@@ -336,19 +336,12 @@ makeMailAttachments ctx document = do
 sendRejectEmails :: (Maybe String) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
-                                 , isActivatedSignatory (documentcurrentsignorder document) sl]
+                                 , isActivatedSignatory (documentcurrentsignorder document) sl || siglinkIsAuthor sl]
   forM_ activatedSignatories $ \sl -> do
     let semail = signatoryemail $ signatorydetails  sl
         sname = signatoryname $ signatorydetails  sl
     mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document signalink
     scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = sname, email = semail }
-  case getAuthorSigLink document of
-    Nothing -> return ()
-    Just authorsiglink -> do
-      let authoremail = signatoryemail $ signatorydetails authorsiglink
-          authorname  = signatoryname  $ signatorydetails authorsiglink
-      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx authorname document signalink
-      scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = authorname, email = authoremail }
 
 -- END EMAILS
 
