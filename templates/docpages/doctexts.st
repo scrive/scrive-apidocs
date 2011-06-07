@@ -173,7 +173,7 @@ documentInfoText=
                              Offert accepterad
                         </span><br>
                         <span class="text">
-                         $signatories:{signatory | $signatory.fstname$ $signatory.sndname$}$
+                         $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
                          har accepterat offerten $documenttitle$  från $authorfstname$ $authorsndname$ .
 
                         </span>
