@@ -94,7 +94,7 @@ secretaryMessage =
 ###
 reminderForm = 
 <span>
-  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatorylinkid$">  
+  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatory.id$">  
     <div class="$if(signatory.signdate)$ reminderForSignedIcon $else$ reminderForSendIcon $endif$"></div>
     <div class="sendLinkText">
         $if(signatory.signdate)$
@@ -108,7 +108,7 @@ reminderForm =
         $endif$
     </div> 
   </a>
-  <form class="overlay" action="$signatory.linkremind$" method="POST" id="siglnk$signatorylinkid$">
+  <form class="overlay" action="$signatory.linkremind$" method="POST" id="siglnk$signatory.id$">
     <div class="modal-container">
         <div class="modal-header">
             <span class="modal-icon message"></span>
