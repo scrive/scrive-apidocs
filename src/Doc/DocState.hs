@@ -77,6 +77,7 @@ module Doc.DocState
     , EndQuarantineForDocument(..)
     , MigrateForDeletion(..)
     , UpdateDocumentRecordStatus(..)
+    , UpdateSigAttachments(..)
     )
 where
 
@@ -1183,6 +1184,15 @@ migrateForDeletion users = do
       
       
 
+updateSigAttachments :: DocumentID -> [SignatoryAttachment] -> Update Documents (Either String Document)
+updateSigAttachments docid sigatts =
+  modifySignableOrTemplate docid $ \doc ->
+  case documentstatus doc of
+    Preparation -> Right doc { documentsignatoryattachments = sigatts }
+    _ -> Left "Can only attach to document in Preparation"  
+
+
+
 {-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
 migrateToSigLinks :: DocumentID -> User -> Update Documents ()
@@ -1241,6 +1251,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'attachCSVUpload
                         , 'getDocumentsByDocumentID
                         , 'updateDocumentAttachments
+                        , 'updateSigAttachments
                         , 'signDocument
                         , 'authorSignDocument
                         , 'authorSendDocument

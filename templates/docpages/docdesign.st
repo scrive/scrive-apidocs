@@ -578,11 +578,11 @@ emailhidden=
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
   $loadingdialog()$
-
-    <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
-      <input type="hidden" name="sigattachments" value="true" />
-      
-      <div class="modal-container">
+  
+  <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
+    <input type="hidden" name="sigattachments" value="true" />
+    
+    <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -602,20 +602,30 @@ pageDocumentForAuthorHelpersLocalDialogs=
               <td>Begar fran</td>
             </tr>
             $sigattachments:{a|
-            <tr><td><a href="#" class="minus">  </a></td>
+            <tr>
+              <td><a href="#" class="minus"></a></td>
               <td><input type="text" name="sigattachname"
-              value="$a.attachmentname$" /></td>
-              <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" /></td>
-              <td><select id="signatoryselector"><option selected>Mottagare</option>
-              </select></td>
-              <td><ul id="selectedsigs">
+                         value="$a.attachmentname$" /></td>
+              <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
+              <td>
+                <select class="signatoryselector">
+                  <option selected>Mottagare</option>
+                </select>
+              </td>
+              <td>
+                <ul class="selectedsigs">
                   $a.signatories:{s|
-                  <li>$s.signame$ <a href="#"
-                  class="remove">x</a><span style="display:none">$s.email$</span></li>
+                  <li>
+                    $s.signame$ 
+                    <a href="#" class="remove">x</a>
+                    <span style="display:none">$s.email$</span>
+                  </li>
                   }$
                   <input type="hidden" name="sigattachemails" value="$a.sigemails$" />
-              </ul></td>
-            </tr>}$
+                </ul>
+              </td>
+            </tr>
+            }$
           </table>
         </div>
       </div>

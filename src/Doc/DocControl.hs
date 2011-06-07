@@ -616,12 +616,13 @@ handleIssueShowPost docid = withUserPost $ do
       csvupload <- isFieldSet "csvupload"
       updateattachments <- isFieldSet "updateattachments"
       switchtoadvanced <- isFieldSet "changefunctionality"
+      sigattachments <- isFieldSet "sigattachments"
       -- is this routing logic or business logic? I say business, but
       -- here it looks mixed.
       -- I'm especially asking about AwaitingAuthor case, because I though
       -- it was covered by SignDocument
       --   Eric
-      case (documentstatus document,sign,send,template,contract,csvupload,updateattachments,switchtoadvanced,False) of 
+      case (documentstatus document,sign,send,template,contract,csvupload,updateattachments,switchtoadvanced,sigattachments) of 
         (Preparation, True, _,_, _, _ , _, _, _) -> handleIssueSign document
         (Preparation, _ ,  True,_, _, _, _, _, _) -> handleIssueSend document
         (Preparation, _ , _ ,True, _, _, _, _, _) -> handleIssueSaveAsTemplate document
@@ -629,6 +630,7 @@ handleIssueShowPost docid = withUserPost $ do
         (Preparation, _ , _ ,_ , _, True, _, _, _) -> handleIssueCSVUpload document
         (Preparation, _ , _ ,_ , _, _, True, _, _) -> handleIssueUpdateAttachments document
         (Preparation, _ , _ ,_ , _, _, _, True, _) -> handleIssueChangeFunctionality document
+        (Preparation, _ , _ ,_ , _, _, _, _, True) -> handleIssueUpdateSigAttachments document
         (Preparation, _ , _ ,_, _, _, _, _, _) -> handleIssueSave document
         (AwaitingAuthor, True , _ ,_, _, _, _, _, _) -> handleIssueSignByAuthor document
         _  -> return $ LinkContracts emptyListParams
@@ -806,14 +808,38 @@ makeSigAttachment doc name desc email =
                                              , signatoryattachmentname = name
                                              , signatoryattachmentdescription = desc}
             
-updateAttachments :: Document -> Kontra [SignatoryAttachment]
-updateAttachments _doc = do 
-  _sigattachmentnames <- getAndConcat "sigattachname"
-  _sigattachmentdescs <- getAndConcat "sigattachdesc"
-  _sigattachmentemails <- getAndConcat "sigattachemails"
+                    
+trim :: String -> String
+trim = f . f
+  where f = reverse . dropWhile isSpace                    
+         
+splitOn :: Char -> String -> [String]
+splitOn c s = case dropWhile (== c) s of
+  "" -> []
+  s' -> w : splitOn c s''
+    where (w, s'') = break (== c) s'
+                                  
+zipSigAttachments :: Document -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [SignatoryAttachment]
+zipSigAttachments doc name desc emailsstring =
+  let emails = [trim e | e <- splitOn ',' $ BS.toString emailsstring
+                       , not $ Data.List.null $ trim e]
+  in catMaybes $  map (makeSigAttachment doc name desc . BS.fromString) emails
+   
+handleIssueUpdateSigAttachments :: Document -> Kontra KontraLink
+handleIssueUpdateSigAttachments doc = do
+  ctx <- get
+  mudoc <- updateDocument ctx doc
+  udoc <- returnRightOrMZero mudoc
   
-  return $ catMaybes []
+  sigattachmentnames  <- getAndConcat "sigattachname"
+  sigattachmentdescs  <- getAndConcat "sigattachdesc"
+  sigattachmentemails <- getAndConcat "sigattachemails"
   
+  let sigattachments = concat $ zipWith3 (zipSigAttachments udoc) sigattachmentnames sigattachmentdescs sigattachmentemails
+  endoc <- update $ UpdateSigAttachments (documentid udoc) sigattachments
+  case endoc of
+    Left _ -> mzero
+    Right ndoc -> return (LinkDesignDoc (DesignStep3 (documentid ndoc)))
 
 handleIssueUpdateAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do

@@ -532,9 +532,26 @@ safeReady(function() {
 });
 
 safeReady(function() {
+  var personpane = $("#personpane");
   $("#addsigattachmentlink").overlay({
     mask: standardDialogMask,
-    top : standardDialogTop
+    top : standardDialogTop,
+    onBeforeLoad: function() {
+      var persondetails = personpane.find(".persondetails");
+      var sigdetails = persondetails.not(".authordetails").has("input:radio[value='signatory']:checked");
+      var sigoptions = $();
+      sigdetails.each(function(i, e) {
+        var sig = $(e);
+        var fn = sig.find("input[name='signatoryfstname']").val();
+        var sn = sig.find("input[name='signatorysndname']").val();
+        var em = sig.find("input[name='signatoryemail']").val();
+        sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
+      });
+      $("select.signatoryselector option").detach();
+      var select = $("select.signatoryselector");
+      select.append($("<option selected>Mottagare</option>"));
+      select.append(sigoptions);
+    }
   });
 });
 
@@ -601,10 +618,13 @@ safeReady(function() {
 safeReady(function() {                      
   $(".redirectsubmitform").submit(function(){
     var newform = $($(this).attr("rel"));
-    var inputs = $("input",$(this));
-    $('textarea:tinymce',$(this)).each(
+    var inputs = $("input", $(this));
+    // I removed the :tinymce selector because it was breaking
+    // everything else. Is it necessary?
+    // -EN
+    $('textarea', $(this)).each(
       function(){
-        inputs = inputs.add($("<input name='"+$(this).attr('name')+"' value='"+$(this).html()+"'>"))
+        inputs = inputs.add($("<input name='"+$(this).attr('name')+"' value='"+$(this).val()+"'>"))
       });
     inputs.css("display","none");
     newform.append(inputs); 

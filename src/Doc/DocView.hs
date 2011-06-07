@@ -1255,7 +1255,7 @@ buildattach d (f:fs) a =
   case signlinkFromDocById d (signatoryattachmentsignatorylinkid f) of
     Nothing -> buildattach d fs a
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), []):a)
+      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
       Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
 
 documentSignatoryAttachments :: Document -> [SignatoryAttachment] -> Fields
