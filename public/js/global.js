@@ -539,7 +539,16 @@ safeReady(function() {
       var signedList =  jQuery(".authornamewhennotsecretary");
       var authorSignes = jQuery("#authorsignatoryradio:checked").size() > 0;
       var newtxt = $("#invitetext").val();
-      $("#edit-invite-text-dialog textarea").val(newtxt);    
+      
+      //if this is the first time we open the invite text input will be empty
+      //which means that if we cancel the custom message, next time we open it
+      //this empty value will be copied over.  so save the default msg to the input.
+      if (newtxt=="") {
+        newtxt = $("#edit-invite-text-dialog textarea").val();
+        $("#invitetext").val( newtxt );
+      }
+
+      $("#edit-invite-text-dialog textarea").val(newtxt);  
       var author = $(".authorname .fieldvalue").text();
       var sigs = $("#personpane .persondetails");
       var partners = new Array();
