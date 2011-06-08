@@ -386,7 +386,7 @@ documentBasicViewFields crtime user doc = do
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
     field "isauthor" $ isUserAuthor doc user
-    field "isviewer" $ isViewer doc user
+    field "isviewer" $ (not $ isUserAuthor doc user) && isViewer doc user
     field "isshared" $ (documentsharing doc)==Shared
     field "isoffer" $ isOffer doc
   where
