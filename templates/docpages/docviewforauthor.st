@@ -29,6 +29,14 @@ pageDocumentForAuthor=
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
         $documentinfotext:noescape()$
+        $if(isattachments)$
+        <div class="attachmentListContainer">  
+          <div class="subheader">Bilaga:</div>
+          $attachments:{attachment |
+            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+          }$
+        </div>
+        $endif$
         $if(canberestarted)$
         <BR/><BR/>
         <form method="POST" action="/restart/$documentid$">
@@ -44,14 +52,6 @@ pageDocumentForAuthor=
             <div class="right"></div>
           </a> 
         </form>
-        $endif$
-        $if(isattachments)$
-        <div class="attachmentListContainer">  
-          <div class="subheader">Bilaga:</div>
-          $attachments:{attachment |
-            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
-          }$
-        </div>
         $endif$
         $if(pending)$
         $if(!awaitingauthor)$
