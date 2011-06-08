@@ -85,7 +85,8 @@ import API.Service.ServiceState
 import Company.CompanyState
 import Control.Monad
 import Control.Monad.Reader (ask)
-import Data.List (find, nub)
+import Control.Monad.State (modify)
+import Data.List (find)
 import Data.Maybe
 import Data.Word
 import Doc.DocStateData
