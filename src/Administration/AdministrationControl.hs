@@ -686,6 +686,7 @@ handleMigrateForDeletion :: Kontra Response
 handleMigrateForDeletion = onlySuperUser $ do
   users <- query $ GetAllUsers
   _ <- update $ MigrateForDeletion users
+  liftIO $ putStrLn $ "Migration Done"
   handleShowQuarantine
   
 
