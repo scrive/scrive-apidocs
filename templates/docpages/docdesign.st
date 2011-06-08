@@ -983,7 +983,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
-        <div class="modal-content">
+        <div class="modal-content disablelinks">
           $invitationMailContent:noescape()$
         </div>
       </div>

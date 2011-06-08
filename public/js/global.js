@@ -580,6 +580,10 @@ safeReady(function() {
 });
 
 safeReady(function() {
+  $(".disablelinks").find("a").attr("href", "#");
+});
+
+safeReady(function() {
   $("#editing-invite-text-finished").click(function() {
     var newtxt = $("#edit-invite-text-dialog textarea").val();
     $("#invitetext").val( newtxt );
