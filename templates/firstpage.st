@@ -209,7 +209,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h2>Kunder berättar</h2>
                                                 <div class="slide-content active">
 									<div class="portrait-image">
-										<img src="/img/portrait-lukas-d.png" style="display:none;" />
 									</div>
 
                                                         <blockquote>”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”</blockquote>
@@ -217,7 +216,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </div>
                                                 <div class="slide-content">
 									<div class="portrait-image">
-										<img src="/img/portrait-lukas-d.png" style="display:none;" />
 									</div>
 
                                                         <blockquote>”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”</blockquote>
@@ -225,7 +223,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </div>
                                                 <div class="slide-content">
 									<div class="portrait-image">
-										<img src="/img/portrait-lukas-d.png" style="display:none;"/>
 									</div>
 
                                                         <blockquote>”Smart lösning.”</blockquote>
@@ -233,16 +230,33 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </div>
                                                 <div class="slide-content">
 									<div class="portrait-image">
-										<img src="/img/portrait-lukas-d.png"  style="display:none;"/>
 									</div>
 
                                                         <blockquote>”Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen.”</blockquote>
                                                         <em>Ola Brundin, Accenture Management Consulting</em>
                                                 </div>
+                                                <div class="slide-content">
+									<div class="portrait-image">
+									</div>
+
+                                                        <blockquote>”Snabbt och överskådligt.”</blockquote>
+                                                        <em>Michael Burman, Marknadschef, Coop Nord</em>
+                                                </div>
+                                                <div class="slide-content">
+									<div class="portrait-image">
+									</div>
+
+                                                        <blockquote>”Notera: efter 1 veckas användning börjar era kunder visa produkten för andra.”</blockquote>
+                                                        <em>Martin Lindström, IPAS</em>
+                                                </div>
+
+
                                         </div>
                                         <div class="slide-nav">
                                                 <ul>
                                                         <li class="active"></li>
+                                                        <li></li>
+                                                        <li></li>
                                                         <li></li>
                                                         <li></li>
                                                         <li></li>
