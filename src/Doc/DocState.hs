@@ -85,6 +85,7 @@ import API.Service.ServiceState
 import Company.CompanyState
 import Control.Monad
 import Control.Monad.Reader (ask)
+import Control.Monad.State (modify)
 import Data.List (find, nub)
 import Data.Maybe
 import Data.Word
@@ -100,6 +101,7 @@ import Misc
 import User.UserState
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = queryDocs $ \documents ->
@@ -1170,36 +1172,26 @@ templateFromDocument docid = modifySignable docid $ \doc ->
 
 migrateForDeletion :: [User] -> Update Documents ()
 migrateForDeletion users = do
-  mapM_ populateUserSigLinks users
-  deleteInvisibleDocs
+  docs <- fmap toList ask  
+  now <- getMinuteTimeDB
+  mapM_ (\doc -> modify (updateIx (documentid doc) (propagetUsers doc))) $ docs
+  mapM_ (\doc -> modify (updateIx (documentid doc) (deleteDocumentIfRequired now users doc))) $ docs
   where
     {- |
         This populates the maybesignatory & maybesupervisor on each of the signatory links for
         the given user.
     -}
-    populateUserSigLinks :: User -> Update Documents ()
-    populateUserSigLinks user@User{userid, userinfo} = do
-      docs <- ask
-      mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . populate)) $ toList docs
-      where
-        populate :: Document -> Document
-        populate doc@Document{ documentsignatorylinks } =
-          let newsiglinks = mapWhen isSignatoryForUser
-                                    (copySignatoryAccount user)
-                                    documentsignatorylinks in
-          doc { documentsignatorylinks = newsiglinks }
-        isSignatoryForUser sl = isSavedforUser sl || isSignedByUser sl
-        isSavedforUser sl = maybesignatory sl == Just userid
-        isSignedByUser sl = signatoryemail (signatorydetails sl) == (unEmail $ useremail userinfo) && isJust (maybesigninfo sl)
-    {- |
-        This quarantines or deletes all of the docs that are current invisible.
-        This means we won't have documents hanging around.
-    -}
-    deleteInvisibleDocs :: Update Documents ()
-    deleteInvisibleDocs = do
-      docs <- ask
-      now <- getMinuteTimeDB
-      mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . deleteDocumentIfRequired now users)) $ toList docs
+    propagetUsers :: Document -> Document
+    propagetUsers doc =
+     doc { documentsignatorylinks = for (documentsignatorylinks doc) $ \sl ->  
+                                        case find (isSignatoryForUser sl) users of
+                                            Just user -> copySignatoryAccount user sl
+                                            Nothing -> sl } 
+    isSignatoryForUser sl u = isSavedforUser sl u || isSignedByUser sl u
+    isSavedforUser sl u = maybesignatory sl == Just (userid u)
+    isSignedByUser sl u = signatoryemail (signatorydetails sl) == (unEmail $ useremail $ userinfo u ) && isJust (maybesigninfo sl)
+      
+      
 
 {-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
