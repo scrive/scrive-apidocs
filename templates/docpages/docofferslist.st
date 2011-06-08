@@ -73,7 +73,7 @@ $loadingdialog()$
 							<th style="width: 130px;">
                                $if(params.sorting.authorREV)$
                                 <a href="$currentlink$&sorting=author">Avsändare <em> ▲</em></a>
-                               $elseif(params.sorting.partnercomp)$
+                               $elseif(params.sorting.author)$
                                 <a href="$currentlink$&sorting=authorREV">Avsändare  <em style="text-color:red"> ▼</em></a>
                                $else$
                                 <a href="$currentlink$&sorting=author">Avsändare </a>
