@@ -632,6 +632,7 @@
        -webkit-border-radius: 0px 0px 5px 5px;
    margin-top: 0px;
    padding: 0 15px;
+   min-height: 150px;
 }
 
 #tab-viewer .account-body h2 {

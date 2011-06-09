@@ -32,7 +32,7 @@ import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Session
-import Templates.Templates (readAllLangsTemplates, KontrakcjaMultilangTemplates, getTemplatesModTime)
+import Templates.Templates (langVersion, readAllLangsTemplates, KontrakcjaMultilangTemplates, getTemplatesModTime)
 import User.UserView as UserView
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
@@ -512,7 +512,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = templates2 Map.! defaultValue
+                , ctxtemplates = langVersion (fromMaybe defaultValue $ lang <$> usersettings <$> muser ) templates2 
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
                               { TW.signConf = trustWeaverSign appConf

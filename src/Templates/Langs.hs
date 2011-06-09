@@ -37,16 +37,7 @@ import System.Directory
 import Text.I18n.Po hiding (putStrLn)
 import Templates.TextTemplates
 import Data.Map (empty,insert, Map)
-
-
-data Lang =    LANG_SE 
-            |  LANG_EN 
-    deriving (Bounded, Enum, Show, Ord, Eq)
-
-
-langDir :: Lang -> String
-langDir LANG_EN = "texts/en"
-langDir LANG_SE = "texts/se"
+import User.Lang
 
 
 translationDirs::[String]

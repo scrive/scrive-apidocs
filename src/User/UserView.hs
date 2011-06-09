@@ -125,6 +125,9 @@ showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ 
     field "fstname" $ BS.toString $ userfstname $ userinfo user 
     field "sndname" $ BS.toString $ usersndname $ userinfo user
     field "userimagelink" False
+    field "lang" $ do
+        field "en" $ LANG_EN == (lang $ usersettings user)
+        field "se" $ LANG_SE == (lang $ usersettings user)
     menuFields user
     
 pageAcceptTOS :: KontrakcjaTemplates -> IO String

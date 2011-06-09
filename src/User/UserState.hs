@@ -75,6 +75,7 @@ import MinutesTime as MT
 import Misc
 import Payments.PaymentsState as Payments
 import User.Password
+import User.Lang
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines) 
 import qualified Data.ByteString.UTF8 as BS
@@ -176,12 +177,22 @@ data UserSettings0  = UserSettings0 {
       }
     deriving (Eq, Ord, Typeable)
 
+data UserSettings1  = UserSettings1 {
+               accounttype1 :: UserAccountType
+             , accountplan1 :: UserAccountPlan
+             , signeddocstorage1 :: Maybe TrustWeaverStorage
+             , userpaymentmethod1 :: PaymentMethod
+             , preferreddesignmode1 :: Maybe DesignMode
+      }
+    deriving (Eq, Ord, Typeable)
+
 data UserSettings  = UserSettings {
                accounttype :: UserAccountType
              , accountplan :: UserAccountPlan
              , signeddocstorage :: Maybe TrustWeaverStorage
              , userpaymentmethod :: PaymentMethod
              , preferreddesignmode :: Maybe DesignMode
+             , lang :: Lang
       }
     deriving (Eq, Ord, Typeable)
 
@@ -732,19 +743,35 @@ instance Migrate UserInfo0 UserInfo where
           , useremail = useremail0
           }
 
-instance Migrate UserSettings0 UserSettings where
+instance Migrate UserSettings0 UserSettings1 where
     migrate (UserSettings0 {
             accounttype0
           , accountplan0
           , signeddocstorage0
           , userpaymentmethod0
-          }) = UserSettings {
-            accounttype = accounttype0
-          , accountplan = accountplan0
-          , signeddocstorage = signeddocstorage0
-          , userpaymentmethod = userpaymentmethod0
-          , preferreddesignmode = Nothing
+          }) = UserSettings1 {
+            accounttype1 = accounttype0
+          , accountplan1 = accountplan0
+          , signeddocstorage1 = signeddocstorage0
+          , userpaymentmethod1 = userpaymentmethod0
+          , preferreddesignmode1 = Nothing
           }
+          
+instance Migrate UserSettings1 UserSettings where
+    migrate (UserSettings1 {
+            accounttype1
+          , accountplan1
+          , signeddocstorage1
+          , userpaymentmethod1
+          , preferreddesignmode1
+          }) = UserSettings {
+            accounttype = accounttype1
+          , accountplan = accountplan1
+          , signeddocstorage = signeddocstorage1
+          , userpaymentmethod = userpaymentmethod1
+          , preferreddesignmode = preferreddesignmode1
+          , lang = LANG_SE
+          } 
 
 isAbleToHaveSubaccounts :: User -> Bool
 isAbleToHaveSubaccounts user = isNothing $ usersupervisor user
@@ -809,9 +836,12 @@ instance Version UserInfo where
 
 instance Version UserSettings0
 
-instance Version UserSettings where
+instance Version UserSettings1 where
     mode = extension 1 (Proxy :: Proxy UserSettings0)
 
+instance Version UserSettings where
+    mode = extension 2 (Proxy :: Proxy UserSettings1)
+    
 instance Version DesignMode
 
 instance Version UserRecordStatus
@@ -1020,6 +1050,7 @@ blankUser = User {
                                   , signeddocstorage = Nothing
                                   , userpaymentmethod = Undefined
                                   , preferreddesignmode = Nothing
+                                  , lang = Misc.defaultValue
                                   }                   
                 , userpaymentpolicy = Payments.initialPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount
@@ -1294,6 +1325,7 @@ $(deriveSerializeFor [ ''User
                      , ''InviteInfo
                      , ''Friend
                      , ''UserSettings
+                     , ''UserSettings1
                      , ''UserSettings0
                      , ''DesignMode
                      , ''UserRecordStatus

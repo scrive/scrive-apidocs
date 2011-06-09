@@ -6,7 +6,7 @@ showUserSecurity =
    </div>
    <ul class="tabs">
        <li><a href="/account">Användaruppgifter</a></li>
-       <li class="active"><a href="/account/security">Lösenord</a></li>
+       <li class="active"><a href="/account/security">Kontoinställningar</a></li>
        $if(issubaccounts)$<li><a href="/account/subaccount">Underkonton</a></li>$endif$
        <li><a href="/account/sharing">Delning</a></li>
    </ul>
@@ -14,7 +14,7 @@ showUserSecurity =
        <div class="tab-content account">
            <div class="col">
                <div class="account-header">
-                   <h2>Byt lösenord</h2>
+                   <h2>Lösenord</h2>
                </div>
                <div class="account-body">
                    <table>
@@ -31,17 +31,39 @@ showUserSecurity =
                        </tr>
                    </table>
                </div>
+             
+           </div>
+
+           <div class="col">
+               <div class="account-header">
+                   <h2>Språkinställningar</h2>
+               </div>
+               <div class="account-body">
+                   <table>
+                       <tr>
+                           <td>Användarspråk:</td>
+                           <td><select name="lang"> 
+                                     <option $if(lang.se)$ selected="" $endif$ value="LANG_SE"> Svenska </option>
+                                     <option $if(lang.en)$ selected="" $endif$ value="LANG_EN"> Engelska </option>
+                               </select>
+                            </td>
+                   </table>
+               </div>
+
+
              <div class="account-footer">
                 <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">
                    <div class="left"></div>
                    <div class="label">
-                       <p>Spara lösenord</p>
+                       <p>Spara inställningar</p>
                    </div>
                    <div class="right"></div>
                 </a>
              </div>
+
            </div>
+
            <div class="clearfix"></div>
        </div>
    </div>

@@ -7,7 +7,7 @@ viewFriends =
 		</div>
 		<ul class="tabs">
 		   <li><a href="/account">Användaruppgifter</a></li>
-                   <li><a href="/account/security">Lösenord</a></li>
+                   <li><a href="/account/security">Kontoinställningar</a></li>
                    $if(issubaccounts)$<li><a href="/account/subaccount">Underkonton</a></li>$endif$
                    <li class="active"><a href="/account/sharing">Delning</a></li>
 		</ul>

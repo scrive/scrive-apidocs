@@ -134,6 +134,12 @@ handlePostUserSecurity = do
               _ <- update $ SetUserPassword (userid user) passwordhash
               addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
         _ -> return ()
+      mlang <- readField "lang"
+      case (mlang) of
+          Just lang -> do
+              _ <-update $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
+              return ()
+          Nothing -> return ()    
       return LinkSecurity
     Nothing -> return $ LinkLogin NotLogged
 
