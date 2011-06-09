@@ -271,9 +271,11 @@ fileMovedTo fid fstorage = do
     let docs = toList (documents @= fid) 
     mapM_ (\doc -> modifySignableOrTemplate (documentid doc) moved) docs
     where
-    moved doc@Document{documentfiles, documentsealedfiles} =
+    moved doc@Document{documentfiles, documentsealedfiles, documentsignatoryattachments, documentauthorattachments} =
         Right $ doc { documentfiles = map moved1 documentfiles
                     , documentsealedfiles = map moved1 documentsealedfiles
+                    , documentsignatoryattachments = map movedsig documentsignatoryattachments
+                    , documentauthorattachments = map movedaut documentauthorattachments
                     }
     moved1 file@File{ fileid
                     , filestorage = FileStorageMemory _
@@ -281,6 +283,9 @@ fileMovedTo fid fstorage = do
                                  file { filestorage = fstorage }
                       | otherwise = file
     moved1 file = file
+    movedsig sa@SignatoryAttachment{signatoryattachmentfile=Just file} = sa {signatoryattachmentfile = Just (moved1 file)}
+    movedsig sa = sa
+    movedaut aa@AuthorAttachment{authorattachmentfile = file} = aa {authorattachmentfile = moved1 file}
 
 getDocumentByFileID :: FileID -> Query Documents (Either String Document)
 getDocumentByFileID fileid' = queryDocs $ \documents ->
@@ -940,7 +945,11 @@ cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
 getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
   let doclist = IxSet.toList documents
-      getFiles Document{documentfiles,documentsealedfiles} = documentfiles ++ documentsealedfiles
+      getFiles d@Document{documentfiles,documentsealedfiles} = 
+        documentfiles 
+        ++ documentsealedfiles
+        ++ map authorattachmentfile (documentauthorattachments d)
+        ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments d)]
       allFiles = concatMap getFiles doclist
       getID file@File{ filestorage = FileStorageMemory _ } = [file]
       getID _ = [] in

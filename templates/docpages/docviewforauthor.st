@@ -47,9 +47,16 @@ pageDocumentForAuthor=
             $if(hassigattachments)$
             <div class="subheader">Bägarda bilagor:</div>
             <table>
-            $sigattachments:{attachment |
-            <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
-            }$
+              $sigattachments:{attachment |
+              <tr><td>
+                  $if(attachment.viewerlink)$
+                  <a href="$attachment.viewerlink$"
+                  target="_blank">$attachment.name$</a>
+                  $else$
+                  $attachment.name$
+                  $endif$
+                </td><td>$attachment.signame$</td></tr>
+              }$
             </table>
             $endif$
 
@@ -95,28 +102,13 @@ pageDocumentForAuthor=
             </div> 
             <div class="right"></div>
           </a> 
-        </form>
-        $endif$
-        $if(pending)$
-        $if(!awaitingauthor)$
-        $if(!timetosignset)$
-        <a class="btn-small red" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
-          <div class="left"></div>
-          <div class="label">
-            $if(contract)$
-            Återkalla inbjudan
-            $elseif(offer)$
-            Återkalla offert
-            $endif$ 
-          </div> 
-          <div class="right"></div>
-        </a>
-        $endif$
-        $endif$
-        $endif$
-      </span> 
+          $endif$
+          $endif$
+          $endif$
+        </span> 
+      </div>
+      $signatoriesBox()$
     </div>
-    
     <div id="documentBox">
       <script type="text/javascript">
         var docstate = $docstate:noescape()$;

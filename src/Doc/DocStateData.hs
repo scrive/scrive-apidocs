@@ -2707,7 +2707,10 @@ instance Indexable Document where
                       -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 
                       -- the scope of a single document! FIXME
                       , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])
-                      , ixFun (\x -> map fileid (documentfiles x ++ documentsealedfiles x) :: [FileID])
+                      , ixFun (\x -> map fileid (documentfiles x 
+                                                 ++ documentsealedfiles x
+                                                 ++ map authorattachmentfile (documentauthorattachments x)
+                                                 ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
                       , ixFun (\x -> (case documenttimeouttime x of
                                          Just time -> [time]
                                          Nothing -> []) :: [TimeoutTime])

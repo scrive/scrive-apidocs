@@ -864,17 +864,18 @@ documentSigAttachmentViewFields docid sls msignlink atts = do
   field "sigattachments" $ map sigAttachmentFields atts
   where
     sigAttachmentFields a = do
-      field "signame" $ case find (isSigLinkForEmail (signatoryattachmentemail a)) sls of
-        Nothing -> "No name"
-        Just sl -> BS.toString $ signatoryname $ signatorydetails sl
+      let mattachlink = find (isSigLinkForEmail (signatoryattachmentemail a)) sls
+      field "signame" $ maybe "No name" (BS.toString . signatoryname . signatorydetails) mattachlink
       field "email" $ signatoryattachmentemail a
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
       field "filename" $ fmap filename $ signatoryattachmentfile a
-      field "viewerlink" $ case msignlink of
-        Just signlink -> fmap (show . LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) . fileid) $ signatoryattachmentfile a
-        Nothing -> fmap (show . LinkAttachmentForAuthor docid . fileid) $ signatoryattachmentfile a
-
+      field "viewerlink" $ 
+        case (msignlink, maybe Nothing maybesigninfo mattachlink, signatoryattachmentfile a) of
+          (_, _, Nothing) -> Nothing
+          (_, Nothing, _) -> Nothing
+          (Nothing, _, Just file) -> Just $ show $ LinkAttachmentForAuthor docid (fileid file)
+          (Just signlink, _, Just file) -> Just $ show $ LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) (fileid file)
 
 pageDocumentForSignatory :: KontraLink 
                     -> Document
@@ -926,7 +927,7 @@ documentSingleSignatoryAttachmentsFields docid sid mh atts =
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
       field "filename" $ fmap filename $ signatoryattachmentfile a
-      field "viewerlink" $ show $ fmap (LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
+      field "viewerlink" $ fmap (show . LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
   )
 
 --- Display of signatory                                                             

@@ -847,15 +847,14 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     mudoc <- updateDocument ctx doc
     udoc <- returnRightOrMZero mudoc
     
-    attidsnums <- getCriticalFieldList asValidNumber "attachmentid"
-    attidsnum2 <- getCriticalFieldList asValidDocID "attachmentid"
+    attidsnums <- getCriticalFieldList asValidID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
-    let idsforremoval = [FileID f | (f, r) <- zip attidsnums removeatt
-                                  , r]
+    let idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
+                                              , r] :: [FileID]
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
-    let idsforadd = [DocumentID did |(did,r)<- zip attidsnum2 removeatt, not r] 
-                    ++ (map documentid $ catMaybes mattachments)
+    let idsforadd = [read $ BS.toString did |(did, r)<- zip attidsnums removeatt, not r] 
+                    ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
 
     mndoc <- update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
     case mndoc of
@@ -1967,13 +1966,20 @@ handleAttachmentDownloadForViewer did sid mh fid = do
   case edoc of
     Left _ -> mzero
     Right doc -> case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
-      Nothing -> mzero -- attachment with this file ID does not exist
       Just AuthorAttachment{ authorattachmentfile } -> do
         ctx <- get
         contents <- liftIO $ getFileContents ctx authorattachmentfile
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
         return res2
+      Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
+        Just SignatoryAttachment{ signatoryattachmentfile = Just file } -> do
+          ctx <- get
+          contents <- liftIO $ getFileContents ctx file
+          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+              res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+          return res2
+        _ -> mzero -- attachment with this file ID does not exist
 
 
 {-
@@ -2059,10 +2065,14 @@ handleSigAttach docid siglinkid mh = do
             mzero
           Just _ -> do
             (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
-            content <- case contentspec of
+            content1 <- case contentspec of
               Left filepath -> liftIO $ BSL.readFile filepath
               Right content -> return content
-            _ <- update $ SaveSigAttachment docid attachname email (concatChunks content)
+            -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+            -- we use gs to do that of course
+            ctx <- get
+            content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
+            _ <- update $ SaveSigAttachment docid attachname email content
             return $ LinkSignDoc doc siglink
         
 
