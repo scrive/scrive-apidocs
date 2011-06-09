@@ -9,9 +9,10 @@
 -- Generating files for internationalisation
 -----------------------------------------------------------------------------
 module Templates.TextTemplates
-    (   generatePOTFiles
-      , getTextTemplates
-      , getTextTemplatesMTime
+    (   getRecursiveMTime
+      , getTextTemplatesFromDir
+      , generatePOTFiles
+      , potDirectory
     ) where
 
 import Text.StringTemplate 
@@ -31,16 +32,19 @@ import Misc
 import qualified Data.Map as Map
 import System.IO
 import System.Directory
-import Text.I18n.Po hiding (putStrLn)
+import Text.I18n.Po hiding (putStrLn,getL10n)
+import qualified Text.I18n.Po (getL10n)
 
-translationDirs::[String]
-translationDirs = ["texts/en","texts/se"]
+commonFileName :: Bool -> String
+commonFileName makeTemplates = templateFileToPOT makeTemplates "common"
 
-commonFileName :: String
-commonFileName = "common.pot"
+potDirectory :: String
+potDirectory = "pot"
 
-templateFileToPOT :: String -> String
-templateFileToPOT s = (takeWhile (/= '.') s) ++ ".pot"
+templateFileToPOT :: Bool -> String -> String
+templateFileToPOT True  s = (takeWhile (/= '.') s) ++ ".pot"
+templateFileToPOT False s = (takeWhile (/= '.') s) ++ ".po"
+
 
 data TemplateTextLocation = TemplateTextLocation {
                                              location:: [(String,String)] -- file/templatename
@@ -50,39 +54,30 @@ data TemplateTextLocation = TemplateTextLocation {
 initialTTLocation::String -> String -> String -> TemplateTextLocation
 initialTTLocation file template ttname = TemplateTextLocation {name=ttname,location=[(file,template)]}
 
-
-generatePOTFiles:: IO ()
-generatePOTFiles = do
-    putStrLn "Digging started"
+generatePOTFiles:: Bool -> IO ()
+generatePOTFiles makeTemplates = do
     ttls <- getTextsFromTemplates
-    let grouped = groupTTLs  ttls Map.empty
-    putStrLn "Cleaning pot dir ... "
-    dirExists <- doesDirectoryExist "pot"
-    when dirExists $ removeDirectoryRecursive "pot"
-    createDirectory "pot"
-    putStrLn "Pot Dirs recreated"
-
+    let grouped = groupTTLs makeTemplates ttls Map.empty
+    dirExists <- doesDirectoryExist potDirectory
+    when dirExists $ removeDirectoryRecursive potDirectory
+    createDirectory potDirectory
     sequence_ $ Map.elems $ Map.mapWithKey writePOTFile grouped
     
 
 writePOTFile:: String -> [TemplateTextLocation] -> IO ()
 writePOTFile s ttls = do
     let dirname = reverse $ drop 1 $ dropWhile (/= '/') (reverse s)         
-    putStrLn $ "Creating extra dirs if needed " ++ dirname
-    createDirectoryIfMissing True ("pot/"++dirname)        
-    putStrLn $ "Creating file " ++ ("pot/" ++ s) 
-    h <- openFile ("pot/" ++ s) WriteMode
-    putStrLn $ "Writing content ... "
+    createDirectoryIfMissing True (potDirectory ++ "/"++dirname)        
+    h <- openFile (potDirectory ++ "/" ++ s) WriteMode
     forM_ ttls $ \ttl -> do 
         forM (location ttl) $ \(l,t)->  hPutStr h $ "#: " ++ l ++ ":" ++ t ++ "\n"
         hPutStr h $ "msgid \""++ name ttl ++"\"\n"
         hPutStr h $ "msgstr \"\"\n\n"
     hClose h
-    putStrLn $ "Done"    
     
-groupTTLs:: [TemplateTextLocation] -> Map.Map String [TemplateTextLocation] -> Map.Map String [TemplateTextLocation]
-groupTTLs (t:tl) m = groupTTLs tl $ Map.insertWith (++) (finalLocation t) [t] m
-groupTTLs []  m = m
+groupTTLs:: Bool -> [TemplateTextLocation] -> Map.Map String [TemplateTextLocation] -> Map.Map String [TemplateTextLocation]
+groupTTLs makeTemplates (t:tl) m = groupTTLs makeTemplates  tl $ Map.insertWith (++) (finalLocation makeTemplates t) [t] m
+groupTTLs makeTemplates []  m = m
 
 
 getTextsFromTemplates::IO [TemplateTextLocation]
@@ -113,22 +108,10 @@ locationMerge (t : ts) = TemplateTextLocation {name = name t, location = (concat
 locationMerge [] = error "No locations provided"
 
 
-finalLocation::TemplateTextLocation -> String
-finalLocation ttl =  if (2 > (length $ nub $ map fst $ location ttl))
-                        then templateFileToPOT $ head $ map fst $ location ttl
-                        else commonFileName
-
-
-getTextTemplates:: IO [(String,String)]
-getTextTemplates = do
-    templates <- join <$> (sequence $ map getTextTemplatesFromDir translationDirs)
-    putStrLn $ show $ templates
-    return templates
-
-getTextTemplatesMTime :: IO ClockTime
-getTextTemplatesMTime =  do
-    mtime <- maximum <$> (sequence $ map getRecursiveMTime translationDirs)
-    return mtime
+finalLocation:: Bool -> TemplateTextLocation -> String
+finalLocation makeTemplates  ttl =  if (2 > (length $ nub $ map fst $ location ttl))
+                        then templateFileToPOT makeTemplates  $ head $ map fst $ location ttl
+                        else commonFileName makeTemplates 
 
 getRecursiveMTime "."  = return $ TOD 0 0
 getRecursiveMTime ".." = return $ TOD 0 0
@@ -143,13 +126,30 @@ getRecursiveMTime dir = do
           return $ maximum $ mt:mts
   
 
-getTextTemplatesFromDir:: String -> IO [(String,String)] 
+getTextTemplatesFromDir:: String -> IO [(String,[(String,String)])]        
 getTextTemplatesFromDir "."  = return []
 getTextTemplatesFromDir ".." = return []
 getTextTemplatesFromDir dir = do
-    l10 <- fst <$> getL10n dir
-    let msgmap = concatMap Map.toList $ concatMap Map.elems (Map.elems l10)
-    return $ for msgmap $ \v -> case v of 
-                                  (Msgid s,a:_) -> (s,a)  
-                                  (Msgid s,_) -> (s,"")   
+    l10 <- getL10n dir
+    let  dumbMerge v = case v of 
+                    (Msgid s,a:_) -> (s,a)  
+                    (Msgid s,_) -> (s,"")  
+    let base = Map.toList $ Map.map (map dumbMerge) $ Map.mapKeys (\(Locale s) -> s) $ Map.map ((concatMap Map.toList) . Map.elems) l10
+    return $ mapSnd  (filter (not . null . fst)) base
+    
+getL10n::String -> IO L10n    
+getL10n dir = case ("." `isSuffixOf` dir) of
+ True -> return Map.empty                   
+ False -> do
+     files <- getDirectoryContents dir
+     mts <- forM files $ \fn -> do
+         isDir <- doesDirectoryExist $ dir ++ "/" ++fn 
+         if not isDir 
+          then return Map.empty
+          else do 
+             m <- getL10n $ dir ++ "/" ++fn 
+             return $ Map.mapKeys (\(Locale s) -> Locale $ fn ++ "/" ++ s) m
+     (mt,_) <- Text.I18n.Po.getL10n $ dir 
+     return $ Map.unions $ mt:mts
+    
         

@@ -397,6 +397,8 @@ caseOf [] d = d
 allValues::(Bounded a, Enum a) => [a]
 allValues = enumFrom minBound
 
+defaultValue::(Bounded a) => a
+defaultValue = minBound
 
 -- | Extra classes for one way enums
 class SafeEnum a where
@@ -640,11 +642,11 @@ onFst f (a,b) = (f a,b)
 onSnd :: (b -> c) -> (a,b) -> (a,c)
 onSnd f (a,b) = (a, f b)
 
-mapFst::(a -> c) -> [(a,b)] -> [(c,b)]
-mapFst f = map (onFst f)
+mapFst::(Functor f) => (a -> c) -> f (a,b)  -> f (c,b)
+mapFst f = fmap (onFst f)
 
-mapSnd::(b -> c)  -> [(a,b)] -> [(a,c)]
-mapSnd f = map (onSnd f)
+mapSnd::(Functor f) => (b -> c)  -> f (a,b) -> f (a,c)
+mapSnd f = fmap (onSnd f)
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))

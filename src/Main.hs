@@ -47,7 +47,7 @@ import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
-import Templates.Templates (readTemplates, getTemplatesModTime)
+import Templates.Templates (readAllLangsTemplates, getTemplatesModTime)
 import Kontra
 import Misc
 import qualified TrustWeaver as TW
@@ -142,7 +142,7 @@ main = Log.withLogger $ do
 
   args <- getArgs
   appConf1 <- readAppConfig
-  templates' <- readTemplates
+  templates' <- readAllLangsTemplates
   templateModTime <- getTemplatesModTime
   templates <- newMVar (templateModTime, templates')
 

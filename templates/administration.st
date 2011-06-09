@@ -807,9 +807,106 @@ Admin: <input type="text" name="admin">
 ###
 adminTranslations = 
 
-<form action="/adminonly/generatepotfiles" method="POST">
 
-<input type="submit" value="Generate POT files">
-</form>
+<center><h2> Translation stats </h2>
+
+<div style="width: 500px;padding:20px; "> If you see this page then .pot files have just been generated.
+      .pot files are for you to see what texts are avaible in the system and to generate .po files. 
+      You can use .pot files, but never write anything to them.
+</div>
+</center>
+
+$langs:{lang | 
+<br/>
+<div style="border: 1px solid black;margin:5px;padding:5px;">
+<center><h3> $lang.name$ </h3></center>
+
+<table>
+<thead>
+ <th style="width:300px">
+ </th>
+ <th style="width:200px">
+
+ </th>
+  <th style="width:200px">
+ </th>
+</thead>
+<tbody>
+<tr>
+  <td>
+    <strong> Missing files, they have not been created</strong> 
+  </td>
+</tr>
+
+$lang.missingFiles:{file | 
+<tr>
+  <td>
+  </td>
+  <td>
+    $file$.po
+  </td>
+</tr>
+}$
+
+<tr>
+  <td>
+    <strong> Not ussed files, they should not exist </strong> 
+  </td>
+</tr>
+
+$lang.extraFiles:{file | 
+<tr>
+  <td>
+  </td>
+  <td>
+    $file$.po
+  </td>
+</tr>
+}$
+
+
+<tr>
+  <td>
+    <strong> Not synchronised files</strong> 
+  </td>
+</tr>
+
+$lang.notSynchronisedFiles:{file | 
+<tr>
+  <td>
+  </td>
+  <td>
+    $file$.po
+  </td>
+</tr>
+}$
+
+
+<tr>
+  <td>
+    <strong> Empty texts </strong> 
+  </td>
+</tr>
+
+$lang.emptyTranslations :{t | 
+<tr>
+  <td>
+  </td>
+  <td>
+    $t.file$.po
+  </td>
+  <td>
+    $t.name$
+  </td>
+</tr>
+}$
+
+
+
+</tbody>
+</table>
+</div>
+<br/>
+}$
 
 ####

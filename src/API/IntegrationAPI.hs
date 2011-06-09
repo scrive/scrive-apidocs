@@ -30,7 +30,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Doc.DocControl as DocControl
 import qualified Data.Map as Map
-import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates, getTemplatesModTime)
+import Templates.Templates (renderTemplate, KontrakcjaTemplates, getTemplatesModTime)
 import Happstack.State (update)
 import Redirect
 import PayEx.PayExInterface -- Import so at least we check if it compiles

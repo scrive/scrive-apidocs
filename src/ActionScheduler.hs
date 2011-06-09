@@ -25,12 +25,14 @@ import MinutesTime
 import Mails.MailsData
 import Mails.SendMail
 import Session
-import Templates.Templates (KontrakcjaTemplates)
+import Templates.Templates (KontrakcjaMultilangTemplates,langVersion,Lang(..))
 import User.UserView
 import qualified AppLogger as Log
 import System.Time
+import Misc
 
-type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaTemplates))
+
+type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
 
 type ActionScheduler a = ReaderT SchedulerData' IO a 
 
@@ -92,7 +94,7 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                 let uinfo = userinfo user
                     email = useremail uinfo
                     fullname = userfullname user
-                (_,templates) <- liftIO $ readMVar (sdTemplates sd)
+                (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
                 let mailfunc = case mdoc of
                       (Just doc) | isOffer doc -> mailAccountCreatedBySigningOfferReminder
                       _ -> mailAccountCreatedBySigningContractReminder

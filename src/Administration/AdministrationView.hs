@@ -46,7 +46,7 @@ import Doc.DocState
 import API.Service.ServiceState
 import Happstack.State (query)
 import Control.Monad
-
+import Templates.Langs
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplate templates "adminsmain" ()
@@ -145,8 +145,17 @@ servicesAdminPage templates services=
             fieldIO "admin"  $ liftM (fmap $ show . useremail . userinfo) $ query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin service
         
         
-adminTranslationsPage::KontrakcjaTemplates -> IO String
-adminTranslationsPage templates =  renderTemplate templates "adminTranslations" ()
+adminTranslationsPage::KontrakcjaTemplates -> [(Lang,TranslationStats)] ->  IO String
+adminTranslationsPage templates stats =  
+    renderTemplate templates "adminTranslations" $
+        field "langs" $ for stats $ \(lang, stat) -> do
+            field "name" $ show lang
+            field "missingFiles" $ missingFiles stat
+            field "extraFiles" $ extraFiles stat
+            field "notSynchronisedFiles" $ notSynchronisedFiles stat
+            field "emptyTranslations" $ for (emptyTranslations stat) $ \(file,name) -> do
+                field "file" file
+                field "name" name
 
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
 mkUserInfoView (userdetails', docstats', userstats') = 

@@ -77,19 +77,22 @@
 -----------------------------------------------------------------------------
 module Templates.Templates
     ( RenderTemplate(..)
-    , readTemplates
+    , readAllLangsTemplates
     , templateList
     , KontrakcjaTemplates
+    , KontrakcjaMultilangTemplates
+    , langVersion
     , TemplatesMonad(..)
     , Fields
     , Field
     , field
     , fieldIO
     , getTemplatesModTime
+    , Lang(..)
     ) where
 
 import Control.Monad.State.Strict
-import Templates.TemplatesLoader (readTemplates,renderTemplateMain,templateList,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime)
+import Templates.TemplatesLoader (langVersion,readAllLangsTemplates,renderTemplateMain,templateList,KontrakcjaMultilangTemplates,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime,Lang(..))
 import Text.StringTemplate.Base hiding (ToSElem,toSElem)
 import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
 import qualified Data.ByteString as BS

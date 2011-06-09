@@ -12,12 +12,16 @@
 module Templates.TemplatesLoader
     ( KontrakcjaTemplates
     , KontrakcjaTemplate
+    , KontrakcjaMultilangTemplates
     , renderTemplateMain
     , templateList
     , getTemplatesModTime
     , toKontrakcjaTemplates
     , getTemplates
     , readTemplates 
+    , readAllLangsTemplates
+    , langVersion
+    , Lang(..)
     ) where
 
 import Text.StringTemplate 
@@ -28,23 +32,38 @@ import Control.Monad
 import Data.Maybe
 import Data.List
 import Data.Char
+import qualified Data.Map as Map
+import Data.Map ((!))
 import AppLogger as Log
 import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
 import Templates.TemplatesFiles
-import Templates.TextTemplates
+import Templates.Langs
+import Misc
+
 {-Names of template files -}
 
 
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
+type KontrakcjaMultilangTemplates = Map.Map Lang KontrakcjaTemplates
 
 
-readTemplates :: IO KontrakcjaTemplates 
-readTemplates = do
+langVersion::Lang -> KontrakcjaMultilangTemplates -> KontrakcjaTemplates
+langVersion lang mtemplates = mtemplates ! lang
+
+
+readAllLangsTemplates :: IO KontrakcjaMultilangTemplates
+readAllLangsTemplates = fmap Map.fromList $ forM allValues $ \lang -> do
+    templates <- readTemplates lang
+    return (lang,templates) 
+
+
+readTemplates :: Lang -> IO KontrakcjaTemplates 
+readTemplates lang = do
     ts <- mapM getTemplates templatesFilesPath
-    texts <- getTextTemplates
+    texts <- getTextTemplates lang
     return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
 
 --This is avaible only for special cases

@@ -32,7 +32,7 @@ import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Session
-import Templates.Templates (readTemplates, KontrakcjaTemplates, getTemplatesModTime)
+import Templates.Templates (readAllLangsTemplates, KontrakcjaMultilangTemplates, getTemplatesModTime)
 import User.UserView as UserView
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
@@ -68,8 +68,6 @@ import API.Service.ServiceControl
 import CoopAPI
 
 import Text.JSON.Types
-import Text.StringTemplate.Base (StringTemplate(..))
-import Text.StringTemplate.Classes (StFirst(..))
 import qualified Codec.MIME.Parse as MIME
 import qualified Codec.MIME.Type as MIME
 import qualified Data.ByteString as BS
@@ -84,6 +82,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
+--import Templates.Langs
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -115,7 +114,7 @@ data AppConf
   Global application data
 -}
 data AppGlobals 
-    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaTemplates)
+    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaMultilangTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
                  , docscache       :: MVar (Map.Map FileID JpegPages)
@@ -262,7 +261,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
      , dir "adminonly" $ dir "translations" $ hGet $ Administration.showAdminTranslations
-     , dir "adminonly" $ dir "generatepotfiles" $ hPost $ Administration.handleGeneratePOTFiles
 
      -- a temporary service to help migration
 
@@ -395,17 +393,14 @@ defaultAWSAction appConf =
            }
 
 
-maybeReadTemplates :: MVar (ClockTime, 
-                             String -> Text.StringTemplate.Classes.StFirst
-                             (Text.StringTemplate.Base.StringTemplate
-                              String))
-                       -> IO KontrakcjaTemplates                      
+maybeReadTemplates :: MVar (ClockTime, KontrakcjaMultilangTemplates)
+                      -> IO KontrakcjaMultilangTemplates
 maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
             then do 
                 Log.debug $ "Reloading templates"
-                templates' <- readTemplates
+                templates' <- readAllLangsTemplates
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
  
@@ -517,7 +512,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = templates2
+                , ctxtemplates = templates2 Map.! defaultValue
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
                               { TW.signConf = trustWeaverSign appConf

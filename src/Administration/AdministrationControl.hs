@@ -31,7 +31,6 @@ module Administration.AdministrationControl(
           , handleMigrate0
           , handleCreateService
           , handleStatistics
-          , handleGeneratePOTFiles
           , handleShowQuarantine
           , handleQuarantinePost
           , handleMigrateForDeletion
@@ -71,7 +70,7 @@ import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
 import InputValidation
-import Templates.TextTemplates
+import Templates.Langs
 import Text.Printf
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
@@ -733,13 +732,8 @@ handleStatistics =
     renderFromBody TopEmpty kontrakcja $ cdata content
     
 
-handleGeneratePOTFiles :: Kontra KontraLink
-handleGeneratePOTFiles = do
-    liftIO $ generatePOTFiles
-    return LoopBack
-
-
 showAdminTranslations :: Kontra String
 showAdminTranslations = do
      ctx <- get
-     liftIO $ adminTranslationsPage $ ctxtemplates ctx
+     tstats <- liftIO $ getTranslationStats
+     liftIO $ adminTranslationsPage (ctxtemplates ctx) tstats
