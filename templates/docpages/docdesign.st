@@ -482,7 +482,6 @@ pageDocumentDesign=
         <a href="#" class="signingOrder"></a>
         <a href="#" class="plus"></a>
         $elseif(offer)$
-        <input type="hidden" name="signatoryrole" value="signatory">
         <a href="#" class="plus"></a>
         $endif$
         <select class="signorder float-right" name="signatorysignorder"></select>
