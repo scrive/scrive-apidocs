@@ -998,6 +998,7 @@ data Document = Document
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
+    , documentattachments            :: [DocumentID]
     , documentauthorattachments      :: [AuthorAttachment]
     , documentoriginalcompany        :: Maybe CompanyID
     , documentrecordstatus           :: DocumentRecordStatus
@@ -1060,7 +1061,7 @@ data AuthorAttachment = AuthorAttachment { authorattachmentfile :: File }
                       deriving (Eq, Ord, Typeable)
                                
 data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: Maybe File
-                                               , signatoryattachmentsignatorylinkid :: SignatoryLinkID
+                                               , signatoryattachmentemail           :: BS.ByteString
                                                , signatoryattachmentname            :: BS.ByteString
                                                , signatoryattachmentdescription     :: BS.ByteString
                                                }
@@ -2565,6 +2566,7 @@ instance Migrate Document24 Document where
              , documenttags24
              , documentservice24
              , documentoriginalcompany24
+             , documentattachments24
              }) = Document
                 { documentid                     = documentid24
                 , documenttitle                  = documenttitle24
@@ -2594,6 +2596,7 @@ instance Migrate Document24 Document where
                 , documentrecordstatus           = LiveDocument
                 , documentquarantineexpiry       = Nothing
                 , documentsignatoryattachments   = []
+                , documentattachments            = documentattachments24
                 }
 
 

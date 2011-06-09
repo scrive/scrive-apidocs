@@ -88,6 +88,7 @@ mailInvitationToSignContent=
        Avsändare: <strong>$creatorname$</strong><br/>
        $timetosigninfo:noescape()$
        $appendixList()$
+       $sigattachlist()$
       </p>
     $endif$
     $if(issignatory)$
@@ -496,4 +497,6 @@ mailSubaccountAcceptedContent=
   $poweredBySkrivaPaPara()$
 ####
 appendixList=$if(isattachments)$Bilagor: $attachments:{a | $a$ };separator=", "$ <br />$endif$
+###
+sigattachlist=$if(hassigattachments)$Begärda bilagor: $sigattachments:{sa|$sa.name:strong()$ från $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###

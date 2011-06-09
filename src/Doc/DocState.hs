@@ -78,6 +78,8 @@ module Doc.DocState
     , MigrateForDeletion(..)
     , UpdateDocumentRecordStatus(..)
     , UpdateSigAttachments(..)
+    , SaveSigAttachment(..)
+    , MigrateDocumentAuthorAttachments(..)
     )
 where
 
@@ -251,6 +253,7 @@ blankDocument =
           , documentrecordstatus         = LiveDocument
           , documentquarantineexpiry     = Nothing
           , documentsignatoryattachments = []
+          , documentattachments          = []
           }
 
 fileMovedToAWS :: FileID 
@@ -1191,7 +1194,25 @@ updateSigAttachments docid sigatts =
     Preparation -> Right doc { documentsignatoryattachments = sigatts }
     _ -> Left "Can only attach to document in Preparation"  
 
-
+saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Update Documents (Either String Document)
+saveSigAttachment docid name email content = do
+  documents <- ask
+  fileid <- getUnique documents FileID
+  modifySignableOrTemplate docid $ \doc ->
+    case documentstatus doc `elem` [Pending, AwaitingAuthor] of
+      False -> Left "Only attach when the document is signable."
+      True -> Right doc { documentsignatoryattachments = newsigatts }
+        where
+          newsigatts = map addfile $ documentsignatoryattachments doc
+          addfile a | email == signatoryattachmentemail a && name == signatoryattachmentname a =
+            a { signatoryattachmentfile =
+                   Just $ File { fileid = fileid
+                               , filename = name
+                               , filestorage = FileStorageMemory content
+                               }
+              }
+          addfile a = a
+  
 
 {-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
@@ -1236,6 +1257,19 @@ migrateToSigLinks docid author = do
                                           }
   return ()
 -}                                 
+
+
+migrateDocumentAuthorAttachments :: DocumentID -> [File] -> Update Documents (Either String Document)
+migrateDocumentAuthorAttachments docid files =
+  modifySignableOrTemplate docid $
+  \doc -> if length files > 0
+          then Right doc { documentauthorattachments = for files (\f ->
+                                                                   AuthorAttachment { authorattachmentfile = f })
+                         , documentattachments = []
+                         }
+          else Left "No documentattachments."
+  
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getQuarantinedDocuments
@@ -1292,6 +1326,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setSignatoryLinks
                         , 'getUniqueSignatoryLinkID
                         , 'getMagicHash
+                        , 'saveSigAttachment
                           
                         , 'getDocumentByFileID
                         , 'errorDocument
@@ -1304,4 +1339,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'templateFromDocument
 --                        , 'migrateToSigLinks
                         , 'migrateForDeletion
+                        , 'migrateDocumentAuthorAttachments
                         ])

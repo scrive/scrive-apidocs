@@ -92,7 +92,7 @@ import Templates.TemplatesUtils
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Char (toUpper)
-import Data.List (find, isInfixOf, delete)
+import Data.List (find, isInfixOf)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -795,6 +795,7 @@ pageDocumentForAuthor ctx
        documentInfoFields document
        documentViewFields document
        documentAttachmentViewFields documentid Nothing (documentauthorattachments document)
+       documentSigAttachmentViewFields documentid documentsignatorylinks Nothing (documentsignatoryattachments document)
 
 {- |
    Show the document for Viewers (friends of author or signatory).
@@ -843,11 +844,12 @@ pageDocumentForViewer ctx
        documentInfoFields document 
        documentViewFields document
        documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
+       documentSigAttachmentViewFields documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
        documentAuthorInfo document
 
 documentAttachmentViewFields :: DocumentID -> Maybe SignatoryLink -> [AuthorAttachment] -> Fields
 documentAttachmentViewFields docid msignlink atts = do
-  field "isattachments" $ not $ null atts
+  field "isattachments" $ length atts > 0
   field "attachments" $ map attachmentFields atts
   where
     attachmentFields AuthorAttachment{ authorattachmentfile = File{ filename, fileid } } = do
@@ -855,6 +857,24 @@ documentAttachmentViewFields docid msignlink atts = do
       field "linkattachment" $ case msignlink of
         Just signlink -> show (LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) fileid)
         Nothing -> show (LinkAttachmentForAuthor docid fileid)
+    
+documentSigAttachmentViewFields :: DocumentID -> [SignatoryLink] -> Maybe SignatoryLink -> [SignatoryAttachment] -> Fields
+documentSigAttachmentViewFields docid sls msignlink atts = do
+  field "hassigattachments" $ length atts > 0
+  field "sigattachments" $ map sigAttachmentFields atts
+  where
+    sigAttachmentFields a = do
+      field "signame" $ case find (isSigLinkForEmail (signatoryattachmentemail a)) sls of
+        Nothing -> "No name"
+        Just sl -> BS.toString $ signatoryname $ signatorydetails sl
+      field "email" $ signatoryattachmentemail a
+      field "name" $ signatoryattachmentname a
+      field "desc" $ signatoryattachmentdescription a
+      field "filename" $ fmap filename $ signatoryattachmentfile a
+      field "viewerlink" $ case msignlink of
+        Just signlink -> fmap (show . LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) . fileid) $ signatoryattachmentfile a
+        Nothing -> fmap (show . LinkAttachmentForAuthor docid . fileid) $ signatoryattachmentfile a
+
 
 pageDocumentForSignatory :: KontraLink 
                     -> Document
@@ -873,7 +893,12 @@ pageDocumentForSignatory action document ctx invitedlink  =
       magichash = signatorymagichash invitedlink
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
+      sigattachments = [a | a <- documentsignatoryattachments document
+                          , signatoryattachmentemail a == signatoryemail (signatorydetails invitedlink)]
+      hassigattachments = length sigattachments > 0
   in do
+    print "pageDocumentForSignatory"
+    print $ show hassigattachments
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
       field "localscripts" localscripts
       field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
@@ -889,23 +914,20 @@ pageDocumentForSignatory action document ctx invitedlink  =
       documentAuthorInfo document
       documentViewFields document
       signedByMeFields document (Just invitedlink)
-      documentAttachmentSignatoryFields (documentid document) (documentauthorattachments document) invitedlink
-
-
-documentAttachmentSignatoryFields :: DocumentID -> [AuthorAttachment] -> SignatoryLink -> Fields
-documentAttachmentSignatoryFields docid atts siglink = do
-  field "isattachments" $ not $ null atts
-  field "attachments" $ map attachmentFields atts
-  where
-    attachmentFields attachment = do
-      field "attachmentname" $ filename (authorattachmentfile attachment)
-      field "linkattachment" $ 
-        show (LinkAttachmentForViewer 
-              docid 
-              (signatorylinkid siglink) 
-              (signatorymagichash siglink) 
-              (fileid $ authorattachmentfile attachment))
-
+      documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
+      documentSigAttachmentViewFields (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
+      documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
+      field "hasmysigattachments" hassigattachments
+      
+documentSingleSignatoryAttachmentsFields :: DocumentID -> SignatoryLinkID -> MagicHash -> [SignatoryAttachment] -> Fields
+documentSingleSignatoryAttachmentsFields docid sid mh atts = 
+  field "mysigattachments" $ for atts 
+  (\a -> do
+      field "name" $ signatoryattachmentname a
+      field "desc" $ signatoryattachmentdescription a
+      field "filename" $ fmap filename $ signatoryattachmentfile a
+      field "viewerlink" $ show $ fmap (LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
+  )
 
 --- Display of signatory                                                             
 signatoryLinkFields :: Context -> Document -> Maybe SignatoryLink -> SignatoryLink -> Fields
@@ -1039,6 +1061,7 @@ documentInfoFields  document  = do
   field "offer" $  isOffer document
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
+  field "hasanyattachments" $ length (documentauthorattachments document) + length (documentsignatoryattachments document) > 0
   documentStatusFields document
 
 documentAuthorInfo :: Document -> Fields
@@ -1243,20 +1266,6 @@ documentAuthorAttachments attachments =
   for attachments (\doc -> do
                       field "attachmentid" $ show (documentid doc)
                       field "attachmentname" $ documenttitle doc)
-  
-samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
-samenameanddescription n d (nn, dd, _) = n == nn && d == dd
-  
-buildattach :: Document -> [SignatoryAttachment] 
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])] 
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-buildattach _ [] a = a
-buildattach d (f:fs) a =
-  case signlinkFromDocById d (signatoryattachmentsignatorylinkid f) of
-    Nothing -> buildattach d fs a
-    Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
-      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
 
 documentSignatoryAttachments :: Document -> [SignatoryAttachment] -> Fields
 documentSignatoryAttachments doc attachments =

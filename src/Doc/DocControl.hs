@@ -228,6 +228,7 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
  -}
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
+  print document
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
                       , not $ siglinkIsAuthor sl]
@@ -499,6 +500,7 @@ handleSignShow documentid
     Right document -> case getSigLinkBySigLinkID signatorylinkid1 document of
       Nothing -> mzero -- signatory link does not exist
       Just invitedlink -> do
+        liftIO $ print document
         let isFlashNeeded = Data.List.null ctxflashmessages
                             && (not (isJust $ maybesigninfo invitedlink))
             -- heavens this is a confusing case statement, there must be a better way!
@@ -798,15 +800,13 @@ handleIssueCSVUpload document = do
             Left _ -> mzero
             Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload)
             
-makeSigAttachment :: Document -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Maybe SignatoryAttachment
-makeSigAttachment doc name desc email =
-  let msiglink = sigLinkForEmail doc email
-  in case msiglink of
-    Nothing -> Nothing
-    Just siglink -> Just SignatoryAttachment { signatoryattachmentfile = Nothing
-                                             , signatoryattachmentsignatorylinkid = signatorylinkid siglink
-                                             , signatoryattachmentname = name
-                                             , signatoryattachmentdescription = desc}
+makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
+makeSigAttachment name desc email =
+  SignatoryAttachment { signatoryattachmentfile = Nothing
+                      , signatoryattachmentemail = email
+                      , signatoryattachmentname = name
+                      , signatoryattachmentdescription = desc
+                      }
             
                     
 trim :: String -> String
@@ -819,11 +819,11 @@ splitOn c s = case dropWhile (== c) s of
   s' -> w : splitOn c s''
     where (w, s'') = break (== c) s'
                                   
-zipSigAttachments :: Document -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [SignatoryAttachment]
-zipSigAttachments doc name desc emailsstring =
+zipSigAttachments :: BS.ByteString -> BS.ByteString -> BS.ByteString -> [SignatoryAttachment]
+zipSigAttachments name desc emailsstring =
   let emails = [trim e | e <- splitOn ',' $ BS.toString emailsstring
                        , not $ Data.List.null $ trim e]
-  in catMaybes $  map (makeSigAttachment doc name desc . BS.fromString) emails
+  in map (makeSigAttachment name desc . BS.fromString) emails
    
 handleIssueUpdateSigAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateSigAttachments doc = do
@@ -835,7 +835,7 @@ handleIssueUpdateSigAttachments doc = do
   sigattachmentdescs  <- getAndConcat "sigattachdesc"
   sigattachmentemails <- getAndConcat "sigattachemails"
   
-  let sigattachments = concat $ zipWith3 (zipSigAttachments udoc) sigattachmentnames sigattachmentdescs sigattachmentemails
+  let sigattachments = concat $ zipWith3 zipSigAttachments sigattachmentnames sigattachmentdescs sigattachmentemails
   endoc <- update $ UpdateSigAttachments (documentid udoc) sigattachments
   case endoc of
     Left _ -> mzero
@@ -1925,6 +1925,13 @@ handleCreateFromTemplate = withUserPost $ do
 authorAttachmentHasFileID :: FileID -> AuthorAttachment -> Bool
 authorAttachmentHasFileID fid attachment =
   fid == fileid (authorattachmentfile attachment)
+  
+{- |
+   The FileID matches the SignatoryAttachment.
+-}
+sigAttachmentHasFileID :: FileID -> SignatoryAttachment -> Bool
+sigAttachmentHasFileID fid attachment =
+  maybe False ((fid ==) . fileid) (signatoryattachmentfile attachment)
 
 {- |
    Download the attachment with the given fileid
@@ -1935,13 +1942,21 @@ handleAttachmentDownloadForAuthor did fid = do
   case edoc of
     Left _ -> mzero
     Right doc -> case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
-      Nothing -> mzero -- attachment with this file ID does not exist
       Just AuthorAttachment{ authorattachmentfile } -> do
         ctx <- get
         contents <- liftIO $ getFileContents ctx authorattachmentfile
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
         return res2
+      Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
+        Just SignatoryAttachment{ signatoryattachmentfile = Just file } -> do
+          ctx <- get
+          contents <- liftIO $ getFileContents ctx file
+          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+              res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+          return res2
+        _ -> mzero -- attachment with this file ID does not exist
+
 
 {- |
    Stream the pdf document for the given FileID.
@@ -1976,6 +1991,28 @@ migrateDocSigLinks = onlySuperUser $ do
 
 -}
 
+handleMigrateDocumentAuthorAttachments :: Kontra Response
+handleMigrateDocumentAuthorAttachments = do
+  Context { ctxmaybeuser = Just user } <- get
+  guard (useremail (userinfo user) == Email (BS.fromString "ericwnormand@gmail.com"))
+  docs <- query $ GetDocuments Nothing
+  forM_ docs (\doc -> do
+                         eatts <- query $ GetDocumentsByDocumentID (documentattachments doc)
+                         case eatts of
+                           Left msg -> do
+                             liftIO $ print msg
+                             return ()
+                           Right atts -> do
+                             eres <- update $ 
+                                     MigrateDocumentAuthorAttachments (documentid doc) (map (head . documentfiles) atts)
+                             case eres of
+                               Left msg2 -> do
+                                 liftIO $ print msg2
+                                 return ()
+                               Right _udoc -> return ())
+  addFlashMsg $ toFlashMsg OperationDone "All documents migrated!"
+  sendRedirect LinkMain
+
 -- Fix for broken production | To be removed after fixing is done
 isBroken::Document -> Bool
 isBroken doc = documentstatus doc == Closed && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
@@ -1999,3 +2036,33 @@ showDocumentsToFix = onlySuperUser $ do
     docs <- query $ GetDocuments Nothing 
     liftIO $ documentsToFixView (ctxtemplates ctx) $ filter isBroken docs
     
+handleSigAttach :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSigAttach docid siglinkid mh = do
+  liftIO $ print "handleSigAttach"
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  case edoc of
+    Left _ -> do
+      liftIO $ print "Doc doesn't exist."
+      mzero
+    Right doc -> case signlinkFromDocById doc siglinkid of
+      Nothing -> do
+        liftIO $ print "No siglink."
+        mzero
+      Just siglink -> do
+        attachname <- getCriticalField asValidFieldValue "attachname"
+        let email = signatoryemail (signatorydetails siglink)
+        case find (\sa -> signatoryattachmentemail sa == email
+                          && signatoryattachmentname sa == attachname) (documentsignatoryattachments doc) of
+          Nothing -> do
+            liftIO $ print "No email."
+            liftIO $ print $ show doc
+            mzero
+          Just _ -> do
+            (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
+            content <- case contentspec of
+              Left filepath -> liftIO $ BSL.readFile filepath
+              Right content -> return content
+            _ <- update $ SaveSigAttachment docid attachname email (concatChunks content)
+            return $ LinkSignDoc doc siglink
+        
+

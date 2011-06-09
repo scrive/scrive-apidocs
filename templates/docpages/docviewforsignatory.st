@@ -152,24 +152,36 @@ pageDocumentForSignContent=
         </a>
       </span>
     </div>
-    $if(isattachments)$
+    $if(signedbyme)$
+    $if(hasanyattachments)$
     <ul class="tabs">
       <li id="doctab" class="active"><a href="#" id="doctablink">Dokument</a></li>
       <li id="atttab" ><a href="#" id="attachtablink">Bilagor</a></li>
     </ul>
     $endif$
+    $endif$
     
   </div>
-  $if(isattachments)$
+  $if(hasanyattachments)$
   <span id="attachmenttabview" style="display:none">
     <div id="signStepsBody" class="ericfix forauthor"> 
       <div id="signViewBodyLeft" >
         <span id="signViewBodyLeftTextContainer"> 
           <div class="attachmentListContainer">  
-            <div class="subheader">Bilaga:</div>
+            $if(isattachments)$
+            <div class="subheader">Bifogade bilagor:</div>
             $attachments:{attachment |
             <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
             }$
+            $endif$
+            $if(hassigattachments)$
+            <div class="subheader">Bägarda bilagor:</div>
+            <table>
+            $sigattachments:{attachment |
+            <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
+            }$
+            $endif$
+            </table>
           </div>
         </span>
       </div>
@@ -207,7 +219,45 @@ pageDocumentForSignContent=
     </div>
     $endif$
 
-    $if(pending)$
+
+    $if(notsignedbyme)$
+    $if(hasmysigattachments)$
+    
+    <div id="signViewSigAttachmentBox">  
+      <h2>Begärda bilagor</h2>
+      <table id="signViewSigAttachmentBoxList">
+        $mysigattachments:{attachment |
+        <tr>
+          <td>$attachment.name$</td>
+          <td>$attachment.desc$</td>
+          <td>              
+            $if(attachment.filename)$
+            <a href="$attachment.viewerlink$" target="_blank">$attachment.filename$</a>
+            $else$
+            <form method="post" enctype="multipart/form-data">
+              <input type="hidden" name="sigattachment" value="yes" />
+              <input type="hidden" name="attachname"
+              value="$attachment.name$" />
+              <div class="signStepsButtonContainer">
+                <a class="btn-small green">  
+                  <div class="left"> </div>
+                  <div class="label" style="width:80px">Välj fil</div> 
+                  <div class="right"> </div>                 
+                  <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
+                </a>
+              </div>
+              <div id="tobeattached-$attachment.name$" style="display:none;"></div>
+            </form>
+
+
+            $endif$
+          </td>
+        </tr>
+        }$
+      </table>
+    </div>
+    $endif$
+
     <div id="signViewBottomBox"> 
       $if(contract)$
       <div id="signViewBottomBoxContainerLeft">
@@ -219,7 +269,10 @@ pageDocumentForSignContent=
       </div>
       <div id="signViewBottomBoxContainerMiddle">
         <div id="signGuardField">
-          <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+          <div class="float-left">
+            <input type="checkbox" id="signGuardCBox"
+            class="signGuard" autocomplete="off"/>
+          </div>
           <div class="float-left" id="signGuardLabel">
             <label for="signGuardCBox">Jag intygar att:
               <br>1. Samtliga undertecknande parter är korrekta.

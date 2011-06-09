@@ -586,3 +586,18 @@ getAuthorName doc =
   let Just authorsiglink = getAuthorSigLink doc
   in personname authorsiglink
 
+
+  
+samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
+samenameanddescription n d (nn, dd, _) = n == nn && d == dd
+  
+buildattach :: Document -> [SignatoryAttachment] 
+               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])] 
+               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
+buildattach _ [] a = a
+buildattach d (f:fs) a =
+  case sigLinkForEmail d (signatoryattachmentemail f) of
+    Nothing -> buildattach d fs a
+    Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
+      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
+      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))

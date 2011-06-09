@@ -47,14 +47,14 @@ pageDocumentForViewerContent =
         </a>
       </span>
     </div>
-    $if(isattachments)$
+    $if(hasanyattachments)$
     <ul class="tabs">
       <li id="doctab" class="active"><a href="#" id="doctablink">Dokument</a></li>
       <li id="atttab" ><a href="#" id="attachtablink">Bilagor</a></li>
     </ul>
     $endif$
   </div>
-  $if(isattachments)$
+  $if(hasanyattachments)$
   <span id="attachmenttabview" style="display:none">
     <div id="signStepsBody" class="ericfix forauthor"> 
       <div id="signViewBodyLeft" >

@@ -263,6 +263,8 @@ mailInvitationToSignOrViewContent templates
                                    ,("documenttitle", BS.toString documenttitle) 
                                    ]  
                      else return $ BS.toString documentinvitetext      
+      sigattachments = for (buildattach document (documentsignatoryattachments document) [])
+                       (\(n, _, sigs) -> (n, renderListTemplate templates (map (BS.toString . fst) sigs)))
            
   header' <- header
   editableHeader <- makeEditable' templates "customtext" header'
@@ -284,7 +286,13 @@ mailInvitationToSignOrViewContent templates
         field "creatorname" creatorname
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
-           
+        field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
+        field "sigattachments" $ 
+          for  sigattachments (\(n, sigs) -> do
+                                  field "name" n
+                                  field "sigs" sigs)
+
+
 mailInvitationFromService :: Context -> Service -> Document -> SignatoryLink -> IO Mail
 mailInvitationFromService ctx service doc sl = do
   templates <- toKontrakcjaTemplates [("invitationmail",BS.toString $ servicedocumentinvitationmail service)]

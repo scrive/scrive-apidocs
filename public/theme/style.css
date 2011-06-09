@@ -2137,7 +2137,7 @@ form {
     text-decoration: none;
 }
 
-#signViewAttachmentBox
+#signViewAttachmentBox, #signViewSigAttachmentBox
 {
     /* 002 float: left;*/
     margin-top: 30px;

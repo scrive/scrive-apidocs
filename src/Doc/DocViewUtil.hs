@@ -10,6 +10,7 @@ module Doc.DocViewUtil ( personname,
                          joinWith,
                          emailFromSignLink,
                          renderListTemplate,  
+                         buildattach
                        ) where
 import Doc.DocState
 import Misc
