@@ -148,7 +148,11 @@ handleDeliveredInvitation docid signlinkid = do
                      field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
                      field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
                      field "documenttitle" $ BS.toString $ documenttitle doc)
-                 scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title, content = BS.fromString content, fullname = signatoryname $ documentauthordetails, email = signatoryemail $ documentauthordetails }
+                 scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
+                                                                      , content = BS.fromString content
+                                                                      , to = [MailAddress { fullname = signatoryname $ documentauthordetails
+                                                                                          , email = signatoryemail $ documentauthordetails }]
+                                                                      }
          Nothing -> return ()
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
@@ -171,7 +175,11 @@ handleDeferredInvitation docid signlinkid = do
                 field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
                 field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                 field "ctxhostpart" $ ctxhostpart ctx)
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title, content = BS.fromString content, fullname = signatoryname $ documentauthordetails, email = signatoryemail $ documentauthordetails }
+             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
+                                                                  , content = BS.fromString content
+                                                                  , to = [MailAddress {fullname = signatoryname $ documentauthordetails
+                                                                                      , email = signatoryemail $ documentauthordetails }]
+                                                                  }
          Left _ -> return ()
 
 handleUndeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
@@ -189,7 +197,11 @@ handleUndeliveredInvitation docid signlinkid = do
                  field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
                  field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                  field "ctxhostpart" $ ctxhostpart ctx)
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title, content = BS.fromString content, fullname = signatoryname $ documentauthordetails, email = signatoryemail $ documentauthordetails }
+             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
+                                                                  , content = BS.fromString content
+                                                                  , to = [MailAddress {fullname = signatoryname $ documentauthordetails
+                                                                                      , email = signatoryemail $ documentauthordetails }]
+                                                                  }
          Nothing -> return ()
 
 getSignatoryLinkFromDocumentByID :: Document -> SignatoryLinkID -> Maybe SignatoryLink

@@ -183,7 +183,10 @@ startPaymentForDocument ctx user document =
 sendPaymentMail::Context -> User -> Payment -> IO ()
 sendPaymentMail ctx user payment = do
     mail <- mailNewPayment ctx user payment
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = userfullname user, email = unEmail $ useremail $ userinfo user }
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname user
+                                                                        , email = unEmail $ useremail $ userinfo user}
+                                                           ]
+                                                    }
 
 processPayment::Payment -> User -> Bool -> Kontra Payment
 processPayment payment user tryToCreateAgreement= runWhenState payment Waiting $ 

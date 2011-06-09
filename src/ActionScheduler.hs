@@ -97,21 +97,22 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                       (Just doc) | isOffer doc -> mailAccountCreatedBySigningOfferReminder
                       _ -> mailAccountCreatedBySigningContractReminder
                 mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailEnforcer sd) $ mail { fullname = fullname, email = unEmail email })
+                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
             let new_atype = (actionType action) { acbsState = ReminderSent }
             update $ UpdateActionType actionID new_atype
             update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
-evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{email, mailInfo}} = do
+evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} = do
     mailer <- sdMailer <$> ask
     success <- liftIO $ sendMail mailer actionID mail
     if success
        then do
            -- morph action type into SentEmailInfo
+           let email' = email (head (to mail))
            now <- liftIO getMinutesTime
            update $ UpdateActionType actionID $ SentEmailInfo {
-                 seiEmail            = Email email
+                 seiEmail            = Email email'
                , seiMailInfo         = mailInfo
                , seiEventType        = Other "passed to sendgrid"
                , seiLastModification = now

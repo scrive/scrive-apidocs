@@ -436,7 +436,12 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
        do
         title <- renderTemplate templates "mailCancelDocumentByAuthorTitle" [("documenttitle", BS.toString documenttitle)] 
         content <- wrapHTML templates =<< mailCancelDocumentByAuthorContent templates True customMessage ctx document
-        return $ emptyMail {title = BS.fromString title, fullname = signatoryname $ signatorydetails signlink, email = signatoryemail $ signatorydetails $ signlink, content = BS.fromString content}
+        return $ emptyMail { title = BS.fromString title
+                           , to = [MailAddress { fullname = signatoryname $ signatorydetails signlink
+                                              , email = signatoryemail $ signatorydetails $ signlink
+                                              }]
+                           , content = BS.fromString content
+                           }
 
 mailMismatchSignatory :: Context 
                         -> Document 

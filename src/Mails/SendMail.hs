@@ -10,9 +10,10 @@
 -- Structure for holding mails + sending function
 -----------------------------------------------------------------------------
 
-module Mails.SendMail (
-      Mail(..)
+module Mails.SendMail
+    ( Mail(..)
     , emptyMail
+    , MailAddress(..)
     , Mailer(..)
     , createSendgridMailer
     , createLocalOpenMailer
@@ -41,6 +42,7 @@ import Text.HTML.TagSoup
 import Misc
 import qualified AppLogger as Log
 import Data.ByteString.Internal (c2w,w2c)
+import Data.List
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
@@ -65,9 +67,8 @@ mailEncode1 :: String -> String
 mailEncode1 source = mailEncode (BS.fromString source)
 
 emptyMail :: Mail
-emptyMail = Mail {
-      fullname       = BS.empty
-    , email          = BS.empty
+emptyMail = Mail
+    { to             = []
     , title          = BS.empty
     , content        = BS.empty
     , attachments    = []
@@ -80,19 +81,21 @@ newtype Mailer = Mailer { sendMail :: ActionID -> Mail -> IO Bool }
 createSendgridMailer :: MailsConfig -> Mailer
 createSendgridMailer config = Mailer{sendMail = reallySend}
     where
-        reallySend aid mail@Mail{email, title, attachments} = do
+        reallySend aid mail@Mail{to, title, attachments} = do
             boundaries <- createBoundaries
             let mailtos = createMailTos mail
                 wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
+                mailRcpt MailAddress {email} = [ "--mail-rcpt"
+                                               , "<" ++ BS.toString email ++ ">"
+                                               ]
                 curlargs =
                     [ "--user"
                     , (sendgridUser config) ++ ":" ++ (sendgridPassword config)
                     , (sendgridSMTP config)
                     , "-k", "--ssl", "--mail-from"
                     , "<" ++ (ourInfoEmail config) ++ ">"
-                    , "--mail-rcpt",
-                    "<" ++ BS.toString email ++ ">"
-                    ]
+                    ] ++ concatMap mailRcpt to
+                    
             Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
             (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
             case code of
@@ -127,19 +130,24 @@ createSendmailMailer config = Mailer{sendMail = reallySend}
 createLocalOpenMailer :: String -> String -> Mailer
 createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = sendToTempFile}
     where
-        sendToTempFile aid mail@Mail{email} = do
+        sendToTempFile aid mail@Mail{to} = do
+            let email' = email $ head to
             tmp <- getTemporaryDirectory
             boundaries <- createBoundaries
             let wholeContent = createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName aid mail
                 mailtos = createMailTos mail
-                filename = tmp ++ "/Email-" ++ BS.toString email ++ "-" ++ show aid ++ ".eml"
+                filename = tmp ++ "/Email-" ++ BS.toString email' ++ "-" ++ show aid ++ ".eml"
             Log.mail $ show aid ++ " " ++ mailtos ++ "  [staging: saved to file " ++ filename ++ "]"
             BSL.writeFile filename wholeContent
             openDocument filename
             return True
 
 createMailTos :: Mail -> String
-createMailTos (Mail {fullname, email}) =
+createMailTos (Mail {to}) =
+    concat $ intersperse ", " $ map createMailTos' to
+
+createMailTos' :: MailAddress -> String
+createMailTos' (MailAddress {fullname, email}) =
     mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
 createBoundaries :: IO (String, String)

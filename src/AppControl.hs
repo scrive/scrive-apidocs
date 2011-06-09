@@ -574,7 +574,8 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
 sendResetPasswordMail ctx link user = do
   mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = userfullname user, email = unEmail $ useremail $ userinfo user }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname user
+                                                                      , email = unEmail $ useremail $ userinfo user }]}
 
 {- |
    Handles viewing of the signup page
@@ -623,7 +624,7 @@ signup vip _freetill =  do
           then do
             al <- newAccountCreatedLink user
             mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
-            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = email, email = email }
+            scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates))
             return LoopBack
           else do
@@ -647,7 +648,7 @@ _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user 
     let email = unEmail $ useremail $ userinfo user
     al <- newAccountCreatedLink user
     mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
-    scheduleEmailSendout ctxesenforcer $ mail { fullname = email, email = email }
+    scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |
    Handles viewing of the login page

@@ -152,8 +152,8 @@ sendReminder = do
   forM siglinkstoremind $ (\signlink -> do
                               mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-                                fullname = signatoryname $ signatorydetails signlink
-                                , email = signatoryemail $ signatorydetails signlink
+                                to = [MailAddress {fullname = signatoryname $ signatorydetails signlink
+                                                  , email = signatoryemail $ signatorydetails signlink}]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
   return $ toJSObject [("documentid", JSString $ toJSString $ show (documentid doc))]  
