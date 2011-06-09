@@ -849,12 +849,17 @@ handleMailCommand (JSObject json) content from to = runErrorT $ do
     "998877665544332211" -> return ()
     z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
 
+  let toStr = BS.toString to
   doctype <- case get_field json "doctype" of
         Just (JSString x) -> case fromJSString x of
           "contract" -> return Contract
           "offer" -> return Offer
           z -> fail $ "Unsupported document type '" ++ z ++ "', should be one of 'contract' or 'offer'"
-        _ -> return Contract
+        _ -> if "contract" `isInfixOf` toStr
+             then return Contract
+             else if "offer" `isInfixOf` toStr
+                  then return Offer
+                  else return Contract
       
   JSArray personsField <- maybeFail "need to specify 'persons'" $ get_field json "persons"
   
