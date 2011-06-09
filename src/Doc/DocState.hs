@@ -421,19 +421,6 @@ updateDocumentAttachments docid idstoadd idstoremove = do
         _ -> Left "Can only attach to document in Preparation"
 
 {- |
-    When a doc comes out of preparation mode the attachments should be finalised, meaning
-    the signatory links setup and status changed to closed.
--}
-finaliseAttachments :: [DocumentID] -> [SignatoryLink] -> Update Documents (Either String [Document])
-finaliseAttachments attachmentids links = do
-  mdocs <- forM attachmentids $ \attid ->
-    modifySignableOrTemplate attid $ \doc@Document{documenttype} ->
-      if documenttype == Attachment
-      then Right $ doc { documentstatus = Pending, documentsignatorylinks = links }
-      else Left $ "Needs to be an attachment"
-  return $ sequence mdocs
-
-{- |
     Creates a new contract by pumping some values into a particular signatory.
 -}
 contractFromSignatoryData :: DocumentID

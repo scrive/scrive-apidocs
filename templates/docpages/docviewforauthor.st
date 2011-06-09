@@ -33,14 +33,58 @@ pageDocumentForAuthor=
     </ul>
     $endif$
   </div>
-  <div id="signStepsBody" class="ericfix forauthor"> 
-    <div id="signViewBodyLeft" > 
-      <span id="signViewBodyLeftTextContainer"> 
-        $documentinfotext:noescape()$
-        $if(canberestarted)$
-        <BR/><BR/>
-        <form method="POST" action="/restart/$documentid$">
-          <a class="btn-small red submit">
+  $if(hasanyattachments)$
+  <span id="attachmenttabview" style="display:none">
+    <div id="signStepsBody" class="ericfix forauthor"> 
+      <div id="signViewBodyLeft" >
+        <span id="signViewBodyLeftTextContainer"> 
+          <div class="attachmentListContainer">  
+            <div class="subheader">Bilaga:</div>
+            $attachments:{attachment |
+            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+            }$
+
+            $if(hassigattachments)$
+            <div class="subheader">Bägarda bilagor:</div>
+            <table>
+            $sigattachments:{attachment |
+            <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
+            }$
+            </table>
+            $endif$
+
+          </div>
+        </span>
+      </div>
+    </div>
+    <div id="attachmentbox"><div class="waiting4page"></div></div>
+  </span>
+  $endif$
+  <span id="documenttabview">
+    <div id="signStepsBody" class="ericfix forauthor"> 
+      <div id="signViewBodyLeft" >
+        <span id="signViewBodyLeftTextContainer"> 
+          $documentinfotext:noescape()$
+          $if(canberestarted)$
+          <BR/><BR/>
+          <form method="POST" action="/restart/$documentid$">
+            <a class="btn-small red submit">
+              <div class="left"></div>
+              <div class="label">
+                $if(contract)$
+                Starta om dokument
+                $elseif(offer)$
+                Starta om offert
+                $endif$
+              </div> 
+              <div class="right"></div>
+            </a> 
+          </form>
+          $endif$
+          $if(pending)$
+          $if(!awaitingauthor)$
+          $if(!timetosignset)$
+          <a class="btn-small red" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
             <div class="left"></div>
             <div class="label">
               $if(contract)$
@@ -52,14 +96,6 @@ pageDocumentForAuthor=
             <div class="right"></div>
           </a> 
         </form>
-        $endif$
-        $if(isattachments)$
-        <div class="attachmentListContainer">  
-          <div class="subheader">Bilaga:</div>
-          $attachments:{attachment |
-            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
-          }$
-        </div>
         $endif$
         $if(pending)$
         $if(!awaitingauthor)$
