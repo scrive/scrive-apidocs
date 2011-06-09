@@ -92,12 +92,8 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.forkIOLogWhenError ("error sealing document " ++ show documentid)$ do
           enewdoc <- sealDocument ctx document
           case enewdoc of
-            Right newdoc -> sendClosedEmailsToSignatories ctx newdoc
-            Left errmsg -> do
-              _ <- update $ ErrorDocument documentid errmsg
-              Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
-                sendDocumentErrorEmailToAuthor ctx document
-              return ()
+            Right newdoc -> sendClosedEmails ctx newdoc
+            Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
     -- main action: sendAwaitingEmail
@@ -266,30 +262,18 @@ sendInvitationEmail1 ctx document signatorylink = do
  -}
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
-  sendClosedEmailsToSignatories ctx document
-  sendClosedAuthorEmail ctx document
+    let signatorylinks = documentsignatorylinks document
+    let mailAddressFromSignatoryLink signatorylink = 
+            MailAddress { fullname = signatoryname $ signatorydetails $ signatorylink
+                        , email = signatoryemail $ signatorydetails $ signatorylink
+                        }
 
-{- | Send email only to non-author
--}
-sendClosedEmailsToSignatories :: Context -> Document -> IO ()
-sendClosedEmailsToSignatories ctx document = do
-  let signlinks = [sl | sl <- documentsignatorylinks document
-                      , not $ siglinkIsAuthor sl]
-  forM_ signlinks $ sendClosedEmail1 ctx document
-
-{- |
-   Helper for sendClosedEmails
- -}
-sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
-sendClosedEmail1 ctx document signatorylink = do
-  let SignatoryLink { signatorydetails } = signatorylink
-  mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
-  mailattachments <- makeMailAttachments ctx document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress { fullname = signatoryname signatorydetails
-                          , email = signatoryemail signatorydetails }]
-      , attachments = mailattachments
-  }
+    mail <- mailDocumentClosed (ctxtemplates ctx) ctx document
+    mailattachments <- makeMailAttachments ctx document
+    scheduleEmailSendout (ctxesenforcer ctx) $ 
+                         mail { to = map mailAddressFromSignatoryLink signatorylinks
+                              , attachments = mailattachments
+                              }
 
 
 {- |
@@ -302,22 +286,6 @@ sendAwaitingEmail ctx document = do
       authorname  = signatoryname  $ signatorydetails authorsiglink
   mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx authorname document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
-
-{- |
-   Send the email to the Author when the document is closed
- -}
-sendClosedAuthorEmail :: Context -> Document -> IO ()
-sendClosedAuthorEmail ctx document = do
-  let Just authorsiglink = getAuthorSigLink document
-      authoremail = signatoryemail $ signatorydetails authorsiglink
-      authorname  = signatoryname  $ signatorydetails authorsiglink
-  mail <- mailDocumentClosedForAuthor (ctxtemplates ctx) ctx authorname document
-  mailattachments <- makeMailAttachments ctx document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress { fullname = authorname
-                          , email = authoremail}]
-      , attachments = mailattachments
-  }
 
 makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
 makeMailAttachments ctx document = do

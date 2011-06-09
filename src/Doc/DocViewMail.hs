@@ -4,8 +4,7 @@ module Doc.DocViewMail ( mailDocumentRemind
                        , mailDocumentRemindContent
                        , mailDocumentRejected
                        , mailRejectMailContent
-                       , mailDocumentClosedForAuthor
-                       , mailDocumentClosedForSignatories
+                       , mailDocumentClosed
                        , mailInvitationToSign
                        , mailInvitationToSignOrViewContent
                        , mailInvitationToSend
@@ -347,34 +346,18 @@ mailInvitationToView' templates ctx document@Document{documenttitle} signatureli
   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just signaturelink)
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
     
-mailDocumentClosedForSignatories :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailDocumentClosedForSignatories templates (Context {ctxhostpart}) document@Document{documenttitle} signaturelink = 
+mailDocumentClosed :: KontrakcjaTemplates -> Context -> Document -> IO Mail
+mailDocumentClosed templates (Context {ctxhostpart}) document@Document{documenttitle} = 
    do
-     title <- renderTemplate templates "mailDocumentClosedForSignatoriesTitle" [("documenttitle",BS.toString  documenttitle )] 
+     title <- renderTemplate templates "mailDocumentClosedTitle" [("documenttitle",BS.toString  documenttitle )] 
      partylist <- renderListTemplate templates $  map (BS.toString . personname') $ partyList document
-     content <- wrapHTML templates =<< (renderTemplate templates "mailDocumentClosedForSignatoriesContent" $ do
-        field "personname" $ BS.toString $ personname signaturelink
+     content <- wrapHTML templates =<< (renderTemplate templates "mailDocumentClosedContent" $ do
         field "documenttitle" $ BS.toString documenttitle 
         field "partylist" $ partylist
         field "ctxhostpart" $ ctxhostpart
         field "offer" $ isOffer document
         field "contract" $ isContract document)
      return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-mailDocumentClosedForAuthor ::  KontrakcjaTemplates -> Context -> BS.ByteString -> Document  -> IO Mail
-mailDocumentClosedForAuthor templates (Context {ctxhostpart}) authorname  document@Document{documenttitle} = 
-    do
-     title <- renderTemplate templates "mailDocumentClosedForAuthorTitle" [("documenttitle",BS.toString  documenttitle )] 
-     partylist <- renderListTemplate templates $  map (BS.toString . personname') $ partyList document
-     content <- renderTemplate templates "mailDocumentClosedForAuthorContent" $ do 
-          field "authorname" $ BS.toString authorname
-          field "documenttitle" $ BS.toString documenttitle 
-          field "partylist" partylist
-          field "ctxhostpart" ctxhostpart
-          field "offer" $ isOffer document
-          field "contract" $ isContract document
-     content' <- wrapHTML templates content
-     return $ emptyMail {title = BS.fromString title, content = BS.fromString content'}
 
 
 mailDocumentAwaitingForAuthor ::  KontrakcjaTemplates -> Context -> BS.ByteString -> Document  -> IO Mail

@@ -35,27 +35,11 @@ mailDocumentAwaitingForAuthorContent=
       3. Underteckna För att avtalet skall färdigställas krävs din underskrift.</p>
     $poweredBySkrivaPaPara()$
 #####
-mailDocumentClosedForAuthorTitle=Bekräftelse: $documenttitle$
+mailDocumentClosedTitle=Bekräftelse: $documenttitle$
 #####
-mailDocumentClosedForAuthorContent=
+mailDocumentClosedContent=
     <span>
-      <p>Hej <strong>$authorname$</strong>,</p>
-       $if(contract)$
-       <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
-         av $partylist:noescape()$. Avtalet är nu bindande.</p>
-       <p>Det färdigställda dokumentet bifogas med detta mail.</p>
-       $elseif(offer)$
-         <p>Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. 
-         Bifogat med detta mail finner du en PDF med offerten och verifikatet.</p>
-       $endif$
-      $poweredBySkrivaPaPara()$
-    </span>
-#####
-mailDocumentClosedForSignatoriesTitle=Bekräftelse: $documenttitle$
-#####
-mailDocumentClosedForSignatoriesContent=
-    <span>
-      <p>Hej <strong>$personname$</strong>,</p>
+      <p>Hej,</p>
       $if(contract)$
        <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.</p>

@@ -41,8 +41,7 @@ module Doc.DocView (
   , mailCancelDocumentByAuthor
   , mailCancelDocumentByAuthorContent
   , mailDocumentAwaitingForAuthor
-  , mailDocumentClosedForAuthor
-  , mailDocumentClosedForSignatories
+  , mailDocumentClosed
   , mailDocumentRejected
   , mailDocumentRemind
   , mailInvitationToSend
