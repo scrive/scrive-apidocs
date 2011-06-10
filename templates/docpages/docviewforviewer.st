@@ -23,85 +23,48 @@ pageDocumentForViewerHelpers=
 </script>
 ###
 pageDocumentForViewerContent = 
-<div class="localdialogs">
-  <div style="display: none">
-    $pageDocumentForViewerHelpers()$
+  <div class="localdialogs">
+    <div style="display: none">
+      $pageDocumentForViewerHelpers()$
+    </div>
   </div>
-</div>
-<div id="tab-viewer">
-  <div id="signStepsContainer"> 
-    <div id="signStepsTitleRow"> 
-      <span id="signStepsTitleRowTextContainer"> 
-        <span class="title">
-          $if(contract)$ 
-          DOKUMENT #$documentid$:
-          $elseif(offer)$
-          OFFERT #$documentid$:
-          $endif$
-        </span>
-        <span class="name">$documenttitle$</span>
+<div id="signStepsContainer"> 
+  <div id="signStepsTitleRow"> 
+     <span id="signStepsTitleRowTextContainer"> 
+      <span class="title">
+        $process.title$ #$documentid$:
       </span>
-      <span class="download">
+      <span class="name">$documenttitle$</span>
+     </span>
+     <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
-          Ladda ned PDF
-        </a>
-      </span>
-    </div>
-    $if(hasanyattachments)$
-    <ul class="tabs">
-      <li id="doctab" class="active"><a href="#" id="doctablink">Dokument</a></li>
-      <li id="atttab" ><a href="#" id="attachtablink">Bilagor</a></li>
-    </ul>
-    $endif$
+         Ladda ned PDF
+       </a>
+     </span>
   </div>
-  $if(hasanyattachments)$
-  <span id="attachmenttabview" style="display:none">
-    <div id="signStepsBody" class="ericfix forauthor"> 
-      <div id="signViewBodyLeft" >
-        <span id="signViewBodyLeftTextContainer"> 
-          <div class="attachmentListContainer">  
-            <div class="subheader">Bilaga:</div>
-            $attachments:{attachment |
-            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
-            }$
-          </div>
-        </span>
-      </div>
-    </div>
-    <div id="attachmentbox"><div class="waiting4page"></div></div>
-  </span>
-  $endif$
-  <span id="documenttabview">
-
-    <div id="signStepsBody" class="forauthor"> 
-      <div id="signViewBodyLeft" > 
-        <span id="signViewBodyLeftTextContainer"> 
+  <div id="signStepsBody" class="forauthor"> 
+    <div id="signViewBodyLeft" > 
+      <span id="signViewBodyLeftTextContainer"> 
           $documentinfotext:noescape()$
-        </span> 
+      </span> 
 
-        $if(isattachments)$
-        <div class="attachmentListContainer">  
-          <div class="subheader">Bilaga:</div>
-          $attachments:{attachment |
-          <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
-          }$
-        </div>
-        $endif$
-
-      </div>
-      $signatoriesBox()$
-    </div>
+  <div> 
     
+  </div>
 
-    <div id="documentBox">
-      <script type="text/javascript">
-        var docstate = $docstate:noescape()$;
-      </script>
-      
-      <div class="waiting4page"></div>
     </div>
-  </span>
+      $signatoriesBox()$
+  </div>
 </div>
+
+<div id="documentBox">
+  <script type="text/javascript">
+    var docstate = $docstate:noescape()$;
+  </script>
+
+  <div class="waiting4page"></div>
+</div>
+
 $signatoryScriptIfRequired()$
 
 ####

@@ -328,7 +328,7 @@ handleSTable = checkUserTOSGet $ do
     Left _ -> mzero
     Right documents -> do
       let contracts  = [doc | doc <- documents
-                            , Contract == documenttype doc]
+                            , (Signable Contract) == documenttype doc]
       params <- getListParams
       content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
       renderFromBody TopNone kontrakcja $ cdata content
@@ -350,9 +350,9 @@ handleAcceptAccountFromSign documentid
     Right document -> case getSigLinkBySigLinkID signatorylinkid document of
       Nothing -> mzero
       Just signatorylink -> do
-        case (muser, isContract document) of
-          (Nothing, True)  -> addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
-          (Nothing, False) -> addModal $ modalOfferSignedNoAccount    document signatorylink actionid magichash
+        case (muser, Closed == documentstatus document) of
+          (Nothing, True)  -> addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
+          (Nothing, False) -> addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           (Just _, _)      -> addFlashMsg =<< (liftIO $ flashMessageAccountActivatedFromSign ctxtemplates)
         return $ LinkSignDoc document signatorylink
 
@@ -430,16 +430,16 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       case muser of
         (Just (user, actionid, magichash)) -> do
           _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
-          if (isContract document)
-            then addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
-            else addModal $ modalOfferSignedNoAccount document signatorylink actionid magichash
+          if (Closed == documentstatus document)
+            then addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
+            else addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
     Just user -> do
      _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
-     if isContract document
-       then addModal $ modalContractSignedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
-       else addModal $ modalOfferSignedHasAccount document
+     if Closed == documentstatus document
+       then addModal $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
+       else addModal $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -506,17 +506,12 @@ handleSignShow documentid
             -- heavens this is a confusing case statement, there must be a better way!
             flashMsg =
               case (isFlashNeeded, 
-                    isSignatory invitedlink, 
-                    isContract document, 
-                    document `allowsIdentification` ELegitimationIdentification,
-                    isOffer document) of
-                (False, _, _, _, _) -> Nothing
-                (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
-                (_, _, True, _, _) -> Just flashMessagePleaseSignContract
-                (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
-                _ -> Nothing
+                    isSignatory invitedlink,
+                    document `allowsIdentification` ELegitimationIdentification) of
+                (False, _, _) -> Nothing
+                (_, False, _) -> Just flashMessageOnlyHaveRightsToViewDoc
+                (_, _, True) -> Just flashMessagePleaseSignWithEleg
+                _ -> Just $ flashMessagePleaseSign document
 
         ctx@Context{ctxtemplates} <- get
 
@@ -527,7 +522,6 @@ handleSignShow documentid
             (True, _) -> liftIO $ pageAttachmentForSignatory ctx document invitedlink
             (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
             _ -> liftIO $ pageDocumentForViewer ctx document (Just invitedlink)
-
 
 --end
 
@@ -650,7 +644,7 @@ handleIssueSign document = do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
                 ([],d:[]) -> do
-                    addModal $ modalSignInviteView d
+                    addModal $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> do 
                     addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
@@ -681,9 +675,7 @@ handleIssueSend document = do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
                 ([],d:[]) -> do
-                    if (isOffer d) 
-                     then addModal $ modalOfferCreated d
-                     else addModal $ modalSignInviteView d
+                    addModal $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> do 
                     addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
@@ -767,7 +759,7 @@ splitUpDocument doc =
                 else mzero
   where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
         createDocFromRow udoc sigindex xs =
-          update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
+          update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |
@@ -1374,49 +1366,45 @@ showContractsList =
         usersICanView <- query $ GetUsersByFriendUserID $ userid user
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
         supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) Contract . documenttype) $ 
+        return . filter ((==) (Signable Contract) . documenttype) $ 
           mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageContractsList getContracts docSortSearchPage
+  showItemList' pageContractsList getContracts
 
 showTemplatesList :: Kontra (Either KontraLink String)
 showTemplatesList = 
   let userTemplates user = do
         mydocuments <- query $ GetDocumentsByUser user
         return $ filter isTemplate mydocuments in
-  showItemList' pageTemplatesList userTemplates docSortSearchPage
+  showItemList' pageTemplatesList userTemplates
 
 showOfferList :: Kontra (Either KontraLink String)
-showOfferList = checkUserTOSGet $ do
-    -- Just user is safe here because we guard for logged in user
-    Context {ctxmaybeuser = Just user, ctxtime, ctxtemplates} <- get
-    mydocuments <- query $ GetDocumentsByUser user 
-    usersICanView <- query $ GetUsersByFriendUserID $ userid user
-    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-    let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
-                      mydocuments ++ concat friends'Documents
-        authornames = map getAuthorName contracts
-    params <- getListParams
-    liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authornames))
+showOfferList = 
+  let getOffers user = do
+        mydocuments <- query $ GetDocumentsByUser user 
+        usersICanView <- query $ GetUsersByFriendUserID $ userid user
+        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        return . filter ((==) (Signable Offer) . documenttype) $
+           mydocuments ++ concat friends'Documents in
+  showItemList' pageContractsList getOffers
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
   let getAttachments user = do
         mydocuments <- query $ GetDocumentsByAuthor (userid user)
         return $ filter ((==) Attachment . documenttype) mydocuments in
-  showItemList' pageAttachmentList getAttachments docSortSearchPage
+  showItemList' pageAttachmentList getAttachments
 
 {- |
     Helper function for showing lists of documents.
 -}
 showItemList' :: (KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String)
                  -> (User -> Kontra [Document])
-                 -> (ListParams -> [Document] -> PagedList Document)
                  -> Kontra (Either KontraLink String)
-showItemList' viewPage getDocs sortSearchPage = checkUserTOSGet $ do
+showItemList' viewPage getDocs = checkUserTOSGet $ do
   Context {ctxmaybeuser = Just user, ctxtime, ctxtemplates} <- get
   docs <- getDocs user
   params <- getListParams
-  liftIO $ viewPage ctxtemplates ctxtime user (sortSearchPage params $ prepareDocsForList docs)
+  liftIO $ viewPage ctxtemplates ctxtime user (docSortSearchPage params $ prepareDocsForList docs)
   
 handleAttachmentViewForViewer :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleAttachmentViewForViewer docid siglinkid mh = do
@@ -1457,7 +1445,6 @@ handleAttachmentViewForAuthor docid = do
             else do
             pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (documentid doc) Nothing $ zip f b
             webHSP $ return $ cdata pages
-
 
 -- get rid of duplicates
 -- FIXME: nub is very slow
@@ -1531,8 +1518,8 @@ basename filename =
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
     input <- getDataFnM (lookInput "doc")
-    offer <- isFieldSet "offer"
-    let doctype = if (offer) then Offer else Contract
+    mdoctype <- getDocType
+    let doctype = fromMaybe (Signable Contract) mdoctype
     mdoc <- makeDocumentFromFile doctype input
     liftIO $ print mdoc
     case mdoc of
@@ -1542,7 +1529,7 @@ handleIssueNewDocument = withUserPost $ do
 handleCreateNewTemplate:: Kontra KontraLink
 handleCreateNewTemplate = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
-  mdoc <- makeDocumentFromFile ContractTemplate input
+  mdoc <- makeDocumentFromFile (Template Contract) input
   case mdoc of
     Nothing -> handleTemplateReload
     (Just doc) -> return $ LinkIssueDoc $ documentid doc
@@ -1575,14 +1562,14 @@ handleContractArchive :: Kontra KontraLink
 handleContractArchive = do
     Context { ctxtemplates } <- get
     handleIssueArchive
-    addFlashMsg =<< (liftIO $ flashMessageContractArchiveDone ctxtemplates)
+    addFlashMsg =<< (liftIO $ flashMessageSignableArchiveDone ctxtemplates (Signable Contract))
     return $ LinkContracts emptyListParams
 
 handleOffersArchive :: Kontra KontraLink
 handleOffersArchive =  do
     Context { ctxtemplates } <- get
     handleIssueArchive
-    addFlashMsg =<< (liftIO $ flashMessageOfferArchiveDone ctxtemplates)
+    addFlashMsg =<< (liftIO $ flashMessageSignableArchiveDone ctxtemplates (Signable Offer))
     return $ LinkOffers emptyListParams   
 
 handleTemplateArchive :: Kontra KontraLink
@@ -1655,8 +1642,8 @@ handleBulkContractRemind = withUserPost $ do
     Context { ctxtemplates } <- get
     remindedsiglinks <- handleIssueBulkRemind
     case (length remindedsiglinks) of
-      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkContractRemindsSent ctxtemplates)
-      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkContractRemindsSent ctxtemplates)
+      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates (Signable Contract))
+      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates (Signable Contract))
     return $ LinkContracts emptyListParams
 
 handleBulkOfferRemind :: Kontra KontraLink
@@ -1664,8 +1651,8 @@ handleBulkOfferRemind =  withUserPost $ do
     Context { ctxtemplates } <- get
     remindedsiglinks <- handleIssueBulkRemind
     case (length remindedsiglinks) of
-      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkOfferRemindsSent ctxtemplates)
-      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkOfferRemindsSent ctxtemplates)
+      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates (Signable Offer))
+      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates (Signable Offer))
     return $ LinkOffers emptyListParams   
 
 {- |
@@ -1865,11 +1852,17 @@ mainPage =  do
                       ctx <- get
                       params <- getListParams
                       showTemplates <- isFieldSet "showTemplates"
-                      mdoctype <- getDocType            
+                      mdoctype <- getDocType
                       liftIO $ uploadPage ctx params mdoctype showTemplates
 
-getDocType::Kontra (Maybe DocumentType)
-getDocType = readField "doctype"
+getDocType :: Kontra (Maybe DocumentType)
+getDocType = getOptionalField asDocType "doctype"
+  where
+    asDocType :: String -> Result DocumentType
+    asDocType val
+      | val == show Offer = Good $ Signable Offer
+      | val == show Contract = Good $ Signable Contract
+      | otherwise = Empty
 
 idmethodFromString :: String -> Maybe IdentificationType
 idmethodFromString idmethod 

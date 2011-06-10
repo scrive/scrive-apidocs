@@ -2,7 +2,6 @@
 
 module Doc.DocView (
     defaultInviteMessage
-  , docAndAuthorSortSearchPage
   , docSortSearchPage
   , documentAuthorInfo
   , documentInfoFields
@@ -14,23 +13,19 @@ module Doc.DocView (
   , flashMessageAccountActivatedFromSign
   , flashMessageAccountRemovedFromSign
   , flashMessageAttachmentArchiveDone
-  , flashMessageBulkContractRemindsSent
-  , flashMessageBulkOfferRemindsSent
+  , flashMessageBulkRemindsSent
   , flashMessageCSVHasTooManyRows
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
-  , flashMessageContractArchiveDone
+  , flashMessageSignableArchiveDone
   , flashMessageFailedToParseCSV
   , flashMessageInvalidCSV
   , flashMessageMultipleAttachmentShareDone
   , flashMessageMultipleTemplateShareDone
-  , flashMessageNoBulkContractRemindsSent
-  , flashMessageNoBulkOfferRemindsSent
-  , flashMessageOfferArchiveDone
+  , flashMessageNoBulkRemindsSent
   , flashMessageOnlyHaveRightsToViewDoc
-  , flashMessagePleaseSignContract
-  , flashMessagePleaseSignOffer
+  , flashMessagePleaseSign
   , flashMessagePleaseSignWithEleg
   , flashMessageSingleAttachmentShareDone
   , flashMessageSingleTemplateShareDone
@@ -46,16 +41,15 @@ module Doc.DocView (
   , mailDocumentRemind
   , mailInvitationToSend
   , mailInvitationToSign
-  , modalContractSignedHasAccount
-  , modalContractSignedNoAccount
+  , modalSignedClosedHasAccount
+  , modalSignedNotClosedHasAccount
+  , modalSignedClosedNoAccount
+  , modalSignedNotClosedNoAccount
   , modalLoginForSaveView
-  , modalOfferCreated
-  , modalOfferSignedHasAccount
-  , modalOfferSignedNoAccount
   , modalRejectedView
   , modalSendInviteView
   , modalSignAwaitingAuthorLast
-  , modalSignInviteView
+  , modalSendConfirmationView
   , pageAttachmentDesign
   , pageAttachmentForSignatory
   , pageAttachmentList
@@ -76,6 +70,7 @@ module Doc.DocView (
 
 import ActionSchedulerState (ActionID)
 import Doc.CSVUtils
+import Doc.DocProcess
 import Doc.DocState
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -102,12 +97,13 @@ modalSignAwaitingAuthorLast :: KontraModal
 modalSignAwaitingAuthorLast = do
     renderTemplateM "signAwaitingAuthorLast" ()
 
-modalSignInviteView :: Document -> KontraModal
-modalSignInviteView document = do
+modalSendConfirmationView :: Document -> KontraModal
+modalSendConfirmationView document = do
   templates <- ask
   partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
-  lift $ renderTemplate templates "modalSignInviteView" $ do
-    field "partyListButAuthor" partylist
+  lift $ renderTemplateForProcess templates document processmodalsendconfirmation $ do
+    field "partyListButAuthor" partylist      
+    field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document
     documentInfoFields document
 
 modalSendInviteView ::  Document -> KontraModal
@@ -131,38 +127,40 @@ modalLoginForSaveView = do
   templates <- ask
   lift $ renderTemplate templates "modalLoginForSaveView" ()
 
-modalContractSignedHasAccount ::  Document -> SignatoryLink -> Bool -> KontraModal
-modalContractSignedHasAccount document signatorylink isloggedin = do
-  modalContractSigned' "modalSignedViewClosedHasAccount" 
-                       "modalSignedViewNotClosedHasAccount" 
-                       document
-                       (loginFields document signatorylink isloggedin)
+modalSignedClosedHasAccount :: Document -> SignatoryLink -> Bool -> KontraModal
+modalSignedClosedHasAccount document signatorylink isloggedin = do
+  templates <- ask
+  lift $ renderTemplateForProcess templates document processmodalsignedviewclosedhasaccount $ do
+    modalSignedFields templates document
+    (loginFields document signatorylink isloggedin)
 
-modalContractSignedNoAccount ::  Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
-modalContractSignedNoAccount document signatorylink actionid magichash =
-  modalContractSigned' "modalSignedViewClosedNoAccount" 
-                       "modalSignedViewNotClosedNoAccount" 
-                       document
-                       (accountFromSignFields document signatorylink actionid magichash)
-         
-modalContractSigned' ::  String -> String -> Document -> Fields -> KontraModal
-modalContractSigned' closedtemplate notclosedtemplate document@Document{documentstatus} extrafields = do
-  templates <- ask   
-  if documentstatus == Closed
-     then
-       lift $ renderTemplate templates closedtemplate $ do
-         field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
-         basicContractSignedFields document
-         extrafields
-     else
-       lift $ renderTemplate templates notclosedtemplate $ do
-         field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
-         basicContractSignedFields document
-         extrafields
+modalSignedNotClosedHasAccount :: Document -> SignatoryLink -> Bool -> KontraModal
+modalSignedNotClosedHasAccount document signatorylink isloggedin = do
+  templates <- ask
+  lift $ renderTemplateForProcess templates document processmodalsignedviewnotclosedhasaccount $ do
+    modalSignedFields templates document
+    (loginFields document signatorylink isloggedin)
 
-basicContractSignedFields :: Document -> Fields
-basicContractSignedFields Document{ documenttitle } = do
-    field "documenttitle" $ BS.toString documenttitle
+modalSignedClosedNoAccount :: Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
+modalSignedClosedNoAccount document signatorylink actionid magichash = do
+  templates <- ask
+  lift $ renderTemplateForProcess templates document processmodalsignedviewclosednoaccount $ do
+    modalSignedFields templates document
+    (accountFromSignFields document signatorylink actionid magichash)
+
+modalSignedNotClosedNoAccount :: Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
+modalSignedNotClosedNoAccount document signatorylink actionid magichash = do
+  templates <- ask
+  lift $ renderTemplateForProcess templates document processmodalsignedviewnotclosednoaccount $ do
+    modalSignedFields templates document
+    (accountFromSignFields document signatorylink actionid magichash)
+
+modalSignedFields :: KontrakcjaTemplates -> Document -> Fields
+modalSignedFields templates document@Document{ documenttitle } = do
+  field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
+  field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
+  field "signatory" . listToMaybe $ map (BS.toString . signatoryemail ) $ partyList document
+  field "documenttitle" $ BS.toString documenttitle
 
 loginFields :: Document -> SignatoryLink -> Bool -> Fields
 loginFields document signatorylink isloggedin = do
@@ -170,31 +168,6 @@ loginFields document signatorylink isloggedin = do
     field "referer" $ show (LinkSignDoc document signatorylink)
     field "email" . signatoryemail $ signatorydetails signatorylink
     field "linklogin" $ show (LinkLogin LoginTry)
-
-modalOfferCreated::  Document -> KontraModal
-modalOfferCreated document = do
-    templates <- ask   
-    lift $ renderTemplate templates "modalOfferCreated" $ do
-        field "documenttitle" . BS.toString $ documenttitle document      
-        field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document
-        
-modalOfferSignedHasAccount ::  Document -> KontraModal
-modalOfferSignedHasAccount document = do
-    templates <- ask   
-    lift $ renderTemplate templates "modalOfferSignedHasAccount" $ do
-        offerSignedFields document
-        
-modalOfferSignedNoAccount ::  Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
-modalOfferSignedNoAccount document siglink actionid magichash = do
-    templates <- ask   
-    lift $ renderTemplate templates "modalOfferSignedNoAccount" $ do
-        offerSignedFields document
-        accountFromSignFields document siglink actionid magichash     
-
-offerSignedFields :: Document -> Fields
-offerSignedFields document = do
-    field "documenttitle" . BS.toString $ documenttitle document      
-    field "signatory" . listToMaybe $ map (BS.toString . signatoryemail ) $ partyList document
 
 accountFromSignFields :: Document -> SignatoryLink -> ActionID -> MagicHash -> Fields
 accountFromSignFields document signatorylink actionid magichash = do
@@ -212,7 +185,7 @@ flashDocumentTemplateSaved templates =
 flashDocumentRestarted :: KontrakcjaTemplates -> Document -> IO FlashMessage
 flashDocumentRestarted templates document =
   fmap (toFlashMsg OperationDone) $ 
-      renderTemplate templates "flashDocumentRestarted" $ do
+      renderTemplateForProcess templates document processflashmessagerestarted $ do
       documentInfoFields document
 
 flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
@@ -232,7 +205,7 @@ flashMessageCannotCancel templates =
 flashMessageCanceled :: KontrakcjaTemplates -> Document -> IO FlashMessage
 flashMessageCanceled templates document =
   fmap (toFlashMsg SigningRelated) $ 
-    renderTemplate templates "flashMessageCanceled" $ do
+    renderTemplateForProcess templates document processflashmessagecanceled $ do
       documentInfoFields document
 
 flashAuthorSigned :: KontrakcjaTemplates -> IO FlashMessage
@@ -247,29 +220,17 @@ flashMessageCSVHasTooManyRows :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageCSVHasTooManyRows maxrows templates = 
   toFlashMsg OperationFailed <$> (renderTemplate templates "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
 
-flashMessageBulkContractRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageBulkContractRemindsSent templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageBulkContractRemindsSent" ()
+flashMessageBulkRemindsSent :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
+flashMessageBulkRemindsSent templates doctype =
+  toFlashMsg OperationDone <$> renderTextForProcess templates doctype processflashmessagebulkremindssent
 
-flashMessageNoBulkContractRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoBulkContractRemindsSent templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoBulkContractRemindsSent" ()
+flashMessageNoBulkRemindsSent :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
+flashMessageNoBulkRemindsSent templates doctype =
+  toFlashMsg OperationFailed <$> renderTextForProcess templates doctype processflashmessagenobulkremindssent
 
-flashMessageBulkOfferRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageBulkOfferRemindsSent templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageBulkOfferRemindsSent" ()
-
-flashMessageNoBulkOfferRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoBulkOfferRemindsSent templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoBulkOfferRemindsSent" ()
-
-flashMessageContractArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageContractArchiveDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageContractArchiveDone" ()
-
-flashMessageOfferArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageOfferArchiveDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageOfferArchiveDone" ()
+flashMessageSignableArchiveDone :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
+flashMessageSignableArchiveDone templates doctype =
+  toFlashMsg OperationDone <$> renderTextForProcess templates doctype processflashmessagearchivedone
 
 flashMessageTemplateArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageTemplateArchiveDone templates =
@@ -319,13 +280,9 @@ flashMessagePleaseSignWithEleg :: KontrakcjaTemplates -> IO FlashMessage
 flashMessagePleaseSignWithEleg templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignWithEleg" ()
 
-flashMessagePleaseSignContract :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePleaseSignContract templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignContract" ()
-
-flashMessagePleaseSignOffer :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePleaseSignOffer templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignOffer" ()
+flashMessagePleaseSign :: Document -> KontrakcjaTemplates -> IO FlashMessage
+flashMessagePleaseSign document templates =
+  toFlashMsg OperationDone <$> renderTextForProcess templates document processflashmessagepleasesign
 
 -- All doc view
 singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
@@ -367,10 +324,11 @@ documentStatusClass doc =
     [] -> SCDraft
     xs -> minimum xs      
 
-documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
-documentBasicViewFields crtime user doc = do
+documentBasicViewFields :: KontrakcjaTemplates -> MinutesTime -> User -> Document -> Fields
+documentBasicViewFields templates crtime user doc = do
     documentInfoFields doc
     field "status" $ show (documentStatusClass doc)
+    field "authorname" $ getAuthorName doc
     field "signatories" $ map (singlnkFields doc (showDateAbbrev crtime)) $ filter isSignatory $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
     field "doclink"  $ if isUserAuthor doc user || null signatorylinklist
@@ -387,7 +345,7 @@ documentBasicViewFields crtime user doc = do
     field "isauthor" $ isUserAuthor doc user
     field "isviewer" $ (not $ isUserAuthor doc user) && isViewer doc user
     field "isshared" $ (documentsharing doc)==Shared
-    field "isoffer" $ isOffer doc
+    field "processname" $ renderTextForProcess templates doc processname 
   where
     signatorylinklist =
       filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  
@@ -424,6 +382,8 @@ docSortFunc "partnercomp" = viewComparing partnerComps
 docSortFunc "partnercompREV" = viewComparingRev partnerComps
 docSortFunc "type" = viewComparing documenttype
 docSortFunc "typeREV" = viewComparingRev documenttype
+docSortFunc "author" = viewComparing getAuthorName
+docSortFunc "authorRev" = viewComparingRev getAuthorName
 docSortFunc _ = const $ const EQ
 
 partnerComps :: Document -> BS.ByteString
@@ -467,36 +427,30 @@ docsPageSize = 100
 --
 
 pageContractsList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
-pageContractsList = pageList' "pageContractsList" LinkContracts documentBasicViewFields
+pageContractsList = pageList' "pageContractsList" LinkContracts
 
 pageTemplatesList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates documentBasicViewFields
+pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates
 
 pageAttachmentList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments documentBasicViewFields
+pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
 
-pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList (Document, BS.ByteString) -> IO String
-pageOffersList = pageList' "pageOffersList" LinkOffers docAndAuthorBasicViewFields
-  where
-    docAndAuthorBasicViewFields :: MinutesTime -> User -> (Document, BS.ByteString) -> Fields
-    docAndAuthorBasicViewFields crtime user (doc, authorname') = do
-      documentBasicViewFields crtime user doc
-      field "authorname" authorname'
+pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageOffersList = pageList' "pageOffersList" LinkOffers
 
 {- |
     Helper function for list pages
 -}
 pageList' :: String
-             -> (ListParams -> KontraLink) 
-             -> (MinutesTime -> User -> a -> Fields)
+             -> (ListParams -> KontraLink)
              -> KontrakcjaTemplates
              -> MinutesTime
              -> User 
-             -> PagedList a 
+             -> PagedList Document 
              -> IO String
-pageList' templatename makeCurrentLink createBasicViewFields templates ctime user documents =
+pageList' templatename makeCurrentLink templates ctime user documents =
   renderTemplate templates templatename $ do
-    field "documents" $ markParity $ map (createBasicViewFields ctime user) $ list documents
+    field "documents" $ markParity $ map (documentBasicViewFields templates ctime user) $ list documents
     pagedListFields documents
     field "currentlink" $ show $ currentlink
     field "linkdoclist" $ show $ LinkContracts emptyListParams
@@ -521,21 +475,6 @@ pageList' templatename makeCurrentLink createBasicViewFields templates ctime use
     attachmentactive = case currentlink of
                        (LinkAttachments _) -> True
                        _ -> False
-
--- Searching, sorting and paging for document author pairs
-docAndAuthorSortSearchPage :: ListParams -> [(Document, BS.ByteString)] -> PagedList (Document, BS.ByteString)
-docAndAuthorSortSearchPage  = listSortSearchPage docAndAuthorSortFunc docAndAuthorSearchFunc docsPageSize
-
-docAndAuthorSearchFunc::SearchingFunction (Document, BS.ByteString)
-docAndAuthorSearchFunc s (doc, author) =  docSearchFunc s doc || nameMatch author
-  where
-    match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . BS.toString
-   
-docAndAuthorSortFunc:: SortingFunction (Document, BS.ByteString)
-docAndAuthorSortFunc "author" (_,author1) (_,author2) = viewComparing id author1 author2
-docAndAuthorSortFunc "authorRev" (_,author1) (_,author2) = viewComparingRev id author1 author2
-docAndAuthorSortFunc x (doc1,_) (doc2,_) = docSortFunc x doc1 doc2
 
 showFileImages :: KontrakcjaTemplates -> DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> IO String
 showFileImages templates _ _ _ JpegPagesPending =
@@ -685,6 +624,22 @@ pageDocumentDesign ctx
        documentAttachmentDesignFields (documentauthorattachments document)
        documentAuthorAttachments attachments
        documentSignatoryAttachments document (documentsignatoryattachments document)
+       field "process" processFields
+     where
+       getProcessText = renderTextForProcess (ctxtemplates ctx) document
+       getProcessValue = getValueForProcess document
+       processFields = do
+         field "isauthorsend" $ getProcessValue processauthorsend
+         field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
+         field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
+         field "title" $ getProcessText processtitle
+         field "step1text" $ getProcessText processstep1text
+         field "expirywarntext" $ getProcessText processexpirywarntext
+         field "sendbuttontext" $ getProcessText processsendbuttontext
+         field "expirywarntext" $ getProcessText processexpirywarntext
+         field "confirmsendtitle" $ getProcessText processconfirmsendtitle
+         field "confirmsendtext" $ getProcessText processconfirmsendtext
+         field "expirytext" $ getProcessText processexpirytext
 
 documentAttachmentDesignFields :: [AuthorAttachment] -> Fields
 documentAttachmentDesignFields atts = do
@@ -699,7 +654,9 @@ documentAttachmentDesignFields atts = do
 documentFunctionalityFields :: Document -> Fields
 documentFunctionalityFields Document{documenttype, documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
-  field "basiccontract" $ documenttype==Contract && documentfunctionality==BasicFunctionality
+  -- it might not really be basic, it's just if there isn't an advanced mode we pretend we are
+  field "isbasic" $ documentfunctionality==BasicFunctionality || (not $ getValueForProcess documenttype processadvancedview)
+  field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (not $ getValueForProcess documenttype processadvancedview) 
 
 documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
 documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do
@@ -796,6 +753,19 @@ pageDocumentForAuthor ctx
        documentViewFields document
        documentAttachmentViewFields documentid Nothing (documentauthorattachments document)
        documentSigAttachmentViewFields documentid documentsignatorylinks Nothing (documentsignatoryattachments document)
+       field "process" processFields
+   where
+     getProcessText = renderTextForProcess (ctxtemplates ctx) document
+     processFields = do
+       field "title" $ getProcessText processtitle
+       field "restartbuttontext" $ getProcessText processrestartbuttontext
+       field "cancelbuttontext" $ getProcessText processcancelbuttontext
+       field "cancelbyauthormodaltitle" $ getProcessText processcancelbyauthormodaltitle
+       field "signatorysignedtext" $ getProcessText processsignatorysignedtext
+       field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
+       field "authorissecretarytext" $ getProcessText processauthorissecretarytext
+       field "remindagainbuttontext" $ getProcessText processremindagainbuttontext
+       signatoryMessageProcessFields ctx document
 
 {- |
    Show the document for Viewers (friends of author or signatory).
@@ -846,6 +816,17 @@ pageDocumentForViewer ctx
        documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
        documentSigAttachmentViewFields documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
        documentAuthorInfo document
+       field "process" $ field "title" $ renderTextForProcess (ctxtemplates ctx) document processtitle
+       signatoryMessageProcessFields ctx document
+
+signatoryMessageProcessFields :: Context -> Document -> Fields
+signatoryMessageProcessFields ctx document = do
+  field "signatorysignedtext" $ getProcessText processsignatorysignedtext
+  field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
+  field "authorissecretarytext" $ getProcessText processauthorissecretarytext
+  field "remindagainbuttontext" $ getProcessText processremindagainbuttontext
+  where
+    getProcessText = renderTextForProcess (ctxtemplates ctx) document
 
 documentAttachmentViewFields :: DocumentID -> Maybe SignatoryLink -> [AuthorAttachment] -> Fields
 documentAttachmentViewFields docid msignlink atts = do
@@ -1043,10 +1024,24 @@ signatoriesWithSecretary doc =
 documentInfoText :: Context -> Document -> Maybe SignatoryLink -> IO String
 documentInfoText ctx document siglnk =
   renderTemplate (ctxtemplates ctx) "documentInfoText" $ do
-    documentInfoFields document 
-    documentAuthorInfo document
-    field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
-    signedByMeFields document siglnk
+    mainFields
+    field "process" processFields
+  where
+    mainFields = do
+      documentInfoFields document 
+      documentAuthorInfo document
+      field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
+      signedByMeFields document siglnk
+    getProcessText f = renderTemplateForProcess (ctxtemplates ctx) document f mainFields
+    processFields = do
+      field "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
+      field "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
+      field "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
+      field "pendingauthorinfotext" $ getProcessText processpendingauthorinfotext
+      field "cancelledinfoheader" $ getProcessText processcancelledinfoheader
+      field "cancelledinfotext" $ getProcessText processcancelledinfotext
+      field "signedinfoheader" $ getProcessText processsignedinfoheader
+      field "signedinfotext" $ getProcessText processsignedinfotext
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Document -> Fields
@@ -1058,8 +1053,6 @@ documentInfoFields  document  = do
   field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
   field "template" $  isTemplate document
-  field "contract" $  isContract document
-  field "offer" $  isOffer document
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
   field "hasanyattachments" $ length (documentauthorattachments document) + length (documentsignatoryattachments document) > 0
@@ -1125,20 +1118,31 @@ designViewFields step = do
 
 uploadPage :: Context -> ListParams -> (Maybe DocumentType) -> Bool -> IO String
 uploadPage ctx params mdoctype showTemplates = renderTemplate (ctxtemplates ctx) "uploadPage" $ do
-    field "typeselected" $ isJust mdoctype
-    field "contract" $ mdoctype == Just Contract
-    field "offer" $ mdoctype == Just Offer
+    field "isprocessselected" $ isJust mdoctype
     field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdoctype
     field "showTemplates" showTemplates
+    field "processes" $ map processFields [Signable Contract, Signable Offer]
+    case mdoctype of
+      Just selectedoctype -> do
+        field "selectedprocess" $ processFields selectedoctype
+      _ -> return ()
+    where
+      processFields doctype@(Signable process) = do
+        field "id" $ show process
+        field "selected" $ (Just doctype) == mdoctype
+        field "name" $ renderTextForProcess (ctxtemplates ctx) doctype processuploadname
+        field "uploadprompttext" $ renderTextForProcess (ctxtemplates ctx) doctype processuploadprompttext
+      processFields _ = return ()
        
 
 templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentType -> PagedList Document -> IO String
 templatesForAjax templates ctime user doctype doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
-        field "documents" $ markParity $ map (documentBasicViewFields ctime user) (list doctemplates)
+        field "documents" $ markParity $ map (documentBasicViewFields templates ctime user) (list doctemplates)
         field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)  True
-        field "contract" $ doctype == Contract
-        field "offer" $ doctype == Offer
+        field "processid" $
+          let Signable process = doctype in
+          show process
         pagedListFields doctemplates
     
 -- We keep this javascript code generation for now

@@ -14,6 +14,7 @@ module Doc.DocStateData
     , DocumentStatus(..)
     , DocumentTag(..)
     , DocumentType(..)
+    , DocumentProcess(..)
     , DocumentRecordStatus(..)
     , Documents
     , FieldDefinition(..)
@@ -411,7 +412,13 @@ data DocumentStatus = Preparation
                     | DocumentError String
     deriving (Eq, Ord, Typeable)
                     
-data DocumentType = Contract | ContractTemplate | Offer | OfferTemplate | Attachment | AttachmentTemplate
+data DocumentType0 = Contract0 | ContractTemplate0 | Offer0 | OfferTemplate0 | Attachment0 | AttachmentTemplate0
+    deriving (Eq, Ord, Typeable)
+
+data DocumentProcess = Contract | Offer
+    deriving (Eq, Ord, Typeable)
+
+data DocumentType = Signable DocumentProcess | Template DocumentProcess | Attachment | AttachmentTemplate
     deriving (Eq, Ord, Typeable)
 
 data DocumentRecordStatus = LiveDocument | QuarantinedDocument | DeletedDocument
@@ -1146,7 +1153,7 @@ instance Show JpegPages where
 deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show DocumentType
-deriving instance Read DocumentType
+deriving instance Show DocumentProcess
 deriving instance Show DocumentFunctionality
 deriving instance Show CSVUpload
 deriving instance Show ChargeMode
@@ -1827,7 +1834,7 @@ instance Migrate Document11 Document12 where
                 , documentfiles12 = documentfiles11
                 , documentsealedfiles12 = documentsealedfiles11
                 , documentstatus12 = documentstatus11
-                , documenttype12 = Contract
+                , documenttype12 = Signable Contract
                 , documentctime12 = documentctime11
                 , documentmtime12 = documentmtime11
                 , documentchargemode12 = documentchargemode11
@@ -2699,8 +2706,23 @@ instance Migrate Document25 Document where
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
 
+$(deriveSerialize ''DocumentProcess)
+instance Version DocumentProcess where
+
+$(deriveSerialize ''DocumentType0)
+instance Version DocumentType0 where
+
+instance Migrate DocumentType0 DocumentType where
+    migrate Contract0 = Signable Contract
+    migrate ContractTemplate0 = Template Contract
+    migrate Offer0 = Signable Offer
+    migrate OfferTemplate0 = Template Offer
+    migrate Attachment0 = Attachment
+    migrate AttachmentTemplate0 = AttachmentTemplate
+
 $(deriveSerialize ''DocumentType)
 instance Version DocumentType where
+    mode = extension 1 (Proxy :: Proxy DocumentType0)
 
 $(deriveSerialize ''DocumentRecordStatus)
 instance Version DocumentRecordStatus where

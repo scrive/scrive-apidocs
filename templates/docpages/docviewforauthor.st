@@ -1,4 +1,22 @@
-####
+###
+contractrestartbuttontext=Starta om dokument
+###
+offerrestartbuttontext=Starta om offert
+###
+contractcancelbuttontext=Återkalla inbjudan
+###
+offercancelbuttontext=Återkalla offert
+###
+contractcancelbyauthormodaltitle=
+         <h2>Återkalla inbjudan</h2> 
+          <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+          </p>
+###
+offercancelbyauthormodaltitle=
+         <h2>Är du säker att du vill återkalla offerten?</h2>
+          <p>När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.</p>
+###
 pageDocumentForAuthor=
 <div class="localdialogs">
   <div style="display: none">
@@ -12,11 +30,7 @@ pageDocumentForAuthor=
     <div id="signStepsTitleRow"> 
       <span id="signStepsTitleRowTextContainer"> 
         <span class="title">
-          $if(contract)$ 
-          DOKUMENT #$documentid$:
-          $elseif(offer)$
-          OFFERT #$documentid$:
-          $endif$
+          $process.title$ #$documentid$:
         </span>
         <span class="name">$documenttitle$</span>
       </span>
@@ -78,11 +92,7 @@ pageDocumentForAuthor=
             <a class="btn-small red submit">
               <div class="left"></div>
               <div class="label">
-                $if(contract)$
-                Starta om dokument
-                $elseif(offer)$
-                Starta om offert
-                $endif$
+                $process.restartbuttontext$
               </div> 
               <div class="right"></div>
             </a> 
@@ -94,11 +104,7 @@ pageDocumentForAuthor=
           <a class="btn-small red" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
             <div class="left"></div>
             <div class="label">
-              $if(contract)$
-              Återkalla inbjudan
-              $elseif(offer)$
-              Återkalla offert
-              $endif$ 
+              $process.cancelbuttontext$
             </div> 
             <div class="right"></div>
           </a> 
@@ -160,14 +166,7 @@ pageDocumentForAuthor=
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            <h2> $if(contract)$ Återkalla inbjudan $elseif(offer)$ Är du säker att du vill återkalla offerten? $endif$</h2>
-            $if(contract)$ 
-            <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-              <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
-              $elseif(offer)$
-            <p> När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.
-            </p>
-            $endif$ 
+            $process.cancelbyauthormodaltitle:noescape()$ 
           </span>
           <a class="modal-close close"> </a>
         </div>
@@ -184,11 +183,7 @@ pageDocumentForAuthor=
           <a class="btn-small red float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <p> $if(contract)$
-                Återkalla inbjudan
-                $elseif(offer)$
-                Återkalla offert
-                $endif$ 
+              <p> $process.cancelbuttontext$ 
               </p>
               <div class="btn-symbol red arrow-left"></div>
             </div>

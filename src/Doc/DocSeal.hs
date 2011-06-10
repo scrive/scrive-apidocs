@@ -19,6 +19,7 @@ import Data.List
 import Data.Word
 import Data.Ord
 import Debug.Trace
+import Doc.DocProcess
 import Doc.DocState
 import Doc.DocStorage
 import Doc.DocView
@@ -160,13 +161,13 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       initials = concatComma initialsx
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _, _)  = do
-          seenDesc <- renderTemplate templates "seenHistEntry" $ do
+          seenDesc <- renderTemplateForProcess templates document processseenhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry 
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc} 
-          signDesc <- renderTemplate templates "signHistEntry" $ do
+          signDesc <- renderTemplateForProcess templates document processsignhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
@@ -178,7 +179,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       invitationSentEntry = case documentinvitetime document of
                                 Nothing -> return []
                                 Just (SignInfo time ipnumber) -> do
-                                   desc <-  renderTemplate templates "invitationSentEntry" $ do
+                                   desc <-  renderTemplateForProcess templates document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
@@ -193,8 +194,8 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       concatComma = concat . intersperse ", "
       
       lastHistEntry = do
-                       desc <- renderTemplate templates "lastHistEntry" (documentInfoFields document)
-                       return $ if (isContract document)
+                       desc <- renderTemplateForProcess templates document processlasthisentry (documentInfoFields document)
+                       return $ if (getValueForProcess document processsealincludesmaxtime)
                                 then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
                                 , Seal.histcomment = pureString desc}]
@@ -214,7 +215,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       -- here we use Data.List.sort that is *stable*, so it puts
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
-      staticTexts <- renderTemplate templates "sealingtexts" $ do
+      staticTexts <- renderTemplateForProcess templates document processsealingtext $ do
                         documentInfoFields document
                         field "hostpart" hostpart
       return $ Seal.SealSpec 

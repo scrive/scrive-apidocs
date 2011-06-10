@@ -5,6 +5,22 @@ signatoriesBox=
 <div class="float-right signViewBodyBox">$signatories:{signatory|
   $if(!signatory.current)$ $signatoryBox()$ $endif$ }$ </div>
 ####
+signatorysignedcontracttext=Undertecknat
+####
+signatorysignedoffertext=Accepterat offert
+####
+signatorycanceledcontracttext=
+####
+signatorycanceledoffertext=Offert återkallad
+####
+contractauthorissecretarytext=Avsändare: Ej undertecknande part
+####
+offerauthorissecretarytext=Avsändare
+####
+contractremindagainbuttontext=Skicka dokumentet igen
+####
+offerremindagainbuttontext=Skicka offert igen
+####
 signatoryBox =
 <div class="signViewBodyRight  $if(signatory.author)$author$endif$">
   <div class="signViewBodyRightTextContainer"> 
@@ -58,20 +74,13 @@ signatoryBox =
 ####
 signatoryMessage=
 $if(signatory.signdate)$
-    $if(contract)$  
-        Undertecknat $signatory.signdate$
-    $elseif(offer)$
-       Accepterat offert $signatory.signdate$
-    $endif$
+    $process.signatorysignedtext$
 $elseif(signatory.datamismatch)$
         Felaktig e-legitmation
 $elseif(timedout)$
         Förfallodatum har passerat
 $elseif(cancel)$
-     $if(contract)$  
-     $elseif(offer)$
-          Offert återkallad
-     $endif$
+     $process.signatorycanceledtext$
 $elseif(datamismatch)$
 
 $elseif(signatory.rejecteddate)$
@@ -87,11 +96,7 @@ $else$
 $endif$
 ###       
 secretaryMessage = 
-    $if(contract)$  
-       Avsändare: Ej undertecknande part
-    $elseif(offer)$
-       Avsändare
-    $endif$
+    $process.authorissecretarytext$
 ### FORM and button for reminding message
 ###
 reminderForm = 
@@ -100,11 +105,7 @@ reminderForm =
     <div class="$if(signatory.signdate)$ reminderForSignedIcon $else$ reminderForSendIcon $endif$"></div>
     <div class="sendLinkText">
         $if(signatory.signdate)$
-            $if(contract)$
-                Skicka dokumentet igen 
-            $elseif(offer)$
-                Skicka offert igen
-            $endif$
+            $process.remindagainbuttontext$
         $else$ 
             Skicka påminnelse 
         $endif$
@@ -117,11 +118,7 @@ reminderForm =
             <span class="modal-title">
                   <h2> 
                     $if(signatory.signdate)$
-                        $if(contract)$
-                            Skicka dokumentet igen 
-                        $elseif(offer)$
-                            Skicka offert igen
-                        $endif$
+                        $process.remindagainbuttontext$
                     $else$ 
                         Skicka påminnelse 
                     $endif$

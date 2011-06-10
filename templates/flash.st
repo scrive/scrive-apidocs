@@ -19,12 +19,11 @@ flashMessageCannotCancel=
     Motparten har redan undertecknat dokumentet. Du kan inte återkalla inbjudan.
 
 ######
-flashMessageCanceled=
-    $if(contract)$
+flashMessageContractCanceled=
      Du har nu återkallat inbjudan att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
-    $elseif(offer)$
+######
+flashMessageOfferCanceled=
      Du har nu återkallat offerten och ett meddlande om återkallelsen har skickats till samtliga parter
-    $endif$
 #####
 flashMessageNoAccountType=
      Du måste välja kontotyp.
@@ -48,12 +47,11 @@ flashMessagePasswordsDontMatch=
     "Nytt lösenord" matchar inte med "Upprepa lösenord" 
 
 ###
-flashDocumentRestarted=
-    $if(contract)$
+flashMessageContractRestarted=
     Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
-    $elseif(offer)$
+###
+flashMessageOfferRestarted=
     Du har startat om offerten och kan nu skicka den på nytt
-    $endif$
 ###
 flashMessageUserPasswordChanged=Ditt lösenord har ändrats.
 

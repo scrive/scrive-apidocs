@@ -101,10 +101,10 @@ instance SafeEnum DOCUMENT_TYPE where
     toSafeEnum _ = Nothing
     
 toDocumentType::DOCUMENT_TYPE -> DocumentType    
-toDocumentType DOCUMENT_TYPE_CONTRACT = Contract 
-toDocumentType DOCUMENT_TYPE_OFFER = Offer
-toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = ContractTemplate
-toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = OfferTemplate
+toDocumentType DOCUMENT_TYPE_CONTRACT = Signable Contract
+toDocumentType DOCUMENT_TYPE_OFFER = Signable Offer
+toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
+toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = Template Offer
 
 {- Building JSON structure representing object in any API response 
    TODO: Something is WRONG FOR ATTACHMENTS HERE

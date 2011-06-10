@@ -648,10 +648,7 @@ safeReady(function() {
                          if (!guardChecked) { 
                            $("#signGuardField").css("border","1px dotted red");
                            $(".signGuard").change(function(){$("#signGuardField").css("border","")});
-                           if (typeof(offer) !== "undefined" && offer)
-                               addFlashMessage("För att bekräfta måste du först klicka i kryssrutan", "red");
-                           else 
-                               addFlashMessage("För att underteckna måste du först klicka i kryssrutan", "red");
+                           addFlashMessage(signguardwarntext, "red");
                            return false;
                          } 
                        }
@@ -1362,7 +1359,7 @@ function renumberParts() {
     if (isMultiPart) {
       $(this).find(".partnumber").text("MASSUTSKICK");
     } else if( isSignatory ) {
-      if (offer) {
+      if (issendonly) {
 		$(this).find(".partnumber").text("MOTTAGARE");
       } else {
         $(this).find(".partnumber").text("PART " + idx);
@@ -1375,6 +1372,7 @@ function renumberParts() {
     }
   });
 }
+
 
 function updateCsvSigIndex() {
   var input = $("form").find("input[type='hidden'][name='csvsigindex']");

@@ -95,7 +95,7 @@ $loadingdialog()$
                             <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
                             -->
                             <td>
-                                <span>$if(document.isoffer)$Offert$else$Avtal$endif$</span>
+                                <span>$document.processname$</span>
                             </td>  
                             <td>
                                 <a href="$document.doclink$" class="listname">$document.documenttitle$</a>

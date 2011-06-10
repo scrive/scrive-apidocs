@@ -138,8 +138,8 @@ coopAPI =  dir "coopdemo" $ msum [ apiCall "sendnewdocument" sendNewDocument
                                  ]
            
 getDocumentType :: Integer -> DocumentType
-getDocumentType 1 = Contract
-getDocumentType 3 = Offer
+getDocumentType 1 = Signable Contract
+getDocumentType 3 = Signable Offer
 getDocumentType _ = error "Cannot create other types."
 
 sendReminder :: CoopAPIFunction APIResponse

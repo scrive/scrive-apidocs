@@ -210,13 +210,15 @@ class MaybeAttachment a where
   
    
 instance  MaybeTemplate DocumentType where
-   isTemplate t = (t == ContractTemplate) || (t == OfferTemplate) || (t == AttachmentTemplate) 
-   
+   isTemplate (Template _) = True
+   isTemplate AttachmentTemplate = True
+   isTemplate _ = False
+
 instance  MaybeContract DocumentType where
-   isContract t =  (t == ContractTemplate) || (t == Contract)
+   isContract t =  (t == Template Contract) || (t == Signable Contract)
 
 instance  MaybeOffer DocumentType where
-   isOffer t =  (t == OfferTemplate) || (t == Offer)
+   isOffer t =  (t == Template Offer) || (t == Signable Offer)
    
 instance  MaybeAttachment DocumentType where
    isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)

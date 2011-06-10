@@ -1,6 +1,5 @@
 #####
-sealingtexts= 
-$if(contract)$
+contractsealingtexts= 
 SealingTexts
     {   verificationTitle="Verifikat"
       , docPrefix="Dok.nr."
@@ -16,7 +15,8 @@ SealingTexts
         , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
         , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
-$elseif(offer)$
+#####
+offersealingtexts=
 SealingTexts
     {   verificationTitle="Acceptverifikat"
       , docPrefix="Offert nummer"
@@ -32,45 +32,34 @@ SealingTexts
         , "av avsändaren och accepterats av mottagaren. Kursiverad information är verifierad genom vår tjänst."
         , "Du kan kontrollera offerten mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
-$endif$
 #####
-lastHistEntry=
-    $if(contract)$
-        Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande.
-    $elseif(offer)$
-        Samligta parter har bekräftat offerten.
-    $endif$
+contractLastHistEntry=
+    Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande.
+#####
+offerLastHistEntry=
+    Samligta parter har bekräftat offerten.
 ####
-invitationSentEntry=
-    $authorfstname$ $authorsndname$ 
-    $if(contract)$
-        skickar en inbjudan att underteckna till
-        $if(oneSignatory)$
-            parterna
-        $else$
-            parten
-        $endif$ 
-    $elseif(offer)$
-        skickar offerten till $personname$
+contractInvitationSentEntry=
+    $authorfstname$ $authorsndname$ skickar en inbjudan att underteckna till
+    $if(oneSignatory)$
+        parterna
+    $else$
+        parten
     $endif$ 
     
     $ip$
 ###
-seenHistEntry=
-    $personname$ 
-    $if(contract)$
-        granskar dokumentet
-    $elseif(offer)$
-        granskar offerten 
-    $endif$ 
-        online $seenip$
+offerInvitationSentEntry=
+    $authorfstname$ $authorsndname$ skickar offerten till $personname$ $ip$
+###
+contractSeenHistEntry=
+    $personname$ granskar dokumentet online $seenip$
+###
+offerSeenHistEntry=
+    $personname$ granskar offerten online $seenip$
 ####
-signHistEntry=
-    $personname$ 
-    $if(offer)$
-        accepterar offerten online
-    $elseif(contract)$
-        undertecknar dokumentet online med 
+contractSignHistEntry=
+    $personname$ undertecknar dokumentet online med 
         $if(!provider)$
             e-post
         $elseif(bankid)$
@@ -82,6 +71,8 @@ signHistEntry=
         $else$
             e-legitimation
         $endif$
-    $endif$ 
     $signip$
+####
+offerSignHistEntry=
+    $personname$ accepterar offerten online $signip$
 ###

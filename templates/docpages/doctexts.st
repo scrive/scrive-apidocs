@@ -1,3 +1,41 @@
+###
+contractpendingauthornotsignedinfoheader=
+  Granska
+###
+offerpendingauthornotsignedinfoheader=
+  Granska innan accept
+###
+contractpendingauthornotsignedinfotext=
+  Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
+###
+offerpendingauthornotsignedinfotext=
+  Vänligen var noga med att granska offerten innan du accepterar.
+###
+contractpendingauthorinfoheader=Väntar
+###
+offerpendingauthorinfoheader=Väntar på accept
+###
+contractpendingauthorinfotext=Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
+###
+offerpendingauthorinfotext=Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
+###
+contractcancelledinfoheader=Dokument återkallat
+###
+offercancelledinfoheader=Offert återkallad
+###
+contractcancelledinfotext=$authorname$  har återkallat sin inbjudan att underteckna dokumentet.
+###
+offercancelledinfotext=$authorname$ har återkallat offerten. Den går således inte att acceptera.
+###
+contractsignedinfoheader=Färdigställt
+###
+offersignedinfoheader=Offert accepterad
+###
+contractsignedinfotext=Samtliga parter har undertecknat dokumentet.
+###
+offersignedinfotext=
+    $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
+    har accepterat offerten $documenttitle$  från $authorfstname$ $authorsndname$ .
 ##########
 documentInfoText=
                 $if(pending)$
@@ -11,14 +49,10 @@ documentInfoText=
                             </span>
                         $else$
                         <span class="header">
-                              $if(contract)$Granska $elseif(offer)$ Granska innan accept $endif$
+                              $process.pendingauthornotsignedinfoheader$
                         </span><br>
                         <span class="text">
-                            $if(contract)$
-                                Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
-                            $elseif(offer)$
-                                Vänligen var noga med att granska offerten innan du accepterar.
-                            $endif$
+                            $process.pendingauthornotsignedinfotext$
                         </span>
                         $endif$
 
@@ -31,34 +65,21 @@ documentInfoText=
                         </span>
                      $else$
                          <span class="header">
-                           $if(contract)$  Väntar $elseif(offer)$  Väntar på accept $endif$
+                           $process.pendingauthorinfoheader$
                         </span><br>
                         <span class="text">
-                           $if(contract)$ 
-                              Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
-                           $elseif(offer)$
-                              Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
-                           $endif$
+                           $process.pendingauthorinfotext$
                         </span>
                      $endif$
 
                   $elseif(cancel)$
 
-                     $if(contract)$    
-                        <span class="header">
-                             Dokument återkallat
-                        </span><br>
-                        <span class="text">
-                           $authorname$  har återkallat sin inbjudan att underteckna dokumentet.
-                        </span>
-                     $elseif(offer)$    
-                        <span class="header">
-                           Offert återkallad
-                        </span><br>
-                        <span class="text">
-                           $authorname$ har återkallat offerten. Den går således inte att acceptera.
-                        </span>
-                     $endif$
+                     <span class="header">
+                        $process.cancelledinfoheader$
+                     </span><br>
+                     <span class="text">
+                        $process.cancelledinfotext$
+                     </span>
  
                   $elseif(datamismatch)$
 
@@ -161,23 +182,12 @@ documentInfoText=
                      $endif$
 
                   $elseif(signed)$
-                        $if(contract)$  
                         <span class="header">
-                             Färdigställt
+                           $process.signedinfoheader$
                         </span><br>
                         <span class="text">
-                           Samtliga parter har undertecknat dokumentet.
+                           $process.signedinfotext$
                         </span>
-                        $elseif(offer)$
-                        <span class="header">
-                             Offert accepterad
-                        </span><br>
-                        <span class="text">
-                         $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
-                         har accepterat offerten $documenttitle$  från $authorfstname$ $authorsndname$ .
-
-                        </span>
-                        $endif$
                  $elseif(awaitingauthor)$
 
                      $if(notsignedbyme)$    

@@ -1,3 +1,40 @@
+####
+contractsignatorysignmodaltitle=Är du säker att du vill underteckna?
+####
+offersignatorysignmodaltitle=Är du säker att du vill acceptera offerten?
+####
+contractsignatorysignmodalcontent=
+          <p>När $partyUnsigned:noescape()$ undertecknat blir 
+            avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din
+            e-post.</p>
+####
+offersignatorysignmodalcontent=
+          <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
+####
+contractsignbuttontext=SkrivaPå
+####
+offersignbuttontext=Acceptera offert
+####
+contractsignatorycancelmodaltitle=
+          <h2>Avvisa</h2>   
+          <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
+####
+offersignatorycancelmodaltitle=
+          <h2>Är du säker på att du vill avvisa?</h2>   
+          <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
+            Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
+          </p>
+####
+contractsignatorycancelbuttontext=Avvisa dokument
+####
+offersignatorycancelbuttontext=Avvisa
+####
+contractsignguardwarntext=För att underteckna måste du först klicka i kryssrutan
+####
+offersignguardwarntext=För att bekräfta måste du först klicka i kryssrutan
+######
+######
 ######
 pageDocumentForSignContent=
 <script type="text/javascript" src="/js/bankid.js"></script>
@@ -7,6 +44,7 @@ pageDocumentForSignContent=
     <script type="text/javascript"> var documentid = "$documentid$", siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$"; </script>
     <script type="text/javascript">
       $localscripts:noescape()$
+      var signguardwarntext = $process.signguardwarntext$
     </script>
   </div>
 
@@ -15,21 +53,13 @@ pageDocumentForSignContent=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          $if(contract)$ 
-          <h2>Är du säker att du vill underteckna?</h2>  
-          $elseif(offer)$
-          <h2>Är du säker att du vill acceptera offerten?</h2>  
-          $endif$
+          <h2>$process.signatorysignmodaltitle$</h2>  
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          $if(contract)$
-          <p>När $partyUnsigned:noescape()$ undertecknat blir 
-            avtalet <strong>juridiskt bindande</strong> och
-            det färdigställda avtalet skickas till din
-            e-post.</p>
+          $process.signatorysignmodalcontent:noescape()$
           $if(requireseleg)$
           <span>
             <h3>Välj typ av e-legitimation</h3>
@@ -39,15 +69,11 @@ pageDocumentForSignContent=
                         target="_new">Klicka här</a> för att läsa mer.</p>
           </span>
           $endif$
-          $elseif(offer)$
-          <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
-          $endif$
         </div>
       </div>
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" id="signauto" />
         <a  class="close cancel float-left">Avbryt</a>
-        $if(contract)$
         $if(requireseleg)$
         <span id="elegbuttons">
           <input type="hidden" name="changetoeleg" id="elegprovider" value=""
@@ -72,17 +98,7 @@ pageDocumentForSignContent=
         <a href="#" class="btn-small blue float-right submiter">
           <div class="left"></div>
           <div class="label">
-            <p>SkrivaPå</p>
-            <span class="btn-symbol cross"></span>
-          </div>
-          <div class="right"></div>
-        </a>
-        $endif$
-        $elseif(offer)$
-        <a href="#" class="btn-small blue float-right submiter">
-          <div class="left"></div>
-          <div class="label">
-            <p>Acceptera offert</p>
+            <p>$process.signbuttontext$</p>
             <span class="btn-symbol cross"></span>
           </div>
           <div class="right"></div>
@@ -98,14 +114,7 @@ pageDocumentForSignContent=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>  $if(contract)$ Avvisa $elseif(offer)$ Är du säker på att du vill avvisa?$endif$</h2>   
-          $if(contract)$
-          <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
-          $elseif(offer)$
-          <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
-            Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
-          </p>
-          $endif$
+          $process.signatorycancelmodaltitle:noescape()$
         </span>
         <a class="modal-close close"> </a>
       </div>
@@ -262,8 +271,7 @@ pageDocumentForSignContent=
     </div>
     $endif$
 
-    <div id="signViewBottomBox"> 
-      $if(contract)$
+    <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
         <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
           <div class="left"></div>
@@ -271,6 +279,7 @@ pageDocumentForSignContent=
           <div class="right"></div>
         </a>
       </div>
+      $if(process.requiressignguard)$
       <div id="signViewBottomBoxContainerMiddle">
         <div id="signGuardField">
           <div class="float-left">
@@ -286,38 +295,21 @@ pageDocumentForSignContent=
           </div>
         </div>
       </div>
-      <div id="signViewBottomBoxContainerRight"> 
-        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
-          <div class="left"></div>
-          <div class="label" style="width:120px">
-            <span>SkrivaPå</span>
-            <span class="icon cross"></span>
-          </div>
-          <div class="right"></div>
-        </a>
-      </div>
-      $elseif(offer)$
-      <div id="signViewBottomBoxContainerLeft">
-        <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
-          <div class="left"></div>
-          <div class="label">Avvisa</div>
-          <div class="right"></div>
-        </a>
-      </div>
+      $else$
       <div id="signViewBottomBoxContainerMiddle"> 
         <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
       </div>
+      $endif$
       <div id="signViewBottomBoxContainerRight"> 
         <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
           <div class="left"></div>
-          <div class="label" style="padding-left:20px;padding-right:20px;">
-            <span>Acceptera offert</span>
+          <div class="label" style="$if(process.requiressignguard)$width:120px$else$padding-left:20px;padding-right:20px;$endif$">
+            <span>$process.signbuttontext$</span>
             <span class="icon cross"></span>
           </div>
           <div class="right"></div>
         </a>
       </div>
-      $endif$  
     </div>
     $endif$
     $endif$ 
@@ -325,4 +317,4 @@ pageDocumentForSignContent=
 </div>
 $signatoryScriptIfRequired()$
 ###
-####
+#####

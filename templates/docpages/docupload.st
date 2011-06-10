@@ -1,4 +1,12 @@
 ####    Pages for documents - main part of system
+contractuploadname=Avtal
+####
+offeruploadname=Offert
+####
+contractuploadprompttext=Välj det dokument som du vill skicka till din motpart för påskrift.
+####
+offeruploadprompttext=Välj den offert som du vill skicka till din motpart.
+####
 uploadPage=   
 $loadingdialog()$
 <div id="signStepsContainer">
@@ -35,7 +43,7 @@ $loadingdialog()$
   <div id="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
-$if(!typeselected)$
+$if(!isprocessselected)$
 <table style="width:100%" > <tbody> <tr valign="top">
  <td>
    <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
@@ -44,16 +52,13 @@ $if(!typeselected)$
     </p>
    </div>
  </td>
+  $processes:{process |
   <td>
-    <div class="documentTypeBox $if(contract)$selected$endif$"> 
-       <a class="contracticon" href="/?doctype=Contract"></a>    
+    <div class="documentTypeBox $if(process.selected)$selected$endif$"> 
+       <a class="documenticon" href="/?doctype=$process.id$">$process.name$</a>    
     </div>
   </td>
-  <td>
-    <div class="documentTypeBox $if(offer)$selected$endif$"> 
-        <a class="offericon" href="/?doctype=Offer"></a>    
-    </div>
-  </td>
+  }$
 </tr></tbody></table>
 <!-- MAIN FROM END HERE --> 
 
@@ -62,15 +67,9 @@ $elseif(!showTemplates)$
 <div class="postSignStepBody">
 <table style="width:100%"> <tbody> <tr valign="top">
 <td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
-    $if(contract)$
     <p class="text" style="padding-top:30px">
-        Välj det dokument som du vill skicka till din motpart för påskrift.
+        $selectedprocess.uploadprompttext$
     </p>
-    $elseif(offer)$
-    <p class="text" style="padding-top:30px">
-        Välj den offert som du vill skicka till din motpart.
-    </p>
-    $endif$
     <a class="backicon float-left" href="/"></a>
  </div>
 </td>
@@ -78,10 +77,7 @@ $elseif(!showTemplates)$
 <div class="signStepsBodyUploadBox"> 
   <form action="/d" method="post" enctype="multipart/form-data" > 
     <div>
-        $if(offer)$ 
-           <!-- By default we create contracts at this address -->
-           <input type="hidden" name="offer" value="YES">
-        $endif$
+        <input type="hidden" name="doctype" value="$selectedprocess.id$" />
         <span class="header">Välj fil från dator</span><br/>
         <span class="text">OBS! Endast PDF</span> 
       <br/>
@@ -106,7 +102,7 @@ $elseif(!showTemplates)$
         <span class="text">Sparad på SkrivaPå</span> 
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
-        <a class="btn-small green selectTemplateButton" href="/?doctype=$if(contract)$Contract$elseif(offer)$Offer$endif$&amp;showTemplates=YES">  
+        <a class="btn-small green selectTemplateButton" href="/?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
           <div class="left"> </div>
           <div class="label" style="width:80px"> Välj mall </div> 
           <div class="right"> </div>

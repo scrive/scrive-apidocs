@@ -20,6 +20,7 @@ module Doc.DocViewMail ( mailDocumentRemind
 import Amazon
 import Doc.DocState
 import Doc.DocUtils
+import Doc.DocProcess
 import Kontra
 import KontraLink
 import Mails.SendMail
@@ -122,7 +123,7 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
       partnersinfo' <- partnersinfo
       whohadsignedinfo' <- whohadsignedinfo 
       timetosigninfo' <- timetosigninfo
-      renderTemplate templates "remindMailNotSignedContent" $ do
+      renderTemplateForProcess templates document processmailremindnotsignedcontent $ do
           field "header" editableHeader
           field "footer" $ footer'
           field "timetosigninfo" $ timetosigninfo'
@@ -130,9 +131,7 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
           field "whohadsignedinfo" $  whohadsignedinfo'
           field "creatorname"  creatorname
           field "documenttitle" $ BS.toString $ documenttitle document
-          field "link" $ link
-          field "offer" $ isOffer document
-          field "contract" $ isContract document         
+          field "link" $ link      
 
 remindMailSignedContent :: KontrakcjaTemplates 
                         -> (Maybe BS.ByteString) 
@@ -153,25 +152,21 @@ remindMailSignedStandardHeader :: KontrakcjaTemplates
                                -> SignatoryLink 
                                -> IO String
 remindMailSignedStandardHeader templates document signlink = 
-  renderTemplate templates "remindMailSignedStandardHeader" $ do 
+  renderTemplateForProcess templates document processmailsignedstandardheader $ do 
     let mauthorsiglink = getAuthorSigLink document
         creatorname = maybe (BS.fromString "") personname mauthorsiglink
     field "documenttitle" $  BS.toString $ documenttitle document
     field "author" $ BS.toString creatorname
     field "personname" $ BS.toString $ personname signlink
-    field "offer" $ isOffer document
-    field "contract" $ isContract document
                                                
 remindMailNotSignedStandardHeader::  KontrakcjaTemplates -> Document -> SignatoryLink -> IO String
 remindMailNotSignedStandardHeader templates document signlink =  
-  renderTemplate templates "remindMailNotSignedStandardHeader" $ do
+  renderTemplateForProcess templates document processmailnotsignedstandardheader $ do
     let mauthorsiglink = getAuthorSigLink document
         creatorname = maybe (BS.fromString "") personname mauthorsiglink
     field "documenttitle" $ BS.toString $ documenttitle document
     field "author" $ BS.toString creatorname
     field "personname" $ BS.toString $ personname signlink
-    field "offer" $ isOffer document
-    field "contract" $ isContract document
                                                                              
 mailDocumentRejected :: KontrakcjaTemplates -> (Maybe String) -> Context -> BS.ByteString -> Document -> SignatoryLink -> IO Mail 
 mailDocumentRejected templates customMessage ctx username  document@Document{documenttitle}  rejector = 
@@ -182,14 +177,12 @@ mailDocumentRejected templates customMessage ctx username  document@Document{doc
 
 mailRejectMailContent::  KontrakcjaTemplates -> (Maybe String) -> Context -> BS.ByteString -> Document -> SignatoryLink -> IO String  
 mailRejectMailContent templates customMessage ctx  username  document  rejector =   
-      renderTemplate templates "mailRejectMailContent" $ do 
+      renderTemplateForProcess templates document processmailrejectcontent $ do 
            field "username" username
            field "documenttitle" $ documenttitle document
            field "rejectorName" $ personname rejector
            field "ctxhostpart" $ ctxhostpart ctx
            field "customMessage" $ customMessage
-           field "offer" $ isOffer document
-           field "contract" $ isContract document 
 
 
 mailDocumentError :: KontrakcjaTemplates -> Context -> Document -> IO Mail 
@@ -250,12 +243,10 @@ mailInvitationToSignOrViewContent templates
                           replaceOnEdit' templates this with            
       header   =  if (BS.null documentinvitetext) 
                      then if issignatory || not forMail 
-                          then renderTemplate templates "mailInvitationToSignDefaultHeader" $ do
+                          then renderTemplateForProcess templates document processmailinvitationtosigndefaultheader $ do
                                    field "creatorname" $ creatorname
                                    field"personname" $ personname1
                                    field "documenttitle" $ BS.toString documenttitle
-                                   field "offer" $ isOffer document
-                                   field "contract" $ isContract document
                                      
                           else renderTemplate templates "mailInvitationToViewDefaultHeader" 
                                    [("creatorname",   creatorname)
@@ -272,15 +263,13 @@ mailInvitationToSignOrViewContent templates
   partnersinfo' <- partnersinfo
   whohadsignedinfo' <- whohadsignedinfo
   timetosigninfo' <- timetosigninfo
-  renderTemplate templates "mailInvitationToSignContent" $ do
+  renderTemplateForProcess templates document processmailinvitationtosigncontent $ do
         field "header" editableHeader
         field "footer" footer'
         field "timetosigninfo" timetosigninfo'
         field "partnersinfo" partnersinfo'
         field "whohadsignedinfo" whohadsignedinfo'
         field "documenttitle" $ BS.toString documenttitle
-        field "offer" $ isOffer document
-        field "contract" $ isContract document
         field "link" link    
         field "issignatory" $ issignatory || not forMail 
         field "creatorname" creatorname
@@ -358,12 +347,10 @@ mailDocumentClosed templates (Context {ctxhostpart}) document@Document{documentt
    do
      title <- renderTemplate templates "mailDocumentClosedTitle" [("documenttitle",BS.toString  documenttitle )] 
      partylist <- renderListTemplate templates $  map (BS.toString . personname') $ partyList document
-     content <- wrapHTML templates =<< (renderTemplate templates "mailDocumentClosedContent" $ do
+     content <- wrapHTML templates =<< (renderTemplateForProcess templates document processmailclosedcontent $ do
         field "documenttitle" $ BS.toString documenttitle 
         field "partylist" $ partylist
-        field "ctxhostpart" $ ctxhostpart
-        field "offer" $ isOffer document
-        field "contract" $ isContract document)
+        field "ctxhostpart" $ ctxhostpart)
      return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 
@@ -399,22 +386,18 @@ mailCancelDocumentByAuthorContent templates forMail customMessage ctx document =
                        replaceOnEdit' templates this with
             header = case customMessage of 
               Just c -> return $ BS.toString c
-              Nothing -> renderTemplate templates "mailCancelDocumentByAuthorStandardHeader" $ do
+              Nothing -> renderTemplateForProcess templates document processmailcancelbyauthorstandardheader $ do
                 field "partylist" $ map (BS.toString . personname') $ partyList document
-                field "offer" $ isOffer document
-                field "contract" $ isContract document
         in 
           do
             header' <- header
             editableHeader <- makeEditable' templates "customtext" header' 
             footer' <- footer
-            renderTemplate templates "mailCancelDocumentByAuthorContent" $ do
+            renderTemplateForProcess templates document processmailcancelbyauthorcontent $ do
                 field "header" editableHeader
                 field "footer" footer'
                 field "creatorname" creatorname
                 field "documenttitle" $ BS.toString $ documenttitle document
-                field "offer" $ isOffer document
-                field "contract" $ isContract document
 
 mailCancelDocumentByAuthor :: KontrakcjaTemplates 
                            -> Maybe BS.ByteString 

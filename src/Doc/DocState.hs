@@ -69,7 +69,7 @@ module Doc.DocState
     , SignableFromDocument(..)
     , SignableFromDocumentID(..)
     , SignableFromSharedDocumentID(..)
-    , ContractFromSignatoryData(..)
+    , DocumentFromSignatoryData(..)
 --    , MigrateToSigLinks(..)
     , ExtendDocumentQuarantine(..)
     , ReviveQuarantinedDocument(..)
@@ -91,6 +91,7 @@ import Control.Monad.State (modify)
 import Data.List (find)
 import Data.Maybe
 import Data.Word
+import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
 import Doc.DocUtils
@@ -178,11 +179,10 @@ getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
     
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user = 
-  case (documenttype, preferreddesignmode $ usersettings user) of
-    (Contract, Nothing)           -> AdvancedFunctionality
-    (Contract, Just AdvancedMode) -> AdvancedFunctionality
-    (Contract, Just BasicMode)    -> BasicFunctionality
-    (_, _)                        -> AdvancedFunctionality
+  case (getValueForProcess documenttype processadvancedview, preferreddesignmode $ usersettings user) of
+    (True, Nothing) -> BasicFunctionality
+    (True, Just BasicMode) -> BasicFunctionality
+    _ -> AdvancedFunctionality
 
 newDocument :: User
             -> BS.ByteString
@@ -198,9 +198,9 @@ newDocumentWithMCompany :: (Maybe CompanyID)
             -> MinutesTime 
             -> Update Documents Document
 newDocumentWithMCompany mcompany user title documenttype ctime = do
-  let authorRoles = if (isContract documenttype)
-                    then [SignatoryPartner, SignatoryAuthor]
-                    else [SignatoryAuthor]
+  let authorRoles = if (getValueForProcess documenttype processauthorsend) 
+                    then [SignatoryAuthor]
+                    else [SignatoryPartner, SignatoryAuthor]
   authorlink0 <- (signLinkFromDetails
                   (signatoryDetailsFromUser user) 
                   authorRoles)
@@ -230,7 +230,7 @@ blankDocument =
           , documentsignatorylinks       = []
           , documentfiles                = []
           , documentstatus               = Preparation
-          , documenttype                 = Contract
+          , documenttype                 = Signable Contract
           , documentfunctionality        = BasicFunctionality
           , documentctime                = MinutesTime 0 0
           , documentmtime                = MinutesTime 0 0
@@ -428,7 +428,7 @@ updateDocumentAttachments docid idstoadd idstoremove = do
 {- |
     Creates a new contract by pumping some values into a particular signatory.
 -}
-contractFromSignatoryData :: DocumentID
+documentFromSignatoryData :: DocumentID
                               -> Int 
                               -> BS.ByteString 
                               -> BS.ByteString 
@@ -438,12 +438,11 @@ contractFromSignatoryData :: DocumentID
                               -> BS.ByteString
                               -> [BS.ByteString]
                               -> Update Documents (Either String Document)
-contractFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues = newFromDocument toNewDoc docid
+documentFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues = newFromDocument toNewDoc docid
   where
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
-                    , documentcsvupload = Nothing
-                    , documenttype = Contract 
+                    , documentcsvupload = Nothing 
                     , documentsharing = Private }
     toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
     toNewSigLink (i, sl)
@@ -1070,7 +1069,7 @@ getSharedTemplates userids = queryDocs $ \documents ->
     filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
 
 justTemplates :: (Indexable a, Typeable a, Ord a) => IxSet a -> IxSet a
-justTemplates docs = (docs @= OfferTemplate) ||| (docs @= ContractTemplate)
+justTemplates docs = (docs @= Template Offer) ||| (docs @= Template Contract)
 
 signableFromDocument :: Document -> Update Documents Document
 signableFromDocument doc = insertNewDocument $ templateToDocument doc
@@ -1092,13 +1091,11 @@ signableFromSharedDocumentID user = newFromDocument $ \doc ->
 
 
 templateToDocument :: Document -> Document
-templateToDocument doc =   doc {
+templateToDocument doc =
+    let Template process = documenttype doc in
+    doc {
           documentstatus = Preparation
-        , documenttype =  if (documenttype doc == OfferTemplate) 
-                             then Offer
-                             else if (documenttype doc == ContractTemplate)
-                                    then Contract
-                                    else documenttype doc
+        , documenttype =  Signable process
         , documentsharing = Private
     }
 {- |
@@ -1150,14 +1147,11 @@ replaceSignatoryData siglink fstname sndname email company personalnumber compan
                        } 
 
 templateFromDocument :: DocumentID -> Update Documents (Either String Document)
-templateFromDocument docid = modifySignable docid $ \doc -> 
+templateFromDocument docid = modifySignable docid $ \doc ->
+    let Signable process = documenttype doc in
     Right $ doc {
           documentstatus = Preparation
-        , documenttype =  if (documenttype doc == Offer) 
-                             then OfferTemplate 
-                             else if (documenttype doc == Contract)
-                                    then ContractTemplate
-                                    else documenttype doc
+        , documenttype =  Template process
         }
 
 migrateForDeletion :: [User] -> Update Documents ()
@@ -1331,7 +1325,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'signableFromDocument
                         , 'signableFromDocumentID
                         , 'signableFromSharedDocumentID
-                        , 'contractFromSignatoryData
+                        , 'documentFromSignatoryData
                         , 'templateFromDocument
 --                        , 'migrateToSigLinks
                         , 'migrateForDeletion
