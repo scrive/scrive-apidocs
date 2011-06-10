@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -XArrows -XViewPatterns #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror -XArrows -XViewPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExResponse
@@ -14,7 +14,7 @@ import Text.XML.HaXml.XmlContent.Parser
 import SOAP.SOAP
 import Data.List
 import Control.Category hiding ((.))
-import Text.XML.HXT.Arrow.XmlArrow hiding (mkAttr)
+import Text.XML.HXT.Arrow.XmlArrow hiding (mkAttr, err)
 import Text.XML.HXT.Arrow.ReadDocument
 import Text.XML.HXT.DOM.TypeDefs
 import Control.Arrow
