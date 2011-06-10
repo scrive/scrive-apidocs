@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.TextTemplates
@@ -15,24 +15,17 @@ module Templates.TextTemplates
       , potDirectory
     ) where
 
-import Text.StringTemplate 
-import Text.StringTemplate.Base
-import Text.StringTemplate.Classes
-import System.IO
-import Control.Monad
-import Data.Maybe
-import Data.List
-import Data.Char
-import Data.Functor
-import Text.Html (stringToHtmlString)
-import System.Directory
-import System.Time
-import Templates.TemplatesFiles
 import Misc
-import qualified Data.Map as Map
-import System.IO
+import Templates.TemplatesFiles
+
+import Control.Monad
+import Data.Functor
+import Data.List
 import System.Directory
-import Text.I18n.Po hiding (putStrLn,getL10n)
+import System.IO
+import System.Time
+import Text.I18n.Po hiding (putStrLn, getL10n)
+import qualified Data.Map as Map
 import qualified Text.I18n.Po (getL10n)
 
 commonFileName :: Bool -> String
@@ -70,14 +63,14 @@ writePOTFile s ttls = do
     createDirectoryIfMissing True (potDirectory ++ "/"++dirname)        
     h <- openFile (potDirectory ++ "/" ++ s) WriteMode
     forM_ ttls $ \ttl -> do 
-        forM (location ttl) $ \(l,t)->  hPutStr h $ "#: " ++ l ++ ":" ++ t ++ "\n"
+        _ <- forM (location ttl) $ \(l,t)->  hPutStr h $ "#: " ++ l ++ ":" ++ t ++ "\n"
         hPutStr h $ "msgid \""++ name ttl ++"\"\n"
         hPutStr h $ "msgstr \"\"\n\n"
     hClose h
     
 groupTTLs:: Bool -> [TemplateTextLocation] -> Map.Map String [TemplateTextLocation] -> Map.Map String [TemplateTextLocation]
 groupTTLs makeTemplates (t:tl) m = groupTTLs makeTemplates  tl $ Map.insertWith (++) (finalLocation makeTemplates t) [t] m
-groupTTLs makeTemplates []  m = m
+groupTTLs _ [] m = m
 
 
 getTextsFromTemplates::IO [TemplateTextLocation]
@@ -95,7 +88,7 @@ retriveTexts::String -> [String]
 retriveTexts ('$':('_': s)) = 
                   let tSplit ('(':(')':('$':s'))) xs = ('_':xs) : (retriveTexts s')    
                       tSplit (x:s') xs = tSplit s' (xs ++ [x])
-                      tSplit [] xs = error "THIS should never happend | Not closed template"
+                      tSplit [] _ = error "THIS should never happend | Not closed template"
                   in  tSplit s []
 retriveTexts (_ : s) = retriveTexts s
 retriveTexts _ = []
@@ -104,6 +97,7 @@ retriveTexts _ = []
 joinTexts::[TemplateTextLocation] -> [TemplateTextLocation] 
 joinTexts = map locationMerge . groupBy (\ttl1 ttl2 -> name ttl1 == name ttl2) 
 
+locationMerge :: [TemplateTextLocation] -> TemplateTextLocation
 locationMerge (t : ts) = TemplateTextLocation {name = name t, location = (concat $ map location $ t:ts)}
 locationMerge [] = error "No locations provided"
 
@@ -113,6 +107,7 @@ finalLocation makeTemplates  ttl =  if (2 > (length $ nub $ map fst $ location t
                         then templateFileToPOT makeTemplates  $ head $ map fst $ location ttl
                         else commonFileName makeTemplates 
 
+getRecursiveMTime :: [Char] -> IO ClockTime
 getRecursiveMTime "."  = return $ TOD 0 0
 getRecursiveMTime ".." = return $ TOD 0 0
 getRecursiveMTime dir = do
