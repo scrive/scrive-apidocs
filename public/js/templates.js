@@ -1560,8 +1560,9 @@ safeReady(function() {
         .append($("<td />").append($('<textarea name="sigattachdesc" >')))
         .append($("<td />").append($('<select class="signatoryselector"><option selected>Mottagare</option></select>')
                                    .append(sigoptions)))
-        .append($("<td />").append($('<ul class="selectedsigs" />'))
-                .append($('<input type="hidden" name="sigattachemails" />'))));
+        .append($("<td />").append($("<span class='selectedsigspan' />")
+                                   .append($('<ul class="selectedsigs" />'))
+                                   .append($('<input type="hidden" name="sigattachemails" />')))));
             
     return false;
   });
@@ -1577,10 +1578,33 @@ safeReady(function() {
       console.log(oldemails);
       console.log(oldemails.indexOf(newemail));
       if(oldemails.indexOf(newemail) === -1) {
-        sel.parents("tr").find(".selectedsigs").append($("<li />").append(opt.text()));
+        sel.parents("tr").find(".selectedsigs")
+          .append($("<li />")
+                  .append(opt.text())
+                  .append('<a href="#" class="removesig">x</a>')
+                  .append($('<span style="display:none" class="sigemail" />')
+                          .append(newemail)));
         inp.val(oldemails + "," + newemail);
       }
     }
+    return false;
+  });
+  $("a.removesig", "table#sigattachmenttable").live("click", function() {
+    console.log("Here");
+    console.log(this);
+    var li = $(this).closest("li");
+    var tr = $(this).closest("tr");
+    console.log(tr);
+    console.log(li);
+    var email = li.find("span.sigemail").text();
+    console.log(email);
+    var inp = tr.find("input[name='sigattachemails']");
+    console.log(inp);
+    var allemail = inp.val();
+    
+    inp.val(allemail.split(email).join(""));
+    li.remove();
+
     return false;
   });
 });

@@ -594,37 +594,46 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div>     
             <a href="#" class="plus" >  </a>Lägg till bilaga
           </div>
-          <table>
-            <tr><td></td>
-              <td>Bilaga</td>
-              <td>Beskrivning</td>
-              <td>Begar fran</td>
-            </tr>
-            $sigattachments:{a|
-            <tr>
-              <td><a href="#" class="minus"></a></td>
-              <td><input type="text" name="sigattachname"
-                         value="$a.attachmentname$" /></td>
-              <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
-              <td>
-                <select class="signatoryselector">
-                  <option selected>Mottagare</option>
-                </select>
-              </td>
-              <td>
-                <ul class="selectedsigs">
-                  $a.signatories:{s|
-                  <li>
-                    $s.signame$ 
-                    <a href="#" class="remove">x</a>
-                    <span style="display:none">$s.email$</span>
-                  </li>
-                  }$
-                  <input type="hidden" name="sigattachemails" value="$a.sigemails$" />
-                </ul>
-              </td>
-            </tr>
-            }$
+          <table id="sigattachmenttable">
+            <thead>
+              <tr>
+                <th class="minusbutton">               </th>
+                <th class="attachmentname">Bilaga      </th>
+                <th class="attachmentdesc">Beskrivning </th>
+                <th class="attachmentsigs">Begar fran  </th>
+                <th class="attachmentsels">            </th>
+              </tr>
+            </thead>
+            <tbody>
+              $sigattachments:{a|
+              <tr>
+                <td><a href="#" class="minus"></a></td>
+                <td><input type="text" name="sigattachname"
+                           value="$a.attachmentname$" /></td>
+                <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
+                <td>
+                  <select class="signatoryselector">
+                    <option selected>Mottagare</option>
+                  </select>
+                </td>
+                <td>
+                  <span class="selectedsigspan">
+                    <ul class="selectedsigs">
+                      $a.signatories:{s|
+                      <li>
+                        $s.signame$ 
+                        <a href="#" class="remove">x</a>
+                        <span style="display:none" class="sigemail">$s.email$</span>
+                      </li>
+                      }$
+                    </ul>
+                    <input type="hidden" name="sigattachemails"
+                    value="$a.sigemails$" />
+                    </span>
+                </td>
+              </tr>
+              }$
+              </tbody>
           </table>
         </div>
       </div>
@@ -709,7 +718,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             $attachments:{attachment |
               <div class="alreadyattacheditem">
                 <div class="display">
-                  <a href="#" class="remove">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
+                  <a href="#" class="removesig">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
                 </div>
                 <div class="data">
                   <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />

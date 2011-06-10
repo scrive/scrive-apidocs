@@ -177,11 +177,14 @@ pageDocumentForSignContent=
             $if(hassigattachments)$
             <div class="subheader">Bägarda bilagor:</div>
             <table>
-            $sigattachments:{attachment |
-            <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
-            }$
-            $endif$
+              <tbody>
+                $sigattachments:{attachment |
+                <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
+                }$
+                </tbody>
             </table>
+            $endif$
+            
           </div>
         </span>
       </div>
@@ -226,35 +229,35 @@ pageDocumentForSignContent=
     <div id="signViewSigAttachmentBox">  
       <h2>Begärda bilagor</h2>
       <table id="signViewSigAttachmentBoxList">
-        $mysigattachments:{attachment |
-        <tr>
-          <td>$attachment.name$</td>
-          <td>$attachment.desc$</td>
-          <td>              
-            $if(attachment.filename)$
-            <a href="$attachment.viewerlink$"
-            target="_blank">$attachment.filename$</a>
-            $else$
-            <form method="post" enctype="multipart/form-data">
-              <input type="hidden" name="sigattachment" value="yes" />
-              <input type="hidden" name="attachname"
-              value="$attachment.name$" />
-              <div class="signStepsButtonContainer">
-                <a class="btn-small green">  
-                  <div class="left"> </div>
-                  <div class="label" style="width:80px">Välj fil</div> 
-                  <div class="right"> </div>                 
-                  <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
-                </a>
-              </div>
-              <div id="tobeattached-$attachment.name$" style="display:none;"></div>
-            </form>
+        <tbody>
+          $mysigattachments:{attachment |
+          <tr>
+            <td>$attachment.name$</td>
+            <td>$attachment.desc$</td>
+            <td>              
+              $if(attachment.filename)$
+              <a href="$attachment.viewerlink$"
+                 target="_blank">$attachment.filename$</a>
+              $else$
+              <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="sigattachment" value="yes" />
+                <input type="hidden" name="attachname"
+                       value="$attachment.name$" />
+                  <a class="btn-small green">  
+                    <div class="left"> </div>
+                    <div class="label" style="width:80px">Välj fil</div> 
+                    <div class="right"> </div>                 
+                    <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
+                  </a>
+                <div id="tobeattached-$attachment.name$" style="display:none;"></div>
+              </form>
 
 
-            $endif$
-          </td>
-        </tr>
-        }$
+              $endif$
+            </td>
+          </tr>
+          }$
+        </tbody>
       </table>
     </div>
     $endif$

@@ -2842,3 +2842,59 @@ div#alreadyattached, div#tobeattached {
     display: block;
     float:left;
 }
+
+th.minusbutton {
+    width: 16px;
+}
+
+th.attachmentname {
+    width: 15%;
+}
+
+th.attachmentdesc {
+    width: 30%;
+}
+
+th.attachmentsigs {
+    width: 20%;
+}
+
+th.attachmentsels {
+    width: 30%;
+}
+
+table#sigattachmenttable {
+    margin: 0;
+    padding: 0;
+}
+
+table#sigattachmenttable a.minus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    background-image: url(images/iconMinus.png);
+    align: left;
+}
+
+table#sigattachmenttable {
+    width: 100%;
+}
+
+input.attachmentname {
+
+}
+
+table.authorsigattachment {
+    width: 100%;
+}
+
+table#signViewSigAttachmentBoxList {
+    width: 100%;
+}
+table#signViewSigAttachmentBoxList td {
+    width: 33%;
+}
+table#signViewSigAttachmentBoxList form {
+    width: 112px;
+}

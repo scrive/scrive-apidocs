@@ -46,7 +46,7 @@ pageDocumentForAuthor=
 
             $if(hassigattachments)$
             <div class="subheader">Bägarda bilagor:</div>
-            <table>
+            <table class="authorsigattachment">
               $sigattachments:{attachment |
               <tr><td>
                   $if(attachment.viewerlink)$

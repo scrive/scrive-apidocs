@@ -638,6 +638,12 @@ safeReady(function() {
                        top : standardDialogTop,
                        onBeforeLoad: function () {
                          if (!sigFieldsValidation()) return false;
+                         var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
+                         if(trs.length > 0) {
+                           trs.addClass("redborder");
+                           addFlashMessage("Var vänlig bifoga begärda bilagor.", "red");
+                           return false;
+                         }
                          var guardChecked = $(".signGuard:checked").size()>0;
                          if (!guardChecked) { 
                            $("#signGuardField").css("border","1px dotted red");
@@ -1531,4 +1537,17 @@ safeReady(function() {
     atttabli.addClass("active");
   });
 });
+
+safeReady(function() {
+  var attachmenttable = $("table#sigattachmenttable");
+  $("a.minus", attachmenttable).live("click", function() {
+    $(this).parents("tr").remove();
+    return false;
+  });
+  $("a.remove", attachmenttable).live("click", function() {
+    $(this).parents("li").remove();
+    return false;
+  });
+});
+
 
