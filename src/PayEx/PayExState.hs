@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -- |Simple session support
 module PayEx.PayExState
     (   PaymentId(..) 
@@ -6,7 +6,7 @@ module PayEx.PayExState
       , PaymentState(..) 
       , PaymentMethod(..) 
       , Payment(..)
-      , Payments(..)
+      , Payments
       , emptyPayment
       , paymentValue
       , isFailed
@@ -23,16 +23,13 @@ module PayEx.PayExState
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import Data.Generics
-import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State 
-import User.UserState (UserID(..),GetUserByUserID(GetUserByUserID), User, PaymentMethod(..))
+import User.UserState (UserID(..), PaymentMethod(..))
 import Doc.DocState
 import MinutesTime
-import Happstack.Server
-import System.Random
 import Payments.PaymentsState(Money(..))
 import Misc
 import Data.List (find)
@@ -116,6 +113,7 @@ isFailed _ = False
 isPaymentForSigningDocument ::DocumentID -> Payment -> Bool
 isPaymentForSigningDocument docid payment = any ((==) (PaymentForSigning docid)) $ map fst $ positions payment
 
+emptyPayment :: Payment
 emptyPayment = Payment {  paymentId=PaymentId 0,
                           paymentState = Waiting ,
                           orderRef="",
