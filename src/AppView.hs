@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 {- |
    Defines the App level views.
 -}
@@ -36,8 +36,6 @@ import Control.Monad.Trans
 import Data.Functor
 import Data.List
 import Data.Maybe
-import HSP hiding (Request)
-import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
@@ -62,18 +60,17 @@ kontrakcja = "SkrivaPå"
 {- |
    Renders some page body xml into a complete reponse
 -}
-renderFromBody :: (EmbedAsChild (HSPT' IO) xml) 
-               => TopMenu 
+renderFromBody :: TopMenu 
                -> String 
-               -> xml 
+               -> String
                -> Kontra Response
-renderFromBody _topmenu title xml = do
+renderFromBody _topmenu title content = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     ctx <- get
     let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx) 
-    res <- webHSP $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title xml
+    res <-  simpleResponse =<< (liftIO $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content)
     clearFlashMsgs
     return res
     
@@ -81,15 +78,14 @@ renderFromBody _topmenu title xml = do
 {- |
    Renders some page body xml into a complete page of xml
 -}
-pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
-             => Context
+pageFromBody :: Context
              -> Bool
              -> Maybe String
              -> Maybe String
              -> Bool
              -> String 
-             -> xml
-             -> HSP XML
+             -> String
+             -> IO String
  
 pageFromBody ctx@Context{ ctxtemplates }
              loginOn
@@ -98,11 +94,10 @@ pageFromBody ctx@Context{ ctxtemplates }
              showCreateAccount 
              title 
              bodytext = do
-    content <- liftIO $ renderHSPToString <div class="mainContainer"><% bodytext %></div>
-    wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
-        field "content" content
+    renderTemplate ctxtemplates "wholePage" $ do
+        field "content" bodytext
         standardPageFields ctx title False showCreateAccount loginOn referer email
-    return $ cdata wholePage
+    
 
 
 embeddedPage :: String -> Kontra Response

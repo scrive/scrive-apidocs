@@ -20,7 +20,6 @@ import AppView as V
 import Crypto
 import Doc.DocState
 import InputValidation
-import InspectXML
 import Kontra
 import KontraLink
 import Mails.MailsConfig
@@ -53,7 +52,6 @@ import Data.List
 import Data.Maybe
 import Data.Word
 import GHC.Int (Int64(..))
-import HSP.XML (cdata)
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
 import Happstack.State (query)
@@ -82,6 +80,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
+import InspectXML
 --import Templates.Langs
 
 {- | 
@@ -594,14 +593,14 @@ _signupPageGet :: Kontra Response
 _signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
+    V.renderFromBody V.TopNone V.kontrakcja  content 
 
     
 _signupVipPageGet :: Kontra Response
 _signupVipPageGet = do
     ctx <- lift get
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
+    V.renderFromBody V.TopNone V.kontrakcja content 
 {- |
    Handles submission of the signup form.
    Normally this would create the user, (in the process mailing them an activation link),
@@ -672,7 +671,7 @@ handleLoginGet = do
          referer <- getField "referer"
          email   <- getField "email"
          content <- liftIO $ V.pageLogin ctx referer email
-         V.renderFromBody V.TopNone V.kontrakcja . cdata $ content
+         V.renderFromBody V.TopNone V.kontrakcja content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
@@ -720,7 +719,7 @@ serveHTMLFiles =  do
             ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
                             (const $ return Nothing)
             case ms of 
-                (Just s) -> renderFromBody V.TopNone V.kontrakcja (cdata $ BS.toString s)
+                (Just s) -> renderFromBody V.TopNone V.kontrakcja $ BS.toString s
                 _      -> mzero
         else mzero
 

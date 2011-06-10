@@ -2,7 +2,6 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
 import Doc.DocState
-import HSP
 import Misc
 import ActionSchedulerState (ActionID)
 import User.UserState
@@ -176,18 +175,3 @@ instance Show KontraLink where
     showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/d/" ++ show did ++ "/" ++ show fid
     showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/s/" ++ show did ++ "/" ++ show sid ++ "/" ++ show mh ++ "/" ++ show fid
     
--- type class instances used for xml'ing the KontraLinks
-
-{-
-instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
-    asAttr = asAttr . show
-
-instance (HSX.XMLGen m,EmbedAsAttr m String) => (EmbedAsAttr m (Attr String KontraLink)) where
-    asAttr = asAttr . show
--}
-
-instance (EmbedAsChild m String) => (EmbedAsChild m KontraLink) where
-    asChild = asChild . show
-
-instance Monad m => IsAttrValue m KontraLink where
-    toAttrValue = toAttrValue . show

@@ -41,9 +41,7 @@ import Data.Either
 import Data.List
 import Data.Maybe
 import Data.Word
-import HSP hiding (catch)
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update, query)
 import Text.ParserCombinators.Parsec
 import qualified Data.ByteString as BS
@@ -331,7 +329,7 @@ handleSTable = checkUserTOSGet $ do
                             , (Signable Contract) == documenttype doc]
       params <- getListParams
       content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-      renderFromBody TopNone kontrakcja $ cdata content
+      renderFromBody TopNone kontrakcja content
 
 {- |
     Handles an account setup from within the sign view.
@@ -1434,7 +1432,7 @@ handleAttachmentViewForViewer docid siglinkid mh = do
              then notFound (toResponse "temporary unavailable (document has files pending for process)")
             else do
             pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (documentid doc) Nothing $ zip f b
-            webHSP $ return $ cdata pages
+            simpleResponse pages
 
 handleAttachmentViewForAuthor :: DocumentID -> Kontra Response
 handleAttachmentViewForAuthor docid = do
@@ -1454,7 +1452,7 @@ handleAttachmentViewForAuthor docid = do
              then notFound (toResponse "temporary unavailable (document has files pending for process)")
             else do
             pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (documentid doc) Nothing $ zip f b
-            webHSP $ return $ cdata pages
+            simpleResponse pages
 
 -- get rid of duplicates
 -- FIXME: nub is very slow
@@ -1499,7 +1497,7 @@ handlePageOfDocument' documentid mtokens = do
                 then notFound (toResponse "temporary unavailable (document has files pending for process)")
                 else do
                     pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) documentid mtokens $ zip f b
-                    webHSP $ return $ cdata pages
+                    simpleResponse pages
 
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do

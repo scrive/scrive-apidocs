@@ -76,10 +76,10 @@ adminsmanageall =
             $users:{user|
             <tr>
               <td>
-                $user.usvFullname$
+                $user.fullname$
               </td>
               <td>
-                &lt;$user.usvEmail$&gt;
+                &lt;$user.email$&gt;
               </td>
             </tr>
             }$
@@ -134,10 +134,10 @@ adminusers=
           <td style="width:50px">Admin Invites</td>
         </thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvFullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvEmail$</a> </td>
-          <td> $user.userdetails.usvCompany$ </td>
-          <td> $user.userdetails.usvPhone$ </td>
+          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td> $user.userdetails.company$ </td>
+          <td> $user.userdetails.phone$ </td>
           <td> $user.docstats.doccount$ </td>
           <td> $user.docstats.signaturecount$ </td>
           <td> $user.docstats.signaturecount1m$ </td>
@@ -169,13 +169,13 @@ adminUsersForSales=
           <td style="width:50px">Subaccounts</td>
        </thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvFullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvEmail$</a> </td>
-          <td> $user.userdetails.usvCompany$ $user.userdetails.usvTitle$</td>
-          <td> $user.userdetails.usvPhone$ </td>
-          <td> $user.userdetails.usvTOSDate$ </td>
+          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td> $user.userdetails.company$</td>
+          <td> $user.userdetails.phone$ </td>
+          <td> $user.userdetails.TOSDate$ </td>
           <td> $user.docstats.doccount$ </td>
-          <td> $user.userdetails.usvSubaccounts$ </td>
+          <td> </td>
        </tr>}$
       </table>
 ###
@@ -201,10 +201,10 @@ adminUsersForPayments=
 	  <td style="width:200px">Current TW storage price</td>
 	</thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvFullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvEmail$</a> </td>
-          <td> $user.userdetails.usvCompany$
-          $user.userdetails.usvTitle$</td>
+          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td> $user.userdetails.company$
+          </td>
 	  <td>-</td>
 	  <td><select autocomplete="off">$user.adminview.uavpaymentaccounttype:options()$</select></td>
 	  <td>?</td>

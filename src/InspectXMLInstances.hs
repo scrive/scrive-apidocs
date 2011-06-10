@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -Wall -XOverlappingInstances  -fno-warn-orphans -Werror #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -12,152 +12,97 @@ module InspectXMLInstances() where
 import API.Service.ServiceState (ServiceID(..))
 import Doc.DocState
 import Company.CompanyState
-import HSP
 import Kontra
 import Misc
 import MinutesTime
 import InspectXML
-import User.UserState
 import Payments.PaymentsState
 import Mails.MailsUtil
 import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
 
---Complex types, usualy big that should be derived automatically
+
+instance InspectXML BS.ByteString where
+    inspectXML = inspectXML . BS.toString
+
+instance InspectXML a => InspectXML [a] where
+    inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
+
+instance InspectXML a => InspectXML (Maybe a) where
+    inspectXML Nothing = "Nothing"
+    inspectXML (Just x) = inspectXML x
+
+instance (InspectXML a, InspectXML b, InspectXML c) => InspectXML (a, b, c) where
+    inspectXML (a, b, c) = "(" ++ inspectXML a ++"," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
+
 $(deriveInspectXML ''Document)
-
 $(deriveInspectXML ''AuthorAttachment)
-
 $(deriveInspectXML ''SignatoryAttachment)
-
 $(deriveInspectXML ''FieldDefinition)
-
 $(deriveInspectXML ''FieldPlacement)
-    
 $(deriveInspectXML ''User)
-
 $(deriveInspectXML ''SignatoryLink)
-
 $(deriveInspectXML ''SignatoryDetails)
 
 
 --Link creating types
 instance InspectXML DocumentID where
-    inspectXML x = asChild <a href=("/dave/document/" ++ show x)><% show x %></a>
+    inspectXML x = "<a href='/dave/document/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML SignatoryLinkID where
-    inspectXML x = asChild <a href=("/dave/signatorylink/" ++ show x)><% show x %></a>  
+    inspectXML x =  "<a href='/dave/signatorylink/" ++ show x ++ "'>"  ++ show x ++"</a>" 
 instance InspectXML UserID where
-    inspectXML x = asChild <a href=("/dave/user/" ++ show x)><% show x %></a>
-
---UnWrappers, usualy when we want to use above but our type is wraped    
-instance InspectXML Author where
-    inspectXML (Author x) = inspectXML x     
-instance InspectXML Friend where
-    inspectXML (Friend x) = inspectXML x
-instance InspectXML Inviter where
-    inspectXML (Inviter x) = inspectXML x
-instance InspectXML ServiceID where
-    inspectXML (ServiceID x) = inspectXML x
- 
- -- old; should be removed
-instance InspectXML DefaultMainSignatory where
-    inspectXML (DefaultMainSignatory x) = inspectXML x
-    
---Standard instances for other data types (based on show)
+    inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>" 
 instance InspectXML File where
-    inspectXML (File 
-          { fileid
-          , filename
-          , filestorage
-          })= asChild <a href=(show $ LinkFile fileid filename)><% show fileid ++ "/" ++ BS.toString filename %></a>
-                              
-instance InspectXML Integer where
-    inspectXML = asChild . show
-instance InspectXML SignOrder where
-    inspectXML (SignOrder n) = inspectXML n
-instance InspectXML SignatoryRole where
-    inspectXML = asChild . show
-instance InspectXML DocumentStatus where
-    inspectXML = asChild . show
-instance InspectXML CSVUpload where
-    inspectXML = asChild . show
-instance InspectXML DocumentType where
-    inspectXML = asChild . show
-instance InspectXML DocumentRecordStatus where
-    inspectXML = asChild . show
-instance InspectXML UserRecordStatus where
-    inspectXML = asChild . show
-instance InspectXML DocumentFunctionality where
-    inspectXML = asChild . show
-instance InspectXML ChargeMode where
-    inspectXML = asChild . show
-instance InspectXML DocumentSharing where
-    inspectXML = asChild . show
-instance InspectXML DocumentTag where
-    inspectXML = asChild . show
-instance InspectXML TimeoutTime where
-    inspectXML = asChild . show
-instance InspectXML SignInfo where
-    inspectXML = asChild . show
-instance InspectXML DocumentHistoryEntry where
-    inspectXML = asChild . show
+    inspectXML file= "<a href='" ++ (inspectXML $ LinkFile (fileid file) (filename file)) ++"'>" ++ show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
+                                  
 instance InspectXML DocumentLogEntry where
-    inspectXML (DocumentLogEntry time text) = asChild (show time ++ ": " ++ BS.toString text)
+    inspectXML (DocumentLogEntry time text) = show time ++ ": " ++ inspectXML text
+    
+--Standard classes - we will just call show with some escaping
+instance InspectXML String where
+instance InspectXML Bool where
+instance InspectXML Int where
+instance InspectXML Author where
+instance InspectXML Friend where
+instance InspectXML Inviter where
+instance InspectXML ServiceID where
+instance InspectXML DefaultMainSignatory where
+instance InspectXML Integer where
+instance InspectXML SignOrder where
+instance InspectXML SignatoryRole where
+instance InspectXML DocumentStatus where
+instance InspectXML CSVUpload where
+instance InspectXML DocumentType where
+instance InspectXML DocumentRecordStatus where
+instance InspectXML UserRecordStatus where
+instance InspectXML DocumentFunctionality where
+instance InspectXML ChargeMode where
+instance InspectXML DocumentTag where
+instance InspectXML TimeoutTime where
+instance InspectXML SignInfo where
+instance InspectXML DocumentHistoryEntry where
 instance InspectXML MagicHash where
-    inspectXML = asChild . show
 instance InspectXML Signatory where
-    inspectXML = asChild . show
 instance InspectXML MinutesTime where
-    inspectXML = asChild . show  
 instance InspectXML SupervisorID where
-    inspectXML = asChild . show  
 instance InspectXML Password where
-    inspectXML = asChild . show
 instance InspectXML FlashMessage where
-    inspectXML = asChild . show
 instance InspectXML Email where
-    inspectXML = asChild . show
-
 instance InspectXML SignupMethod where
-    inspectXML = asChild . show
-
 instance InspectXML MailsDeliveryStatus where
-    inspectXML = asChild . show
-    
 instance InspectXML UserInfo where
-    inspectXML = asChild . show 
-
 instance InspectXML UserSettings where
-    inspectXML = asChild . show 
-
 instance InspectXML UserPaymentPolicy where
-    inspectXML = asChild . show 
-
 instance InspectXML UserPaymentAccount where
-    inspectXML = asChild . show 
-                     
 instance InspectXML IdentificationType where
-    inspectXML = asChild . show
-    
 instance InspectXML CancelationReason where
-    inspectXML = asChild . show
-
 instance InspectXML SignatureProvider where
-    inspectXML = asChild . show
-
 instance InspectXML SignatureInfo where
-    inspectXML = asChild . show
-
 instance InspectXML InviteInfo where
-    inspectXML = asChild . show
-
 instance InspectXML LoginInfo where
-    inspectXML = asChild . show
-    
 instance InspectXML Company where
-    inspectXML = asChild . show
-    
 instance InspectXML CompanyID where
-    inspectXML = asChild . show
+instance InspectXML DocumentSharing where
+instance InspectXML KontraLink where
         

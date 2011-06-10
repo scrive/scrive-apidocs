@@ -60,8 +60,7 @@ module User.UserView (
 
     --utils  
     prettyName,
-    userSmallView,
-    UserSmallView(..)) where
+    userBasicFields) where
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -456,24 +455,14 @@ prettyName u =
      then unEmail . useremail $ userinfo u
      else userfullname u
 
-{- View Utills  -}
 
-{-| Users simple view (for templates) -}
-data UserSmallView = UserSmallView 
-                     { usvId       :: String
-                     , usvFullname :: String
-                     , usvEmail    :: String
-                     , usvCompany  :: String
-                     , usvPhone    :: String
-                     , usvTOSDate  :: String
-                     } deriving (Data, Typeable)
-
-{-| Conversion from 'User' to 'Option', for select box UserSmallView  -}      
-userSmallView :: User -> UserSmallView 
-userSmallView u = UserSmallView { usvId       = show $ userid u
-                                , usvFullname = BS.toString $ userfullname u
-                                , usvEmail    = BS.toString . unEmail . useremail $ userinfo u
-                                , usvCompany  = BS.toString . usercompanyname $ userinfo u
-                                , usvPhone    = BS.toString . userphone $ userinfo u
-                                , usvTOSDate  = maybe "-" show (userhasacceptedtermsofservice u)
-                                }
+{-| Basic fields for the user  -}      
+userBasicFields :: User -> Fields
+userBasicFields u = do
+    field "id" $ show $ userid u
+    field "fullname" $ BS.toString $ userfullname u
+    field "email" $ BS.toString . unEmail . useremail $ userinfo u
+    field "company" $ BS.toString . usercompanyname $ userinfo u
+    field "phone" $ BS.toString . userphone $ userinfo u
+    field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
+                          

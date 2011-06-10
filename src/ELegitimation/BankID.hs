@@ -11,7 +11,6 @@ module ELegitimation.BankID
 
 import ListUtil
 import Redirect
-import HSP (cdata)
 import AppView    
 import qualified AppLogger as Log
 import Control.Monad.State
@@ -442,7 +441,7 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
             | sid == signatorylinkid -> do
                 maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ signatoryemail (signatorydetails signatorylink))
                 content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
-                renderFromBody TopEmpty kontrakcja $ cdata content1
+                renderFromBody TopEmpty kontrakcja content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
   
 signCanceledDataMismatch :: KontrakcjaTemplates 

@@ -55,7 +55,7 @@ adminMainPage templates =  renderTemplate templates "adminsmain" ()
 adminUsersAdvancedPage::KontrakcjaTemplates -> [User] -> AdminUsersPageParams -> IO String
 adminUsersAdvancedPage templates users params =
     renderTemplate templates "adminsmanageall" $ do
-        field "users" $ map userSmallView $ visibleUsers params users
+        field "users" $ map userBasicFields $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -157,20 +157,13 @@ adminTranslationsPage templates stats =
                 field "file" file
                 field "name" name
 
-mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
-mkUserInfoView (userdetails', docstats', userstats') = 
-  UserInfoView { userdetails = userSmallView userdetails'
-               , docstats = docstats'
-               , userstats = userstats'
-               , adminview = userAdminView userdetails'
-               }
- 
-data UserInfoView = UserInfoView 
-                    { userdetails   :: UserSmallView
-                    , docstats      :: DocStats
-                    , userstats     :: UserStats
-                    , adminview     :: UserAdminView
-                    } deriving (Data, Typeable)
+mkUserInfoView :: (User, DocStats, UserStats) -> Fields
+mkUserInfoView (userdetails', docstats', userstats') = do
+  field "userdetails" $ userBasicFields userdetails'
+  field "docstats" $ docstats'
+  field "userstats" $ userstats'
+  field "adminview" $ userAdminView userdetails'
+               
                                    
 data StatsView = StatsView 
                  { svDoccount          :: Int

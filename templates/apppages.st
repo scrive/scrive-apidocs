@@ -15,7 +15,9 @@ wholePage=
       </head>
       <body>
         $bodystart()$
-        $content:noescape()$
+        <div class="mainContainer">
+            $content:noescape()$
+        </div>
         $bodyend()$ 
       </body>
     </html>

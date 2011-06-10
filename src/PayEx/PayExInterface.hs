@@ -18,7 +18,6 @@ import SOAP.SOAP
 import Kontra 
 import Happstack.Server
 import AppView
-import qualified HSP.XML as HSP
 import Doc.DocState
 import Doc.DocUtils
 import User.UserState
@@ -47,7 +46,7 @@ payexTest Nothing = do
                                          liftIO $ query $ GetUserPayments $ userid user
                           Nothing -> return []
              content <- liftIO $ viewPayments  (ctxtemplates ctx)  payments             
-             renderFromBody TopNone kontrakcja $ HSP.cdata $ content
+             renderFromBody TopNone kontrakcja $ content
              
 payexTest (Just pid) =
                    do
@@ -77,7 +76,7 @@ payexTest (Just pid) =
                                              _ ->  return payment
                                        else return payment
                                       content <- liftIO $ viewPayment (ctxtemplates ctx) payment
-                                      renderFromBody TopNone kontrakcja $ HSP.cdata $ content
+                                      renderFromBody TopNone kontrakcja $ content
                      Nothing -> sendRedirect $ LinkPayExView Nothing
 
 {-| Ajax info about how much we will chage a user for this document |-}

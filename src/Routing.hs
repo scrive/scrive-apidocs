@@ -14,7 +14,6 @@ import Control.Monad.State
 import Data.Functor
 import AppView as V
 import Data.Maybe
-import HSP.XML (cdata)
 import Happstack.Server hiding (simpleHTTP,host,body)
 import KontraLink
 import Misc
@@ -70,7 +69,7 @@ page pageBody = do
     pb <- pageBody
     ctx <- get 
     if (isNothing $ ctxservice ctx)
-     then renderFromBody TopDocument kontrakcja $ cdata pb
+     then renderFromBody TopDocument kontrakcja pb
      else embeddedPage pb 
      
 

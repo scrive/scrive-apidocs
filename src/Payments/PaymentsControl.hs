@@ -17,7 +17,6 @@ import Happstack.State (update, query)
 import KontraLink
 import Misc
 import Kontra
-import HSP (cdata)
 import Payments.PaymentsState
 import Payments.PaymentsView
 import Payments.PaymentsUtils
@@ -29,7 +28,7 @@ handlePaymentsModelForViewView = onlySuperUser $
                                   ctx<- get
                                   models <- query $ GetPaymentModels
                                   content <- liftIO $ adminView (ctxtemplates ctx) models 
-                                  renderFromBody TopEmpty kontrakcja $ cdata content
+                                  renderFromBody TopEmpty kontrakcja content
                                   
 {- | View of payment models (editable) -}
 handlePaymentsModelForEditView ::Kontra Response
@@ -38,7 +37,7 @@ handlePaymentsModelForEditView =  onlySuperUser $
                                    ctx<- get
                                    models <- query $ GetPaymentModels
                                    content <- liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
-                                   renderFromBody TopEmpty kontrakcja $ cdata content                                  
+                                   renderFromBody TopEmpty kontrakcja content                                  
 {- | Handle change of models values request.
      Supports full and partial upgrade.
      Fields names like in PaymentModelView (see PaymentsView) with PaymentAccountType suffix.

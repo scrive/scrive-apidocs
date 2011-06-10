@@ -39,7 +39,6 @@ import Control.Concurrent.MVar
 import Data.Word
 import Data.Functor
 import Doc.DocState
-import HSP hiding (Request)
 import Happstack.Server
 import MinutesTime
 import Misc
@@ -51,7 +50,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
-import HSP.XML
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
 import Mails.MailsConfig()

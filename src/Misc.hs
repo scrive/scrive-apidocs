@@ -22,8 +22,6 @@ import Data.Maybe
 import Data.Monoid
 import Data.Traversable (sequenceA)
 import Data.Word
-import HSP (evalHSP, XMLMetaData(..), renderAsHTML, IsAttrValue, toAttrValue)
-import HSX.XMLGenerator
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State
@@ -41,8 +39,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
-import qualified HSP
-import qualified HSP.XML
 import qualified AppLogger as Log
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
@@ -67,25 +63,6 @@ guardFormAction button = do
 #else
   guard (isJust maybepressed)
 #endif
-
-instance (EmbedAsChild m String) => (EmbedAsChild m BSL.ByteString) 
-    where
-        asChild = asChild . BSL.toString
-              
-instance (EmbedAsChild m String) => (EmbedAsChild m BS.ByteString) where
-    asChild = asChild . BS.toString
-
-instance (EmbedAsAttr m String) => (EmbedAsAttr m BSL.ByteString) where
-    asAttr = asAttr . BSL.toString
-
-instance (EmbedAsAttr m String) => (EmbedAsAttr m BS.ByteString) where
-    asAttr = asAttr . BS.toString
-
-instance Monad m => IsAttrValue m BS.ByteString where
-    toAttrValue = toAttrValue . BS.toString
-
-instance Monad m => IsAttrValue m BSL.ByteString where
-    toAttrValue = toAttrValue . BSL.toString
 
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
@@ -253,33 +230,6 @@ lookInputList name
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
-
--- | Render XML as a 'String' properly, i. e. with <?xml?> in the beginning.
-renderXMLAsStringHTML :: (Maybe XMLMetaData, HSP.XML.XML) -> [Char]
-renderXMLAsStringHTML (meta,content) = 
-    case meta of
-      Just (XMLMetaData (showDt, dt) _ pr) -> 
-          (if showDt then (dt ++) else id) (pr content)
-      Nothing -> renderAsHTML content
-
--- | Render XML as a 'ByteString' properly, i. e. with <?xml?> in the beginning.
-renderXMLAsBSHTML
-  :: (Maybe XMLMetaData, HSP.XML.XML) -> BS.ByteString
-renderXMLAsBSHTML = BS.fromString . renderXMLAsStringHTML
-
-
--- | Render HSP as a 'ByteString' properly, i. e. with <?xml?> in the beginning.
-renderHSPToByteString
-  :: HSP.HSP HSP.XML.XML -> IO BS.ByteString
-renderHSPToByteString xml = do
-  fmap renderXMLAsBSHTML $ evalHSP Nothing xml
-
--- | Render HSP as a 'String' properly, i. e. with <?xml?> in the beginning.
-renderHSPToString
-  :: HSP.HSP HSP.XML.XML -> IO String
-renderHSPToString xml = do
-  fmap renderXMLAsStringHTML $ evalHSP Nothing xml
-
 
 -- | Opaque 'Word64' type. Used as authentication token. Useful is the 'Random' instance.
 newtype MagicHash = MagicHash { unMagicHash :: Word64 }

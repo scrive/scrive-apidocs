@@ -16,7 +16,6 @@ import Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
 import Kontra
-import HSP (cdata)
 import Contacts.ContactsView
 import KontraLink
 import FlashMessage
@@ -26,7 +25,7 @@ showContacts ::Kontra Response
 showContacts =  do
   ctx <- lift get
   content <- liftIO $ contactsView (ctxtemplates ctx)
-  renderFromBody TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja content 
 
 {- | Process view for advanced user administration -}                    
 handleContactsChange :: Kontra KontraLink

@@ -23,7 +23,6 @@ import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update,query)
 import Misc
 import Kontra
-import HSP (cdata)
 import Administration.AdministrationView
 import Payments.PaymentsState
 import Doc.DocState
