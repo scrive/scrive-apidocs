@@ -865,43 +865,55 @@ pageDocumentForSignatory :: KontraLink
                     -> SignatoryLink
                     -> IO String 
 pageDocumentForSignatory action document ctx invitedlink  =
-  let authorsiglink = fromJust $ getAuthorSigLink document
-      localscripts =
-        "var docstate = "
-        ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
-        ++ "; docstate['useremail'] = '"
-        ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
-        ++ "'; offer = " ++ if (isOffer document) then "true" else"false"
-        ++ ";"
-      magichash = signatorymagichash invitedlink
-      allowedtypes = documentallowedidtypes document
-      requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
-      sigattachments = [a | a <- documentsignatoryattachments document
-                          , signatoryattachmentemail a == signatoryemail (signatorydetails invitedlink)]
-      hassigattachments = length sigattachments > 0
-  in do
-    print "pageDocumentForSignatory"
-    print $ show hassigattachments
-    renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
-      field "localscripts" localscripts
-      field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
-      field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (personname authorsiglink) document invitedlink
-      field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-      field "action" $ show action
-      field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
-      field "documentinfotext" $  documentInfoText ctx document (Just invitedlink)
-      field "requireseleg" requiresEleg
-      field "siglinkid" $ show $ signatorylinkid invitedlink
-      field "sigmagichash" $ show $ signatorymagichash invitedlink
-      documentInfoFields document
-      documentAuthorInfo document
-      documentViewFields document
-      signedByMeFields document (Just invitedlink)
-      documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
-      documentSigAttachmentViewFields (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
-      documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
-      field "hasmysigattachments" hassigattachments
-      
+  renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
+      mainFields
+      field "process" processFields
+  where
+    mainFields =
+      let authorsiglink = fromJust $ getAuthorSigLink document
+          localscripts =
+            "var docstate = "
+            ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
+            ++ "; docstate['useremail'] = '"
+            ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
+            ++ "';"
+          magichash = signatorymagichash invitedlink
+          allowedtypes = documentallowedidtypes document
+          requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
+          sigattachments = [a | a <- documentsignatoryattachments document
+                              , signatoryattachmentemail a == signatoryemail (signatorydetails invitedlink)]
+          hassigattachments = length sigattachments > 0
+      in do
+          field "localscripts" localscripts
+          field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
+          field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (personname authorsiglink) document invitedlink
+          field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
+          field "action" $ show action
+          field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
+          field "documentinfotext" $  documentInfoText ctx document (Just invitedlink)
+          field "requireseleg" requiresEleg
+          field "siglinkid" $ show $ signatorylinkid invitedlink
+          field "sigmagichash" $ show $ signatorymagichash invitedlink
+          documentInfoFields document
+          documentAuthorInfo document
+          documentViewFields document
+          signedByMeFields document (Just invitedlink)
+          documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
+          documentSigAttachmentViewFields (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
+          documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
+          field "hasmysigattachments" hassigattachments
+    getProcessText f = renderTemplateForProcess (ctxtemplates ctx) document f mainFields
+    processFields = do
+      field "signatorysignmodaltitle" $ getProcessText processsignatorysignmodaltitle
+      field "signatorysignmodalcontent" $ getProcessText processsignatorysignmodalcontent
+      field "signbuttontext" $ getProcessText processsignbuttontext
+      field "signatorycancelmodaltitle" $ getProcessText processsignatorycancelmodaltitle
+      field "title" $ getProcessText processtitle
+      field "signatorycancelbuttontext" $ getProcessText processsignatorycancelbuttontext
+      field "requiressignguard" $ getValueForProcess document processrequiressignguard
+      field "signguardwarntext" $ getProcessText processsignguardwarntext
+      signatoryMessageProcessFields ctx document
+
 documentSingleSignatoryAttachmentsFields :: DocumentID -> SignatoryLinkID -> MagicHash -> [SignatoryAttachment] -> Fields
 documentSingleSignatoryAttachmentsFields docid sid mh atts = 
   field "mysigattachments" $ for atts 

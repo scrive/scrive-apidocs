@@ -79,6 +79,7 @@ mailRejectMailContentHeader=
       <div class="editable" name="customtext">
       <p>Hej,</p>
       </div>
+      $endif$
 ####
 mailInvitationToViewTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###

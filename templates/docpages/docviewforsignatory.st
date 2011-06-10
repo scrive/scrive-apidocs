@@ -44,7 +44,7 @@ pageDocumentForSignContent=
     <script type="text/javascript"> var documentid = "$documentid$", siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$"; </script>
     <script type="text/javascript">
       $localscripts:noescape()$
-      var signguardwarntext = $process.signguardwarntext$
+      var signguardwarntext = '$process.signguardwarntext$';
     </script>
   </div>
 
@@ -147,11 +147,7 @@ pageDocumentForSignContent=
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer"> 
         <span class="title">
-          $if(contract)$ 
-          DOKUMENT #$documentid$:
-          $elseif(offer)$
-          OFFERT #$documentid$:
-          $endif$
+          $process.title$ #$documentid$:
         </span>
         <span class="name">$documenttitle$</span>
       </span>
