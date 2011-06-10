@@ -30,6 +30,10 @@ Flag trust-weaver-test
   Description: Build kontrakcja-trust-weaver-test
   Default: True
 
+Flag action-scheduler-test
+  Description: Build kontrakcja-action-scheduler-test
+  Default: True
+
 Executable kontrakcja-server
   if flag(server)
     Buildable: True
@@ -217,6 +221,41 @@ Executable kontrakcja-trust-weaver-test
   cpp-options: -DTrustWeaverTest=Main
 
   Main-is: TrustWeaverTest.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable kontrakcja-action-scheduler-test
+  if flag(action-scheduler-test)
+    Buildable: True
+  else
+    Buildable: False
+  Hs-source-dirs: test/src src pdfseal/inc
+
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  cpp-options: -DSchedulerTest=Main
+
+  Main-is: SchedulerTest.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,
