@@ -195,6 +195,11 @@ handleRoutes = msum [
      , dir "o" $ param "remind" $ hPost $ DocControl.handleBulkOfferRemind
      , dir "o" $ hPost $ DocControl.handleOffersReload
      
+     , dir "or" $ hGet  $ DocControl.showOrdersList
+     , dir "or" $ param "archive" $ hPost  $ DocControl.handleOrdersArchive
+     , dir "or" $ param "remind" $ hPost $ DocControl.handleBulkOrderRemind
+     , dir "or" $ hPost $ DocControl.handleOrdersReload
+     
      , dir "d"                     $ hGet  $ DocControl.showContractsList
      , dir "d"                     $ hGet  $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGet

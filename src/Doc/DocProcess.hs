@@ -318,7 +318,7 @@ orderProcess =
   , processexpirytext = "orderexpirytext"
 
   -- process specific templates used in doc views
-  , processrequiressignguard = True
+  , processrequiressignguard = False
   , processsignguardwarntext = "ordersignguardwarntext"
   , processrestartbuttontext = "orderrestartbuttontext"
   , processcancelbuttontext = "ordercancelbuttontext"

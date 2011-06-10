@@ -1387,6 +1387,16 @@ showOfferList =
            mydocuments ++ concat friends'Documents in
   showItemList' pageOffersList getOffers
 
+showOrdersList :: Kontra (Either KontraLink String)
+showOrdersList = 
+  let getOrders user = do
+        mydocuments <- query $ GetDocumentsByUser user 
+        usersICanView <- query $ GetUsersByFriendUserID $ userid user
+        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        return . filter ((==) (Signable Order) . documenttype) $
+           mydocuments ++ concat friends'Documents in
+  showItemList' pageOrdersList getOrders
+
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
   let getAttachments user = do
@@ -1560,17 +1570,25 @@ makeDocumentFromFile _ _ = mzero -- to complete the patterns
 
 handleContractArchive :: Kontra KontraLink
 handleContractArchive = do
-    Context { ctxtemplates } <- get
-    handleIssueArchive
-    addFlashMsg =<< (liftIO $ flashMessageSignableArchiveDone ctxtemplates (Signable Contract))
+    _ <- handleSignableArchive (Signable Contract)
     return $ LinkContracts emptyListParams
 
 handleOffersArchive :: Kontra KontraLink
 handleOffersArchive =  do
+    _ <- handleSignableArchive (Signable Offer)
+    return $ LinkOffers emptyListParams   
+
+handleOrdersArchive :: Kontra KontraLink
+handleOrdersArchive =  do
+    _ <- handleSignableArchive (Signable Order)
+    return $ LinkOrders emptyListParams
+
+handleSignableArchive :: DocumentType -> Kontra ()
+handleSignableArchive doctype =  do
     Context { ctxtemplates } <- get
     handleIssueArchive
-    addFlashMsg =<< (liftIO $ flashMessageSignableArchiveDone ctxtemplates (Signable Offer))
-    return $ LinkOffers emptyListParams   
+    addFlashMsg =<< (liftIO $ flashMessageSignableArchiveDone ctxtemplates doctype)
+    return ()
 
 handleTemplateArchive :: Kontra KontraLink
 handleTemplateArchive = do
@@ -1639,21 +1657,18 @@ handleAttachmentRename docid = withUserPost $ do
     
 handleBulkContractRemind :: Kontra KontraLink
 handleBulkContractRemind = withUserPost $ do
-    Context { ctxtemplates } <- get
-    remindedsiglinks <- handleIssueBulkRemind
-    case (length remindedsiglinks) of
-      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates (Signable Contract))
-      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates (Signable Contract))
+    _ <- handleIssueBulkRemind (Signable Contract)
     return $ LinkContracts emptyListParams
 
 handleBulkOfferRemind :: Kontra KontraLink
-handleBulkOfferRemind =  withUserPost $ do
-    Context { ctxtemplates } <- get
-    remindedsiglinks <- handleIssueBulkRemind
-    case (length remindedsiglinks) of
-      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates (Signable Offer))
-      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates (Signable Offer))
+handleBulkOfferRemind = withUserPost $ do
+    _ <- handleIssueBulkRemind (Signable Offer)
     return $ LinkOffers emptyListParams   
+
+handleBulkOrderRemind :: Kontra KontraLink
+handleBulkOrderRemind = withUserPost $ do
+    _ <- handleIssueBulkRemind (Signable Order)
+    return $ LinkOrders emptyListParams   
 
 {- |
     This sends out bulk reminders.  The functionality is offered in the document
@@ -1661,12 +1676,15 @@ handleBulkOfferRemind =  withUserPost $ do
     and send out reminders only to signatories who haven't accepted or signed on those that are 
     pending.  This returns all the signatory links that were reminded.
 -}
-handleIssueBulkRemind :: Kontra [SignatoryLink]
-handleIssueBulkRemind = do
-    ctx@(Context { ctxmaybeuser = Just user }) <- get
+handleIssueBulkRemind :: DocumentType -> Kontra [SignatoryLink]
+handleIssueBulkRemind doctype = do
+    ctx@(Context { ctxtemplates, ctxmaybeuser = Just user }) <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
+    case (length remindedsiglinks) of
+      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates doctype)
+      _ -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates doctype)
     return remindedsiglinks
     where
       docRemind :: Context -> User -> DocumentID -> Kontra [SignatoryLink]
@@ -1700,6 +1718,9 @@ handleAttachmentReload = fmap LinkAttachments getListParamsForSearch
 
 handleOffersReload :: Kontra KontraLink
 handleOffersReload = fmap LinkOffers getListParamsForSearch
+
+handleOrdersReload :: Kontra KontraLink
+handleOrdersReload = fmap LinkOrders getListParamsForSearch
 
 {- |
    Get some html to display the images of the files
@@ -1862,6 +1883,7 @@ getDocType = getOptionalField asDocType "doctype"
     asDocType val
       | val == show Offer = Good $ Signable Offer
       | val == show Contract = Good $ Signable Contract
+      | val == show Order = Good $ Signable Order
       | otherwise = Empty
 
 idmethodFromString :: String -> Maybe IdentificationType

@@ -60,6 +60,7 @@ module Doc.DocView (
   , pageDocumentForSignatory
   , pageDocumentForViewer
   , pageOffersList
+  , pageOrdersList
   , pageTemplatesList
   , showFilesImages2
   , signatoryDetailsFromUser
@@ -438,6 +439,9 @@ pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
 pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
 pageOffersList = pageList' "pageOffersList" LinkOffers
 
+pageOrdersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageOrdersList = pageList' "pageOrdersList" LinkOrders
+
 {- |
     Helper function for list pages
 -}
@@ -457,6 +461,8 @@ pageList' templatename makeCurrentLink templates ctime user documents =
     field "documentactive" $ documentactive
     field "linkofferlist" $ show $ LinkOffers emptyListParams
     field "offeractive" $ offeractive
+    field "linkorderlist" $ show $ LinkOrders emptyListParams
+    field "orderactive" $ orderactive
     field "linktemplatelist" $ show $ LinkTemplates emptyListParams
     field "templateactive" $ templateactive
     field "linkattachmentlist" $ show $ LinkAttachments emptyListParams
@@ -468,6 +474,9 @@ pageList' templatename makeCurrentLink templates ctime user documents =
                        _ -> False
     offeractive = case currentlink of
                        (LinkOffers _) -> True
+                       _ -> False
+    orderactive = case currentlink of
+                       (LinkOrders _) -> True
                        _ -> False
     templateactive = case currentlink of
                        (LinkTemplates _) -> True
@@ -1134,7 +1143,7 @@ uploadPage ctx params mdoctype showTemplates = renderTemplate (ctxtemplates ctx)
     field "isprocessselected" $ isJust mdoctype
     field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdoctype
     field "showTemplates" showTemplates
-    field "processes" $ map processFields [Signable Contract, Signable Offer]
+    field "processes" $ map processFields [Signable Contract, Signable Offer, Signable Order]
     case mdoctype of
       Just selectedoctype -> do
         field "selectedprocess" $ processFields selectedoctype

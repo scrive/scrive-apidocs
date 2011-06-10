@@ -3,6 +3,7 @@ docListTabs=
 <ul class="tabs">
   $docListTabItem(active=documentactive;link=linkdoclist;name="Dokument")$
   $docListTabItem(active=offeractive;link=linkofferlist;name="Offerter")$
+  $docListTabItem(active=orderactive;link=linkorderlist;name="Orderbekräftelser")$
   $docListTabItem(active=templateactive;link=linktemplatelist;name="Mallar")$
   $docListTabItem(active=attachmentactive;link=linkattachmentlist;name="Bilagor")$ 
 </ul>

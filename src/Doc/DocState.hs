@@ -1069,7 +1069,7 @@ getSharedTemplates userids = queryDocs $ \documents ->
     filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
 
 justTemplates :: (Indexable a, Typeable a, Ord a) => IxSet a -> IxSet a
-justTemplates docs = (docs @= Template Offer) ||| (docs @= Template Contract)
+justTemplates docs = (docs @= Template Offer) ||| (docs @= Template Contract) ||| (docs @= Template Order)
 
 signableFromDocument :: Document -> Update Documents Document
 signableFromDocument doc = insertNewDocument $ templateToDocument doc

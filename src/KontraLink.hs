@@ -51,6 +51,7 @@ data KontraLink
     | LinkContracts ListParams
     | LinkTemplates ListParams
     | LinkOffers ListParams
+    | LinkOrders ListParams
     | LinkAttachments ListParams
     | LinkMain 
     | LinkNew (Maybe DocumentType) ListParams Bool
@@ -112,6 +113,7 @@ instance Show KontraLink where
     showsPrec _ (LinkContracts params) = (++) $ "/d" ++ "?" ++ show params
     showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
     showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
+    showsPrec _ (LinkOrders params) = (++) $ "/or" ++ "?" ++ show params
     showsPrec _ (LinkAttachments params) = (++) $ "/a" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ (LinkNew mdoctype params templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdoctype) ++"&"++ show params

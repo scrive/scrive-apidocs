@@ -124,7 +124,7 @@ pageDocumentDesign=
                   <span class="partnumber">PART 1</span>
                     $if(!isbasic)$
                     $if(!process.isauthorsend)$
-                      <a href="#man2" class="man"></a>
+                    <a href="#man2" class="man"></a>
                     $endif$
                     <a href="#" class="signingOrder"></a>
                     <select id="authorsignorder" class="float-right">
@@ -132,7 +132,7 @@ pageDocumentDesign=
                       <option value=""></option>
                     </select>
                     $endif$
-                    $if(!featureenabled)$
+                    $if(featureenabled)$
                     <a class="plus" href="#"></a>
                     $endif$
                 </div>
@@ -467,15 +467,17 @@ pageDocumentDesign=
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       $if(isbasic)$
-        <input type="hidden" name="signatoryrole" value="signatory">
+      <input type="hidden" name="signatoryrole" value="signatory">
       $else$
-        $if(!process.isauthorsend)$
-          <a href="#" class="man"></a>
-        $endif$
-        <a href="#" class="csv single" rel="#dialog-csvupload-1"></a>
-        <a href="#" class="csv multi" rel="#dialog-csvupload-2" style="display:none;"></a>
-        <a href="#" class="signingOrder"></a>
-        <select class="signorder float-right" name="signatorysignorder"></select>
+      $if(process.isauthorsend)$
+      <input type="hidden" name="signatoryrole" value="signatory">
+      $else$
+      <a href="#" class="man"></a>
+      $endif$
+      <a href="#" class="csv single" rel="#dialog-csvupload-1"></a>
+      <a href="#" class="csv multi" rel="#dialog-csvupload-2" style="display:none;"></a>
+      <a href="#" class="signingOrder"></a>
+      <select class="signorder float-right" name="signatorysignorder"></select>
       $endif$
       $if(featureenabled)$
         <a href="#" class="plus"></a>
