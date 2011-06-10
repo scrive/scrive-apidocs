@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExConfig
@@ -9,9 +9,6 @@
 --  Configuration of PayEx service 
 -----------------------------------------------------------------------------
 module PayEx.PayExConfig(PayExConfig(..),getPayExConfig) where
-import Control.Monad.Reader
-import Payments.PaymentsState
-import PayEx.PayExState
 
 {- | View of payment models (not editable) -}
 getPayExConfig:: IO PayExConfig
