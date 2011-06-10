@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.TemplatesLoader
@@ -27,11 +27,7 @@ module Templates.TemplatesLoader
 import Text.StringTemplate 
 import Text.StringTemplate.Base
 import Text.StringTemplate.Classes
-import System.IO
 import Control.Monad
-import Data.Maybe
-import Data.List
-import Data.Char
 import qualified Data.Map as Map
 import Data.Map ((!))
 import AppLogger as Log
@@ -95,7 +91,7 @@ templateList :: IO ()
 templateList = do 
     ts <- fmap concat $ sequence (map getTemplates templatesFilesPath)         
     let tsnames = map fst ts
-    let tsgroup =  groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) ts
+    let tsgroup :: KontrakcjaTemplates =  groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) ts
     sequence_ $ map (printTemplateData tsgroup) tsnames
     
     
