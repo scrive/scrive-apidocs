@@ -2898,3 +2898,7 @@ table#signViewSigAttachmentBoxList td {
 table#signViewSigAttachmentBoxList form {
     width: 112px;
 }
+
+table#signatorysignatoryattachments {
+    width: 100%;
+}

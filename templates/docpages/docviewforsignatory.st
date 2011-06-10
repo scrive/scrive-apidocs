@@ -176,7 +176,7 @@ pageDocumentForSignContent=
             $endif$
             $if(hassigattachments)$
             <div class="subheader">Bägarda bilagor:</div>
-            <table>
+            <table id="signatorysignatoryattachments">
               <tbody>
                 $sigattachments:{attachment |
                 <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
