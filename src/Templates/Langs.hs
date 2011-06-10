@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Langs
@@ -17,26 +17,11 @@ module Templates.Langs
         , Lang(..)
     ) where
 
-import Text.StringTemplate 
-import Text.StringTemplate.Base
-import Text.StringTemplate.Classes
-import System.IO
-import Control.Monad
-import Data.Maybe
 import Data.List
-import Data.Char
 import Data.Functor
-import Text.Html (stringToHtmlString)
-import System.Directory
 import System.Time
-import Templates.TemplatesFiles
 import Misc
-import qualified Data.Map as Map
-import System.IO
-import System.Directory
-import Text.I18n.Po hiding (putStrLn)
 import Templates.TextTemplates
-import Data.Map (empty,insert, Map)
 import User.Lang
 
 
@@ -52,10 +37,6 @@ getTextTemplates lang = do
 
 getTextTemplatesMTime :: IO ClockTime
 getTextTemplatesMTime = maximum <$> (sequence $ map getRecursiveMTime translationDirs)
-
-generatePOTFiles:: IO ()
-generatePOTFiles = Templates.TextTemplates.generatePOTFiles True
-
 
 getTranslationStats:: IO [(Lang,TranslationStats)]
 getTranslationStats = do
@@ -81,7 +62,7 @@ translationStats tts lng =
    , extraFiles = extra
    , notSynchronisedFiles  = (notSynch \\ missing)  \\ extra
    , emptyTranslations = let 
-                          empt = mapSnd (filter (\(a,b) ->  null b)) lng 
+                          empt = mapSnd (filter (\(_, b) ->  null b)) lng 
                           joined = map (\(k,l) -> map (\(a,_) -> (k,a)) l) empt
                         in concat joined
 }
