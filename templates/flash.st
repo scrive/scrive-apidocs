@@ -25,6 +25,9 @@ flashMessageContractCanceled=
 flashMessageOfferCanceled=
      Du har nu återkallat offerten och ett meddlande om återkallelsen har skickats till samtliga parter
 #####
+flashMessageOrderCanceled=
+     Du har nu återkallat ordern att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
+#####
 flashMessageNoAccountType=
      Du måste välja kontotyp.
 #####
@@ -52,6 +55,9 @@ flashMessageContractRestarted=
 ###
 flashMessageOfferRestarted=
     Du har startat om offerten och kan nu skicka den på nytt
+###
+flashMessageOrderRestarted=
+    Du har startat om orderbekräftelsen och kan nu skicka den på nytt
 ###
 flashMessageUserPasswordChanged=Ditt lösenord har ändrats.
 
@@ -196,9 +202,15 @@ flashMessageBulkOfferRemindsSent=Påminnelse har skickats till alla mottagare so
 ###
 flashMessageNoBulkOfferRemindsSent=Tyvärr, det finns inga mottagare som återstår att acceptera.
 ###
+flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
+###
+flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
+###
 flashMessageContractArchiveDone=Valda dokument har blivit raderade.
 ###
 flashMessageOfferArchiveDone=Valda offerter har blivit raderade.
+###
+flashMessageOrderArchiveDone=Valda orderbekräftelse har blivit raderade.
 ###
 flashMessageTemplateArchiveDone=Valda mallar har blivit raderade.
 ###
@@ -235,6 +247,8 @@ flashMessagePleaseSignWithEleg=Du undertecknar dokumentet längst ned. Det kräv
 flashMessagePleaseSignContract=Underteckna dokumentet längst ned på sidan.
 ###
 flashMessagePleaseSignOffer=Du kan acceptera offerten längst ned på sidan.
+###
+flashMessagePleaseSignOrder=Du kan bekräftat ordern längst ned på sidan.
 ###
 flashMessageUserHasLiveDocs=Unable to remove account(s) as there are some remaining documents that need to be finalised (spec/translate me please).
 ###

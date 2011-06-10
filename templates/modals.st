@@ -66,6 +66,33 @@ modalOfferCreated=
     </a>
   </div>
 </div>
+###
+modalOrderCreated=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Orderbekräftelsen skickad!</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p> Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats till <strong>$signatory$</strong>. 
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>Stäng</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
 ####
 modalOfferSignedHasAccount=
 <div class="modal-container">
@@ -449,6 +476,82 @@ modalSignedViewClosedHasAccountLoggedIn=
   </div>
 </div>
 ####
+####
+modalSignedViewOrderClosedHasAccount=
+$if(isloggedin)$
+$modalSignedViewOrderClosedHasAccountLoggedIn()$
+$else$
+$modalSignedViewOrderClosedHasAccountNotLoggedIn()$
+$endif$
+####
+modalSignedViewOrderClosedHasAccountNotLoggedIn=
+<div class="modal-container">
+  <form method="post" action="$linklogin$">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>Du har bekräftat ordern $documenttitle$</h3>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>
+          $partyListString:noescape()$ har nu bekräftat ordern.
+        </p>
+        <p>
+          Orderbekräftelsen har sparats till ditt konto.
+        </p>
+        $loginModalPart()$
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">Stäng</a>
+        <a href="#" class="txt-link message">Glömt lösenord</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit">
+        <div class="left"></div>
+        <div class="label">
+          <p>Logga in</p>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </form>
+</div>
+####
+modalSignedViewOrderClosedHasAccountLoggedIn=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har bekräftat ordern $documenttitle$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>
+        $partyListString:noescape()$ har nu bekräftat ordern.
+      </p>
+      <p>
+        Orderbekräftelsen har sparats till ditt konto.
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>Stäng</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+####
 modalSignedViewClosedNoAccount=
 <div class="modal-container">
   <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
@@ -458,6 +561,31 @@ modalSignedViewClosedNoAccount=
       <h3>Du har undertecknat!</h3>
       <p>
         Dokumentet är nu bindande. SkrivaPå har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.
+      </p>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      $accountFromSignInputs()$
+    </div>
+  </div>
+  <div class="modal-footer">
+      $accountFromSignFooter()$
+  </div>
+  </form>
+</div>
+####
+####
+modalSignedViewOrderClosedNoAccount=
+<div class="modal-container">
+  <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har bekräftat ordern!</h3>
+      <p>
+        Vi har skickat ett original orderbekräftelse till din inkorg.
       </p>
     </span>
     <a class="modal-close close"> </a>
@@ -554,16 +682,93 @@ modalSignedViewNotClosedHasAccountNotLoggedIn=
 </div>
 #####
 #####
-modalSignedViewNotClosedNoAccount=
+modalSignedViewOrderNotClosedHasAccount=
+$if(isloggedin)$
+$modalSignedViewOrderNotClosedHasAccountLoggedIn()$
+$else$
+$modalSignedViewOrderNotClosedHasAccountNotLoggedIn()$
+$endif$
+#####
+modalSignedViewOrderNotClosedHasAccountLoggedIn=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har bekräftat ordern $documenttitle$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>
+        $partyUnsignedListString:noescape()$ har ännu inte
+        bekräftat.
+      </p>
+      <p>
+        Orderbekräftelsen har sparats till ditt konto.
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>Stäng</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+#####
+modalSignedViewOrderNotClosedHasAccountNotLoggedIn=
+<div class="modal-container">
+  <form method="post" action="$linklogin$">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>Du har bekräftat ordern $documenttitle$</h3>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>
+          $partyUnsignedListString:noescape()$ har ännu inte
+          bekräftat.
+        </p>
+        <p>
+          Orderbekräftelsen har sparats till ditt konto.
+        </p>
+        $loginModalPart()$
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">Stäng</a>
+        <a href="#" class="txt-link message">Glömt lösenord</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit">
+        <div class="left"></div>
+        <div class="label">
+          <p>Logga in</p>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </form>
+</div>
+#####
+modalSignedViewOrderNotClosedNoAccount=
 <div class="modal-container">
   <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat!</h3>
+      <h3>Du har bekräftat ordern!</h3>
       <p>
-        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar SkrivaPå ett verifikat,
-        dokumentet blir bindande och en kopia skickas till din e-post.
+        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
       </p>
     </span>
     <a class="modal-close close"> </a>

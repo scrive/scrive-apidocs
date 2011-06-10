@@ -9,17 +9,25 @@ signatorysignedcontracttext=Undertecknat
 ####
 signatorysignedoffertext=Accepterat offert
 ####
+signatorysignedordertext=Ordern bekräftad
+####
 signatorycanceledcontracttext=
 ####
 signatorycanceledoffertext=Offert återkallad
+####
+signatorycanceledordertext=Order återkallad
 ####
 contractauthorissecretarytext=Avsändare: Ej undertecknande part
 ####
 offerauthorissecretarytext=Avsändare
 ####
+orderauthorissecretarytext=Avsändare
+####
 contractremindagainbuttontext=Skicka dokumentet igen
 ####
 offerremindagainbuttontext=Skicka offert igen
+####
+orderremindagainbuttontext=Skicka orderbekräftelse igen
 ####
 signatoryBox =
 <div class="signViewBodyRight  $if(signatory.author)$author$endif$">

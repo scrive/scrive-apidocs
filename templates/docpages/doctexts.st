@@ -5,37 +5,57 @@ contractpendingauthornotsignedinfoheader=
 offerpendingauthornotsignedinfoheader=
   Granska innan accept
 ###
+orderpendingauthornotsignedinfoheader=
+  Granska innan bekräftelse
+###
 contractpendingauthornotsignedinfotext=
   Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
 ###
 offerpendingauthornotsignedinfotext=
   Vänligen var noga med att granska offerten innan du accepterar.
 ###
+orderpendingauthornotsignedinfotext=
+  Vänligen var noga med att granska ordern innan du bekräftar.
+###
 contractpendingauthorinfoheader=Väntar
 ###
 offerpendingauthorinfoheader=Väntar på accept
+###
+orderpendingauthorinfoheader=Väntar på bekräftelse
 ###
 contractpendingauthorinfotext=Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
 ###
 offerpendingauthorinfotext=Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
 ###
+orderpendingauthorinfotext=Du har skickat orderbekräftelsen. Orderbekräftelsen har ännu inte bekräftats av din mottagare.
+###
 contractcancelledinfoheader=Dokument återkallat
 ###
 offercancelledinfoheader=Offert återkallad
+###
+ordercancelledinfoheader=Order återkallad
 ###
 contractcancelledinfotext=$authorname$  har återkallat sin inbjudan att underteckna dokumentet.
 ###
 offercancelledinfotext=$authorname$ har återkallat offerten. Den går således inte att acceptera.
 ###
+ordercancelledinfotext=$authorname$ har återkallat ordern. Den går således in att acceptera.
+###
 contractsignedinfoheader=Färdigställt
 ###
 offersignedinfoheader=Offert accepterad
+###
+ordersignedinfoheader=Ordern bekräftad
 ###
 contractsignedinfotext=Samtliga parter har undertecknat dokumentet.
 ###
 offersignedinfotext=
     $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
     har accepterat offerten $documenttitle$  från $authorfstname$ $authorsndname$ .
+###
+ordersignedinfotext=
+    $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
+    har bekräftat ordern $documenttitle$  från $authorfstname$ $authorsndname$ .
 ##########
 documentInfoText=
                 $if(pending)$

@@ -415,7 +415,7 @@ data DocumentStatus = Preparation
 data DocumentType0 = Contract0 | ContractTemplate0 | Offer0 | OfferTemplate0 | Attachment0 | AttachmentTemplate0
     deriving (Eq, Ord, Typeable)
 
-data DocumentProcess = Contract | Offer
+data DocumentProcess = Contract | Offer | Order
     deriving (Eq, Ord, Typeable)
 
 data DocumentType = Signable DocumentProcess | Template DocumentProcess | Attachment | AttachmentTemplate

@@ -1122,31 +1122,47 @@ contracttitle=DOKUMENT
 ###
 offertitle=OFFERT
 ###
+ordertitle=ORDER-BEKRÄFTELSE
+###
 contractname=Avtal
 ###
 offername=Offert
+###
+ordername=Orderbekräftelse
 ###
 contractstep1text=Välj dokument
 ####
 offerstep1text=Välj offert
 ###
+orderstep1text=Välj orderbekräftelse
+###
 contractexpirywarntext=Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.
 ####
 offerexpirywarntext=Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum. Detta regleras av avtalslagen.
+####
+orderexpirywarntext=Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.
 ####
 contractsendtext=Skicka
 ####
 offersendtext=Skicka offert
 ####
+ordersendtext=Skicka order
+####
 contractconfirmsendtitle=Skicka inbjudan
 ####
 offerconfirmsendtitle=Skicka offert
+####
+orderconfirmsendtitle=Skicka orderbekräftelse
 ####
 contractconfirmsendtext= 
 ####
 offerconfirmsendtext=Är du säker på att du vill skicka offerten
 ####
+orderconfirmsendtext=Är du säker att du vill skicka orderbekräftelsen
+####
 contractexpirytext=Undertecknas inom
 ####
 offerexpirytext=Förfallodatum
+####
+orderexpirytext=Förfallodatum
 ####

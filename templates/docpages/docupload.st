@@ -1,11 +1,15 @@
 ####    Pages for documents - main part of system
-contractuploadname=Avtal
+contractuploadname=AVTAL
 ####
-offeruploadname=Offert
+offeruploadname=OFFERT
+####
+orderuploadname=ORDER-BEKRÄFTELSE
 ####
 contractuploadprompttext=Välj det dokument som du vill skicka till din motpart för påskrift.
 ####
 offeruploadprompttext=Välj den offert som du vill skicka till din motpart.
+####
+orderuploadprompttext=Välj det dokument som du vill skicka till din motpart för påskrift.
 ####
 uploadPage=   
 $loadingdialog()$

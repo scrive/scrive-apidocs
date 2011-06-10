@@ -3,6 +3,8 @@ contractsignatorysignmodaltitle=Är du säker att du vill underteckna?
 ####
 offersignatorysignmodaltitle=Är du säker att du vill acceptera offerten?
 ####
+ordersignatorysignmodaltitle=Är du säker att du vill bekräfta ordern?
+####
 contractsignatorysignmodalcontent=
           <p>När $partyUnsigned:noescape()$ undertecknat blir 
             avtalet <strong>juridiskt bindande</strong> och
@@ -12,9 +14,14 @@ contractsignatorysignmodalcontent=
 offersignatorysignmodalcontent=
           <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
 ####
+ordersignatorysignmodalcontent=
+          <p>Genom att klicka ”bekräfta order” kommer du att bekräfta ordern <strong>$documenttitle$</strong>. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.</p>
+####
 contractsignbuttontext=SkrivaPå
 ####
 offersignbuttontext=Acceptera offert
+####
+ordersignbuttontext=Bekräfta order
 ####
 contractsignatorycancelmodaltitle=
           <h2>Avvisa</h2>   
@@ -26,15 +33,23 @@ offersignatorycancelmodaltitle=
             Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
           </p>
 ####
+ordersignatorycancelmodaltitle=
+          <h2>Är du säker på att du vill avvisa?</h2>   
+          <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
+            Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
+          </p>
+####
 contractsignatorycancelbuttontext=Avvisa dokument
 ####
 offersignatorycancelbuttontext=Avvisa
+####
+ordersignatorycancelbuttontext=Avvisa
 ####
 contractsignguardwarntext=För att underteckna måste du först klicka i kryssrutan
 ####
 offersignguardwarntext=För att bekräfta måste du först klicka i kryssrutan
 ######
-######
+ordersignguardwarntext=För att bekräfta måste du först klicka i kryssrutan
 ######
 pageDocumentForSignContent=
 <script type="text/javascript" src="/js/bankid.js"></script>

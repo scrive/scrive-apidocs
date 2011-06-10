@@ -32,6 +32,8 @@ instance HasProcess DocumentType where
   getProcess (Template Contract) = Just contractProcess
   getProcess (Signable Offer) = Just offerProcess
   getProcess (Template Offer) = Just offerProcess
+  getProcess (Signable Order) = Just orderProcess
+  getProcess (Template Order) = Just orderProcess
   getProcess _ = Nothing
 
 instance HasProcess Document where
@@ -290,3 +292,89 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   }
+
+orderProcess :: DocProcessInfo
+orderProcess =
+  DocProcessInfo {
+
+  -- templates used in lots of different places
+    processtitle = "ordertitle"
+  , processname = "ordername"
+
+  -- used when uploading
+  , processuploadprompttext = "orderuploadprompttext"
+  , processuploadname = "orderuploadname"
+
+  -- used in the design view
+  , processadvancedview = True
+  , processauthorsend = True
+  , processvalidationchoiceforbasic = True
+  , processexpiryforbasic = True
+  , processstep1text = "orderstep1text"
+  , processexpirywarntext = "orderexpirywarntext"
+  , processsendbuttontext = "ordersendtext"
+  , processconfirmsendtitle = "orderconfirmsendtitle"
+  , processconfirmsendtext = "orderconfirmsendtext"
+  , processexpirytext = "orderexpirytext"
+
+  -- process specific templates used in doc views
+  , processrequiressignguard = True
+  , processsignguardwarntext = "ordersignguardwarntext"
+  , processrestartbuttontext = "orderrestartbuttontext"
+  , processcancelbuttontext = "ordercancelbuttontext"
+  , processcancelbyauthormodaltitle = "ordercancelbyauthormodaltitle"
+  , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
+  , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
+  , processsignbuttontext = "ordersignbuttontext"
+  , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
+  , processsignatorycancelbuttontext = "ordersignatorycancelbuttontext"
+  , processsignatorysignedtext = "signatorysignedordertext"
+  , processsignatorycanceledtext = "signatorycanceledordertext"
+  , processauthorissecretarytext = "orderauthorissecretarytext"
+  , processremindagainbuttontext = "orderremindagainbuttontext"
+
+  -- process specific doc mail template names
+  , processmailcancelbyauthorstandardheader = "mailCancelOrderByAuthorStandardHeader"
+  , processmailcancelbyauthorcontent = "mailCancelOrderByAuthorContent"
+  , processmailclosedcontent = "mailOrderClosedContent"
+  , processmailrejectcontent = "mailRejectOrderMailContent"
+  , processmailinvitationtosigncontent = "mailInvitationToSignOrderContent"
+  , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
+  , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
+  , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
+  , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+
+  -- process specific flash messages
+  , processflashmessagecanceled = "flashMessageOrderCanceled"
+  , processflashmessagerestarted = "flashMessageOrderRestarted"
+  , processflashmessagearchivedone = "flashMessageOrderArchiveDone"
+  , processflashmessagebulkremindssent = "flashMessageBulkOrderRemindsSent"
+  , processflashmessagenobulkremindssent = "flashMessageNoBulkOrderRemindsSent"
+  , processflashmessagepleasesign = "flashMessagePleaseSignOrder"
+
+  -- process specific modal templates
+  , processmodalsignedviewclosedhasaccount = "modalSignedViewOrderClosedHasAccount"
+  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewOrderNotClosedHasAccount"
+  , processmodalsignedviewclosednoaccount = "modalSignedViewOrderClosedNoAccount"
+  , processmodalsignedviewnotclosednoaccount = "modalSignedViewOrderNotClosedNoAccount"
+  , processmodalsendconfirmation = "modalOrderCreated"
+
+  -- process specific seal information
+  , processsealincludesmaxtime = True
+  , processsealingtext = "ordersealingtexts"
+  , processlasthisentry = "orderLastHistEntry"
+  , processinvitationsententry = "orderInvitationSentEntry"
+  , processseenhistentry = "orderSeenHistEntry"
+  , processsignhistentry = "orderSignHistEntry"
+
+  -- doctexts templates
+  , processpendingauthornotsignedinfoheader = "orderpendingauthornotsignedinfoheader"
+  , processpendingauthornotsignedinfotext = "orderpendingauthornotsignedinfotext"
+  , processpendingauthorinfoheader = "orderpendingauthorinfoheader"
+  , processpendingauthorinfotext = "orderpendingauthorinfotext"
+  , processcancelledinfoheader = "ordercancelledinfoheader"
+  , processcancelledinfotext = "ordercancelledinfotext"
+  , processsignedinfoheader = "ordersignedinfoheader"
+  , processsignedinfotext = "ordersignedinfotext"
+  }
+

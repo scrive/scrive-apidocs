@@ -3,9 +3,13 @@ contractrestartbuttontext=Starta om dokument
 ###
 offerrestartbuttontext=Starta om offert
 ###
+orderrestartbuttontext=Starta om orderbekräftelse
+###
 contractcancelbuttontext=Återkalla inbjudan
 ###
 offercancelbuttontext=Återkalla offert
+###
+ordercancelbuttontext=Återkalla orderbekräftelse
 ###
 contractcancelbyauthormodaltitle=
          <h2>Återkalla inbjudan</h2> 
@@ -16,6 +20,10 @@ contractcancelbyauthormodaltitle=
 offercancelbyauthormodaltitle=
          <h2>Är du säker att du vill återkalla offerten?</h2>
           <p>När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.</p>
+###
+ordercancelbyauthormodaltitle=
+         <h2>Är du säker att du vill återkalla orderbekräftelsen?</h2>
+          <p>När du återkallat orderbekräftelsen kommer nedanstående meddelande att skickas till din motpart.</p>
 ###
 pageDocumentForAuthor=
 <div class="localdialogs">
