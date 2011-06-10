@@ -23,7 +23,11 @@ Flag test
   Default: True
 
 Flag input-validation-test
-  Description: Build input-validation-test
+  Description: Build kontrakcja-input-validation-test
+  Default: True
+
+Flag trust-weaver-test
+  Description: Build kontrakcja-trust-weaver-test
   Default: True
 
 Executable kontrakcja-server
@@ -178,6 +182,41 @@ Executable kontrakcja-input-validation-test
   cpp-options: -DInputValidationTest=Main
 
   Main-is: InputValidationTest.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable kontrakcja-trust-weaver-test
+  if flag(trust-weaver-test)
+    Buildable: True
+  else
+    Buildable: False
+  Hs-source-dirs: test/src src pdfseal/inc
+
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  cpp-options: -DTrustWeaverTest=Main
+
+  Main-is: TrustWeaverTest.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

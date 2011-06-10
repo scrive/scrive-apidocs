@@ -1,15 +1,25 @@
-module TrustWeaverTest(
-    trustWeaverTests
-) where
+{-# LANGUAGE CPP #-}
+module TrustWeaverTest where
 
 import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
-import Test.Framework (Test, testGroup)
+import Test.Framework (Test, testGroup, defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
+import System.IO
 
 import MinutesTime
 
 import qualified Data.ByteString as BS
 import qualified TrustWeaver as TW
+
+main :: IO ()
+main = do
+    hSetEncoding stdout utf8
+    hSetEncoding stderr utf8
+    defaultMain tests
+
+tests :: [Test]
+tests = [ testGroup "TrustWeaver" trustWeaverTests
+        ]
 
 {-
 
