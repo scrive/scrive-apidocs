@@ -974,6 +974,37 @@ data Document24 = Document24
     } deriving Typeable
 
 -- migration for author attachments
+data Document25 = Document25
+    { documentid25                     :: DocumentID
+    , documenttitle25                  :: BS.ByteString
+    , documentsignatorylinks25         :: [SignatoryLink]
+    , documentfiles25                  :: [File]
+    , documentsealedfiles25            :: [File]
+    , documentstatus25                 :: DocumentStatus
+    , documenttype25                   :: DocumentType
+    , documentfunctionality25          :: DocumentFunctionality
+    , documentctime25                  :: MinutesTime
+    , documentmtime25                  :: MinutesTime
+    , documentdaystosign25             :: Maybe Int    
+    , documenttimeouttime25            :: Maybe TimeoutTime
+    , documentinvitetime25             :: Maybe SignInfo
+    , documentlog25                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext25             :: BS.ByteString
+    , documenttrustweaverreference25   :: Maybe BS.ByteString
+    , documentallowedidtypes25         :: [IdentificationType]
+    , documentcsvupload25              :: Maybe CSVUpload
+    , documentcancelationreason25      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing25                :: DocumentSharing
+    , documentrejectioninfo25          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags25                   :: [DocumentTag]
+    , documentservice25                :: Maybe ServiceID
+    , documentattachments25            :: [DocumentID]
+    , documentoriginalcompany25        :: Maybe CompanyID
+    , documentrecordstatus25           :: DocumentRecordStatus
+    , documentquarantineexpiry25       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
+    } deriving Typeable
+
+-- migration for author attachments
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -999,12 +1030,13 @@ data Document = Document
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
     , documentattachments            :: [DocumentID]
-    , documentauthorattachments      :: [AuthorAttachment]
     , documentoriginalcompany        :: Maybe CompanyID
     , documentrecordstatus           :: DocumentRecordStatus
     , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
-    , documentsignatoryattachments   :: [SignatoryAttachment]
+    , documentauthorattachments      :: [AuthorAttachment]
+    , documentsignatoryattachments   :: [SignatoryAttachment]    
     }
+
 
 data CancelationReason =  ManualCancel
                         -- The data returned by ELeg server
@@ -1742,9 +1774,13 @@ $(deriveSerialize ''Document24)
 instance Version Document24 where
     mode = extension 24 (Proxy :: Proxy Document23)
 
+$(deriveSerialize ''Document25)
+instance Version Document25 where
+    mode = extension 25 (Proxy :: Proxy Document24)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 25 (Proxy :: Proxy Document24)
+    mode = extension 26 (Proxy :: Proxy Document25)
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
@@ -2540,7 +2576,7 @@ instance Migrate Document23 Document24 where
                 , documentoriginalcompany24        = Nothing
                 }
 
-instance Migrate Document24 Document where
+instance Migrate Document24 Document25 where
     migrate (Document24
              { documentid24
              , documenttitle24
@@ -2567,36 +2603,96 @@ instance Migrate Document24 Document where
              , documentservice24
              , documentoriginalcompany24
              , documentattachments24
+             }) = Document25
+                { documentid25                     = documentid24
+                , documenttitle25                  = documenttitle24
+                , documentsignatorylinks25         = documentsignatorylinks24
+                , documentfiles25                  = documentfiles24
+                , documentsealedfiles25            = documentsealedfiles24
+                , documentstatus25                 = documentstatus24
+                , documenttype25                   = documenttype24
+                , documentfunctionality25          = documentfunctionality24
+                , documentctime25                  = documentctime24
+                , documentmtime25                  = documentmtime24
+                , documentdaystosign25             = documentdaystosign24
+                , documenttimeouttime25            = documenttimeouttime24
+                , documentinvitetime25             = documentinvitetime24
+                , documentlog25                    = documentlog24
+                , documentinvitetext25             = documentinvitetext24
+                , documenttrustweaverreference25   = documenttrustweaverreference24
+                , documentallowedidtypes25         = documentallowedidtypes24
+                , documentcsvupload25              = documentcsvupload24
+                , documentcancelationreason25      = documentcancelationreason24
+                , documentsharing25                = documentsharing24
+                , documentrejectioninfo25          = documentrejectioninfo24
+                , documenttags25                   = documenttags24
+                , documentservice25                = documentservice24
+                , documentoriginalcompany25        = documentoriginalcompany24
+                , documentrecordstatus25           = LiveDocument
+                , documentquarantineexpiry25       = Nothing
+                , documentattachments25            = documentattachments24
+                }
+                
+
+instance Migrate Document25 Document where
+    migrate (Document25
+             { documentid25
+             , documenttitle25
+             , documentsignatorylinks25
+             , documentfiles25
+             , documentsealedfiles25
+             , documentstatus25
+             , documenttype25
+             , documentfunctionality25
+             , documentctime25
+             , documentmtime25
+             , documentdaystosign25
+             , documenttimeouttime25
+             , documentinvitetime25
+             , documentlog25
+             , documentinvitetext25
+             , documenttrustweaverreference25
+             , documentallowedidtypes25
+             , documentcsvupload25
+             , documentcancelationreason25
+             , documentsharing25
+             , documentrejectioninfo25
+             , documenttags25
+             , documentservice25
+             , documentoriginalcompany25
+             , documentattachments25
+             , documentrecordstatus25
+             , documentquarantineexpiry25
              }) = Document
-                { documentid                     = documentid24
-                , documenttitle                  = documenttitle24
-                , documentsignatorylinks         = documentsignatorylinks24
-                , documentfiles                  = documentfiles24
-                , documentsealedfiles            = documentsealedfiles24
-                , documentstatus                 = documentstatus24
-                , documenttype                   = documenttype24
-                , documentfunctionality          = documentfunctionality24
-                , documentctime                  = documentctime24
-                , documentmtime                  = documentmtime24
-                , documentdaystosign             = documentdaystosign24
-                , documenttimeouttime            = documenttimeouttime24
-                , documentinvitetime             = documentinvitetime24
-                , documentlog                    = documentlog24
-                , documentinvitetext             = documentinvitetext24
-                , documenttrustweaverreference   = documenttrustweaverreference24
-                , documentallowedidtypes         = documentallowedidtypes24
-                , documentcsvupload              = documentcsvupload24
-                , documentcancelationreason      = documentcancelationreason24
-                , documentsharing                = documentsharing24
-                , documentrejectioninfo          = documentrejectioninfo24
-                , documenttags                   = documenttags24
-                , documentservice                = documentservice24
+                { documentid                     = documentid25
+                , documenttitle                  = documenttitle25
+                , documentsignatorylinks         = documentsignatorylinks25
+                , documentfiles                  = documentfiles25
+                , documentsealedfiles            = documentsealedfiles25
+                , documentstatus                 = documentstatus25
+                , documenttype                   = documenttype25
+                , documentfunctionality          = documentfunctionality25
+                , documentctime                  = documentctime25
+                , documentmtime                  = documentmtime25
+                , documentdaystosign             = documentdaystosign25
+                , documenttimeouttime            = documenttimeouttime25
+                , documentinvitetime             = documentinvitetime25
+                , documentlog                    = documentlog25
+                , documentinvitetext             = documentinvitetext25
+                , documenttrustweaverreference   = documenttrustweaverreference25
+                , documentallowedidtypes         = documentallowedidtypes25
+                , documentcsvupload              = documentcsvupload25
+                , documentcancelationreason      = documentcancelationreason25
+                , documentsharing                = documentsharing25
+                , documentrejectioninfo          = documentrejectioninfo25
+                , documenttags                   = documenttags25
+                , documentservice                = documentservice25
+                , documentoriginalcompany        = documentoriginalcompany25
+                , documentattachments            = documentattachments25
+                , documentrecordstatus           = documentrecordstatus25
+                , documentquarantineexpiry       = documentquarantineexpiry25
                 , documentauthorattachments      = []
-                , documentoriginalcompany        = documentoriginalcompany24
-                , documentrecordstatus           = LiveDocument
-                , documentquarantineexpiry       = Nothing
                 , documentsignatoryattachments   = []
-                , documentattachments            = documentattachments24
                 }
 
 
