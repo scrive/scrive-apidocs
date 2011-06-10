@@ -1385,7 +1385,7 @@ showOfferList =
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
         return . filter ((==) (Signable Offer) . documenttype) $
            mydocuments ++ concat friends'Documents in
-  showItemList' pageContractsList getOffers
+  showItemList' pageOffersList getOffers
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 

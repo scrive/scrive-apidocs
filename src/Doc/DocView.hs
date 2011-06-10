@@ -629,6 +629,7 @@ pageDocumentDesign ctx
        getProcessText = renderTextForProcess (ctxtemplates ctx) document
        getProcessValue = getValueForProcess document
        processFields = do
+         field "hasadvancedview" $ getProcessValue processadvancedview
          field "isauthorsend" $ getProcessValue processauthorsend
          field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
          field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
