@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.TemplatesFiles
@@ -15,18 +15,10 @@ module Templates.TemplatesFiles
       , getTemplates
     ) where
 
-import Text.StringTemplate 
-import Text.StringTemplate.Base
-import Text.StringTemplate.Classes
-import System.IO
-import Control.Monad
-import Data.Maybe
-import Data.List
 import Data.Char
-import AppLogger as Log
-import Text.Html (stringToHtmlString)
-import System.Directory
-import System.Time
+import Data.List
+import Data.Maybe
+import System.IO
 {-Names of template files -}
 
 templatesFilesPath :: [String]
