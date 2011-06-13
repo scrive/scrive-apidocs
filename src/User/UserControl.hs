@@ -13,6 +13,7 @@ import Happstack.Util.Common (readM)
 import HSP.XML
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
+import Debug.Trace
 
 import ActionSchedulerState
 import AppView
@@ -345,6 +346,8 @@ handleViralInvite = withUserPost $ do
         ctx@Context{ctxmaybeuser = Just user} <- get
         muser <- query $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
+           -- we leak user information here! SECURITY!!!!
+           -- you can find out if a given email is already a user
           then addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
           else do
             now <- liftIO getMinutesTime
