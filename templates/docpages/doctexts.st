@@ -41,8 +41,16 @@ documentInfoText=
                            $if(contract)$  Väntar $elseif(offer)$  Väntar på accept $endif$
                         </span><br>
                         <span class="text">
-                           $if(contract)$ 
-                              Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
+                           $if(contract)$
+                           $if(iamauthor)$
+                              Du har skickat inbjudan att
+                           underteckna. Dokumentet har ännu inte
+                           undertecknats av samtliga parter.
+                           $else$
+                           Du har endast behörighet att se detta
+                           dokumentet. Dokumentet har ännu inte
+                           undertecknats av samtliga parter.
+                           $endif$
                            $elseif(offer)$
                               Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
                            $endif$
