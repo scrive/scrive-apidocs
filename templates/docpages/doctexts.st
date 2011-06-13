@@ -23,7 +23,15 @@ offerpendingauthorinfoheader=Väntar på accept
 ###
 orderpendingauthorinfoheader=Väntar på bekräftelse
 ###
-contractpendingauthorinfotext=Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
+contractpendingauthorinfotext=$if(iamauthor)$
+                              Du har skickat inbjudan att
+                           underteckna. Dokumentet har ännu inte
+                           undertecknats av samtliga parter.
+                           $else$
+                           Du har endast behörighet att se detta
+                           dokumentet. Dokumentet har ännu inte
+                           undertecknats av samtliga parter.
+                           $endif$
 ###
 offerpendingauthorinfotext=Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
 ###
@@ -55,7 +63,16 @@ offersignedinfotext=
 ###
 ordersignedinfotext=
     $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
-    har bekräftat ordern $documenttitle$  från $authorfstname$ $authorsndname$ .
+    har bekräftat ordern $documenttitle$  från $authorfstname$
+$authorsndname$ .
+###
+contractstatusinfotext=Du har valt att underteckna
+sist. Vänligen invänta övriga parters
+underskrift.
+###
+offerstatusinfotext=Du har skickat en inbjudan att acceptera offerten. Vänligen inväntan accepten.
+###
+orderstatusinfotext=Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta bekräftelsen.
 ##########
 documentInfoText=
                 $if(pending)$
@@ -65,14 +82,7 @@ documentInfoText=
                                  Väntar
                             </span><br>
                             <span class="text">
-                              $if(offer)$
-                              Du har skickat en inbjudan att acceptera
-                              offerten. Vänligen inväntan accepten.
-                              $else$
-                              Du har valt att underteckna
-                              sist. Vänligen invänta övriga parters
-                              underskrift.
-                              $endif$
+                              $process.statusinfotext$
                             </span>
                         $else$
                         <span class="header">
