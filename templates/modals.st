@@ -174,11 +174,11 @@ modalAccountSetup=
         <table id="companyInfo"><tbody>
             <tr>
                 <td style="width: 120px">Förnamn:</td>
-                <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"></td>
+                <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"/></td>
             </tr>
             <tr>
                 <td>Efternamn:</td>
-                <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"></td>
+                <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"/></td>
             </tr>
             <tr>
                 <td>Företag:</td>
@@ -188,25 +188,25 @@ modalAccountSetup=
                     $else$
                     value="$if(companyname)$$companyname$$endif$"
                     $endif$
-                ></td>
+                /></td>
             </tr>
             <tr>
                 <td>Position:</td>
-                <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"></td>
+                <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"/></td>
             </tr>
             <tr>
                 <td>Telefonnummer:</td>
-                <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"></td>
+                <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"/></td>
             </tr>
         </tbody></table>
         <table id="passwordInfo"><tbody>
             <tr>
                 <td style="width: 120px">Välj lösenord:</td>
-                <td><input type="password" name="password" autocomplete="off"></td>
+                <td><input type="password" name="password" autocomplete="off"/></td>
             </tr>
             <tr>
                 <td>Upprepa lösenord:</td>
-                <td><input type="password" name="password2" autocomplete="off"></td>
+                <td><input type="password" name="password2" autocomplete="off"/></td>
             </tr>
         </tbody></table>
         <input type="submit" class="hidden" />
@@ -223,6 +223,7 @@ modalAccountSetup=
       <div class="right"></div>
     </a>
   </div>
+  </form>
 </div>
 ######
 modalWelcomeToSkrivaPa=
@@ -236,15 +237,15 @@ modalWelcomeToSkrivaPa=
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Med SkrivaPå kan du skriva på och arkivera dokument elektroniskt. Tjänsten går att använda för avtal, offerter och även andra typer av dokument. Givetvis kommer det inte att kosta någonting efter den fria månaden om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:<p>
+      <p>Med SkrivaPå kan du skriva på och arkivera dokument elektroniskt. Tjänsten går att använda för avtal, offerter och även andra typer av dokument. Givetvis kommer det inte att kosta någonting efter den fria månaden om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:</p>
 
-      <p>1. Ladda upp ett dokument<br>
-        2. Fyll i motpartens uppgifter<br>
+      <p>1. Ladda upp ett dokument<br/>
+        2. Fyll i motpartens uppgifter<br/>
         3. Underteckna och skicka iväg</p>
 
       <p>Tips: Testa med dig själv först.</p>
 
-      <p>Med vänliga hälsningar<br>
+      <p>Med vänliga hälsningar<br/>
         Team SkrivaPå</p>
     </div>
   </div>
@@ -271,7 +272,7 @@ modalAccountRemoval=
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Är du säker på att du vill radera dokumentet "Non Disclosure and Immaterial Rights Agreement" och ditt konto från SkrivaPå?<p>
+      <p>Är du säker på att du vill radera dokumentet "Non Disclosure and Immaterial Rights Agreement" och ditt konto från SkrivaPå</p>
     </div>
   </div>
   <div class="modal-footer">
@@ -300,7 +301,7 @@ modalAccountRemoved=
   <div class="modal-body">
     <div class="modal-content">
       <p>Din kopia av dokumentet "$documenttitle$" är nu raderat tillsammans från SkrivaPå tillsammans med ditt konto.</p>
-      <p>Med vänliga hälsningar<br>
+      <p>Med vänliga hälsningar<br/>
         Team SkrivaPå</p>
     </div>
   </div>
@@ -1099,7 +1100,7 @@ signCanceledDataMismatchModal=
   <div class="modal-body">
     <div class="modal-content">
       <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
-      <p>Avtalsprocessen är därför bruten, var vänliga invänta <br> 
+      <p>Avtalsprocessen är därför bruten, var vänliga invänta <br/> 
         en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
       <p><strong>Felrapport:</strong></p>
       $message:noescape()$

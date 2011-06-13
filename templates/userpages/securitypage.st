@@ -21,6 +21,7 @@ showUserSecurity =
                        <tr>
                            <td>Nuvarande lösenord:</td>
                            <td><input type="password" name="oldpassword" /></td>
+                       </tr>
                        <tr>
                            <td>Nytt lösenord:</td>
                            <td><input type="password" name="password" /></td>
@@ -47,6 +48,7 @@ showUserSecurity =
                                      <option $if(lang.en)$ selected="" $endif$ value="LANG_EN"> Engelska </option>
                                </select>
                             </td>
+                       </tr>
                    </table>
                </div>
 
@@ -68,4 +70,5 @@ showUserSecurity =
        </div>
    </div>
 </div>
+</form>
 ####

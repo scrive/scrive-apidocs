@@ -45,11 +45,11 @@ viewFriends =
 							<th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
 							<th style="width: 110px;">
                               $if(params.sorting.emailREV)$
-                                <a href="$currentlink$&sorting=email">Mailadress <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=email">Mailadress <em> ▲</em></a>
                                $elseif(params.sorting.email)$
-                                <a href="$currentlink$&sorting=emailREV">Mailadress <em> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=emailREV">Mailadress <em> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=email">Mailadress </a>
+                                <a href="$currentlink$&amp;sorting=email">Mailadress </a>
                                $endif$ 
                             </th>
 							<th style="width: 52px;text-align:center"></th>

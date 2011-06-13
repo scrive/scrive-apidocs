@@ -24,8 +24,8 @@ signupVipPageView =
   </div>
   <div class="right">
      <form action="" method="post">
-         <input type="email"  infotext="Fyll i din e-postadress" name="email" class="shiny"> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
-         <input type="submit" class="hidden">
+         <input type="email"  infotext="Fyll i din e-postadress" name="email" class="shiny"/> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
+         <input type="submit" class="hidden"/>
     </form>
   </div>
 </div>

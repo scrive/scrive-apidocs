@@ -1,6 +1,6 @@
 pagingFooter=	<div class="table-paginate">
                   $if(elements.firstPageAvaible)$
-                    <a href="$currentlink$&page=$elements.lastPage$" class="btn-tiny black float-left">
+                    <a href="$currentlink$&amp;page=$elements.lastPage$" class="btn-tiny black float-left">
                         <div class="left"></div>
                         <div class="label">
                             <div class="btn-symbol black arrow-right"></div>
@@ -10,7 +10,7 @@ pagingFooter=	<div class="table-paginate">
                     </a>
                    $endif$ 
                    $if(elements.lastPageAvaible)$
-                    <a href="$currentlink$&page=$elements.nextPage$" class="btn-tiny black float-right">
+                    <a href="$currentlink$&amp;page=$elements.nextPage$" class="btn-tiny black float-right">
                         <div class="left"></div>
                         <div class="label">
                             <p>Nästa</p>
@@ -27,7 +27,7 @@ pagingFooter=	<div class="table-paginate">
                          $if(page.current)$
                           $page.nr$
                          $else$
-                          <a href="$currentlink$&page=$page.nr$">$page.nr$</a>
+                          <a href="$currentlink$&amp;page=$page.nr$">$page.nr$</a>
                          $endif$
                         }$
                         

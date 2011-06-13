@@ -148,9 +148,9 @@ pageDocumentForAuthor=
         <div id="signGuardField">
           <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
           <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:</label>
-            <br>1. Samtliga undertecknande parter är korrekta.
-            <br>2. Att jag granskat och förstått dokumentet.
-            <br>3. Att jag har befogenhet att skriva på dokumentet.
+            <br/>1. Samtliga undertecknande parter är korrekta.
+            <br/>2. Att jag granskat och förstått dokumentet.
+            <br/>3. Att jag har befogenhet att skriva på dokumentet.
           </div>
         </div>
       </div>

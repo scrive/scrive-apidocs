@@ -37,7 +37,7 @@ termsPageContents=
 <br />
 <h2>2. Användarkonton</h2>
 <br />
-Ni är ansvarig för att hemlighålla och skydda Er kontoinformation, inklusive koder, och ansvarar för all annan aktivitet som sker via Ert konto. Ni ska omedelbart meddela SkrivaPå vid misstanke om otillåten användning eller försök till användning av Ert konto eller Er kod, eller andra brott mot säkerheten. Ni får inte heller vid något tillfälle använda någon annans kod eller konto eller på annat ej auktoriserat vis försöka få tillgång till Tjänsten.</p>
+<p>Ni är ansvarig för att hemlighålla och skydda Er kontoinformation, inklusive koder, och ansvarar för all annan aktivitet som sker via Ert konto. Ni ska omedelbart meddela SkrivaPå vid misstanke om otillåten användning eller försök till användning av Ert konto eller Er kod, eller andra brott mot säkerheten. Ni får inte heller vid något tillfälle använda någon annans kod eller konto eller på annat ej auktoriserat vis försöka få tillgång till Tjänsten.</p>
 <br />
 <p><h4>a. Kontovillkor:</h4> Ni accepterar att Ni ska ge SkrivaPå korrekt, uppdaterad och fullständig information om Er själv och Er faktura-/betalinformation. Ni ska uppdatera all kontoinformation genom att följa de procedurer som Tjänsten tillhandahåller. Ni får inte använda någon automatisk apparat, program, algoritm, metod, eller någon liknande manuell process, för att komma åt, införskaffa, kopiera, sondera, indexera, manipulera, testa eller övervaka någon del av Tjänsten eller något Innehåll, eller på något som helst sätt reproducera eller kringgå Tjänstens struktur eller presentation, eller för att försöka införskaffa något material, dokument, eller information på något annat sätt än genom den infrastruktur som skapats och gjorts tillgänglig av SkrivaPå eller dess samarbetspartners i detta syfte. Ni accepterar att Ni inte kommer att göra något som utsätter Tjänstens infrastruktur, eller några system eller nätverk som är del av eller anknutna till Tjänsten för en orimlig belastning. </p>
 <br />
@@ -49,7 +49,7 @@ Ni är ansvarig för att hemlighålla och skydda Er kontoinformation, inklusive 
 <br />
 <h2>3. Datahanteringspolicy</h2>
 <br />
-SkrivaPå Arkiv är ett säkert och smidigt dokumenthanterings- och arkiveringssystem som är en del av Tjänsten. SkrivaPå lagrar även användardata i syfte att stärka bevisstyrkan av dokument undertecknade genom Tjänsten. Båda dessa deltjänster kräver att vi samlar in och lagrar användardata automatiskt. Därför har vi en datahanteringspolicy.</p>
+<p>SkrivaPå Arkiv är ett säkert och smidigt dokumenthanterings- och arkiveringssystem som är en del av Tjänsten. SkrivaPå lagrar även användardata i syfte att stärka bevisstyrkan av dokument undertecknade genom Tjänsten. Båda dessa deltjänster kräver att vi samlar in och lagrar användardata automatiskt. Därför har vi en datahanteringspolicy.</p>
 <br />
 <p><h4>a. Datahantering:</h4> Tjänsten lagrar automatiskt information om Användare, kommunikation och dokument. Vilken information som lagras och hur denna hanteras beskrivs närmare i vår sekretesspolicy. SkrivaPå förbehåller sig rätten att fortsätta lagra denna information på obegränsad tid på våra servrar, detta gäller även information från Användare som sagt upp eller blivit uppsagda från sitt konto och den information som Användaren själv valt att radera från sitt användarkonto. </p>
 <br />

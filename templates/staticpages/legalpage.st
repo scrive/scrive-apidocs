@@ -177,7 +177,7 @@ legalPageContents=
 	</tr>
 	<tr>
 		<td>12</td>
-		<td>Mottagare & Avsändare</td>
+		<td>Mottagare &amp; Avsändare</td>
 		<td>När samtliga parter undertecknat dokumentet stämplar SkrivaPå det med dokumentuppgifter och med en kvalificerad signatur. Sedan skickas ett e-postmeddelande innehållandes det färdiga dokumentet och information om att dokumentet slutligen undertecknats av samtliga parter och är juridiskt bindande till alla avtalsparter.</td>
 	</tr>
 </table>
@@ -243,5 +243,7 @@ legalPageContents=
 	<br />
 	<li>
 		<p><h4>Amazon:</h4> Denna typ av lagring sker hos den världsledande molnbaserade lagringslösningen Amazon S3. Precis som TrustWeaver är Amazon S3 säkerhetscertifierad enligt SAS 70 II och följer en strikt policy kring datasäkerhet. Trots detta saknar den TrustWeavers rigorösa användarkontroller och garantier av dataintegritet.</p>
+	</li>
+</ol>
 </div>
 ###

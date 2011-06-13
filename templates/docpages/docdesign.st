@@ -238,8 +238,8 @@ pageDocumentDesign=
                   <div style="padding-bottom:2px;padding-left:1px;">Välj verifieringsmetod</div>
                   <select name="validationmethod"
                           id="validationdropdown">
-                    <option value="email" $if(emailselected)$selected$endif$>E-post</option>
-                    <option value="eleg" $if(elegselected)$selected$endif$>E-Legitimation</option>
+                    <option value="email" $if(emailselected)$selected="selected"$endif$>E-post</option>
+                    <option value="eleg" $if(elegselected)$selected="selected"$endif$>E-Legitimation</option>
                   </select>
                 </div>
                 $endif$
@@ -439,7 +439,6 @@ pageDocumentDesign=
   </div>
   $pageDocumentForAuthorHelpersLocalDialogs()$
   
-</div>      
 </div>  
 <div id="documentBox">
   <script type="text/javascript">
@@ -467,10 +466,10 @@ pageDocumentDesign=
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       $if(isbasic)$
-      <input type="hidden" name="signatoryrole" value="signatory">
+      <input type="hidden" name="signatoryrole" value="signatory"/>
       $else$
       $if(process.isauthorsend)$
-      <input type="hidden" name="signatoryrole" value="signatory">
+      <input type="hidden" name="signatoryrole" value="signatory"/>
       $else$
       <a href="#" class="man"></a>
       $endif$
@@ -532,7 +531,7 @@ pageDocumentDesign=
       </div>
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
-        <input type="hidden" name="signatoryrole" value="signatory"> </input>
+        <input type="hidden" name="signatoryrole" value="signatory"/>
         <input type="radio" class="sigrole_signatory" value="signatory"><label class="radiolabel">Undertecknande part</label></input>
         <br/>
         <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
@@ -565,8 +564,8 @@ validationdropdown=
   <span>Välj verifieringsmetod</span>
   <select name="validationmethod"
           id="validationdropdown">
-    <option value="email" $if(emailselected)$selected$endif$>E-post</option>
-    <option value="eleg" $if(elegselected)$selected$endif$>E-Legitimation</option>
+    <option value="email" $if(emailselected)$selected="selected"$endif$>E-post</option>
+    <option value="eleg" $if(elegselected)$selected="selected"$endif$>E-Legitimation</option>
   </select>
 </div> 
 #####
@@ -612,7 +611,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
                 <td>
                   <select class="signatoryselector">
-                    <option selected>Mottagare</option>
+                    <option selected="selected">Mottagare</option>
                   </select>
                 </td>
                 <td>

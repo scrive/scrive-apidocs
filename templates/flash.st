@@ -63,7 +63,7 @@ flashMessageUserPasswordChanged=Ditt lösenord har ändrats.
 
 ###
 flashMessagePasswordChangeLinkNotValid=
-    Vi beklagar. Länken är inte längre giltig.<BR>
+    Vi beklagar. Länken är inte längre giltig.<br/>
      Vänligen använd "Glömt lösenord" för att generera en ny länk.
 
 ###
@@ -82,7 +82,7 @@ flashMessageNoRemainedInvitationEmails=
     Du har redan skickat 10 inbjudningar till denna e-post. Vänligen försök senare.
 ###
 flashMessageActivationLinkNotValid=
-    Vi beklagar. Länken är inte längre giltig.<BR>
+    Vi beklagar. Länken är inte längre giltig.<br/>
     Vänligen använd "Glömt lösenord" för att generera en ny länk.
 
 ###

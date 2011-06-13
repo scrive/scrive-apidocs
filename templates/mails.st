@@ -394,7 +394,7 @@ inviteSubaccountMailContent=
     underkonto på SkrivaPå genom vilket du kan skriva avtal
     för organisationen <strong>$companyname$</strong>. Observera att detta konto inte
     är avsett för privat bruk då samtliga dokument i kontot
-    tillhör organisationen
+    tillhör organisationen</p>
 
     <p>Användarnamn:<br/>
     $email$</p>
@@ -411,10 +411,10 @@ mailAccountBySigningContractReminderContent=
 
 <p>Du har inte bekräftat att du vill spara ditt dokument "$documenttitle$" hos SkrivaPå. SkrivaPås system kommer att radera dokumentet automatiskt inom 72h. Det kostar ingenting att spara dokumentet.</p>
 
-<p>Gör så här:<br>
-1. Klicka på länken<br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br>
-2. Definiera lösenord och acceptera villkoren<br>
+<p>Gör så här:<br/>
+1. Klicka på länken<br/>
+<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br/>
+2. Definiera lösenord och acceptera villkoren<br/>
 3. Färdig</p>
 
 $poweredBySkrivaPaPara()$
@@ -426,10 +426,10 @@ mailAccountBySigningOfferReminderContent=
 
 <p>Du har inte bekräftat att du vill spara din offert "$documenttitle$" hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt inom 72h. Det kostar ingenting att spara offerten.</p>
 
-<p>Gör så här:<br>
-1. Klicka på länken<br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br>
-2. Definiera lösenord och acceptera villkoren<br>
+<p>Gör så här:<br/>
+1. Klicka på länken<br/>
+<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br/>
+2. Definiera lösenord och acceptera villkoren<br/>
 3. Färdig</p>
 
 $poweredBySkrivaPaPara()$
@@ -474,7 +474,7 @@ mailNewAccountCreatedByAdminContent=
     $mailNewAccountCreatedByAdminContentHeader()$
     $endif$
    
-    <p>Användarnamn:<br>
+    <p>Användarnamn:<br/>
     $email$</p>
     
     <p>Vänligen klicka på länken för att aktivera kontot:<br/>
@@ -648,6 +648,7 @@ mailInviteUserAsSubaccountContent=
  <li>Läs meddelandet online</li>
  <li>Acceptera</li>
  <li>Ditt konto är nu underkonto</li>
+ </ul>
 
  <p><a href="$hostpart$/account/bsa/$supervisor.id$">Detta är länken nedan</a></p>
   $poweredBySkrivaPaPara()$

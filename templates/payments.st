@@ -50,9 +50,11 @@ paymentsadminpage= <div style="text-align:center;margin-left:20%;margin-right:20
                            </tr> 
                            <tr>  
                               <td>For TrustWeaver: </td>  
-                              $models:{$it.fortrustweaver$}:td()$ </tr> 
+                              $models:{$it.fortrustweaver$}:td()$
+                           </tr> 
                            <tr> 
-                              <td style="padding-top:20px">  <strong>Payment storage of other documents</strong> </td></tr>   
+                              <td style="padding-top:20px">  <strong>Payment storage of other documents</strong> </td>
+                           </tr>   
                            <tr>  <td>Template:  </td>     
                                $models:{$it.fortemplate$}:td()$
                            </tr> 
@@ -60,7 +62,7 @@ paymentsadminpage= <div style="text-align:center;margin-left:20%;margin-right:20
                               <td> Draft:  </td>    
                                  $models:{$it.fordraft$}:td()$
                            </tr> 
-                         <tbody></table>
+                         </tbody></table>
                        </div></div>
 ###
 paymentsadminpagesuperuser = <div style="text-align:center;margin-left:20%;margin-right:20%;"> 
@@ -125,7 +127,7 @@ paymentsadminpagesuperuser = <div style="text-align:center;margin-left:20%;margi
                               <td> Draft:  </td>    
                               $models:{n | $input(iType = "text"; iName= join(fst="fordraft";snd=n.modelname); iValue=n.fordraft)$}:td()$ 
                           </tr> 
-                         <tbody></table>
+                         </tbody></table>
                          <BR/>
                          <BR/>
                          <input type="submit" style="width:200px;font-weight:bold" value="Change">

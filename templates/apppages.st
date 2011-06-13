@@ -30,12 +30,12 @@ doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="sv" />
-        <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen">
-		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen">
-		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen">
+        <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen"/>
+		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
+		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
         <link rel="stylesheet" type="text/css"  href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/ui-lightness/jquery-ui.css"              media="screen" />

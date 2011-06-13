@@ -40,7 +40,7 @@ contactsView=
 							<th style="width: 115px;"><a href="javascript:;">Personnummer <em>▼</em></a></th>
 							<th style="width: 110px;"><a href="javascript:;">Mailadress <em>▼</em></a></th>
 							<th style="width: 20px;"></th>
-							<th style="width: 20px;"></td>
+							<th style="width: 20px;"></th>
 						</tr>
 					</thead>
 					<tbody id="selectable">
@@ -48,7 +48,7 @@ contactsView=
 						$contacts:{contact |
 						<tr >
 							<td><input type="checkbox" name="contactcheck" id="" class="check" /></td>
-							<td>$contact.firstName$</div></td>
+							<td>$contact.firstName$</td>
 							<td>$contact.lastName$</td>
 							<td class="right">$contact.position$</td>
 							<td>$contact.company$</td>
@@ -65,8 +65,8 @@ contactsView=
 				<div class="table-paginate">
 					<div class="pages">
 						<strong>1-20 av 123</strong>
-						<<
-						<
+						&lt;&lt;
+						&lt;
 						1
 						<a href="#">2</a>
 						<a href="#">3</a>
