@@ -24,30 +24,30 @@ templatesForAjax=
                             <!--
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
-                                <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=time">Senaste händelse  <em> ▲</em></a>
                                $elseif(params.sorting.time)$
-                                <a href="$currentlink$&sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=time">Senaste händelse </a>
+                                <a href="$currentlink$&amp;sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
                             <th style="width: 300px;">
                                $if(params.sorting.partnerREV)$
-                                <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=partner">Parter <em> ▲</em></a>
                                $elseif(params.sorting.partner)$
-                                <a href="$currentlink$&sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=partner">Parter </a>
+                                <a href="$currentlink$&amp;sorting=partner">Parter </a>
                                $endif$
                             </th>
                            -->
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&sorting=title">Mall <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">Mall <em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=title">Mall </a>
+                                <a href="$currentlink$&amp;sorting=title">Mall </a>
                                $endif$
                             </th>
                             <th></th>

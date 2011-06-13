@@ -93,6 +93,7 @@ usersfilter=
         Find user:
         <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$" />
         <input type="submit" value="Search"/>
+      </div>
     </form>
     <br/><br/>
     <a href="$link$">View list of users </a>
@@ -723,31 +724,30 @@ pageStats=
         <table style="width:600px">
           <tr>
             <td>First name:</td>
-            <td><input type="text" name="fstname"></td>
+            <td><input type="text" name="fstname"/></td>
           </tr>
           <tr>
             <td>Second name:</td>
-            <td><input type="text" name="sndname"></td>
+            <td><input type="text" name="sndname"/></td>
           </tr>
           <tr>
             <td>Email address:</td>
-            <td><input type="email" name="email"></td>
+            <td><input type="email" name="email"/></td>
           </tr>
           <tr>
             <td>Free till:</td>
-            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox">
+            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox"/>
                  <span id="freetillcontainer">
                  </span>
            </td>
          </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default">
+            <td> <input type="button" class="editer" value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
 
            </td>
           </tr>
-        </table><br>
         </table><br/>
         <input type="submit" value="Create user" />
       </form>
@@ -755,11 +755,11 @@ pageStats=
      <div id="hiddenfreetill" style="display:none">
       <span id="freetillbox">
         <a class="datetodate date" rel="[name='freetill']"> </a>
-        <input type="hidden" autocomplete="off" name="freetill" value="">
+        <input type="hidden" autocomplete="off" name="freetill" value=""/>
       </span>
      </div>
-      <br>
-      Disk status:<br>
+      <br/>
+      Disk status:<br/>
 
       <pre>$sysinfo$</pre>
     </div>
@@ -793,13 +793,13 @@ $services:{service |<tr>
 <div>
 <form method="POST">
 Create service <BR/>
-Name: <input type="text" name="name">
+Name: <input type="text" name="name"/>
 <BR/>
-Password: <input type="password" name="password">
+Password: <input type="password" name="password"/>
 <BR/>
-Admin: <input type="text" name="admin">
+Admin: <input type="text" name="admin"/>
 <BR/>
-<input type="submit" name="create" value="Create">
+<input type="submit" name="create" value="Create"/>
 </form>
 </div>
 <BR/>

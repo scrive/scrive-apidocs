@@ -43,20 +43,20 @@ $loadingdialog()$
                             <th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
-                                <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=time">Senaste händelse  <em> ▲</em></a>
                                $elseif(params.sorting.time)$
-                                <a href="$currentlink$&sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=time">Senaste händelse </a>
+                                <a href="$currentlink$&amp;sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&sorting=title">Mall <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">Mall <em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=title">Mall </a>
+                                <a href="$currentlink$&amp;sorting=title">Mall </a>
                                $endif$
                             </th>
                             <th style="width: 100px;"></th>
@@ -67,7 +67,7 @@ $loadingdialog()$
                     <tbody id="selectable">
                       $documents:{document |
                         <tr $if(document.odd)$class="odd"$endif$>
-                            <td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
+                            <td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"/> $endif$</td>
                             <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
                             </td>

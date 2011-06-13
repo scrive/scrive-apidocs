@@ -36,38 +36,38 @@ $loadingdialog()$
 				<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
 				<th style="width: 65px;">
                   $if(params.sorting.statusREV)$
-                  <a href="$currentlink$&sorting=status">Status  <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=status">Status  <em> ▲</em></a>
                   $elseif(params.sorting.status)$
-                  <a href="$currentlink$&sorting=statusREV">Status  <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=statusREV">Status  <em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&sorting=status">Status </a>
+                  <a href="$currentlink$&amp;sorting=status">Status </a>
                   $endif$
                 </th>
 				<th style="width: 140px;">
                   $if(params.sorting.timeREV)$
-                  <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=time">Senaste händelse  <em> ▲</em></a>
                   $elseif(params.sorting.time)$
-                  <a href="$currentlink$&sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&sorting=time">Senaste händelse </a>
+                  <a href="$currentlink$&amp;sorting=time">Senaste händelse </a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.partnerREV)$
-                  <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=partner">Parter <em> ▲</em></a>
                   $elseif(params.sorting.partner)$
-                  <a href="$currentlink$&sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&sorting=partner">Parter </a>
+                  <a href="$currentlink$&amp;sorting=partner">Parter </a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.titleREV)$
-                  <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=title">Dokument <em> ▲</em></a>
                   $elseif(params.sorting.title)$
-                  <a href="$currentlink$&sorting=titleREV">Dokument <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=titleREV">Dokument <em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&sorting=title">Dokument </a>
+                  <a href="$currentlink$&amp;sorting=title">Dokument </a>
                   $endif$
                 </th>
 				<th></th>
@@ -77,7 +77,7 @@ $loadingdialog()$
     		<tbody id="selectable">
 			  $documents:{document |
       		  <tr class="$if(document.odd)$odd$endif$ $if(document.isviewer)$viewer$endif$" >
-				<td><input type="checkbox" name="doccheck" value="$document.documentid$" class="check"></td>
+				<td><input type="checkbox" name="doccheck" value="$document.documentid$" class="check"/></td>
 				<td>
                   <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-$document.status$"></div>
                   $if(document.anyinvitationundelivered)$  <span style="color:#000000;">!</span>$endif$

@@ -80,14 +80,14 @@ documentInfoText=
                         $if(iamauthor)$
                             <span class="header">
                                  Väntar
-                            </span><br>
+                            </span><br/>
                             <span class="text">
                               $process.statusinfotext$
                             </span>
                         $else$
                         <span class="header">
                               $process.pendingauthornotsignedinfoheader$
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                             $process.pendingauthornotsignedinfotext$
                         </span>
@@ -96,14 +96,14 @@ documentInfoText=
                      $elseif(signedbyme)$
                         <span class="header">
                              Väntar på motpart
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                             Du har undertecknat och vi inväntar övriga parter.
                         </span>
                      $else$
                          <span class="header">
                            $process.pendingauthorinfoheader$
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            $process.pendingauthorinfotext$
                         </span>
@@ -113,7 +113,7 @@ documentInfoText=
 
                      <span class="header">
                         $process.cancelledinfoheader$
-                     </span><br>
+                     </span><br/>
                      <span class="text">
                         $process.cancelledinfotext$
                      </span>
@@ -123,7 +123,7 @@ documentInfoText=
                      $if(notsignedbyme)$    
                         <span class="header">
                              Avtalsprocessen avbruten
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                         
                                 Avtalsprocessen är avbruten på grund
@@ -136,7 +136,7 @@ documentInfoText=
                      $elseif(signedbyme)$
                         <span class="header">
                              Avtalsprocessen avbruten
-                        </span><br>
+                        </span><br/>
                         <span class="text">
 
                               Avtalsprocessen är avbruten på grund av
@@ -149,7 +149,7 @@ documentInfoText=
                      $else$
                         <span class="header">
                              Avtalsprocessen avbruten
-                        </span><br>
+                        </span><br/>
                         <span class="text">
 
                               Avtalsprocessen är avbruten på grund av
@@ -166,7 +166,7 @@ documentInfoText=
                      $if(notsignedbyme)$    
                         <span class="header">
                              Förfallodatum har passerat
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Du kan inte längre underteckna dokumentet eftersom sista datum för att underteckna passerat.
                         </span>
@@ -174,7 +174,7 @@ documentInfoText=
                      $elseif(signedbyme)$
                         <span class="header">
                              Förfallodatum har passerat
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum har passerat och därför har dokumentet avbrutits.
                         </span>
@@ -182,7 +182,7 @@ documentInfoText=
                      $else$
                         <span class="header">
                              Förfallodatum har passerat
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum har passerat och därför har dokumentet avbrutits.
                         </span>
@@ -195,7 +195,7 @@ documentInfoText=
                      $if(notsignedbyme)$    
                         <span class="header">
                              Avvisat
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Dokumentet har avvisats av en motpart.
                         </span>
@@ -203,7 +203,7 @@ documentInfoText=
                      $elseif(signedbyme)$
                         <span class="header">
                              Avvisat
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Dokumentet har avvisats av en motpart.
                         </span>
@@ -211,7 +211,7 @@ documentInfoText=
                      $else$
                         <span class="header">
                              Avvisat
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Dokumentet har avvisats av en motpart
                         </span>
@@ -221,7 +221,7 @@ documentInfoText=
                   $elseif(signed)$
                         <span class="header">
                            $process.signedinfoheader$
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            $process.signedinfotext$
                         </span>
@@ -230,21 +230,21 @@ documentInfoText=
                      $if(notsignedbyme)$    
                             <span class="header">
                                  Granska
-                            </span><br>
+                            </span><br/>
                             <span class="text">
                               Vänligen kontrollera dokumentet och parternas uppgifter och underteckna längst ned.
                             </span>
                      $elseif(signedbyme)$
                         <span class="header">
                              Väntar på motpart
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                             Du har undertecknat och vi inväntar övriga parter.
                         </span>
                      $else$
                         <span class="header">
                              Väntar
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                            Dokumentet väntar på att undertecknas av inbjudande part.
                         </span>
@@ -253,14 +253,14 @@ documentInfoText=
                   $elseif(preparation)$
                         <span class="header">
                               Förberedelse
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                               Dokumentet är i förberedelsefasen.
                         </span>
                   $else$ 
                         <span class="header">
                              Problem
-                        </span><br>
+                        </span><br/>
                         <span class="text">
                         Problem Ledsen, det har uppstått ett problem att rendera sigillet på PDF:en. Vänliga ladda upp dokumentet igen. Om problemet upprepar sig var vänlig kontakta <a href="mailto:support@skrivapa.se">support@skrivapa.se</a>
                         </span>

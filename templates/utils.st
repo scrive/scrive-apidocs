@@ -21,7 +21,7 @@ wrapHTML=
     <html>
       <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-        <meta http-equiv="content-language" content="sv">
+        <meta http-equiv="content-language" content="sv"/>
       </head>
       <body>
         $body:noescape()$
@@ -46,11 +46,11 @@ LinkLandpageSaved=/landpage/signedsave/$documentid$/$signatorylinkid$
 ###
 join=$fst$$snd$
 ###
-option=<option value="$oValue$" $if(oSelected)$ SELECTED $endif$ > $oText$ </option>
+option=<option value="$oValue$" $if(oSelected)$ SELECTED="SELECTED" $endif$ > $oText$ </option>
 ###
 options=$it:{n | $option(oValue=n.oValue;oText=n.oText;oSelected=n.oSelected)$}$
 ###
-input=<input style="width:50px" type="$iType$" name="$iName$" value="$iValue$">
+input=<input style="width:50px" type="$iType$" name="$iName$" value="$iValue$"/>
 ###
 showmoney=$main$.$rest$
 ###

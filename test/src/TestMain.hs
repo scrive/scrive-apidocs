@@ -2,8 +2,9 @@ module Main where
 
 import Test.Framework (defaultMain, testGroup)
 import UserStateTest
-import TrustWeaverTest
-import InputValidationTest
+import TrustWeaverTest hiding (tests,main)
+import InputValidationTest hiding (tests,main)
+import HtmlTest hiding (tests,main)
 import System.IO
 
 main = do
@@ -13,5 +14,6 @@ main = do
 
 tests = [testGroup "UserState" userStateTests,
          -- testGroup "TrustWeaver" trustWeaverTests,
-         testGroup "InputValidation" inputValidationTests
+         testGroup "InputValidation" inputValidationTests,
+         testGroup "Html" htmlTests
         ]

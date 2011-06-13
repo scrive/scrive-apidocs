@@ -65,27 +65,27 @@ showUser =
                    <table>
                        <tr>
                            <td>Företag:</td>
-                           <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(hassupervisor)$disabled$endif$/></td>
+                           <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>Org. nr:</td>
-                           <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(hassupervisor)$disabled$endif$ /></td>
+                           <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$ /></td>
                        </tr>
                        <tr>
                            <td>Adress:</td>
-                           <td><input type="text" name="address" value="$address$" autocomplete="off"  $if(hassupervisor)$disabled$endif$/></td>
+                           <td><input type="text" name="address" value="$address$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>Postnummer:</td>
-                           <td><input type="email" name="zip" value="$zip$" autocomplete="off"  $if(hassupervisor)$disabled$endif$/></td>
+                           <td><input type="email" name="zip" value="$zip$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>Postort:</td>
-                           <td><input type="text" name="city" value="$city$" autocomplete="off"  $if(hassupervisor)$disabled$endif$/></td>
+                           <td><input type="text" name="city" value="$city$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>Land:</td>
-                           <td><input type="text" name="country" value="$country$" autocomplete="off"  $if(hassupervisor)$disabled$endif$/></td>
+                           <td><input type="text" name="country" value="$country$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                    </table>
                </div>
@@ -104,4 +104,5 @@ showUser =
        </div>
    </div>
 </div>
+</form>
 ####
