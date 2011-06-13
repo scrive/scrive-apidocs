@@ -19,7 +19,7 @@ SealingTexts
 offersealingtexts=
 SealingTexts
     {   verificationTitle="Acceptverifikat"
-      , docPrefix="Offert nummer"
+      , docPrefix="Offertnummer"
       , signedText="Offert accepterad"
       , partnerText="Mottagare"
       , secretaryText="Avsändare"
@@ -28,15 +28,15 @@ SealingTexts
       , dateText="Datum"
       , historyText="Händelser"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offert nummer $documentid$ har skickats"
-        , "av avsändaren och accepterats av mottagaren. Kursiverad information är verifierad genom vår tjänst."
+          "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offertnummer $documentid$ har accepterats"
+        , "av parterna och är juridiskt bindande. Kursiverad information är verifierad genom vår tjänst.
         , "Du kan kontrollera offerten mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
 #####
 ordersealingtexts= 
 SealingTexts
     {   verificationTitle="Orderbekräftelse"
-      , docPrefix="Orderbekräftelse nummer"
+      , docPrefix="Orderbekräftelsenummer"
       , signedText="Ordern bekräftad"
       , partnerText="Mottagare"
       , secretaryText="Avsändare"
@@ -45,16 +45,16 @@ SealingTexts
       , dateText="Datum"
       , historyText="Händelser"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documentid$ har undertecknats"
+          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att orderbekräftelsenummer $documentid$ har bekräftats"
         , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
-        , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+        , "Kontrollera orderbekräftelsen mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
 #####
 contractLastHistEntry=
     Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande.
 #####
 offerLastHistEntry=
-    Samligta parter har bekräftat offerten.
+    Samligta parter har accepterat offerten.
 ####
 orderLastHistEntry=
     Samligta parter har bekräftat ordern.
@@ -62,22 +62,29 @@ orderLastHistEntry=
 contractInvitationSentEntry=
     $authorfstname$ $authorsndname$ skickar en inbjudan att underteckna till
     $if(oneSignatory)$
-        parterna
-    $else$
         parten
+    $else$
+        parterna
     $endif$ 
     
     $ip$
 ###
 offerInvitationSentEntry=
-    $authorfstname$ $authorsndname$ skickar offerten till $personname$ $ip$
+    $authorfstname$ $authorsndname$ skickar offerten till
+    $if(oneSignatory)$
+        parten
+    $else$
+        parterna
+    $endif$ 
+    
+    $ip$
 ###
 orderInvitationSentEntry=
     $authorfstname$ $authorsndname$ skickar orderbekräftelsen till
     $if(oneSignatory)$
-        parterna
-    $else$
         parten
+    $else$
+        parterna
     $endif$ 
     
     $ip$
@@ -92,25 +99,15 @@ orderSeenHistEntry=
     $personname$ granskar orderbekräftelsen online $seenip$
 ####
 contractSignHistEntry=
-    $personname$ undertecknar dokumentet online med 
-        $if(!provider)$
-            e-post
-        $elseif(bankid)$
-            BankID
-        $elseif(norder)$
-            Nordea e-legitimation
-        $elseif(telia)$
-            Telia e-legitimation
-        $else$
-            e-legitimation
-        $endif$
-    $signip$
+    $personname$ undertecknar dokumentet online med $signMethod()$ $signip$
 ####
 offerSignHistEntry=
-    $personname$ accepterar offerten online $signip$
+    $personname$ accepterar offerten med $signMethod()$ $signip$
 ###
 orderSignHistEntry=
-    $personname$ bekräftar ordern online med 
+    $personname$ bekräftar ordern online med $signMethod()$ $signip$
+###
+signMethod=
         $if(!provider)$
             e-post
         $elseif(bankid)$
@@ -122,5 +119,4 @@ orderSignHistEntry=
         $else$
             e-legitimation
         $endif$
-    $signip$
 ###

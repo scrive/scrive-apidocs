@@ -11,7 +11,7 @@ signatorysignedoffertext=Accepterat offert
 ####
 signatorysignedordertext=Ordern bekräftad
 ####
-signatorycanceledcontracttext=
+signatorycanceledcontracttext=Dokumentet återkallad
 ####
 signatorycanceledoffertext=Offert återkallad
 ####

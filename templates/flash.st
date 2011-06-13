@@ -26,7 +26,7 @@ flashMessageOfferCanceled=
      Du har nu återkallat offerten och ett meddlande om återkallelsen har skickats till samtliga parter
 #####
 flashMessageOrderCanceled=
-     Du har nu återkallat ordern att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
+     Du har nu återkallat ordern och ett meddelande om återkallelsen har skickats till samtliga parter.
 #####
 flashMessageNoAccountType=
      Du måste välja kontotyp.
@@ -202,9 +202,9 @@ flashMessageBulkOfferRemindsSent=Påminnelse har skickats till alla mottagare so
 ###
 flashMessageNoBulkOfferRemindsSent=Tyvärr, det finns inga mottagare som återstår att acceptera.
 ###
-flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
+flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte bekräftat.
 ###
-flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
+flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att bekräfta.
 ###
 flashMessageContractArchiveDone=Valda dokument har blivit raderade.
 ###
@@ -248,7 +248,7 @@ flashMessagePleaseSignContract=Underteckna dokumentet längst ned på sidan.
 ###
 flashMessagePleaseSignOffer=Du kan acceptera offerten längst ned på sidan.
 ###
-flashMessagePleaseSignOrder=Du kan bekräftat ordern längst ned på sidan.
+flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
 ###
 flashMessageUserHasLiveDocs=Unable to remove account(s) as there are some remaining documents that need to be finalised (spec/translate me please).
 ###

@@ -919,7 +919,6 @@ pageDocumentForSignatory action document ctx invitedlink  =
       field "signbuttontext" $ getProcessText processsignbuttontext
       field "signatorycancelmodaltitle" $ getProcessText processsignatorycancelmodaltitle
       field "title" $ getProcessText processtitle
-      field "signatorycancelbuttontext" $ getProcessText processsignatorycancelbuttontext
       field "requiressignguard" $ getValueForProcess document processrequiressignguard
       field "signguardwarntext" $ getProcessText processsignguardwarntext
       signatoryMessageProcessFields ctx document
