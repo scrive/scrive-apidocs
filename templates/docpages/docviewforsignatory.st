@@ -39,15 +39,9 @@ ordersignatorycancelmodaltitle=
             Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
           </p>
 ####
-contractsignatorycancelbuttontext=Avvisa dokument
-####
-offersignatorycancelbuttontext=Avvisa
-####
-ordersignatorycancelbuttontext=Avvisa
-####
 contractsignguardwarntext=För att underteckna måste du först klicka i kryssrutan
 ####
-offersignguardwarntext=För att bekräfta måste du först klicka i kryssrutan
+offersignguardwarntext=För att acceptera måste du först klicka i kryssrutan
 ######
 ordersignguardwarntext=För att bekräfta måste du först klicka i kryssrutan
 ######
@@ -147,7 +141,7 @@ pageDocumentForSignContent=
         <a href="#" class="btn-small red float-right submiter">
           <div class="left"></div>
           <div class="label">
-            <p>Avvisa </p>
+            <p>Avvisa</p>
             <div class="btn-symbol red arrow-left"></div></div>
           <div class="right"></div>
         </a>

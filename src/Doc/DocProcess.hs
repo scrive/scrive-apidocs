@@ -72,7 +72,6 @@ data DocProcessInfo =
   , processsignatorysignmodalcontent :: String
   , processsignbuttontext :: String
   , processsignatorycancelmodaltitle :: String
-  , processsignatorycancelbuttontext :: String
   , processsignatorysignedtext :: String
   , processsignatorycanceledtext :: String
   , processauthorissecretarytext :: String
@@ -121,6 +120,7 @@ data DocProcessInfo =
   , processcancelledinfotext :: String
   , processsignedinfoheader :: String
   , processsignedinfotext :: String
+  , processstatusinfotext :: String
   }
 
 contractProcess :: DocProcessInfo
@@ -157,7 +157,6 @@ contractProcess =
   , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
-  , processsignatorycancelbuttontext = "contractsignatorycancelbuttontext"
   , processsignatorysignedtext = "signatorysignedcontracttext"
   , processsignatorycanceledtext = "signatorycanceledcontracttext"
   , processauthorissecretarytext = "contractauthorissecretarytext"
@@ -206,6 +205,7 @@ contractProcess =
   , processcancelledinfotext = "contractcancelledinfotext"
   , processsignedinfoheader = "contractsignedinfoheader"
   , processsignedinfotext = "contractsignedinfotext"
+  , processstatusinfotext = "contractstatusinfotext"
   }
 
 offerProcess :: DocProcessInfo
@@ -242,7 +242,6 @@ offerProcess =
   , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
   , processsignbuttontext = "offersignbuttontext"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
-  , processsignatorycancelbuttontext = "offersignatorycancelbuttontext"
   , processsignatorysignedtext = "signatorysignedoffertext"
   , processsignatorycanceledtext = "signatorycanceledoffertext"
   , processauthorissecretarytext = "offerauthorissecretarytext"
@@ -291,6 +290,7 @@ offerProcess =
   , processcancelledinfotext = "offercancelledinfotext"
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
+  , processstatusinfotext = "offerstatusinfotext"
   }
 
 orderProcess :: DocProcessInfo
@@ -327,7 +327,6 @@ orderProcess =
   , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
-  , processsignatorycancelbuttontext = "ordersignatorycancelbuttontext"
   , processsignatorysignedtext = "signatorysignedordertext"
   , processsignatorycanceledtext = "signatorycanceledordertext"
   , processauthorissecretarytext = "orderauthorissecretarytext"
@@ -376,5 +375,6 @@ orderProcess =
   , processcancelledinfotext = "ordercancelledinfotext"
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
+  , processstatusinfotext = "orderstatusinfotext"
   }
 

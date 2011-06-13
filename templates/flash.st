@@ -26,7 +26,7 @@ flashMessageOfferCanceled=
      Du har nu återkallat offerten och ett meddlande om återkallelsen har skickats till samtliga parter
 #####
 flashMessageOrderCanceled=
-     Du har nu återkallat ordern att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
+     Du har nu återkallat ordern och ett meddelande om återkallelsen har skickats till samtliga parter.
 #####
 flashMessageNoAccountType=
 	$_flashMessageNoAccountType()$
@@ -200,9 +200,9 @@ flashMessageBulkOfferRemindsSent=	$_flashMessageBulkOfferRemindsSent()$
 ###
 flashMessageNoBulkOfferRemindsSent=	$_flashMessageNoBulkOfferRemindsSent()$
 ###
-flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
+flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte bekräftat.
 ###
-flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
+flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att bekräfta.
 ###
 flashMessageContractArchiveDone=	$_flashMessageContractArchiveDone()$
 ###
@@ -244,7 +244,7 @@ flashMessagePleaseSignContract=	$_flashMessagePleaseSignContract()$
 ###
 flashMessagePleaseSignOffer=	$_flashMessagePleaseSignOffer()$
 ###
-flashMessagePleaseSignOrder=Du kan bekräftat ordern längst ned på sidan.
+flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
 ###
 flashMessageUserHasLiveDocs=	$_flashMessageUserHasLiveDocs()$
 ###

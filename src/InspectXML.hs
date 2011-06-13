@@ -11,15 +11,15 @@ module InspectXML where
 import qualified Language.Haskell.TH as TH
 
 
-class (Show a) => InspectXML a where
-    inspectXML :: a -> String
+class InspectXML a where
+    inspectXML ::(Show a) =>  a -> String
     inspectXML = concatMap escape . show 
         where escape '<' = "&lt;"
               escape '>' = "&gt;"
               escape c   = [c]
     
 table :: [Char] -> [Char] -> [Char]
-table a b = "<table><tbody><tr><td valign='top'> "++ a ++" </td><td> </td><td> "++ b ++" </td></tr></tbody></table>"
+table a b = "<table><tbody><tr><td valign='top' style='padding-right:5px'> "++ a ++" </td><td> </td><td> "++ b ++" </td></tr></tbody></table>"
 
 deriveInspectXML :: TH.Name -> TH.Q [TH.Dec]
 deriveInspectXML name = do

@@ -350,6 +350,8 @@ handleViralInvite = withUserPost $ do
         ctx@Context{ctxmaybeuser = Just user} <- get
         muser <- query $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
+           -- we leak user information here! SECURITY!!!!
+           -- you can find out if a given email is already a user
           then addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
           else do
             now <- liftIO getMinutesTime

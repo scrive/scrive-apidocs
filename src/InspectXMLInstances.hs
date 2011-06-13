@@ -22,18 +22,14 @@ import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
 
-
-instance InspectXML BS.ByteString where
-    inspectXML = inspectXML . BS.toString
-
-instance InspectXML a => InspectXML [a] where
+instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
 
-instance InspectXML a => InspectXML (Maybe a) where
+instance (InspectXML a, Show a) => InspectXML (Maybe a) where  
     inspectXML Nothing = "Nothing"
     inspectXML (Just x) = inspectXML x
 
-instance (InspectXML a, InspectXML b, InspectXML c) => InspectXML (a, b, c) where
+instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => InspectXML (a, b, c) where  
     inspectXML (a, b, c) = "(" ++ inspectXML a ++"," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
 
 $(deriveInspectXML ''Document)
@@ -61,6 +57,8 @@ instance InspectXML DocumentLogEntry where
     
 --Standard classes - we will just call show with some escaping
 instance InspectXML String where
+instance InspectXML BS.ByteString where
+  inspectXML = inspectXML . BS.toString  
 instance InspectXML Bool where
 instance InspectXML Int where
 instance InspectXML Author where
