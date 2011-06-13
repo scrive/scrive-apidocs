@@ -41,8 +41,8 @@ deriveInspectXML name = do
                           let k = namesOfRec fields
                           u fname k
       d fname cons = 
-        [d| instance InspectXML $ (TH.conT fname) where
-              inspectXML x = $ (TH.caseE (TH.varE 'x) 
+        [d| instance InspectXML $(TH.conT fname) where
+              inspectXML x = $( TH.caseE (TH.varE 'x) 
                               (map pcon cons) ) |]
 
   case info of
