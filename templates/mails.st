@@ -5,7 +5,7 @@ mailCancelContractByAuthorStandardHeader=
     <p>Hej, </p>
 ######
 mailCancelOfferByAuthorStandardHeader=
-    <p>Hej, $partylist$ </p>
+    <p>Hej, </p>
 ######
 mailCancelOrderByAuthorStandardHeader=
     <p>Hej, </p>
@@ -116,7 +116,7 @@ mailInvitationToSignContractContent=
     <p>
      <i>Översiktlig information</i><br/>
      Parter: $partnersinfo:noescape()$<br/>
-     $whohadsignedinfo:noescape()$<br/>
+     $whohadsignedcontractinfo:noescape()$<br/>
      Avsändare: <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -143,6 +143,15 @@ mailInvitationToSignContractContent=
 ###
 mailInvitationToSignOfferContent=
     $header:noescape()$
+    <p>
+     <i>Översiktlig information</i><br/>
+     Parter: $partnersinfo:noescape()$<br/>
+     $whohadsignedofferinfo:noescape()$<br/>
+     Avsändare: <strong>$creatorname$</strong><br/>
+     $timetosigninfo:noescape()$
+     $appendixList()$
+     $sigattachlist()$
+    </p>
     $if(issignatory)$
     <p>
       1. Klicka på länken <br/>
@@ -166,7 +175,7 @@ mailInvitationToSignOrderContent=
     <p>
      <i>Översiktlig information</i><br/>
      Parter: $partnersinfo:noescape()$<br/>
-     $whohadsignedinfo:noescape()$<br/>
+     $whohadsignedorderinfo:noescape()$<br/>
      Avsändare: <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -286,6 +295,15 @@ remindMailNotSignedOfferContent=
     $header:noescape()$
     <span>
       <p>
+        <i>Översiktlig information</i><br/>
+        Parter: $partnersinfo:noescape()$<br/>
+        $whohadsignedofferinfo:noescape()$<br/>
+        Avsändare: <strong>$creatorname$</strong><br/>
+        $timetosigninfo:noescape()$
+        $appendixList()$
+        $sigattachlist()$
+      </p>
+      <p>
         1. Klicka på länken<br/>
         <a href="$link$">$link$</a><br/>
         2. Granska online<br/>
@@ -301,7 +319,7 @@ remindMailNotSignedOrderContent=
     <span>
       <p><i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $whohadsignedinfo:noescape()$<br/> 
+        $whohadsignedorderinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
@@ -533,11 +551,31 @@ updateinglistwithauthor=
 noonehadsignedtext=
     Ingen har undertecknat dokumentet ännu
 ####
-whohadsignedinfoformail=
+contracthassignedformailtext=Har undertecknat
+####
+offerhassignedformailtext=Har accepterat
+####
+orderhassignedformailtext=Har bekräftat
+####
+whohadsignedcontractinfoformail=
     $if(signedlist)$
     Har undertecknat: $signedlist:noescape()$
     $else$
     Har undertecknat: $noonehadsignedtext()$
+    $endif$
+####
+whohadsignedorderinfoformail=
+    $if(signedlist)$
+    Har accepterat: $signedlist:noescape()$
+    $else$
+    Har accepterat: $noonehadsignedtext()$
+    $endif$
+####
+whohadsignedofferinfoformail=
+    $if(signedlist)$
+    Har bekräftat: $signedlist:noescape()$
+    $else$
+    Har bekräftat: $noonehadsignedtext()$
     $endif$
 ####
 whohadsignedinfoforpreview=

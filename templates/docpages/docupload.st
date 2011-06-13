@@ -9,7 +9,7 @@ contractuploadprompttext=Välj det dokument som du vill skicka till din motpart 
 ####
 offeruploadprompttext=Välj den offert som du vill skicka till din motpart.
 ####
-orderuploadprompttext=Välj det dokument som du vill skicka till din motpart för påskrift.
+orderuploadprompttext=Välj den orderbekräftelse som du vill skicka till.
 ####
 uploadPage=   
 $loadingdialog()$
