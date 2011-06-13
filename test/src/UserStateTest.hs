@@ -73,9 +73,9 @@ test_getUserSubaccounts_returnsTheRightUsers = withTestState $ do
     Just user0 <- addNewUserWithSupervisor 100 "Emily" "Green" "emily@green.com"
     Just user1 <- addNewUserWithSupervisor 100 "Bob" "Blue" "bob@blue.com"
     queriedSubAccounts <- query $ GetUserSubaccounts (UserID 100)
-    assertEqual "For GetUserSubaccounts result" 2 (Set.size queriedSubAccounts)
-    assert $ user0 `Set.member` queriedSubAccounts
-    assert $ user1 `Set.member` queriedSubAccounts
+    assertEqual "For GetUserSubaccounts result" 2 (length queriedSubAccounts)
+    assert $ user0 `elem` queriedSubAccounts
+    assert $ user1 `elem` queriedSubAccounts
 
 test_getUserStats_returnsTheUserCount = withTestState $ do
     Just user0 <- addNewUser "Emily" "Green" "emily@green.com"
