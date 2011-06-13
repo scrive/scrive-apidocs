@@ -37,7 +37,16 @@ instance Show MinutesTime where
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in (++) $ formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d, %H:%M:%S" calendartime
-               
+
+showMinutesTimeForAPI :: MinutesTime -> String 
+showMinutesTimeForAPI (MinutesTime mins secs) = 
+        let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
+            calendartime = unsafePerformIO $ toCalendarTime clocktime
+        in formatCalendarTime defaultTimeLocale 
+               "%Y-%m-%d %H:%M" calendartime
+
+
+
 showDateOnly :: MinutesTime -> String
 showDateOnly (MinutesTime 0 _) = ""
 showDateOnly (MinutesTime mins _) = 

@@ -156,10 +156,10 @@ api_signatory sl = JSObject $ toJSObject $  [
      Nothing -> []
     ++ 
     case (maybesigninfo sl) of 
-     Just signinfo ->  [("seen", api_date $ signtime signinfo)]
+     Just signinfo ->  [("sign", api_date $ signtime signinfo)]
      Nothing -> []
     ++ 
-    [("sign",showJSON $ fromSafeEnum $ api_document_relation sl)]                     
+    [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]  
     
 api_document_tag::DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject $ [
@@ -200,7 +200,7 @@ api_document addFiles doc = do
     
        
 api_date :: MinutesTime -> JSValue 
-api_date = showJSON  . show
+api_date = showJSON  . showMinutesTimeForAPI
 
 
 data SignatoryTMP = SignatoryTMP {
