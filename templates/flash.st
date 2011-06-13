@@ -1,22 +1,22 @@
 ### Some comment here
 flashDocumentDraftSaved=
-    Du har sparat dokumentet.
+	$_flashDocumentDraftSaved()$
 
 ######
 flashDocumentTemplateSaved=
-    Din mall är sparad.
+	$_flashDocumentTemplateSaved()$
 
 ######
 flashRemindMailSentNotSigned=
-    En påminnelse har skickats till $personname$
+	$_flashRemindMailSentNotSigned()$ $personname$ 
 
 ######
 flashRemindMailSentSigned=
-    Dokumentet har skickats till $personname$
+	$_flashRemindMailSentSigned()$ $personname$
 
 ######
 flashMessageCannotCancel=
-    Motparten har redan undertecknat dokumentet. Du kan inte återkalla inbjudan.
+	$_flashMessageCannotCancel()$
 
 ######
 flashMessageContractCanceled=
@@ -29,25 +29,25 @@ flashMessageOrderCanceled=
      Du har nu återkallat ordern att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
 #####
 flashMessageNoAccountType=
-     Du måste välja kontotyp.
+	$_flashMessageNoAccountType()$
 #####
 flashMessageInvalidAccountType=
-    Den kontotyp du försöker att välja är inte tillåten.
+	$_flashMessageInvalidAccountType()$
 #####
 flashMessageMustAcceptTOS=
-    För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.
+	$_flashMessageMustAcceptTOS()$
 
 ####
 flashMessageUserDetailsSaved=
-    <div>Dina kontoändringar har sparats.</div>
+	<div>$_flashMessageUserDetailsSaved()$</div>
 
 ####        
 flashMessageBadOldPassword=
-    Du har skrivit in fel nuvarande lösenord
+	$_flashMessageBadOldPassword()$
 
 ####
 flashMessagePasswordsDontMatch=
-    "Nytt lösenord" matchar inte med "Upprepa lösenord" 
+	$_flashMessagePasswordsDontMatch()$
 
 ###
 flashMessageContractRestarted=
@@ -59,198 +59,194 @@ flashMessageOfferRestarted=
 flashMessageOrderRestarted=
     Du har startat om orderbekräftelsen och kan nu skicka den på nytt
 ###
-flashMessageUserPasswordChanged=Ditt lösenord har ändrats.
+flashMessageUserPasswordChanged=
+	$_flashMessageUserPasswordChanged()$
 
 ###
 flashMessagePasswordChangeLinkNotValid=
-    Vi beklagar. Länken är inte längre giltig.<BR>
-     Vänligen använd "Glömt lösenord" för att generera en ny länk.
+	$_flashMessagePasswordChangeLinkNotValid()$
 
 ###
 flashMessageUserWithSameEmailExists=
-    En användare med samma e-post existerar redan.
+	$_flashMessageUserWithSameEmailExists()$
 
 ###
 flashMessageViralInviteSent=
-    Inbjudan har skickats!
+	$_flashMessageViralInviteSent()$
 
 ###
 flashMessageOtherUserSentInvitation=
-    Inbjudan har redan skickats av en annan användare.
+	$_flashMessageOtherUserSentInvitation()$
 ###
 flashMessageNoRemainedInvitationEmails=
-    Du har redan skickat 10 inbjudningar till denna e-post. Vänligen försök senare.
+	$_flashMessageNoRemainedInvitationEmails()$
 ###
 flashMessageActivationLinkNotValid=
-    Vi beklagar. Länken är inte längre giltig.<BR>
-    Vänligen använd "Glömt lösenord" för att generera en ny länk.
+	$_flashMessageActivationLinkNotValid()$
 
 ###
-flashMessageUserActivated=
-    Välkommen till SkrivaPå!
+flashMessageUserActivated=	$_flashMessageUserActivated()$
 
 ###
 flashMessageUserAlreadyActivated=
-    Du har redan aktiverat detta konto.
+	$_flashMessageUserAlreadyActivated()$
 
 ###
-flashMessageChangePasswordEmailSend=Ett nytt lösenord har blivit skickat till din e-post.
+flashMessageChangePasswordEmailSend=
+	$_flashMessageChangePasswordEmailSend()$
 ###
 flashMessageNoRemainedPasswordReminderEmails=
-    Du har redan begärt lösenordsbyte 10 gånger i rad. Vänligen försök igen senare.
+	$_flashMessageNoRemainedPasswordReminderEmails()$
 ####
 flashMessageNewActivationLinkSend=
-    Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
+	$_flashMessageNewActivationLinkSend()$
 
 ###
-flashMessageUserSignupDone=Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.
+flashMessageUserSignupDone=	$_flashMessageUserSignupDone()$
 ###
-flashAuthorSigned=Dokumentet har undertecknats.
+flashAuthorSigned=	$_flashAuthorSigned()$
 ###
 flashMessageLoginPageRedirectReason=
 $if(notlogged)$
-  Du är inte inloggad.
+	$_flashMessageLoginPageRedirectReasonNotLoggedIn()$
 $endif$
 $if(notsu)$
-  Du har inte rätt behörighet att se denna sida.
+	$_flashMessageLoginPageRedirectReasonNotAdmin()$
 $endif$
 $if(invloginfo)$
-  Felaktig e-post eller lösenord.
+	$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$
 $endif$
 ###
 ###
-emailFieldName=e-post
+emailFieldName=	$_emailFieldName()$
 ###
-passwordFieldName=lösenord
+passwordFieldName=	$_passwordFieldName()$
 ###
-nameFieldName=namn
+nameFieldName=	$_nameFieldName()$
 ###
-firstNameFieldName=förnamn
+firstNameFieldName=	$_firstNameFieldName()$
 ###
-secondNameFieldName=efternamn
+secondNameFieldName=	$_secondNameFieldName()$
 ###
-companyNameFieldName=företagsnamn
+companyNameFieldName=	$_companyNameFieldName()$
 ###
-companyNumberFieldName=organisationsnummer
+companyNumberFieldName=	$_companyNumberFieldName()$
 ###
-addressFieldName=adress
+addressFieldName=	$_addressFieldName()$
 ###
-positionFieldName=position
+positionFieldName=	$_positionFieldName()$
 ###
-checkBoxFieldName=check box
+checkBoxFieldName=	$_checkBoxFieldName()$
 ###
-daysToSignFieldName=days to sign
+daysToSignFieldName=	$_daysToSignFieldName()$
 ###
-idFieldName=id
+idFieldName=	$_idFieldName()$
 ###
-fieldNameFieldName=namn på fält
+fieldNameFieldName=	$_fieldNameFieldName()$
 ###
-fieldValueFieldName=värde på fält
+fieldValueFieldName=	$_fieldValueFieldName()$
 ###
-placeFieldName=place
+placeFieldName=	$_placeFieldName()$
 ###
-inviteTextFieldName=invite text
+inviteTextFieldName=	$_inviteTextFieldName()$
 ###
-flashMessageNeedsLetterAndDigit=$fieldnametitlecase$ måste innehålla åtminstone två bokstäver och två nummer.
+flashMessageNeedsLetterAndDigit=	$_flashMessageNeedsLetterAndDigit()$
 ###
-flashMessageInvalidFormat=$fieldnametitlecase$ är ej korrekt formaterad.
+flashMessageInvalidFormat=	$_flashMessageInvalidFormat()$
 ###
-flashMessageNumberBelowMinimum=$fieldnametitlecase$ must be a minimum of $min$.
+flashMessageNumberBelowMinimum=	$_flashMessageNumberBelowMinimum()$
 ###
-flashMessageNumberAboveMaximum=$fieldnametitlecase$ can be a maximum of $max$.
+flashMessageNumberAboveMaximum=	$_flashMessageNumberAboveMaximum()$
 ###
-flashMessageNotAValidInteger=$fieldnametitlecase$ should be a number.
+flashMessageNotAValidInteger=	$_flashMessageNotAValidInteger()$
 ###
-flashMessageInvalidSpaceInInput=Blankrad är inte tillåtet i $fieldnamelowercase$.
+flashMessageInvalidSpaceInInput=	$_flashMessageInvalidSpaceInInput()$
 ###
-flashMessageInvalidUnprintableCharsInInput=$fieldnametitlecase$ innehåller ej tillåtna tecken. 
+flashMessageInvalidUnprintableCharsInInput= 	$_flashMessageInvalidUnprintableCharsInInput()$
 ###
-flashMessageInvalidPrintableCharsInInput=$fieldnametitlecase$ innehåller ej tillåtna tecken.
+flashMessageInvalidPrintableCharsInInput=	$_flashMessageInvalidPrintableCharsInInput()$
 ###
-flashMessageInputLessThanMinLength=$fieldnametitlecase$ måste innehålla minst $minlength$ tecken.
+flashMessageInputLessThanMinLength=	$_flashMessageInputLessThanMinLength()$
 ###
-flashMessageInputExceedsMaxLength=$fieldnametitlecase$ får max innehålla $maxlength$ tecken.
+flashMessageInputExceedsMaxLength=	$_flashMessageInputExceedsMaxLength()$
 ###
-flashMessageMissingRequiredField=Du har missat att fylla i ett obligatoriskt fält.
+flashMessageMissingRequiredField=	$_flashMessageMissingRequiredField()$
 ###
-flashMessageFailedToParseCSV=Misslyckad tolkning av .csv, var vänlig och kontrollera och ladda upp igen.
+flashMessageFailedToParseCSV=	$_flashMessageFailedToParseCSV()$
 ###
-flashMessageCSVHasTooManyRows=Vi beklagar, men vi har begränsat denna fuktion til $maxrows$ rader.
-<br/>Var vänlig kontakta vår support om du behöver infoga fler än $maxrows$ rader.
+flashMessageCSVHasTooManyRows=	$_flashMessageCSVHasTooManyRows()$
 ###
-flashMessageNoDataInCSV=Kunde inte hitta några data i filen.
+flashMessageNoDataInCSV=	$_flashMessageNoDataInCSV()$
 ###
-flashMessageNoDataInCSVApartFromHeader=Kunde inte hitta några data i filen, kunde bara hitta titlar.
+flashMessageNoDataInCSVApartFromHeader=	$_flashMessageNoDataInCSVApartFromHeader()$
 ###
-flashMessageRowLessThanMinColCount=Raden behöver åtminstone $mincols$ kolumner.
+flashMessageRowLessThanMinColCount=	$_flashMessageRowLessThanMinColCount()$
 ###
-flashMessageRowGreaterThanMaxColCount=Raden kan inte ha mer än $maxcols$ kolumner.
+flashMessageRowGreaterThanMaxColCount=	$_flashMessageRowGreaterThanMaxColCount()$
 ###
-flashMessageFirstNameIsRequired=Förnamn krävs.
+flashMessageFirstNameIsRequired=	$_flashMessageFirstNameIsRequired()$
 ###
-flashMessageSecondNameIsRequired=Efternamn krävs.
+flashMessageSecondNameIsRequired=	$_flashMessageSecondNameIsRequired()$
 ###
-flashMessageEmailIsRequired=E-post krävs.
+flashMessageEmailIsRequired=	$_flashMessageEmailIsRequired()$
 ###
-flashMessageNumberIsRequired=Nummer krävs.
+flashMessageNumberIsRequired=	$_flashMessageNumberIsRequired()$
 ###
-flashMessageBulkContractRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
+flashMessageBulkContractRemindsSent=	$_flashMessageBulkContractRemindsSent()$
 ###
-flashMessageNoBulkContractRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
+flashMessageNoBulkContractRemindsSent=	$_flashMessageNoBulkContractRemindsSent()$
 ###
-flashMessageBulkOfferRemindsSent=Påminnelse har skickats till alla mottagare som ännu inte accepterat.
+flashMessageBulkOfferRemindsSent=	$_flashMessageBulkOfferRemindsSent()$
 ###
-flashMessageNoBulkOfferRemindsSent=Tyvärr, det finns inga mottagare som återstår att acceptera.
+flashMessageNoBulkOfferRemindsSent=	$_flashMessageNoBulkOfferRemindsSent()$
 ###
 flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
 ###
 flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
 ###
-flashMessageContractArchiveDone=Valda dokument har blivit raderade.
+flashMessageContractArchiveDone=	$_flashMessageContractArchiveDone()$
 ###
-flashMessageOfferArchiveDone=Valda offerter har blivit raderade.
+flashMessageOfferArchiveDone=	$_flashMessageOfferArchiveDone()$
 ###
 flashMessageOrderArchiveDone=Valda orderbekräftelse har blivit raderade.
 ###
-flashMessageTemplateArchiveDone=Valda mallar har blivit raderade.
+flashMessageTemplateArchiveDone=	$_flashMessageTemplateArchiveDone()$
 ###
-flashMessageAttachmentArchiveDone=Valda bilagor har blivit raderade.
+flashMessageAttachmentArchiveDone=	$_flashMessageAttachmentArchiveDone()$
 ###
-flashMessageThanksForTheQuestion=Ditt meddelande har skickats! Vi återkommer inom 24h.
+flashMessageThanksForTheQuestion=	$_flashMessageThanksForTheQuestion()$
 ###
-flashMessageInvalidCSV=Det uppstod ett problem med datan i din .csv. Var vänling och kontrollera och ladda upp igen.
+flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
 ###
-flashMessageCSVSent=Dokumentet är skickat till $doccount$ parter.
+flashMessageCSVSent=	$_flashMessageCSVSent()$
 ###
-flashMessageSingleTemplateShareDone=$docname$ har blivit delad inom din organisation.
+flashMessageSingleTemplateShareDone=	$_flashMessageSingleTemplateShareDone()$
 ###
-flashMessageMultipleTemplateShareDone=Valda mallar har blivit delade inom din organisation.
+flashMessageMultipleTemplateShareDone=	$_flashMessageMultipleTemplateShareDone()$
 ###
-flashMessageSingleAttachmentShareDone=$docname$ har blivit delad inom din organisation.
+flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()$
 ###
-flashMessageMultipleAttachmentShareDone=Valda bilagor har blivit delade inom din organisation.
+flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
-flashMessageUserInvitedAsSubaccount=Din förfrågan har skickats!
+flashMessageUserInvitedAsSubaccount=	$_flashMessageUserInvitedAsSubaccount()$
 ###
-flashMessageUserHasBecomeSubaccount=Du är nu underkonto under
-huvudkontot $supervisor.fullnamePlusEmail$ och rättigheterna till dina
-dokument har överförts till huvudkontot.
+flashMessageUserHasBecomeSubaccount=	$_flashMessageUserHasBecomeSubaccount()$
 ###
-flashMessageAccountActivatedFromSign=Ditt original har arkiverats hos SkrivaPå.
+flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
 ###
-flashMessageAccountRemovedFromSign=Ditt original är borttaget från SkrivaPå.
+flashMessageAccountRemovedFromSign=	$_flashMessageAccountRemovedFromSign()$
 ###
-flashMessageOnlyHaveRightsToViewDoc=Du har endast rättigheter att se detta dokument.
+flashMessageOnlyHaveRightsToViewDoc=	$_flashMessageOnlyHaveRightsToViewDoc()$
 ###
-flashMessagePleaseSignWithEleg=Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna.
+flashMessagePleaseSignWithEleg=	$_flashMessagePleaseSignWithEleg()$
 ###
-flashMessagePleaseSignContract=Underteckna dokumentet längst ned på sidan.
+flashMessagePleaseSignContract=	$_flashMessagePleaseSignContract()$
 ###
-flashMessagePleaseSignOffer=Du kan acceptera offerten längst ned på sidan.
+flashMessagePleaseSignOffer=	$_flashMessagePleaseSignOffer()$
 ###
 flashMessagePleaseSignOrder=Du kan bekräftat ordern längst ned på sidan.
 ###
-flashMessageUserHasLiveDocs=Unable to remove account(s) as there are some remaining documents that need to be finalised (spec/translate me please).
+flashMessageUserHasLiveDocs=	$_flashMessageUserHasLiveDocs()$
 ###
-flashMessageAccountsDeleted=Account(s) successfully deleted (spec/translate me please).
+flashMessageAccountsDeleted=	$_flashMessageAccountsDeleted()$
 ###
