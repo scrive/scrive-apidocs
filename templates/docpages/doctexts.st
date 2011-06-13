@@ -7,7 +7,14 @@ documentInfoText=
                                  Väntar
                             </span><br>
                             <span class="text">
-                                 Du har valt att underteckna sist. Vänligen invänta övriga parters underskrift.
+                              $if(offer)$
+                              Du har skickat en inbjudan att acceptera
+                              offerten. Vänligen inväntan accepten.
+                              $else$
+                              Du har valt att underteckna
+                              sist. Vänligen invänta övriga parters
+                              underskrift.
+                              $endif$
                             </span>
                         $else$
                         <span class="header">
