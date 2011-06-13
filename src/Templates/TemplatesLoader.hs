@@ -25,7 +25,6 @@ module Templates.TemplatesLoader
     ) where
 
 import Text.StringTemplate 
-import Text.StringTemplate.Base
 import Text.StringTemplate.Classes
 import Control.Monad
 import qualified Data.Map as Map

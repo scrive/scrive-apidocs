@@ -12,7 +12,6 @@ import Happstack.State (update, query)
 import Happstack.Util.Common (readM)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
-import Debug.Trace
 
 import ActionSchedulerState
 import AppView
