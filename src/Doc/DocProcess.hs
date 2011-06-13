@@ -120,6 +120,7 @@ data DocProcessInfo =
   , processcancelledinfotext :: String
   , processsignedinfoheader :: String
   , processsignedinfotext :: String
+  , processstatusinfotext :: String
   }
 
 contractProcess :: DocProcessInfo
@@ -204,6 +205,7 @@ contractProcess =
   , processcancelledinfotext = "contractcancelledinfotext"
   , processsignedinfoheader = "contractsignedinfoheader"
   , processsignedinfotext = "contractsignedinfotext"
+  , processstatusinfotext = "contractstatusinfotext"
   }
 
 offerProcess :: DocProcessInfo
@@ -288,6 +290,7 @@ offerProcess =
   , processcancelledinfotext = "offercancelledinfotext"
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
+  , processstatusinfotext = "offerstatusinfotext"
   }
 
 orderProcess :: DocProcessInfo
@@ -372,5 +375,6 @@ orderProcess =
   , processcancelledinfotext = "ordercancelledinfotext"
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
+  , processstatusinfotext = "orderstatusinfotext"
   }
 

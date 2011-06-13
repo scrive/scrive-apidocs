@@ -831,10 +831,11 @@ pageDocumentForViewer ctx
 
 signatoryMessageProcessFields :: Context -> Document -> Fields
 signatoryMessageProcessFields ctx document = do
-  field "signatorysignedtext" $ getProcessText processsignatorysignedtext
+  field "signatorysignedtext"   $ getProcessText processsignatorysignedtext
   field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
   field "authorissecretarytext" $ getProcessText processauthorissecretarytext
   field "remindagainbuttontext" $ getProcessText processremindagainbuttontext
+  field "statusinfotext"        $ getProcessText processstatusinfotext 
   where
     getProcessText = renderTextForProcess (ctxtemplates ctx) document
 
