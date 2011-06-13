@@ -533,7 +533,8 @@ handleSignShow documentid
       Just invitedlink -> do
         attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
         let isFlashNeeded = Data.List.null ctxflashmessages
-                            && (not $ isJust $ maybesigninfo invitedlink)  && (not $ isAttachment document )
+                            && (not $ isJust $ maybesigninfo invitedlink) 
+                            && (not $ isAttachment document )
             -- heavens this is a confusing case statement, there must be a better way!
             flashMsg =
               case (isFlashNeeded, 
@@ -541,13 +542,12 @@ handleSignShow documentid
                     isContract document, 
                     document `allowsIdentification` ELegitimationIdentification,
                     isOffer document) of
-                (False, _, _, _, _) -> Nothing
-                (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
-                (_, _, True, _, _) -> Just flashMessagePleaseSignContract
-                (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
-                _ -> Nothing
+                (False, _    , _    , _    , _    ) -> Nothing
+                (True , False, _    , _    , _    ) -> Just flashMessageOnlyHaveRightsToViewDoc
+                (True , True , True , True , _    ) -> Just flashMessagePleaseSignWithEleg
+                (True , True , True , False, _    ) -> Just flashMessagePleaseSignContract
+                (True , True , False, _    , True ) -> Just flashMessagePleaseSignOffer
+                _                                   -> Nothing
 
         ctx@Context{ctxtemplates} <- get
 
