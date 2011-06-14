@@ -102,10 +102,12 @@ function swedishString(names) {
 safeReady(function () {
   var menu = $('#signStepsContainer.follow');
   if(menu.size() > 0) {
-    var pos = menu.offset();
     var signStepsWrapper = $("#signStepsWrapper");
     var documentBox = $("#documentBox");
     $(window).scroll(function(){
+      var pos = menu.offset();
+      console.log("pos: " + str(pos));
+      console.log("offset: " + str(offset));
       if($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')){
         signStepsWrapper.height(menu.height() - 53);
         menu.addClass('fixed');
