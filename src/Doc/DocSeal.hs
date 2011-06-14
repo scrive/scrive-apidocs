@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocSeal
@@ -38,7 +38,7 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
-import System.IO                       
+import System.IO hiding (stderr)              
                          
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -58,7 +58,7 @@ personFromSignatoryDetails details =
                 }
 
 personFields::(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields
-personFields  (person, signinfo,seeninfo, _ , mprovider, _initials) = do 
+personFields  (person, signinfo,_seeninfo, _ , mprovider, _initials) = do 
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -75,7 +75,6 @@ personsFromDocument document =
         x (sl@SignatoryLink { signatorydetails
                             , maybesigninfo = Just signinfo
                             , maybeseeninfo
-                            , maybesignatory
                             , signatorysignatureinfo
                             })
              -- FIXME: this one should really have seentime always...
@@ -90,8 +89,8 @@ personsFromDocument document =
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
               , map head $ words $ BS.toString $ signatoryname signatorydetails
               )
-                  where fullnameverified = maybe False (\x -> signaturefstnameverified x
-                                                        && signaturelstnameverified x)
+                  where fullnameverified = maybe False (\s -> signaturefstnameverified s
+                                                        && signaturelstnameverified s)
                                                 signatorysignatureinfo
                         numberverified = maybe False signaturepersnumverified signatorysignatureinfo
 
@@ -136,12 +135,6 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 8) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
-                   
-formatProvider :: SignatureProvider -> String
-formatProvider BankIDProvider = "BankID"
-formatProvider NordeaProvider = "Nordea e-legitimation"
-formatProvider TeliaProvider  = "Telia e-legitimation"
-formatProvider _ = "e-legitimation"
 
 sealSpecFromDocument :: KontrakcjaTemplates -> String -> Document -> String -> String -> IO Seal.SealSpec
 sealSpecFromDocument templates hostpart document inputpath outputpath =
@@ -159,7 +152,6 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       paddeddocid = pad0 20 (show docid)
 
       initials = concatComma initialsx
-      initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _, _)  = do
           seenDesc <- renderTemplateForProcess templates document processseenhistentry $ do
                         personFields personInfo
@@ -234,7 +226,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
 sealDocument :: Context 
              -> Document
              -> IO (Either String Document)
-sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
+sealDocument ctx@Context{ctxdocstore, ctxs3action}
              document = do
   let files = documentfiles document
   Log.debug $ "Sealing document"
@@ -267,7 +259,7 @@ sealDocumentFile :: Context
                  -> Document
                  -> File
                  -> IO (Either String Document)
-sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, ctxtemplates}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -277,7 +269,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
   BS.writeFile tmpin content
   config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
   Log.debug $ show config
-  (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+  (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
   Log.debug $ "Sealing completed with " ++ show code
   case code of
       ExitSuccess -> 
@@ -288,7 +280,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
                       Nothing -> do
                           Log.debug $ "TrustWeaver configuration empty, not doing TrustWeaver signing"
                           return newfilepdf1
-                      Just x -> do
+                      Just _ -> do
                           Log.debug $ "About to TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid
                           x <- TW.signDocument ctxtwconf newfilepdf1
                           case x of
