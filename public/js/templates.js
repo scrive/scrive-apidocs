@@ -5,6 +5,7 @@
 // set this to true to output logging messages to the console
 var debug = false;
 
+
 // create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
   return {fstname: "",
@@ -351,6 +352,7 @@ function docstateToHTML() {
   $(".dragfield").each(function () {
     updateStatus(this);
   });
+  $("#signStepsWrapper").show();
 }
 
 function getDragStatus(field){
