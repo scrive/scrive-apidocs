@@ -281,6 +281,8 @@ handleRoutes = msum [
        
        
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet $ DocControl.migrateDocSigLinks
+     , dir "adminonly" $ dir "unquarantineall" $ hGet $ Administration.handleUnquarantineAll
+     
      , dir "services" $ hGet $ handleShowServiceList
      , dir "services" $ hGet $ handleShowService
      , dir "services" $ hPost $ handleChangeService
@@ -738,7 +740,7 @@ onlySuperUserGet action = do
 -}
 daveDocument :: DocumentID -> Kontra Response
 daveDocument documentid = onlySuperUserGet $ do
-    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    document <- queryOrFail $ GetDocumentByDocumentIDAllEvenQuarantinedDocuments documentid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
 
 {- |
