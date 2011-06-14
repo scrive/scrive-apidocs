@@ -23,6 +23,7 @@ module Doc.DocState
     , FileMovedToAWS(..)
     , FileMovedToDisk(..)
     , GetDocumentByDocumentID(..)
+    , GetDocumentByDocumentIDAllEvenQuarantinedDocuments(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
     , GetDocuments(..)
@@ -78,6 +79,7 @@ module Doc.DocState
     , EndQuarantineForDocument(..)
     , MigrateForDeletion(..)
     , UpdateDocumentRecordStatus(..)
+    , UnquarantineAll(..)
     )
 where
 
@@ -114,6 +116,11 @@ getQuarantinedDocuments mservice = queryQuarantinedDocs $ \documents ->
 getDocumentByDocumentID :: DocumentID -> Query Documents (Maybe Document)
 getDocumentByDocumentID documentid = queryDocs $ \documents ->
     getOne $ documents @= documentid
+    
+getDocumentByDocumentIDAllEvenQuarantinedDocuments :: DocumentID -> Query Documents (Maybe Document)
+getDocumentByDocumentIDAllEvenQuarantinedDocuments documentid = do
+  documents <- ask
+  return $ getOne $ documents @= documentid
 
 getDocumentsByAuthor :: UserID -> Query Documents [Document]
 getDocumentsByAuthor userid = queryDocs $ \documents ->
@@ -1174,9 +1181,9 @@ migrateForDeletion :: [User] -> Update Documents ()
 migrateForDeletion users = do
   docs <- fmap toList ask  
   now <- getMinuteTimeDB
-  mapM_ (\doc -> modify (updateIx (documentid doc) (propagetUsers doc))) $ docs
-  docs2 <- fmap toList ask
-  mapM_ (\doc -> modify (updateIx (documentid doc) (deleteDocumentIfRequired now users doc))) $ docs2
+  let docs2 = map propagetUsers docs
+      docs3 = map (deleteDocumentIfRequired now users) docs2
+  mapM_ (\doc -> modify (updateIx (documentid doc) doc)) docs3
   where
     {- |
         This populates the maybesignatory & maybesupervisor on each of the signatory links for
@@ -1192,7 +1199,18 @@ migrateForDeletion users = do
     isSavedforUser sl u = maybesignatory sl == Just (userid u)
     isSignedByUser sl u = signatoryemail (signatorydetails sl) == (unEmail $ useremail $ userinfo u ) && isJust (maybesigninfo sl)
       
-      
+unquarantineAll :: Update Documents ([Either String Document])
+unquarantineAll = do
+  docs <- fmap toList ask
+  let qdocs = [docid | Document{ documentrecordstatus = QuarantinedDocument
+                               , documentid = docid} <- docs ]
+  mapM unq qdocs
+  where
+    unq docid = 
+      modifySignableOrTemplate docid $ \doc ->
+      return $ doc { documentrecordstatus = LiveDocument,
+                     documentquarantineexpiry = Nothing }
+  
 
 {-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
@@ -1305,4 +1323,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'templateFromDocument
 --                        , 'migrateToSigLinks
                         , 'migrateForDeletion
+                        , 'unquarantineAll
+                        , 'getDocumentByDocumentIDAllEvenQuarantinedDocuments
                         ])

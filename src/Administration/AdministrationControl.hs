@@ -35,6 +35,7 @@ module Administration.AdministrationControl(
           , handleShowQuarantine
           , handleQuarantinePost
           , handleMigrateForDeletion
+          , handleUnquarantineAll
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -689,6 +690,13 @@ handleMigrateForDeletion = onlySuperUser $ do
   liftIO $ putStrLn $ "Migration Done"
   handleShowQuarantine
   
+handleUnquarantineAll :: Kontra KontraLink
+handleUnquarantineAll = onlySuperUser $ do
+  res <- update $ UnquarantineAll
+  mapM_ (\r -> case r of
+            Left msg -> liftIO $ putStrLn msg
+            Right msg -> return ()) res
+  return LinkMain
 
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
