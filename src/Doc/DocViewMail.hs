@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 
 module Doc.DocViewMail ( mailDocumentRemind
                        , mailDocumentRemindContent
@@ -21,20 +21,17 @@ import Amazon
 import Doc.DocState
 import Doc.DocUtils
 import Doc.DocProcess
-import Kontra
 import KontraLink
 import Mails.SendMail
 import Misc
 import Templates.Templates 
 import Templates.TemplatesUtils
-import User.UserView (prettyName)
 import Kontra
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import API.Service.ServiceState
 import Happstack.State (query) 
-import Control.Monad.Trans
 import Templates.TemplatesLoader
 
 mailDocumentRemind :: KontrakcjaTemplates 
