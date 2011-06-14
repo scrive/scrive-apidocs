@@ -648,8 +648,8 @@ documentFunctionalityFields :: Document -> Fields
 documentFunctionalityFields Document{documenttype, documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
   -- it might not really be basic, it's just if there isn't an advanced mode we pretend we are
-  field "isbasic" $ documentfunctionality==BasicFunctionality || (not $ getValueForProcess documenttype processadvancedview)
-  field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (not $ getValueForProcess documenttype processadvancedview) 
+  field "isbasic" $ documentfunctionality==BasicFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
+  field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (Just False == getValueForProcess documenttype processadvancedview) 
 
 documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
 documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do

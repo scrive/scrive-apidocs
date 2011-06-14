@@ -195,7 +195,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       
       lastHistEntry = do
                        desc <- renderTemplateForProcess templates document processlasthisentry (documentInfoFields document)
-                       return $ if (getValueForProcess document processsealincludesmaxtime)
+                       return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
                                 then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
                                 , Seal.histcomment = pureString desc}]

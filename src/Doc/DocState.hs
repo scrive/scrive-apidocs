@@ -180,8 +180,8 @@ getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user = 
   case (getValueForProcess documenttype processadvancedview, preferreddesignmode $ usersettings user) of
-    (True, Nothing) -> BasicFunctionality
-    (True, Just BasicMode) -> BasicFunctionality
+    (Just True, Nothing) -> BasicFunctionality
+    (Just True, Just BasicMode) -> BasicFunctionality
     _ -> AdvancedFunctionality
 
 newDocument :: User
@@ -198,7 +198,7 @@ newDocumentWithMCompany :: (Maybe CompanyID)
             -> MinutesTime 
             -> Update Documents Document
 newDocumentWithMCompany mcompany user title documenttype ctime = do
-  let authorRoles = if (getValueForProcess documenttype processauthorsend) 
+  let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend) 
                     then [SignatoryAuthor]
                     else [SignatoryPartner, SignatoryAuthor]
   authorlink0 <- (signLinkFromDetails

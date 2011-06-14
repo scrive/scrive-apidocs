@@ -13,16 +13,15 @@ import Templates.Templates
 class HasProcess a where
   getProcess :: a -> Maybe DocProcessInfo
 
-  getValueForProcess :: a -> (DocProcessInfo -> b) -> b
+  getValueForProcess :: a -> (DocProcessInfo -> b) -> Maybe b
   getValueForProcess doctype fieldname =
-    case fmap fieldname (getProcess doctype) of
-      Nothing -> error "there is no process"
-      (Just val) -> val
+    fmap fieldname (getProcess doctype)
 
   renderTemplateForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> Fields -> IO String
-  renderTemplateForProcess templates hasprocess fieldname =
-    let templatename = getValueForProcess hasprocess fieldname in
-    renderTemplate templates templatename
+  renderTemplateForProcess templates hasprocess fieldname fields =
+    case getValueForProcess hasprocess fieldname of
+      (Just templatename) -> renderTemplate templates templatename fields
+      _ -> return ""
 
   renderTextForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> IO String
   renderTextForProcess templates hasprocess fieldname = renderTemplateForProcess templates hasprocess fieldname $ do return ()
