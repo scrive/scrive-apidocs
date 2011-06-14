@@ -345,21 +345,26 @@ pageDocumentDesign=
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
               <div class="signStepsBodyAttachments">
-                   <small>
-                     <a rel="#update-attachments-dialog" href="#"
-                        style="padding-top:3px" id="addattachmentlink">BIFOGA BILAGA</a>
-                     $if(isattachments)$
-                     <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ dokument)</span>
-                     <div id="tooltip-attachmentlist" class="hidden">
-                       $attachments:{attachment |
-                         <div>$attachment.attachmentname$</div>
-                       }$
-                     </div>
-                     $endif$
-                   </small>
+                <small>
+                  <a rel="#update-attachments-dialog" href="#"
+                     style="padding-top:3px" id="addattachmentlink">BIFOGA BILAGA</a>
+                  $if(isattachments)$
+                  <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ dokument)</span>
+                  <div id="tooltip-attachmentlist" class="hidden">
+                    $attachments:{attachment |
+                    <div>$attachment.attachmentname$</div>
+                    }$
+                  </div>
+                  $endif$
+                </small>
+              </div>
+              <div class="signStepsBodySigAttachments">
+                <small>
+                  <a rel="#update-sigattachments-dialog" href="#"
+                     style="padding-top:3px" id="addsigattachmentlink">BEGÄR BILAGA</a>
+                </small>
+              </div>
             </div>
-            
-          </div>
           
         <div class="border"></div>   
         <div id="signStepsBodyRight" class="step3">      
