@@ -1175,7 +1175,8 @@ migrateForDeletion users = do
   docs <- fmap toList ask  
   now <- getMinuteTimeDB
   mapM_ (\doc -> modify (updateIx (documentid doc) (propagetUsers doc))) $ docs
-  mapM_ (\doc -> modify (updateIx (documentid doc) (deleteDocumentIfRequired now users doc))) $ docs
+  docs2 <- fmap toList ask
+  mapM_ (\doc -> modify (updateIx (documentid doc) (deleteDocumentIfRequired now users doc))) $ docs2
   where
     {- |
         This populates the maybesignatory & maybesupervisor on each of the signatory links for
