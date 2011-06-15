@@ -1379,7 +1379,6 @@ showTemplatesList =
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
 
-
 showOrdersList :: Kontra (Either KontraLink String)
 showOrdersList = 
   let getOrders user = do
