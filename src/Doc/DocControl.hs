@@ -1351,6 +1351,10 @@ getDocumentsForUserByType user docfilter = do
   return . filter docfilter $ nub $
           mydocuments ++ concat friends'Documents ++ concat supervised'Documents ++ relatedUsersSharedDocuments
 
+-- These should be refactored (showContractsList, showOffersList, show OrdersList).
+-- They are the same except for Signable Contract/Offer/Order
+-- --EN
+  
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -1375,25 +1379,27 @@ showTemplatesList =
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
 
-showOfferList :: Kontra (Either KontraLink String)
-showOfferList = 
-  let getOffers user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        return . filter ((==) (Signable Offer) . documenttype) $
-           mydocuments ++ concat friends'Documents in
-  showItemList' pageOffersList getOffers
-
 showOrdersList :: Kontra (Either KontraLink String)
 showOrdersList = 
   let getOrders user = do
         mydocuments <- query $ GetDocumentsByUser user 
         usersICanView <- query $ GetUsersByFriendUserID $ userid user
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- query $ GetDocumentsBySupervisor user
         return . filter ((==) (Signable Order) . documenttype) $
-           mydocuments ++ concat friends'Documents in
+           mydocuments ++ concat friends'Documents ++ supervised'Documents in
   showItemList' pageOrdersList getOrders
+
+showOfferList :: Kontra (Either KontraLink String)
+showOfferList = 
+  let getOffers user = do
+        mydocuments <- query $ GetDocumentsByUser user 
+        usersICanView <- query $ GetUsersByFriendUserID $ userid user
+        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- query $ GetDocumentsBySupervisor user
+        return . filter ((==) (Signable Offer) . documenttype) $
+           mydocuments ++ concat friends'Documents ++ supervised'Documents in
+  showItemList' pageOffersList getOffers
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
