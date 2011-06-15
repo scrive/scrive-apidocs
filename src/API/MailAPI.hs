@@ -37,7 +37,6 @@ import Data.List
 import Data.Maybe
 import Data.Word
 import GHC.Int (Int64(..))
-import HSP.XML (cdata)
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
 import Happstack.State (query)
