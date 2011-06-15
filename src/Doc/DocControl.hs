@@ -1382,8 +1382,9 @@ showOfferList = checkUserTOSGet $ do
     mydocuments <- query $ GetDocumentsByUser user 
     usersICanView <- query $ GetUsersByFriendUserID $ userid user
     friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+    supervised'Documents <- query $ GetDocumentsBySupervisor user
     let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
-                      mydocuments ++ concat friends'Documents
+                      mydocuments ++ concat friends'Documents ++ supervised'Documents
         authornames = map getAuthorName contracts
     params <- getListParams
     liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authornames))
