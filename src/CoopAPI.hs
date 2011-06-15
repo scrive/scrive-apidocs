@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module CoopAPI (coopAPI)
        
        {- 
@@ -80,7 +81,6 @@ where
 import API.API
 import Doc.DocControl
 import Doc.DocState
-import Doc.DocStateData
 import Doc.DocUtils
 import Kontra
 import Misc
@@ -89,18 +89,13 @@ import Mails.MailsData
 
 import Happstack.State
 import Happstack.Server
-import Happstack.Util.Common (readM)
 import Control.Monad
 import Data.Functor
 import Data.List
 import Data.Maybe
 import Control.Monad.Reader
 import Text.JSON
-import Text.JSON.String
-import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString as BS
 
 data CoopAPIContext = CoopAPIContext {wsbody :: APIRequestBody ,user :: User}
@@ -113,7 +108,7 @@ instance APIContext CoopAPIContext where
         muser <- coopUser
         mbody <- apiBody 
         case (muser, mbody)  of
-             (Just user, Right body) -> return $ Right $ CoopAPIContext { wsbody = body, user = user }
+             (Just u, Right b) -> return $ Right $ CoopAPIContext { wsbody = b, user = u}
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
              (_, Left s)             -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
 
@@ -149,7 +144,7 @@ sendReminder = do
   let siglinkstoremind = [sl | sl <- documentsignatorylinks doc
                              , isSignatory sl
                              , not $ hasSigned sl]
-  forM siglinkstoremind $ (\signlink -> do
+  _ <- forM siglinkstoremind $ (\signlink -> do
                               mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
                                 to = [MailAddress {fullname = signatoryname $ signatorydetails signlink
@@ -161,14 +156,14 @@ sendReminder = do
 
 getDocumentStatusAndSignatories :: CoopAPIFunction APIResponse
 getDocumentStatusAndSignatories = do
-  author <- user <$> ask
   doc <- getDocument
   let signatories = [s|s <- documentsignatorylinks doc,
                      isSignatory s]
   return $ toJSObject [("documentid", JSString $ toJSString $ show $ documentid doc)
                       ,("documentstatus", JSString $ toJSString $ show $ documentstatus doc)
                       ,("signatories", JSArray $ map (sigToJSON) signatories)]
-  
+
+sigToJSON :: SignatoryLink -> JSValue  
 sigToJSON siglink = JSObject $ toJSObject [("signed", JSBool $ isJust $ maybesigninfo siglink)
                                ,("email", JSString $ toJSString $ BS.toString $ signatoryemail $ signatorydetails siglink)
                                ,("fstname", JSString $ toJSString $ BS.toString $  signatoryfstname $ signatorydetails siglink)
@@ -177,8 +172,9 @@ sigToJSON siglink = JSObject $ toJSObject [("signed", JSBool $ isJust $ maybesig
                                ,("companynr", JSString $ toJSString $ BS.toString $  signatorycompanynumber $ signatorydetails siglink)
                                ,("personalnr", JSString $ toJSString $  BS.toString $ signatorypersonalnumber $ signatorydetails siglink)
                                ,("customfields", JSArray $ map fieldDefinitionToJSObject $ signatoryotherfields $ signatorydetails siglink)]
+
                                                                                   
---fieldDefinitionToJSObject :: FieldDefinition -> JSObject JSValue
+fieldDefinitionToJSObject :: FieldDefinition -> JSValue
 fieldDefinitionToJSObject fd = 
   JSObject $ toJSObject $ [("name", JSString $ toJSString $ BS.toString $ fieldlabel fd)]
             ++ if not (BS.null $ fieldvalue fd) || fieldfilledbyauthor fd 
@@ -210,7 +206,7 @@ sendFromTemplate = do
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
   let Just authorsiglink = mauthorsiglink
   let saccount = getSignatoryAccount author
-  edoc <- update $
+  medoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx) 
           (documentid doc) 
@@ -222,17 +218,17 @@ sendFromTemplate = do
           [EmailIdentification] 
           Nothing 
           AdvancedFunctionality
-  case edoc of
-    Left msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
-    Right doc -> do
-      liftIO $ print doc
+  case medoc of
+    Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
+    Right edoc -> do
+      liftIO $ print edoc
       esdoc <- update $ AuthorSendDocument 
-               (documentid doc)
+               (documentid edoc)
                (ctxtime ctx)
                (ctxipnumber ctx)
                Nothing
       case esdoc of
-        Left msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
+        Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
           liftIO $ print sdoc
 
@@ -290,7 +286,7 @@ sendNewDocument = do
           Nothing 
           AdvancedFunctionality
   case edoc of
-    Left msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
+    Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
       liftIO $ print doc
       esdoc <- update $ AuthorSendDocument 
@@ -299,7 +295,7 @@ sendNewDocument = do
                (ctxipnumber ctx)
                Nothing
       case esdoc of
-        Left msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
+        Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
           liftIO $ print sdoc
 

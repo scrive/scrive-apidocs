@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
+-fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
 import Doc.DocState
@@ -8,12 +9,10 @@ import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import PayEx.PayExState
 import ListUtil
 import Session
 import API.Service.ServiceState
-import Data.Maybe
 import Company.CompanyState
 
 {- |
