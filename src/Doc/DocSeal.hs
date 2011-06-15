@@ -194,10 +194,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
                                 else []
 
       -- document fields
-      fields = if authorHasSigned
-               then concatMap fieldsFromSignatory signatoriesdetails
-               else concatMap fieldsFromSignatory $ authordetails : signatoriesdetails
-                    
+      fields = concatMap (fieldsFromSignatory . signatorydetails) (documentsignatorylinks document)
     
   in do    
       events <- fmap concat $ sequence $ 
