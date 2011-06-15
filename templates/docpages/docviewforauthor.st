@@ -86,7 +86,7 @@ pageDocumentForAuthor=
         </span>
       </div>
     </div>
-    <div id="attachmentbox"><div class="waiting4page"></div></div>
+    <div id="attachmentbox waiting4page"></div>
   </span>
   $endif$
   <span id="documenttabview">
