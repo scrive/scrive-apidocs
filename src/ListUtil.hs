@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -XOverlappingInstances #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
+-fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ListUtil
@@ -172,7 +173,7 @@ viewComparingRev:: (ViewOrd a) => (b -> a) -> b -> b -> Ordering
 viewComparingRev f a1 a2 = viewCompare (f a2) (f a1)
 
 doSearching::SearchingFunction a -> Maybe String -> [a] -> [a]
-doSearching searchFunc Nothing = id
+doSearching _ Nothing = id
 doSearching searchFunc (Just s) = filter (searchFunc s)
 
 doPaging:: Int -> Int -> [a] -> [a]
