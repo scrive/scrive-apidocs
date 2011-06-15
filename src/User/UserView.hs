@@ -59,7 +59,6 @@ module User.UserView (
     modalNewPasswordView,
 
     --utils  
-    prettyName,
     userBasicFields) where
 
 import Control.Applicative ((<$>))
@@ -197,7 +196,7 @@ inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress
 
 viralInviteMail :: KontrakcjaTemplates -> Context -> BS.ByteString -> KontraLink -> IO Mail
 viralInviteMail templates ctx invitedemail setpasslink = do
-  let invitername = BS.toString $ maybe BS.empty prettyName (ctxmaybeuser ctx)
+  let invitername = BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
   title   <- renderTemplate templates "mailViralInviteTitle" $ field "invitername" invitername
   content <- (renderTemplate templates "mailViralInviteContent" $ do
     field "email"        $ BS.toString invitedemail
@@ -215,7 +214,7 @@ mailNewAccountCreatedByAdmin templates ctx personname email setpasslink customme
     field "personname"    $ BS.toString personname
     field "email"         $ BS.toString email
     field "passwordlink"  $ show setpasslink
-    field "creatorname"   $ BS.toString $ maybe BS.empty prettyName (ctxmaybeuser ctx)
+    field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
     ) >>= wrapHTML templates
@@ -446,12 +445,6 @@ modalDoYouWantToBeSubaccount = do
     
     
 -------------------------------------------------------------------------------
-
-{- Same as personname (username or email) from DocView but works on User -}
--- TODO: get rid of this definition
-prettyName :: User -> BS.ByteString
-prettyName = getSmartName
-
 
 {- | Basic fields for the user  -}      
 userBasicFields :: User -> Fields
