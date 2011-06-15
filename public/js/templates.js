@@ -1592,6 +1592,17 @@ safeReady(function() {
     }
     return false;
   });
+  $("a.removesig", "#alreadyattached").live("click", function() {
+    var x = $(this);
+    var item = x.closest(".alreadyattacheditem");
+    item.find(".display").hide();
+    item.find("input[name='removeattachment']").val("true");
+    return false;
+  });
+  $("a.removesig", "#tobeattached").live("click", function() {
+    $(this).closest(".alreadyattacheditem").remove();
+    return false;
+  });
   $("a.removesig", "table#sigattachmenttable").live("click", function() {
     console.log("Here");
     console.log(this);
