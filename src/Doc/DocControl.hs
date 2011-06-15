@@ -839,14 +839,29 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
-    let idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
+    
+
+    let existingattachments = map (fileid . authorattachmentfile) (documentauthorattachments udoc)
+        idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
                                               , r] :: [FileID]
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
-    let idsforadd = [read $ BS.toString did |(did, r)<- zip attidsnums removeatt, not r] 
+    liftIO $ print "mattachments: "
+    liftIO $ print mattachments
+    -- read in the ids as both FileID and DocumentID
+    -- if the FileID exists in the existing author attachments
+    -- it's not a DocumentID
+    -- otherwise, consider it a DocumentID to add
+    let idsforadd = [did | (did, fid) <- [( read $ BS.toString sid
+                                          , read $ BS.toString sid) | (sid, r) <- zip attidsnums removeatt
+                                                                    , not r]
+                         , not $ fid `elem` existingattachments]
                     ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
-
+    liftIO $ print "idsforadd: "
+    liftIO $ print idsforadd
     mndoc <- update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
+    liftIO $ print "mndoc"
+    liftIO $ print mndoc
     case mndoc of
         Left _msg -> mzero
         Right ndoc -> return . LinkDesignDoc . DesignStep3 $ documentid ndoc
