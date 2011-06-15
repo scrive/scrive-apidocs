@@ -1367,7 +1367,7 @@ function renumberParts() {
       idx = idx + 1;
     } else {
       var text = "EJ UNDERTECKNANDE PART";
-      if (offer) text = "AVSÄNDARE";
+      if (issendonly) text = "AVSÄNDARE";
       $(this).find(".partnumber").text(text);
     }
   });
