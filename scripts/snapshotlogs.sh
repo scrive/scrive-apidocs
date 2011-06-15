@@ -1,38 +1,31 @@
 #!/bin/bash
 
-# usage: snapshot.sh {repodir} {prefix} {wherethescriptslive}
-# example: snapshot.sh /home/prod/kontrakcja kontrakcja-snapshot /home/prod/kontrackja
+# usage: snapshotlogs.sh {repodir} {prefix} {wherethescriptslive}
+# example: snapshotlogs.sh /home/prod/kontrakcja kontrakcja-logs /home/prod/kontrackja
 
 repo=$3
 tocopy=$1
 prefix=$2
+
+# this has to match what logrotate uses
+dateext=`date "+%Y%m%d"`
 date=`date -u "+%Y-%m-%d-%H-%M-%S%z"`
 zipfile=$prefix-$date.tar.gz
 cd /tmp
-echo "Zipping repo"
+
+echo "Zipping logs"
 tar zcf "$zipfile"                    \
-    --exclude=.git*                   \
-    --exclude=_local*                 \
-    --exclude=_darcs*                 \
-    --exclude=dist*                   \
-    --exclude=selenium-test*          \
-    --exclude=*.dll                   \
-    --exclude=*.exe                   \
-    --exclude=log*                    \
-    --exclude=*.log                   \
-    --exclude=.hpc*                   \
-    --exclude=_locakal_ticket_backup* \
-    $tocopy/
+    $tocopy/log/*.log-$dateext
 ls -lh "$zipfile"
 
 echo "Generating signature hash"
-hashdoc=hash-$date.txt
+hashdoc=loghash-$date.txt
 m=`md5sum $zipfile | awk 'BEGIN { FS = " +" } ; { print $1 }'`
-echo "SkrivaPa Code Snapshot" >  "$hashdoc"
+echo "SkrivaPa Log Snapshot"  >  "$hashdoc"
 echo "Date: $date"            >> "$hashdoc"
 echo "Filename: $zipfile"     >> "$hashdoc"
 echo "MD5SUM: $m"             >> "$hashdoc"
-
+exit 
 #sign with trustweaver
 echo "Building soap message"
 echo "Multipart MIME"
@@ -75,7 +68,7 @@ echo "Not checking amazon sum"
 #then
 #    echo "MD5 sum matches!"
     #clean up
-    rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
+#    rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
     exit 0
 #fi
 echo "Something went wrong. Try again."
