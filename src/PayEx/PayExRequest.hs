@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExRequest
@@ -51,7 +51,7 @@ instance HTypeable (PC PayExInit) where
     
 instance XmlContent (PC PayExInit) where
     parseContents = error "Never serialize response"
-    toContents rq@(PC (config, PayExInit request templates agreement payment)) =
+    toContents rq@(PC (config, PayExInit request _templates agreement payment)) =
          rqHeader rq $ 
                    fieldBox $  (setField "accountNumber" $ accountNumber config) >>>
                                (setField "purchaseOperation" "SALE") >>>
@@ -202,8 +202,9 @@ setField::String->String->([Content ()],String) -> ([Content ()],String)
 setField n v (l,vs)= (l ++ [mkElemC n (toText $ escapeAmps v)], vs ++ v)
 
 addHash::String -> ([Content ()],String) -> [Content ()] 
-addHash hash (l,vs)= l -- ++ [ mkElemC "hash" (toText $ md5s $ Str $ encodeString ISO88591 $ vs ++ hash) ]
+addHash _hash (l,_vs)= l -- ++ [ mkElemC "hash" (toText $ md5s $ Str $ encodeString ISO88591 $ vs ++ hash) ]
 
+escapeAmps :: String -> String
 escapeAmps ('&':ss) = "&amp;"++(escapeAmps ss)
 escapeAmps (s:ss) = s:(escapeAmps ss)
 escapeAmps [] = []

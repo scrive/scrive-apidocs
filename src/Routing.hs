@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Routing
@@ -19,7 +19,6 @@ import KontraLink
 import Misc
 import Kontra
 import qualified User.UserControl as UserControl
-import qualified AppLogger as Log (error, security, debug)
 import Redirect
 
 type RedirectOrContent = Either KontraLink String

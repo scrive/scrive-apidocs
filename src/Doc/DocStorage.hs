@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStorage
@@ -31,14 +31,12 @@ import Kontra
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
 import qualified MemCache
-import Data.Char
 
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
@@ -85,12 +83,11 @@ uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
   _ <- update $ SetDocumentTrustWeaverReference documentid reference
   return ()
 
-
+resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
 resizeImageAndReturnOriginalSize filepath = do
     (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "identify" [filepath])
                                               { std_out = CreatePipe }
-    out <-  hGetContents sizerouthandle
-    let (w,h) = readSize out
+    _out <-  hGetContents sizerouthandle
     sizerexitcode <- waitForProcess sizechecker
     case sizerexitcode of
         ExitFailure _ -> return ()
@@ -102,14 +99,6 @@ resizeImageAndReturnOriginalSize filepath = do
         ExitSuccess -> return ()
     fcontent <- BS.readFile filepath
     return (fcontent,943,1335)
-  where
-   readSize::[Char] -> (Int,Int) --Ugly and unsafe but I can't get info about output format so writing nicer parser is useless
-   readSize ('J':'P':'E':'G':' ':rest) = let
-                                          (w,hs) = span (isDigit) rest
-                                          h = takeWhile (isDigit) (tail hs)
-                                         in (read w,read h)
-   readSize (_:rest) = readSize rest
-   readSize [] = (943,1335)
 
 {- |
    Convert PDF to jpeg images of pages
@@ -213,8 +202,8 @@ preprocessPDF ctx content docid = withSystemTempDirectory "preprocess_gs" $ \tmp
                            , std_err = CreatePipe
                            }
   (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-  errcontent <- BSL.hGetContents errhandle
-  outcontent <- BSL.hGetContents outhandle
+  _errcontent <- BSL.hGetContents errhandle
+  _outcontent <- BSL.hGetContents outhandle
                  
   exitcode <- waitForProcess gsProcHandle
 

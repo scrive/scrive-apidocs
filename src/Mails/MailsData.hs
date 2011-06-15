@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -Werror  #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 module Mails.MailsData where
 
 import Data.Typeable

@@ -203,7 +203,7 @@ pageDocumentForSignContent=
         </span>
       </div>
     </div>
-    <div id="attachmentbox"><div class="waiting4page"></div></div>
+    <div id="attachmentbox waiting4page"></div>
   </span>
   $endif$
   <span id="documenttabview">
@@ -305,7 +305,7 @@ pageDocumentForSignContent=
         <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
       </div>
       $endif$
-      <div id="signViewBottomBoxContainerRight"> 
+      <div id="signViewBottomBoxContainerRight">
         <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
           <div class="left"></div>
           <div class="label" style="$if(process.requiressignguard)$width:120px$else$padding-left:20px;padding-right:20px;$endif$">

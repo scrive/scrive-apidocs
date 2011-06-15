@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Werror #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module FlashMessage (
       FlashType(..)
     , FlashMessage(..)

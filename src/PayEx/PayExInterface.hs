@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExInterface
@@ -9,21 +9,19 @@
 --  Wrapper around PeyEx webservices
 -----------------------------------------------------------------------------
 module PayEx.PayExInterface(payexTest,paymentInfo,startPaymentForDocument,checkSendPayments) where
-import Control.Monad.State
+import Control.Monad.State hiding (state)
 import PayEx.PayExState
 import PayEx.PayExRequest
 import PayEx.PayExResponse
 import PayEx.PayExView
 import SOAP.SOAP
-import Kontra 
-import Happstack.Server
+import Kontra
+import Happstack.Server hiding (result)
 import AppView
 import Doc.DocState
 import Doc.DocUtils
-import User.UserState
 import Payments.PaymentsState
 import Happstack.State (update,query)
-import Templates.Templates
 import Text.XML.HaXml.XmlContent.Parser (XmlContent)
 import KontraLink
 import Misc
@@ -53,29 +51,29 @@ payexTest (Just pid) =
                     ctx <- get 
                     mpayment <- sequenceMM $ fmap (liftIO . query . GetPayment . PaymentId) $ readM pid
                     case mpayment of
-                     Just payment -> do
-                                      payment <- if (Send == paymentState payment) 
-                                       then liftIO $ checkIfPaymentIsComplete payment
-                                       else return payment
+                     Just payment1 -> do
+                                      payment2 <- if (Send == paymentState payment1) 
+                                       then liftIO $ checkIfPaymentIsComplete payment1
+                                       else return payment1
                                       agreement <- getField "agreement"  
                                       initial <- getField "initial"  
-                                      payment <- if (isJust initial) 
+                                      payment3 <- if (isJust initial) 
                                        then do
-                                             muser <- query $ GetUserByUserID $ userId payment
+                                             muser <- query $ GetUserByUserID $ userId payment2
                                              case muser of
-                                              Just user ->  processPayment payment user (isJust agreement)
-                                              Nothing -> return payment
-                                       else return payment 
+                                              Just user ->  processPayment payment2 user (isJust agreement)
+                                              Nothing -> return payment2
+                                       else return payment2 
                                       unfail <- getField "unfail"  
-                                      payment <- if (isJust  unfail) 
-                                       then case (paymentState payment) of
+                                      payment4 <- if (isJust  unfail) 
+                                       then case (paymentState payment3) of
                                              (Failed _ state) -> do
-                                                                 let npayment = payment {paymentState = state}
+                                                                 let npayment = payment3 {paymentState = state}
                                                                  liftIO $ update $ UpdatePayment $ npayment 
                                                                  return $ npayment
-                                             _ ->  return payment
-                                       else return payment
-                                      content <- liftIO $ viewPayment (ctxtemplates ctx) payment
+                                             _ ->  return payment3
+                                       else return payment3
+                                      content <- liftIO $ viewPayment (ctxtemplates ctx) payment4
                                       renderFromBody TopNone kontrakcja $ content
                      Nothing -> sendRedirect $ LinkPayExView Nothing
 
@@ -90,7 +88,7 @@ paymentInfo documentid = do
                   case (mdocument,ctxmaybeuser ctx) of
                     (Just document,Just user) -> if (isUserAuthor document user)
                                                   then do 
-                                                        getCostOfSigning user document signatoriesCount allowedIdentification
+                                                        _ <- getCostOfSigning user document signatoriesCount allowedIdentification
                                                         simpleResponse ""
                                                   else  simpleResponse ""
                                                     
@@ -98,7 +96,7 @@ paymentInfo documentid = do
                                          
                   
 getCostOfSigning::User -> Document -> Integer -> [IdentificationType] -> Kontra Money
-getCostOfSigning u d sc its = return $ Money sc
+getCostOfSigning _u _d sc _its = return $ Money sc
 
 makePayExSoapCall::(PayExRequest a,XmlContent (PC a),XmlContent (PX b)) => PC a ->  IO (PX b)
 makePayExSoapCall rq = do
@@ -118,15 +116,19 @@ sendCompleteRequest payment =  do
                  rq <- toPC $ PayExComplete payment
                  makePayExSoapCall rq 
 
+{- not called, comment for compiler
 sendCaptureRequest::Payment -> IO (PX CaptureResponse)
 sendCaptureRequest payment = do
                            rq <- toPC $ PayExCapture payment
-                           makePayExSoapCall rq 
+                           makePayExSoapCall rq
+-} 
 
+{- not called, comment for compiler
 sendCancelRequest::Payment -> IO (PX CancelResponse)
 sendCancelRequest payment = do
                            rq <- toPC $ PayExCancel payment
                            makePayExSoapCall rq 
+-}
 
 sendAutopayRequest::String -> Payment -> IO (PX AutopayResponse)
 sendAutopayRequest agreement payment = do
@@ -146,7 +148,7 @@ tryCreateAgreement user = do
                            case response of
                             PX (Left _) -> return Nothing
                             PX (Right res) -> do
-                              update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {paymentAgreementRef= Just $ agreementRef res}
+                              _ <- update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {paymentAgreementRef= Just $ agreementRef res}
                               return $ Just $ agreementRef res
 
 processAutopay::Payment -> String -> IO Payment
@@ -174,7 +176,7 @@ startPaymentForDocument ctx user document =
                                              then 
                                              case (paymentAgreementRef $ userpaymentaccount user) of
                                               Just agreement -> do
-                                                                 processAutopay payment agreement
+                                                                 _ <- processAutopay payment agreement
                                                                  return ()
                                               Nothing -> sendPaymentMail ctx user payment
                                              else return () 
@@ -228,7 +230,7 @@ createPaymentForDocument user doc = do
 
 getDocumentPaymentValue::PaymentScheme -> Document -> Money
 getDocumentPaymentValue paymentschema doc  =  let persig = forEmailSignature  $$ (paymentForSignature paymentschema)
-                                                  sigcount = fromIntegral $ length $ documentsignatorylinks doc
+                                                  (sigcount :: Money) = fromIntegral $ length $ documentsignatorylinks doc
                                               in  sigcount * persig
                                                      
 
@@ -245,6 +247,7 @@ generateInvoice user = do
                         liftIO $ update $ UpdatePayment $ updatePayment result payment 
                         return ()
 --Short utils
+runWhenState :: (Monad m) => Payment -> PaymentState -> m Payment -> m Payment
 runWhenState payment state a = if (state == (paymentState payment))
                             then a 
                             else return payment

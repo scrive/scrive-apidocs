@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates
@@ -15,7 +15,6 @@ module Templates.TemplatesUtils
     (wrapHTML,option,soption,Option(..),markParity) where
 
 import Data.Data
-import Data.Typeable
 import Templates.Templates
 
 {- Common templates - should be shared and it seams like a good place for them -}

@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 module User.UserView (
     -- pages
     viewSubaccounts,
@@ -64,8 +64,6 @@ module User.UserView (
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
-import Control.Monad.Trans (lift)
-import Data.Data
 import Data.Maybe
 import ActionSchedulerState
 import Happstack.State (query)

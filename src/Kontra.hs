@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, IncoherentInstances #-}
-
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
 module Kontra
     ( module User.UserState
     , module User.Password
@@ -42,18 +42,15 @@ import Doc.DocState
 import Happstack.Server
 import MinutesTime
 import Misc
-import Session
 import Happstack.State (query,QueryEvent)
 import User.UserState
-import User.Password
+import User.Password hiding (Password, NoPassword)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
 import Mails.MailsConfig()
-import Mails.SendMail
 import KontraLink
 import ActionSchedulerState
 import qualified TrustWeaver as TW
@@ -63,15 +60,6 @@ import qualified MemCache
 import API.Service.ServiceState
 import FlashMessage
 import Company.CompanyState
-
-#if MIN_VERSION_happstack_server(0,5,1)
-rqInputs2 rq = do
-    let inputs = rqInputsQuery rq 
-    body <- readMVar (rqInputsBody rq)
-    return $ inputs ++ body
-#else
-rqInputs2 rq = return (rqInputs rq)
-#endif
   
 data Context = Context 
     { ctxmaybeuser           :: Maybe User
@@ -218,7 +206,7 @@ newAccountCreatedBySigningLink user doclinkdata = do
 -- | Schedule mail for send out and awake scheduler
 scheduleEmailSendout :: MonadIO m => MVar () -> Mail -> m ()
 scheduleEmailSendout enforcer mail = do
-    liftIO $ do
+    _ <- liftIO $ do
         newEmailSendoutAction mail
         tryPutMVar enforcer ()
     return ()

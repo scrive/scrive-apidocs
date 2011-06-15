@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, OverloadedStrings, TupleSections , OverlappingInstances , ViewPatterns #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExView
@@ -14,7 +14,7 @@ import PayEx.PayExState
 import Kontra 
 import Doc.DocState
 import Payments.PaymentsState
-import Happstack.State (update,query)
+import Happstack.State (query)
 import Templates.Templates
 import KontraLink
 import qualified Data.ByteString.UTF8 as BS
@@ -23,11 +23,11 @@ import Data.Data
 import Mails.SendMail
 
 positionInfo::KontrakcjaTemplates -> (PaymentPosition,Money) -> IO String
-positionInfo templates (PaymentForSigning did,money) = do
+positionInfo templates (PaymentForSigning did,_money) = do
                                         mtitle <- fmap (fmap $ BS.toString . documenttitle) $ query $ GetDocumentByDocumentID did
                                         renderTemplate templates "paymentForSigningPosition" $ do
                                                                      field "documenttitle" mtitle
-
+positionInfo _ _ = return "" --FIXME: do something better here
 
 data PaymentView = PaymentView
                       { pvId::String,
@@ -62,20 +62,20 @@ toPaymentView templates payment = do
                                              }
 viewPayment::KontrakcjaTemplates -> Payment -> IO String
 viewPayment templates payment = do
-                                 pm <- toPaymentView templates payment
+                                 _pm <- toPaymentView templates payment
                                  renderTemplate templates "paymentView" $ do
                                      field "payment" True--pm
 
 viewPayments::KontrakcjaTemplates -> [Payment] -> IO String
 viewPayments templates payments = do
-                                   pms <- sequence $ map (toPaymentView templates) payments
+                                   _pms <- sequence $ map (toPaymentView templates) payments
                                    renderTemplate templates "paymentsView" $ do
                                        field "payments" True--pms
 
 
 mailNewPayment::Context -> User -> Payment -> IO Mail
-mailNewPayment ctx user payment = do
-                                        pm <- toPaymentView (ctxtemplates ctx) payment 
+mailNewPayment ctx _user payment = do
+                                        _pm <- toPaymentView (ctxtemplates ctx) payment 
                                         title <- renderTemplate (ctxtemplates ctx) "mailNewPaymentTitle" () 
                                         content <- renderTemplate (ctxtemplates ctx) "mailNewPaymentContent" $ do
                                                        field "payment" True--pm

@@ -839,14 +839,29 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
-    let idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
+    
+
+    let existingattachments = map (fileid . authorattachmentfile) (documentauthorattachments udoc)
+        idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
                                               , r] :: [FileID]
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
-    let idsforadd = [read $ BS.toString did |(did, r)<- zip attidsnums removeatt, not r] 
+    liftIO $ print "mattachments: "
+    liftIO $ print mattachments
+    -- read in the ids as both FileID and DocumentID
+    -- if the FileID exists in the existing author attachments
+    -- it's not a DocumentID
+    -- otherwise, consider it a DocumentID to add
+    let idsforadd = [did | (did, fid) <- [( read $ BS.toString sid
+                                          , read $ BS.toString sid) | (sid, r) <- zip attidsnums removeatt
+                                                                    , not r]
+                         , not $ fid `elem` existingattachments]
                     ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
-
+    liftIO $ print "idsforadd: "
+    liftIO $ print idsforadd
     mndoc <- update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
+    liftIO $ print "mndoc"
+    liftIO $ print mndoc
     case mndoc of
         Left _msg -> mzero
         Right ndoc -> return . LinkDesignDoc . DesignStep3 $ documentid ndoc
@@ -1351,6 +1366,10 @@ getDocumentsForUserByType user docfilter = do
   return . filter docfilter $ nub $
           mydocuments ++ concat friends'Documents ++ concat supervised'Documents ++ relatedUsersSharedDocuments
 
+-- These should be refactored (showContractsList, showOffersList, show OrdersList).
+-- They are the same except for Signable Contract/Offer/Order
+-- --EN
+  
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -1375,25 +1394,27 @@ showTemplatesList =
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
 
-showOfferList :: Kontra (Either KontraLink String)
-showOfferList = 
-  let getOffers user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        return . filter ((==) (Signable Offer) . documenttype) $
-           mydocuments ++ concat friends'Documents in
-  showItemList' pageOffersList getOffers
-
 showOrdersList :: Kontra (Either KontraLink String)
 showOrdersList = 
   let getOrders user = do
         mydocuments <- query $ GetDocumentsByUser user 
         usersICanView <- query $ GetUsersByFriendUserID $ userid user
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- query $ GetDocumentsBySupervisor user
         return . filter ((==) (Signable Order) . documenttype) $
-           mydocuments ++ concat friends'Documents in
+           mydocuments ++ concat friends'Documents ++ supervised'Documents in
   showItemList' pageOrdersList getOrders
+
+showOfferList :: Kontra (Either KontraLink String)
+showOfferList = 
+  let getOffers user = do
+        mydocuments <- query $ GetDocumentsByUser user 
+        usersICanView <- query $ GetUsersByFriendUserID $ userid user
+        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- query $ GetDocumentsBySupervisor user
+        return . filter ((==) (Signable Offer) . documenttype) $
+           mydocuments ++ concat friends'Documents ++ supervised'Documents in
+  showItemList' pageOffersList getOffers
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 

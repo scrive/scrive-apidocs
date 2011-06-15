@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Administration.AdministrationView
@@ -37,7 +37,6 @@ import Data.Typeable
 import Data.Data
 import Payments.PaymentsView
 import Payments.PaymentsState
-import Payments.PaymentsUtils
 import Misc
 import MinutesTime
 import User.UserView
@@ -110,6 +109,7 @@ adminUserPage templates user paymentModel =
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
+adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> Fields -> IO String
 adminUserUsageStatsPage templates user morefields =
     renderTemplate templates "userusagestats" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing

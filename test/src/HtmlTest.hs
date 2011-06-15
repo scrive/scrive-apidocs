@@ -4,12 +4,13 @@
 
 module HtmlTest where
 
-
+import Data.Char
 import Test.Framework (Test, testGroup, defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
+import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
 import System.IO
 
@@ -29,25 +30,58 @@ tests = [ testGroup "Html" htmlTests
 htmlTests :: [Test]
 htmlTests = 
     [ testGroup "static checks"
-        [ testCase "templates make valid xml" testValidXml ]
+        [ testCase "templates make valid xml" testValidXml,
+          testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ]
     ]
+
+excludedTemplates :: [String]
+excludedTemplates = ["paymentsadminpagesuperuser","bodystart","bodyend"]
+
+isIncluded :: (String, String) -> Bool
+isIncluded (name, _) = not $ name `elem` excludedTemplates
 
 testValidXml :: Assertion
 testValidXml = do
   templates <- mapM getTemplates templatesFilesPath
   _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat templates
   assertSuccess
-  where
-    excludedTemplates = ["paymentsadminpagesuperuser","bodystart","bodyend"]
-    isIncluded (name, _) = not $ name `elem` excludedTemplates
 
-assertTemplateIsValidXML :: (String,String) -> Assertion
+assertTemplateIsValidXML :: (String, String) -> Assertion
 assertTemplateIsValidXML t =
   case parseTemplateAsXML t of
     Left msg -> assertFailure msg
     Right _ -> assertSuccess
+    
+testNoUnecessaryDoubleDivs :: Assertion
+testNoUnecessaryDoubleDivs = do
+  templates <- mapM getTemplates templatesFilesPath
+  _ <- mapM assertNoUnecessaryDoubleDivs . filter isIncluded $ concat templates
+  assertSuccess
 
-parseTemplateAsXML :: (String,String) -> Either String (Document Posn)
+assertNoUnecessaryDoubleDivs :: (String, String) -> Assertion
+assertNoUnecessaryDoubleDivs t@(name,_) =
+  case parseTemplateAsXML t of
+    Left msg -> assertFailure msg
+    Right (Document _ _ root _) -> checkXMLForUnecessaryDoubleDivs name $ CElem root undefined
+       
+checkXMLForUnecessaryDoubleDivs :: String -> Content Posn -> Assertion
+checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
+  let isDiv = isDivElem e
+      isSingleChild = length children == 1
+      isSingleChildDiv = isSingleChild && isDivElem (head children)
+      isUnecessaryDiv = isDiv && isSingleChildDiv in
+  if isUnecessaryDiv
+    then assertFailure $ "unecesary double divs in template " ++ templatename ++ ":\n" ++ 
+                         (show $ content e)
+    else do
+      _ <- mapM (checkXMLForUnecessaryDoubleDivs templatename) children
+      assertSuccess
+  where isDivElem :: Content Posn -> Bool
+        isDivElem (CElem (Elem n _ _) _) | map toLower n == "div" = True
+        isDivElem _ = False
+checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
+
+parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
 parseTemplateAsXML (name, rawtxt) =
   let preparedtxt = "<template>\n" ++ (clearTemplatingStuff rawtxt) ++ "\n</template>"
       prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
