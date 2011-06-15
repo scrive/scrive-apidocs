@@ -1,0 +1,280 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Mariusz Rak <mariusz@skrivapa.se>\n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentInstruction"
+msgstr "        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3.  Acceptera offert (eller avvisa)<br/>        4. Färdig      "
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentSender"
+msgstr "Avsändare:"
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentPartys"
+msgstr "Parter:"
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:remindMailNotSignedContractContent
+msgid "_remindMailNotSignedContractContentInstruction"
+msgstr "        <i>Så här går du vidare</i><br/>        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3. Underteckna (eller avvisa)<br/>         4. Färdig      "
+
+#: mails.st:remindMailNotSignedContractContent
+msgid "_remindMailNotSignedContractContentPartys"
+msgstr "Parter:"
+
+#: mails.st:remindMailNotSignedContractContent
+msgid "_remindMailNotSignedContractContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:remindMailNotSignedOrderStandardHeader
+msgid "_remindMailNotSignedOrderStandardHeaderRemind"
+msgstr "<strong>$author$</strong> vill påminna dig om att du inte bekräftat ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern genom att följa instruktionerna nedan.      "
+
+#: mails.st:remindMailNotSignedOrderStandardHeader
+msgid "_remindMailNotSignedOrderStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong"
+
+#: mails.st:remindMailNotSignedOfferStandardHeader
+msgid "_remindMailNotSignedOfferStandardHeaderRemind"
+msgstr "<strong>$author$</strong> vill påminna dig om att du inte accepterat offerten <strong>$documenttitle$</strong> ännu.        Acceptera offerten genom att följa instruktionerna nedan.      "
+
+#: mails.st:remindMailNotSignedOfferStandardHeader
+msgid "_remindMailNotSignedOfferStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailNotSignedContractStandardHeader
+msgid "_remindMailNotSignedContractStandardHeaderRemind"
+msgstr "<strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu."
+
+#: mails.st:remindMailNotSignedContractStandardHeader
+msgid "_remindMailNotSignedContractStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailNotSignedTitle
+msgid "_remindMailNotSignedTitle"
+msgstr "Påminnelse att underteckna  $documenttitle$"
+
+#: mails.st:remindMailSignedOrderStandardHeader
+msgid "_remindMailSignedOrderStandardHeaderSendRequest"
+msgstr "<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen <strong>$documenttitle$</strong>        till dig som du har bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med detta mail."
+
+#: mails.st:remindMailSignedOrderStandardHeader
+msgid "_remindMailSignedOrderStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailSignedOfferStandardHeader
+msgid "_remindMailSignedOfferStandardHeaderSendRequest"
+msgstr "<strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>        till dig. Offerten har accepterats av dig via tjänsten SkrivaPå. Den accepterade offerten bifogas med detta mail."
+
+#: mails.st:remindMailSignedOfferStandardHeader
+msgid "_remindMailSignedOfferStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailSignedContractStandardHeader
+msgid "_remindMailSignedContractStandardHeaderSendRequest"
+msgstr "<strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>        till dig. Dokumentet har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas med detta mail."
+
+#: mails.st:remindMailSignedContractStandardHeader
+msgid "_remindMailSignedContractStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:mailInvitationToViewDefaultHeader
+msgid "_mailInvitationToViewDefaultHeader"
+msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.    "
+
+#: mails.st:mailInvitationToSignOrderDefaultHeader
+msgid "_mailInvitationToSignOrderDefaultHeader"
+msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har skickat orderbekräftelsen <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta ordern genom att följa instruktionerna nedan.    "
+
+#: mails.st:mailInvitationToSignOfferDefaultHeader
+msgid "_mailInvitationToSignOfferDefaultHeader"
+msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong>  till dig och önskar din accept.      Acceptera offerten genom att följa instruktionerna nedan.    "
+
+#: mails.st:mailInvitationToSignContractDefaultHeader
+msgid "_mailInvitationToSignContractDefaultHeader"
+msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.    "
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentIfNotSignatoryInstruction"
+msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentIfSignatoryInstruction"
+msgstr "      1. Klicka på länken <br/>      <a href=\"$link$\">$link$</a><br/>      2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>       4. Färdig   "
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentSender"
+msgstr "Avsändare: "
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentPartys"
+msgstr "Parter:"
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentIfNotSignatoryInstruction"
+msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentIfSignatoryInstruction"
+msgstr "      1. Klicka på länken <br/>      <a href=\"$link$\">$link$</a><br/>      2. Granska online<br/>      3. Acceptera offert (eller avvisa)<br/>       4. Färdig    "
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentSender"
+msgstr "Avsändare: "
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentPartys"
+msgstr "Parter:"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentIfNotSignatoryInstruction"
+msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentIfSignatoryInstruction"
+msgstr "      <i>Så här går du vidare</i><br/>      1. Klicka på länken <br/>      <a href=\"$link$\">$link$</a><br/>      2. Granska online<br/>      3. Underteckna (eller avvisa)<br/>       4. Färdig    "
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentSender"
+msgstr "Avsändare: "
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentPartys"
+msgstr "Parter:"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:mailInvitationToSignTitle
+msgid "_mailInvitationToSignTitle"
+msgstr "Inbjudan från $creatorname$ till $documenttitle$"
+
+#: mails.st:mailInvitationToViewTitle
+msgid "_mailInvitationToViewTitle"
+msgstr "Inbjudan från $creatorname$ till $documenttitle$"
+
+#: mails.st:mailRejectMailContentHeader
+msgid "_mailRejectMailContentHeaderIfNotCustomHi"
+msgstr "Hej,"
+
+#: mails.st:mailRejectOrderMailContent
+msgid "_mailRejectOrderMailContentHasRejected"
+msgstr "        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.      "
+
+#: mails.st:mailRejectOfferMailContent
+msgid "_mailRejectOfferMailContentOfferRejected"
+msgstr "        <strong>$rejectorName$</strong> har avvisat offerten <strong>$documenttitle$</strong>.      "
+
+#: mails.st:mailRejectContractMailContent
+msgid "_mailRejectContractMailContentContractRejected"
+msgstr "        <strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.      "
+
+#: mails.st:mailRejectMailTitle
+msgid "_mailRejectMailTitle"
+msgstr "Avvisat: $documenttitle$"
+
+#: mails.st:mailOrderClosedContent
+msgid "_mailOrderClosedContentAttached"
+msgstr "Bifogat med detta mail finner du en PDF med orderbekräftelsen och verifikatet."
+
+#: mails.st:mailOrderClosedContent
+msgid "_mailOrderClosedContentViewed"
+msgstr "Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$  och SkrivaPå har utfärdat ett verifikat för bekräftelsen. "
+
+#: mails.st:mailOrderClosedContent
+msgid "_mailOrderClosedContentHi"
+msgstr "Hej,"
+
+#: mails.st:mailOfferClosedContent
+msgid "_mailOfferClosedContentAttached"
+msgstr "Bifogat med detta mail finner du en PDF med offerten och verifikatet."
+
+#: mails.st:mailOfferClosedContent
+msgid "_mailOfferClosedContentOfferAccepted"
+msgstr "Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. "
+
+#: mails.st:mailOfferClosedContent
+msgid "_mailOfferClosedContentHi"
+msgstr "Hej,"
+
+#: mails.st:mailContractClosedContent
+msgid "_mailContractClosedContentAttached"
+msgstr "Det färdigställda dokumentet bifogas med detta mail."
+
+#: mails.st:mailContractClosedContent
+msgid "_mailContractClosedContentSignedBy"
+msgstr "Dokumentet <strong>$documenttitle$</strong> har undertecknats         av $partylist:noescape()$. Avtalet är nu bindande."
+
+#: mails.st:mailContractClosedContent
+msgid "_mailContractClosedContentHi"
+msgstr "Hej,"
+
+#: mails.st:mailDocumentClosedTitle
+msgid "_mailDocumentClosedTitle"
+msgstr "Bekräftelse: $documenttitle$"
+
+#: mails.st:mailDocumentAwaitingForAuthorContent
+msgid "_mailDocumentAwaitingForAuthorContentInstruction"
+msgstr "För att färdigställa dokumentet gör följande:<br/>      1. Klicka på länken<br/>      <a href=\"$documentlink$\">$documenttitle$</a><br/>      <br/>      2. Granska uppgifterna<br/>      3. Underteckna För att avtalet skall färdigställas krävs din underskrift."
+
+#: mails.st:mailDocumentAwaitingForAuthorContent
+msgid "_mailDocumentAwaitingForAuthorContentSignedBy"
+msgstr "Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist:noescape()$.      Därmed är det bara du kvar innan dokumentet är färdigställt."
+
+#: mails.st:mailDocumentAwaitingForAuthorContent
+msgid "_mailDocumentAwaitingForAuthorContentHi"
+msgstr "Hej,"
+
+#: mails.st:mailDocumentAwaitingForAuthorTitle
+msgid "_mailDocumentAwaitingForAuthorTitle"
+msgstr "Vänligen underteckna $documenttitle$"
+
+#: mails.st:mailCancelOrderByAuthorContent
+msgid "_mailCancelOrderByAuthorContentBody"
+msgstr "      <strong>$creatorname$</strong>   har valt att återkalla orderbekräftelsen  $documenttitle$.    "
+
+#: mails.st:mailCancelOfferByAuthorContent
+msgid "_mailCancelOfferByAuthorContentBody"
+msgstr "      <strong>$creatorname$</strong>   har valt att återkalla offerten  $documenttitle$.    "
+
+#: mails.st:mailCancelContractByAuthorContent
+msgid "_mailCancelContractByAuthorContentBody"
+msgstr "      <strong>$creatorname$</strong> har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.      Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.    "
+
+#: mails.st:mailCancelOrderByAuthorStandardHeader
+msgid "_mailCancelOrderByAuthorStandardHi"
+msgstr "Hej,"
+
+#: mails.st:mailCancelOfferByAuthorStandardHeader
+msgid "_mailCancelOfferByAuthorStandardHi"
+msgstr "Hej,"
+
+#: mails.st:mailCancelContractByAuthorStandardHeader
+msgid "_mailCancelContractByAuthorStandardHi"
+msgstr "Hej,"
+
+#: mails.st:mailCancelDocumentByAuthorTitle
+msgid "_mailCancelDocumentByAuthorTitle"
+msgstr "Återkallelsenotis: $documenttitle$"
+

@@ -6,7 +6,7 @@ $(document).ready( function() {
        var alertModal = $("<div class='modal-container' style='height:80px'>"+
                         "<div class='modal-body' style='padding:20px;font-size:13pt'>"+
                         "<div class='modal-icon decline' style='margin-top:0px'></div>"+
-                        "<div>Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen uppgradera till en modern webbläsare</div>"+
+                        "<div>"+localization.ie6NotSupported +"</div>"+
                         ""+
                         "</div>"
                          )
@@ -157,11 +157,11 @@ $(document).ready( function() {
 		if ($('.newSubaccount',container).size()==0) {
         var newrow = $('<tr class="odd newSubaccount">' +
 		'<td><input type="checkbox" name="subcheck" class="check" /></td>' + 
-		'<td><input type="text" name="fstname" infotext="Förnamn" value="Förnamn" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="sndname" infotext="Efternamn" value="Efternamn" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="companyposition" infotext="Befattning" value="Befattning" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="phone" infotext="Telefonnummer" value="Telefonnummer" class="infotext grayed" /></td>' + 
-		'<td><input type="email" name="email" infotext="Email" value="Email" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="fstname" infotext="'+localization.fstname+'" value="'+localization.fstname+'" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="sndname" infotext="'+localization.sndname+'" value="'+localization.sndname+'" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="companyposition" infotext="'+localization.companyposition+'" value="'+localization.companyposition+'" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="phone" infotext="'+localization.phone+'" value="'+localization.phone+'" class="infotext grayed" /></td>' + 
+		'<td><input type="email" name="email" infotext="'+localization.email+'" value="'+localization.email+'" class="infotext grayed" /></td>' + 
         '<td style="text-align:center">' + 
             '<a href="javascript:;" class="icon small ok add"></a>' + 
             '<a href="javascript:;" class="icon small minus remove"></a>' + 
@@ -175,7 +175,7 @@ $(document).ready( function() {
 	    var email = emailfield.val();
 	    
 	    if( email.replace(/.*@/,"") != useremail.replace(/.*@/, "") ) {
-		addFlashMessage("Du kan inte bjuda in underkonton vars e-post inte har samma URL som du har i din e-post.", "red");
+		addFlashMessage(localization.youCanNotInviteSameEmail, "red");
 	    }
 	    else {
 		form.append("<input type='hidden' name='add' value='YES'>").submit();
