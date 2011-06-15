@@ -1,2 +1,3 @@
-0 3 * * 2 bash /home/prod/kontrakcja/scripts/snapshot.sh /home/prod/kontrakcja kontrakcja-staging /home/prod/kontrackja
+0 3 * * 2 bash /home/prod/kontrakcja/scripts/snapshot.sh /home/prod/kontrakcja kontrakcja-snapshot /home/prod/kontrakcja
+10 3 * * * logrotate -s /home/prod/kontrakcja/logstatus /home/prod/kontrakcja/scripts/logrotate.conf
 
