@@ -22,7 +22,29 @@ javascriptLocalisation =
             , contractSignatory : function(idx) {return "Part " + idx}
             , nonsignatory : "Ej undertecknande part"
             , offerAuthor : "Avsändare"
-
-           
-        }
+            , youMustSetParnerEmail : "Du måste ange e-post till motpart."
+            , emptyOrNotValidEmail :  "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen."
+            , atLeastOneSignatoryRequired : "Du måste ha minst en undertecknande part."
+            , mustFillFieldsBeforeSigning : "Du måste fylla i tomma fält innan du kan underteckna."
+            , backToStepTwoAndFillPersonNumber : "Var vänlig gå tillbaka till steg 2 och fyll i personnummer."
+            , missingNames : "Du har inte namngett alla fält. Vänligen försök igen." 
+            , missingSignatoryNames : "Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen."
+            , yourSigningPluginFailed : "Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. "
+            , startingSaveSigning : "Inleder säker signering . . ."
+            , noNordeaInstalled  : "Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank."
+            , noTeliaInstalled  : "Du har inte Telias e-legitimation installerad."
+            , noBankIdInstalled  : "Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken."
+            , verifyingSignature : "Verifierar signatur..."
+            , tbsGenerationMessage : function(doctitle, docid){
+                    return 'Du undertecknar "' + doctitle + '" med transaktionsnummer "' + docid + '". Undertecknande parter är:'
+                     }
+            , differentSignatories :  "Various signatories."
+            , ie6NotSupported : "Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen uppgradera till en modern webbläsare"
+            , youCanNotInviteSameEmail : "Du kan inte bjuda in underkonton vars e-post inte har samma URL som du har i din e-post."
+            , fstname : "Förnamn"
+            , sndname : "Efternamn"
+            , companyposition : "Befattning"
+            , phone : "Telefonnummer"
+            , email : "Email"
+   }
 ####

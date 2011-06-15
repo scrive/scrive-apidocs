@@ -929,13 +929,13 @@ function authorFieldsValidation() {
   if(remainingAuthorFields.size() > 0) {
     console.log(remainingAuthorFields);
     if(remainingAuthorFields.hasClass('sigfstname') || remainingAuthorFields.hasClass('sigsndname')) {
-      addFlashMessage("Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.","red");
+      addFlashMessage(localization.missingSignatoryNames,"red");
     }
     if(remainingAuthorFields.hasClass('customfield')) {
-      addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.","red");
+      addFlashMessage(localization.missingNames,"red");
     }
     if(remainingAuthorFields.hasClass('sigpersnum')) {
-      addFlashMessage("Var vänlig gå tillbaka till steg 2 och fyll i personnummer.", "red");
+      addFlashMessage(localization.backToStepTwoAndFillPersonNumber, "red");
     }
     remainingAuthorFields.addClass('redborder').addClass('offending');
     fieldValidationType = "fillstatus";
@@ -955,7 +955,7 @@ function sigFieldsValidation(){
   });
 
   if(remainingSigFields.size() > 0) {
-    addFlashMessage("Du måste fylla i tomma fält innan du kan underteckna.","red");
+    addFlashMessage(localization.mustFillFieldsBeforeSigning,"red");
     remainingSigFields.addClass("redborder");
     return false;
   } else {
@@ -983,7 +983,7 @@ function nonZeroSignatories() {
   var error = (sigs === 0);
 
   if(error) {
-    addFlashMessage('Du måste ha minst en undertecknande part.', "red");
+    addFlashMessage(localization.atLeastOneSignatoryRequired, "red");
     //saving this for later
     //addFlashMessage('Du kan inte underteckna med endast dig själv.', "red");
     $("li.plus").addClass("redborder");
@@ -1104,8 +1104,8 @@ standardDialogTop  = "10%"
 whitelabel = false;                     
                      
 $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
-  var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
-  var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
+  var invalidEmailErrMsg = localization.emptyOrNotValidEmail;
+  var emptyEmailErrMsg = localization.youMustSetParnerEmail ;
   $.each(errors, function(index, error) {
     var input = $(error.input);
     input.parents('.inputWrapper').addClass("redborder");
