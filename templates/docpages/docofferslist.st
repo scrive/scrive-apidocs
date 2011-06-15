@@ -160,6 +160,9 @@ $loadingdialog()$
     <div id="tooltip-reviewed" class="hidden">
         <div class="icon status reviewed"></div><p>Status: Granskat online</p>
     </div>
+    <div id="tooltip-read" class="hidden">
+      <div class="icon status read"></div><p>Status: Läst e-post</p>
+    </div>
     <div id="tooltip-opened" class="hidden">
         <div class="icon status opened"></div><p>Status: Granskat online</p>
     </div>
