@@ -1,0 +1,2 @@
+0 3 * * 2 bash /home/prod/kontrakcja/scripts/snapshot.sh /home/prod/kontrakcja kontrakcja-staging /home/prod/kontrackja
+

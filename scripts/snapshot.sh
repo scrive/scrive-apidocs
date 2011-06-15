@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# usage: snapshot.sh {repodir} {prefix} {wherethescriptslive}
+# example: snapshot.sh /home/prod/kontrakcja kontrakcja-snapshot /home/prod/kontrackja
+
 repo=$3
 tocopy=$1
 prefix=$2
