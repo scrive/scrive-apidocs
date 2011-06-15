@@ -11,6 +11,7 @@ zipfile=$prefix-$date.tar.gz
 cd /tmp
 echo "Zipping repo"
 tar zcf "$zipfile"                    \
+    --exclude=.git*                   \
     --exclude=_local*                 \
     --exclude=_darcs*                 \
     --exclude=dist*                   \
@@ -74,7 +75,7 @@ echo "Not checking amazon sum"
 #then
 #    echo "MD5 sum matches!"
     #clean up
-    rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
+#    rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
     exit 0
 #fi
 echo "Something went wrong. Try again."
