@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -Werror -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendGridEvents
@@ -67,7 +67,7 @@ handleSendgridEvent = do
          Just Action{actionID, actionType = atype@SentEmailInfo{seiEmail}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
                  Log.debug "Updating SentEmailInfo..."
-                 update $ UpdateActionType actionID $ atype {
+                 _ <- update $ UpdateActionType actionID $ atype {
                        seiEventType = et
                      , seiLastModification = now
                  }
