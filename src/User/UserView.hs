@@ -78,6 +78,8 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 import FlashMessage
+import Util.HasEmail
+import Util.HasName
 
 showUser :: KontrakcjaTemplates -> User -> IO String 
 showUser templates user = renderTemplate templates "showUser" $ do
@@ -86,16 +88,15 @@ showUser templates user = renderTemplate templates "showUser" $ do
 
 userFields :: User -> Fields
 userFields user = do
-    let fullname = unwords $ filter (not . null) $ [ BS.toString $ userfstname $ userinfo user, 
-                                                                      BS.toString $ usersndname $ userinfo user]
-        fullnameOrEmail = if null fullname then BS.toString $ unEmail $ useremail $ userinfo user
-                          else fullname
-        fullnamePlusEmail = if null fullname then "<" ++ (BS.toString $ unEmail $ useremail $ userinfo user) ++ ">"
-                            else fullname ++ " <" ++ (BS.toString $ unEmail $ useremail $ userinfo user) ++ ">"
+    let fullname          = BS.toString $ getFullName user
+        fullnameOrEmail   = BS.toString $ getSmartName user
+        fullnamePlusEmail = if null fullname 
+                            then              "<" ++ (BS.toString $ getEmail user) ++ ">"
+                            else fullname ++ " <" ++ (BS.toString $ getEmail user) ++ ">"
     field "id" $ show $ userid user 
-    field "fstname" $ BS.toString $ userfstname $ userinfo user 
-    field "sndname" $ BS.toString $ usersndname $ userinfo user 
-    field "email" $ BS.toString $ unEmail $ useremail $ userinfo user
+    field "fstname" $ BS.toString $ getFirstName user
+    field "sndname" $ BS.toString $ getLastName user
+    field "email" $ BS.toString $ getEmail user
     field "personalnumber" $ BS.toString $ userpersonalnumber $ userinfo user
     field "address" $ BS.toString $ useraddress $ userinfo user
     field "city" $ BS.toString $ usercity $ userinfo user
@@ -119,8 +120,8 @@ userFields user = do
 showUserSecurity :: KontrakcjaTemplates -> User -> IO String
 showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
     field "linksecurity" $ show LinkSecurity 
-    field "fstname" $ BS.toString $ userfstname $ userinfo user 
-    field "sndname" $ BS.toString $ usersndname $ userinfo user
+    field "fstname" $ BS.toString $ getFirstName user 
+    field "sndname" $ BS.toString $ getLastName user
     field "userimagelink" False
     field "lang" $ do
         field "en" $ LANG_EN == (lang $ usersettings user)
@@ -447,20 +448,17 @@ modalDoYouWantToBeSubaccount = do
 -------------------------------------------------------------------------------
 
 {- Same as personname (username or email) from DocView but works on User -}
+-- TODO: get rid of this definition
 prettyName :: User -> BS.ByteString
-prettyName u =
-  if BS.null $ userfullname u
-     then unEmail . useremail $ userinfo u
-     else userfullname u
+prettyName = getSmartName
 
 
-{-| Basic fields for the user  -}      
+{- | Basic fields for the user  -}      
 userBasicFields :: User -> Fields
 userBasicFields u = do
     field "id" $ show $ userid u
-    field "fullname" $ BS.toString $ userfullname u
-    field "email" $ BS.toString . unEmail . useremail $ userinfo u
+    field "fullname" $ BS.toString $ getFullName u
+    field "email" $ BS.toString $ getEmail u
     field "company" $ BS.toString . usercompanyname $ userinfo u
     field "phone" $ BS.toString . userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
-                          
