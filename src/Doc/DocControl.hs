@@ -1381,8 +1381,9 @@ showOfferList =
         mydocuments <- query $ GetDocumentsByUser user 
         usersICanView <- query $ GetUsersByFriendUserID $ userid user
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- query $ GetDocumentsBySupervisor user        
         return . filter ((==) (Signable Offer) . documenttype) $
-           mydocuments ++ concat friends'Documents in
+           mydocuments ++ concat friends'Documents ++ supervised'Documents in
   showItemList' pageOffersList getOffers
 
 showOrdersList :: Kontra (Either KontraLink String)
@@ -1391,8 +1392,9 @@ showOrdersList =
         mydocuments <- query $ GetDocumentsByUser user 
         usersICanView <- query $ GetUsersByFriendUserID $ userid user
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- query $ GetDocumentsBySupervisor user
         return . filter ((==) (Signable Order) . documenttype) $
-           mydocuments ++ concat friends'Documents in
+           mydocuments ++ concat friends'Documents ++ supervised'Documents in
   showItemList' pageOrdersList getOrders
 
 showAttachmentList :: Kontra (Either KontraLink String)
