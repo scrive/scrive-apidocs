@@ -154,9 +154,9 @@ safeReady(function() {
         if (countSentOrOpenRows(selectedrows)>0) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
           if (listtype=="dokument") {
-            addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
+            addFlashMessage(localization.cantRemoveActiveDocuments, "red");
           } else {
-            addFlashMessage("Det går inte att radera offer som är skickade eller öppna, var vänliga återkalla offerter först.", "red");
+            addFlashMessage(localization.cantRemoveActiveOffers, "red");
           }
           return false;
         }
@@ -185,7 +185,7 @@ safeReady(function() {
       } else {
         if (countSentOrOpenRows(selectedrows)!=selectedrows.length) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-          addFlashMessage("Det går inte att skicka påminnelser för " + listtype + " som inte är skickade eller öppna.", "red");
+          addFlashMessage( localization.cantSendReminder(listtype), "red");
           return false;
         }
         var singlemsg = $("#dialog-list-remind-confirm").find(".singleremindmsg");
@@ -316,7 +316,7 @@ function initFileInputs(){
       list: upload.attr("rel"),
       onFileAppend: function() {
         if (upload.hasClass("submitOnUpload")) {
-          displayLoadingOverlay("Laddar upp . . .");
+          displayLoadingOverlay(localization.loadingFile);
           form.submit();
         }
       }
@@ -348,7 +348,7 @@ safeReady(function() {
                var content = $(data);
                var errormsg = content.find(".errormsg")
                if (errormsg.length > 0) {
-                   var errdialog = $("<div title='Problem med PDF'>"
+                   var errdialog = $("<div title='"+localization.problemWithPDF+"'>"
                                    + errormsg.text()
                                    + "</div>");
                    errdialog.dialog({
@@ -494,7 +494,7 @@ function checkSignatoriesHaveUniqueEmail() {
   }
   
   if (isRepetition || isAuthorUsedAsSignatory) {
-    addFlashMessage("Du kan ej använda samma e-post för mer än 1 användare", "red");
+    addFlashMessage( localization.repetedEmailAddress , "red");
     return false;
   } else {
     return true;
@@ -551,7 +551,7 @@ safeReady(function() {
       });
       $("select.signatoryselector option").detach();
       var select = $("select.signatoryselector");
-      select.append($("<option selected>Mottagare</option>"));
+      select.append($("<option selected>" +localization.offerSignatory + "</option>"));
       select.append(sigoptions);
     }
   });
@@ -643,7 +643,7 @@ safeReady(function() {
                          var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
                          if(trs.length > 0) {
                            trs.addClass("redborder");
-                           addFlashMessage("Var vänlig bifoga begärda bilagor.", "red");
+                           addFlashMessage(localization.addRequiredAttachments, "red");
                            return false;
                          }
                          var guardChecked = $(".signGuard:checked").size()>0;
@@ -895,7 +895,7 @@ function checkSignPossibility() {
   if($("#authorsecretaryradio").attr("checked")) {
     // secretary
     $(".authordetails .man").addClass("redborder");   
-    addFlashMessage("Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.","red");
+    addFlashMessage(localization.secretaryCantSign ,"red");
     return false;
   } else {
     // sign is possible
@@ -910,7 +910,7 @@ function checkAllCustomFieldsAreNamed() {
   unamedfields = $("#personpane .newfield");
   unamedfields.addClass("redborder");
   if (unamedfields.length>0) {
-    addFlashMessage("Var vänlig namnge alla skapade fält", "red");
+    addFlashMessage(localization.setAllFields, "red");
     return false;
   } else {
     return true;
@@ -1359,17 +1359,17 @@ function renumberParts() {
     var isSignatory = (authorrole.length + signatoryrole.length)>0;
     var isMultiPart = isMultiPartElem($(this));
     if (isMultiPart) {
-      $(this).find(".partnumber").text("MASSUTSKICK");
+      $(this).find(".partnumber").text(localization.multipleSignatory.toUpperCase());
     } else if( isSignatory ) {
       if (issendonly) {
-		$(this).find(".partnumber").text("MOTTAGARE");
+		$(this).find(".partnumber").text(localization.offerSignatory.toUpperCase());
       } else {
-        $(this).find(".partnumber").text("PART " + idx);
+        $(this).find(".partnumber").text(localization.contractSignatory(idx).toUpperCase());
       }
       idx = idx + 1;
     } else {
-      var text = "EJ UNDERTECKNANDE PART";
-      if (offer) text = "AVSÄNDARE";
+      var text = localization.nonsignatory.toUpperCase();
+      if (issendonly) text = localization.offerAuthor.toUpperCase(); 
       $(this).find(".partnumber").text(text);
     }
   });
@@ -1495,7 +1495,7 @@ safeReady(function() {
                var content = $(data);
                var errormsg = content.find(".errormsg")
                if (errormsg.length > 0) {
-                   var errdialog = $("<div title='Problem med PDF'>"
+                   var errdialog = $("<div title='"+localization.problemWithPDF+"'>"
                                    + errormsg.text()
                                    + "</div>");
                    errdialog.dialog({
