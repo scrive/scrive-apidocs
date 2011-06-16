@@ -84,6 +84,9 @@ import MinutesTime
 import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
+import Util.HasEmail
+import Util.HasName
+
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -160,14 +163,14 @@ modalSignedFields :: KontrakcjaTemplates -> Document -> Fields
 modalSignedFields templates document@Document{ documenttitle } = do
   field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
   field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
-  field "signatory" . listToMaybe $ map (BS.toString . signatoryemail ) $ partyList document
+  field "signatory" . listToMaybe $ map (BS.toString . getEmail ) $ partyList document
   field "documenttitle" $ BS.toString documenttitle
 
 loginFields :: Document -> SignatoryLink -> Bool -> Fields
 loginFields document signatorylink isloggedin = do
     field "isloggedin" isloggedin
     field "referer" $ show (LinkSignDoc document signatorylink)
-    field "email" . signatoryemail $ signatorydetails signatorylink
+    field "email" $ getEmail signatorylink
     field "linklogin" $ show (LinkLogin LoginTry)
 
 accountFromSignFields :: Document -> SignatoryLink -> ActionID -> MagicHash -> Fields
@@ -775,7 +778,7 @@ pageDocumentForViewer ctx
        field "invitationMailContent" $ invitationMailContent
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
-       field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
+       field "undelivered" $ map getEmail $ undeliveredSignatoryLinks document
        field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ cancelMailContent
@@ -838,13 +841,13 @@ pageDocumentForSignatory action document ctx invitedlink  =
         "var docstate = "
         ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
         ++ "; docstate['useremail'] = '"
-        ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
+        ++ (BS.toString $ getEmail invitedlink)
         ++ "';"
       magichash = signatorymagichash invitedlink
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
       sigattachments = [a | a <- documentsignatoryattachments document
-                          , signatoryattachmentemail a == signatoryemail (signatorydetails invitedlink)]
+                          , signatoryattachmentemail a == getEmail invitedlink]
       hassigattachments = length sigattachments > 0 in
   (withProcessFieldsFor document renderTemplate) (ctxtemplates ctx) "pageDocumentForSignContent" $ do
     field "localscripts" localscripts
@@ -966,17 +969,17 @@ signatoryLinkFields
     , invitationdeliverystatus
   } =
   let isCurrentUserAuthor = maybe False (isUserAuthor document) muser
-      current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail signatorydetails)) 
+      current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap getEmail muser) == (Just $ getEmail signatorydetails)) 
       isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
     in do
       field "id" $ show signatorylinkid
       field "current" $ current
-      field "fstname" $ packToMString $ signatoryfstname $ signatorydetails
-      field "sndname" $ packToMString $ signatorysndname $ signatorydetails
+      field "fstname" $ packToMString $ getFirstName signatorydetails
+      field "sndname" $ packToMString $ getLastName  signatorydetails
       field "company" $ packToMString $ signatorycompany $ signatorydetails
       field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
       field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
-      field "email" $ packToMString $ signatoryemail $ signatorydetails
+      field "email" $ packToMString $ getEmail signatorydetails
       field "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
         field "fieldlabel" $ fieldlabel sof
         field "fieldvalue" $ fieldvalue sof
@@ -1089,10 +1092,10 @@ documentAuthorInfo document =
   case getAuthorSigLink document of
     Nothing -> return ()
     Just siglink -> do
-      field "authorfstname"       $ nothingIfEmpty $ signatoryfstname        $ signatorydetails siglink
-      field "authorsndname"       $ nothingIfEmpty $ signatorysndname        $ signatorydetails siglink
+      field "authorfstname"       $ nothingIfEmpty $ getFirstName siglink
+      field "authorsndname"       $ nothingIfEmpty $ getLastName  siglink
       field "authorcompany"       $ nothingIfEmpty $ signatorycompany        $ signatorydetails siglink
-      field "authoremail"         $ nothingIfEmpty $ signatoryemail          $ signatorydetails siglink
+      field "authoremail"         $ nothingIfEmpty $ getEmail siglink
       field "authorpersonnumber"  $ nothingIfEmpty $ signatorypersonalnumber $ signatorydetails siglink
       field "authorcompanynumber" $ nothingIfEmpty $ signatorycompanynumber  $ signatorydetails siglink
   
@@ -1288,7 +1291,7 @@ documentsToFixView templates docs = do
         field "documents" $ for docs $ \doc -> do
             field "title" $ documenttitle doc
             field "id" $ show $ documentid doc 
-            field "involved" $ map (signatoryemail . signatorydetails)  $ documentsignatorylinks doc
+            field "involved" $ map getEmail  $ documentsignatorylinks doc
             field "cdate" $  show $ documentctime doc
 
 documentAuthorAttachments :: [Document] -> Fields

@@ -29,6 +29,7 @@ import Redirect
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
 import qualified AppLogger as Log
+import Util.HasName
 
 checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -401,7 +402,7 @@ createUser ctx hostpart names email maybesupervisor vip = do
                               newUserMail (ctxtemplates ctx) hostpart email fullname al vip
                           Just supervisor -> do
                               al <- newAccountCreatedLink user
-                              inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor) email fullname al
+                              inviteSubaccountMail (ctxtemplates ctx) hostpart (getSmartName  supervisor) (usercompanyname $ userinfo supervisor) email fullname al
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
