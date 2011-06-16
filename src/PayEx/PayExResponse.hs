@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror -XArrows -XViewPatterns #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror -XArrows -XViewPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExResponse
