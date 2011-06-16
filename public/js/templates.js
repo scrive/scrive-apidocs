@@ -563,11 +563,15 @@ function authorToHTML(sig) {
     return false;
   });
 
+  var authorsignorder = $("#authorsignorder");
   if(sig.signatory) {
     sigentry.find(".partyrole input:radio").first().attr("checked", "true");
+    authorsignorder.val(sig.signorder);
+    if (sig.signorder > 1) {
+      showSigningOrderRelatedElements();
+    }
   } else {
     sigentry.find(".partyrole input:radio").last().attr("checked", "true");
-    var authorsignorder = $("#authorsignorder");
     authorsignorder.hide();
     makeNonSignatory(authorsignorder);
   }
@@ -575,7 +579,7 @@ function authorToHTML(sig) {
   $("#peopleList ol").append(
       $("<li>").append(
           $("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " (Avsändare)").append(
-              newSignOrderListElement(sig.signatory ? 1 : "-")
+              newSignOrderListElement(sig.signatory ? sig.signorder : "-")
           )
       )
   );

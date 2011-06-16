@@ -273,7 +273,7 @@ documentcurrentsignorder doc =
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
             && SignatoryPartner `elem` signatoryroles siglnk -- we exclude non-signatories
-            && signorder siglnk > SignOrder 0 -- we omit author
+            && not (siglinkIsAuthor siglnk) -- we omit author
 
 {- |
    Build a SignatoryDetails from a User with no fields
@@ -494,6 +494,7 @@ getSigLinkBySigLinkID siglinkid =
  -}
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink = 
+  (not $ siglinkIsAuthor siglink) &&
   signorder >= signatorysignorder (signatorydetails siglink)
 
 {- |
@@ -502,6 +503,7 @@ isActivatedSignatory signorder siglink =
  -}
 isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
 isCurrentSignatory signorder siglink =
+  (not $ siglinkIsAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
 {- |
