@@ -29,7 +29,7 @@ SealingTexts
       , historyText="Händelser"
       , verificationFooter=[
           "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offertnummer $documentid$ har accepterats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är verifierad genom vår tjänst.
+        , "av parterna och är juridiskt bindande. Kursiverad information är verifierad genom vår tjänst."
         , "Du kan kontrollera offerten mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
 #####
