@@ -153,9 +153,9 @@ safeReady(function() {
         if (countSentOrOpenRows(selectedrows)>0) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
           if (listtype=="dokument") {
-            addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
+            addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.", "red");
           } else {
-            addFlashMessage("Det går inte att radera offer som är skickade eller öppna, var vänliga återkalla offerter först.", "red");
+            addFlashMessage("Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.", "red");
           }
           return false;
         }
