@@ -1057,7 +1057,6 @@ documentInfoText ctx document siglnk =
       documentAuthorInfo document
       field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
       signedByMeFields document siglnk
-      field "process" processFields
     getProcessText = renderTextForProcess (ctxtemplates ctx) document
     getProcessTextWithFields f = renderTemplateForProcess (ctxtemplates ctx) document f mainFields
     processFields = do
