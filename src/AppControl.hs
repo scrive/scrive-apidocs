@@ -381,7 +381,7 @@ handleError = do
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = do
-    liftM3 LinkNew DocControl.getDocType getListParamsForSearch (isFieldSet "showTemplates")
+    liftM3 LinkNew DocControl.getDocProcess getListParamsForSearch (isFieldSet "showTemplates")
 
 {- |
    Creates a default amazon configuration based on the

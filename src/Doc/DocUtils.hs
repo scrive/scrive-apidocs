@@ -197,47 +197,24 @@ class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool 
    isSignable = not . isTemplate
-
-class MaybeContract a where
-   isContract :: a -> Bool 
-   
-class MaybeOffer a where
-   isOffer :: a -> Bool 
-   
-class MaybeAttachment a where   
-   isAttachment :: a -> Bool 
-    
-  
-   
+       
 instance  MaybeTemplate DocumentType where
    isTemplate (Template _) = True
    isTemplate AttachmentTemplate = True
    isTemplate _ = False
 
-instance  MaybeContract DocumentType where
-   isContract t =  (t == Template Contract) || (t == Signable Contract)
+instance  MaybeTemplate Document where
+   isTemplate =  isTemplate . documenttype
 
-instance  MaybeOffer DocumentType where
-   isOffer t =  (t == Template Offer) || (t == Signable Offer)
+class MaybeAttachment a where   
+   isAttachment :: a -> Bool 
    
 instance  MaybeAttachment DocumentType where
    isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
 
-instance  MaybeTemplate Document where
-   isTemplate =  isTemplate . documenttype
-
-instance  MaybeContract Document where
-   isContract =  isContract . documenttype
-   
-instance  MaybeOffer Document where
-   isOffer =  isOffer . documenttype
-  
 instance  MaybeAttachment Document where
    isAttachment =  isAttachment . documenttype
-  
-   
-matchingType::(MaybeContract a, MaybeContract b,MaybeOffer a, MaybeOffer b,MaybeAttachment a, MaybeAttachment b) => a -> b -> Bool
-matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b) || (isAttachment a && isAttachment b)
+
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
