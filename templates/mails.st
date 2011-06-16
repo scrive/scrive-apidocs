@@ -218,7 +218,7 @@ remindMailNotSignedContractContent=
     <span>
       <p><i>$_remindMailNotSignedContractContentInfo()$</i><br/>
         $_remindMailNotSignedContractContentPartys()$ $partnersinfo:noescape()$<br/>
-        $whohadsignedinfo:noescape()$<br/> 
+        $whohadsignedcontractinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>

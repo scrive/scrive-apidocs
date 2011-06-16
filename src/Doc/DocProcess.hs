@@ -86,6 +86,7 @@ data DocProcessInfo =
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
   , processmailremindnotsignedcontent :: String
+  , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
   , processflashmessagecanceled :: String
@@ -171,6 +172,7 @@ contractProcess =
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
+  , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageContractCanceled"
@@ -256,6 +258,7 @@ offerProcess =
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
+  , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageOfferCanceled"
@@ -341,6 +344,7 @@ orderProcess =
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+  , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageOrderCanceled"
