@@ -30,7 +30,7 @@ markDocumentSeen docid sigid mh time ipnum =
    Securely 
  -}
 restartDocument :: Document -> Kontra (Either DBError Document)
-restartDocument doc@Document { documentid } = do
+restartDocument doc= do
   Context { ctxtime
           , ctxipnumber
           , ctxmaybeuser
@@ -39,7 +39,7 @@ restartDocument doc@Document { documentid } = do
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> case getAuthorSigLink doc of
       Just authorsiglink | isSigLinkForUser user authorsiglink -> do
-        enewdoc <- update $ RestartDocument documentid user ctxtime ctxipnumber 
+        enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber 
         case enewdoc of
           Right newdoc -> return $ Right newdoc
           _            -> return $ Left DBResourceNotAvailable

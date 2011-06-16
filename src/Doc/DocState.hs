@@ -970,9 +970,13 @@ getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
     
    It is passed a document 
 -} 
-restartDocument :: DocumentID -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
-restartDocument docid user time ipnumber =
-   modifySignableWithAction docid (\d -> tryToGetRestarted d user time ipnumber)    
+restartDocument :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+restartDocument doc user time ipnumber = do
+   mndoc <- tryToGetRestarted doc user time ipnumber
+   case mndoc of
+        Right newdoc -> newFromDocument (const newdoc) (documentid doc)
+        other -> return other
+   
 
 
 {- | 

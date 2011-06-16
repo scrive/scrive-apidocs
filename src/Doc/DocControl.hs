@@ -1814,7 +1814,7 @@ handleRestart docid = withUserPost $ do
         Left _ -> mzero
         Right doc2 -> do
           addFlashMsg =<< (liftIO $ flashDocumentRestarted ctxtemplates doc2)
-          return $ LinkIssueDoc docid
+          return $ LinkIssueDoc (documentid doc2)
                     
 handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
 handleResend docid signlinkid  = withUserPost $ do

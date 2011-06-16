@@ -2,69 +2,30 @@
 module API.MailAPI where
 
 
-import Crypto
 import Doc.DocState
-import InputValidation
-import InspectXML
 import Kontra
-import KontraLink
-import Mails.MailsConfig
-import Mails.SendGridEvents
-import Mails.SendMail
-import MinutesTime
 import Misc
 import PayEx.PayExInterface ()-- Import so at least we check if it compiles
-import Redirect
-import Routing
-import Session
-import User.UserView as UserView
-import qualified Administration.AdministrationControl as Administration
-import qualified AppLogger as Log (error, security, debug)
-import qualified Contacts.ContactsControl as Contacts
+import qualified AppLogger as Log (debug)
 import qualified Doc.DocControl as DocControl
-import qualified ELegitimation.BankID as BankID
-import qualified FlashMessage as F
-import qualified MemCache
-import qualified Payments.PaymentsControl as Payments
-import qualified TrustWeaver as TW
-import qualified User.UserControl as UserControl
 import Control.Monad.Reader
 
-import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.State
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Word
-import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
-import Happstack.Server.Internal.Cookie
 import Happstack.State (query)
 import Happstack.State (update)
-import ListUtil
-import Network.Socket
-import System.Directory
-import System.Time
 import Text.JSON
 import Text.JSON.String
-import API.Service.ServiceControl
-
-import Text.JSON.Types
-import Text.StringTemplate.Base (StringTemplate(..))
-import Text.StringTemplate.Classes (StFirst(..))
 import qualified Codec.MIME.Parse as MIME
 import qualified Codec.MIME.Type as MIME
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map as Map
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.HTTP as HTTP
+
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import API.API
@@ -221,7 +182,7 @@ handleMailCommand = do
     (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
 
     (newdocument :: Document) <- case eithernewdocument of
-                                     Left errmsg -> return (error "zonk")
+                                     Left errmsg -> return (error errmsg)
                                      Right document -> return document
 
     (_ :: ()) <- lift $ lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
