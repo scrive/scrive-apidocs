@@ -152,9 +152,9 @@ safeReady(function() {
         if (countSentOrOpenRows(selectedrows)>0) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
           if (listtype=="dokument") {
-            addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
+            addFlashMessage(localization.cantRemoveActiveDocuments, "red");
           } else {
-            addFlashMessage("Det går inte att radera offer som är skickade eller öppna, var vänliga återkalla offerter först.", "red");
+            addFlashMessage(localization.cantRemoveActiveOffers, "red");
           }
           return false;
         }
@@ -183,7 +183,7 @@ safeReady(function() {
       } else {
         if (countSentOrOpenRows(selectedrows)!=selectedrows.length) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-          addFlashMessage("Det går inte att skicka påminnelser för " + listtype + " som inte är skickade eller öppna.", "red");
+          addFlashMessage( localization.cantSendReminder(listtype), "red");
           return false;
         }
         var singlemsg = $("#dialog-list-remind-confirm").find(".singleremindmsg");
@@ -314,7 +314,7 @@ function initFileInputs(){
       list: upload.attr("rel"),
       onFileAppend: function() {
         if (upload.hasClass("submitOnUpload")) {
-          displayLoadingOverlay("Laddar upp . . .");
+          displayLoadingOverlay(localization.loadingFile);
           form.submit();
         }
       }
@@ -346,7 +346,7 @@ safeReady(function() {
                var content = $(data);
                var errormsg = content.find(".errormsg")
                if (errormsg.length > 0) {
-                   var errdialog = $("<div title='Problem med PDF'>"
+                   var errdialog = $("<div title='"+localization.problemWithPDF+"'>"
                                    + errormsg.text()
                                    + "</div>");
                    errdialog.dialog({
@@ -492,7 +492,7 @@ function checkSignatoriesHaveUniqueEmail() {
   }
   
   if (isRepetition || isAuthorUsedAsSignatory) {
-    addFlashMessage("Du kan ej använda samma e-post för mer än 1 användare", "red");
+    addFlashMessage( localization.repetedEmailAddress , "red");
     return false;
   } else {
     return true;
@@ -549,7 +549,7 @@ safeReady(function() {
       });
       $("select.signatoryselector option").detach();
       var select = $("select.signatoryselector");
-      select.append($("<option selected>Mottagare</option>"));
+      select.append($("<option selected>" +localization.offerSignatory + "</option>"));
       select.append(sigoptions);
     }
   });
@@ -641,7 +641,7 @@ safeReady(function() {
                          var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
                          if(trs.length > 0) {
                            trs.addClass("redborder");
-                           addFlashMessage("Var vänlig bifoga begärda bilagor.", "red");
+                           addFlashMessage(localization.addRequiredAttachments, "red");
                            return false;
                          }
                          var guardChecked = $(".signGuard:checked").size()>0;
@@ -893,7 +893,7 @@ function checkSignPossibility() {
   if($("#authorsecretaryradio").attr("checked")) {
     // secretary
     $(".authordetails .man").addClass("redborder");   
-    addFlashMessage("Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.","red");
+    addFlashMessage(localization.secretaryCantSign ,"red");
     return false;
   } else {
     // sign is possible
@@ -908,7 +908,7 @@ function checkAllCustomFieldsAreNamed() {
   unamedfields = $("#personpane .newfield");
   unamedfields.addClass("redborder");
   if (unamedfields.length>0) {
-    addFlashMessage("Var vänlig namnge alla skapade fält", "red");
+    addFlashMessage(localization.setAllFields, "red");
     return false;
   } else {
     return true;
@@ -929,13 +929,13 @@ function authorFieldsValidation() {
   if(remainingAuthorFields.size() > 0) {
     console.log(remainingAuthorFields);
     if(remainingAuthorFields.hasClass('sigfstname') || remainingAuthorFields.hasClass('sigsndname')) {
-      addFlashMessage("Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.","red");
+      addFlashMessage(localization.missingSignatoryNames,"red");
     }
     if(remainingAuthorFields.hasClass('customfield')) {
-      addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.","red");
+      addFlashMessage(localization.missingNames,"red");
     }
     if(remainingAuthorFields.hasClass('sigpersnum')) {
-      addFlashMessage("Var vänlig gå tillbaka till steg 2 och fyll i personnummer.", "red");
+      addFlashMessage(localization.backToStepTwoAndFillPersonNumber, "red");
     }
     remainingAuthorFields.addClass('redborder').addClass('offending');
     fieldValidationType = "fillstatus";
@@ -955,7 +955,7 @@ function sigFieldsValidation(){
   });
 
   if(remainingSigFields.size() > 0) {
-    addFlashMessage("Du måste fylla i tomma fält innan du kan underteckna.","red");
+    addFlashMessage(localization.mustFillFieldsBeforeSigning,"red");
     remainingSigFields.addClass("redborder");
     return false;
   } else {
@@ -983,7 +983,7 @@ function nonZeroSignatories() {
   var error = (sigs === 0);
 
   if(error) {
-    addFlashMessage('Du måste ha minst en undertecknande part.', "red");
+    addFlashMessage(localization.atLeastOneSignatoryRequired, "red");
     //saving this for later
     //addFlashMessage('Du kan inte underteckna med endast dig själv.', "red");
     $("li.plus").addClass("redborder");
@@ -1104,8 +1104,8 @@ standardDialogTop  = "10%"
 whitelabel = false;                     
                      
 $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
-  var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
-  var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
+  var invalidEmailErrMsg = localization.emptyOrNotValidEmail;
+  var emptyEmailErrMsg = localization.youMustSetParnerEmail ;
   $.each(errors, function(index, error) {
     var input = $(error.input);
     input.parents('.inputWrapper').addClass("redborder");
@@ -1357,17 +1357,17 @@ function renumberParts() {
     var isSignatory = (authorrole.length + signatoryrole.length)>0;
     var isMultiPart = isMultiPartElem($(this));
     if (isMultiPart) {
-      $(this).find(".partnumber").text("MASSUTSKICK");
+      $(this).find(".partnumber").text(localization.multipleSignatory.toUpperCase());
     } else if( isSignatory ) {
       if (issendonly) {
-		$(this).find(".partnumber").text("MOTTAGARE");
+		$(this).find(".partnumber").text(localization.offerSignatory.toUpperCase());
       } else {
-        $(this).find(".partnumber").text("PART " + idx);
+        $(this).find(".partnumber").text(localization.contractSignatory(idx).toUpperCase());
       }
       idx = idx + 1;
     } else {
-      var text = "EJ UNDERTECKNANDE PART";
-      if (offer) text = "AVSÄNDARE";
+      var text = localization.nonsignatory.toUpperCase();
+      if (issendonly) text = localization.offerAuthor.toUpperCase(); 
       $(this).find(".partnumber").text(text);
     }
   });
@@ -1493,7 +1493,7 @@ safeReady(function() {
                var content = $(data);
                var errormsg = content.find(".errormsg")
                if (errormsg.length > 0) {
-                   var errdialog = $("<div title='Problem med PDF'>"
+                   var errdialog = $("<div title='"+localization.problemWithPDF+"'>"
                                    + errormsg.text()
                                    + "</div>");
                    errdialog.dialog({

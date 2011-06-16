@@ -1,100 +1,81 @@
 ######
-mailCancelDocumentByAuthorTitle=Återkallelsenotis: $documenttitle$
+mailCancelDocumentByAuthorTitle=$_mailCancelDocumentByAuthorTitle()$
 ####
 mailCancelContractByAuthorStandardHeader=
-    <p>Hej, </p>
+    <p>$_mailCancelContractByAuthorStandardHi()$</p>
 ######
 mailCancelOfferByAuthorStandardHeader=
-    <p>Hej, </p>
+    <p>$_mailCancelOfferByAuthorStandardHi()$</p>
 ######
 mailCancelOrderByAuthorStandardHeader=
-    <p>Hej, </p>
+    <p>$_mailCancelOrderByAuthorStandardHi()$</p>
 ######
 mailCancelContractByAuthorContent=
     $header:noescape()$
-    <p>
-      <strong>$creatorname$</strong> har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
-      Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
-    </p>
+    <p>$_mailCancelContractByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
 mailCancelOfferByAuthorContent=
     $header:noescape()$
-    <p>
-      <strong>$creatorname$</strong>   har valt att återkalla offerten  $documenttitle$.
-    </p>
+    <p>$_mailCancelOfferByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
 mailCancelOrderByAuthorContent=
     $header:noescape()$
-    <p>
-      <strong>$creatorname$</strong>   har valt att återkalla orderbekräftelsen  $documenttitle$.
-    </p>
+    <p>$_mailCancelOrderByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
-mailDocumentAwaitingForAuthorTitle=Vänligen underteckna $documenttitle$
+mailDocumentAwaitingForAuthorTitle=$_mailDocumentAwaitingForAuthorTitle()$
 ######
 mailDocumentAwaitingForAuthorContent=
-    <p>Hej <strong>$authorname$</strong>,</p>
-    <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist:noescape()$.
-      Därmed är det bara du kvar innan dokumentet är färdigställt.</p>
-    <p>För att färdigställa dokumentet gör följande:<br/>
-      1. Klicka på länken<br/>
-      <a href="$documentlink$">$documenttitle$</a><br/>
-      <br/>
-      2. Granska uppgifterna<br/>
-      3. Underteckna För att avtalet skall färdigställas krävs din underskrift.</p>
+    <p>$_mailDocumentAwaitingForAuthorContentHi()$</p>
+    <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
+    <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
     $poweredBySkrivaPaPara()$
 #####
-mailDocumentClosedTitle=Bekräftelse: $documenttitle$
+mailDocumentClosedTitle=$_mailDocumentClosedTitle()$
 #####
 mailContractClosedContent=
     <span>
-      <p>Hej,</p>
-      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
-         av $partylist:noescape()$. Avtalet är nu bindande.</p>
-      <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
+      <p>$_mailContractClosedContentHi()$</p>
+      <p>$_mailContractClosedContentSignedBy()$</p>
+      <p>$_mailContractClosedContentAttached()$</p> 
       $poweredBySkrivaPaPara()$
     </span>
 ####
 mailOfferClosedContent=
     <span>
-      <p>Hej,</p>
-      <p>Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. </p>
-      <p>Bifogat med detta mail finner du en PDF med offerten och verifikatet.</p>
+      <p>$_mailOfferClosedContentHi()$</p>
+      <p>$_mailOfferClosedContentOfferAccepted()$</p>
+      <p>$_mailOfferClosedContentAttached()$</p>
 
       $poweredBySkrivaPaPara()$
     </span>
 ####
 mailOrderClosedContent=
     <span>
-      <p>Hej,</p>
-      <p>Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$  och SkrivaPå har utfärdat ett verifikat för bekräftelsen. </p>
-      <p>Bifogat med detta mail finner du en PDF med orderbekräftelsen och verifikatet.</p>
+      <p>$_mailOrderClosedContentHi()$</p>
+      <p>$_mailOrderClosedContentViewed()$</p>
+      <p>$_mailOrderClosedContentAttached()$</p>
 
       $poweredBySkrivaPaPara()$
     </span>
 ####
-mailRejectMailTitle=Avvisat: $documenttitle$
+mailRejectMailTitle=$_mailRejectMailTitle()$
 ####
 mailRejectContractMailContent=
       $mailRejectMailContentHeader()$
-      <p>
-        <strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
-      </p>
+      <p>$_mailRejectContractMailContentContractRejected()$</p>
       $poweredBySkrivaPaPara()$
 ####
 mailRejectOfferMailContent=
       $mailRejectMailContentHeader()$
-      <p>
-        <strong>$rejectorName$</strong> har avvisat offerten <strong>$documenttitle$</strong>.
-      </p>
+      <p>$_mailRejectOfferMailContentOfferRejected()$</p>
       $poweredBySkrivaPaPara()$
 ###
 mailRejectOrderMailContent=
       $mailRejectMailContentHeader()$
-      <p>
-        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.
+      <p>$_mailRejectOrderMailContentHasRejected()$
       </p>
       $poweredBySkrivaPaPara()$
 ###
@@ -103,37 +84,29 @@ mailRejectMailContentHeader=
        $customMessage:noescape()$ 
       $else$
       <div class="editable" name="customtext">
-      <p>Hej,</p>
+      <p>$_mailRejectMailContentHeaderIfNotCustomHi()$</p>
       </div>
       $endif$
 ####
-mailInvitationToViewTitle=Inbjudan från $creatorname$ till $documenttitle$
+mailInvitationToViewTitle=$_mailInvitationToViewTitle()$
 ###
-mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
+mailInvitationToSignTitle=$_mailInvitationToSignTitle()$
 ###
 mailInvitationToSignContractContent=
     $header:noescape()$
     <p>
-     <i>Översiktlig information</i><br/>
-     Parter: $partnersinfo:noescape()$<br/>
+     <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
+     $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
      $whohadsignedcontractinfo:noescape()$<br/>
-     Avsändare: <strong>$creatorname$</strong><br/>
+     $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
      $sigattachlist()$
     </p>
     $if(issignatory)$
-    <p>
-      <i>Så här går du vidare</i><br/>
-      1. Klicka på länken <br/>
-      <a href="$link$">$link$</a><br/>
-      2. Granska online<br/>
-      3. Underteckna (eller avvisa)<br/> 
-      4. Färdig
-    </p>
+    <p>$_mailInvitationToSignContractContentIfSignatoryInstruction()$</p>
     $else$
-    Du har endast behörighet att se detta dokument
-    Klicka på länken nedan för att se dokumentet:
+    $_mailInvitationToSignContractContentIfNotSignatoryInstruction()$
     <br/> 
     <a href="$link$">$link$</a> <br/>
     <br/>
@@ -144,25 +117,18 @@ mailInvitationToSignContractContent=
 mailInvitationToSignOfferContent=
     $header:noescape()$
     <p>
-     <i>Översiktlig information</i><br/>
-     Parter: $partnersinfo:noescape()$<br/>
+     <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
+     $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
      $whohadsignedofferinfo:noescape()$<br/>
-     Avsändare: <strong>$creatorname$</strong><br/>
+     $_mailInvitationToSignOfferContentSender()$<strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
      $sigattachlist()$
     </p>
     $if(issignatory)$
-    <p>
-      1. Klicka på länken <br/>
-      <a href="$link$">$link$</a><br/>
-      2. Granska online<br/>
-      3. Acceptera offert (eller avvisa)<br/> 
-      4. Färdig
-    </p>
+    <p>$_mailInvitationToSignOfferContentIfSignatoryInstruction()$</p>
     $else$
-    Du har endast behörighet att se detta dokument
-    Klicka på länken nedan för att se dokumentet:
+    $_mailInvitationToSignOfferContentIfNotSignatoryInstruction()$
     <br/> 
     <a href="$link$">$link$</a> <br/>
     <br/>
@@ -173,25 +139,18 @@ mailInvitationToSignOfferContent=
 mailInvitationToSignOrderContent=
     $header:noescape()$
     <p>
-     <i>Översiktlig information</i><br/>
-     Parter: $partnersinfo:noescape()$<br/>
+     <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
+     $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
      $whohadsignedorderinfo:noescape()$<br/>
-     Avsändare: <strong>$creatorname$</strong><br/>
+     $_mailInvitationToSignOrderContentSender()$<strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
      $sigattachlist()$
     </p>
     $if(issignatory)$
-    <p>
-      1. Klicka på länken <br/>
-      <a href="$link$">$link$</a><br/>
-      2. Bekräfta ordern<br/>
-      3. Underteckna (eller avvisa)<br/> 
-      4. Färdig
-    </p>
+    <p>$_mailInvitationToSignOrderContentIfSignatoryInstruction()$</p>
     $else$
-    Du har endast behörighet att se detta dokument
-    Klicka på länken nedan för att se dokumentet:
+    $_mailInvitationToSignOrderContentIfNotSignatoryInstruction()$
     <br/> 
     <a href="$link$">$link$</a> <br/>
     <br/>
@@ -200,26 +159,16 @@ mailInvitationToSignOrderContent=
     $legalparagraph()$
 ###
 mailInvitationToSignContractDefaultHeader=
-    <p>Hej $personname$,
-      <br/><br/>
-      <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
-    </p>
+    <p>$_mailInvitationToSignContractDefaultHeader()$</p>
 ####
 mailInvitationToSignOfferDefaultHeader=
-    <p>Hej $personname$,
-      <br/><br/>
-      <strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong>  till dig och önskar din accept.
-      Acceptera offerten genom att följa instruktionerna nedan.
-    </p>
+    <p>$_mailInvitationToSignOfferDefaultHeader()$</p>
 ####
 mailInvitationToSignOrderDefaultHeader=
-    <p>Hej $personname$,
-      <br/><br/>
-      <strong>$creatorname$</strong> har skickat orderbekräftelsen <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta ordern genom att följa instruktionerna nedan.
-    </p>
+    <p>$_mailInvitationToSignOrderDefaultHeader()$ </p>
 ####
 mailInvitationToViewDefaultHeader=
-    <p>Hej $personname$,
+    <p>$_mailInvitationToViewDefaultHeader()$	Hej $personname$,
       <br/><br/>
       <strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
     </p>
@@ -228,65 +177,52 @@ remindMailSignedTitle=$documenttitle$
 ###
 remindMailSignedContractStandardHeader=
     <span>
-      <p>Hej <strong>$personname$</strong></p>
-      <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>
-        till dig. Dokumentet har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
+      <p>$_remindMailSignedContractStandardHeaderHi()$</p>
+      <p>$_remindMailSignedContractStandardHeaderSendRequest()$</p>
     </span>
 ####
 remindMailSignedOfferStandardHeader=
     <span>
-      <p>Hej <strong>$personname$</strong></p>
-      <p><strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>
-        till dig. Offerten har accepterats av dig via tjänsten SkrivaPå. Den accepterade offerten bifogas med detta mail.</p>
+      <p>$_remindMailSignedOfferStandardHeaderHi()$</p>
+      <p>$_remindMailSignedOfferStandardHeaderSendRequest()$</p>
     </span>
 ####
 remindMailSignedOrderStandardHeader=
     <span>
-      <p>Hej <strong>$personname$</strong></p>
-      <p><strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen <strong>$documenttitle$</strong>
-        till dig som du har bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med detta mail.</p>
+      <p>$_remindMailSignedOrderStandardHeaderHi()$</p>
+      <p>$_remindMailSignedOrderStandardHeaderSendRequest()$</p>
     </span>
 ####
-remindMailNotSignedTitle=Påminnelse att underteckna  $documenttitle$
+remindMailNotSignedTitle=$_remindMailNotSignedTitle()$
 ########
 remindMailNotSignedContractStandardHeader=
     <span>
-      <p>Hej <strong>$personname$</strong></p>
-      <p><strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu.</p>
+      <p>$_remindMailNotSignedContractStandardHeaderHi()$</p>
+      <p>$_remindMailNotSignedContractStandardHeaderRemind()$</p>
     </span>
 #####
 remindMailNotSignedOfferStandardHeader=
     <span>
-      <p>Hej <strong>$personname$</strong></p>
-      <p><strong>$author$</strong> vill påminna dig om att du inte accepterat offerten <strong>$documenttitle$</strong> ännu.
-        Acceptera offerten genom att följa instruktionerna nedan.
-      </p>
+      <p>$_remindMailNotSignedOfferStandardHeaderHi()$</p>
+      <p>$_remindMailNotSignedOfferStandardHeaderRemind()$</p>
     </span>
 #####
 remindMailNotSignedOrderStandardHeader=
     <span>
-      <p>Hej <strong>$personname$</strong></p>
-      <p><strong>$author$</strong> vill påminna dig om att du inte bekräftat ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern genom att följa instruktionerna nedan.
-      </p>
+      <p>$_remindMailNotSignedOrderStandardHeaderHi()$</p>
+      <p>$_remindMailNotSignedOrderStandardHeaderRemind()$</p>
     </span>
 #####
 remindMailNotSignedContractContent=
     $header:noescape()$
     <span>
-      <p><i>Översiktlig information</i><br/>
-        Parter: $partnersinfo:noescape()$<br/>
+      <p><i>$_remindMailNotSignedContractContentInfo()$</i><br/>
+        $_remindMailNotSignedContractContentPartys()$ $partnersinfo:noescape()$<br/>
         $whohadsignedinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
-      <p>
-        <i>Så här går du vidare</i><br/>
-        1. Klicka på länken<br/>
-        <a href="$link$">$link$</a><br/>
-        2. Granska online<br/>
-        3. Underteckna (eller avvisa)<br/> 
-        4. Färdig
-      </p>
+      <p>$_remindMailNotSignedContractContentInstruction()$</p>
     </span>
     $footer:noescape()$
     $legalparagraph()$
@@ -295,21 +231,15 @@ remindMailNotSignedOfferContent=
     $header:noescape()$
     <span>
       <p>
-        <i>Översiktlig information</i><br/>
-        Parter: $partnersinfo:noescape()$<br/>
+        <i>$_remindMailNotSignedOfferContentInfo()$</i><br/>
+        $_remindMailNotSignedOfferContentPartys()$ $partnersinfo:noescape()$<br/>
         $whohadsignedofferinfo:noescape()$<br/>
-        Avsändare: <strong>$creatorname$</strong><br/>
+        $_remindMailNotSignedOfferContentSender()$<strong>$creatorname$</strong><br/>
         $timetosigninfo:noescape()$
         $appendixList()$
         $sigattachlist()$
       </p>
-      <p>
-        1. Klicka på länken<br/>
-        <a href="$link$">$link$</a><br/>
-        2. Granska online<br/>
-        3.  Acceptera offert (eller avvisa)<br/>
-        4. Färdig
-      </p>
+      <p>$_remindMailNotSignedOfferContentInstruction()$</p>
     </span>
     $footer:noescape()$
     $legalparagraph()$

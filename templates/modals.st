@@ -5,11 +5,11 @@ modalSignInviteView=
     <span class="modal-icon message"></span>
     $if(signed)$
     <span class="modal-title">
-      <h3>Du har undertecknat dokumentet <strong>$documenttitle$</strong>!</h3>
+      <h3>$_modalSignInviteViewHeaderIfSigned()$</h3>
     </span>
     $else$
     <span class="modal-title">
-      <h3>Du har undertecknat!</h3>
+      <h3>$_modalSignInviteViewHeaderIfElse()$</h3>
     </span>
     $endif$
     <a class="modal-close close"> </a>
@@ -18,12 +18,11 @@ modalSignInviteView=
     <div class="modal-content">
       $if(signed)$
       <p>
-        Du har undertecknat dokumentet $documenttitle$ och dokumentet har färdigställts.
+        $_modalSignInviteViewBodyIfSigned()$
       </p>
       $else$
       <p>
-        En inbjudan att underteckna har nu skickats till
-        $partyListButAuthor:noescape()$.
+        $_modalSignInviteViewBodyIfElse()$
       </p>
       $endif$
     </div>
@@ -32,7 +31,7 @@ modalSignInviteView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>	$_modalSignInviteViewFooterClose()$	Stäng</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -45,13 +44,13 @@ modalOfferCreated=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Offerten skickad!</h3>
+      <h3>$_modalOfferCreatedHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p> Offerten <strong>$documenttitle$</strong> har nu skickats till <strong>$signatory$</strong>. 
+      <p>$_modalOfferCreatedBody()$ 
       </p>
     </div>
   </div>
@@ -59,7 +58,7 @@ modalOfferCreated=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalOfferCreatedClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -72,13 +71,13 @@ modalOrderCreated=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Orderbekräftelsen skickad!</h3>
+      <h3>$_modalOrderCreatedHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p> Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats till <strong>$signatory$</strong>. 
+      <p>$_modalOrderCreatedBody()$
       </p>
     </div>
   </div>
@@ -86,7 +85,7 @@ modalOrderCreated=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalOrderCreatedClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -99,13 +98,13 @@ modalOfferSignedHasAccount=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har accepterat offerten!</h3>
+      <h3>$_modalOfferSignedHasAccountHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p> Offerten har sparats till ditt konto med användarnamn <span style="color:#007CAC">$signatory$</span>.
+      <p>$_modalOfferSignedHasAccountBody()$
       </p>
     </div>
   </div>
@@ -113,7 +112,7 @@ modalOfferSignedHasAccount=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalOfferSignedHasAccountClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -127,10 +126,8 @@ modalOfferSignedNoAccount=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har accepterat offerten!</h3>
-      <p>
-        Offerten är nu bindande. SkrivaPå har verifierat accepten och utfärdat ett verifikat. Ett original av den färdiga accepten har skickats till din inkorg.
-      </p>
+      <h3>$_modalOfferSignedNoAccountHeader()$</h3>
+      <p>$_modalOfferSignedNoAccountBody()$</p>
     </span>
     <a class="modal-close close"> </a>
   </div>
@@ -152,7 +149,7 @@ modalAccountSetup=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Vänligen acceptera användarvillkoren</h3>
+      <h3>$_modalAccountSetupHeaderAcceptTOS()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
@@ -163,25 +160,25 @@ modalAccountSetup=
       </div>
       <div style="padding: 0 19px">
         <input type="checkbox" id="tosCBox" name="tos" />
-        <label for="tosCBox">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/>
+        <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
         <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
-            <td><input id="accountTypePrivate" type="radio" value="PrivateAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(PrivateAccount)$checked="true"$endif$ /> <label for="accountTypePrivate">Privatperson</label></td>
-            <td><input id="accountTypeCompany" type="radio" value="CompanyAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(CompanyAccount)$checked="true"$endif$ /> <label for="accountTypeCompany">Företag</label></td>
+            <td><input id="accountTypePrivate" type="radio" value="PrivateAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(PrivateAccount)$checked="true"$endif$ /> <label for="accountTypePrivate">$_modalAccountSetupIfPrivateAccount()$</label></td>
+            <td><input id="accountTypeCompany" type="radio" value="CompanyAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(CompanyAccount)$checked="true"$endif$ /> <label for="accountTypeCompany">$_modalAccountSetupIfCompanyAccount()$</label></td>
             $if(hassupervisor)$
             <td><input type="hidden" name="accounttype" value="$supervisoraccounttype$" /></td>
             $endif$
         </tr></tbody></table>
         <table id="companyInfo"><tbody>
             <tr>
-                <td style="width: 120px">Förnamn:</td>
+                <td style="width: 120px">$_modalAccountSetupFirstName()$</td>
                 <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"/></td>
             </tr>
             <tr>
-                <td>Efternamn:</td>
+                <td>$_modalAccountSetupLastName()$</td>
                 <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"/></td>
             </tr>
             <tr>
-                <td>Företag:</td>
+                <td>$_modalAccountSetupCompany()$</td>
                 <td><input type="text" name="companyname" autocomplete="off"
                     $if(hassupervisor)$
                     disabled="true" value="$supervisorcompany$"
@@ -191,21 +188,21 @@ modalAccountSetup=
                 /></td>
             </tr>
             <tr>
-                <td>Position:</td>
+                <td>$_modalAccountSetupPosition()$</td>
                 <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"/></td>
             </tr>
             <tr>
-                <td>Telefonnummer:</td>
+                <td>$_modalAccountSetupPhone()$</td>
                 <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"/></td>
             </tr>
         </tbody></table>
         <table id="passwordInfo"><tbody>
             <tr>
-                <td style="width: 120px">Välj lösenord:</td>
+                <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
                 <td><input type="password" name="password" autocomplete="off"/></td>
             </tr>
             <tr>
-                <td>Upprepa lösenord:</td>
+                <td>$_modalAccountSetupRepeatPassword()$</td>
                 <td><input type="password" name="password2" autocomplete="off"/></td>
             </tr>
         </tbody></table>
@@ -217,7 +214,7 @@ modalAccountSetup=
     <a href="#" class="btn-small green float-right submit">
       <div class="left"></div>
       <div class="label">
-        <p>Skapa konto!</p>
+        <p>$_modalAccountSetupFooter()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -231,21 +228,19 @@ modalWelcomeToSkrivaPa=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Vi bjuder på 1 fri månad med SkrivaPå!</h3>
+      <h3>$_modalWelcomeToSkrivaPaHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Med SkrivaPå kan du skriva på och arkivera dokument elektroniskt. Tjänsten går att använda för avtal, offerter och även andra typer av dokument. Givetvis kommer det inte att kosta någonting efter den fria månaden om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:</p>
+      <p>$_modalWelcomeToSkrivaPaBodyMain()$</p>
 
-      <p>1. Ladda upp ett dokument<br/>
-        2. Fyll i motpartens uppgifter<br/>
-        3. Underteckna och skicka iväg</p>
+      <p>$_modalWelcomeToSkrivaPaBodyInstructions()$</p>
 
-      <p>Tips: Testa med dig själv först.</p>
+      <p>$_modalWelcomeToSkrivaPaBodyHint()$</p>
 
-      <p>Med vänliga hälsningar<br/>
+      <p>$_modalWelcomeToSkrivaPaBodyBestRegards()$<br/>
         Team SkrivaPå</p>
     </div>
   </div>
@@ -253,7 +248,7 @@ modalWelcomeToSkrivaPa=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Välkommen!</p>
+        <p>$_modalWelcomeToSkrivaPaFooter()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -266,13 +261,13 @@ modalAccountRemoval=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Är du säker?</h3>
+      <h3>$_modalAccountRemovalHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Är du säker på att du vill radera dokumentet "Non Disclosure and Immaterial Rights Agreement" och ditt konto från SkrivaPå</p>
+      <p>$_modalAccountRemovalBody()$</p>
     </div>
   </div>
   <div class="modal-footer">
@@ -280,12 +275,12 @@ modalAccountRemoval=
     <a href="#" onclick="\$('#removeaccountform').submit();" class="btn-small red float-right">
       <div class="left"></div>
       <div class="label">
-        <p>Radera konto</p>
+        <p>$_modalAccountRemovalFooter()$</p>
         <div class="btn-symbol red arrow-left"></div>
       </div>
       <div class="right"></div>
     </a>
-    <a href="$activationlink$" class="float-left" style="color: #5eb30c; text-decoration: none">Aktivera konto</a>
+    <a href="$activationlink$" class="float-left" style="color: #5eb30c; text-decoration: none">$_modalAccountRemovalActivateAccount()$</a>
   </div>
 </div>
 ###
@@ -294,22 +289,21 @@ modalAccountRemoved=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Raderat</h3>
+      <h3>$_modalAccountRemovedHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Din kopia av dokumentet "$documenttitle$" är nu raderat tillsammans från SkrivaPå tillsammans med ditt konto.</p>
-      <p>Med vänliga hälsningar<br/>
-        Team SkrivaPå</p>
+      <p>$_modalAccountRemovedBody()$</p>
+      <p>$_modalAccountRemovedBestRegards()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Ok</p>
+        <p>$_modalAccountRemovedFooter()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -322,14 +316,13 @@ modalSendInviteView=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Dokumentet <strong>$documenttitle$</strong> skickat!</h3>
+      <h3>$_modalSendInviteViewHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>En inbjudan att underteckna har nu skickats
-        till $partyListButAuthor:noescape()$.
+      <p>$_modalSendInviteViewBody()$
       </p>
     </div>
   </div>
@@ -337,7 +330,7 @@ modalSendInviteView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalSendInviteViewClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -351,20 +344,20 @@ modalLoginForSaveView=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Konto har skapats</h3>
+      <h3>$_modalLoginForSaveViewHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Ditt konto har skapats. En aktiveringslänk har skickats till din inkorg.</p>
+      <p>$_modalLoginForSaveViewBody()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalLoginForSaveViewClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -378,20 +371,20 @@ modalRejectedView=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har avvisat dokumentet $documenttitle$</h3>
+      <h3>$_modalRejectedViewHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Ett meddelande har skickats till $partyList:noescape()$.</p>
+      <p>$_modalRejectedViewBody()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalRejectedViewClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -413,31 +406,27 @@ modalSignedViewClosedHasAccountNotLoggedIn=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-        <h3>Du har undertecknat dokumentet $documenttitle$</h3>
-      </span>
+        <h3>$_modalSignedViewClosedHasAccountNotLoggedInHeader()$	</span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>
-          $partyListString:noescape()$ har nu undertecknat och
-          dokumentet är bindande.
-        </p>
-        <p>
-          Dokumentet har sparats till ditt konto.
-        </p>
+        <p>$_modalSignedViewClosedHasAccountNotLoggedInBodySigned()$
+</p>
+        <p>$_modalSignedViewClosedHasAccountNotLoggedInBodySaved()$
+</p>
         $loginModalPart()$
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">Stäng</a>
-        <a href="#" class="txt-link message">Glömt lösenord</a>
+        <a class="close cancel">$_modalSignedViewClosedHasAccountNotLoggedInFooterClose()$</a>
+        <a href="#" class="txt-link message">$_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>Logga in</p>
+          <p>$_modalSignedViewClosedHasAccountNotLoggedInFooterLogIn()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -450,26 +439,20 @@ modalSignedViewClosedHasAccountLoggedIn=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat dokumentet $documenttitle$</h3>
-    </span>
+      <h3>$_modalSignedViewClosedHasAccountLoggedInHeader()$</span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        $partyListString:noescape()$ har nu undertecknat och
-        dokumentet är bindande.
-      </p>
-      <p>
-        Dokumentet har sparats till ditt konto.
-      </p>
+      <p>$_modalSignedViewClosedHasAccountLoggedInBodySigned()$</p>
+      <p>$_modalSignedViewClosedHasAccountLoggedInBodySaved()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalSignedViewClosedHasAccountLoggedInClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -491,30 +474,26 @@ modalSignedViewOrderClosedHasAccountNotLoggedIn=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-        <h3>Du har bekräftat ordern $documenttitle$</h3>
+        <h3>$_modalSignedViewOrderClosedHasAccountNotLoggedInHeader()$</h3>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>
-          $partyListString:noescape()$ har nu bekräftat ordern.
-        </p>
-        <p>
-          Orderbekräftelsen har sparats till ditt konto.
-        </p>
+        <p>$_modalSignedViewOrderClosedHasAccountNotLoggedInBodyConfirmed()$</p>
+        <p>$_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved()$</p>
         $loginModalPart()$
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">Stäng</a>
-        <a href="#" class="txt-link message">Glömt lösenord</a>
+        <a class="close cancel">$_modalSignedViewOrderClosedHasAccountNotLoggedInFooterClose()$</a>
+        <a href="#" class="txt-link message">$_modalSignedViewOrderClosedHasAccountNotLoggedInFooterForgotPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>Logga in</p>
+          <p>$_modalSignedViewOrderClosedHasAccountNotLoggedInFooterLogIn()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -527,25 +506,21 @@ modalSignedViewOrderClosedHasAccountLoggedIn=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har bekräftat ordern $documenttitle$</h3>
+      <h3>$_modalSignedViewOrderClosedHasAccountLoggedInHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        $partyListString:noescape()$ har nu bekräftat ordern.
-      </p>
-      <p>
-        Orderbekräftelsen har sparats till ditt konto.
-      </p>
+      <p>$_modalSignedViewOrderClosedHasAccountLoggedInBodyConfirmed()$</p>
+      <p>$_modalSignedViewOrderClosedHasAccountLoggedInBodySaved()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalSignedViewOrderClosedHasAccountLoggedInFooterClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -559,10 +534,8 @@ modalSignedViewClosedNoAccount=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat!</h3>
-      <p>
-        Dokumentet är nu bindande. SkrivaPå har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.
-      </p>
+      <h3>$_modalSignedViewClosedNoAccountHeader()$</h3>
+      <p>$_modalSignedViewClosedNoAccountBody()$</p>
     </span>
     <a class="modal-close close"> </a>
   </div>
@@ -584,10 +557,8 @@ modalSignedViewOrderClosedNoAccount=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har bekräftat ordern!</h3>
-      <p>
-        Vi har skickat ett original orderbekräftelse till din inkorg.
-      </p>
+      <h3>$_modalSignedViewOrderClosedNoAccountHeader()$</h3>
+      <p>$_modalSignedViewOrderClosedNoAccountBody()$</p>
     </span>
     <a class="modal-close close"> </a>
   </div>
@@ -614,27 +585,21 @@ modalSignedViewNotClosedHasAccountLoggedIn=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      <h3>$_modalSignedViewNotClosedHasAccountLoggedInHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        $partyUnsignedListString:noescape()$ har ännu inte
-        undertecknat. När alla undertecknat blir dokumentet bindande
-        och en kopia skickas till din e-post.
-      </p>
-      <p>
-        Dokumentet har sparats till ditt konto.
-      </p>
+      <p>$_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned()$</p>
+      <p>$_modalSignedViewNotClosedHasAccountLoggedInBodySaved()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalSignedViewNotClosedHasAccountLoggedInFooterClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -649,32 +614,26 @@ modalSignedViewNotClosedHasAccountNotLoggedIn=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-        <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+        <h3>$_modalSignedViewNotClosedHasAccountNotLoggedInHeader()$</h3>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>
-          $partyUnsignedListString:noescape()$ har ännu inte
-          undertecknat. När alla undertecknat blir dokumentet bindande
-          och en kopia skickas till din e-post.
-        </p>
-        <p>
-          Dokumentet har sparats till ditt konto.
-        </p>
+        <p>$_modalSignedViewNotClosedHasAccountNotLoggedInBodyNotSigned()$</p>
+        <p>$_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved()$</p>
         $loginModalPart()$
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">Stäng</a>
-        <a href="#" class="txt-link message">Glömt lösenord</a>
+        <a class="close cancel">$_modalSignedViewNotClosedHasAccountNotLoggedInFooterCLose()$</a>
+        <a href="#" class="txt-link message">$_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>Logga in</p>
+          <p>$_modalSignedViewNotClosedHasAccountNotLoggedInFooterLogIn()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -695,26 +654,20 @@ modalSignedViewOrderNotClosedHasAccountLoggedIn=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har bekräftat ordern $documenttitle$</h3>
-    </span>
+      <h3>$_modalSignedViewOrderNotClosedHasAccountLoggedInHeader()$</span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        $partyUnsignedListString:noescape()$ har ännu inte
-        bekräftat.
-      </p>
-      <p>
-        Orderbekräftelsen har sparats till ditt konto.
-      </p>
+      <p>$_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned()$</p>
+      <p>$_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Stäng</p>
+        <p>$_modalSignedViewOrderNotClosedHasAccountLoggedInFooterClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -729,31 +682,26 @@ modalSignedViewOrderNotClosedHasAccountNotLoggedIn=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-        <h3>Du har bekräftat ordern $documenttitle$</h3>
+        <h3>$_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader()$</h3>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>
-          $partyUnsignedListString:noescape()$ har ännu inte
-          bekräftat.
-        </p>
-        <p>
-          Orderbekräftelsen har sparats till ditt konto.
-        </p>
+        <p>$_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed()$</p>
+        <p>$_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved()$</p>
         $loginModalPart()$
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">Stäng</a>
-        <a href="#" class="txt-link message">Glömt lösenord</a>
+        <a class="close cancel">$_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterClose()$</a>
+        <a href="#" class="txt-link message">$_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>Logga in</p>
+          <p>$_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterLogIn()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -767,10 +715,8 @@ modalSignedViewOrderNotClosedNoAccount=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har bekräftat ordern!</h3>
-      <p>
-        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
-      </p>
+      <h3>$_modalSignedViewOrderNotClosedNoAccountHeader()$</h3>
+      <p>$_modalSignedViewOrderNotClosedNoAccountBody()$</p>
     </span>
     <a class="modal-close close"> </a>
   </div>
@@ -790,27 +736,25 @@ accountFromSignInputs=
   <div class="login-container">
     <div class="body">
       <div class="wrapper">
-        <p>
-          Vill du säkra ditt original? SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.
-        </p>
+        <p>$_accountFromSignInputsBodySecureOriginal()$</p>
         <input type="hidden" name="acceptaccount" value="true" />
         <div style="padding:10px 50px;">
          <div>
           <input type="checkbox" name="tos" id="tos" style="width: auto"/>
-          <label for="tos" style="padding-left:5px;">Jag har läst och accepterat <a target="_blank" href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
+          <label for="tos" style="padding-left:5px;">$_accountFromSignInputsBodyAcceptTOS()$</a></label>
          </div>
          <table style="width: 250px; margin-top: 5px"><tbody><tr>
-           <td><input style="width: auto" id="accountTypePrivate" type="radio" name="accounttype" value="PrivateAccount" /> <label for="accountTypePrivate">Privatperson</label></td>
-           <td><input style="width: auto" id="accountTypeCompany" type="radio" name="accounttype" value="CompanyAccount" /> <label for="accountTypeCompany">Företag</label></td>
+           <td><input style="width: auto" id="accountTypePrivate" type="radio" name="accounttype" value="PrivateAccount" /> <label for="accountTypePrivate">$_accountFromSignInputsPrivateAccount()$</label></td>
+           <td><input style="width: auto" id="accountTypeCompany" type="radio" name="accounttype" value="CompanyAccount" /> <label for="accountTypeCompany">$_accountFromSignInputsCompanyAccount()$</label></td>
          </tr></tbody></table>
          <div style="padding-top:10px">
           <table>
             <tr>
-              <td style="width:120px;">Lösenord</td>
+              <td style="width:120px;">$_accountFromSignInputsPassword()$</td>
               <td><input type="password" name="password" /></td>
             </tr>
             <tr>
-              <td>Bekräfta lösenord</td>
+              <td>$_accountFromSignInputsConfirmPassword()$</td>
               <td><input type="password" name="password2" /></td>
             </tr>
           </table>
@@ -824,12 +768,12 @@ accountFromSignInputs=
 accountFromSignFooter=
     <div class="accountFromSignFooter">
       <div class="float-left">
-        <a class="declineAccountFromSign cancel" style="width:60px;">Nej tack</a>
+        <a class="declineAccountFromSign cancel" style="width:60px;">$_accountFromSignFooterNoThx()$</a>
       </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>Ja, arkivera</p>
+          <p>$_accountFromSignFooterYesArchive()$</p>
           <div class="btn-symbol green arrow-left"></div>
         </div>
         <div class="right"></div>
@@ -847,7 +791,7 @@ $if(loginModal)$
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            <h1>Logga in</h1>
+            <h1>$_loginModalLogIn()$</h1>
           </span>
           <a class="modal-close close"> </a>
         </div>
@@ -856,8 +800,8 @@ $if(loginModal)$
             <div class="body">
               <div class="wrapper" style="text-align:right">
                 <input type="hidden" name="referer" value="$referer$" />
-                <span class="txt">E-post</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-                <span class="txt">Lösenord</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
+                <span class="txt">$_loginModalEmail()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+                <span class="txt">$_loginModalPassword()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -865,13 +809,13 @@ $if(loginModal)$
         </div>
         <div class="modal-footer">
           <div class="float-left">
-            <a class="close cancel">Avbryt</a>
-            <a href="#" class="txt-link message">Glömt lösenord</a>
+            <a class="close cancel">$_loginModalFooterCancel()$</a>
+            <a href="#" class="txt-link message">$_loginModalFooterForgotPassword()$</a>
           </div>
           <a href="#" class="btn-small blue float-right submit">
             <div class="left"></div>
             <div class="label">
-              <p>Logga in</p>
+              <p>$_loginModalFooterLogIn()$</p>
             </div>
             <div class="right"></div>
           </a>
@@ -886,7 +830,7 @@ $if(loginModal)$
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            <h1>Glömt lösenord</h1>
+            <h1>$_loginModalForgotPasswordForgotPassword()$</h1>
           </span>
           <a class="modal-close close"> </a>
         </div>
@@ -894,7 +838,7 @@ $if(loginModal)$
           <div class="modal-content"> 
             <div class="body">
               <div class="wrapper">
-                <span class="txt">E-post</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
+                <span class="txt">$_loginModalForgotPasswordEmail()$</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -902,13 +846,13 @@ $if(loginModal)$
         </div>  
         <div class="modal-footer">
           <div class="float-left">
-            <a class="close cancel">Avbryt</a>
-            <a href="#" class="txt-link message">Logga in</a>
+            <a class="close cancel">$_loginModalForgotPasswordFooterCancel()$</a>
+            <a href="#" class="txt-link message">$_loginModalForgotPasswordFooterLogIn()$</a>
           </div>
           <a href="#" class="btn-small green float-right submit">
             <div class="left"></div>
             <div class="label">
-              <p>Skicka nytt lösenord</p>
+              <p>$_loginModalForgotPasswordSendNewPassword()$</p>
             </div>
             <div class="right"></div>
           </a>
@@ -926,8 +870,8 @@ loginModalPart=
     <div class="body">
       <div class="wrapper" style="text-align:right">
         <input type="hidden" name="referer" value="$referer$" />
-        <span class="txt">E-post</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-        <span class="txt">Lösenord</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
+        <span class="txt">$_loginModalPartEmail()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+        <span class="txt">$_loginModalPartPassword()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
         <input type="submit" class="hidden" />
       </div>
     </div>
@@ -941,7 +885,7 @@ modalNewPasswordView=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-        <h1>Nytt Lösenord</h1>
+        <h1>$_modalNewPasswordViewHeader()$</h1>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -950,10 +894,10 @@ modalNewPasswordView=
         <div class="recovery-container">
           <div class="body">
             <div class="wrapper" style="text-align: right;">
-              <span class="txt">Nytt lösenord:</span>
+              <span class="txt">$_modalNewPasswordViewNewPassword()$</span>
               <input type="password" name="password" autocomplete="off" />
               <BR/> 
-              <span class="txt">Upprepa lösenord:</span>
+              <span class="txt">$_modalNewPasswordViewRepeatPassword()$</span>
               <input type="password" name="password2" autocomplete="off" />
               <BR/>
               <input type="submit" class="hidden"/>
@@ -964,12 +908,12 @@ modalNewPasswordView=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">Avbryt</a>
+        <a class="close cancel">$_modalNewPasswordViewFooterCancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>Spara</p>
+          <p>$_modalNewPasswordViewFooterSave()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -987,7 +931,7 @@ modalInviteUserAsSubaccount=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-	    <h1>Skicka förfrågan?</h1>
+	    <h1>$_modalInviteUserAsSubaccountHeaderSendRequest()$</h1>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -995,26 +939,20 @@ modalInviteUserAsSubaccount=
       <div class="modal-content"> 
 	    <div class="recovery-container">
 	      <div class="body">
-	        <p>Skicka en förfrågan till användaren att bli ett underkonto
-	          under ditt konto. Det betyder att du blir
-	          huvudkonto och kommer att ta över ägarskapet över samtliga underkontots dokument. 
-	        </p>
-	        <p>
-	          Är du säker att du vill skicka förfrågan till användaren att bli
-	          underkonto?
-	        </p>
+	        <p>$_modalInviteUserAsSubaccountBodySendRequest()$</p>
+	        <p>$_modalInviteUserAsSubaccountBodySendSure()$</p>
 	      </div>
 	    </div>
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-	    <a class="close cancel">Avbryt</a>
+	    <a class="close cancel">$_modalInviteUserAsSubaccountFooterCancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
 	    <div class="left"></div>
 	    <div class="label">
-	      <p>Skicka förfrågan</p>
+	      <p>$_modalInviteUserAsSubaccountFooterSendRequest()$</p>
 	    </div>
 	    <div class="right"></div>
       </a>
@@ -1029,7 +967,7 @@ modalDoYouWantToBeSubaccount=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-	    <h1>Vill du acceptera att bli underkonto?</h1>
+	    <h1>$_modalDoYouWantToBeSubaccountHeader()$</h1>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -1037,23 +975,19 @@ modalDoYouWantToBeSubaccount=
       <div class="modal-content"> 
 	    <div class="recovery-container">
 	      <div class="body">
-	        <p>Om du accepterar blir du underkonto till huvudkontot
-	          $supervisor.fullnamePlusEmail$ och huvudkontot tar över
-	          ägarskapet över samtliga dokument i ditt konto.  Är du
-	          säker att du vill acceptera?
-	        </p>
+	        <p>$_modalDoYouWantToBeSubaccountBody()$</p>
 	      </div>
 	    </div>
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-	    <a class="close cancel">Avbryt</a>
+	    <a class="close cancel">$_modalDoYouWantToBeSubaccountFooterCancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
 	    <div class="left"></div>
 	    <div class="label">
-	      <p>Acceptera</p>
+	      <p>$_modalDoYouWantToBeSubaccountFooterAccept()$</p>
 	    </div>
 	    <div class="right"></div>
       </a>
@@ -1067,20 +1001,20 @@ modalError=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Oops, ett fel har uppstått</h3>
+      <h3>$_modalErrorHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Oroa dig inte, vi tittar på problemet</p>
+      <p>$_modalErrorBody()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Ok</p>
+        <p>$_modalErrorFooterOk()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -1093,16 +1027,15 @@ signCanceledDataMismatchModal=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Felaktiga personuppgifter</h3>
+      <h3>$_signCanceledDataMismatchModalHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
-      <p>Avtalsprocessen är därför bruten, var vänliga invänta <br/> 
-        en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
-      <p><strong>Felrapport:</strong></p>
+      <p>$_signCanceledDataMismatchModalBodySorry()$</p>
+      <p>$_signCanceledDataMismatchModalBodyAborted()$</p>
+      <p><strong>$_signCanceledDataMismatchModalErrorReport()$</strong></p>
       $message:noescape()$
     </div>
   </div>
@@ -1110,7 +1043,7 @@ signCanceledDataMismatchModal=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Ok</p>
+        <p>$_signCanceledDataMismatchModalFooterOk()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -1123,20 +1056,20 @@ signAwaitingAuthorLast=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Dokumentet har undertecknats</h3>
+      <h3>$_signAwaitingAuthorLastHeader()$</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>Alla parter har nu undertecknat och dokumentet är bindande.</p>
+      <p>$_signAwaitingAuthorLastBody()$</p>
     </div>
   </div>
   <div class="modal-footer">
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>Ok</p>
+        <p>$_signAwaitingAuthorLastFooterOk()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>

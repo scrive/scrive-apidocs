@@ -115,10 +115,10 @@ function doSign1(tbs, posturl) {
     if (signer.Sign() == 0) {
 	  return unescape(signer.GetSignature());
     } else {
-      failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; " + signer.GetErrorString());      
+      failEleg( localization.yourSigningPluginFailed + " " + signer.GetErrorString());      
     }
   } else {
-    failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
+    failEleg( localization.yourSigningPluginFailed);
   }
   return null;
 }
@@ -135,10 +135,10 @@ function doSign2 (tbs, nonce, servertime) {
     if (res == 0) {
 	  return signer2.GetParam('Signature');
     } else {
-      failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; error code: " + res);
+      failEleg( localization.yourSigningPluginFailed + " error code: " + res);
     }
   } else {
-    failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
+    failEleg( localization.yourSigningPluginFailed);
   }
   return null;
 }
@@ -155,10 +155,10 @@ function doSignNetID (tbs, nonce, servertime) {
     if (res == 0) {
 	  return signer.GetProperty('Signature');
     } else {
-      failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; error code: " + res);
+      failEleg( localization.yourSigningPluginFailed + " error code: " + res);
     }
   } else {
-    failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
+    failEleg( localization.yourSigningPluginFailed);
   }
   return null;
 }
@@ -211,7 +211,7 @@ function sign1() {
   if(!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/s/nordea" + url;
   var posturl = "/s" + url;
@@ -224,7 +224,7 @@ function sign2() {
   if(!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/s/bankid" + url;
   var posturl = "/s" + url;
@@ -237,7 +237,7 @@ function netIDSign() {
   if(!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/s/telia" + url;
   var posturl = "/s" + url;
@@ -251,7 +251,7 @@ function sign1AwaitingAuthor() {
   if(!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/nordea" + url;
   var posturl = "/d" + url;
@@ -264,7 +264,7 @@ function sign2AwaitingAuthor() {
   if(!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/bankid" + url;
   var posturl = "/d" + url;
@@ -277,7 +277,7 @@ function netIDSignAwaitingAuthor() {
   if(!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/telia" + url;
   var posturl = "/d" + url;
@@ -291,7 +291,7 @@ function sign1Author() {
   if(!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/nordea" + url;
   var posturl = "/d" + url;
@@ -304,7 +304,7 @@ function sign2Author() {
   if(!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/bankid" + url;
   var posturl = "/d" + url;
@@ -317,7 +317,7 @@ function netIDSignAuthor() {
   if(!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
     return false;
   }
-  displayLoadingOverlay("Inleder säker signering . . .");
+  displayLoadingOverlay(localization.startingSaveSigning );
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/telia" + url;
   var posturl = "/d" + url;
@@ -328,15 +328,15 @@ function netIDSignAuthor() {
 
 
 function flashNordeaMessage() {
-  addFlashMessage("Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank.", "red");
+  addFlashMessage(localization.noNordeaInstalled , "red");
 }
 
 function flashBankIDMessage() {
-  addFlashMessage("Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken.", "red");
+  addFlashMessage(localization.noBankIdInstalled , "red");
 }
 
 function flashTeliaMessage() {
-  addFlashMessage("Du har inte Telias e-legitimation installerad.", "red");
+  addFlashMessage(localization.noTeliaInstalled , "red");
 }
 
 function failEleg(msg) {
@@ -416,10 +416,10 @@ function getSignatoryData() {
 }
 
 function generateTBS(doctitle, docid, signatories) {
-  var text = 'Du undertecknar "' + doctitle + '" med transaktionsnummer "' + docid + '". Undertecknande parter är:';
+  var text = localization.tbsGenerationMessage(doctitle, docid);
 
   if($("a.group").size() > 0) {
-    text = text + "\n   Various signatories.";
+    text = text + "\n " + localization.differentSignatories ;
   } else {
     $(signatories).each(function() {
       text = text + "\n" + this.fname + " " + this.lname + ", " + this.num;
@@ -465,7 +465,7 @@ function ajaxRequest(ajaxurl, posturl, formselector, successfn, tbs) {
 
 function postBack(sig, provider, formselector, transactionid, posturl) {
   if(sig) {
-    displayLoadingOverlay("Verifierar signatur...");
+    displayLoadingOverlay(localization.verifyingSignature);
 	var form = $(formselector);
     form.find("#signauto").attr("name", "dontsign");
 	form.find("#signatureinput").val(sig);
