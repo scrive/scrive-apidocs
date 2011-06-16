@@ -1696,9 +1696,7 @@ handleIssueBulkRemind doctype = do
     ctx@(Context { ctxtemplates, ctxmaybeuser = Just user }) <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
-    Log.debug $ "doc ids are " ++ (show ids)
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
-    Log.debug $ " reminded " ++ (show $ length remindedsiglinks)
     case (length remindedsiglinks) of
       0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates doctype)
       _ -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates doctype)
