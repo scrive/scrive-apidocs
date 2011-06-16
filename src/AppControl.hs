@@ -144,7 +144,7 @@ handleRoutes = msum [
      , dir "kunder"          $ hGetAllowHttp $ handleClientsPage                
        
      -- this is SMTP to HTTP gateway  
-     , dir "mailapi" $ handleMailAPI
+     , dir "mailapi" $ mailAPI
 
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
