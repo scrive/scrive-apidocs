@@ -1285,6 +1285,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   placedfieldids <- getAndConcat "placedfieldid"
 
   authorrole <- getFieldWithDefault "" "authorrole"
+  authorsignorder <- (SignOrder . fromIntegral . fromMaybe 1) <$> getDefaultedField 1 asValidNumber "authorsignorder"
   
   currentuser <- maybe mzero return $ ctxmaybeuser ctx
   docfunctionality <- getCriticalField (asValidDocumentFunctionality currentuser documentfunctionality) "docfunctionality"
@@ -1320,7 +1321,8 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
       authoraccount = getSignatoryAccount authorsiglink
-  let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 } -- author has sign order set to 0 since he is 'the host' of the document
+  let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
+  Log.debug $ "set author sign order to " ++ (show authorsignorder)
                         
   let isauthorsig = authorrole == "signatory"
       signatories2 = zip signatories roles2

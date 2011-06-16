@@ -127,7 +127,7 @@ pageDocumentDesign=
                     <a href="#man2" class="man"></a>
                     $endif$
                     <a href="#" class="signingOrder"></a>
-                    <select id="authorsignorder" class="float-right">
+                    <select id="authorsignorder" name="authorsignorder" class="float-right">
                       <option value="1">1</option>
                       <option value=""></option>
                     </select>
