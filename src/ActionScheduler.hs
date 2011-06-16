@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 {-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
+=======
+{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
+>>>>>>> staging
 
 module ActionScheduler (
       ActionScheduler
@@ -96,9 +100,10 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                     email = useremail uinfo
                     fullname = userfullname user
                 (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
-                let mailfunc = case mdoc of
-                      (Just doc) | isOffer doc -> mailAccountCreatedBySigningOfferReminder
-                      _ -> mailAccountCreatedBySigningContractReminder
+                let mailfunc = case documenttype <$> mdoc of
+                      (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
+                      (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
+                      -- | TODO - so other option for order | THIS WILL GIVE A WARNING TILL IT IS FIXED
                 mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
             let new_atype = (actionType action) { acbsState = ReminderSent }

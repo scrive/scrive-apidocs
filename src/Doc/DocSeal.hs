@@ -197,16 +197,22 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       fields = concatMap (fieldsFromSignatory . signatorydetails) (documentsignatorylinks document)
     
   in do    
+      Log.debug "Creating seal spec from file."
       events <- fmap concat $ sequence $ 
                     (map makeHistoryEntryFromSignatory signatories) ++
                     [invitationSentEntry] ++
                     [lastHistEntry]
+      Log.debug ("events created: " ++ show events)
       -- here we use Data.List.sort that is *stable*, so it puts
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
+      Log.debug ("about to render staticTexts")
       staticTexts <- renderTemplateForProcess templates document processsealingtext $ do
                         documentInfoFields document
                         field "hostpart" hostpart
+      Log.debug ("finished staticTexts: " ++ show staticTexts)
+      let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
+      Log.debug ("read texts: " ++ show readtexts)
       return $ Seal.SealSpec 
             { Seal.input          = inputpath
             , Seal.output         = outputpath
@@ -217,7 +223,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.fields         = fields
-            , Seal.staticTexts    = read staticTexts -- this should never fail since we control templates
+            , Seal.staticTexts    = readtexts
             }
 
 sealDocument :: Context 
@@ -260,15 +266,19 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-  let tmpin = tmppath ++ "/input.pdf"
-  let tmpout = tmppath ++ "/output.pdf"
-  content <- getFileContents ctx file
-  BS.writeFile tmpin content
-  config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
-  Log.debug $ show config
-  (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-  Log.debug $ "Sealing completed with " ++ show code
-  case code of
+    Log.debug ("sealing: " ++ show fileid)
+    let tmpin = tmppath ++ "/input.pdf"
+    let tmpout = tmppath ++ "/output.pdf"
+    content <- getFileContents ctx file
+    Log.debug ("got file contents: " ++ show (BS.length content))
+    BS.writeFile tmpin content
+    Log.debug ("wrote file : " ++ tmppath) 
+    config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
+    Log.debug (show config)
+    Log.debug $ show config
+    (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+    Log.debug $ "Sealing completed with " ++ show code
+    case code of
       ExitSuccess -> 
           do
               newfilepdf1 <- BS.readFile tmpout
