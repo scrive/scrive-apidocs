@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 {-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
-=======
-{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
->>>>>>> staging
 
 module ActionScheduler (
       ActionScheduler
