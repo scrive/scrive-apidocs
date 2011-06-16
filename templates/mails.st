@@ -116,7 +116,7 @@ mailInvitationToSignContractContent=
     <p>
      <i>Översiktlig information</i><br/>
      Parter: $partnersinfo:noescape()$<br/>
-     $whohadsignedcontractinfo:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
      Avsändare: <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -146,7 +146,7 @@ mailInvitationToSignOfferContent=
     <p>
      <i>Översiktlig information</i><br/>
      Parter: $partnersinfo:noescape()$<br/>
-     $whohadsignedofferinfo:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
      Avsändare: <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -175,7 +175,7 @@ mailInvitationToSignOrderContent=
     <p>
      <i>Översiktlig information</i><br/>
      Parter: $partnersinfo:noescape()$<br/>
-     $whohadsignedorderinfo:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
      Avsändare: <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -275,7 +275,7 @@ remindMailNotSignedContractContent=
     <span>
       <p><i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $whohadsignedcontractinfo:noescape()$<br/> 
+        $whohadsignedinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
@@ -297,7 +297,7 @@ remindMailNotSignedOfferContent=
       <p>
         <i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $whohadsignedofferinfo:noescape()$<br/>
+        $whohadsignedinfo:noescape()$<br/>
         Avsändare: <strong>$creatorname$</strong><br/>
         $timetosigninfo:noescape()$
         $appendixList()$
@@ -319,7 +319,7 @@ remindMailNotSignedOrderContent=
     <span>
       <p><i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $whohadsignedorderinfo:noescape()$<br/> 
+        $whohadsignedinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
@@ -564,18 +564,14 @@ whohadsignedcontractinfoformail=
     Har undertecknat: $noonehadsignedtext()$
     $endif$
 ####
-whohadsignedorderinfoformail=
-    $if(signedlist)$
-    Har accepterat: $signedlist:noescape()$
-    $else$
-    Har accepterat: $noonehadsignedtext()$
-    $endif$
-####
 whohadsignedofferinfoformail=
     $if(signedlist)$
+    Har accepterat: $signedlist:noescape()$
+    $endif$
+####
+whohadsignedorderinfoformail=
+    $if(signedlist)$
     Har bekräftat: $signedlist:noescape()$
-    $else$
-    Har bekräftat: $noonehadsignedtext()$
     $endif$
 ####
 whohadsignedinfoforpreview=
