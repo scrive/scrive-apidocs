@@ -121,7 +121,8 @@ function countSentOrOpenRows(selectedrows) {
    var notviewers = selectedrows.not(".viewer");
    return (notviewers.find(".sent").length
                + notviewers.find(".read").length
-               + notviewers.find(".opened").length);
+               + notviewers.find(".opened").length
+               + notviewers.find(".delivered").length);
 }
 
 /*
