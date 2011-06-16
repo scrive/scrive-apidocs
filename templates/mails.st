@@ -301,7 +301,6 @@ remindMailNotSignedOfferContent=
         Avsändare: <strong>$creatorname$</strong><br/>
         $timetosigninfo:noescape()$
         $appendixList()$
-        $sigattachlist()$
       </p>
       <p>
         1. Klicka på länken<br/>

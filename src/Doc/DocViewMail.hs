@@ -129,6 +129,8 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
           field "creatorname"  creatorname
           field "documenttitle" $ BS.toString $ documenttitle document
           field "link" $ link      
+          field "isattachments" $ length (documentauthorattachments document) > 0
+          field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
 
 remindMailSignedContent :: KontrakcjaTemplates 
                         -> (Maybe BS.ByteString) 
