@@ -284,19 +284,19 @@ function docstateToHTML(){
     return this.email === author.email;
   }).size() > 0;
   if(!authorIsInSiglist) {
-	placePlacements(author.fstnameplacements, "Förnamn", author.fstname, "author", "fstname");
-    placePlacements(author.sndnameplacements, "Efternamn", author.sndname, "author", "sndname");
-	placePlacements(author.emailplacements, "Personens e-mail", author.email, "author", "email");
-	placePlacements(author.companyplacements, "Företag", author.company, "author", "sigco");
-	placePlacements(author.personalnumberplacements, "Pers. nr", author.personalnumber, "author", "sigpersnr");
-    placePlacements(author.companynumberplacements, "Org. nr", author.companynumber, "author", "sigcompnr");
+	placePlacements(author.fstnameplacements, localization.fstname, author.fstname, "author", "fstname");
+    placePlacements(author.sndnameplacements, localization.sndname, author.sndname, "author", "sndname");
+	placePlacements(author.emailplacements, localization.niceEmail, author.email, "author", "email");
+	placePlacements(author.companyplacements, localization.company, author.company, "author", "sigco");
+	placePlacements(author.personalnumberplacements, localization.personamNumber, author.personalnumber, "author", "sigpersnr");
+    placePlacements(author.companynumberplacements, localization.companyNumber, author.companynumber, "author", "sigcompnr");
 
 
     if(author.companyplacements.length > 0 || author.company != ""){
                         var val = author.company;
                         var c = "";
                         if(val === ""){
-                                val =  "Företag";
+                                val =   localization.company;
                                 c = "grayed";
                               }
                         $(".signViewBodyRight.author").find(".signatoryfields").append(
@@ -309,7 +309,7 @@ function docstateToHTML(){
                         var val = author.personalnumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Pers. nr";
+                                val =  localization.personamNumber;
                                 c = "grayed";
                               }
                         $(".signViewBodyRight.author").find(".signatoryfields").append(
@@ -322,7 +322,7 @@ function docstateToHTML(){
                         var val = author.companynumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Org. nr";
+                                val =  localization.companyNumber;
                                 c = "grayed";
                               }
                         $(".signViewBodyRight.author").find(".signatoryfields").append(
@@ -359,12 +359,12 @@ function docstateToHTML(){
 		cc = true;
 	    }
 
-	    placePlacements(this.fstnameplacements, "Förnamn", this.fstname, s.id, "fstname");
-        placePlacements(this.sndnameplacements, "Efternamn", this.sndname, s.id, "sndname");
-	    placePlacements(this.emailplacements, "Personens e-mail", this.email, s.id, "email");
-	    placePlacements(this.companyplacements, "Företag", this.company, s.id, "sigco");
-	    placePlacements(this.personalnumberplacements, "Pers. nr", this.personalnumber, s.id, "sigpersnr");
-            placePlacements(this.companynumberplacements, "Org. nr", this.companynumber, s.id, "sigcompnr");
+	    placePlacements(this.fstnameplacements,  localization.fstname, this.fstname, s.id, "fstname");
+        placePlacements(this.sndnameplacements,  localization.sndname, this.sndname, s.id, "sndname");
+	    placePlacements(this.emailplacements, localization.niceEmail, this.email, s.id, "email");
+	    placePlacements(this.companyplacements, localization.company, this.company, s.id, "sigco");
+	    placePlacements(this.personalnumberplacements, localization.personamNumber, this.personalnumber, s.id, "sigpersnr");
+            placePlacements(this.companynumberplacements,  localization.companyNumber, this.companynumber, s.id, "sigcompnr");
 
 	  if(!cc){
         $(".signViewBodyRight").each(function() {
@@ -373,7 +373,7 @@ function docstateToHTML(){
                         var val = s.company;
                         var c = "";
                         if(val === ""){
-                                val =  "Företag";
+                                val =  localization.company;
                                 c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
@@ -386,7 +386,7 @@ function docstateToHTML(){
                         var val = s.personalnumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Pers. nr";
+                                val =  localization.personamNumber;
                                 c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
@@ -399,7 +399,7 @@ function docstateToHTML(){
                         var val = s.companynumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Org. nr";
+                                val =  localization.companyNumber;
                                 c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
@@ -440,7 +440,7 @@ function docstateToHTML(){
                         var val = currentsig.company;
                         var c = "";
                         if(val === ""){
-                                val =  "Företag";
+                                val =  localization.company;
                                 c = "grayed";
                               }
                         currentsigdiv.find(".signatoryfields").append(
@@ -449,7 +449,7 @@ function docstateToHTML(){
                             "</div>");
 
     } else if(currentsig.companyplacements.length > 0) {
-	var cfield = buildField("Företag", currentsig.company, "sig");
+	var cfield = buildField(localization.company, currentsig.company, "sig");
 	setFieldID(cfield, "sigco");
 	setSigID(cfield, currentsig.id);
 	setHiddenField(cfield, "fieldname", "sigco");
@@ -462,7 +462,7 @@ function docstateToHTML(){
                               var val = currentsig.personalnumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Pers. nr";
+                                val =  localization.personamNumber;
                                 c = "grayed";
                               }
                         currentsigdiv.find(".signatoryfields").append(
@@ -471,7 +471,7 @@ function docstateToHTML(){
                             "</div>");
 
     } else if(currentsig.personalnumberplacements.length > 0) {
-        var cfield = buildField("Pers. nr", currentsig.company, "sig");
+        var cfield = buildField(localization.personamNumber, currentsig.company, "sig");
         setFieldID(cfield, "sigpersnr");
         setSigID(cfield, currentsig.id);
         setHiddenField(cfield, "fieldname", "sigpersnr");
@@ -484,7 +484,7 @@ function docstateToHTML(){
                         var val = currentsig.companynumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Org. nr";
+                                val =  localization.companyNumber;
                                 c = "grayed";
                               }
                         currentsigdiv.find(".signatoryfields").append(
@@ -493,7 +493,7 @@ function docstateToHTML(){
                             "</div>");
 
     }else if(currentsig.companynumberplacements.length > 0) {
-	var nfield = buildField("Org. nr", currentsig.number, "sig");
+	var nfield = buildField(localization.companyNumber, currentsig.number, "sig");
 	setFieldID(nfield, "sigcompnr");
 	setSigID(nfield, currentsig.id);
 	setHiddenField(nfield, "fieldname", "sigcompnr");

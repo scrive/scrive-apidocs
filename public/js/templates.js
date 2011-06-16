@@ -981,7 +981,7 @@ safeReady(function() {
     var plus = $(this);
     var persondetails = plus.parents('.persondetails');
     var otherfields = persondetails.find('.otherfields');
-    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='Namnge fältet' /><a href='#' class='minusIcon icon small remove'></a><a href='#' class='okIcon icon small ok'></a></div>");
+    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='"+localization.fieldName+"' /><a href='#' class='minusIcon icon small remove'></a><a href='#' class='okIcon icon small ok'></a></div>");
 
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);
@@ -1282,12 +1282,12 @@ safeReady(function() {
 function placePlacementsOfSignatories(signatories) {
   $(signatories).each(function(){
     var sig = this;
-    placePlacements(sig.fstnameplacements, "Förnamn", sig.fstname, sig.id, "fstname");
-    placePlacements(sig.sndnameplacements, "Efternamn", sig.sndname, sig.id, "sndname");
-    placePlacements(sig.companyplacements, "Företag", sig.company, sig.id, "company");
-    placePlacements(sig.personalnumberplacements, "Persnr", sig.personalnumber, sig.id, "personalnumber");
-    placePlacements(sig.companynumberplacements, "Orgnr", sig.companynumber, sig.id, "companynumber");
-    placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
+    placePlacements(sig.fstnameplacements,  localization.fstname, sig.fstname, sig.id, "fstname");
+    placePlacements(sig.sndnameplacements, localization.sndname, sig.sndname, sig.id, "sndname");
+    placePlacements(sig.companyplacements, localization.company , sig.company, sig.id, "company");
+    placePlacements(sig.personalnumberplacements, localization.personamNumber, sig.personalnumber, sig.id, "personalnumber");
+    placePlacements(sig.companynumberplacements, localization.companyNumber, sig.companynumber, sig.id, "companynumber");
+    placePlacements(sig.emailplacements, localization.niceEmail, sig.email, sig.id, "email");
     $(sig.otherfields).each(function(){
       var fd = this;
       placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
@@ -1561,7 +1561,7 @@ safeReady(function() {
         .append($("<td />").append($('<a href="#" class="minus">  </a>')))
         .append($("<td />").append($('<input type="text" name="sigattachname" >')))
         .append($("<td />").append($('<textarea name="sigattachdesc" >')))
-        .append($("<td />").append($('<select class="signatoryselector"><option selected>Mottagare</option></select>')
+        .append($("<td />").append($('<select class="signatoryselector"><option selected>'+localization.offerSignatory+'</option></select>')
                                    .append(sigoptions)))
         .append($("<td />").append($("<span class='selectedsigspan' />")
                                    .append($('<ul class="selectedsigs" />'))
@@ -1572,7 +1572,7 @@ safeReady(function() {
   $("select.signatoryselector").live('change', function() {
     var sel = $(this);
     var opt = sel.find("option:selected");
-    if(opt.text() !== "Mottagare") {
+    if(opt.text() !== localization.offerSignatory) {
       //console.log(opt);
       var inp = sel.parents("tr").find("input[name='sigattachemails']");
       var newemail = opt.val();

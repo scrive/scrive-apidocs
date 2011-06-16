@@ -46,5 +46,11 @@ javascriptLocalisation =
             , companyposition : "Befattning"
             , phone : "Telefonnummer"
             , email : "Email"
+            , niceEmail : "Personens e-mail"
+            , company : "Företag"
+            , personamNumber : "Pers. nr"
+            , companyNumber : "Org. nr"
+            , loadingTweets : "Laddar tweets.."
+            , fieldName : "Namnge fältet"
    }
 ####

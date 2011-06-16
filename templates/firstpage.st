@@ -22,6 +22,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 type="text/javascript"></script>
                <script src="$prefix$/tiny_mce/jquery.tinymce.js"  
                 type="text/javascript"></script>
+               <script type="text/javascript">
+                $javascriptLocalisation()$</script>
                <script src="$prefix$/js/global.js"
                 type="text/javascript"></script>
                 <script src="/js/jquery.tweet.js" type="text/javascript"></script>

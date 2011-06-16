@@ -128,7 +128,7 @@ $(document).ready( function() {
 	  setTimeout(function(){tweetelems.tweet({
 	        username: 'skrivapa',
 	        count: 3,
-	        loading_text: 'Laddar tweets..'
+	        loading_text: localization .loadingTweets
 	  });},1000);
         }
 	
