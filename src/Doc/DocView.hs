@@ -1140,33 +1140,31 @@ designViewFields step = do
         _ -> False
 
 
-uploadPage :: Context -> ListParams -> (Maybe DocumentType) -> Bool -> IO String
-uploadPage ctx params mdoctype showTemplates = renderTemplate (ctxtemplates ctx) "uploadPage" $ do
-    field "isprocessselected" $ isJust mdoctype
-    field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdoctype
+uploadPage :: Context -> ListParams -> (Maybe DocumentProcess) -> Bool -> IO String
+uploadPage ctx params mdocprocess showTemplates = renderTemplate (ctxtemplates ctx) "uploadPage" $ do
+    field "isprocessselected" $ isJust mdocprocess
+    field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdocprocess
     field "showTemplates" showTemplates
-    field "processes" $ map processFields [Signable Contract, Signable Offer, Signable Order]
-    case mdoctype of
-      Just selectedoctype -> do
-        field "selectedprocess" $ processFields selectedoctype
+    field "processes" $ map processFields [Contract,Offer,Order]
+    case mdocprocess of
+      Just selecteprocess -> do
+        field "selectedprocess" $ processFields selecteprocess
       _ -> return ()
     where
-      processFields doctype@(Signable process) = do
+      processFields process = do
         field "id" $ show process
-        field "selected" $ (Just doctype) == mdoctype
-        field "name" $ renderTextForProcess (ctxtemplates ctx) doctype processuploadname
-        field "uploadprompttext" $ renderTextForProcess (ctxtemplates ctx) doctype processuploadprompttext
-      processFields _ = return ()
+        field "selected" $ (Just process == mdocprocess)
+        field "name" $ renderTextForProcess (ctxtemplates ctx) (Signable process) processuploadname
+        field "uploadprompttext" $ renderTextForProcess (ctxtemplates ctx) (Signable process) processuploadprompttext
+
        
 
-templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentType -> PagedList Document -> IO String
-templatesForAjax templates ctime user doctype doctemplates = 
+templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentProcess -> PagedList Document -> IO String
+templatesForAjax templates ctime user docprocess doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
         field "documents" $ markParity $ map (documentBasicViewFields templates ctime user) (list doctemplates)
-        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)  True
-        field "processid" $
-          let Signable process = doctype in
-          show process
+        field "currentlink" $ show $ LinkNew (Just docprocess) (params doctemplates)  True
+        field "processid" $ show docprocess
         pagedListFields doctemplates
     
 -- We keep this javascript code generation for now

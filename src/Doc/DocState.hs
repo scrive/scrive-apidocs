@@ -2,9 +2,6 @@
 module Doc.DocState 
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
-    , isContract -- fromUtils
-    , isOffer -- fromUtils
-    , matchingType -- fromUtils
     , signatoryname -- fromUtils
     , SignatoryAccount -- fromUtils
     , getSignatoryAccount -- fromUtils

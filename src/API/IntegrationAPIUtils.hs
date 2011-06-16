@@ -111,10 +111,11 @@ toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = Template Offer
 -} 
 api_document_type::Document ->  DOCUMENT_TYPE
 api_document_type doc   
-    | isTemplate doc && isContract doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    | isTemplate doc && isOffer doc = DOCUMENT_TYPE_OFFER_TEMPLATE
-    | isContract doc = DOCUMENT_TYPE_CONTRACT
-    | otherwise  = DOCUMENT_TYPE_OFFER 
+    | Template Contract == documenttype doc  = DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    | Template Offer == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
+    | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
+    | Signable Offer == documenttype doc = DOCUMENT_TYPE_OFFER
+    | otherwise = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
     
     
 api_document_status::Document -> DOCUMENT_STATUS 

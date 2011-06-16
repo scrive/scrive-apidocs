@@ -1543,9 +1543,9 @@ basename filename =
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
     input <- getDataFnM (lookInput "doc")
-    mdoctype <- getDocType
-    let doctype = fromMaybe (Signable Contract) mdoctype
-    mdoc <- makeDocumentFromFile doctype input
+    mdocprocess <- getDocProcess
+    let docprocess = fromMaybe (Contract) mdocprocess
+    mdoc <- makeDocumentFromFile (Signable docprocess) input
     liftIO $ print mdoc
     case mdoc of
       Nothing -> return LinkMain
@@ -1888,17 +1888,17 @@ mainPage =  do
                       ctx <- get
                       params <- getListParams
                       showTemplates <- isFieldSet "showTemplates"
-                      mdoctype <- getDocType
-                      liftIO $ uploadPage ctx params mdoctype showTemplates
+                      mdocprocess <- getDocProcess
+                      liftIO $ uploadPage ctx params mdocprocess showTemplates
 
-getDocType :: Kontra (Maybe DocumentType)
-getDocType = getOptionalField asDocType "doctype"
+getDocProcess :: Kontra (Maybe DocumentProcess)
+getDocProcess = getOptionalField asDocType "doctype"
   where
-    asDocType :: String -> Result DocumentType
+    asDocType :: String -> Result DocumentProcess
     asDocType val
-      | val == show Offer = Good $ Signable Offer
-      | val == show Contract = Good $ Signable Contract
-      | val == show Order = Good $ Signable Order
+      | val == show Offer = Good $ Offer
+      | val == show Contract = Good $ Contract
+      | val == show Order = Good $ Order
       | otherwise = Empty
 
 idmethodFromString :: String -> Maybe IdentificationType
@@ -1911,13 +1911,13 @@ getTemplatesForAjax::Kontra Response
 getTemplatesForAjax = do
     ctx <- get 
     params <- getListParams
-    mdoctype <- getDocType
-    case (ctxmaybeuser ctx,mdoctype) of
-            (Just user, Just doctype) -> do
-                let tfilter doc = isTemplate doc && (matchingType doctype $ documenttype doc)
+    mdocprocess <- getDocProcess 
+    case (ctxmaybeuser ctx,mdocprocess) of
+            (Just user, Just docprocess) -> do
+                let tfilter doc = (Template docprocess == documenttype doc)
                 documents <- liftIO $ query $ GetDocumentsByUser user
                 let templates = filter tfilter documents
-                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templates
+                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
             _ -> mzero
