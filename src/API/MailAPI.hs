@@ -1,4 +1,4 @@
-
+{-# OPTIONS_GHC -Werror #-}
 module API.MailAPI where
 
 
@@ -28,6 +28,7 @@ import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
 import qualified TrustWeaver as TW
 import qualified User.UserControl as UserControl
+import Control.Monad.Reader
 
 import Control.Concurrent
 import Control.Monad.Error
@@ -66,11 +67,54 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
+import API.API
+import API.IntegrationAPIUtils
+
+data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
+                                     , icontent :: BS.ByteString
+                                     , ifrom :: BS.ByteString
+                                     , ito :: BS.ByteString
+                                     }
+type MailAPIFunction a = APIFunction MailAPIContext a
+
+instance APIContext MailAPIContext where
+    body = ibody
+    newBody b ctx = ctx {ibody = b}
+    apiContext = apiContextForMail
+
+
+apiContextForMail :: Kontra (Either (API_ERROR,String) MailAPIContext)
+apiContextForMail = do
+    Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
+    content <- case contentspec of
+        Left filepath -> liftIO $ BSL.readFile filepath
+        Right content -> return content
+            
+    -- content at this point is basically full MIME email as it was received by SMTP server
+    -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
+    eresult <- parseEmailMessage (concatChunks content)
+    case eresult of
+      Left msg -> do
+        Log.debug $ "handleMailAPI: " ++ msg
+        return $ Left (API_ERROR_PARSING, "Cannot parse email API call: " ++ msg)
+      Right (json, pdf, from, to) -> do
+                        return $ Right $ MailAPIContext { ibody = json
+                                                        , icontent = pdf
+                                                        , ifrom = from
+                                                        , ito = to
+                                                        }
+
+mailAPI :: Kontra Response
+mailAPI = do
+    methodM POST 
+    apiResponse $ do
+              mcontext <- apiContext
+              case mcontext  of
+                  Right apicontext -> fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT handleMailCommand apicontext
+                  Left emsg -> return $ uncurry apiError emsg
 
 maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return 
-
-
 
 {- 
 
@@ -122,121 +166,70 @@ parseEmailMessage content = runErrorT $ do
   return (json,pdfBinary,from,to)
   
 
-handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
-handleMailCommand (JSObject json) content from to = runErrorT $ do
-  let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
-  -- 'extension' is a piece of data that is after + sign in email
-  -- addres. example: api+1234@api.skrivapa.se here '1234' is
-  -- extension and can be used as for example password
-  let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
+-- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
+-- handleMailCommand (JSObject json) content from to = runErrorT $ do
+handleMailCommand :: MailAPIFunction (JSObject JSValue)
+handleMailCommand = do
+    MailAPIContext { ifrom = from, ito = to, icontent = content } <- ask
+    let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
+    -- 'extension' is a piece of data that is after + sign in email
+    -- addres. example: api+1234@api.skrivapa.se here '1234' is
+    -- extension and can be used as for example password
+    let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
     
-  Context { ctxtime, ctxipnumber } <- lift get
-  maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-  (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
+    Context { ctxtime, ctxipnumber } <- askKontraContext
+    (maybeUser :: Maybe User) <- liftIO $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
+    (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
   
-  let title = case get_field json "title" of
-        Just (JSString x) -> BS.fromString (fromJSString x)
-        _ -> BS.fromString "Untitled document received by email"
-  let apikey = case get_field json "apikey" of
-        Just (JSString x) -> fromJSString x
-        _ -> extension
-      extractPerson :: (Monad m) => JSValue -> m SignatoryDetails
-      extractPerson (JSObject x) = do
-        (JSString email :: JSValue) <- maybeFail "'email' is required string field" $ get_field x "email" 
-        JSString firstName <- maybeFail "'firstName' is required string field" $ get_field x "firstName" 
-        JSString lastName <- maybeFail "'lastName' is required string field" $ get_field x "lastName" 
-        company <- case get_field x "company" of
-          Just (JSString v) -> return $ fromJSString v
-          _ -> return ""
-        personalNumber <- case get_field x "personalNumber" of
-          Just (JSString v) -> return $ fromJSString v
-          _ -> return ""
-        companyNumber <- case get_field x "companyNumber" of
-          Just (JSString v) -> return $ fromJSString v
-          _ -> return ""
-        return $ SignatoryDetails 
-                               { signatoryfstname = BS.fromString (fromJSString firstName)
-                               , signatorysndname = BS.fromString (fromJSString lastName)
-                               , signatorycompany = BS.fromString company
-                               , signatorypersonalnumber = BS.fromString personalNumber
-                               , signatorycompanynumber = BS.fromString companyNumber
-                               , signatoryemail = BS.fromString (fromJSString email)
-                               , signatoryfstnameplacements = []
-                               , signatorysndnameplacements = []
-                               , signatorycompanyplacements = []
-                               , signatoryemailplacements = []
-                               , signatorypersonalnumberplacements = []
-                               , signatorycompanynumberplacements = []
-                               , signatoryotherfields = []
-                               , signatorysignorder = SignOrder 1
-                               }
-      extractPerson _ = fail "'persons' is not a JavaScript object"
-      
-  case apikey of
-    "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
-    "998877665544332211" -> return ()
-    z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
+    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
 
-  let toStr = BS.toString to
-  doctype <- case get_field json "doctype" of
-        Just (JSString x) -> case fromJSString x of
-          "contract" -> return (Signable Contract)
-          "offer" -> return (Signable Offer)
-          "order" -> return (Signable Order)
-          z -> fail $ "Unsupported document type '" ++ z ++ "', should be one of ['contract', 'offer', 'order']"
-        _ -> if "contract" `isInfixOf` toStr
-             then return $ Signable Contract
-             else if "offer" `isInfixOf` toStr
-                  then return $ Signable Offer
-                  else if "order" `isInfixOf` toStr
-                       then return $ Signable Order
-                       else return $ Signable Contract
-
-      
-  JSArray personsField <- maybeFail "need to specify 'persons'" $ get_field json "persons"
+    apikey <- fromMaybe extension <$> (apiAskString "apikey")
   
-  (persons :: [SignatoryDetails]) <- mapM extractPerson personsField
-  let
-      signatories = map (\p -> (p,[SignatoryPartner])) persons
-      userDetails = signatoryDetailsFromUser user
+    case apikey of
+        "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
+        "998877665544332211" -> return ()
+        z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
+
+    let toStr = BS.toString to
+    mdoctype <- apiAskString "doctype"
+    doctype <- case mdoctype of
+        Just "contract" -> return (Signable Contract)
+        Just "offer" -> return (Signable Offer)
+        Just "order" -> return (Signable Order)
+        Just z -> fail $ "Unsupported document type '" ++ z ++ "', should be one of ['contract', 'offer', 'order']"
+        -- magic below defaults to (Signable Contract), but looks up first True in a list of options
+        _ -> return $ fromJust $ lookup True 
+             [ ("contract" `isInfixOf` toStr, Signable Contract)
+             , ("offer" `isInfixOf` toStr,    Signable Offer)
+             , ("order" `isInfixOf` toStr,    Signable Order)
+             , (True,                         Signable Contract)
+             ]
+
+    (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
+    let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
+  
+    let signatories = map (\p -> (p,[SignatoryPartner])) involved
+    let userDetails = signatoryDetailsFromUser user
         
-  doc <- lift $ update $ NewDocument user title doctype ctxtime
-  lift $ DocControl.handleDocumentUpload (documentid doc) content title
-  _ <- ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
-    signatories Nothing BS.empty (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user) [EmailIdentification] Nothing AdvancedFunctionality
+    (doc :: Document) <- lift $ update $ NewDocument user title doctype ctxtime
+    (_ :: ()) <- lift $ lift $ DocControl.handleDocumentUpload (documentid doc) content title
+    (_ :: Either String Document) <- lift $ update $ UpdateDocument ctxtime (documentid doc) title 
+                                     signatories Nothing BS.empty
+                                    (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user)
+                                    [EmailIdentification] Nothing AdvancedFunctionality
   
-  newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
-  lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
-  lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
-  return (documentid doc)
-handleMailCommand _ _ _ _ = return (Left ("needs JSON object as top level value"))
-  
-handleMailAPI :: Kontra Response
-handleMailAPI = do
-    Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
-    content <- case contentspec of
-        Left filepath -> liftIO $ BSL.readFile filepath
-        Right content -> return content
-            
-    -- content at this point is basically full MIME email as it was received by SMTP server
-    -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
-    eresult <- parseEmailMessage (concatChunks content)
-    case eresult of
-      Left msg -> do
-        Log.debug $ "handleMailAPI: " ++ msg
-        return $ toResponse msg
-      Right (json, pdf, from, to) -> do
-        result' <- handleMailCommand json pdf from to
-        case result' of
-          Right docid -> do
-            let rjson = makeObj [ ("status", JSString (toJSString "success"))
-                                , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))
-                                , ("documentid", JSString (toJSString (show docid)))
-                                ]
-            return $ toResponse $ showJSValue rjson []
-          Left msg -> do
-            Log.debug $ msg
-            let rjson = makeObj [ ("status", JSString (toJSString "error"))
-                                , ("message", JSString (toJSString msg))
-                                ]
-            return $ toResponse $ showJSValue rjson []
+    (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
+
+    (newdocument :: Document) <- case eithernewdocument of
+                                     Left errmsg -> return (error "zonk")
+                                     Right document -> return document
+
+    (_ :: ()) <- lift $ lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
+    (_ :: ()) <- lift $ lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
+    let docid = documentid doc
+    let (rjson :: JSObject JSValue) = toJSObject [ ("status", JSString (toJSString "success"))
+                                                 , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))
+                                                 , ("documentid", JSString (toJSString (show docid)))
+                                                 ]
+    return rjson
+

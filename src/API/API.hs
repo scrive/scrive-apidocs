@@ -32,6 +32,8 @@ module API.API(
      , askKontraContext
      -- Standard way of getting JSON request body
      , apiBody
+     , apiError
+     , apiResponse
      -- Errors 
      , throwApiError
      , API_ERROR(..)
