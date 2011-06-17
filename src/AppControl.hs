@@ -14,7 +14,10 @@ module AppControl
 
 import API.IntegrationAPI
 import API.Service.ServiceState
+import API.Service.ServiceControl
 import API.WebshopAPI
+import API.MailAPI
+
 import ActionSchedulerState
 import AppView as V
 import Crypto
@@ -60,9 +63,6 @@ import ListUtil
 import Network.Socket
 import System.Directory
 import System.Time
-import API.Service.ServiceControl
-import CoopAPI
-import API.MailAPI
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -307,7 +307,6 @@ handleRoutes = msum [
      , dir "s" $ param "eleg" $ hPost $ BankID.handleSignPostBankID
      , dir "d" $ hGet  $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
-     , coopAPI
      , webshopAPI
      , integrationAPI
      -- static files
