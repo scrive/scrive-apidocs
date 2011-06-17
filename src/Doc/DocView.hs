@@ -84,9 +84,7 @@ import MinutesTime
 import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
-import Util.HasEmail
-import Util.HasName
-
+import Util.HasSomeUserInfo
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader

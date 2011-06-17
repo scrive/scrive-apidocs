@@ -29,7 +29,7 @@ import Redirect
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
 import qualified AppLogger as Log
-import Util.HasName
+import Util.HasSomeUserInfo
 
 checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswordsMatch p1 p2 =
