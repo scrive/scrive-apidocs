@@ -2821,7 +2821,9 @@ getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignat
 instance Indexable Document where
         empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
                       , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory (documentsignatorylinks x)))) :: [Signatory])
-                              
+                      -- shouldn't be using emails really, need to start savings docs for users earlier
+                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails) (documentsignatorylinks x) :: [Email])
+                               
                       -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 
                       -- the scope of a single document! FIXME
                       , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])
