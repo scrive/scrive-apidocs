@@ -19,7 +19,7 @@ pageDocumentDesign=
         $endif$
         $docname()$
       </span>
-   </div>
+    </div>
     
     <div id="signStepsMenu" class="signStepsMenu">
       <div id="step1select">
@@ -108,9 +108,9 @@ pageDocumentDesign=
                 </div>
                 
                 <!--<div class="signStepsBodyAddField partCount">
-                         <span>Visa</span>
-                         <a href="">11-20</a>,
-                         <a href="">21-30</a>
+                    <span>Visa</span>
+                    <a href="">11-20</a>,
+                    <a href="">21-30</a>
                 </div>
                 -->
               </div>
@@ -122,19 +122,19 @@ pageDocumentDesign=
                 <!-- 008 change/new -->
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">PART 1</span>
-                    $if(!isbasic)$
-                    $if(!process.isauthorsend)$
-                    <a href="#man2" class="man"></a>
-                    $endif$
-                    <a href="#" class="signingOrder"></a>
-                    <select id="authorsignorder" name="authorsignorder" class="float-right">
-                      <option value="1">1</option>
-                      <option value=""></option>
-                    </select>
-                    $endif$
-                    $if(featureenabled)$
-                    <a class="plus" href="#"></a>
-                    $endif$
+                  $if(!isbasic)$
+                  $if(!process.isauthorsend)$
+                  <a href="#man2" class="man"></a>
+                  $endif$
+                  <a href="#" class="signingOrder"></a>
+                  <select id="authorsignorder" name="authorsignorder" class="float-right">
+                    <option value="1">1</option>
+                    <option value=""></option>
+                  </select>
+                  $endif$
+                  $if(featureenabled)$
+                  <a class="plus" href="#"></a>
+                  $endif$
                 </div>
                 
                 <!-- 013 changed -->
@@ -198,7 +198,7 @@ pageDocumentDesign=
                       $dragndropIcon()$
                     </span>
                     $endif$
-                     <div class="otherfields">
+                    <div class="otherfields">
                       $authorOtherFields:noescape()$
                     </div>
                   </span>
@@ -210,7 +210,7 @@ pageDocumentDesign=
                   </div>                  
                 </div>
               </span>
-
+              
             </div>
             
             <div id="signStepsBodyFunctions">
@@ -224,8 +224,8 @@ pageDocumentDesign=
                   <a href="#nextStep" id="nextstep" class="btn-small green center" style="display:inline-block">
                     <div class="left"></div>
                     <div class="label">
-                        <p style="display:inline-block;width:80px;">Nästa steg</p>
-                        <span class="btn-symbol green arrow-left"></span>
+                      <p style="display:inline-block;width:80px;">Nästa steg</p>
+                      <span class="btn-symbol green arrow-left"></span>
                     </div>
                     <div class="right"></div>
                   </a>  
@@ -252,53 +252,53 @@ pageDocumentDesign=
                          autocomplete="off"
                          value="$if(timetosignset)$on$else$off$endif$"
                          id="daystosigncheckbox" />
-                   <span class="hidden flashMessage">$process.expirywarntext$</span>
-                   <label for="daystosigncheckbox">Förfallodatum</label>
-                   <div id="datetosigncontainer">  </div>
-                 </div>
-                 $endif$
-                 <div class="signStepsBodyInvation" style="padding-top:4px;padding-bottom:9px;">
-                   <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">HÄLSNINGSMEDDELANDE</a></small>
-                   <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
-                 </div>
-                 $if(template)$
-                 <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                   <a class="btn-small green center submiter">
-                     <div class="left"></div>
-                     <div class="label">
-                        <span>Spara mall</span>
-                        <span class="btn-symbol green arrow-left"></span>
-                     </div>
-                     <div class="right"></div>
-                   </a>
-                 </div>
-                 $elseif(process.isauthorsend)$
-                 <input type="hidden" value="email" name="validationmethod" />
-                 <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
-                     <div class="left"></div>
-                     <div class="label" style="">
-                       <span>$process.sendbuttontext$</span>
-                       <span class="btn-symbol green arrow-left" ></span>
-                     </div> 
-                     <div class="right"></div>
-                   </a>
-                 </div>
-                 $else$
-                 <div class="signbutton" style="display:inline-block;">
-                   <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-small blue center">
-                     <div class="left"></div>
-                     <div class="label" style="width:134px;">
-                       <span style="padding-left:9px;padding-right:9px">SkrivaPå</span>
-                       <span class="btn-symbol cross"></span>
-                     </div> 
-                     <div class="right"></div>
-                   </a>
-                 </div>
-                 $endif$
-               </div>
-             $endif$
-             </div>
+                  <span class="hidden flashMessage">$process.expirywarntext$</span>
+                  <label for="daystosigncheckbox">Förfallodatum</label>
+                  <div id="datetosigncontainer">  </div>
+                </div>
+                $endif$
+                <div class="signStepsBodyInvation" style="padding-top:4px;padding-bottom:9px;">
+                  <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">HÄLSNINGSMEDDELANDE</a></small>
+                  <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
+                </div>
+                $if(template)$
+                <div class="signStepButton" style="display:inline-block;padding-top:4px;">
+                  <a class="btn-small green center submiter">
+                    <div class="left"></div>
+                    <div class="label">
+                      <span>Spara mall</span>
+                      <span class="btn-symbol green arrow-left"></span>
+                    </div>
+                    <div class="right"></div>
+                  </a>
+                </div>
+                $elseif(process.isauthorsend)$
+                <input type="hidden" value="email" name="validationmethod" />
+                <div class="signStepButton" style="display:inline-block;padding-top:4px;">
+                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
+                    <div class="left"></div>
+                    <div class="label" style="">
+                      <span>$process.sendbuttontext$</span>
+                      <span class="btn-symbol green arrow-left" ></span>
+                    </div> 
+                    <div class="right"></div>
+                  </a>
+                </div>
+                $else$
+                <div class="signbutton" style="display:inline-block;">
+                  <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-small blue center">
+                    <div class="left"></div>
+                    <div class="label" style="width:134px;">
+                      <span style="padding-left:9px;padding-right:9px">SkrivaPå</span>
+                      <span class="btn-symbol cross"></span>
+                    </div> 
+                    <div class="right"></div>
+                  </a>
+                </div>
+                $endif$
+              </div>
+              $endif$
+            </div>
           </div>
         </div>  
 
@@ -329,16 +329,16 @@ pageDocumentDesign=
                 
                 
                 <!-- 
-                   <p class="signStepsBodySaveMethods">
-                     <label for="c">Lagring</label> 
-                     <select id="c">
-                       <option value="1">Standard</option>
-                       <option value="2">Trustweaver</option>
-                       
-                       <option value="3">Option 3</option>
-                     </select> 
-                  </p>
-                   -->
+                     <p class="signStepsBodySaveMethods">
+                       <label for="c">Lagring</label> 
+                       <select id="c">
+                         <option value="1">Standard</option>
+                         <option value="2">Trustweaver</option>
+                         
+                         <option value="3">Option 3</option>
+                       </select> 
+                     </p>
+                     -->
               </div>
               <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
@@ -365,81 +365,82 @@ pageDocumentDesign=
                 </small>
               </div>
             </div>
-          
-        <div class="border"></div>   
-        <div id="signStepsBodyRight" class="step3">      
-          <!-- 015 new -->
-           </div>
-           <div class="border"></div>
+            
+            <div class="border"></div>   
+            <div id="signStepsBodyRight" class="step3">      
+              <!-- 015 new -->
+            </div>
+            <div class="border"></div>
 
             <div id="signStepsBodyFunctions" class="step3">
               <div class="signStepsBodyFunctionsBox options">
                 <!--
-                   <p>
-                     <label for="d">Metod</label> 
-                     <select id="d">
-                       <option value="1">e-post</option>
-                       <option value="2">e-legitimation</option>
-                       <option value="3">Option 3</option>
-                     </select>
-                   </p>
-                   -->
+                    <p>
+                      <label for="d">Metod</label> 
+                      <select id="d">
+                        <option value="1">e-post</option>
+                        <option value="2">e-legitimation</option>
+                        <option value="3">Option 3</option>
+                      </select>
+                    </p>
+                    -->
                 <!-- 013 changed sign button tag -->
                 
                 
-          </div>
-          $if(template)$
-          <a class="btn-small green center submiter saveTemplate">
-            <div class="left"></div>
-            <div class="label">
-              <p>Spara mall</p>
-              <span class="btn-symbol green arrow-left"></span>
-            </div>
-            <div class="right"></div>
-          </a>
-          $else$
-          <div> 
-            $validationdropdown()$
-            <div style="padding-bottom:8px; padding-top: 2px;">
-            $if(!process.isauthorsend)$
-            <input id="switchercheckbox" style="position:relative;top:2px" type="checkbox" class="sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
-            <label for="switchercheckbox" class="usual" style="margin-left:3px;">Underteckna sist </label>
-            <label class="secretary" style="margin-left:3px;display:none;">Ej undertecknande part</label>
-            </input>
-            </div>
-            $endif$
-            <div class="sendbutton" style="$if(!process.isauthorsend)$display:none$endif$">
-            <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
-               <div class="left"></div>
-               <div class="label" style="width:120px">
-		 <span>$process.sendbuttontext$</span>
-                 <span class="btn-symbol green arrow-left"
-                 style="position:relative;top:3px;right:0px"></span>
-	       </div> 
-               <div class="right"></div>
-            </a>
-            </div>
-            $if(!process.isauthorsend)$
-            <div class="signbutton">
-               <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
-               <div class="left"></div>
-               <div class="label" style="width:120px">
-                    <span>SkrivaPå </span>
-                    <span class="icon cross"></span>
-               </div> 
-               <div class="right"></div>
+              </div>
+              $if(template)$
+              <a class="btn-small green center submiter saveTemplate">
+                <div class="left"></div>
+                <div class="label">
+                  <p>Spara mall</p>
+                  <span class="btn-symbol green arrow-left"></span>
+                </div>
+                <div class="right"></div>
               </a>
-            </div>
-            $endif$
-          </div>
-          $endif$
+              $else$
+              <div> 
+                $validationdropdown()$
+                $if(!process.isauthorsend)$
+                <div style="padding-bottom:8px; padding-top: 2px;">
+                  <input id="switchercheckbox" style="position:relative;top:2px" type="checkbox" class="sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
+                  <label for="switchercheckbox" class="usual" style="margin-left:3px;">Underteckna sist </label>
+                  <label class="secretary"
+                  style="margin-left:3px;display:none;">Ej
+                  undertecknande part</label></input>
+                </div>
+                $endif$
+                <div class="sendbutton" style="$if(!process.isauthorsend)$display:none$endif$">
+                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
+                    <div class="left"></div>
+                    <div class="label" style="width:120px">
+		              <span>$process.sendbuttontext$</span>
+                      <span class="btn-symbol green arrow-left"
+                            style="position:relative;top:3px;right:0px"></span>
+	                </div> 
+                    <div class="right"></div>
+                  </a>
+                </div>
+                $if(!process.isauthorsend)$
+                <div class="signbutton">
+                  <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
+                    <div class="left"></div>
+                    <div class="label" style="width:120px">
+                      <span>SkrivaPå </span>
+                      <span class="icon cross"></span>
+                    </div> 
+                    <div class="right"></div>
+                  </a>
+                </div>
+                $endif$
+              </div>
+              $endif$
 
             </div>
             
           </div>            
         </div>
         $endif$
-       </form>
+      </form>
     </div>
   </div>
   $pageDocumentForAuthorHelpersLocalDialogs()$
@@ -484,7 +485,7 @@ pageDocumentDesign=
       <select class="signorder float-right" name="signatorysignorder"></select>
       $endif$
       $if(featureenabled)$
-        <a href="#" class="plus"></a>
+      <a href="#" class="plus"></a>
       $endif$
     </div>
     
@@ -513,7 +514,7 @@ pageDocumentDesign=
           <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
           $dragndropIcon()$
         </span>
-       <span class='dragfield sigcomp inputWrapper'>
+        <span class='dragfield sigcomp inputWrapper'>
           <span style="display:none;" class="fieldid">company</span>
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
@@ -546,23 +547,23 @@ pageDocumentDesign=
 </div>
 ####
 docname=
-       <span class="docname">
-         <span class="docname-display">
-           $if(featureenabled)$
-           <a href="#" class="icon edit" style="margin-right: 2px"></a>
-           $endif$
-           <span class="visible-docname">$documenttitle$</span>
-         </span>
-         <span class="docname-edit" style="display:none;">
-           <a href="#" class="icon small ok" style="margin-right: 2px; float: none"></a>
-           <input type="text" name="docname-edit" value="$documenttitle$" />
-         </span>
-       </span>
+<span class="docname">
+  <span class="docname-display">
+    $if(featureenabled)$
+    <a href="#" class="icon edit" style="margin-right: 2px"></a>
+    $endif$
+    <span class="visible-docname">$documenttitle$</span>
+  </span>
+  <span class="docname-edit" style="display:none;">
+    <a href="#" class="icon small ok" style="margin-right: 2px; float: none"></a>
+    <input type="text" name="docname-edit" value="$documenttitle$" />
+  </span>
+</span>
 ####
 dragndropIcon=
- $if(featureenabled)$
-   <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
- $endif$
+$if(featureenabled)$
+<img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
+$endif$
 #####
 validationdropdown= 
 <div>
@@ -631,12 +632,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
                       }$
                     </ul>
                     <input type="hidden" name="sigattachemails"
-                    value="$a.sigemails$" />
-                    </span>
+                           value="$a.sigemails$" />
+                  </span>
                 </td>
               </tr>
               }$
-              </tbody>
+            </tbody>
           </table>
         </div>
       </div>
@@ -719,15 +720,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </span>
           <div id="alreadyattached">
             $attachments:{attachment |
-              <div class="alreadyattacheditem">
-                <div class="display">
-                  <a href="#" class="removesig">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
-                </div>
-                <div class="data">
-                  <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />
-                  <input type="hidden" name="removeattachment" value="false" />
-                </div>
+            <div class="alreadyattacheditem">
+              <div class="display">
+                <a href="#" class="removesig">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
               </div>
+              <div class="data">
+                <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />
+                <input type="hidden" name="removeattachment" value="false" />
+              </div>
+            </div>
             }$
           </div>
           <div id="tobeattached">
@@ -804,324 +805,324 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-content">
           <div class="csvproblems">
             $csvproblems: {csvproblem |
-              <div class="csvproblemcontainer$if(csvproblem.isfirstproblem)$ currentcsvproblem$endif$">
-                <div class="csvproblemheader">
-                  $if(csvproblem.problemrow)$Row: $csvproblem.problemrow$$endif$
-                  $if(csvproblem.problemcol)$Column: $csvproblem.problemcol$$endif$
-                </div>
-                <div class="csvproblemdesc">
-                  $csvproblem.problemdesc$
-                </div>
-                <div class="csvproblemfooter">
-                  <div class="csvproblemcount">$csvproblem.problemnumber$/$csvproblemcount$</div>
-                  $if(!csvproblem.isfirstproblem)$
-                    <a class="btn-tiny black float-left previousproblem" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span class="btn-symbol black arrow-right"></span>
-                        <span>Bakåt</span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                  $if(!csvproblem.islastproblem)$
-                    <a class="btn-tiny black float-right nextproblem" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span>Nästa</span>
-                        <span class="btn-symbol black arrow-left"></span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                </div>
+            <div class="csvproblemcontainer$if(csvproblem.isfirstproblem)$ currentcsvproblem$endif$">
+              <div class="csvproblemheader">
+                $if(csvproblem.problemrow)$Row: $csvproblem.problemrow$$endif$
+                $if(csvproblem.problemcol)$Column: $csvproblem.problemcol$$endif$
               </div>
+              <div class="csvproblemdesc">
+                $csvproblem.problemdesc$
+              </div>
+              <div class="csvproblemfooter">
+                <div class="csvproblemcount">$csvproblem.problemnumber$/$csvproblemcount$</div>
+                $if(!csvproblem.isfirstproblem)$
+                <a class="btn-tiny black float-left previousproblem" href="#">
+                  <div class="left"></div>
+                  <div class="label">
+                    <span class="btn-symbol black arrow-right"></span>
+                    <span>Bakåt</span>
+                  </div>
+                  <div class="right"></div>
+                </a>
+                $endif$
+                $if(!csvproblem.islastproblem)$
+                <a class="btn-tiny black float-right nextproblem" href="#">
+                  <div class="left"></div>
+                  <div class="label">
+                    <span>Nästa</span>
+                    <span class="btn-symbol black arrow-left"></span>
+                  </div>
+                  <div class="right"></div>
+                </a>
+                $endif$
+              </div>
+            </div>
             }$
           </div>
           <div class="csvdata">
             $csvpages: {csvpage |
-              <div class="csvpagecontainer$if(csvpage.isfirstcsvpage)$ currentcsvpage$endif$">
-                <div class="csvpagecontents">
-                  <table>
-                    <theader>
-                      <tr>
-                        <th class="rownumbercol">&nbsp;</th>
-                        <th>Förnamn</th>
-                        <th>Efternamn</th>
-                        <th>E-post</th>
-                        <th>Företag</th>
-                        <th>Pers. nr</th>
-                        <th>Org. nr</th>
-                        $csvcustomfields: {csvcustomfield |
-                          <th>$csvcustomfield$</th>
-                        }$
-                      </tr>
-                    </theader>
-                    <tbody>
-                      $csvpage.csvrows: {csvrow |
-                        <tr$if(csvrow.isproblem)$ class="csvproblem"$endif$>
-                          <td class="rownumbercol">$csvrow.rownumber$</td>
-                          $csvrow.csvfields: { csvfield |
-                            <td$if(csvfield.isproblem)$ class="csvproblem"$endif$>$csvfield.value$</td>
-                          }$
-                        </tr>
+            <div class="csvpagecontainer$if(csvpage.isfirstcsvpage)$ currentcsvpage$endif$">
+              <div class="csvpagecontents">
+                <table>
+                  <theader>
+                    <tr>
+                      <th class="rownumbercol">&nbsp;</th>
+                      <th>Förnamn</th>
+                      <th>Efternamn</th>
+                      <th>E-post</th>
+                      <th>Företag</th>
+                      <th>Pers. nr</th>
+                      <th>Org. nr</th>
+                      $csvcustomfields: {csvcustomfield |
+                      <th>$csvcustomfield$</th>
                       }$
-                    </tbody>
-                  </table>
-                </div>
-                <div class="csvpagefooter">
-                  $if(!csvpage.isfirstcsvpage)$
-                    <a class="btn-tiny black float-left previouscsvpage" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span class="btn-symbol black arrow-right"></span>
-                        <span>Bakåt</span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                  $if(!csvpage.islastcsvpage)$
-                    <a class="btn-tiny black float-right nextcsvpage" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span>Nästa</span>
-                        <span class="btn-symbol black arrow-left"></span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                </div>
-              </div>
-            }$
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        
-        <a class="cancel float-left" style="height:40px;">  
-          <div class="label"> Välj fil </div> 
-          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
-          <div class="filelist" style="display:none;"></div>
-        </a>
-        
-        <a class="btn-small green float-right close" href="#">
-          <div class="left"></div>
-          <div class="label"><p>Spara</p></div>
-          <div class="right"></div>
-        </a>
+                    </tr>
+                  </theader>
+                  <tbody>
+                    $csvpage.csvrows: {csvrow |
+                    <tr$if(csvrow.isproblem)$ class="csvproblem"$endif$>
+                      <td class="rownumbercol">$csvrow.rownumber$</td>
+                      $csvrow.csvfields: { csvfield |
+                      <td$if(csvfield.isproblem)$ class="csvproblem"$endif$>$csvfield.value$</td>
+}$
+</tr>
+}$
+</tbody>
+</table>
+</div>
+<div class="csvpagefooter">
+  $if(!csvpage.isfirstcsvpage)$
+  <a class="btn-tiny black float-left previouscsvpage" href="#">
+    <div class="left"></div>
+    <div class="label">
+      <span class="btn-symbol black arrow-right"></span>
+      <span>Bakåt</span>
+    </div>
+    <div class="right"></div>
+  </a>
+  $endif$
+  $if(!csvpage.islastcsvpage)$
+  <a class="btn-tiny black float-right nextcsvpage" href="#">
+    <div class="left"></div>
+    <div class="label">
+      <span>Nästa</span>
+      <span class="btn-symbol black arrow-left"></span>
+    </div>
+    <div class="right"></div>
+  </a>
+  $endif$
+</div>
+</div>
+}$
+</div>
+</div>
+</div>
+<div class="modal-footer">
+  
+  <a class="cancel float-left" style="height:40px;">  
+    <div class="label"> Välj fil </div> 
+    <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
+    <div class="filelist" style="display:none;"></div>
+  </a>
+  
+  <a class="btn-small green float-right close" href="#">
+    <div class="left"></div>
+    <div class="label"><p>Spara</p></div>
+    <div class="right"></div>
+  </a>
+</div>
+</div>
+</form>
+
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-advanced" rel=".stepForm">
+  <input type="hidden" name="changefunctionality" value="true" />
+  <input type="hidden" name="toadvanced" value="true" />
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2 id="dialog-title">Vill du byta till avancerad process?</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>Du kan byta till avancerad process för att ta del av mer avancerade funktioner så som förfallodatum, mallar, massutskick mm. Denna process tillhör betalplanerna Business och Enterprise, även vid fri testperiod.</p>
       </div>
     </div>
-  </form>
-
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-advanced" rel=".stepForm">
-    <input type="hidden" name="changefunctionality" value="true" />
-    <input type="hidden" name="toadvanced" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2 id="dialog-title">Vill du byta till avancerad process?</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <p>Du kan byta till avancerad process för att ta del av mer avancerade funktioner så som förfallodatum, mallar, massutskick mm. Denna process tillhör betalplanerna Business och Enterprise, även vid fri testperiod.</p>
+    <div class="modal-footer">
+      <a  class="close cancel float-left">Avbryt</a>
+      <a href="#" class="btn-small green float-right submiter toadvanced">
+        <div class="left"></div>
+        <div class="label">
+          <span>Byt process</span>
         </div>
-      </div>
-      <div class="modal-footer">
-        <a  class="close cancel float-left">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter toadvanced">
-          <div class="left"></div>
-          <div class="label">
-            <span>Byt process</span>
-          </div>
-          <div class="right"></div>
-        </a>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
+
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
+  <input type="hidden" name="changefunctionality" value="true" />
+  <input type="hidden" name="tobasic" value="true" />
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2 id="dialog-title">Vill du byta till förenklad process?</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>
+          Du kan byta till förenklad process för att göra processen ännu smidigare.
+          Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod. 
+        </p>
+        <p> 
+          När du byter kommer alla ändringar du gjort förutom de för part 1 och part 2 att försvinna. 
+          Är du säker att du vill byta process
+        </p>    
       </div>
     </div>
-  </form>
+    <div class="modal-footer">
+      <a  class="close cancel float-left">Avbryt</a>
+      <a href="#" class="btn-small green float-right submiter tobasic">
+        <div class="left"></div>
+        <div class="label">
+          <span>Byt process</span>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
 
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
-    <input type="hidden" name="changefunctionality" value="true" />
-    <input type="hidden" name="tobasic" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2 id="dialog-title">Vill du byta till förenklad process?</h2>
+<form method="post" name="form" action="$linkissuedoc$"
+      class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
+      rel=".stepForm">  
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2 id="dialog-title-sign">Underteckna</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>Är du säker att du vill underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong>?</p>
+        <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+          <span class="Xinvited">Invited</span> med e-post.</p>
+        <span class="eleghidden" style="display:none;">
+          <h3>Välj typ av e-legitimation</h3>
+          <p>Har du ingen e-legitimation? Du kan ladda ned en
+            e-legitimation från din internetbank eller från
+            Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                      target="_new">Klicka här</a> för att läsa mer.</p>
         </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-         <p>
-            Du kan byta till förenklad process för att göra processen ännu smidigare.
-            Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod. 
-          </p>
-          <p> 
-            När du byter kommer alla ändringar du gjort förutom de för part 1 och part 2 att försvinna. 
-            Är du säker att du vill byta process
-          </p>    
-     </div>
-      </div>
-      <div class="modal-footer">
-        <a  class="close cancel float-left">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter tobasic">
-          <div class="left"></div>
-          <div class="label">
-            <span>Byt process</span>
-          </div>
-          <div class="right"></div>
-        </a>
       </div>
     </div>
-  </form>
-
-  <form method="post" name="form" action="$linkissuedoc$"
-        class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
-        rel=".stepForm">  
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2 id="dialog-title-sign">Underteckna</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <p>Är du säker att du vill underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong>?</p>
-          <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-            <span class="Xinvited">Invited</span> med e-post.</p>
-          <span class="eleghidden" style="display:none;">
-            <h3>Välj typ av e-legitimation</h3>
-            <p>Har du ingen e-legitimation? Du kan ladda ned en
-              e-legitimation från din internetbank eller från
-              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                        target="_new">Klicka här</a> för att läsa mer.</p>
-          </span>
+    <div class="modal-footer">
+      <input type="hidden" name="sign" value="automatic" id="signauto" />
+      <a class="close cancel float-left">Avbryt</a>
+      <a href="#" class="btn-small blue float-right submiter signhidden">
+        <div class="left"></div>
+        <div class="label">
+          <p>SkrivaPå</p>
+          <span class="btn-symbol cross"></span>
         </div>
-      </div>
-      <div class="modal-footer">
-        <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a class="close cancel float-left">Avbryt</a>
-        <a href="#" class="btn-small blue float-right submiter signhidden">
-          <div class="left"></div>
-          <div class="label">
-            <p>SkrivaPå</p>
-            <span class="btn-symbol cross"></span>
-          </div>
-          <div class="right"></div>
+        <div class="right"></div>
+      </a>
+      <span class="eleghidden" style="display: none;">
+        <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
+        <input type="hidden" name="signature" value="" id="signatureinput" />
+        <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+        <a href="#" class="btn-small green float-right author bankid">
+          <img src="/img/bankid.png" alt="BankID" />
         </a>
-        <span class="eleghidden" style="display: none;">
-          <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
-          <input type="hidden" name="signature" value="" id="signatureinput" />
-          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-          <a href="#" class="btn-small green float-right author bankid">
-              <img src="/img/bankid.png" alt="BankID" />
-          </a>
-          <a href="#" class="btn-small green float-right author telia">
-              <img src="/img/telia.png" alt="Telia Eleg" />
-          </a>
-          <a href="#" class="btn-small green float-right author nordea">
-              <img src="/img/nordea.png" alt="Nordea Eleg" />
-          </a>
-        </span>
-        
+        <a href="#" class="btn-small green float-right author telia">
+          <img src="/img/telia.png" alt="Telia Eleg" />
+        </a>
+        <a href="#" class="btn-small green float-right author nordea">
+          <img src="/img/nordea.png" alt="Nordea Eleg" />
+        </a>
+      </span>
+      
+    </div>
+  </div>
+</form>
+
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2 id="dialog-title-sign">
+          $process.confirmsendtitle$
+        </h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        $if(!process.isauthorsend)$ 
+        <div id="dialog-confirm-text-send">
+          <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+        </div>
+        <div id="dialog-confirm-text-send-fields">
+          <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
+            få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
+          <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong> till 
+            <span class="Xinvited">Invited</span>?  </p>
+        </div>
+
+        <div id="dialog-confirm-text-send-normal">
+          <p> Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? 
+            Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.</p>
+        </div>
+        $else$
+        <div id="dialog-confirm-text-send">
+          <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+        </div>
+        $endif$
       </div>
     </div>
-  </form>
+    <div class="modal-footer">
+      <input type="hidden" name="final" value="automatic" />
+      <a  class="close cancel float-left">Avbryt</a>
+      <a href="#" class="btn-small green float-right submiter">
+        <div class="left"></div>
+        <div class="label">
+          <span> Skicka</span>
+          <div class="btn-symbol green arrow-left"></div></div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
 
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2 id="dialog-title-sign">
-               $process.confirmsendtitle$
-          </h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-         $if(!process.isauthorsend)$ 
-          <div id="dialog-confirm-text-send">
-            <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
-          </div>
-          <div id="dialog-confirm-text-send-fields">
-            <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
-              få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
-            <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong> till 
-              <span class="Xinvited">Invited</span>?  </p>
-          </div>
-
-          <div id="dialog-confirm-text-send-normal">
-            <p> Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? 
-              Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.</p>
-          </div>
-          $else$
-            <div id="dialog-confirm-text-send">
-              <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
-            </div>
-          $endif$
-        </div>
-      </div>
-      <div class="modal-footer">
-        <input type="hidden" name="final" value="automatic" />
-        <a  class="close cancel float-left">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter">
-          <div class="left"></div>
-          <div class="label">
-            <span> Skicka</span>
-            <div class="btn-symbol green arrow-left"></div></div>
-          <div class="right"></div>
-        </a>
+<form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2>Hälsningsmeddelande</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content disablelinks">
+        $invitationMailContent:noescape()$
       </div>
     </div>
-  </form>
-
-  <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2>Hälsningsmeddelande</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content disablelinks">
-          $invitationMailContent:noescape()$
-        </div>
-      </div>
-      <div class="modal-footer">
-            <div class="float-left">
+    <div class="modal-footer">
+      <div class="float-left">
         <a class="close cancel">Avbryt</a>
         <a class="editer message">Skriv eget meddelande</a>
-            </div>
-        <a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
-          <div class="left"></div>
-          <div class="label">
-            <p>Ok</p>
-            <div class="btn-symbol green arrow-left"></div>
-          </div>
-          <div class="right"></div>
-        </a>
       </div>
+      <a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
+        <div class="left"></div>
+        <div class="label">
+          <p>Ok</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
     </div>
-  </form>  
+  </div>
+</form>  
 
-  <div class="hidden" id="hiddenttimestuffbox">
-    <div id="daystosignbox">
-      <span> 
-        $process.expirytext$ <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> dagar
-      </span>
-      <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div>
-    </div>
+<div class="hidden" id="hiddenttimestuffbox">
+  <div id="daystosignbox">
+    <span> 
+      $process.expirytext$ <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> dagar
+    </span>
+    <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div>
   </div>
-  </div>
+</div>
+</div>
 #####
 ###
 contracttitle=DOKUMENT
