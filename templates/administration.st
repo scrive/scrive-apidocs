@@ -207,7 +207,7 @@ adminUsersForPayments=
           <td> $user.userdetails.company$
           </td>
 	  <td>-</td>
-	  <td><select autocomplete="off">$user.adminview.uavpaymentaccounttype:options()$</select></td>
+	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
 	  <td>?</td>
 	  <td>?</td>
 	  <td>?</td>
@@ -228,10 +228,10 @@ adminuser=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="active"><a href="$adminuserslink$/$user.uavuserid$">Användaruppgifter</a></li>
+	  <li class="active"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
 	  <li><a href="#">Payment info</a></li>
 	  <li><a href="#">Payment list</a></li>
-	  <li><a href="$adminuserslink$/usagestats/$user.uavuserid$">Usage stats</a></li>
+	  <li><a href="$adminuserslink$/usagestats/$user.id$">Usage stats</a></li>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
@@ -240,54 +240,54 @@ adminuser=
 		<tr> <td style="padding-top:10px"><strong>User data</strong></td> <td> </td></tr>
 		<tr> <td>First Name:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavuserfstname$"  name="userfstname" />
+		    <input type="text" style="width:200px;margin:0" value="$user.fstname$"  name="userfstname" />
 		  </td>
 		</tr>
 		<tr> <td>Secound Name:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusersndname$"  name="usersndname" />
+		    <input type="text" style="width:200px;margin:0" value="$user.sndname$"  name="usersndname" />
 		  </td>
 		</tr>
 		<tr> <td>Pers Nr:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavuserpersonalnumber$"  name="userpersonalnumber" />
+		    <input type="text" style="width:200px;margin:0" value="$user.personalnumber$"  name="userpersonalnumber" />
 		  </td>
 		</tr>
 		<tr> <td>Company:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyname$"  name="usercompanyname" />
+		    <input type="text" style="width:200px;margin:0" value="$user.companyname$"  name="usercompanyname" />
 		  </td>
 		</tr>
 		<tr> <td>Company position:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyposition$"  name="usercompanyposition" />
+		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
 		<tr> <td>Company nr:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusercompanynumber$"  name="usercompanynumber" />
+		    <input type="text" style="width:200px;margin:0" value="$user.companynumber$"  name="usercompanynumber" />
 		  </td>
 		</tr>
 		<tr> <td style="padding-top:10px"><strong>Location</strong></td>
 		  <td> </td>
 		</tr>
 		<tr> <td>Adress:</td>
-		  <td> <input type="text" style="width:200px;margin:0" value="$user.uavuseraddress$"  name="useraddress" />
+		  <td> <input type="text" style="width:200px;margin:0" value="$user.address$"  name="useraddress" />
 		  </td>
 		</tr>
 		<tr> <td>ZIP:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavuserzip$"  name="userzip" />
+		    <input type="text" style="width:200px;margin:0" value="$user.zip$"  name="userzip" />
 		  </td>
 		</tr>
 		<tr> <td>City:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusercity$"  name="usercity" />
+		    <input type="text" style="width:200px;margin:0" value="$user.city$"  name="usercity" />
 		  </td>
 		</tr>
 		<tr> <td>Country:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusercountry$" name="usercountry" />
+		    <input type="text" style="width:200px;margin:0" value="$user.country$" name="usercountry" />
 		  </td>
 		</tr>
 		<tr> <td style="padding-top:10px" ><strong>Contact</strong></td>
@@ -296,17 +296,17 @@ adminuser=
 		</tr>
 		<tr> <td>Phone:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0"  value="$user.uavuserphone$" name="userphone" />
+		    <input type="text" style="width:200px;margin:0"  value="$user.phone$" name="userphone" />
 		  </td>
 		</tr>
 		<tr> <td>Mobile:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.uavusermobile$" name="usermobile" />
+		    <input type="text" style="width:200px;margin:0" value="$user.mobile$" name="usermobile" />
 		  </td>
 		</tr>
 		<tr> <td>Email:</td>
 		  <td>
-		    <input type="text" style="width:200px;margin:0"  value="$user.uavuseremail$" name="useremail" />
+		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
 		  </td>
 		</tr>
 		<tr>
@@ -315,20 +315,20 @@ adminuser=
 		</tr>
 		<tr> <td>Account type:</td>
 		  <td>
-		    <select autocomplete="off" name="accounttype">$user.uavaccounttype:options()$</select>
+		    <select autocomplete="off" name="accounttype">$user.accounttype:options()$</select>
 		  </td>
 		</tr>
 		<tr> <td>Account plan:</td>
 		  <td>
-		    <select autocomplete="off" name="accountplan">$user.uavaccountplan:options()$</select>
+		    <select autocomplete="off" name="accountplan">$user.accountplan:options()$</select>
 		  </td>
 		</tr>
 		<tr> <td>Signed doc storage:</td>
-		  <td> $user.uavsigneddocstorage$ </td>
+		  <td> $user.signeddocstorage$ </td>
 		</tr>
 		<tr> <td>Payment method:</td>
 		  <td>
-		    <select autocomplete="off" name="userpaymentmethod" >$user.uavuserpaymentmethod:options()$</select>
+		    <select autocomplete="off" name="userpaymentmethod" >$user.userpaymentmethod:options()$</select>
 		  </td>
 		</tr>
 		<tr> <td style="padding-top:10px" ><strong>Special deals</strong></td>
@@ -337,7 +337,7 @@ adminuser=
 		<tr> <td>Free trial expiration date:</td>
                   <td>
                      <span>
-                      <input type="checkbox" value="$if(user.uavfreetrialexpirationdate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#freetrialexpirationdatecontainer" rel="#freetrialexpirationdatebox" class="addremovecheckbox" />
+                      <input type="checkbox" value="$if(user.freetrialexpirationdate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#freetrialexpirationdatecontainer" rel="#freetrialexpirationdatebox" class="addremovecheckbox" />
                       <span id="freetrialexpirationdatecontainer">
                       </span>
                     </span>
@@ -345,7 +345,7 @@ adminuser=
                 </tr>
 		<tr> <td>Free signatures left:</td>
 		  <td>
-		    <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountfreesignatures$" name="paymentaccountfreesignatures" />
+		    <input type="text" style="width:40px;margin:0" value="$user.paymentaccountfreesignatures$" name="paymentaccountfreesignatures" />
 		  </td>
 		</tr>
 		<tr> <td style="padding-top:10px" ><strong>Pricing</strong></td>
@@ -354,13 +354,13 @@ adminuser=
 		</tr>
 		<tr> <td>Payment plan:</td>
 		  <td>
-		    <select autocomplete="off" name="paymentaccounttype">$user.uavpaymentaccounttype:options()$</select>
+		    <select autocomplete="off" name="paymentaccounttype">$user.paymentaccounttype:options()$</select>
 		  </td>
 		</tr>
 		<tr> <td>Temporary price:</td>
 		  <td>
 		    <span>
-                      <input type="checkbox" value="$if(user.uavtmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox" />
+                      <input type="checkbox" value="$if(user.tmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox" />
                       <span id="datetosigncontainer">
                       </span>
 		    </span>
@@ -386,17 +386,17 @@ adminuser=
 		  <td>For account: </td>
 		  $paymentmodel.foraccount:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foraccountcustom" value="$user.uavcustompaymentchange.changeforaccount$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foraccountcustom" value="$user.custompaymentchange.changeforaccount$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foraccounttemp" value="$user.uavtemppaymentchange.changeforaccount$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foraccounttemp" value="$user.temppaymentchange.changeforaccount$"/>}:td()$
 		</tr>
 		<tr>
 		  <td>For subaccount: </td>
 		  $paymentmodel.forsubaccount:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="forsubaccountcustom" value="$user.uavcustompaymentchange.changeforsubaccount$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="forsubaccountcustom" value="$user.custompaymentchange.changeforsubaccount$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="forsubaccounttemp" value="$user.uavtemppaymentchange.changeforsubaccount$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="forsubaccounttemp" value="$user.temppaymentchange.changeforsubaccount$"/>}:td()$
 		</tr>
 		<tr>
 		  <td style="padding-top:20px"><strong>Payment for signatures </strong> </td>
@@ -405,41 +405,41 @@ adminuser=
 		  <td>For email signature:</td>
 		  $paymentmodel.foremailsignature:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foremailsignaturecustom" value="$user.uavcustompaymentchange.changeforemailsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foremailsignaturecustom" value="$user.custompaymentchange.changeforemailsignature$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foremailsignaturetemp" value="$user.uavtemppaymentchange.changeforemailsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foremailsignaturetemp" value="$user.temppaymentchange.changeforemailsignature$"/>}:td()$
 		</tr>
 		<tr>
 		  <td>For eLeg signature:</td>
 		  $paymentmodel.forelegsignature:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="forelegsignaturecustom" value="$user.uavcustompaymentchange.changeforelegsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="forelegsignaturecustom" value="$user.custompaymentchange.changeforelegsignature$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="forelegsignaturetemp" value="$user.uavtemppaymentchange.changeforelegsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="forelegsignaturetemp" value="$user.temppaymentchange.changeforelegsignature$"/>}:td()$
 		</tr>
 		<tr>
 		  <td> For mobile signature: :</td>
 		  $paymentmodel.formobiledignature:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="formobiledignaturecustom" value="$user.uavcustompaymentchange.changeformobiledignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="formobiledignaturecustom" value="$user.custompaymentchange.changeformobiledignature$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="formobiledignaturetemp" value="$user.uavtemppaymentchange.changeformobiledignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="formobiledignaturetemp" value="$user.temppaymentchange.changeformobiledignature$"/>}:td()$
 		</tr>
 		<tr>
 		  <td>For creadit card signature:</td>
 		  $paymentmodel.forcrediteardsignature:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="forcrediteardsignaturecustom" value="$user.uavcustompaymentchange.changeforcrediteardsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="forcrediteardsignaturecustom" value="$user.custompaymentchange.changeforcrediteardsignature$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="forcrediteardsignaturetemp" value="$user.uavtemppaymentchange.changeforcrediteardsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="forcrediteardsignaturetemp" value="$user.temppaymentchange.changeforcrediteardsignature$"/>}:td()$
 		</tr>
 		<tr>
 		  <td>For iPad signature: </td>
 		  $paymentmodel.foripadsignature:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foripadsignaturecustom" value="$user.uavcustompaymentchange.changeforipadsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foripadsignaturecustom" value="$user.custompaymentchange.changeforipadsignature$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foripadsignaturetemp" value="$user.uavtemppaymentchange.changeforipadsignature$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foripadsignaturetemp" value="$user.temppaymentchange.changeforipadsignature$"/>}:td()$
 		</tr>
 		<tr>
 		  <td style="padding-top:20px"><strong>Storage of signed documents</strong> </td>
@@ -448,17 +448,17 @@ adminuser=
 		  <td>For Amazon: </td>
 		  $paymentmodel.foramazon:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foramazoncustom" value="$user.uavcustompaymentchange.changeforamazon$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foramazoncustom" value="$user.custompaymentchange.changeforamazon$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="foramazontemp" value="$user.uavtemppaymentchange.changeforamazon$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="foramazontemp" value="$user.temppaymentchange.changeforamazon$"/>}:td()$
 		</tr>
 		<tr>
 		  <td>For TrustWeaver: </td>
 		  $paymentmodel.fortrustweaver:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortrustweavercustom" value="$user.uavcustompaymentchange.changefortrustweaver$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="fortrustweavercustom" value="$user.custompaymentchange.changefortrustweaver$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortrustweavertemp" value="$user.uavtemppaymentchange.changefortrustweaver$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="fortrustweavertemp" value="$user.temppaymentchange.changefortrustweaver$"/>}:td()$
 		</tr>
 		<tr>
 		  <td style="padding-top:20px">  <strong>Storage of other documents</strong> </td>
@@ -467,17 +467,17 @@ adminuser=
 		  <td>Template:  </td>
 		  $paymentmodel.fortemplate:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortemplatecustom" value="$user.uavcustompaymentchange.changefortemplate$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="fortemplatecustom" value="$user.custompaymentchange.changefortemplate$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortemplatetemp" value="$user.uavtemppaymentchange.changefortemplate$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="fortemplatetemp" value="$user.temppaymentchange.changefortemplate$"/>}:td()$
 		</tr>
 		<tr>
 		  <td> Draft:  </td>
 		  $paymentmodel.fordraft:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="fordraftcustom" value="$user.uavcustompaymentchange.changefordraft$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="fordraftcustom" value="$user.custompaymentchange.changefordraft$"/>}:td()$
 		  <td></td>
-		  ${<input type="text" style="width:45px" name="fordrafttemp" value="$user.uavtemppaymentchange.changefordraft$"/>}:td()$
+		  ${<input type="text" style="width:45px" name="fordrafttemp" value="$user.temppaymentchange.changefordraft$"/>}:td()$
 		</tr>
 	    </tbody></table>
 	    <br/>
@@ -494,11 +494,11 @@ adminuser=
     <div id="hiddenttimestuffbox" style="display:none">
       <span id="daystosignbox">
         <a class="datetodate date" rel="[name='tmppaymentchangeenddate']"> </a>
-        <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.uavtmppaymentchangeenddate$" />
+        <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.tmppaymentchangeenddate$" />
       </span>
       <span id="freetrialexpirationdatebox">
         <a class="datetodate date" rel="[name='freetrialexpirationdate']"> </a>
-        <input type="hidden" autocomplete="off" name="freetrialexpirationdate" value="$user.uavfreetrialexpirationdate$" />
+        <input type="hidden" autocomplete="off" name="freetrialexpirationdate" value="$user.freetrialexpirationdate$" />
       </span>
     </div>
 ####
@@ -511,10 +511,10 @@ userusagestats=
       <div class="tab-header">
       </div>
       <ul class="tabs">
-	<li><a href="$adminuserslink$/$user.uavuserid$">Användaruppgifter</a></li>
+	<li><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
 	<li><a href="#">Payment info</a></li>
 	<li><a href="#">Payment list</a></li>
-	<li class="active"><a href="$adminuserslink$/usagestats/$user.uavuserid$">Usage stats</a></li>
+	<li class="active"><a href="$adminuserslink$/usagestats/$user.id$">Usage stats</a></li>
       </ul>
       <div class="tab-container">
 	<div class="tab-content account">
