@@ -1353,25 +1353,24 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
     else do
      update $ UpdateDocument ctxtime documentid docname
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
-
               
-
-getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
-getDocumentsForUserByType user docfilter = do
-  mydocuments <- query $ GetDocumentsByUser user 
+{- |
+    This stuff is deeply messed up.  At the moment maybesignatory and maybesupervisor aren't populated
+    until a signatory signs.  This means that to make docs available to signatories, viewers or supervisors
+    until a sign happens (which is never in the case of viewers!) is to lookup by email.  We need to change
+    so we lookup not by email, but by userid only.  This means linking up and saving the docs far earlier for users.
+-}
+getDocumentsForUserByType :: DocumentType -> User -> Kontra [Document]
+getDocumentsForUserByType doctype user = do
+  mydocuments <- query $ GetDocumentsByUser user --docs saved for user, so not included if yet to sign or viewer
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
   usersISupervise <- query $ GetUserSubaccounts $ userid user
-  relatedUsers <- query $ GetUserRelatedAccounts $ userid user
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-  relatedUsersSharedDocuments <- filter ((==) Shared . documentsharing) <$> concat <$> mapM (query . GetDocumentsByAuthor . userid) relatedUsers
-  return . filter docfilter $ nub $
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents ++ relatedUsersSharedDocuments
+  supervised'Documents <- query $ GetDocumentsBySupervisor user --supervised docs saved for user (required if subaccount is deleted), again just saved ones
+  moresupervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise --all supervised docs for undeleted subaccounts
+  return . filter (\d -> documenttype d == doctype) $ nub $
+          mydocuments ++ concat friends'Documents ++ supervised'Documents ++ concat moresupervised'Documents
 
--- These should be refactored (showContractsList, showOffersList, show OrdersList).
--- They are the same except for Signable Contract/Offer/Order
--- --EN
-  
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -1380,14 +1379,15 @@ getDocumentsForUserByType user docfilter = do
  -}
 showContractsList :: Kontra (Either KontraLink String)
 showContractsList =
-  let getContracts user = do
-        mydocuments <- query $ GetDocumentsByUser user
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) (Signable Contract) . documenttype) $ 
-          mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageContractsList getContracts
+  showItemList' pageContractsList $ getDocumentsForUserByType (Signable Contract)
+
+showOfferList :: Kontra (Either KontraLink String)
+showOfferList = 
+  showItemList' pageOffersList $ getDocumentsForUserByType (Signable Offer)
+
+showOrdersList :: Kontra (Either KontraLink String)
+showOrdersList = 
+  showItemList' pageOrdersList $ getDocumentsForUserByType (Signable Order)
 
 showTemplatesList :: Kontra (Either KontraLink String)
 showTemplatesList = 
@@ -1395,28 +1395,6 @@ showTemplatesList =
         mydocuments <- query $ GetDocumentsByUser user
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
-
-showOrdersList :: Kontra (Either KontraLink String)
-showOrdersList = 
-  let getOrders user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) (Signable Order) . documenttype) $
-           mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageOrdersList getOrders
-
-showOfferList :: Kontra (Either KontraLink String)
-showOfferList = 
-  let getOffers user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) (Signable Offer) . documenttype) $
-           mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageOffersList getOffers
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
