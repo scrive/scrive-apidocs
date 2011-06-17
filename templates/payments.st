@@ -1,6 +1,6 @@
 ####          PAYMENT ADMIN        
 paymentsadminpage= <div style="text-align:center;margin-left:20%;margin-right:20%;"> 
-                       <strong>     This page shows prices for all account types</strong> 
+                       <strong>$_paymentsadminpageHead()$</strong> 
                         <div style="padding:20px;border:1px solid #DDDDDD;width:600px;margin-top:20px">
                           <table style="text-align:left"><tbody> 
                            <tr> 
@@ -8,65 +8,65 @@ paymentsadminpage= <div style="text-align:center;margin-left:20%;margin-right:20
                              $models:{$it.modelname$}:strong():th()$
                            </tr>
                            <tr> 
-                             <td style="padding-top:10px"><strong>Payment for account and subaccounts </strong> </td>
+                             <td style="padding-top:10px"><strong>$_paymentsadminpageAccountSubHead()$</strong> </td>
                            </tr>
                            <tr>
-                             <td>For account: </td>
+                             <td>$_paymentsadminpageAccount()$</td>
                               $models:{$it.foraccount$}:td()$ 
                            </tr>
                            <tr> 
-                              <td>For subaccount: </td>  
+                              <td>$_paymentsadminpageSubaccount()$</td>  
                               $models:{$it.forsubaccount$}:td()$
                            </tr>
                            <tr> 
-                              <td style="padding-top:20px"><strong>Payment for each signature </strong> </td>
+                              <td style="padding-top:20px"><strong>$_paymentsadminpageSignatureSubHead()$</strong> </td>
                            </tr>
                            <tr> 
-                              <td>For email signature:</td>   
+                              <td>$_paymentsadminpageSignatureEmail()$</td>   
                               $models:{$it.foremailsignature$}:td()$ 
                            </tr>
                            <tr>
-                              <td>For eLeg signature:</td> 
+                              <td>$_paymentsadminpageSignatureEleg()$</td> 
                               $models:{$it.forelegsignature$}:td()$ 
                            </tr> 
                            <tr>  
-                             <td>For For mobile signature: :</td>  
+                             <td>$_paymentsadminpageSignatureMobile()$</td>  
                               $models:{$it.formobiledignature$}:td()$
                            </tr> 
                            <tr> 
-                              <td>For creadit card signature:</td>  
+                              <td>$_paymentsadminpageSignatureCreditCard()$</td>  
                               $models:{$it.forcrediteardsignature$}:td()$ 
                            </tr> 
                            <tr> 
-                              <td>For iPad signature: </td>  
+                              <td>$_paymentsadminpageSignatureIpad()$</td>  
                               $models:{$it.foripadsignature$}:td()$ 
                            </tr> 
                            <tr> 
-                             <td style="padding-top:20px"><strong>Payment storage of signed documents</strong> </td>
+                             <td style="padding-top:20px"><strong>$_paymentsadminpageStorageSubHead()$</strong> </td>
                            </tr> 
                            <tr> 
-                              <td>For Amazon: </td>     
+                              <td>$_paymentsadminpageStorageAmazon()$</td>     
                               $models:{$it.foramazon$}:td()$
                            </tr> 
                            <tr>  
-                              <td>For TrustWeaver: </td>  
+                              <td>$_paymentsadminpageStorageTW()$</td>  
                               $models:{$it.fortrustweaver$}:td()$
                            </tr> 
                            <tr> 
-                              <td style="padding-top:20px">  <strong>Payment storage of other documents</strong> </td>
+                              <td style="padding-top:20px">  <strong>$_paymentsadminpageStorageOtherSubHead()$</strong> </td>
                            </tr>   
-                           <tr>  <td>Template:  </td>     
+                           <tr>  <td>$_paymentsadminpageStorageOtherTemplate()$</td>     
                                $models:{$it.fortemplate$}:td()$
                            </tr> 
                            <tr> 
-                              <td> Draft:  </td>    
+                              <td> $_paymentsadminpageStorageOtherDraft()$</td>    
                                  $models:{$it.fordraft$}:td()$
                            </tr> 
                          </tbody></table>
                        </div></div>
 ###
 paymentsadminpagesuperuser = <div style="text-align:center;margin-left:20%;margin-right:20%;"> 
-                       <strong>   This page shows prices for all account types </strong>
+                       <strong>$_paymentsadminpagesuperuserHead()$</strong>
                         <div style="padding:20px;border:1px solid #DDDDDD;width:600px;margin-top:20px">
                           <form method="POST" action="$changeaction$"> 
                           <table style="text-align:left"><tbody> 
@@ -75,56 +75,56 @@ paymentsadminpagesuperuser = <div style="text-align:center;margin-left:20%;margi
                              $models:{$it.modelname$}:strong():th()$
                            </tr>
                            <tr> 
-                             <td style="padding-top:10px"><strong>Payment for account and subaccounts </strong> </td>
+                             <td style="padding-top:10px"><strong>$_paymentsadminpagesuperuserAccountSubHead()$</strong> </td>
                            </tr>
                            <tr>
-                             <td>For account: </td>
+                             <td>$_paymentsadminpagesuperuserAccountAccount()$</td>
                              $models:{n | $input(iType = "text"; iName= join(fst="foraccount";snd=n.modelname); iValue=n.foraccount)$}:td()$
                            </tr>
                            <tr> 
-                              <td>For subaccount: </td>  
+                              <td>$_paymentsadminpagesuperuserAccountSubAccount()$</td>  
                                $models:{n | $input(iType = "text"; iName= join(fst="forsubaccount";snd=n.modelname); iValue=n.forsubaccount)$}:td()$ 
                            </tr>
                            <tr> 
-                              <td style="padding-top:20px"><strong>Payment for each signature </strong> </td>
+                              <td style="padding-top:20px"><strong>$_paymentsadminpagesuperuserSignatureSubHead()$</strong> </td>
                            </tr>
                            <tr> 
-                              <td>For email signature:</td>   
+                              <td>$_paymentsadminpagesuperuserSignatureEmail()$</td>   
                               $models:{n | $input(iType = "text"; iName= join(fst="foremailsignature";snd=n.modelname); iValue=n.foremailsignature)$}:td()$ 
                            </tr>
                            <tr>
-                              <td>For eLeg signature:</td> 
+                              <td>$_paymentsadminpagesuperuserSignatureEleg()$</td> 
                               $models:{n | $input(iType = "text"; iName= join(fst="forelegsignature";snd=n.modelname); iValue=n.forelegsignature)$}:td()$ 
                             </tr> 
                            <tr>  
-                             <td>For For mobile signature: :</td>  
+                             <td>$_paymentsadminpagesuperuserSignatureMobile()$</td>  
                               $models:{n | $input(iType = "text"; iName= join(fst="formobiledignature";snd=n.modelname); iValue=n.formobiledignature)$}:td()$ 
                            </tr> 
                            <tr> 
-                              <td>For creadit card signature:</td>  
+                              <td>$_paymentsadminpagesuperuserSignatureCreditCard()$</td>  
                               $models:{n | $input(iType = "text"; iName= join(fst="forcrediteardsignature";snd=n.modelname); iValue=n.forcrediteardsignature)$}:td()$ 
                            </tr> 
                            <tr> 
-                              <td>For iPad signature: </td>  
+                              <td>$_paymentsadminpagesuperuserSignatureIpad()$</td>  
                               $models:{n | $input(iType = "text"; iName= join(fst="foripadsignature";snd=n.modelname); iValue=n.foripadsignature)$}:td()$ 
                            </tr> 
                            <tr> 
-                             <td style="padding-top:20px"><strong>Payment storage of signed documents</strong> </td>
+                             <td style="padding-top:20px"><strong>$_paymentsadminpagesuperuserStorageSubHead()$</strong> </td>
                            </tr> 
                            <tr> 
-                              <td>For Amazon: </td>     
+                              <td>$_paymentsadminpagesuperuserStorageAmazon()$</td>     
                                $models:{n | $input(iType = "text"; iName= join(fst="foramazon";snd=n.modelname); iValue=n.foramazon)$}:td()$ 
                            </tr> 
                            <tr>  
-                              <td>For TrustWeaver: </td>  
+                              <td>$_paymentsadminpagesuperuserStorageTW()$</td>  
                                $models:{n | $input(iType = "text"; iName= join(fst="fortrustweaver";snd=n.modelname); iValue=n.fortrustweaver)$}:td()$ 
                            <tr> 
-                              <td style="padding-top:20px">  <strong>Payment storage of other documents</strong> </td></tr>   
-                           <tr>  <td>Template:  </td>     
+                              <td style="padding-top:20px">  <strong>$_paymentsadminpagesuperuserStorageOtherSubHead()$</strong> </td></tr>   
+                           <tr>  <td>$_paymentsadminpagesuperuserStorageOtherTemplate()$</td>     
                               $models:{n | $input(iType = "text"; iName= join(fst="fortemplate";snd=n.modelname); iValue=n.fortemplate)$}:td()$ 
                            </tr> 
                            <tr> 
-                              <td> Draft:  </td>    
+                              <td>$_paymentsadminpagesuperuserStorageOtherDraft()$</td>    
                               $models:{n | $input(iType = "text"; iName= join(fst="fordraft";snd=n.modelname); iValue=n.fordraft)$}:td()$ 
                           </tr> 
                          </tbody></table>

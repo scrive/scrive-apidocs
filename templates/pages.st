@@ -3,12 +3,12 @@ signupPageView =
 <div class="newdesign">
 <div class="try-skrivapa">
   <div class="left">
-       <h2>Gratis SkrivaPå till och med 31 maj!</h2>
-       <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+       <h2>$_signupPageViewBodyHead()$</h2>
+       <p>$_signupPageViewBodyBody()$</p>
   </div>
   <div class="right">
      <form action="" method="post">
-         <input type="email"  infotext="Fyll i din e-postadress" name="email" /> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
+         <input type="email"  infotext="$_signupPageViewEmail()$" name="email" /> <a class="submit btn-small green2 center float-right" href="#"><p>$_signupPageViewCreateAccount()$</p></a>
          <input type="submit" class="hidden" />
     </form>
   </div>
@@ -19,12 +19,12 @@ signupVipPageView =
 <div class="newdesign">
 <div class="try-skrivapa">
   <div class="left">
-       <h2>Gratis SkrivaPå till och med 31 december!</h2>
-       <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+       <h2>$_signupVipPageViewHead()$</h2>
+       <p>$_signupVipPageViewBody()$</p>
   </div>
   <div class="right">
      <form action="" method="post">
-         <input type="email"  infotext="Fyll i din e-postadress" name="email" class="shiny"/> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
+         <input type="email"  infotext="$_signupVipPageViewEmail()$" name="email" class="shiny"/> <a class="submit btn-small green2 center float-right" href="#"><p>$_signupVipPageViewCreateAccount()$</p></a>
          <input type="submit" class="hidden"/>
     </form>
   </div>
@@ -33,17 +33,15 @@ signupVipPageView =
 ####
 activatePageViewNotValidLink=
     <div class="centerdivnarrow">
-      <p> Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen fyll i
-        din mailadress så skickar vi en ny aktiveringslänk omedelbart.
-      </p>
+      <p>$_activatePageViewNotValidLinkBody()$</p>
       <form action="" method="post">
         <table>
           <tr>
-            <td>E-mail:</td>
+            <td>$_activatePageViewNotValidLinkEmail()$</td>
             <td><input type="email" name="email" value="$if(email)$$email$$endif$" /></td>
           </tr>
         </table>
-        <input type="submit" name="resendActivate" value="Skicka"  class="validateEmail" />
+        <input type="submit" name="resendActivate" value="$_activatePageViewNotValidLinkSend()$"  class="validateEmail" />
       </form>
     </div>
 ####
