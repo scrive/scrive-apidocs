@@ -46,7 +46,7 @@ import Control.Monad.Error
 import API.API
 import Routing
 import API.Service.ServiceState
-import API.IntegrationAPIUtils
+import API.APICommons
 import Doc.DocUtils
 import Company.CompanyState
 import Data.Foldable (fold)

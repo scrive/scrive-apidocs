@@ -29,7 +29,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import API.API
-import API.IntegrationAPIUtils
+import API.APICommons
 
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , icontent :: BS.ByteString

@@ -15,7 +15,7 @@ module AppControl
 import API.IntegrationAPI
 import API.Service.ServiceState
 import API.Service.ServiceControl
-import API.WebshopAPI
+import API.UserAPI
 import API.MailAPI
 
 import ActionSchedulerState
@@ -307,7 +307,7 @@ handleRoutes = msum [
      , dir "s" $ param "eleg" $ hPost $ BankID.handleSignPostBankID
      , dir "d" $ hGet  $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
-     , webshopAPI
+     , userAPI
      , integrationAPI
      -- static files
      , allowHttp $ serveHTMLFiles

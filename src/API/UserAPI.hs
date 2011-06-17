@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-module API.WebshopAPI (webshopAPI)
+module API.UserAPI (userAPI)
        
        {- 
 
@@ -12,7 +12,7 @@ Example Request:
   "involved"   : [{"email"       : "dude@signatory.com",
                    "fstname"     : "John",
                    "sndname"     : "Wayne",
-                   "company"     : "Webshop",     //optional
+                   "company"     : "User",     //optional
                    "companynr"   : "32432432", //optional
                    "personalnr"  : "4324324",  //optional
                    "customfields" : [{"name"  : "BABS"},
@@ -50,7 +50,7 @@ Response example:
                     "email"       : "dude@signatory.com",
                     "fstname"     : "John",
                     "sndname"     : "Wayne",
-                    "company"     : "Webshop",     
+                    "company"     : "User",     
                     "companynr"   : "32432432", 
                     "personalnr"  : "4324324",  
                     "customfields" : [{"name"  : "BABS",
@@ -61,7 +61,7 @@ Response example:
                    "email"       : "gregor@mendel.com",
                    "fstname"     : "Gregor",
                    "sndname"     : "Mendel",
-                   "company"     : "Webshop",     
+                   "company"     : "User",     
                    "companynr"   : "3533432", 
                    "personalnr"  : "123224",  
                    "customfields" : [{"name"  : "BABS"},
@@ -98,22 +98,22 @@ import Text.JSON
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 
-data WebshopAPIContext = WebshopAPIContext {wsbody :: APIRequestBody ,user :: User}
-type WebshopAPIFunction a = APIFunction WebshopAPIContext a
+data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
+type UserAPIFunction a = APIFunction UserAPIContext a
 
-instance APIContext WebshopAPIContext where
+instance APIContext UserAPIContext where
     body= wsbody
     newBody b ctx = ctx {wsbody = b}
     apiContext  = do
-        muser <- coopUser
+        muser <- apiUser
         mbody <- apiBody 
         case (muser, mbody)  of
-             (Just u, Right b) -> return $ Right $ WebshopAPIContext { wsbody = b, user = u}
+             (Just u, Right b) -> return $ Right $ UserAPIContext { wsbody = b, user = u}
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
              (_, Left s)             -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
 
-coopUser ::  Kontra (Maybe User)
-coopUser = do
+apiUser ::  Kontra (Maybe User)
+apiUser = do
     email <- getFieldUTFWithDefault BS.empty "email"
     muser <- query $ GetUserByEmail Nothing (Email email)
     case muser of
@@ -124,8 +124,8 @@ coopUser = do
                then return $ Just user
                else return Nothing
 
-webshopAPI :: Kontra Response
-webshopAPI =  dir "webshop" $ msum [ apiCall "sendnewdocument" sendNewDocument
+userAPI :: Kontra Response
+userAPI =  dir "webshop" $ msum [ apiCall "sendnewdocument" sendNewDocument
                                  , apiCall "sendFromTemplate" sendFromTemplate
                                  , apiCall "getDocumentStatusAndSignatories" getDocumentStatusAndSignatories
                                  , apiCall "sendReminder" sendReminder
@@ -137,7 +137,7 @@ getDocumentType 1 = Signable Contract
 getDocumentType 3 = Signable Offer
 getDocumentType _ = error "Cannot create other types."
 
-sendReminder :: WebshopAPIFunction APIResponse
+sendReminder :: UserAPIFunction APIResponse
 sendReminder = do
   ctx <- askKontraContext  
   doc <- getDocument
@@ -154,7 +154,7 @@ sendReminder = do
   return $ toJSObject [("documentid", JSString $ toJSString $ show (documentid doc))]  
                                 
 
-getDocumentStatusAndSignatories :: WebshopAPIFunction APIResponse
+getDocumentStatusAndSignatories :: UserAPIFunction APIResponse
 getDocumentStatusAndSignatories = do
   doc <- getDocument
   let signatories = [s|s <- documentsignatorylinks doc,
@@ -182,7 +182,7 @@ fieldDefinitionToJSObject fd =
                else []
                                
   
-getDocument :: WebshopAPIFunction Document
+getDocument :: UserAPIFunction Document
 getDocument = do
   author <- user <$> ask  
   mdocumentid <- maybeReadM $ apiAskString "documentid"
@@ -195,7 +195,7 @@ getDocument = do
   when (not $ isUserAuthor doc author) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
   return doc
 
-sendFromTemplate :: WebshopAPIFunction APIResponse
+sendFromTemplate :: UserAPIFunction APIResponse
 sendFromTemplate = do
   author <- user <$> ask
   ctx <- askKontraContext  
@@ -235,7 +235,7 @@ sendFromTemplate = do
           lift $ lift $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("documentid", JSString $ toJSString $ show (documentid sdoc))]
 
-getTemplate :: WebshopAPIFunction Document
+getTemplate :: UserAPIFunction Document
 getTemplate = do 
   author <- user <$> ask
   mtemplateid <- maybeReadM $ apiAskString "templateid"
@@ -250,7 +250,7 @@ getTemplate = do
   return temp
   
   
-sendNewDocument :: WebshopAPIFunction APIResponse
+sendNewDocument :: UserAPIFunction APIResponse
 sendNewDocument = do
   author <- user <$> ask
   mtitle <- apiAskBS "title"
@@ -302,7 +302,7 @@ sendNewDocument = do
           lift $ lift $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
-getFiles :: WebshopAPIFunction [(BS.ByteString, BS.ByteString)]
+getFiles :: UserAPIFunction [(BS.ByteString, BS.ByteString)]
 getFiles = do
   mfiles <- apiLocal "files" $ apiMapLocal $ do
     name    <- apiAskBS     "name"
@@ -313,7 +313,7 @@ getFiles = do
     Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
     Just files -> return files
 
-getSignatories :: WebshopAPIFunction [SignatoryDetails]
+getSignatories :: UserAPIFunction [SignatoryDetails]
 getSignatories = do
   minvolved <- apiLocal "involved" $ apiMapLocal $ do
     memail      <- apiAskBS "email"
