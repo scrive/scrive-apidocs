@@ -3,13 +3,13 @@ contractrestartbuttontext=Starta om dokument
 ###
 offerrestartbuttontext=Starta om offert
 ###
-orderrestartbuttontext=Starta om orderbekräftelse
+orderrestartbuttontext=Starta om order
 ###
 contractcancelbuttontext=Återkalla inbjudan
 ###
 offercancelbuttontext=Återkalla offert
 ###
-ordercancelbuttontext=Återkalla orderbekräftelse
+ordercancelbuttontext=Återkalla order
 ###
 contractcancelbyauthormodaltitle=
          <h2>Återkalla inbjudan</h2> 

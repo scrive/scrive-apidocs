@@ -43,11 +43,11 @@ offercancelledinfoheader=Offert återkallad
 ###
 ordercancelledinfoheader=Order återkallad
 ###
-contractcancelledinfotext=$authorname$  har återkallat sin inbjudan att underteckna dokumentet.
+contractcancelledinfotext=$authorfstname$ $authorsndname$ har återkallat sin inbjudan att underteckna dokumentet.
 ###
-offercancelledinfotext=$authorname$ har återkallat offerten. Den går således inte att acceptera.
+offercancelledinfotext=$authorfstname$ $authorsndname$ har återkallat offerten. Den går således inte att acceptera.
 ###
-ordercancelledinfotext=$authorname$ har återkallat ordern. Den går således in att acceptera.
+ordercancelledinfotext=$authorfstname$ $authorsndname$ har återkallat ordern. Den går således in att acceptera.
 ###
 contractsignedinfoheader=Färdigställt
 ###
