@@ -1,86 +1,22 @@
 {-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  API.UserAPI
+-- Maintainer  :  mariusz@skrivapa.se
+-- Stability   :  development
+-- Portability :  portable
+--
+-- Simple api that allows some action to be done as system user, but thru the API.
+-- Calls require authorisation with user email and password
+-- 
+-----------------------------------------------------------------------------
+
 module API.UserAPI (userAPI)
-       
-       {- 
 
-// create and send a single new contract from a template
-/coopdemo/api/sendFromTemplate
-
-Example Request:
-
-{ "templateid" : "43243242",
-  "involved"   : [{"email"       : "dude@signatory.com",
-                   "fstname"     : "John",
-                   "sndname"     : "Wayne",
-                   "company"     : "User",     //optional
-                   "companynr"   : "32432432", //optional
-                   "personalnr"  : "4324324",  //optional
-                   "customfields" : [{"name"  : "BABS"},
-                                     {"name"  : "Age",
-                                      "value" : "23"}]}]}
-
-// note: custom field names must match those in the template and all
-// custom fields from the template must exist in the request
-
-// note: if you leave out the value in the customfield, it will be
-// left up to the signatory to fill out
-
-// note: "signatories" has changed to "involved"
-
-// note: involved is a list of signatories; author is not included
-
-Example response:
-
-{ "documentid" : "43265434" }
-
-// get the document status for an existing document. also return all
-// of the BABS numbers that have been filled in by signatories
-
-/coopdemo/api/getDocumentStatusAndSignatories
-
-Request example:
-
-{ "documentid" : "765756765" }
-
-Response example:
-
-{ "documentid"     : "765756765",
-  "documentstatus" : "Pending",
-  "signatories" : [{"signed"      : true,
-                    "email"       : "dude@signatory.com",
-                    "fstname"     : "John",
-                    "sndname"     : "Wayne",
-                    "company"     : "User",     
-                    "companynr"   : "32432432", 
-                    "personalnr"  : "4324324",  
-                    "customfields" : [{"name"  : "BABS",
-                                       "value" : "432432423"},
-                                      {"name"  : "Age",
-                                       "value" : "23"}]},
-                  {"signed"      : false,
-                   "email"       : "gregor@mendel.com",
-                   "fstname"     : "Gregor",
-                   "sndname"     : "Mendel",
-                   "company"     : "User",     
-                   "companynr"   : "3533432", 
-                   "personalnr"  : "123224",  
-                   "customfields" : [{"name"  : "BABS"},
-                                     {"name"  : "Age",
-                                      "value" : ""}]}]}
-
-// note: if a signatory has not signed, his fields may be empty. Use
-// the "signed" property to see if he has signed.
-
-// note: if no value is given for a custom field, it is because it has
-// not been filled out.
-
-
--}
 where
 
 import API.API
 import API.APICommons hiding (SignatoryTMP(..))
---import qualified API.APICommons as SignatoryTMP (SignatoryTMP(..))
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocUtils
@@ -97,7 +33,6 @@ import Data.List
 import Data.Maybe
 import Control.Monad.Reader
 import Text.JSON
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
@@ -127,18 +62,13 @@ apiUser = do
                else return Nothing
 
 userAPI :: Kontra Response
-userAPI =  dir "webshop" $ msum [ apiCall "sendnewdocument" sendNewDocument
+userAPI =  dir "userapi" $ msum [ apiCall "sendnewdocument" sendNewDocument
                                  , apiCall "sendFromTemplate" sendFromTemplate
-                                 , apiCall "getDocument" getDocument
+                                 , apiCall "document" getDocument
                                  , apiCall "sendReminder" sendReminder
                                  , apiUnknownCall
                                  ]
            
-getDocumentType :: Integer -> DocumentType
-getDocumentType 1 = Signable Contract
-getDocumentType 3 = Signable Offer
-getDocumentType _ = error "Cannot create other types."
-
 sendReminder :: UserAPIFunction APIResponse
 sendReminder = do
   ctx <- askKontraContext  
@@ -153,7 +83,7 @@ sendReminder = do
                                                   , email = signatoryemail $ signatorydetails signlink}]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
-  return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]       
+  return $ toJSObject []       
                                 
 
 getDocument :: UserAPIFunction APIResponse
@@ -209,18 +139,14 @@ sendFromTemplate = do
           liftIO $ print sdoc
 
           lift $ lift $ postDocumentChangeAction sdoc doc Nothing
-          return $ toJSObject [("documentid", JSString $ toJSString $ show (documentid sdoc))]
+          return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
 getTemplate :: UserAPIFunction Document
 getTemplate = do 
   author <- user <$> ask
-  mtemplateid <- maybeReadM $ apiAskString "templateid"
-  when (isNothing mtemplateid) $ throwApiError API_ERROR_MISSING_VALUE "The templateid was not given or was invalid."
-  let Just templateid = mtemplateid
-  mtemp <- query $ GetDocumentByDocumentID templateid
-  when (isNothing mtemp) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
-  let Just temp = mtemp
-  -- same error message because we can't leak that the docid exists
+  mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
+  when (isNothing mtemplate) $ throwApiError API_ERROR_NO_DOCUMENT "No template exists with this ID"
+  let Just temp = mtemplate
   when (not $ isUserAuthor temp author) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
   when (not $ isTemplate temp) $ throwApiError API_ERROR_OTHER "This document is not a template"
   return temp
@@ -233,19 +159,17 @@ sendNewDocument = do
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""
   let title = fromJust mtitle
   files <- getFiles
-  when (Data.List.null files) $ throwApiError API_ERROR_MISSING_VALUE "There was no file uploaded. Exactly one file is required."
-  when (length files > 1) $ throwApiError API_ERROR_MISSING_VALUE "There was more than one file uploaded. Exactly one file is required."
+  when (length files /= 1) $ throwApiError API_ERROR_MISSING_VALUE "There has bad number of files. Exactly one file is required."
   let (filename, content) = head files
   signatories <- getSignatories
   when (Data.List.null signatories) $ throwApiError API_ERROR_MISSING_VALUE "There were no involved parties. At least one is needed."
-  mdoctype <- apiAskInteger "type"  
-  when (isNothing mdoctype) $ throwApiError API_ERROR_MISSING_VALUE "You forgot to add the document type. (ex: type: 1)"
-  let doctype = fromJust mdoctype
+  mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
+  when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
+  let doctype = toDocumentType $ fromJust mtype
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
   ctx <- askKontraContext  
-  --mnewdoc <- makeDocumentFromFile (getDocumentType doctype) (Input (Right content) (Just filename) "")
-  newdoc <- update $ NewDocument author title (getDocumentType doctype) (ctxtime ctx)
+  newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
   liftIO $ print newdoc
   _ <- lift $ lift $ handleDocumentUpload (documentid newdoc) content filename
   let saccount = getSignatoryAccount author
@@ -278,53 +202,9 @@ sendNewDocument = do
           lift $ lift $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
-getFiles :: UserAPIFunction [(BS.ByteString, BS.ByteString)]
-getFiles = do
-  mfiles <- apiLocal "files" $ apiMapLocal $ do
-    name    <- apiAskBS     "name"
-    content <- apiAskBase64 "content"
-    when (isNothing name || isNothing content) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
-    return $ Just (fromJust name, fromJust content)    
-  case mfiles of
-    Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
-    Just files -> return files
-
 getSignatories :: UserAPIFunction [SignatoryDetails]
 getSignatories = do
-  minvolved <- apiLocal "involved" $ apiMapLocal $ do
-    memail      <- apiAskBS "email"
-    mfstname    <- apiAskBS "fstname"
-    msndname    <- apiAskBS "sndname"
-    mcompany    <- apiAskBS "company"
-    mcompanynr  <- apiAskBS "companynr"
-    mpersonalnr <- apiAskBS "personalnr"
-    mfields     <- apiLocal "customfields" $ apiMapLocal $ do
-      mname  <- apiAskBS "name"
-      when (isNothing mname) $ throwApiError API_ERROR_MISSING_VALUE "Missing name in customfields."
-      mvalue <- apiAskBS "value"
-      return $ Just (fromJust mname, mvalue)
-    when (isNothing memail || isNothing mfstname || isNothing msndname) $
-      throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
-    return $ Just SignatoryDetails { signatoryfstname                  = fromJust mfstname
-                                   , signatorysndname                  = fromJust msndname
-                                   , signatorycompany                  = maybe BS.empty id mcompany
-                                   , signatorypersonalnumber           = maybe BS.empty id mcompanynr
-                                   , signatorycompanynumber            = maybe BS.empty id mpersonalnr
-                                   , signatoryemail                    = fromJust memail
-                                   , signatorysignorder                = SignOrder 1
-                                   , signatoryfstnameplacements        = []
-                                   , signatorysndnameplacements        = []
-                                   , signatorycompanyplacements        = []
-                                   , signatoryemailplacements          = []
-                                   , signatorypersonalnumberplacements = []
-                                   , signatorycompanynumberplacements  = []
-                                   , signatoryotherfields              = maybe [] (map (\(name, mvalue) ->
-                                                                                         FieldDefinition { fieldlabel = name,
-                                                                                                           fieldvalue = maybe BS.empty id mvalue,
-                                                                                                           fieldplacements = [],
-                                                                                                           fieldfilledbyauthor = isJust mvalue
-                                                                                                         })) mfields
-                                   }
-  case minvolved of
-    Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
-    Just involved -> return involved
+    minvolved  <- apiLocal "involved" $ apiMapLocal $ fmap toSignatoryDetails <$> getSignatoryTMP
+    case minvolved of
+        Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
+        Just involved -> return involved

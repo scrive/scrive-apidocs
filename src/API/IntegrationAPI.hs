@@ -147,11 +147,7 @@ createDocument = do
    mtitle <- apiAskBS "title"
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
-   files <- fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
-                n <- apiAskBS "name"
-                c <- apiAskBase64 "content"
-                when (isNothing n || isNothing c) $ throwApiError API_ERROR_MISSING_VALUE "Problem with uploaded file"
-                return $ Just (fromJust n, fromJust c)
+   files <- getFiles
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
