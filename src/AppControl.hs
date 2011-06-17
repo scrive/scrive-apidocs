@@ -278,7 +278,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0
      , dir "adminonly" $ dir "deletemigrate" $ hGet $ Administration.handleMigrateForDeletion
      , dir "adminonly" $ dir "migrateattachments" $ hGet $ DocControl.handleMigrateDocumentAuthorAttachments
-       
+     , dir "adminonly" $ dir "makesigauthor" $ hGet $ Administration.migrateDocsNoAuthor
        
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet $ DocControl.migrateDocSigLinks
      , dir "adminonly" $ dir "unquarantineall" $ hGet $ Administration.handleUnquarantineAll
