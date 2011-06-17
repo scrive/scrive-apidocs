@@ -79,6 +79,8 @@ Response example:
 where
 
 import API.API
+import API.APICommons hiding (SignatoryTMP(..))
+--import qualified API.APICommons as SignatoryTMP (SignatoryTMP(..))
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocUtils
@@ -127,7 +129,7 @@ apiUser = do
 userAPI :: Kontra Response
 userAPI =  dir "webshop" $ msum [ apiCall "sendnewdocument" sendNewDocument
                                  , apiCall "sendFromTemplate" sendFromTemplate
-                                 , apiCall "getDocumentStatusAndSignatories" getDocumentStatusAndSignatories
+                                 , apiCall "getDocument" getDocument
                                  , apiCall "sendReminder" sendReminder
                                  , apiUnknownCall
                                  ]
@@ -140,7 +142,7 @@ getDocumentType _ = error "Cannot create other types."
 sendReminder :: UserAPIFunction APIResponse
 sendReminder = do
   ctx <- askKontraContext  
-  doc <- getDocument
+  doc <- getUserDoc
   let siglinkstoremind = [sl | sl <- documentsignatorylinks doc
                              , isSignatory sl
                              , not $ hasSigned sl]
@@ -151,50 +153,24 @@ sendReminder = do
                                                   , email = signatoryemail $ signatorydetails signlink}]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
-  return $ toJSObject [("documentid", JSString $ toJSString $ show (documentid doc))]  
+  return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]       
                                 
 
-getDocumentStatusAndSignatories :: UserAPIFunction APIResponse
-getDocumentStatusAndSignatories = do
-  doc <- getDocument
-  let signatories = [s|s <- documentsignatorylinks doc,
-                     isSignatory s]
-  return $ toJSObject [("documentid", JSString $ toJSString $ show $ documentid doc)
-                      ,("documentstatus", JSString $ toJSString $ show $ documentstatus doc)
-                      ,("signatories", JSArray $ map (sigToJSON) signatories)]
-
-sigToJSON :: SignatoryLink -> JSValue  
-sigToJSON siglink = JSObject $ toJSObject [("signed", JSBool $ isJust $ maybesigninfo siglink)
-                               ,("email", JSString $ toJSString $ BS.toString $ signatoryemail $ signatorydetails siglink)
-                               ,("fstname", JSString $ toJSString $ BS.toString $  signatoryfstname $ signatorydetails siglink)
-                               ,("sndname", JSString $ toJSString $ BS.toString $  signatorysndname $ signatorydetails siglink)
-                               ,("company", JSString $ toJSString $ BS.toString $  signatorycompany $ signatorydetails siglink)
-                               ,("companynr", JSString $ toJSString $ BS.toString $  signatorycompanynumber $ signatorydetails siglink)
-                               ,("personalnr", JSString $ toJSString $  BS.toString $ signatorypersonalnumber $ signatorydetails siglink)
-                               ,("customfields", JSArray $ map fieldDefinitionToJSObject $ signatoryotherfields $ signatorydetails siglink)]
-
-                                                                                  
-fieldDefinitionToJSObject :: FieldDefinition -> JSValue
-fieldDefinitionToJSObject fd = 
-  JSObject $ toJSObject $ [("name", JSString $ toJSString $ BS.toString $ fieldlabel fd)]
-            ++ if not (BS.null $ fieldvalue fd) || fieldfilledbyauthor fd 
-               then [("value", JSString $ toJSString $ BS.toString $ fieldvalue fd)]
-               else []
-                               
-  
-getDocument :: UserAPIFunction Document
+getDocument :: UserAPIFunction APIResponse
 getDocument = do
-  author <- user <$> ask  
-  mdocumentid <- maybeReadM $ apiAskString "documentid"
-  when (isNothing mdocumentid) $ throwApiError API_ERROR_MISSING_VALUE "The documentid was not given or was invalid."
-  let Just documentid = mdocumentid
-  mdoc <- query $ GetDocumentByDocumentID documentid
-  when (isNothing mdoc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
-  let Just doc = mdoc
-  -- same error message because we can't leak that the docid exists
-  when (not $ isUserAuthor doc author) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
-  return doc
+  doc <- getUserDoc
+  api_doc <- api_document True (doc)
+  return $ toJSObject [("document",api_doc)]
 
+
+getUserDoc :: UserAPIFunction Document
+getUserDoc = do
+  author <- user <$> ask  
+  mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+  when (isNothing mdocument || (not $ isUserAuthor (fromJust mdocument) author)) $
+        throwApiError API_ERROR_NO_DOCUMENT "No document"
+  return (fromJust mdocument)
+                               
 sendFromTemplate :: UserAPIFunction APIResponse
 sendFromTemplate = do
   author <- user <$> ask
