@@ -74,7 +74,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import InspectXMLInstances ()
 import InspectXML
---import Templates.Langs
+import User.Lang
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -493,7 +493,7 @@ appHandler appConf appGlobals = do
       let peerip = case addrAddress addr of
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
-
+      let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
       mcompany <- getCompanyFromSession session
@@ -521,7 +521,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = langVersion (fromMaybe defaultValue $ lang <$> usersettings <$> muser ) templates2 
+                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2 
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
                               { TW.signConf = trustWeaverSign appConf

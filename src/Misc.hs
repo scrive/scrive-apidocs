@@ -601,3 +601,16 @@ mapSnd f = fmap (onSnd f)
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
+
+
+-- Splits string over some substring
+splitOver:: (Eq a) => [a] -> [a] -> [[a]]
+splitOver = splitOver' []
+    where
+        splitOver' [] _ []  = []
+        splitOver' c _ []  = [reverse c]
+        splitOver' c a b@(bh:bt) = 
+            if (a `isPrefixOf` b)  
+             then (reverse c) : (splitOver' [] a (drop (length a) b) )
+             else splitOver' (bh:c) a bt 
+
