@@ -199,6 +199,7 @@ handleRoutes = msum [
      , dir "or" $ param "remind" $ hPost $ DocControl.handleBulkOrderRemind
      , dir "or" $ hPost $ DocControl.handleOrdersReload
      
+     , dir "d"                     $ hGet  $ DocControl.handleAttachmentDownloadForAuthor     
      , dir "d"                     $ hGet  $ DocControl.showContractsList
      , dir "d"                     $ hGet  $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGet
@@ -208,7 +209,7 @@ handleRoutes = msum [
      , dir "d" $ param "remind"    $ hPost $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ DocControl.handleContractsReload
      , dir "d"                     $ hPost $ DocControl.handleIssueShowPost
-     , dir "d"                     $ hGet  $ DocControl.handleAttachmentDownloadForAuthor
+
      
      , dir "df"                    $ hGet  $ DocControl.handleFileGet
      , dir "dv"                    $ hGet  $ DocControl.handleAttachmentViewForAuthor
