@@ -79,6 +79,7 @@ module Doc.DocState
     , SaveSigAttachment(..)
     , MigrateDocumentAuthorAttachments(..)
     , UnquarantineAll(..)
+    , MakeFirstSignatoryAuthor(..)
     )
 where
 
@@ -1279,6 +1280,21 @@ migrateDocumentAuthorAttachments docid files =
                          }
           else Left "No documentattachments."
   
+makeFirstSignatoryAuthor :: DocumentID -> Update Documents (Either String Document)
+makeFirstSignatoryAuthor docid =
+  modifySignableOrTemplate docid $ 
+  \doc -> case getAuthorSigLink doc of
+    Just _ -> Left "Already has an author."
+    Nothing -> 
+      let fsig = head (documentsignatorylinks doc)
+          rsig = tail (documentsignatorylinks doc)
+      in Right doc { documentsignatorylinks =
+                        fsig { signatoryroles = SignatoryAuthor : (signatoryroles fsig) }
+                        
+                        :
+                        
+                        rsig
+                   }
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1352,4 +1368,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'migrateDocumentAuthorAttachments
                         , 'unquarantineAll
                         , 'getDocumentByDocumentIDAllEvenQuarantinedDocuments
+                        , 'makeFirstSignatoryAuthor
                         ])
