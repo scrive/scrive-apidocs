@@ -241,3 +241,4 @@ instance SafeEnum API_ERROR where
     toSafeEnum _ = Nothing
 
 -- Other constants used for api calls
+

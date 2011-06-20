@@ -281,6 +281,4 @@ connectCompanyToSession sid cid ssid = do
     if (loaded) 
      then return $ BackToReferer
      else mzero
-    
 
-                      

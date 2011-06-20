@@ -268,3 +268,4 @@ setCurrentService a = do
    ctx <- get 
    srv <- liftMM (query . GetService) (return $ getService a)
    put ctx {ctxservice = srv}
+
