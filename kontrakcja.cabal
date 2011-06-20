@@ -95,6 +95,7 @@ Executable kontrakcja-server
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck
   Build-depends: text
+  Build-depends: transformers
 
   Main-Is: Main.hs
 

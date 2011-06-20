@@ -95,8 +95,8 @@ integrationAPI =  dir "integration" $ msum [
                     , apiCall "set_document_tag"  setDocumentTag
                     , apiCall "remove_document" removeDocument
                     , apiUnknownCall
-                    , dir "connectuser" $ hGet $ connectUserToSession
-                    , dir "connectcompany" $ hGet $ connectCompanyToSession
+                    , dir "connectuser" $ hGet3 $ connectUserToSession
+                    , dir "connectcompany" $ hGet3 $ connectCompanyToSession
                   ]
 --- Real api requests
 getRequestUser:: IntegrationAPIFunction User
