@@ -82,7 +82,7 @@ signatoryBox =
 ####
 signatoryMessage=
 $if(signatory.signdate)$
-    $process.signatorysignedtext$
+    $process.signatorysignedtext$ $signatory.signdate$
 $elseif(signatory.datamismatch)$
         Felaktig e-legitmation
 $elseif(timedout)$
