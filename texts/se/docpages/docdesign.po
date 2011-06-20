@@ -1,0 +1,540 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docdesign.st:orderexpirytext
+msgid "_orderexpirytext"
+msgstr "Förfallodatum"
+
+#: docpages/docdesign.st:offerexpirytext
+msgid "_offerexpirytext"
+msgstr "Förfallodatum"
+
+#: docpages/docdesign.st:contractexpirytext
+msgid "_contractexpirytext"
+msgstr "Undertecknas inom"
+
+#: docpages/docdesign.st:orderconfirmsendtext
+msgid "_orderconfirmsendtext"
+msgstr "Är du säker att du vill skicka orderbekräftelsen"
+
+#: docpages/docdesign.st:offerconfirmsendtext
+msgid "_offerconfirmsendtext"
+msgstr "Är du säker på att du vill skicka offerten"
+
+#: docpages/docdesign.st:contractconfirmsendtext
+msgid "_contractconfirmsendtext"
+msgstr ""
+
+#: docpages/docdesign.st:orderconfirmsendtitle
+msgid "_orderconfirmsendtitle"
+msgstr "Skicka orderbekräftelse"
+
+#: docpages/docdesign.st:offerconfirmsendtitle
+msgid "_offerconfirmsendtitle"
+msgstr "Skicka offert"
+
+#: docpages/docdesign.st:contractconfirmsendtitle
+msgid "_contractconfirmsendtitle"
+msgstr "Skicka inbjudan"
+
+#: docpages/docdesign.st:ordersendtext
+msgid "_ordersendtext"
+msgstr "Skicka order"
+
+#: docpages/docdesign.st:offersendtext
+msgid "_offersendtext"
+msgstr "Skicka offert"
+
+#: docpages/docdesign.st:contractsendtext
+msgid "_contractsendtext"
+msgstr "Skicka"
+
+#: docpages/docdesign.st:orderexpirywarntext
+msgid "_orderexpirywarntext"
+msgstr "Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen."
+
+#: docpages/docdesign.st:offerexpirywarntext
+msgid "_offerexpirywarntext"
+msgstr "Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum. Detta regleras av avtalslagen."
+
+#: docpages/docdesign.st:contractexpirywarntext
+msgid "_contractexpirywarntext"
+msgstr "Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen."
+
+#: docpages/docdesign.st:orderstep1text
+msgid "_orderstep1text"
+msgstr "Välj orderbekräftelse"
+
+#: docpages/docdesign.st:offerstep1text
+msgid "_offerstep1text"
+msgstr "Välj offert"
+
+#: docpages/docdesign.st:contractstep1text
+msgid "_contractstep1text"
+msgstr "Välj dokument"
+
+#: docpages/docdesign.st:ordername
+msgid "_ordername"
+msgstr "Orderbekräftelse"
+
+#: docpages/docdesign.st:offername
+msgid "_offername"
+msgstr "Offert"
+
+#: docpages/docdesign.st:contractname
+msgid "_contractname"
+msgstr "Avtal"
+
+#: docpages/docdesign.st:ordertitle
+msgid "_ordertitle"
+msgstr "ORDER-BEKRÄFTELSE"
+
+#: docpages/docdesign.st:offertitle
+msgid "_offertitle"
+msgstr "OFFERT"
+
+#: docpages/docdesign.st:contracttitle
+msgid "_contracttitle"
+msgstr "DOKUMENT"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_signStepsBodyDaysLeftToSign"
+msgstr " dagar"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_edit-invite-text-dialogFooterOk"
+msgstr "Ok"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_edit-invite-text-dialogFooterOwnMessage"
+msgstr "Skriv eget meddelande"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_edit-invite-text-dialogFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_edit-invite-text-dialogHead"
+msgstr "Hälsningsmeddelande"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-text-sendFooterSend"
+msgstr "Skicka"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-text-sendFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-text-sendIfNotNormalOrFieldsTo"
+msgstr " till "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-text-send-normalBody2"
+msgstr "?               Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-text-send-normalBody1"
+msgstr "Vill du skicka en inbjudan att underteckna dokumentet till "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-sendinviteBody5"
+msgstr " till "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-sendinviteBody4"
+msgstr " Vill du skicka inbjudan att fylla i och underteckna dokumentet "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-sendinviteBody3"
+msgstr "Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att               få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-sendinviteBody2To"
+msgstr " till "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-sendinviteBody"
+msgstr "Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteFooterSkrivaPa"
+msgstr "SkrivaPå"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteSubBody3"
+msgstr " för att läsa mer."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteSubBody2ClickHere"
+msgstr "Klicka här"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteSubBody"
+msgstr "Har du ingen e-legitimation? Du kan ladda ned en              e-legitimation från din internetbank eller från              Telia. "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteSubHead"
+msgstr "Välj typ av e-legitimation"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteBody3"
+msgstr " med e-post."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteBody2"
+msgstr "När du undertecknat kommer en automatisk inbjudan att skickas till             "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteBody"
+msgstr "Är du säker att du vill underteckna dokumentet "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-signinviteHead"
+msgstr "Underteckna"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-basicChangeToChangeProcess"
+msgstr "Byt process"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-basicChangeToFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-basicChangeToBody2"
+msgstr "När du byter kommer alla ändringar du gjort förutom de för part 1 och part 2 att försvinna.             Är du säker att du vill byta process          "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-basicChangeToBody"
+msgstr "Du kan byta till förenklad process för att göra processen ännu smidigare.            Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod.           "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-basicChangeToHead"
+msgstr "Vill du byta till förenklad process?"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-advancedChangeToFooterChangeProcess"
+msgstr "Byt process"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-advancedChangeToFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-advancedBody"
+msgstr "Du kan byta till avancerad process för att ta del av mer avancerade funktioner så som förfallodatum, mallar, massutskick mm. Denna process tillhör betalplanerna Business och Enterprise, även vid fri testperiod."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-confirm-advancedChangeToHead"
+msgstr "Vill du byta till avancerad process?"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVMultiSave"
+msgstr "Spara"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVMultiChooseFile"
+msgstr "Välj fil "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVProblemNext"
+msgstr "Nästa"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVProblemBack"
+msgstr "Bakåt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVDataOrgNumber"
+msgstr "Org. nr"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVDataPersonalNumber"
+msgstr "Pers. nr"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVDataCompany"
+msgstr "Företag"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVDataEmail"
+msgstr "E-post"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVDataLastName"
+msgstr "Efternamn"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2CSVDataFirstName"
+msgstr "Förnamn"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2FooterNext"
+msgstr "Nästa"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2FooterBack"
+msgstr "Bakåt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-2Head"
+msgstr "Massutskick: Granska Data"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-1ChooseFile"
+msgstr " Välj fil "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-1CSVOnly"
+msgstr "OBS! Endast .CSV"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-1ChooseFileToUpLoad"
+msgstr "Välj fil att ladda upp"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-1Body"
+msgstr "            Du har valt att göra ett massutskick, för att genomföra detta krävs att du laddar upp ett dokument med formatet .csv          "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialog-csvupload-1Head"
+msgstr "Massutskick"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadFooterAttach"
+msgstr "Bifoga"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadChooseExistingAttachment"
+msgstr "Välj bilaga"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadSaved"
+msgstr "Sparad på SkrivaPå"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadChooseAttachment"
+msgstr "Välj bilaga"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadChooseFile"
+msgstr "Välj fil"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoadOnlyPDF"
+msgstr "OBS! Endast PDF"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogUpLoad"
+msgstr "Välj fil från dator"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogChooseAttachment"
+msgstr "Välj de bilagor du vill bifoga"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_update-attachments-dialogHead"
+msgstr "Välj bilagor"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsSave"
+msgstr "Spara"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsCancel"
+msgstr "Avbryt"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsRecipient"
+msgstr "Mottagare"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsels"
+msgstr "            "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs"
+msgstr "Begar fran  "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc"
+msgstr "Beskrivning "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentname"
+msgstr "Bilaga      "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsMinusbutton"
+msgstr "            "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAddAttachment"
+msgstr "Lägg till bilaga"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsHead"
+msgstr "Begär bilaga"
+
+#: docpages/docdesign.st:validationdropdown
+msgid "_validationdropdownIfEleg"
+msgstr "E-Legitimation"
+
+#: docpages/docdesign.st:validationdropdown
+msgid "_validationdropdownIfEmail"
+msgstr "E-post"
+
+#: docpages/docdesign.st:validationdropdown
+msgid "_validationdropdownChooseVMethod"
+msgstr "Välj verifieringsmetod"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signinviteSkrivaPa2"
+msgstr "SkrivaPå"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_switchercheckboxNotSignatory"
+msgstr "Ej undertecknande part"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_switchercheckboxSignLast"
+msgstr "Underteckna sist "
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionssaveTemplate"
+msgstr "Spara mall"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_addsigattachmentlink"
+msgstr "BEGÄR BILAGA"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_addattachmentlink"
+msgstr "BIFOGA BILAGA"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_editinvitetextlink"
+msgstr "JUSTERA HÄLSNINGSMEDDELANDE"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_daystosigncheckboxActivateExpDate"
+msgstr "Aktivera förfallodatum"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signinviteSkrivaPa"
+msgstr "SkrivaPå"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_invitetextSaveTemplate"
+msgstr "Spara mall"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_editinvitetextlinkInviteText"
+msgstr "HÄLSNINGSMEDDELANDE"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_daystosigncheckboxExpDate"
+msgstr "Förfallodatum"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsBoxEleg"
+msgstr "E-Legitimation"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsBoxEmail"
+msgstr "E-post"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsBoxChooseVerification"
+msgstr "Välj verifieringsmetod"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsNextStep"
+msgstr "Nästa steg"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsRemovePerson"
+msgstr "TA BORT PERSON"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsAddPerson"
+msgstr "LÄGG TILL PERSON"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_authorsignatoryradioSenderNotSign"
+msgstr "Ej undertecknande part"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_authorsignatoryradioSenderSign"
+msgstr "Undertecknande part"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_personpanePart1"
+msgstr "PART 1"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStep2ContentSignOrder"
+msgstr "SIGNERINGSORDNING"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStep2ContentPersons"
+msgstr "PERSONER"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsFunctionalityChangeToSimplified"
+msgstr "BYT TILL FÖRENKLAD PROCES"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsFunctionalityChangeToAdvanced"
+msgstr "BYT TILL AVANCERAD PROCESS"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsMenuEmptyStepSaveAsTemplate"
+msgstr "SPARA SOM MALL"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step3selectIfNotTemplate"
+msgstr "Underteckna och skicka!"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step3selectIfTemplate"
+msgstr "Färdigställ och spara"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step2selectIfElse"
+msgstr "Fyll i uppgifter"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step2selectIfisbasic"
+msgstr "Fyll i uppgifter &amp; Skicka!"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step2selectIfTemplate"
+msgstr "Utforma mall"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step1selectIfTemplate"
+msgstr "Välj mall"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsTitleRowTextContainerIfTemplate"
+msgstr "MALL:"
+

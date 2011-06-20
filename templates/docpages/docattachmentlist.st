@@ -13,17 +13,17 @@ $loadingdialog()$
                 <div class="col float-left">
                     <div class="tab-dd float-left">
                         <div class="tab-dd-button">
-                          <a href="javascript:;"><p>Alternativ</p></a>
+                          <a href="javascript:;"><p>$_pageAttachmentListOptions()$</p></a>
                         </div>
                         <ul class="tab-dd-opts">
-                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
-                            <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listShare">Dela</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_pageAttachmentListDelete()$</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listShare">$_pageAttachmentListShare()$</a></li>
                         </ul>
                     </div>
 
                     <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:92px;margin-left: 20px;" >  
                         <div class="left"> </div>
-                        <div class="label">Ny Bilagor</div> 
+                        <div class="label">$_pageAttachmentListNewAttachment()$</div>
                         <div class="right"> </div>
                         <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
                     </a>
@@ -32,7 +32,7 @@ $loadingdialog()$
                 </div>
 
                 <div class="col float-right">
-                      $searchBox(infotext='Sök dokument')$
+                      $searchBox(infotext='$_pageAttachmentListSearchInfo()$')$
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -43,20 +43,20 @@ $loadingdialog()$
                             <th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
-                                <a href="$currentlink$&amp;sorting=time">Senaste händelse  <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=time">$_pageAttachmentListSortTimeUp()$<em> ▲</em></a>
                                $elseif(params.sorting.time)$
-                                <a href="$currentlink$&amp;sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=timeREV">$_pageAttachmentListSortTimeDown()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=time">Senaste händelse </a>
+                                <a href="$currentlink$&amp;sorting=time">$_pageAttachmentListSortTime()$</a>
                                $endif$
                             </th>
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&amp;sorting=title">Mall <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">$_pageAttachmentListSortTemplateUp()$<em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&amp;sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">$_pageAttachmentListSortTemplateDown()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=title">Mall </a>
+                                <a href="$currentlink$&amp;sorting=title">$_pageAttachmentListSortTemplate()$</a>
                                $endif$
                             </th>
                             <th style="width: 100px;"></th>
@@ -78,7 +78,7 @@ $loadingdialog()$
                                 $endif$
                             </td>
                             <td>
-                                $if(document.isshared)$Delad$endif$
+                                $if(document.isshared)$	$_pageAttachmentListIfShared()$$endif$
                             </td>
                             <td class="right">
                                <!--  <em>▼</em> -->

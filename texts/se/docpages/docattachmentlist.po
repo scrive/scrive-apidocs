@@ -1,0 +1,59 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListIfShared"
+msgstr "Delad"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSortTemplate"
+msgstr "Mall"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSortTemplateDown"
+msgstr "Mall"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSortTemplateUp"
+msgstr "Mall"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSortTime"
+msgstr "Senaste händelse "
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSortTimeDown"
+msgstr "Senaste händelse "
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSortTimeUp"
+msgstr "Senaste händelse "
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListSearchInfo"
+msgstr "Sök dokument"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListNewAttachment"
+msgstr "Ny Bilagor"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListShare"
+msgstr "Dela"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListDelete"
+msgstr "Radera"
+
+#: docpages/docattachmentlist.st:pageAttachmentList
+msgid "_pageAttachmentListOptions"
+msgstr "Alternativ"
+
