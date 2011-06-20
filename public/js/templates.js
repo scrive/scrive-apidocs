@@ -1541,7 +1541,16 @@ safeReady(function() {
 safeReady(function() {
   $("#showexistingattachments").click(function() {
     $("#attachmentselectlist").show();
+    $("#attachmentback").show();
     $("#attachmentbuttons").hide();
+    return false;
+  });
+
+  $("#attachmentback").click(function() {
+    $("#attachmentselectlist").hide();
+    $("#attachmentback").hide();
+    $("#attachmentbuttons").show();
+    return false;
   });
 });
 
