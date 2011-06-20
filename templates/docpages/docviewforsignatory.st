@@ -1,4 +1,10 @@
 ####
+contractrejectbuttontext=Avvisa dokument
+####
+offerrejectbuttontext=Avvisa offert
+####
+orderrejectbuttontext=Avvisa order
+####
 contractsignatorysignmodaltitle=Är du säker att du vill underteckna?
 ####
 offersignatorysignmodaltitle=Är du säker att du vill acceptera offerten?
@@ -280,7 +286,7 @@ pageDocumentForSignContent=
       <div id="signViewBottomBoxContainerLeft">
         <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
           <div class="left"></div>
-          <div class="label">Avvisa dokument</div>
+          <div class="label">$process.rejectbuttontext$</div>
           <div class="right"></div>
         </a>
       </div>

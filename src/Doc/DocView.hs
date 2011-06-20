@@ -770,6 +770,7 @@ pageDocumentForAuthor ctx
        field "title" $ getProcessText processtitle
        field "restartbuttontext" $ getProcessText processrestartbuttontext
        field "cancelbuttontext" $ getProcessText processcancelbuttontext
+       field "rejectbuttontext" $ getProcessText processrejectbuttontext
        field "cancelbyauthormodaltitle" $ getProcessText processcancelbyauthormodaltitle
        field "signatorysignedtext" $ getProcessText processsignatorysignedtext
        field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
@@ -918,6 +919,7 @@ pageDocumentForSignatory action document ctx invitedlink  =
       field "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent
       field "signbuttontext" $ getProcessText processsignbuttontext
       field "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle
+      field "rejectbuttontext" $ getProcessText processrejectbuttontext
       field "title" $ getProcessText processtitle
       field "requiressignguard" $ getValueForProcess document processrequiressignguard
       field "signguardwarntext" $ getProcessText processsignguardwarntext

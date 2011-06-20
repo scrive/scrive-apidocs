@@ -67,6 +67,7 @@ data DocProcessInfo =
   , processrestartbuttontext :: String
   , processcancelbuttontext :: String
   , processcancelbyauthormodaltitle :: String
+  , processrejectbuttontext :: String
   , processsignatorysignmodaltitle :: String
   , processsignatorysignmodalcontent :: String
   , processsignbuttontext :: String
@@ -153,6 +154,7 @@ contractProcess =
   , processrestartbuttontext = "contractrestartbuttontext"
   , processcancelbuttontext = "contractcancelbuttontext"
   , processcancelbyauthormodaltitle = "contractcancelbyauthormodaltitle"
+  , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
   , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
   , processsignbuttontext = "contractsignbuttontext"
@@ -239,6 +241,7 @@ offerProcess =
   , processrestartbuttontext = "offerrestartbuttontext"
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelbyauthormodaltitle = "offercancelbyauthormodaltitle"
+  , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
   , processsignbuttontext = "offersignbuttontext"
@@ -325,6 +328,7 @@ orderProcess =
   , processrestartbuttontext = "orderrestartbuttontext"
   , processcancelbuttontext = "ordercancelbuttontext"
   , processcancelbyauthormodaltitle = "ordercancelbyauthormodaltitle"
+  , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
   , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
   , processsignbuttontext = "ordersignbuttontext"

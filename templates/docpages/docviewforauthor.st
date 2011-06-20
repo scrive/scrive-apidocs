@@ -140,7 +140,7 @@ pageDocumentForAuthor=
       <div id="signViewBottomBoxContainerLeft">
         <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
           <div class="left"></div>
-          <div class="label">Avvisa dokument</div>
+          <div class="label">$process.cancelbuttontext$</div>
           <div class="right"></div>
         </a>
       </div>
