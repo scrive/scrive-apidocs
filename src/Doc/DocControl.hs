@@ -450,7 +450,7 @@ rejectDocument :: DocumentID
                -> Kontra KontraLink
 rejectDocument documentid 
                signatorylinkid1 
-               magichash = withUserPost $ do
+               magichash = do
   Context{ ctxtime, ctxipnumber } <- get
   edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash
   case edoc of
