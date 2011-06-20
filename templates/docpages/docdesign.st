@@ -778,7 +778,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <span class="text">OBS! Endast .CSV</span> 
               </span>
             </div>
-            <br/>
             <div class="signStepsButtonContainer">
               <a class="btn-small green">  
                 <div class="left"> </div>
