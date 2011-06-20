@@ -835,6 +835,9 @@ handleIssueUpdateAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do
     ctx <- get
     mudoc <- updateDocument ctx doc
+    
+    Log.debug $ show mudoc
+    
     udoc <- returnRightOrMZero mudoc
     
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
@@ -1257,6 +1260,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   signatoriesroles           <- getAndConcat "signatoryrole"
   liftIO $ print signatoriesroles
   liftIO $ print signatoriessignorders
+  
 
   -- if the post doesn't contain this one, we parse the old way
   sigids <- getAndConcat "sigid"
@@ -1283,6 +1287,9 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   placedheights  <- getCriticalFieldList asValidNumber "placedheight"
   placedsigids   <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
+
+  Log.debug $ show placedfieldids
+
 
   authorrole <- getFieldWithDefault "" "authorrole"
   authorsignorder <- (SignOrder . fromIntegral . fromMaybe 1) <$> getDefaultedField 1 asValidNumber "authorsignorder"

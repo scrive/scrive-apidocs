@@ -209,7 +209,6 @@ pageDocumentForSignContent=
         </span>
       </div>
     </div>
-    <div id="attachmentbox"><div class="waiting4page"></div></div>
   </span>
   $endif$
   <span id="documenttabview">
@@ -223,11 +222,11 @@ pageDocumentForSignContent=
       $signatoriesBox()$
     </div>
 
-
-    <div id="documentBox">
-      <div class="waiting4page"></div>
-    </div>
-
+  </span>
+  <div id="documentBox">
+    <div class="waiting4page"></div>
+  </div>
+  
 
     $if(notsignedbyme)$
 
@@ -324,7 +323,6 @@ pageDocumentForSignContent=
     </div>
     $endif$
     $endif$ 
-  </span>
 </div>
 $signatoryScriptIfRequired()$
 ###

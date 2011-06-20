@@ -38,7 +38,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
     $(pls).each(function () {
 	    var pl = this;
 	    var d = placementToHTML(label, value);
-	    var page = $("#page" + pl.page);
+	    var page = $("#documentBox #page" + pl.page);
 	    d.offset({left: pl.x, top: pl.y});
 
 	    page.append(d);
