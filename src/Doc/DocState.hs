@@ -450,7 +450,12 @@ documentFromSignatoryData docid sigindex fstname sndname email company personaln
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
                     , documentcsvupload = Nothing 
-                    , documentsharing = Private }
+                    , documentsharing = Private
+                    , documenttype = newDocType $ documenttype d}
+    newDocType :: DocumentType -> DocumentType
+    newDocType (Signable p) = Signable p
+    newDocType (Template p) = Signable p
+    newDocType dt = dt
     toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
     toNewSigLink (i, sl)
       | i==sigindex = (i, pumpData sl)
