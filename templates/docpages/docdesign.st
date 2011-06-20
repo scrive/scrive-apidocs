@@ -775,7 +775,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <span class="text">$_dialog-csvupload-1CSVOnly()$</span>
               </span>
             </div>
-            <br/>
             <div class="signStepsButtonContainer">
               <a class="btn-small green">  
                 <div class="left"> </div>

@@ -1289,6 +1289,12 @@ input[type=submit].hidden
     float: left;
 }
 
+#dialog-csvupload-1 .signStepsBodyUploadBox
+{
+   height: 105px;
+   position: relative;
+   left: 105px;
+}
 
 .documentTypeBox
 {
