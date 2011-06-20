@@ -52,6 +52,8 @@ Executable kontrakcja-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
   Build-depends: filepath
   Build-depends: base64-bytestring
   Build-depends: tagsoup
@@ -118,6 +120,8 @@ Executable pdfseal
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
   Hs-source-dirs: pdfseal/src pdfseal/inc
@@ -144,6 +148,9 @@ Executable kontrakcja-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -177,6 +184,9 @@ Executable kontrakcja-input-validation-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -212,6 +222,9 @@ Executable kontrakcja-trust-weaver-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -247,6 +260,9 @@ Executable kontrakcja-action-scheduler-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -282,6 +298,9 @@ Executable html-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
