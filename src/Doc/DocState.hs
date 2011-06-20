@@ -176,7 +176,7 @@ supervisorCanView user doc =
 
 getDocumentsBySupervisor :: User -> Query Documents [Document]
 getDocumentsBySupervisor user = queryDocs $ \documents ->
-   filter (supervisorCanView user) (toList $ documents @= userservice user)
+   filter (supervisorCanView user) (toList $ documents @= Supervisor (userid user))
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
@@ -777,7 +777,7 @@ deleteDocumentSignatoryLinks docid users p = do
   now <- getMinuteTimeDB
   modifySignableOrTemplate docid $ \doc ->
     if isDeletableDocument doc
-      then Right . deleteDocumentIfRequired now users $ deleteSigLinks doc
+      then Right $ deleteDocumentIfRequired now users $ deleteSigLinks doc
       else Left "Unable to delete siglinks for this doc"
   where
     deleteSigLinks doc@Document{documentsignatorylinks} =

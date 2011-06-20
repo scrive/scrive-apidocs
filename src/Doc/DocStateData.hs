@@ -36,6 +36,7 @@ module Doc.DocStateData
     , TimeoutTime(..)
     , AuthorAttachment(..)
     , SignatoryAttachment(..)
+    , Supervisor(..)
     , documentHistoryToDocumentLog
     , getAuthorSigLink
     ) where
@@ -362,6 +363,9 @@ data SignInfo0 = SignInfo0
 
 newtype Signatory = Signatory { unSignatory :: UserID }
     deriving (Eq, Ord, Typeable)
+             
+newtype Supervisor = Supervisor { unSupervisor :: UserID }
+                   deriving (Eq, Ord, Typeable)
 
 {-
    Document start in Preparation state.
@@ -1189,6 +1193,9 @@ deriving instance Show SignatureInfo
 
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
+    
+instance Show Supervisor where
+  showsPrec prec (Supervisor userid) = showsPrec prec userid
 
 instance Show DocumentID where
     showsPrec prec (DocumentID val) = 
@@ -1712,6 +1719,9 @@ instance Version Author
 
 $(deriveSerialize ''Signatory)
 instance Version Signatory where
+  
+$(deriveSerialize ''Supervisor)
+instance Version Supervisor where
 
 $(deriveSerialize ''DocumentHistoryEntry0)
 instance Version DocumentHistoryEntry0
@@ -2820,9 +2830,16 @@ getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignat
 
 instance Indexable Document where
         empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
-                      , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory (documentsignatorylinks x)))) :: [Signatory])
+                      , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory 
+                                                                (filter (not . signatorylinkdeleted)
+                                                                 (documentsignatorylinks x))))) :: [Signatory])
+                      , ixFun (\x -> (map Supervisor (catMaybes (map maybesupervisor 
+                                                                (filter (not . signatorylinkdeleted)
+                                                                 (documentsignatorylinks x))))) :: [Supervisor])
                       -- shouldn't be using emails really, need to start savings docs for users earlier
-                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails) (documentsignatorylinks x) :: [Email])
+                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails) 
+                                     (filter (not . signatorylinkdeleted)
+                                       (documentsignatorylinks x)) :: [Email])
                                
                       -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 
                       -- the scope of a single document! FIXME

@@ -1368,7 +1368,7 @@ getDocumentsForUserByType doctype user = do
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
   supervised'Documents <- query $ GetDocumentsBySupervisor user --supervised docs saved for user (required if subaccount is deleted), again just saved ones
   moresupervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise --all supervised docs for undeleted subaccounts
-  return . filter (\d -> documenttype d == doctype) $ nub $
+  return . filter ((\d -> documenttype d == doctype)) $ nub $
           mydocuments ++ concat friends'Documents ++ supervised'Documents ++ concat moresupervised'Documents
 
 {- |
@@ -1605,6 +1605,7 @@ handleAttachmentArchive = do
     
 handleIssueArchive :: Kontra ()
 handleIssueArchive = do
+    Log.debug "handleIssueArchive"
     Context { ctxmaybeuser = Just user } <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
