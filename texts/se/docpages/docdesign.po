@@ -32,7 +32,7 @@ msgstr "Är du säker på att du vill skicka offerten"
 
 #: docpages/docdesign.st:contractconfirmsendtext
 msgid "_contractconfirmsendtext"
-msgstr ""
+msgstr " "
 
 #: docpages/docdesign.st:orderconfirmsendtitle
 msgid "_orderconfirmsendtitle"
@@ -111,247 +111,247 @@ msgid "_signStepsBodyDaysLeftToSign"
 msgstr " dagar"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_edit-invite-text-dialogFooterOk"
+msgid "_editInviteTextDialogFooterOk"
 msgstr "Ok"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_edit-invite-text-dialogFooterOwnMessage"
+msgid "_editInviteTextDialogFooterOwnMessage"
 msgstr "Skriv eget meddelande"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_edit-invite-text-dialogFooterCancel"
+msgid "_editInviteTextDialogFooterCancel"
 msgstr "Avbryt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_edit-invite-text-dialogHead"
+msgid "_editInviteTextDialogHead"
 msgstr "Hälsningsmeddelande"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-text-sendFooterSend"
+msgid "_send"
 msgstr "Skicka"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-text-sendFooterCancel"
+msgid "_dialogConfirmTextSendIfNotNormalOrFieldsFooterCancel"
 msgstr "Avbryt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-text-sendIfNotNormalOrFieldsTo"
+msgid "_dialogConfirmTextSendIfNotNormalOrFieldsTo"
 msgstr " till "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-text-send-normalBody2"
+msgid "_dialogConfirmTextSendNormalBody2"
 msgstr "?               Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet."
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-text-send-normalBody1"
+msgid "_dialogConfirmTextSendNormalBody1"
 msgstr "Vill du skicka en inbjudan att underteckna dokumentet till "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-sendinviteBody5"
+msgid "_dialogConfirmSendinviteBody5"
 msgstr " till "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-sendinviteBody4"
-msgstr " Vill du skicka inbjudan att fylla i och underteckna dokumentet "
+msgid "_dialogConfirmSendinviteBody4"
+msgstr " Vill du skicka inbjudan att fylla i och underteckna dokumentet"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-sendinviteBody3"
+msgid "_dialogConfirmSendinviteBody3"
 msgstr "Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att               få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-sendinviteBody2To"
+msgid "_dialogConfirmSendinviteBody2To"
 msgstr " till "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-sendinviteBody"
+msgid "_dialogConfirmSendinviteBody"
 msgstr "Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteFooterSkrivaPa"
+msgid "_SkrivaPa"
 msgstr "SkrivaPå"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteFooterCancel"
+msgid "_dialogConfirmSigninviteFooterCancel"
 msgstr "Avbryt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteSubBody3"
+msgid "_dialogConfirmSigninviteSubBody3"
 msgstr " för att läsa mer."
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteSubBody2ClickHere"
+msgid "_dialogConfirmSigninviteSubBody2ClickHere"
 msgstr "Klicka här"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteSubBody"
+msgid "_dialogConfirmSigninviteSubBody"
 msgstr "Har du ingen e-legitimation? Du kan ladda ned en              e-legitimation från din internetbank eller från              Telia. "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteSubHead"
+msgid "_dialogConfirmSigninviteSubHead"
 msgstr "Välj typ av e-legitimation"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteBody3"
+msgid "_dialogConfirmSigninviteBody3"
 msgstr " med e-post."
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteBody2"
+msgid "_dialogConfirmSigninviteBody2"
 msgstr "När du undertecknat kommer en automatisk inbjudan att skickas till             "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteBody"
+msgid "_dialogConfirmSigninviteBody"
 msgstr "Är du säker att du vill underteckna dokumentet "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-signinviteHead"
+msgid "_dialogConfirmSigninviteHead"
 msgstr "Underteckna"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-basicChangeToChangeProcess"
+msgid "_dialogConfirmBasicChangeToChangeProcess"
 msgstr "Byt process"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-basicChangeToFooterCancel"
+msgid "_dialogConfirmBasicChangeToFooterCancel"
 msgstr "Avbryt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-basicChangeToBody2"
+msgid "_dialogConfirmBasicChangeToBody2"
 msgstr "När du byter kommer alla ändringar du gjort förutom de för part 1 och part 2 att försvinna.             Är du säker att du vill byta process          "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-basicChangeToBody"
+msgid "_dialogConfirmBasicChangeToBody"
 msgstr "Du kan byta till förenklad process för att göra processen ännu smidigare.            Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod.           "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-basicChangeToHead"
+msgid "_dialogConfirmBasicChangeToHead"
 msgstr "Vill du byta till förenklad process?"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-advancedChangeToFooterChangeProcess"
+msgid "_dialogConfirmAdvancedChangeToFooterChangeProcess"
 msgstr "Byt process"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-advancedChangeToFooterCancel"
+msgid "_dialogConfirmAdvancedFooterCancel"
 msgstr "Avbryt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-advancedBody"
+msgid "_dialogConfirmAdvancedBody"
 msgstr "Du kan byta till avancerad process för att ta del av mer avancerade funktioner så som förfallodatum, mallar, massutskick mm. Denna process tillhör betalplanerna Business och Enterprise, även vid fri testperiod."
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-confirm-advancedChangeToHead"
+msgid "_dialogConfirmAdvancedChangeToHead"
 msgstr "Vill du byta till avancerad process?"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVMultiSave"
+msgid "_save"
 msgstr "Spara"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVMultiChooseFile"
+msgid "_dialogCsvupload2CSVMultiChooseFile"
 msgstr "Välj fil "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVProblemNext"
+msgid "_dialogCsvupload2CSVProblemNext"
 msgstr "Nästa"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVProblemBack"
+msgid "_dialogCsvupload2CSVProblemBack"
 msgstr "Bakåt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVDataOrgNumber"
+msgid "_dialogCsvupload2CSVDataOrgNumber"
 msgstr "Org. nr"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVDataPersonalNumber"
+msgid "_dialogCsvupload2CSVDataPersonalNumber"
 msgstr "Pers. nr"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVDataCompany"
+msgid "_company"
 msgstr "Företag"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVDataEmail"
+msgid "_Email"
 msgstr "E-post"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVDataLastName"
+msgid "_lastname"
 msgstr "Efternamn"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2CSVDataFirstName"
+msgid "_firstname"
 msgstr "Förnamn"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2FooterNext"
+msgid "_dialogCsvupload2FooterNext"
 msgstr "Nästa"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2FooterBack"
+msgid "_dialogCsvupload2FooterBack"
 msgstr "Bakåt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-2Head"
+msgid "_dialogCsvupload2Head"
 msgstr "Massutskick: Granska Data"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-1ChooseFile"
-msgstr " Välj fil "
+msgid "_dialogCsvupload1ChooseFile"
+msgstr "Välj fil "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-1CSVOnly"
+msgid "_dialogCsvupload1CSVOnly"
 msgstr "OBS! Endast .CSV"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-1ChooseFileToUpLoad"
+msgid "_dialogCsvupload1ChooseFileToUpLoad"
 msgstr "Välj fil att ladda upp"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-1Body"
+msgid "_dialogCsvupload1Body"
 msgstr "            Du har valt att göra ett massutskick, för att genomföra detta krävs att du laddar upp ett dokument med formatet .csv          "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_dialog-csvupload-1Head"
+msgid "_dialogCsvupload1Head"
 msgstr "Massutskick"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadFooterAttach"
+msgid "_updateAttachmentsDialogUpLoadFooterAttach"
 msgstr "Bifoga"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadFooterCancel"
+msgid "_updateAttachmentsDialogUpLoadChooseExistingAttachmentFooterCancel"
 msgstr "Avbryt"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadChooseExistingAttachment"
+msgid "_updateAttachmentsDialogUpLoadChooseExistingAttachment"
 msgstr "Välj bilaga"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadSaved"
+msgid "_updateAttachmentsDialogUpLoadSaved"
 msgstr "Sparad på SkrivaPå"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadChooseAttachment"
+msgid "_updateAttachmentsDialogUpLoadChooseAttachment"
 msgstr "Välj bilaga"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadChooseFile"
+msgid "_updateAttachmentsDialogUpLoadChooseFile"
 msgstr "Välj fil"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoadOnlyPDF"
+msgid "_updateAttachmentsDialogUpLoadOnlyPDF"
 msgstr "OBS! Endast PDF"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogUpLoad"
+msgid "_updateAttachmentsDialogUpLoad"
 msgstr "Välj fil från dator"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogChooseAttachment"
-msgstr "Välj de bilagor du vill bifoga"
+msgid "_updateAttachmentsDialogChooseAttachment"
+msgstr "Välj de bilagor du vill bifoga          "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
-msgid "_update-attachments-dialogHead"
+msgid "_updateAttachmentsDialogHead"
 msgstr "Välj bilagor"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
@@ -537,4 +537,8 @@ msgstr "Välj mall"
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_signStepsTitleRowTextContainerIfTemplate"
 msgstr "MALL:"
+
+#, fuzzy
+#~ msgid "_dialogConfirmSigninviteFooterSkrivaPa"
+#~ msgstr "SkrivaPå"
 
