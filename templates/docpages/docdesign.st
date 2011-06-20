@@ -664,7 +664,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>$_update-attachments-dialogHead()$</h2>
+          <h2>$_updateAttachmentsDialogHead()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
@@ -674,21 +674,20 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-content">
           <a href=#" id="attachmentback" style="display:none;"> </a>
           <div>     
-           $_update-attachments-dialogChooseAttachment()$
-          </div>
+           $_updateAttachmentsDialogChooseAttachment()$</div>
           <span id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
-                  <span class="header">$_update-attachments-dialogUpLoad()$</span><br/>
-                  <span class="text">$_update-attachments-dialogUpLoadOnlyPDF()$</span> 
+                  <span class="header">$_updateAttachmentsDialogUpLoad()$</span><br/>
+                  <span class="text">$_updateAttachmentsDialogUpLoadOnlyPDF()$</span> 
                 </span>
               </div>
               <br/>
               <div class="signStepsButtonContainer">
                 <a class="btn-small green">  
                   <div class="left"> </div>
-                  <div class="label" style="width:80px">$_update-attachments-dialogUpLoadChooseFile()$</div> 
+                  <div class="label" style="width:80px">$_updateAttachmentsDialogUpLoadChooseFile()$</div> 
                   <div class="right"> </div>
                   <input class="multiFileInput" style="top:-40px;right:0px" maxlength="20" type="file" name="attachment" accept="application/pdf" rel="#tobeattached" />
                 </a>
@@ -697,15 +696,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
-                  <span class="header">$_update-attachments-dialogUpLoadChooseAttachment()$</span><br/>
-                  <span class="text">$_update-attachments-dialogUpLoadSaved()$</span>
+                  <span class="header">$_updateAttachmentsDialogUpLoadChooseAttachment()$</span><br/>
+                  <span class="text">$_updateAttachmentsDialogUpLoadSaved()$</span>
                 </span>
               </div>
               <br/>
               <div class="signStepsButtonContainer">
                 <a id="showexistingattachments" class="btn-small green">  
                   <div class="left"> </div>
-                  <div class="label" style="width:80px">$_update-attachments-dialogUpLoadChooseExistingAttachment()$</div>
+                  <div class="label" style="width:80px">$_updateAttachmentsDialogUpLoadChooseExistingAttachment()$</div>
                   <div class="right"> </div>
                 </a>
               </div>
@@ -739,14 +738,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         <div class="float-left">
-          <a class="close cancel">$_update-attachments-dialogUpLoadFooterCancel()$</a>
+          <a class="close cancel">$_updateAttachmentsDialogUpLoadChooseExistingAttachmentFooterCancel()$</a>
         </div>
         <a class="btn-small green float-right submitAttachments">
           <div class="left"></div>
           <div class="label">
             <p>
-              $_update-attachments-dialogUpLoadFooterAttach()$
-            </p>
+              $_updateAttachmentsDialogUpLoadFooterAttach()$</p>
             <div class="btn-symbol green arrow-left"></div>
           </div>
           <div class="right"></div>
@@ -761,24 +759,24 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>$_dialog-csvupload-1Head()$</h2>
+          <h2>$_dialogCsvupload1Head()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <div>$_dialog-csvupload-1Body()$</div>
+          <div>$_dialogCsvupload1Body()$</div>
           <div class="signStepsBodyUploadBox">
             <div>
               <span id="signStepsBodyUploadTextContainer"> 
-                <span class="header">$_dialog-csvupload-1ChooseFileToUpLoad()$</span><br/>
-                <span class="text">$_dialog-csvupload-1CSVOnly()$</span>
+                <span class="header">$_dialogCsvupload1ChooseFileToUpLoad()$</span><br/>
+                <span class="text">$_dialogCsvupload1CSVOnly()$</span>
               </span>
             </div>
             <div class="signStepsButtonContainer">
               <a class="btn-small green">  
                 <div class="left"> </div>
-                <div class="label" style="width:80px">$_dialog-csvupload-1ChooseFile()$</div>
+                <div class="label" style="width:80px">$_dialogCsvupload1ChooseFile()$</div>
                 <div class="right"> </div>
                 <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
               </a>
@@ -796,7 +794,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>$_dialog-csvupload-2Head()$</h2>
+          <h2>$_dialogCsvupload2Head()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
@@ -819,7 +817,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <div class="left"></div>
                   <div class="label">
                     <span class="btn-symbol black arrow-right"></span>
-                        <span>$_dialog-csvupload-2FooterBack()$</span>
+                        <span>$_dialogCsvupload2FooterBack()$</span>
                   </div>
                   <div class="right"></div>
                 </a>
@@ -828,7 +826,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <a class="btn-tiny black float-right nextproblem" href="#">
                   <div class="left"></div>
                   <div class="label">
-                        <span>$_dialog-csvupload-2FooterNext()$</span>
+                        <span>$_dialogCsvupload2FooterNext()$</span>
                     <span class="btn-symbol black arrow-left"></span>
                   </div>
                   <div class="right"></div>
@@ -846,12 +844,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <theader>
                     <tr>
                       <th class="rownumbercol">&nbsp;</th>
-                        <th>$_dialog-csvupload-2CSVDataFirstName()$</th>
-                        <th>$_dialog-csvupload-2CSVDataLastName()$</th>
-                        <th>$_dialog-csvupload-2CSVDataEmail()$</th>
-                        <th>$_dialog-csvupload-2CSVDataCompany()$</th>
-                        <th>$_dialog-csvupload-2CSVDataPersonalNumber()$</th>
-                        <th>$_dialog-csvupload-2CSVDataOrgNumber()$</th>
+                        <th>$_firstname()$</th>
+                        <th>$_lastname()$</th>
+                        <th>$_Email()$</th>
+                        <th>$_company()$</th>
+                        <th>$_dialogCsvupload2CSVDataPersonalNumber()$</th>
+                        <th>$_dialogCsvupload2CSVDataOrgNumber()$</th>
                       $csvcustomfields: {csvcustomfield |
                       <th>$csvcustomfield$</th>
                       }$
@@ -875,7 +873,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="left"></div>
     <div class="label">
       <span class="btn-symbol black arrow-right"></span>
-                        <span>$_dialog-csvupload-2CSVProblemBack()$</span>
+                        <span>$_dialogCsvupload2CSVProblemBack()$</span>
     </div>
     <div class="right"></div>
   </a>
@@ -884,7 +882,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <a class="btn-tiny black float-right nextcsvpage" href="#">
     <div class="left"></div>
     <div class="label">
-                        <span>$_dialog-csvupload-2CSVProblemNext()$</span>
+                        <span>$_dialogCsvupload2CSVProblemNext()$</span>
       <span class="btn-symbol black arrow-left"></span>
     </div>
     <div class="right"></div>
@@ -899,14 +897,14 @@ pageDocumentForAuthorHelpersLocalDialogs=
 <div class="modal-footer">
   
   <a class="cancel float-left" style="height:40px;">  
-          <div class="label">$_dialog-csvupload-2CSVMultiChooseFile()$</div>
+          <div class="label">$_dialogCsvupload2CSVMultiChooseFile()$</div>
     <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
     <div class="filelist" style="display:none;"></div>
   </a>
   
   <a class="btn-small green float-right close" href="#">
     <div class="left"></div>
-          <div class="label"><p>$_dialog-csvupload-2CSVMultiSave()$</p></div>
+          <div class="label"><p>$_save()$</p></div>
     <div class="right"></div>
   </a>
 </div>
@@ -920,21 +918,21 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">$_dialog-confirm-advancedChangeToHead()$</h2>
+          <h2 id="dialog-title">$_dialogConfirmAdvancedChangeToHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-          <p>$_dialog-confirm-advancedBody()$</p>
+          <p>$_dialogConfirmAdvancedBody()$</p>
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_dialog-confirm-advancedChangeToFooterCancel()$</a>
+        <a  class="close cancel float-left">$_dialogConfirmAdvancedFooterCancel()$</a>
       <a href="#" class="btn-small green float-right submiter toadvanced">
         <div class="left"></div>
         <div class="label">
-            <span>$_dialog-confirm-advancedChangeToFooterChangeProcess()$</span>
+            <span>$_dialogConfirmAdvancedChangeToFooterChangeProcess()$</span>
         </div>
         <div class="right"></div>
       </a>
@@ -949,24 +947,24 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">$_dialog-confirm-basicChangeToHead()$</h2>
+          <h2 id="dialog-title">$_dialogConfirmBasicChangeToHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
         <p>
-            $_dialog-confirm-basicChangeToBody()$</p>
+            $_dialogConfirmBasicChangeToBody()$</p>
         <p> 
-            $_dialog-confirm-basicChangeToBody2()$</p>
+            $_dialogConfirmBasicChangeToBody2()$</p>
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_dialog-confirm-basicChangeToFooterCancel()$</a>
+        <a  class="close cancel float-left">$_dialogConfirmBasicChangeToFooterCancel()$</a>
       <a href="#" class="btn-small green float-right submiter tobasic">
         <div class="left"></div>
         <div class="label">
-            <span>$_dialog-confirm-basicChangeToChangeProcess()$</span>
+            <span>$_dialogConfirmBasicChangeToChangeProcess()$</span>
         </div>
         <div class="right"></div>
       </a>
@@ -981,28 +979,28 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title-sign">$_dialog-confirm-signinviteHead()$</h2>
+          <h2 id="dialog-title-sign">$_dialogConfirmSigninviteHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-          <p>$_dialog-confirm-signinviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
-          <p>$_dialog-confirm-signinviteBody2()$<span class="Xinvited">Invited</span>$_dialog-confirm-signinviteBody3()$</p>
+          <p>$_dialogConfirmSigninviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
+          <p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p>
         <span class="eleghidden" style="display:none;">
-            <h3>$_dialog-confirm-signinviteSubHead()$</h3>
-            <p>$_dialog-confirm-signinviteSubBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                        target="_new">$_dialog-confirm-signinviteSubBody2ClickHere()$</a>$_dialog-confirm-signinviteSubBody3()$</p>
+            <h3>$_dialogConfirmSigninviteSubHead()$</h3>
+            <p>$_dialogConfirmSigninviteSubBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                        target="_new">$_dialogConfirmSigninviteSubBody2ClickHere()$</a>$_dialogConfirmSigninviteSubBody3()$</p>
         </span>
       </div>
     </div>
     <div class="modal-footer">
       <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a class="close cancel float-left">$_dialog-confirm-signinviteFooterCancel()$</a>
+        <a class="close cancel float-left">$_dialogConfirmSigninviteFooterCancel()$</a>
       <a href="#" class="btn-small blue float-right submiter signhidden">
         <div class="left"></div>
         <div class="label">
-            <p>$_dialog-confirm-signinviteFooterSkrivaPa()$</p>
+            <p>$_SkrivaPa()$</p>
           <span class="btn-symbol cross"></span>
         </div>
         <div class="right"></div>
@@ -1041,30 +1039,30 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-content">
         $if(!process.isauthorsend)$ 
         <div id="dialog-confirm-text-send">
-            <p>$_dialog-confirm-sendinviteBody()$<strong class="visible-docname">$documenttitle$</strong>$_dialog-confirm-sendinviteBody2To()$<span class="Xinvited">Invited</span>?</p>
+            <p>$_dialogConfirmSendinviteBody()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody2To()$<span class="Xinvited">Invited</span>?</p>
         </div>
         <div id="dialog-confirm-text-send-fields">
-            <p>$_dialog-confirm-sendinviteBody3()$</p>
-            <p>$_dialog-confirm-sendinviteBody4()$<strong class="visible-docname">$documenttitle$</strong>$_dialog-confirm-sendinviteBody5()$<span class="Xinvited">Invited</span>?  </p>
+            <p>$_dialogConfirmSendinviteBody3()$</p>
+            <p>$_dialogConfirmSendinviteBody4()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody5()$	<span class="Xinvited">Invited</span>?  </p>
         </div>
 
         <div id="dialog-confirm-text-send-normal">
-            <p>$_dialog-confirm-text-send-normalBody1()$<span class="Xinvited">Invited</span>$_dialog-confirm-text-send-normalBody2()$</p>
+            <p>$_dialogConfirmTextSendNormalBody1()$<span class="Xinvited">Invited</span>$_dialogConfirmTextSendNormalBody2()$</p>
         </div>
         $else$
         <div id="dialog-confirm-text-send">
-              <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong>$_dialog-confirm-text-sendIfNotNormalOrFieldsTo()$<span class="Xinvited">Invited</span>?</p>
+              <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmTextSendIfNotNormalOrFieldsTo()$<span class="Xinvited">Invited</span>?</p>
         </div>
         $endif$
       </div>
     </div>
     <div class="modal-footer">
       <input type="hidden" name="final" value="automatic" />
-        <a  class="close cancel float-left">$_dialog-confirm-text-sendFooterCancel()$</a>
+        <a  class="close cancel float-left">$_dialogConfirmTextSendIfNotNormalOrFieldsFooterCancel()$</a>
       <a href="#" class="btn-small green float-right submiter">
         <div class="left"></div>
         <div class="label">
-            <span>$_dialog-confirm-text-sendFooterSend()$</span>
+            <span>$_send()$</span>
           <div class="btn-symbol green arrow-left"></div></div>
         <div class="right"></div>
       </a>
@@ -1077,7 +1075,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2>$_edit-invite-text-dialogHead()$</h2>
+          <h2>$_editInviteTextDialogHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -1088,13 +1086,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_edit-invite-text-dialogFooterCancel()$</a>
-        <a class="editer message">$_edit-invite-text-dialogFooterOwnMessage()$</a>
+        <a class="close cancel">$_editInviteTextDialogFooterCancel()$</a>
+        <a class="editer message">$_editInviteTextDialogFooterOwnMessage()$</a>
       </div>
       <a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
         <div class="left"></div>
         <div class="label">
-            <p>$_edit-invite-text-dialogFooterOk()$</p>
+            <p>$_editInviteTextDialogFooterOk()$</p>
           <div class="btn-symbol green arrow-left"></div>
         </div>
         <div class="right"></div>
