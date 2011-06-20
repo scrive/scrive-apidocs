@@ -16,8 +16,8 @@ $loadingdialog()$
                           <a href="javascript:;"><p>$_pageAttachmentListOptions()$</p></a>
                         </div>
                         <ul class="tab-dd-opts">
-                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_pageAttachmentListDelete()$</a></li>
                             <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listShare">$_pageAttachmentListShare()$</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_pageAttachmentListDelete()$</a></li>
                         </ul>
                     </div>
 
