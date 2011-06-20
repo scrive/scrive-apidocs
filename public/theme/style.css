@@ -2902,3 +2902,12 @@ table#signViewSigAttachmentBoxList form {
 table#signatorysignatoryattachments {
     width: 100%;
 }
+
+a#attachmentback {
+    width: 16px;
+    height: 16px;
+    float:left;
+    background-image: url(/img/back.png);
+    margin-left: -80px;
+    margin-top: -16px;
+}

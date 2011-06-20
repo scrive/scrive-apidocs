@@ -669,8 +669,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </span>
         <a class="modal-close close"> </a>
       </div>
+
       <div class="modal-body">
+
         <div class="modal-content">
+          <a href=#" id="attachmentback" style="display:none;"> </a>
           <div>     
             Välj de bilagor du vill bifoga
           </div>
