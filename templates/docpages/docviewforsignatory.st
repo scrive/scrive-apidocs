@@ -240,7 +240,8 @@ pageDocumentForSignContent=
       </div>
     </div>
     $endif$
-
+    
+    $endif$
 
     $if(notsignedbyme)$
     $if(hasmysigattachments)$
@@ -281,6 +282,8 @@ pageDocumentForSignContent=
     </div>
     $endif$
 
+    $if(pending)$
+    
     <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
         <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
@@ -321,8 +324,8 @@ pageDocumentForSignContent=
         </a>
       </div>
     </div>
-    $endif$
     $endif$ 
+    $endif$
 </div>
 $signatoryScriptIfRequired()$
 ###
