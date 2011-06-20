@@ -35,7 +35,7 @@ Flag action-scheduler-test
   Default: True
   
 Flag html-test
-  Description: Build html-test
+  Description: Build kontrakcja-html-test
   Default: True
 
 Executable kontrakcja-server
@@ -293,7 +293,7 @@ Executable kontrakcja-action-scheduler-test
               TypeSynonymInstances,
               UndecidableInstances
               
-Executable html-test
+Executable kontrakcja-html-test
   if flag(html-test)
     Buildable: True
   else
