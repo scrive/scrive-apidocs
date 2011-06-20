@@ -1285,7 +1285,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   placedfieldids <- getAndConcat "placedfieldid"
 
   authorrole <- getFieldWithDefault "" "authorrole"
-  authorsignorder <- (SignOrder . fromIntegral . fromMaybe 1) <$> getDefaultedField 1 asValidNumber "authorsignorder"
+  authorsignorder <- (SignOrder . fromIntegral . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
   
   currentuser <- maybe mzero return $ ctxmaybeuser ctx
   docfunctionality <- getCriticalField (asValidDocumentFunctionality currentuser documentfunctionality) "docfunctionality"
