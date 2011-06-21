@@ -1453,8 +1453,11 @@ safeReady(function() {
 		             appendTo: "body",
 		             helper: function(event) {
 		               var field = $(this);
-		               var input = field.find("input");
-		               return placedFieldHelper(input.attr("value"));
+                               var input = field.find("input");
+		               var text = input.val();
+                               if (text === "")
+                                   text = input.attr("infotext");
+		               return placedFieldHelper(text);
 		             },
 		             start: function(event, ui) {
                        showCoordinateAxes(ui.helper);
