@@ -1550,3 +1550,6 @@ safeReady(function() {
 });
 
 
+safeReady(function() {
+  $("#toscontainer").css("position", "absolute");
+});
