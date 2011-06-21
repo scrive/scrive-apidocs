@@ -1798,6 +1798,7 @@ input.multiFileInput {
     position: relative;
     top: 1px;
     height: 18px;
+    width: 138px;
     line-height: 18px;
     font-size: 12px;
     border-color: transparent;
@@ -1812,6 +1813,7 @@ input.multiFileInput {
 .dragDisabled .inputWrapper .fieldvalue
 {
     padding-left: 5px;
+    width: 152px;
 }
 
 
