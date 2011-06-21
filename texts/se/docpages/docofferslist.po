@@ -7,7 +7,7 @@ msgstr ""
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: docpages/docofferslist.st:pageOffersList
@@ -24,19 +24,19 @@ msgstr "offerter.          "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_OfferReminderBodyMulti"
-msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter för "
+msgstr "            Ã„r du sÃ¤ker att du vill skicka en pÃ¥minnelse til berÃ¶rda parter fÃ¶r "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_OfferReminderBodySingel"
-msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter i offerter "
+msgstr "            Ã„r du sÃ¤ker att du vill skicka en pÃ¥minnelse til berÃ¶rda parter i offerter "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_OfferReminderHead"
-msgstr "Skicka påminnelse"
+msgstr "Skicka pÃ¥minnelse"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tooltipsigned"
-msgstr "Status: Bekräftat	"
+msgstr "Status: BekrÃ¤ftat	"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tooltipopened"
@@ -44,7 +44,7 @@ msgstr "Status: Granskat online	"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tooltipread"
-msgstr "Status: Läst e-post	"
+msgstr "Status: LÃ¤st e-post	"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tooltipreviewed"
@@ -68,7 +68,7 @@ msgstr "Status: Utkast"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tablestatusesConfirmed"
-msgstr "Bekräftat"
+msgstr "BekrÃ¤ftat"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tablestatusesViewedOnline"
@@ -76,7 +76,7 @@ msgstr "Granskat online"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tablestatusesEmailOpened"
-msgstr "Läst e-post"
+msgstr "LÃ¤st e-post"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_tablestatusesDelivered"
@@ -100,11 +100,11 @@ msgstr "Dokument "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SortSender"
-msgstr "Avsändare "
+msgstr "AvsÃ¤ndare "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SortCompany"
-msgstr "Företag "
+msgstr "FÃ¶retag "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SortReciever"
@@ -112,7 +112,7 @@ msgstr "Mottagare "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SortTime"
-msgstr "Senaste händelse "
+msgstr "Senaste hÃ¤ndelse "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SortStatus"
@@ -120,7 +120,7 @@ msgstr "Status "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SearchDoc"
-msgstr "Sök dokument"
+msgstr "SÃ¶k dokument"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_Delete"
@@ -128,7 +128,7 @@ msgstr "Radera"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_SendReminder"
-msgstr "Skicka påminnelse"
+msgstr "Skicka pÃ¥minnelse"
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_Options"

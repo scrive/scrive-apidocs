@@ -6,7 +6,7 @@ msgstr ""
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: docpages/docattachmentlist.st:pageAttachmentList
@@ -27,19 +27,19 @@ msgstr "Mall"
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListSortTime"
-msgstr "Senaste h‰ndelse "
+msgstr "Senaste h√§ndelse "
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListSortTimeDown"
-msgstr "Senaste h‰ndelse "
+msgstr "Senaste h√§ndelse "
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListSortTimeUp"
-msgstr "Senaste h‰ndelse "
+msgstr "Senaste h√§ndelse "
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListSearchInfo"
-msgstr "Sˆk dokument"
+msgstr "S√∂k dokument"
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListNewAttachment"

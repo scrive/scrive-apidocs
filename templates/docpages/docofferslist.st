@@ -13,16 +13,16 @@ $loadingdialog()$
 				<div class="col float-left">
 					<div class="tab-dd">
                                                 <div class="tab-dd-button">
-						        <a href="javascript:;"><p>$_Options()$	Alternativ</p></a>
+						        <a href="javascript:;"><p>$_Options()$</p></a>
 						</div>
                                                 <ul class="tab-dd-opts">
-                                                        <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$	Skicka påminnelse</a></li>
-							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$	Radera</a></li>
+                                                        <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>
+							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$</a></li>
 						</ul>
 					</div>
 				</div>
 				<div class="col float-right">
-                      $searchBox(infotext='$_SearchDoc()$	Sök dokument')$
+                      $searchBox(infotext=_SearchDoc())$
                 </div>
 
      
@@ -36,34 +36,34 @@ $loadingdialog()$
 							<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
 							<th style="width: 65px;">
                                $if(params.sorting.statusREV)$
-                                <a href="$currentlink$&amp;sorting=status">$_SortStatus()$	Status  <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=status">$_SortStatus()$<em> ▲</em></a>
                                $elseif(params.sorting.status)$
-                                <a href="$currentlink$&amp;sorting=statusREV">$_SortStatus()$	Status  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=statusREV">$_SortStatus()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=status">$_SortStatus()$	Status </a>
+                                <a href="$currentlink$&amp;sorting=status">$_SortStatus()$</a>
                                $endif$
                              </th>
 							<th style="width: 130px;">
                                $if(params.sorting.timeREV)$
-                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$	Senaste händelse  <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$<em> ▲</em></a>
                                $elseif(params.sorting.time)$
-                                <a href="$currentlink$&amp;sorting=timeREV">$_SortTime()$	Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=timeREV">$_SortTime()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$	Senaste händelse </a>
+                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$</a>
                                $endif$
                             </th>
 							<th style="width: 130px;">
                                $if(params.sorting.partnerREV)$
-                                <a href="$currentlink$&amp;sorting=partner">$_SortReciever()$	Mottagare <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=partner">$_SortReciever()$<em> ▲</em></a>
                                $elseif(params.sorting.partner)$
-                                <a href="$currentlink$&amp;sorting=partnerREV">$_SortReciever()$	Mottagare  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=partnerREV">$_SortReciever()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=partner">$_SortReciever()$	Mottagare </a>
+                                <a href="$currentlink$&amp;sorting=partner">$_SortReciever()$</a>
                                $endif$
                             </th>
 							<th style="width: 130px;">
                                $if(params.sorting.partnercompREV)$
-                                <a href="$currentlink$&amp;sorting=partnercomp">$_SortCompany()$	Företag <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=partnercomp">$_SortCompany()$<em> ▲</em></a>
                                $elseif(params.sorting.partnercomp)$
                                 <a href="$currentlink$&amp;sorting=partnercompREV">$_SortCompany()$<em style="text-color:red"> ▼</em></a>
                                $else$

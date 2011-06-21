@@ -22,7 +22,7 @@ $loadingdialog()$
 			</div>
 		  </div>
 		  <div class="col float-right">
-            $searchBox(infotext='$_SearchDoc()$')$
+            $searchBox(infotext=_SearchDoc())$
           </div>
 
           
