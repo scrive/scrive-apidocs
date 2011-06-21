@@ -90,7 +90,7 @@ $elseif(!showTemplates)$
           <div class="left"> </div>
           <div class="label" style="width:80px"> Välj fil </div> 
           <div class="right"> </div>
-          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
         </a>
        </div>
       <div class="filelist" style="padding-left:10px;display:none"></div>

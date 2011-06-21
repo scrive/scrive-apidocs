@@ -267,7 +267,7 @@ pageDocumentForSignContent=
                     <div class="left"> </div>
                     <div class="label" style="width:80px">Välj fil</div> 
                     <div class="right"> </div>                 
-                    <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
+                    <input class="multiFileInput submitOnUpload" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
                   </a>
                 <div id="tobeattached-$attachment.name$" style="display:none;"></div>
               </form>
