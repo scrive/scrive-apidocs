@@ -689,7 +689,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <div class="left"> </div>
                   <div class="label" style="width:80px">$_updateAttachmentsDialogUpLoadChooseFile()$</div> 
                   <div class="right"> </div>
-                  <input class="multiFileInput" style="top:-40px;right:0px" maxlength="20" type="file" name="attachment" accept="application/pdf" rel="#tobeattached" />
+                  <input class="multiFileInput" maxlength="20" type="file" name="attachment" accept="application/pdf" rel="#tobeattached" />
                 </a>
               </div>
             </div>
@@ -778,7 +778,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <div class="left"> </div>
                 <div class="label" style="width:80px">$_dialogCsvupload1ChooseFile()$</div>
                 <div class="right"> </div>
-                <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
+                <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
               </a>
               <div class="filelist" style="display:none;"></div>
             </div>
@@ -898,7 +898,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
   
   <a class="cancel float-left" style="height:40px;">  
           <div class="label">$_dialogCsvupload2CSVMultiChooseFile()$</div>
-    <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
+    <input class="multiFileInput submitOnUpload" style="width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
     <div class="filelist" style="display:none;"></div>
   </a>
   
