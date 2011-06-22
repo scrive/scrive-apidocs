@@ -6,7 +6,8 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Utility for abstracting away destructuring to get a name.
+-- Utility for abstracting away destructuring to get a name, email,
+-- company number, company name, and personal number.
 -----------------------------------------------------------------------------
 module Util.HasSomeUserInfo ( 
   getCompanyName,

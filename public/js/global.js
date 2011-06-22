@@ -1569,4 +1569,3 @@ function saveOverlay(d,o)
      }   
   }) 
 }
-
