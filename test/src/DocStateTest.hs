@@ -59,38 +59,29 @@ testDocumentCanBeCreatedAndFetchedByID :: Assertion
 testDocumentCanBeCreatedAndFetchedByID = do
   -- setup
   mt <- liftIO $ getMinutesTime
-  mauthor <- addNewUser "Eric" "Normand" "eric@skrivapa.se"
-  case mauthor of
-    Nothing -> assertFailure "Cannot create a new user"
-    Just author -> do
+  author <- assumingBasicUser
+
+  doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
       
-      -- execute
-      doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
-      
-      mdoc <- query $ GetDocumentByDocumentID (documentid doc)
-      -- assert
-      case mdoc of
-        Just resdoc -> assert $ sameDocID doc resdoc
-        Nothing -> assertFailure "Could not read in new document I just created."
+  mdoc <- query $ GetDocumentByDocumentID (documentid doc)
+  -- assert
+  case mdoc of
+    Just resdoc -> assert $ sameDocID doc resdoc
+    Nothing -> assertFailure "Could not read in new document I just created."
                 
 testDocumentCanBeCreatedAndFetchedByAllDocs :: Assertion
 testDocumentCanBeCreatedAndFetchedByAllDocs = do
   -- setup
   mt <- liftIO $ getMinutesTime
-  mauthor <- addNewUser "Eric" "Normand" "eric@skrivapa.se"
-  case mauthor of
-    Nothing -> assertFailure "Cannot create a new user"
-    Just author -> do
+  author <- assumingBasicUser
+  -- execute
+  doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
+  docs <- query $ GetDocuments Nothing
       
-      -- execute
-      doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
-      
-
-      docs <- query $ GetDocuments Nothing
-      -- assert
-      case find (sameDocID doc) docs of
-        Just _ -> assertSuccess
-        Nothing -> assertFailure "Could not read in new document I just created."
+  -- assert
+  case find (sameDocID doc) docs of
+    Just _ -> assertSuccess
+    Nothing -> assertFailure "Could not read in new document I just created."
 
 
 apply :: a -> (a -> b) -> b
