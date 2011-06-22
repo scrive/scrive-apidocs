@@ -276,13 +276,13 @@ documentcurrentsignorder doc =
  -}
 signatoryDetailsFromUser :: User -> SignatoryDetails
 signatoryDetailsFromUser user = 
-    SignatoryDetails { signatoryfstname           = userfstname $ userinfo user 
-                     , signatorysndname           = usersndname $ userinfo user 
-                     , signatoryemail             = unEmail $ useremail $ userinfo user
-                     , signatorycompany           = usercompanyname $ userinfo user
-                     , signatorysignorder         = SignOrder 1
-                     , signatorypersonalnumber    = userpersonalnumber $ userinfo user
-                     , signatorycompanynumber     = usercompanynumber $ userinfo user
+    SignatoryDetails { signatoryfstname                  = getFirstName      user 
+                     , signatorysndname                  = getLastName       user 
+                     , signatoryemail                    = getEmail          user
+                     , signatorycompany                  = getCompanyName    user
+                     , signatorypersonalnumber           = getPersonalNumber user
+                     , signatorycompanynumber            = getCompanyNumber  user
+                     , signatorysignorder                = SignOrder 1
                      , signatoryfstnameplacements        = []
                      , signatorysndnameplacements        = []
                      , signatorycompanyplacements        = []

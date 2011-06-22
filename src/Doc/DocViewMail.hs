@@ -73,11 +73,9 @@ remindMailNotSigned templates customMessage ctx document@Document{documenttitle}
         
 remindMailSigned:: KontrakcjaTemplates -> Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned templates customMessage ctx document@Document{documenttitle}  signlink = do
-  let files = if (null $ documentsealedfiles document) then (documentfiles document) else (documentsealedfiles document)
   title <- renderTemplate templates "remindMailSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
   content <- wrapHTML templates =<<remindMailSignedContent templates customMessage ctx  document signlink
-  attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
-  return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
+  return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 remindMailNotSignedContent :: KontrakcjaTemplates 
                            -> Bool 
