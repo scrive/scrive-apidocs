@@ -21,12 +21,15 @@ import Templates.TemplatesFiles
 import Control.Monad
 import Data.Functor
 import Data.List
+import Data.Ord
+import Data.Char
 import System.Directory
 import System.IO
 import System.Time
 import Text.I18n.Po hiding (putStrLn, getL10n)
 import qualified Data.Map as Map
 import qualified Text.I18n.Po (getL10n)
+
 
 commonFileName :: Bool -> String
 commonFileName makeTemplates = templateFileToPOT makeTemplates "common"
@@ -42,8 +45,8 @@ templateFileToPOT False s = (takeWhile (/= '.') s) ++ ".po"
 data TemplateTextLocation = TemplateTextLocation {
                                              location:: [(String,String)] -- file/templatename
                                            , name:: String
-                                    }
-
+                                    } deriving (Show,Eq)
+                                    
 initialTTLocation::String -> String -> String -> TemplateTextLocation
 initialTTLocation file template ttname = TemplateTextLocation {name=ttname,location=[(file,template)]}
 
@@ -90,12 +93,23 @@ retriveTexts ('$':('_': s)) =
                       tSplit (x:s') xs = tSplit s' (xs ++ [x])
                       tSplit [] _ = error "THIS should never happend | Not closed template"
                   in  tSplit s []
-retriveTexts (_ : s) = retriveTexts s
+                  
+retriveTexts ('$':rest) = 
+    case dropWhile (isAlphaNum) rest of
+      ('(':s) ->  (embTexts $ takeWhile (/= '$') s) ++ (retriveTexts $ dropWhile (/= '$') s)
+      s -> retriveTexts s
+
+retriveTexts (_:s) = retriveTexts s
 retriveTexts _ = []
+
+embTexts::String -> [String]
+embTexts ('_':s) = ('_':(takeWhile isAlphaNum s)) : (embTexts $ dropWhile isAlphaNum s)
+embTexts (_:s) = embTexts s
+embTexts _ = []
 
 
 joinTexts::[TemplateTextLocation] -> [TemplateTextLocation] 
-joinTexts = map locationMerge . groupBy (\ttl1 ttl2 -> name ttl1 == name ttl2) 
+joinTexts = map locationMerge . groupBy (\ttl1 ttl2 -> name ttl1 == name ttl2) . sortBy (comparing name)
 
 locationMerge :: [TemplateTextLocation] -> TemplateTextLocation
 locationMerge (t : ts) = TemplateTextLocation {name = name t, location = (concat $ map location $ t:ts)}
