@@ -366,15 +366,14 @@ handleIssuePostBankID docid = withUserPost $ do
                 Right (cert, attrs) -> do
                     Log.debug $ show attrs
                     providerType <- providerStringToType provider
-                    let authorinfo = userinfo author
                     -- compare information from document (and fields) to that obtained from BankID
-                    let contractFirst  = userfstname authorinfo
-                        contractLast   = usersndname authorinfo
-                        contractNumber = userpersonalnumber authorinfo
+                    let contractFirst  = getFirstName      author
+                        contractLast   = getLastName       author
+                        contractNumber = getPersonalNumber author
             
-                        elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName") attrs
-                        elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")  attrs
-                        elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber")     attrs
+                        elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
+                        elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
+                        elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
 
                         mfinal = mergeInfo 
                                     (contractFirst, contractLast, contractNumber)
@@ -390,10 +389,10 @@ handleIssuePostBankID docid = withUserPost $ do
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
                             Log.debug $ show mfinal
-                            let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
-                                                            , signatureinfosignature = signature
+                            let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
+                                                            , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
-                                                            , signatureinfoprovider = providerType
+                                                            , signatureinfoprovider    = providerType
                                                             , signaturefstnameverified = bfn
                                                             , signaturelstnameverified = bln
                                                             , signaturepersnumverified = bpn
@@ -440,7 +439,7 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
     case mcancelationreason of
         Just (ELegDataMismatch msg sid _ _ _) 
             | sid == signatorylinkid -> do
-                maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ signatoryemail (signatorydetails signatorylink))
+                maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
                 content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
                 renderFromBody TopEmpty kontrakcja content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
@@ -737,7 +736,7 @@ getTBS :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
 getTBS templates doc = do
     entries <- getSigEntries templates doc
     renderTemplate templates "tbs" $ do
-        field "documentname"   $ BS.toString $ documenttitle doc
+        field "documentname"   $ documenttitle doc
         field "documentnumber" $ show $ documentid doc
         field "tbssigentries"  entries
         
@@ -749,10 +748,10 @@ getSigEntries templates doc = do
 getSigEntry :: KontrakcjaTemplates -> SignatoryDetails -> IO String
 getSigEntry templates signatorydetails =
     renderTemplate templates "tbssig" $ do
-        field "firstname" $ signatoryfstname signatorydetails
-        field "lastname"  $ signatorysndname signatorydetails
-        field "company"   $ signatorycompany signatorydetails
-        field "number"    $ signatorypersonalnumber signatorydetails
+        field "firstname" $ getFirstName signatorydetails
+        field "lastname"  $ getLastName signatorydetails
+        field "company"   $ getCompanyName signatorydetails
+        field "number"    $ getPersonalNumber signatorydetails
 
 fieldvaluebyid :: BS.ByteString -> [(BS.ByteString, BS.ByteString)] -> BS.ByteString
 fieldvaluebyid _ [] = BS.fromString ""
