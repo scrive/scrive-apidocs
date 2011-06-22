@@ -17,7 +17,6 @@ module Doc.DocViewMail ( mailDocumentRemind
                        , mailMismatchAuthor
                        ) where
 
-import Amazon
 import Doc.DocState
 import Doc.DocUtils
 import Doc.DocProcess
@@ -71,11 +70,9 @@ remindMailNotSigned templates customMessage ctx document@Document{documenttitle}
         
 remindMailSigned:: KontrakcjaTemplates -> Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned templates customMessage ctx document@Document{documenttitle}  signlink = do
-  let files = if (null $ documentsealedfiles document) then (documentfiles document) else (documentsealedfiles document)
   title <- renderTemplate templates "remindMailSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
   content <- wrapHTML templates =<<remindMailSignedContent templates customMessage ctx  document signlink
-  attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
-  return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
+  return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 remindMailNotSignedContent :: KontrakcjaTemplates 
                            -> Bool 
@@ -344,7 +341,7 @@ mailInvitationToView' templates ctx document@Document{documenttitle} signatureli
 mailDocumentClosed :: KontrakcjaTemplates -> Context -> Document -> IO Mail
 mailDocumentClosed templates (Context {ctxhostpart}) document@Document{documenttitle} = 
    do
-     title <- renderTemplate templates "mailDocumentClosedTitle" [("documenttitle",BS.toString  documenttitle )] 
+     title <- renderTemplate templates "mailDocumentClosedTitle" [("documenttitle", BS.toString  documenttitle )] 
      partylist <- renderListTemplate templates $  map (BS.toString . personname') $ partyList document
      content <- wrapHTML templates =<< (renderTemplateForProcess templates document processmailclosedcontent $ do
         field "documenttitle" $ BS.toString documenttitle 
