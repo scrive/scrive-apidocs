@@ -604,7 +604,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <th class="minusbutton">               </th>
                 <th class="attachmentname">Bilaga      </th>
                 <th class="attachmentdesc">Beskrivning </th>
-                <th class="attachmentsigs">Begar fran  </th>
+                <th class="attachmentsigs">Begär från  </th>
                 <th class="attachmentsels">            </th>
               </tr>
             </thead>
