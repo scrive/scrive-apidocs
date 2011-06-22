@@ -151,6 +151,10 @@ msgid "_Delete"
 msgstr "Radera"
 
 #: docpages/doclist.st:pageContractsList
+msgid "_CantRemoveActiveDocuments"
+msgstr "Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först."
+
+#: docpages/doclist.st:pageContractsList
 msgid "_SendReminder"
 msgstr "Skicka påminnelse"
 

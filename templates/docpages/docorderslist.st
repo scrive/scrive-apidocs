@@ -17,7 +17,8 @@ $loadingdialog()$
 			  </div>
               <ul class="tab-dd-opts">
                 <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>
-				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$</a></li>
+				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$</a>
+				          <div class="cantdeleteopenflashmsgtxt" style="display:none;">$_CantRemoveActiveOrders()$</div></li>
 			  </ul>
 			</div>
 		  </div>

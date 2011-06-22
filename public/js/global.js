@@ -151,12 +151,8 @@ safeReady(function() {
         return false;
       } else {
         if (countSentOrOpenRows(selectedrows)>0) {
-          var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-          if (listtype=="dokument") {
-            addFlashMessage(localization.cantRemoveActiveDocuments, "red");
-          } else {
-            addFlashMessage(localization.cantRemoveActiveOffers, "red");
-          }
+          var flashtxt = $(".cantdeleteopenflashmsgtxt").text();
+          addFlashMessage(flashtxt, "red");
           return false;
         }
         var deletionDetails = "";

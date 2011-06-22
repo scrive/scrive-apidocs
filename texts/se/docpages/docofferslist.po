@@ -127,6 +127,10 @@ msgid "_Delete"
 msgstr "Radera"
 
 #: docpages/docofferslist.st:pageOffersList
+msgid "_CantRemoveActiveOffers"
+msgstr "Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först."
+
+#: docpages/docofferslist.st:pageOffersList
 msgid "_SendReminder"
 msgstr "Skicka påminnelse"
 

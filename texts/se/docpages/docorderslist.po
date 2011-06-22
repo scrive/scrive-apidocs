@@ -118,6 +118,10 @@ msgid "_Delete"
 msgstr "Radera"
 
 #: docpages/docorderslist.st:pageOrdersList
+msgid "_CantRemoveActiveOrders"
+msgstr "Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först."
+
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_SendReminder"
 msgstr "Skicka påminnelse"
 
