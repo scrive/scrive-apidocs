@@ -677,6 +677,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div>     
             Välj de bilagor du vill bifoga
           </div>
+          <div id="possibleAttachmentsList">
           <span id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
@@ -685,7 +686,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <span class="text">OBS! Endast PDF</span> 
                 </span>
               </div>
-              <br/>
               <div class="signStepsButtonContainer">
                 <a class="btn-small green">  
                   <div class="left"> </div>
@@ -702,7 +702,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <span class="text">Sparad på SkrivaPå</span> 
                 </span>
               </div>
-              <br/>
               <div class="signStepsButtonContainer">
                 <a id="showexistingattachments" class="btn-small green">  
                   <div class="left"> </div>
@@ -721,6 +720,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
               </ul>
             </div>
           </span>
+          </div>
+          <div id="attachedList">
           <div id="alreadyattached">
             $attachments:{attachment |
             <div class="alreadyattacheditem">
@@ -735,6 +736,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             }$
           </div>
           <div id="tobeattached">
+          </div>
           </div>
         </div>
       </div>
