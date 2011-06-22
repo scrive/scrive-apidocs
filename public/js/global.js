@@ -1543,6 +1543,11 @@ safeReady(function() {
   });
 });
 
+safeReady(function() {
+  $("form.requestAccount").submit(function() {
+    var res = _gaq.push(['_trackPageview', '/mal/skapa-konto']);
+  });
+});
 
 safeReady(function() {
   $("#toscontainer").css("position", "absolute");

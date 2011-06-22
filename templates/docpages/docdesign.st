@@ -584,7 +584,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
     <input type="hidden" name="sigattachments" value="true" />
     
-    <div class="modal-container">
+    <div class="modal-container" style="width:740px;left:-50px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -592,9 +592,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </span>
         <a class="modal-close close"> </a>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="padding-left:20px;padding-right:20px;">
         <div class="modal-content">
-          <div>     
+          <div style="padding-bottom:10px;">     
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
           <table id="sigattachmenttable">
@@ -610,7 +610,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <tbody>
               $sigattachments:{a|
               <tr>
-                <td><a href="#" class="minus"></a></td>
+                <td class="centralised"><a href="#" class="minus"></a></td>
                 <td><input type="text" name="sigattachname"
                            value="$a.attachmentname$" /></td>
                 <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
@@ -619,7 +619,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                     <option selected="selected">$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$</option>
                   </select>
                 </td>
-                <td>
+                <td class="centralised">
                   <span class="selectedsigspan">
                     <ul class="selectedsigs">
                       $a.signatories:{s|
