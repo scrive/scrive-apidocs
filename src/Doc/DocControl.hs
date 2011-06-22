@@ -255,6 +255,23 @@ sendInvitationEmail1 ctx document signatorylink = do
                           , email = signatoryemail signatorydetails}]
       , mailInfo = Invitation documentid signatorylinkid
   }
+  
+{- |
+    Send a reminder email
+-}
+sendReminderEmail :: Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> Kontra SignatoryLink
+sendReminderEmail custommessage ctx doc siglink = do
+  mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) custommessage ctx doc siglink
+  mailattachments <- liftIO $ makeMailAttachments ctx doc
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+      to = [MailAddress { fullname = signatoryname $ signatorydetails siglink
+    , email = signatoryemail $ signatorydetails siglink }]
+    , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
+    , attachments = if isJust $ maybesigninfo siglink
+                      then mailattachments
+                      else []
+    }
+  return siglink
 
 {- |
    Send emails to all parties when a document is closed.
@@ -1703,17 +1720,8 @@ handleIssueBulkRemind doctype = do
           Pending -> do
             let isElegible = isEligibleForReminder (Just user) doc
                 unsignedsiglinks = filter isElegible $ documentsignatorylinks doc
-            sequence . map (sigRemind ctx doc) $ unsignedsiglinks
+            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
           _ -> return []
-      sigRemind :: Context -> Document -> SignatoryLink -> Kontra SignatoryLink
-      sigRemind ctx doc signlink = do
-        mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-              to = [MailAddress { fullname = signatoryname $ signatorydetails signlink
-                                , email = signatoryemail $ signatorydetails signlink }]
-            , mailInfo = Invitation (documentid doc) (signatorylinkid signlink)
-        }
-        return signlink
 
 handleContractsReload :: Kontra KontraLink
 handleContractsReload  = fmap LinkContracts getListParamsForSearch
@@ -1817,12 +1825,7 @@ handleResend docid signlinkid  = withUserPost $ do
         Nothing -> mzero
         Just signlink -> do
           customMessage <- getCustomTextField "customtext"  
-          mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink
-          scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-                to = [MailAddress { fullname = signatoryname $ signatorydetails signlink
-                                  , email = signatoryemail $ signatorydetails signlink }]
-              , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
-          }
+          _ <- sendReminderEmail customMessage ctx doc signlink
           addFlashMsg =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
           return (LinkIssueDoc docid)
 
