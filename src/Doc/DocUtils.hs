@@ -578,3 +578,6 @@ buildattach d (f:fs) a =
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
       Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
       Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
+
+sameDocID :: Document -> Document -> Bool
+sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
