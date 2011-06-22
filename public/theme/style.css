@@ -1277,7 +1277,7 @@ input[type=submit].hidden
 /* step 1 */
 .signStepsBodyUploadBox
 {
-    width: 180px;
+    width: 185px;
     height: 92px;
     margin: 15px;
     border-top: 1px solid #E0E0E0;
@@ -1289,6 +1289,12 @@ input[type=submit].hidden
     float: left;
 }
 
+#dialog-csvupload-1 .signStepsBodyUploadBox
+{
+   height: 105px;
+   position: relative;
+   left: 105px;
+}
 
 .documentTypeBox
 {
@@ -1345,8 +1351,9 @@ input.multiFileInput {
     z-index:10;
     cursor:pointer;
     float:right;
-    top:-15;
+    top:-40px;
     left:10;
+    right:0px;
     font-size:xx-large;
     cursor:pointer;
     -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
@@ -1792,6 +1799,7 @@ input.multiFileInput {
     position: relative;
     top: 1px;
     height: 18px;
+    width: 138px;
     line-height: 18px;
     font-size: 12px;
     border-color: transparent;
@@ -1806,6 +1814,7 @@ input.multiFileInput {
 .dragDisabled .inputWrapper .fieldvalue
 {
     padding-left: 5px;
+    width: 152px;
 }
 
 
@@ -2442,6 +2451,11 @@ form {
     background-image: url(images/iconPen.png); 
     background-repeat: no-repeat;
     background-position: 3px 3px;
+    width: 105px;
+}
+
+.customfield input.customfieldbox {
+    width: 120px;
 }
 
 .redborder
@@ -2902,3 +2916,13 @@ table#signViewSigAttachmentBoxList form {
 table#signatorysignatoryattachments {
     width: 100%;
 }
+
+a#attachmentback {
+    width: 16px;
+    height: 16px;
+    float:left;
+    background-image: url(/img/back.png);
+    margin-left: -80px;
+    margin-top: -16px;
+}
+

@@ -84,9 +84,7 @@ import MinutesTime
 import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
-import Util.HasEmail
-import Util.HasName
-
+import Util.HasSomeUserInfo
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -104,16 +102,16 @@ modalSignAwaitingAuthorLast = do
 modalSendConfirmationView :: Document -> KontraModal
 modalSendConfirmationView document = do
   templates <- ask
-  partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
+  partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
   lift $ renderTemplateForProcess templates document processmodalsendconfirmation $ do
     field "partyListButAuthor" partylist      
-    field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document
+    field "signatory" . listToMaybe $ map (BS.toString . getSmartName) $ partyList document
     documentInfoFields document
 
 modalSendInviteView ::  Document -> KontraModal
 modalSendInviteView document = do
   templates <- ask  
-  partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
+  partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
   lift $ renderTemplate templates  "modalSendInviteView" $ do
     field "partyListButAuthor" partylist
     field "documenttitle" . BS.toString $ documenttitle document
@@ -121,7 +119,7 @@ modalSendInviteView document = do
 modalRejectedView :: Document -> KontraModal
 modalRejectedView document = do
   templates <- ask
-  partylist <-lift $ renderListTemplate templates . map (BS.toString . personname') $ partyList document
+  partylist <-lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyList document
   lift $ renderTemplate templates "modalRejectedView" $ do
     field "partyList" partylist
     field "documenttitle" . BS.toString $ documenttitle document
@@ -161,8 +159,8 @@ modalSignedNotClosedNoAccount document signatorylink actionid magichash = do
 
 modalSignedFields :: KontrakcjaTemplates -> Document -> Fields
 modalSignedFields templates document@Document{ documenttitle } = do
-  field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
-  field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
+  field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . getSmartName) $ partyUnsignedList document
+  field "partyListString" . renderListTemplate templates . map (BS.toString . getSmartName) $ partyList document
   field "signatory" . listToMaybe $ map (BS.toString . getEmail ) $ partyList document
   field "documenttitle" $ BS.toString documenttitle
 
@@ -195,7 +193,7 @@ flashDocumentRestarted templates document =
 flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
 flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
   toFlashMsg OperationDone <$> (renderTemplate templates (template_name maybesigninfo) $ do
-    field "personname" . BS.toString $ personname signlink)
+    field "personname" . BS.toString $ getSmartName signlink)
   where
     template_name =
       maybe "flashRemindMailSentNotSigned"
@@ -292,7 +290,7 @@ flashMessagePleaseSign document templates =
 singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
 singlnkFields document dateformatter sl = do
   field "id" $ show $ signatorylinkid sl
-  field "name" $ BS.toString $ personname sl
+  field "name" $ BS.toString $ getSmartName sl
   field "email" $  ""
   field "company" $ BS.toString . signatorycompany $ signatorydetails sl
   field "author" $ SignatoryAuthor `elem` (signatoryroles sl)
@@ -370,7 +368,7 @@ docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
-    signMatch d = any match $ map (BS.toString . personname) (documentsignatorylinks d)
+    signMatch d = any match $ map (BS.toString . getSmartName) (documentsignatorylinks d)
     
    
 docSortFunc:: SortingFunction Document
@@ -417,7 +415,7 @@ comparePartners doc1 doc2 =
     isMatch _ = False
     compareSignatory :: SignatoryLink -> SignatoryLink -> Ordering
     compareSignatory sl1 sl2 =
-      let splitUp sl = span (\c -> c/=' ') . map toUpper . BS.toString $ personname sl
+      let splitUp sl = span (\c -> c/=' ') . map toUpper . BS.toString $ getSmartName sl
           (fst1, snd1) = splitUp sl1
           (fst2, snd2) = splitUp sl2 in
       case (compare fst1 fst2) of
@@ -620,7 +618,7 @@ pageDocumentDesign ctx
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
      csvfields <- documentCsvFields templates document
-     (withProcessFieldsFor document renderTemplate) (ctxtemplates ctx) "pageDocumentDesign" $ do
+     renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
@@ -636,6 +634,23 @@ pageDocumentDesign ctx
        documentAttachmentDesignFields (documentauthorattachments document)
        documentAuthorAttachments attachments
        documentSignatoryAttachments document (documentsignatoryattachments document)
+       field "process" processFields
+   where
+     getProcessText = renderTextForProcess (ctxtemplates ctx) document
+     getProcessValue = getValueForProcess document
+     processFields = do
+       field "hasadvancedview" $ getProcessValue processadvancedview
+       field "isauthorsend" $ getProcessValue processauthorsend
+       field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
+       field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
+       field "title" $ getProcessText processtitle
+       field "step1text" $ getProcessText processstep1text
+       field "expirywarntext" $ getProcessText processexpirywarntext
+       field "sendbuttontext" $ getProcessText processsendbuttontext
+       field "expirywarntext" $ getProcessText processexpirywarntext
+       field "confirmsendtitle" $ getProcessText processconfirmsendtitle
+       field "confirmsendtext" $ getProcessText processconfirmsendtext
+       field "expirytext" $ getProcessText processexpirytext
 
 documentAttachmentDesignFields :: [AuthorAttachment] -> Fields
 documentAttachmentDesignFields atts = do
@@ -735,7 +750,7 @@ pageDocumentForAuthor ctx
        templates = ctxtemplates ctx
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
-     (withProcessFieldsFor document renderTemplate) (ctxtemplates ctx) "pageDocumentForAuthor" $ do
+     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document               
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
@@ -749,6 +764,20 @@ pageDocumentForAuthor ctx
        documentViewFields document
        documentAttachmentViewFields documentid Nothing (documentauthorattachments document)
        documentSigAttachmentViewFields documentid documentsignatorylinks Nothing (documentsignatoryattachments document)
+       field "process" processFields
+   where
+     getProcessText = renderTextForProcess (ctxtemplates ctx) document
+     processFields = do
+       field "title" $ getProcessText processtitle
+       field "restartbuttontext" $ getProcessText processrestartbuttontext
+       field "cancelbuttontext" $ getProcessText processcancelbuttontext
+       field "rejectbuttontext" $ getProcessText processrejectbuttontext
+       field "cancelbyauthormodaltitle" $ getProcessText processcancelbyauthormodaltitle
+       field "signatorysignedtext" $ getProcessText processsignatorysignedtext
+       field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
+       field "authorissecretarytext" $ getProcessText processauthorissecretarytext
+       field "remindagainbuttontext" $ getProcessText processremindagainbuttontext
+       signatoryMessageProcessFields ctx document
 
 {- |
    Show the document for Viewers (friends of author or signatory).
@@ -772,7 +801,7 @@ pageDocumentForViewer ctx
      invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document
      documentinfotext <- documentInfoText ctx document Nothing
-     (withProcessFieldsFor document renderTemplate) (ctxtemplates ctx) "pageDocumentForViewerContent" $  do
+     renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
        field "invitationMailContent" $ invitationMailContent
@@ -799,6 +828,17 @@ pageDocumentForViewer ctx
        documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
        documentSigAttachmentViewFields documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
        documentAuthorInfo document
+       field "process" $ field "title" $ renderTextForProcess (ctxtemplates ctx) document processtitle
+       signatoryMessageProcessFields ctx document
+
+signatoryMessageProcessFields :: Context -> Document -> Fields
+signatoryMessageProcessFields ctx document = do
+  field "signatorysignedtext" $ getProcessText processsignatorysignedtext
+  field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
+  field "authorissecretarytext" $ getProcessText processauthorissecretarytext
+  field "remindagainbuttontext" $ getProcessText processremindagainbuttontext
+  where
+    getProcessText = renderTextForProcess (ctxtemplates ctx) document
 
 documentAttachmentViewFields :: DocumentID -> Maybe SignatoryLink -> [AuthorAttachment] -> Fields
 documentAttachmentViewFields docid msignlink atts = do
@@ -836,113 +876,55 @@ pageDocumentForSignatory :: KontraLink
                     -> SignatoryLink
                     -> IO String 
 pageDocumentForSignatory action document ctx invitedlink  =
-  let authorsiglink = fromJust $ getAuthorSigLink document
-      localscripts =
-        "var docstate = "
-        ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
-        ++ "; docstate['useremail'] = '"
-        ++ (BS.toString $ getEmail invitedlink)
-        ++ "';"
-      magichash = signatorymagichash invitedlink
-      allowedtypes = documentallowedidtypes document
-      requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
-      sigattachments = [a | a <- documentsignatoryattachments document
-                          , signatoryattachmentemail a == getEmail invitedlink]
-      hassigattachments = length sigattachments > 0 in
-  (withProcessFieldsFor document renderTemplate) (ctxtemplates ctx) "pageDocumentForSignContent" $ do
-    field "localscripts" localscripts
-    field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
-    field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (personname authorsiglink) document invitedlink
-    field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-    field "action" $ show action
-    field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
-    field "documentinfotext" $  documentInfoText ctx document (Just invitedlink)
-    field "requireseleg" requiresEleg
-    field "siglinkid" $ show $ signatorylinkid invitedlink
-    field "sigmagichash" $ show $ signatorymagichash invitedlink
-    documentInfoFields document
-    documentAuthorInfo document
-    documentViewFields document
-    signedByMeFields document (Just invitedlink)
-    documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
-    documentSigAttachmentViewFields (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
-    documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
-    field "hasmysigattachments" hassigattachments
-
-withProcessFieldsFor :: Document
-                     -> (KontrakcjaTemplates -> String -> Fields -> IO String)
-                     -> (KontrakcjaTemplates -> String -> Fields -> IO String)
-withProcessFieldsFor document renderFunc templates templatename mainfields =
-  renderFunc templates templatename $ do
-    mainfields
-    field "process" allProcessFields
-  where
-    getProcessText f = renderTemplateForProcess templates document f mainfields
-    getProcessValue = getValueForProcess document
-    allProcessFields = do
-      field "title" $ getProcessText processtitle
-      field "name" $ getProcessText processname
-      field "uploadprompttext" $ getProcessText processuploadprompttext
-      field "uploadname" $ getProcessText processuploadname
-      field "hasadvancedview" $ getProcessValue processadvancedview
-      field "isauthorsend" $ getProcessValue processauthorsend
-      field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
-      field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
-      field "step1text" $ getProcessText processstep1text
-      field "expirywarntext" $ getProcessText processexpirywarntext
-      field "sendbuttontext" $ getProcessText processsendbuttontext
-      field "confirmsendtitle" $ getProcessText processconfirmsendtitle
-      field "confirmsendtext" $ getProcessText processconfirmsendtext
-      field "expirytext" $ getProcessText processexpirytext
-      field "requiressignguard" $ getProcessValue processrequiressignguard
-      field "signguardwarntext" $ getProcessText processsignguardwarntext
-      field "restartbuttontext" $ getProcessText processrestartbuttontext
-      field "cancelbuttontext" $ getProcessText processcancelbuttontext
-      field "cancelbyauthormodaltitle" $ getProcessText processcancelbyauthormodaltitle
+  renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
+    mainFields
+    field "process" processFields
+    where
+    mainFields =
+      let authorsiglink = fromJust $ getAuthorSigLink document
+          localscripts =
+            "var docstate = "
+            ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
+            ++ "; docstate['useremail'] = '"
+            ++ (BS.toString $ getEmail invitedlink)
+            ++ "';"
+          magichash = signatorymagichash invitedlink
+          allowedtypes = documentallowedidtypes document
+          requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
+          sigattachments = [a | a <- documentsignatoryattachments document
+                              , signatoryattachmentemail a == getEmail invitedlink]
+          hassigattachments = length sigattachments > 0
+      in do
+        field "localscripts" localscripts
+        field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
+        field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (getSmartName authorsiglink) document invitedlink
+        field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . getSmartName) $ partyUnsignedMeAndList magichash document
+        field "action" $ show action
+        field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
+        field "documentinfotext" $  documentInfoText ctx document (Just invitedlink)
+        field "requireseleg" requiresEleg
+        field "siglinkid" $ show $ signatorylinkid invitedlink
+        field "sigmagichash" $ show $ signatorymagichash invitedlink
+        documentInfoFields document
+        documentAuthorInfo document
+        documentViewFields document
+        signedByMeFields document (Just invitedlink)
+        documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
+        documentSigAttachmentViewFields (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
+        documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
+        field "hasmysigattachments" hassigattachments
+    getProcessTextWithFields f = renderTemplateForProcess (ctxtemplates ctx) document f mainFields
+    getProcessText = renderTextForProcess (ctxtemplates ctx) document
+    processFields = do
       field "signatorysignmodaltitle" $ getProcessText processsignatorysignmodaltitle
-      field "signatorysignmodalcontent" $ getProcessText processsignatorysignmodalcontent
+      field "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent
       field "signbuttontext" $ getProcessText processsignbuttontext
-      field "signatorycancelmodaltitle" $ getProcessText processsignatorycancelmodaltitle
-      field "signatorysignedtext" $ getProcessText processsignatorysignedtext
-      field "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
-      field "authorissecretarytext" $ getProcessText processauthorissecretarytext
-      field "remindagainbuttontext" $ getProcessText processremindagainbuttontext
-      field "cancelbyauthorstandardheader" $ getProcessText processmailcancelbyauthorstandardheader
-      field "cancelbyauthorcontent" $ getProcessText processmailcancelbyauthorcontent
-      field "closedcontent" $ getProcessText processmailclosedcontent
-      field "rejectcontent" $ getProcessText processmailrejectcontent
-      field "invitationtosigncontent" $ getProcessText processmailinvitationtosigncontent
-      field "invitationtosigndefaultheader" $ getProcessText processmailinvitationtosigndefaultheader
-      field "signedstandardheader" $ getProcessText processmailsignedstandardheader
-      field "notsignedstandardheader" $ getProcessText processmailnotsignedstandardheader
-      field "remindnotsignedcontent" $ getProcessText processmailremindnotsignedcontent
-      field "flashmessagecanceled" $ getProcessText processflashmessagecanceled
-      field "flashmessagerestarted" $ getProcessText processflashmessagerestarted
-      field "flashmessagearchivedone" $ getProcessText processflashmessagearchivedone
-      field "flashmessagebulkremindssent" $ getProcessText processflashmessagebulkremindssent
-      field "flashmessagenobulkremindssent" $ getProcessText processflashmessagenobulkremindssent
-      field "flashmessagepleasesign" $ getProcessText processflashmessagepleasesign
-      field "signedviewclosedhasaccount" $ getProcessText processmodalsignedviewclosedhasaccount
-      field "signedviewnotclosedhasaccount" $ getProcessText processmodalsignedviewnotclosedhasaccount
-      field "signedviewclosednoaccount" $ getProcessText processmodalsignedviewclosednoaccount
-      field "signedviewnotclosednoaccount" $ getProcessText processmodalsignedviewnotclosednoaccount
-      field "modalsendconfirmation" $ getProcessText processmodalsendconfirmation
-      field "sealincludesmaxtime" $ getProcessValue processsealincludesmaxtime
-      field "sealingtext" $ getProcessText processsealingtext
-      field "lasthisentry" $ getProcessText processlasthisentry
-      field "invitationsententry" $ getProcessText processinvitationsententry
-      field "seenhistentry" $ getProcessText processseenhistentry
-      field "signhistentry" $ getProcessText processsignhistentry
-      field "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
-      field "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      field "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
-      field "pendingauthorinfotext" $ getProcessText processpendingauthorinfotext
-      field "cancelledinfoheader" $ getProcessText processcancelledinfoheader
-      field "cancelledinfotext" $ getProcessText processcancelledinfotext
-      field "signedinfoheader" $ getProcessText processsignedinfoheader
-      field "signedinfotext" $ getProcessText processsignedinfotext
-      field "statusinfotext" $ getProcessText processstatusinfotext
-       
+      field "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle
+      field "rejectbuttontext" $ getProcessText processrejectbuttontext
+      field "title" $ getProcessText processtitle
+      field "requiressignguard" $ getValueForProcess document processrequiressignguard
+      field "signguardwarntext" $ getProcessText processsignguardwarntext
+      signatoryMessageProcessFields ctx document
 
 documentSingleSignatoryAttachmentsFields :: DocumentID -> SignatoryLinkID -> MagicHash -> [SignatoryAttachment] -> Fields
 documentSingleSignatoryAttachmentsFields docid sid mh atts = 
@@ -1066,11 +1048,27 @@ signatoriesWithSecretary doc =
 -- Helper to get document after signing info text
 documentInfoText :: Context -> Document -> Maybe SignatoryLink -> IO String
 documentInfoText ctx document siglnk =
-  (withProcessFieldsFor document renderTemplate) (ctxtemplates ctx) "documentInfoText" $ do
-    documentInfoFields document 
-    documentAuthorInfo document
-    field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
-    signedByMeFields document siglnk
+  renderTemplate (ctxtemplates ctx) "documentInfoText" $ do
+    mainFields
+    field "process" processFields
+  where
+    mainFields = do
+      documentInfoFields document 
+      documentAuthorInfo document
+      field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
+      signedByMeFields document siglnk
+    getProcessText = renderTextForProcess (ctxtemplates ctx) document
+    getProcessTextWithFields f = renderTemplateForProcess (ctxtemplates ctx) document f mainFields
+    processFields = do
+      field "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
+      field "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
+      field "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
+      field "pendingauthorinfotext" $ getProcessTextWithFields processpendingauthorinfotext
+      field "cancelledinfoheader" $ getProcessText processcancelledinfoheader
+      field "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
+      field "signedinfoheader" $ getProcessText processsignedinfoheader
+      field "signedinfotext" $ getProcessTextWithFields processsignedinfotext
+      field "statusinfotext" $ getProcessTextWithFields processstatusinfotext
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Document -> Fields
@@ -1145,33 +1143,31 @@ designViewFields step = do
         _ -> False
 
 
-uploadPage :: Context -> ListParams -> (Maybe DocumentType) -> Bool -> IO String
-uploadPage ctx params mdoctype showTemplates = renderTemplate (ctxtemplates ctx) "uploadPage" $ do
-    field "isprocessselected" $ isJust mdoctype
-    field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdoctype
+uploadPage :: Context -> ListParams -> (Maybe DocumentProcess) -> Bool -> IO String
+uploadPage ctx params mdocprocess showTemplates = renderTemplate (ctxtemplates ctx) "uploadPage" $ do
+    field "isprocessselected" $ isJust mdocprocess
+    field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdocprocess
     field "showTemplates" showTemplates
-    field "processes" $ map processFields [Signable Contract, Signable Offer, Signable Order]
-    case mdoctype of
-      Just selectedoctype -> do
-        field "selectedprocess" $ processFields selectedoctype
+    field "processes" $ map processFields [Contract,Offer,Order]
+    case mdocprocess of
+      Just selecteprocess -> do
+        field "selectedprocess" $ processFields selecteprocess
       _ -> return ()
     where
-      processFields doctype@(Signable process) = do
+      processFields process = do
         field "id" $ show process
-        field "selected" $ (Just doctype) == mdoctype
-        field "name" $ renderTextForProcess (ctxtemplates ctx) doctype processuploadname
-        field "uploadprompttext" $ renderTextForProcess (ctxtemplates ctx) doctype processuploadprompttext
-      processFields _ = return ()
+        field "selected" $ (Just process == mdocprocess)
+        field "name" $ renderTextForProcess (ctxtemplates ctx) (Signable process) processuploadname
+        field "uploadprompttext" $ renderTextForProcess (ctxtemplates ctx) (Signable process) processuploadprompttext
+
        
 
-templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentType -> PagedList Document -> IO String
-templatesForAjax templates ctime user doctype doctemplates = 
+templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentProcess -> PagedList Document -> IO String
+templatesForAjax templates ctime user docprocess doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
         field "documents" $ markParity $ map (documentBasicViewFields templates ctime user) (list doctemplates)
-        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)  True
-        field "processid" $
-          let Signable process = doctype in
-          show process
+        field "currentlink" $ show $ LinkNew (Just docprocess) (params doctemplates)  True
+        field "processid" $ show docprocess
         pagedListFields doctemplates
     
 -- We keep this javascript code generation for now

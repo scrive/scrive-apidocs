@@ -13,16 +13,17 @@ $loadingdialog()$
 		  <div class="col float-left">
 			<div class="tab-dd">
               <div class="tab-dd-button">
-				<a href="javascript:;"><p>Alternativ</p></a>
+				<a href="javascript:;"><p>$_Options()$</p></a>
 			  </div>
               <ul class="tab-dd-opts">
-                <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">Skicka påminnelse</a></li>
-				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
+                <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>
+				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$</a>
+				          <div class="cantdeleteopenflashmsgtxt" style="display:none;">$_CantRemoveActiveDocuments()$</div></li>
 			  </ul>
 			</div>
 		  </div>
 		  <div class="col float-right">
-            $searchBox(infotext='Sök dokument')$
+            $searchBox(infotext=_SearchDoc())$
           </div>
 
           
@@ -36,38 +37,38 @@ $loadingdialog()$
 				<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
 				<th style="width: 65px;">
                   $if(params.sorting.statusREV)$
-                  <a href="$currentlink$&amp;sorting=status">Status  <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=status">$_StatusSortUp()$<em> ▲</em></a>
                   $elseif(params.sorting.status)$
-                  <a href="$currentlink$&amp;sorting=statusREV">Status  <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=statusREV">$_StatusSortDown()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=status">Status </a>
+                  <a href="$currentlink$&amp;sorting=status">$_StatusSortElse()$</a>
                   $endif$
                 </th>
 				<th style="width: 140px;">
                   $if(params.sorting.timeREV)$
-                  <a href="$currentlink$&amp;sorting=time">Senaste händelse  <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=time">$_TimeSortUp()$<em> ▲</em></a>
                   $elseif(params.sorting.time)$
-                  <a href="$currentlink$&amp;sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=timeREV">$_TimeSortDown()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=time">Senaste händelse </a>
+                  <a href="$currentlink$&amp;sorting=time">$_TimeSortElse()$</a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.partnerREV)$
-                  <a href="$currentlink$&amp;sorting=partner">Parter <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=partner">$_PartysSortUp()$<em> ▲</em></a>
                   $elseif(params.sorting.partner)$
-                  <a href="$currentlink$&amp;sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=partnerREV">$_PartysSortDown()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=partner">Parter </a>
+                  <a href="$currentlink$&amp;sorting=partner">$_PartysSortElse()$</a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.titleREV)$
-                  <a href="$currentlink$&amp;sorting=title">Dokument <em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=title">$_DocSortUp()$<em> ▲</em></a>
                   $elseif(params.sorting.title)$
-                  <a href="$currentlink$&amp;sorting=titleREV">Dokument <em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=titleREV">$_DocSortDown()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=title">Dokument </a>
+                  <a href="$currentlink$&amp;sorting=title">$_DocSortElse()$</a>
                   $endif$
                 </th>
 				<th></th>
@@ -134,44 +135,44 @@ $loadingdialog()$
             <!--
 			   <div class="icon status template"></div>Mall&nbsp;</div>
           -->
-			<div class="icon status draft float-left"></div><div class="float-left">Utkast&nbsp;</div>
-			<div class="icon status cancelled float-left"></div><div class="float-left">Avbrutet&nbsp;</div>
-			<div class="icon status sent float-left"></div><div class="float-left">Skickat&nbsp;</div>
-			<div class="icon status delivered float-left"></div><div class="float-left">Levererat&nbsp;</div>
+			<div class="icon status draft float-left"></div><div class="float-left">$_tablestatusesDraft()$&nbsp;</div>
+			<div class="icon status cancelled float-left"></div><div class="float-left">$_tablestatusesCancelled()$&nbsp;</div>
+			<div class="icon status sent float-left"></div><div class="float-left">$_tablestatusesSent()$&nbsp;</div>
+			<div class="icon status delivered float-left"></div><div class="float-left">$_tablestatusesDelivered()$&nbsp;</div>
 			<!--
 			   <div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 			   -->
-                        <div class="icon status read float-left"></div><div class="float-left">Läst e-post&nbsp;</div>
-			<div class="icon status opened float-left"></div><div class="float-left">Granskat online&nbsp;</div>
-			<div class="icon status signed float-left"></div><div class="float-left">Signerat&nbsp;</div>
+                        <div class="icon status read float-left"></div><div class="float-left">$_tablestatusesEmailOpened()$&nbsp;</div>
+			<div class="icon status opened float-left"></div><div class="float-left">$_tablestatusesViewedOnline()$&nbsp;</div>
+			<div class="icon status signed float-left"></div><div class="float-left">$_tablestatusesSigned()$&nbsp;</div>
 		  </div>
           $pagingFooter()$
 		</div>
 	  </div>
 	</div>
 	<div id="tooltip-draft" class="hidden">
-	  <div class="icon status draft"></div><p>Status: Utkast</p>
+	  <div class="icon status draft"></div><p>$_tooltipdraft()$</p>
 	</div>
     <div id="tooltip-cancelled" class="hidden">
-      <div class="icon status cancelled"></div><p>Status: Avbrutet</p>
+      <div class="icon status cancelled"></div><p>$_tooltipcancelled()$</p>
     </div>
     <div id="tooltip-sent" class="hidden">
-      <div class="icon status sent"></div><p>Status: Skickat</p>
+      <div class="icon status sent"></div><p>$_tooltipsent()$</p>
     </div>
     <div id="tooltip-delivered" class="hidden">
-      <div class="icon status delivered"></div><p>Status: Levererat</p>
+      <div class="icon status delivered"></div><p>$_tooltipdelivered()$</p>
     </div>
     <div id="tooltip-reviewed" class="hidden">
-      <div class="icon status reviewed"></div><p>Status: Granskat online</p>
+      <div class="icon status reviewed"></div><p>$_tooltipreviewed()$</p>
     </div>
     <div id="tooltip-read" class="hidden">
-      <div class="icon status read"></div><p>Status: Läst e-post</p>
+      <div class="icon status read"></div><p>$_tooltipread()$</p>
     </div>
     <div id="tooltip-opened" class="hidden">
-      <div class="icon status opened"></div><p>Status: Granskat online</p>
+      <div class="icon status opened"></div><p>$_tooltipopened()$</p>
     </div>
     <div id="tooltip-signed" class="hidden">
-      <div class="icon status signed"></div><p>Status: Signerat</p>
+      <div class="icon status signed"></div><p>$_tooltipsigned()$</p>
     </div>
   </form>
   $listLocalDialogs()$
@@ -181,27 +182,24 @@ $loadingdialog()$
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>Skicka påminnelse</h2>
+          <h2>$_ReminderHead()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <div class="singleremindmsg">
-            Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet <span class="docname"></span>.
+          <div class="singleremindmsg">$_ReminderBodyIfSingel()$<span class="docname"></span>.
           </div>
-          <div class="multipleremindmsg">
-            Är du säker att du vill skicka en påminnelse til berörda parter för <span class="doccount"></span> dokument.
-          </div>
+          <div class="multipleremindmsg">$_ReminderBodyIfMulti()$<span class="doccount"></span>$_ReminderBodyIfMulti2()$</div>
         </div>
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">Avbryt</div> 
+          <div class="label">$_ReminderFooterCancel()$</div> 
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>OK</p></div>
+          <div class="label"><p>$_ReminderFooterOk()$</p></div>
           <div class="right"></div>
         </a>
       </div>

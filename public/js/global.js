@@ -121,7 +121,8 @@ function countSentOrOpenRows(selectedrows) {
    var notviewers = selectedrows.not(".viewer");
    return (notviewers.find(".sent").length
                + notviewers.find(".read").length
-               + notviewers.find(".opened").length);
+               + notviewers.find(".opened").length
+               + notviewers.find(".delivered").length);
 }
 
 /*
@@ -150,12 +151,8 @@ safeReady(function() {
         return false;
       } else {
         if (countSentOrOpenRows(selectedrows)>0) {
-          var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-          if (listtype=="dokument") {
-            addFlashMessage(localization.cantRemoveActiveDocuments, "red");
-          } else {
-            addFlashMessage(localization.cantRemoveActiveOffers, "red");
-          }
+          var flashtxt = $(".cantdeleteopenflashmsgtxt").text();
+          addFlashMessage(flashtxt, "red");
           return false;
         }
         var deletionDetails = "";
@@ -633,10 +630,12 @@ safeReady(function() {
   });
 });
 
-safeReady(function() {                      
-  $("#sign").overlay({ mask: standardDialogMask,
-                       top : standardDialogTop,
+safeReady(function() {   
+    saveOverlay("#sign", {
+                       mask: standardDialogMask,
+                       load: true,
                        onBeforeLoad: function () {
+                         var x = this  
                          if (!sigFieldsValidation()) return false;
                          var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
                          if(trs.length > 0) {
@@ -656,15 +655,11 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  $("#signbankid").overlay({ mask: standardDialogMask,
-                             top : standardDialogTop
-                            });
+  saveOverlay("#signbankid",{    mask: standardDialogMask});
 });
    
 safeReady(function() { 
-  $("#cancel, .cancel").overlay({	mask: standardDialogMask,
-                                    top : standardDialogTop,
-                                });
+  saveOverlay("#cancel, .cancel",{	mask: standardDialogMask});
 });
 
 safeReady(function() {
@@ -1553,3 +1548,30 @@ safeReady(function() {
     var res = _gaq.push(['_trackPageview', '/mal/skapa-konto']);
   });
 });
+
+safeReady(function() {
+  $("#toscontainer").css("position", "absolute");
+});
+
+/*
+ * Function to deal with the situation when page is very big (more then 3000px)
+ * So when basiclly all page, normally seen as 10 or more pages are interpreted
+ * by the browser as one big page. This happends on iPod or in embedded frames, 
+ * 
+ * Then we want to put overlay near the button that activates it
+ */
+
+function saveOverlay(d,o) 
+{               
+  $(d).click(function () {
+     if ($(this).data("overlay") == undefined) { 
+       if ($(window).height() < 1650) // never seen screen with bigger respolution
+        top = standardDialogTop
+       else
+        o.top = $(this).offset().top - $(document).scrollTop() - 400;
+        o.load = true;
+        $(this).overlay(o);
+     }   
+  }) 
+}
+

@@ -6,9 +6,7 @@
 javascriptLocalisation = 
     var localization = 
         {
-              cantRemoveActiveDocuments : "Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först."
-            , cantRemoveActiveOffers : "Det går inte att radera offer som är skickade eller öppna, var vänliga återkalla offerter först."
-            , loadingFile : "Laddar upp . . ."
+              loadingFile : "Laddar upp . . ."
             , problemWithPDF : "Problem med PDF"
             , repetedEmailAddress : "Du kan ej använda samma e-post för mer än 1 användare" 
             , offerSignatory : "Mottagare" 

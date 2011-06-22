@@ -1,122 +1,122 @@
 #####
 contractsealingtexts= 
 SealingTexts
-    {   verificationTitle="Verifikat"
-      , docPrefix="Dok.nr."
-      , signedText="Undertecknat"
-      , partnerText="Parter"
-      , secretaryText="Ej undertecknande part"
-      , orgNumberText="Org.nr. "
-      , eventsText="Registrerade händelser"
-      , dateText="Datum"
-      , historyText="Händelser"
+    {   verificationTitle="$_contractsealingtexts()$"
+      , docPrefix="$_contractsealingtextsdocPrefix()$"
+      , signedText="$_contractsealingtextssignedText()$"
+      , partnerText="$_contractsealingtextspartnerText()$"
+      , secretaryText="$_contractsealingtextssecretaryText()$"
+      , orgNumberText="$_contractsealingtextsorgNumberText()$"
+      , eventsText="$_contractsealingtextseventsText()$"
+      , dateText="$_contractsealingtextsdateText()$"
+      , historyText="$_contractsealingtextshistoryText()$"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documentid$ har undertecknats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
-        , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+          "$_contractsealingtextsverificationFooterRow1()$$documentid$ $_contractsealingtextsverificationFooterRow12()$"
+        , "$_contractsealingtextsverificationFooterRow2()$"
+        , "$_contractsealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
 #####
 offersealingtexts=
 SealingTexts
-    {   verificationTitle="Acceptverifikat"
-      , docPrefix="Offertnummer"
-      , signedText="Offert accepterad"
-      , partnerText="Mottagare"
-      , secretaryText="Avsändare"
-      , orgNumberText="Org.nr. "
-      , eventsText="Registrerade händelser"
-      , dateText="Datum"
-      , historyText="Händelser"
+    {   verificationTitle="$_offersealingtextsverificationTitle()$"
+      , docPrefix="$_offersealingtextsdocPrefix()$"
+      , signedText="$_offersealingtextssignedText()$"
+      , partnerText="$_offersealingtextspartnerText()$"
+      , secretaryText="$_offersealingtextssecretaryText()$"
+      , orgNumberText="$_offersealingtextsorgNumberText()$"
+      , eventsText="$_offersealingtextseventsText()$"
+      , dateText="$_offersealingtextsdateText()$"
+      , historyText="$_offersealingtextshistoryText()$"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offertnummer $documentid$ har accepterats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är verifierad genom vår tjänst.
-        , "Du kan kontrollera offerten mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+          "$_offersealingtextsverificationFooterRow1()$$documentid$ $_offersealingtextsverificationFooterRow12()$"
+        , "$_offersealingtextsverificationFooterRow2()$."
+        , "$_offersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
 #####
 ordersealingtexts= 
 SealingTexts
-    {   verificationTitle="Orderbekräftelse"
-      , docPrefix="Orderbekräftelsenummer"
-      , signedText="Ordern bekräftad"
-      , partnerText="Mottagare"
-      , secretaryText="Avsändare"
-      , orgNumberText="Org.nr. "
-      , eventsText="Registrerade händelser"
-      , dateText="Datum"
-      , historyText="Händelser"
+    {   verificationTitle="$_ordersealingtextsverificationTitle()$"
+      , docPrefix="$_ordersealingtextsdocPrefix()$"
+      , signedText="$_ordersealingtextssignedText()$"
+      , partnerText="$_ordersealingtextspartnerText()$"
+      , secretaryText="$_ordersealingtextssecretaryText()$"
+      , orgNumberText="$_ordersealingtextsorgNumberText()$"
+      , eventsText="$_ordersealingtextseventsText()$"
+      , dateText="$_ordersealingtextsdateText()$"
+      , historyText="$_ordersealingtextshistoryText()$"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att orderbekräftelsenummer $documentid$ har bekräftats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
-        , "Kontrollera orderbekräftelsen mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+          "$_ordersealingtextsverificationFooterRow1()$ $documentid$ $_ordersealingtextsverificationFooterRow12()$"
+        , "$_ordersealingtextsverificationFooterRow2()$."
+        , "$_ordersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
 #####
 contractLastHistEntry=
-    Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande.
+$_contractLastHistEntry()$
 #####
 offerLastHistEntry=
-    Samligta parter har accepterat offerten.
+$_offerLastHistEntry()$
 ####
 orderLastHistEntry=
-    Samligta parter har bekräftat ordern.
+$_orderLastHistEntry()$
 ####
 contractInvitationSentEntry=
-    $authorfstname$ $authorsndname$ skickar en inbjudan att underteckna till
+    $authorfstname$ $authorsndname$$_contractInvitationSentEntry()$
     $if(oneSignatory)$
-        parten
+        $_contractInvitationSentEntryIfoneSignatory()$
     $else$
-        parterna
+        $_contractInvitationSentEntryIfElse()$
     $endif$ 
     
     $ip$
 ###
 offerInvitationSentEntry=
-    $authorfstname$ $authorsndname$ skickar offerten till
+    $authorfstname$ $authorsndname$ $_offerInvitationSentEntry()$
     $if(oneSignatory)$
-        parten
+        $_offerInvitationSentEntryIfoneSignatory()$
     $else$
-        parterna
+        $_offerInvitationSentEntryIfElse()$
     $endif$ 
     
     $ip$
 ###
 orderInvitationSentEntry=
-    $authorfstname$ $authorsndname$ skickar orderbekräftelsen till
+    $authorfstname$ $authorsndname$ $_orderInvitationSentEntry()$
     $if(oneSignatory)$
-        parten
+        $_orderInvitationSentEntryIfoneSignatory()$
     $else$
-        parterna
+        $_orderInvitationSentEntryIfElse()$
     $endif$ 
     
     $ip$
 ###
 contractSeenHistEntry=
-    $personname$ granskar dokumentet online $seenip$
+    $personname$$_contractSeenHistEntry()$ $seenip$
 ###
 offerSeenHistEntry=
-    $personname$ granskar offerten online $seenip$
+    $personname$$_offerSeenHistEntry()$ $seenip$
 ####
 orderSeenHistEntry=
-    $personname$ granskar orderbekräftelsen online $seenip$
+    $personname$$_orderSeenHistEntry()$ $seenip$
 ####
 contractSignHistEntry=
-    $personname$ undertecknar dokumentet online med $signMethod()$ $signip$
+    $personname$$_contractSignHistEntry()$ $signMethod()$ $signip$
 ####
 offerSignHistEntry=
-    $personname$ accepterar offerten med $signMethod()$ $signip$
+    $personname$$_offerSignHistEntry()$ $signMethod()$ $signip$
 ###
 orderSignHistEntry=
-    $personname$ bekräftar ordern online med $signMethod()$ $signip$
+    $personname$$_orderSignHistEntry()$ $signMethod()$ $signip$
 ###
 signMethod=
         $if(!provider)$
-            e-post
+            $_signMethodEmail()$
         $elseif(bankid)$
-            BankID
+            $_signMethodElegBankID()$
         $elseif(norder)$
-            Nordea e-legitimation
+            $_signMethodElegNordea()$
         $elseif(telia)$
-            Telia e-legitimation
+            $_signMethodElegTelia()$
         $else$
-            e-legitimation
+            $_signMethodEleg()$
         $endif$
 ###

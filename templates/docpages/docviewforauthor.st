@@ -1,29 +1,27 @@
 ###
-contractrestartbuttontext=Starta om dokument
+contractrestartbuttontext=$_contractrestartbuttontext()$
 ###
-offerrestartbuttontext=Starta om offert
+offerrestartbuttontext=$_offerrestartbuttontext()$
 ###
-orderrestartbuttontext=Starta om orderbekräftelse
+orderrestartbuttontext=$_orderrestartbuttontext()$
 ###
-contractcancelbuttontext=Återkalla inbjudan
+contractcancelbuttontext=$_contractcancelbuttontext()$
 ###
-offercancelbuttontext=Återkalla offert
+offercancelbuttontext=$_offercancelbuttontext()$
 ###
-ordercancelbuttontext=Återkalla orderbekräftelse
+ordercancelbuttontext=$_ordercancelbuttontext()$
 ###
 contractcancelbyauthormodaltitle=
-         <h2>Återkalla inbjudan</h2> 
-          <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
-          </p>
+         <h2>$_contractcancelbyauthormodaltitleHead()$</h2>
+          <p>$_contractcancelbyauthormodaltitleBody()$</p>
 ###
 offercancelbyauthormodaltitle=
-         <h2>Är du säker att du vill återkalla offerten?</h2>
-          <p>När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.</p>
+         <h2>$_offercancelbyauthormodaltitleHead()$</h2>
+          <p>$_offercancelbyauthormodaltitleBody()$</p>
 ###
 ordercancelbyauthormodaltitle=
-         <h2>Är du säker att du vill återkalla orderbekräftelsen?</h2>
-          <p>När du återkallat orderbekräftelsen kommer nedanstående meddelande att skickas till din motpart.</p>
+         <h2>$_ordercancelbyauthormodaltitleHead()$</h2>
+          <p>$_ordercancelbyauthormodaltitleBody()$</p>
 ###
 pageDocumentForAuthor=
 <div class="localdialogs">
@@ -44,14 +42,14 @@ pageDocumentForAuthor=
       </span>
       <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
-          Ladda ned PDF
+          $_DownloadPDF()$
         </a>
       </span>
     </div>
     $if(hasanyattachments)$
     <ul class="tabs">
-      <li id="doctab" class="active"><a href="#" id="doctablink">Dokument</a></li>
-      <li id="atttab" ><a href="#" id="attachtablink">Bilagor</a></li>
+      <li id="doctab" class="active"><a href="#" id="doctablink">$_Document()$</a></li>
+      <li id="atttab" ><a href="#" id="attachtablink">$_Attachments()$</a></li>
     </ul>
     $endif$
   </div>
@@ -61,13 +59,13 @@ pageDocumentForAuthor=
       <div id="signViewBodyLeft" >
         <span id="signViewBodyLeftTextContainer"> 
           <div class="attachmentListContainer">  
-            <div class="subheader">Bilaga:</div>
+            <div class="subheader">$_Attachment()$</div>
             $attachments:{attachment |
             <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
             }$
 
             $if(hassigattachments)$
-            <div class="subheader">Bägarda bilagor:</div>
+            <div class="subheader">$_RequestedAttachments()$</div>
             <table class="authorsigattachment">
               $sigattachments:{attachment |
               <tr><td>
@@ -123,50 +121,48 @@ pageDocumentForAuthor=
       </div>
       $signatoriesBox()$
     </div>
-    <div id="documentBox">
-      <script type="text/javascript">
-        var docstate = $docstate:noescape()$;
-      </script>
-      
-      <div class="waiting4page"></div>
-    </div>
+  </span>
+  <div id="documentBox">
+    <script type="text/javascript">
+      var docstate = $docstate:noescape()$;
+    </script>
     
-    $if(awaitingauthor)$
-    <script type="text/javascript" src="/js/bankid.js"> </script>
-    <div style="display:none;">
-      $validationdropdown()$
+    <div class="waiting4page"></div>
+  </div>
+  
+  $if(awaitingauthor)$
+  <script type="text/javascript" src="/js/bankid.js"> </script>
+  <div style="display:none;">
+    $validationdropdown()$
+  </div>
+  <div id="signViewBottomBox"> 
+    <div id="signViewBottomBoxContainerLeft">
+      <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
+        <div class="left"></div>
+        <div class="label">$process.cancelbuttontext$</div>
+        <div class="right"></div>
+      </a>
     </div>
-    <div id="signViewBottomBox"> 
-      <div id="signViewBottomBoxContainerLeft">
-        <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
-          <div class="left"></div>
-          <div class="label">Avvisa dokument</div>
-          <div class="right"></div>
-        </a>
-      </div>
-      <div id="signViewBottomBoxContainerMiddle">
-        <div id="signGuardField">
-          <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
-          <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:</label>
-            <br/>1. Samtliga undertecknande parter är korrekta.
-            <br/>2. Att jag granskat och förstått dokumentet.
-            <br/>3. Att jag har befogenhet att skriva på dokumentet.
-          </div>
+    <div id="signViewBottomBoxContainerMiddle">
+      <div id="signGuardField">
+        <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+        <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">$_signGuardField1()$</label>$_signGuardField2()$
+
         </div>
       </div>
-      <div id="signViewBottomBoxContainerRight"> 
-        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
-          <div class="left"></div>
-          <div class="label" style="width:120px">
-            <span>SkrivaPå</span>
-            <span class="icon cross"></span>
-          </div>
-          <div class="right"></div>
-        </a>
-      </div>
     </div>
-    $endif$   
-  </span>
+    <div id="signViewBottomBoxContainerRight"> 
+      <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
+        <div class="left"></div>
+        <div class="label" style="width:120px">
+          <span>$_signViewBottomBoxContainerRightSkrivapa()$</span>
+          <span class="icon cross"></span>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+  $endif$   
   <div class="localdialogs">
     $loadingdialog()$
     <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
@@ -185,8 +181,8 @@ pageDocumentForAuthor=
         </div>
         <div class="modal-footer">
           <div class="float-left">
-            <a class="close cancel">Avbryt</a>
-            <a class="editer message">Skriv eget meddelande</a>
+            <a class="close cancel">$_cancelByAuthorDialogCancel()$</a>
+            <a class="editer message">$_cancelByAuthorDialogOwnMessage()$</a>
           </div>
           <a class="btn-small red float-right submiter">
             <div class="left"></div>
@@ -205,32 +201,29 @@ pageDocumentForAuthor=
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            <h2>Underteckna</h2>   
+            <h2>$_dialogConfirmSignByAuthorHead()$</h2>
           </span>
           <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
           <div class="modal-content">     
-            <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-            <p>När $partyUnsigned:noescape()$ undertecknat blir avtalet <strong>juridiskt bindande</strong> och
-              det färdigställda avtalet skickas till din e-post.</p>
+            <p>$_dialogConfirmSignByAuthorBody1()$<strong>$documenttitle$</strong>?</p>
+            <p>$_dialogConfirmSignByAuthorBody2()$ $partyUnsigned:noescape()$ $_dialogConfirmSignByAuthorBody3()$</p>
             <span class="eleghidden" style="display:none;">
-              <h3>Välj typ av e-legitimation</h3>
-              <p>Har du ingen e-legitimation? Du kan ladda ned en
-                e-legitimation från din internetbank eller från
-                Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                          target="_new">Klicka här</a> för att läsa mer.</p>
+              <h3>$_dialogConfirmSignByAuthorElegSubHead()$</h3>
+              <p>$_dialogConfirmSignByAuthorElegBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                          target="_new">$_dialogConfirmSignByAuthorElegClickHere1()$</a>$_dialogConfirmSignByAuthorElegClickHere2()$ </p>
             </span>
           </div>
         </div>
         <div class="modal-footer">
           <input type="hidden" name="sign" value="automatic" id="signauto" />
-          <a class="close cancel float-left">Avbryt</a>
+          <a class="close cancel float-left">$_dialogConfirmSignByAuthorFooterCancel()$</a>
 
           <a href="#" class="btn-small blue float-right submiter signhidden" id="editing-invite-text-finished">
             <div class="left"></div>
             <div class="label">
-              <p>SkrivaPå</p>
+              <p>$_dialogConfirmSignByAuthorFooterSkrivapa()$</p>
               <span class="btn-symbol cross"></span>
             </div>
             <div class="right"></div>

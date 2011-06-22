@@ -56,8 +56,9 @@ insertNewDocument :: Document ->  Update Documents Document
 insertNewDocument doc = do 
   documents <- ask
   docid <- getUnique64 documents DocumentID
-  let docWithId = doc {documentid = docid}
-  modify $ insert docWithId
+  now <- getMinuteTimeDB
+  let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
+  modify $ insert docWithId 
   return docWithId
 
 

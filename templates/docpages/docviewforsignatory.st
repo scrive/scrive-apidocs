@@ -1,4 +1,10 @@
 ####
+contractrejectbuttontext=Avvisa dokument
+####
+offerrejectbuttontext=Avvisa offert
+####
+orderrejectbuttontext=Avvisa order
+####
 contractsignatorysignmodaltitle=Är du säker att du vill underteckna?
 ####
 offersignatorysignmodaltitle=Är du säker att du vill acceptera offerten?
@@ -217,11 +223,11 @@ pageDocumentForSignContent=
       $signatoriesBox()$
     </div>
 
-
-    <div id="documentBox">
-      <div class="waiting4page"></div>
-    </div>
-
+  </span>
+  <div id="documentBox">
+    <div class="waiting4page"></div>
+  </div>
+  
 
     $if(notsignedbyme)$
 
@@ -235,7 +241,8 @@ pageDocumentForSignContent=
       </div>
     </div>
     $endif$
-
+    
+    $endif$
 
     $if(notsignedbyme)$
     $if(hasmysigattachments)$
@@ -261,7 +268,7 @@ pageDocumentForSignContent=
                     <div class="left"> </div>
                     <div class="label" style="width:80px">Välj fil</div> 
                     <div class="right"> </div>                 
-                    <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
+                    <input class="multiFileInput submitOnUpload" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
                   </a>
                 <div id="tobeattached-$attachment.name$" style="display:none;"></div>
               </form>
@@ -276,11 +283,13 @@ pageDocumentForSignContent=
     </div>
     $endif$
 
+    $if(pending)$
+    
     <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
         <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
           <div class="left"></div>
-          <div class="label">Avvisa dokument</div>
+          <div class="label">$process.rejectbuttontext$</div>
           <div class="right"></div>
         </a>
       </div>
@@ -316,9 +325,8 @@ pageDocumentForSignContent=
         </a>
       </div>
     </div>
-    $endif$
     $endif$ 
-  </span>
+    $endif$
 </div>
 $signatoryScriptIfRequired()$
 ###

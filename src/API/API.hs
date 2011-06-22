@@ -32,6 +32,8 @@ module API.API(
      , askKontraContext
      -- Standard way of getting JSON request body
      , apiBody
+     , apiError
+     , apiResponse
      -- Errors 
      , throwApiError
      , API_ERROR(..)
@@ -241,3 +243,4 @@ instance SafeEnum API_ERROR where
     toSafeEnum _ = Nothing
 
 -- Other constants used for api calls
+

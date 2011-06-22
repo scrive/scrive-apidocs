@@ -247,154 +247,100 @@ remindMailNotSignedOfferContent=
 remindMailNotSignedOrderContent=
     $header:noescape()$
     <span>
-      <p><i>Översiktlig information</i><br/>
-        Parter: $partnersinfo:noescape()$<br/>
+      <p><i>$_remindMailNotSignedOrderContentInfo()$</i><br/>
+        $_remindMailNotSignedOrderContentPartys()$ $partnersinfo:noescape()$<br/>
         $whohadsignedorderinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
-      <p>
-        1. Klicka på länken<br/>
-        <a href="$link$">$link$</a><br/>
-        2. Granska online<br/>
-        3. Bekräfta ordern (eller avvisa)<br/> 
-        4. Färdig
-      </p>
+      <p>$_remindMailNotSignedOrderContentInstruction()$</p>
     </span>
     $footer:noescape()$
     $legalparagraph()$
 ###
 signupLinkEmailPart=
-    <p>Användarnamn:<br/>
-    $email$</p>
+    <p>$_signupLinkEmailPartUserName()$ $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
-    <br/>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_signupLinkEmailPartClickLink()$<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 
 ####
-newUserMailTitle=Nytt konto
+newUserMailTitle=$_newUserMailTitle()$
 ####
 newUserMailContent=
-<p>Hej,</p>
-<p>
-
-  Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har
-  skapat ett konto hos oss. När du aktiverat ditt konto kommer du
-  kunna använda tjänsten med full funktionalitet med kontoplanen
-  Business i 1 månad utan kostnad. Väljer du att inte fortsätta med en
-  betald kontoplan efter testperioden behåller du givetvis tillgång
-  till samtliga dina dokument på SkrivaPå och kan fortsätta använda
-  tjänsten genom vår fria kontoplan Free.
-
-</p>
-<p> 
-
-  Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte
-  att höra av dig med feedback eller bara en enkel hälsning. Din åsikt
-  är värdefull.
-
-</p>
-<p>
-
-  Användarnamn:<br/>
-  $email$
+<p>$_newUserMailContentHi()$</p>
+<p>$_newUserMailContentBodyFirst()$</p>
+<p>$_newUserMailContentBodySecond()$</p>
+<p>$_newUserMailContentBodyUserName()$ $email$
 
 </p>
 
-<p>
-
-  Du aktiverar ditt konto genom att klicka på länken nedan. Länken är
-  giltig i 12 timmar.<br/>
-  
-  <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
+<p>$_newUserMailContentBodyThird()$ <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
 
 </p>
 
 $poweredBySkrivaPaPara()$
 ####
-inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
+inviteSubaccountMailTitle=$_inviteSubaccountMailTitle()$
 ####
 inviteSubaccountMailContent=
-    <p>Hej <strong>$personname$</strong>,</p>
+    <p>$_inviteSubaccountMailContentHi()$</p>
 
-    <p><strong>$supervisorname$</strong> har bjudit in dig till ett
-    underkonto på SkrivaPå genom vilket du kan skriva avtal
-    för organisationen <strong>$companyname$</strong>. Observera att detta konto inte
-    är avsett för privat bruk då samtliga dokument i kontot
-    tillhör organisationen</p>
+    <p>$_inviteSubaccountMailContentBodyFirst()$</p>
 
-    <p>Användarnamn:<br/>
+    <p>$_inviteSubaccountMailContentBodyUserName()$<br/>
     $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_inviteSubaccountMailContentClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 ####
-mailAccountBySigningContractReminderTitle=Du har inte säkrat ditt original
+mailAccountBySigningContractReminderTitle=$_mailAccountBySigningContractReminderTitle()$
 ###
 mailAccountBySigningContractReminderContent=
-<p>Hej <strong>$personname$</strong>,</p>
+<p>$_mailAccountBySigningContractReminderContentHi()$</p>
 
-<p>Du har inte bekräftat att du vill spara ditt dokument "$documenttitle$" hos SkrivaPå. SkrivaPås system kommer att radera dokumentet automatiskt inom 72h. Det kostar ingenting att spara dokumentet.</p>
+<p>$_mailAccountBySigningContractReminderContentBody()$</p>
 
-<p>Gör så här:<br/>
-1. Klicka på länken<br/>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br/>
-2. Definiera lösenord och acceptera villkoren<br/>
-3. Färdig</p>
+<p>$_mailAccountBySigningContractReminderContentInstruction()$</p>
 
 $poweredBySkrivaPaPara()$
 ####
-mailAccountBySigningOfferReminderTitle=Du har inte sparat ditt original
+mailAccountBySigningOfferReminderTitle= $_mailAccountBySigningOfferReminderTitle()$
 ###
 mailAccountBySigningOfferReminderContent=
-<p>Hej <strong>$personname$</strong>,</p>
+<p>$_mailAccountBySigningOfferReminderContentHi()$</p>
 
-<p>Du har inte bekräftat att du vill spara din offert "$documenttitle$" hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt inom 72h. Det kostar ingenting att spara offerten.</p>
+<p>$_mailAccountBySigningOfferReminderContentBody()$</p>
 
-<p>Gör så här:<br/>
-1. Klicka på länken<br/>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br/>
-2. Definiera lösenord och acceptera villkoren<br/>
-3. Färdig</p>
+<p>$_mailAccountBySigningOfferReminderContentInstruction()$</p>
 
 $poweredBySkrivaPaPara()$
 ###
-mailViralInviteTitle=Inbjudan från $invitername$
+mailViralInviteTitle=$_mailViralInviteTitle()$
 ###
 mailViralInviteContent=
-    <p>Hej,</p>
+    <p>$_mailViralInviteContentHi()$</p>
 
-    <p>$invitername$ har bjudit dig på två månaders fri användning av tjänsten SkrivaPå.
-    Det betyder nog att han/hon gillar vår tjänst och tror du också skulle uppskatta den också.</p>
+    <p>$_mailViralInviteContentBodyFirst()$</p>
 
-    <p>SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt.
-    Spara pengar, frustration och miljö och använd SkrivaPå istället. 
-    Du kan spara mellan 50-250kr/dokument!</p>
+    <p>$_mailViralInviteContentBodySecond()$</p>
 
-    <p>Användarnamn:<br/>
-    $email$</p>
+    <p>$_mailViralInviteContentBodyUserName()$$email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_mailViralInviteContentBodyThird()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 
 ####
-mailNewAccountCreatedByAdminTitle=Nytt konto
+mailNewAccountCreatedByAdminTitle=$_mailNewAccountCreatedByAdminTitle()$
 ####
 mailNewAccountCreatedByAdminContentHeader=
  
-    <p>Hej <strong>$personname$</strong>,</p>
+    <p>$_mailNewAccountCreatedByAdminContentHeaderHi()$</p>
 
-    <p>$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå. 
-    SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt. 
-    Spara pengar, frustration och miljö och använd SkrivaPå istället. 
-    Du kan spara mellan 50-250kr/dokument!</p>
+    <p>$_mailNewAccountCreatedByAdminContentHeaderBody()$</p>
 
 ###
 mailNewAccountCreatedByAdminContent=
@@ -404,194 +350,155 @@ mailNewAccountCreatedByAdminContent=
     $mailNewAccountCreatedByAdminContentHeader()$
     $endif$
    
-    <p>Användarnamn:<br/>
-    $email$</p>
+    <p>$_mailNewAccountCreatedByAdminContentUserName()$ $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_mailNewAccountCreatedByAdminContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 ####
-invitationMailDeferredTitle=Problem med leverans
+invitationMailDeferredTitle=$_invitationMailDeferredTitle()$
 ###
 invitationMailDeferredContent=
     <span>
-      <p>Hej $authorname$,</p>
-      <p>Vi skickar detta meddelande för att meddela att vårt system har identifierat ett problem med mottagarens e-postserver. Antingen finns inte e-postadressen eller så ligger mottagarens e-postserver nere för tillfället. Vänligen kontrollera att mottagarens e-post är korrekt.</p>
-      <p>Vi fortsätter försöka att nå mottagarens server och meddelar inom kort hur det gått. Klicka på länken nedan om du vill stoppa våra försök eller om du vill ändra e-post adressen.<br />
-      <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
+      <p>$_invitationMailDeferredContentHi()$</p>
+      <p>$_invitationMailDeferredContentBodyFirst()$</p>
+      <p>$_invitationMailDeferredContentBodySecond()$<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
       $poweredBySkrivaPaPara()$
     </span>
 ###
-invitationMailDeliveredAfterDeferredTitle=Lyckosam leverans
+invitationMailDeliveredAfterDeferredTitle=$_invitationMailDeliveredAfterDeferredTitle()$
 ###
 invitationMailDeliveredAfterDeferredContent=
     <span>
-      <p>Hej $authorname$,</p>
-      <p>Vi meddelade dig tidigare om att vi hade problem att nå mottagarens server. Efter upprepade försök har vår server lyckats leverera inbjudan till dokumentet <strong>$documenttitle$</strong> till $email$.</p>
+      <p>$_invitationMailDeliveredAfterDeferredContentHi()$</p>
+      <p>$_invitationMailDeliveredAfterDeferredContentBody()$</p>
       $poweredBySkrivaPaPara()$
     </span>
 ###
-invitationMailUndeliveredTitle=Felaktig e-post
+invitationMailUndeliveredTitle=$_invitationMailUndeliveredTitle()$
 ###
 invitationMailUndeliveredContent=
     <span>
-      <p>Hej $authorname$,</p>
-       <p>Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle$</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.
-       Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
-       <p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>
-       2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
-       <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br/>
-       <br/>
-       3. Klicka "Starta om"<br/>
-       4. Skriv in rätt e-postadress och skicka igen
-      </p>
+      <p>$_invitationMailUndeliveredContentHi()$</p>
+       <p>$_invitationMailUndeliveredContentBody()$</p>
+       <p>$_invitationMailUndeliveredContentInstruction()$</p>
       $poweredBySkrivaPaPara()$
     </span>
 ####
-mailDocumentErrorTitle=SkrivaPå could no handle $documenttitle$
+mailDocumentErrorTitle=$_mailDocumentErrorTitle()$
 ###
 mailDocumentErrorContent=
-    <p>Hej,</p>
-    <p>We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
-      There are probably very good reasons for this, but they might be hard to explain.</p>
-    <p>Our technicians were notified about this issue. We will (probably) contact you when fix is available.</p>
-    <p>Processen har därmed avbrutits.</p>
-    <p>We are sorry for the inconvenience</p>
+    <p>$_mailDocumentErrorContentHi()$</p>
+    <p>$_mailDocumentErrorContentBodyFirst()$</p>
+    <p>$_mailDocumentErrorContentBodySecond()$</p>
+    <p>$_mailDocumentErrorContentBodyThird()$</p>
+    <p>$_mailDocumentErrorContentBodyFourth()$</p>
     $poweredBySkrivaPaPara()$
 ###
-passwordChangeLinkMailTitle=Nytt lösenord
+passwordChangeLinkMailTitle= $_passwordChangeLinkMailTitle()$
 ###
 passwordChangeLinkMailContent=
-    <p>Hej $personname$,</p>
-    <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_passwordChangeLinkMailContentHi()$</p>
+    <p>$_passwordChangeLinkMailContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
     $poweredBySkrivaPaPara()$
 ###
 ###
 ####UTILS
 timetosigninfo=
-    <span>Undertecknas senast: <strong>$time$</strong>.</span>
+    <span>$_timetosigninfo()$ <strong>$time$</strong>.</span>
 ###
 updateinglistwithauthor=
     <span>
       <span class="partylistupdate"></span>
     </span>
 ####
-noonehadsignedtext=
-    Ingen har undertecknat dokumentet ännu
+noonehadsignedtext=$_noonehadsignedtext()$####
+contracthassignedformailtext=$_contracthassignedformailtext()$
 ####
-contracthassignedformailtext=Har undertecknat
+offerhassignedformailtext=$_offerhassignedformailtext()$
 ####
-offerhassignedformailtext=Har accepterat
-####
-orderhassignedformailtext=Har bekräftat
+orderhassignedformailtext=$_orderhassignedformailtext()$
 ####
 whohadsignedcontractinfoformail=
-    $if(signedlist)$
-    Har undertecknat: $signedlist:noescape()$
-    $else$
-    Har undertecknat: $noonehadsignedtext()$
+    $if(signedlist)$	$_whohadsignedcontractinfoformailIfSigned()$ $signedlist:noescape()$
+    $else$	$_whohadsignedcontractinfoformailIfNotSigned()$ $noonehadsignedtext()$
     $endif$
 ####
 whohadsignedorderinfoformail=
-    $if(signedlist)$
-    Har accepterat: $signedlist:noescape()$
-    $else$
-    Har accepterat: $noonehadsignedtext()$
+    $if(signedlist)$	$_whohadsignedorderinfoformailIfAccepted()$ $signedlist:noescape()$
+    $else$	$_whohadsignedorderinfoformailIfNotAccepted()$ $noonehadsignedtext()$
     $endif$
 ####
 whohadsignedofferinfoformail=
-    $if(signedlist)$
-    Har bekräftat: $signedlist:noescape()$
-    $else$
-    Har bekräftat: $noonehadsignedtext()$
+    $if(signedlist)$	$_whohadsignedofferinfoformailIfConfirmed()$$signedlist:noescape()$
+    $else$	$_whohadsignedofferinfoformailIfNotConfirmed()$$noonehadsignedtext()$
     $endif$
 ####
 whohadsignedinfoforpreview=
-    <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="Har undertecknat:"></span>
+    <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="$_whohadsignedinfoforpreview()$"></span>
 ####
 ####
 legalparagraph=
-<p style="width:90%;font-size:8pt;font-style:italic;"> 
-   Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras.
-   Avslöjande, kopiering, distribution eller annan behandling av informationen i 
-   meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande 
-   ber vi dig omedelbart informera avsändaren samt att därefter radera meddelandet. 
-</p>
+<p style="width:90%;font-size:8pt;font-style:italic;">$_legalparagraphBody()$ </p>
 <BR/>
 ####
-mailMismatchSignatoryTitle=Problem med matchning av personuppgifter
+mailMismatchSignatoryTitle=$_mailMismatchSignatoryTitle()$
 ####
 mailMismatchSignatoryContent=
-<p>Hej $signame$</p>
+<p>$_mailMismatchSignatoryContentHi()$</p>
 
-<p>Vi beklagar, men någon av de uppgifter <a href="mailto:$authoremail$">$authorname$</a> har angivit i <a href="$doclink$">$documenttitle$</a> matchar inte personuppgifterna hos $badname$s e-legitmation.</p>
+<p>$_mailMismatchSignatoryContentBodyFirst()$</p>
 
-<p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Var vänliga invänta en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
+<p>$_mailMismatchSignatoryContentBodySecond()$</p>
 
 $if(messages)$
-<p><strong>Felrapport:</strong></p>
+<p>$_mailMismatchSignatoryContentBodyIfMessages()$</p>
 $messages:noescape()$
 $endif$
 
-<p>
-Med Vänliga Hälsningar
-</p>
-<p>
-SkrivaPå
-</p>
+<p>$_mailMismatchSignatoryContentBestRegards()$</p>
+<p>$_mailMismatchSignatoryContentSkrivaPa()$</p>
 ####
-mailMismatchAuthorTitle=Felaktiga personuppgifter
+mailMismatchAuthorTitle=$_mailMismatchAuthorTitle()$
 ####
 mailMismatchAuthorContent=
-<p>Hej $authorname$</p>
+<p>$_mailMismatchAuthorContentHi()$</p>
 
-<p>Vi beklagar, de uppgifter du angivet i <a href="$doclink$">$documenttitle$</a> matchar inte personuppgifterna hos <a href="mailto:$bademail$">$badname$</a>s e-legitimation.</p>
+<p>$_mailMismatchAuthorContentBodyFirst()$</p>
 
-<p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, ett e-post meddelande har även skickats ut till dina motparter med information om att avtalsprocessen har avbrutits.</p>
+<p>$_mailMismatchAuthorContentBodySecond()$</p>
  
-<p><strong>Felrapport:</strong></p>
+<p>$_mailMismatchAuthorContentErrorReport()$</p>
 
 $messages:noescape()$
 
-<p>Med vänliga hälsningar</p>
-<p>SkrivaPå</p>
+<p>$_mailMismatchAuthorContentBestRegards()$</p>
+<p>$_mailMismatchAuthorContentSkrivaPa()$</p>
 ####
-mailInviteUserAsSubaccountTitle=Förfrågan att göra till underkonto
+mailInviteUserAsSubaccountTitle=$_mailInviteUserAsSubaccountTitle()$
 ###
 mailInviteUserAsSubaccountContent=
-  <p>Hej $invited.fullnameOrEmail$,</p>
-  <p>Användaren $supervisor.fullnamePlusEmail$ har
- begärt att få bli huvudkonto till ditt konto. Om du accepterar blir
- ditt konto ett underkonto till avsändaren. Du kommer fortfarande att kunna se och administrera dina avtal, dock tar huvudkontot över ägarskapet över
- samtliga dokument i ditt konto. </p>
+  <p>$_mailInviteUserAsSubaccountContentHi()$</p>
+  <p>$_mailInviteUserAsSubaccountContentBodyFirst()$</p>
 
- <p>Vänligen iaktta försiktighet innan du accepterar. Särskilt om du
-  har privata dokument i kontot.</p>
+ <p>$_mailInviteUserAsSubaccountContentBodySecond()$</p>
 
- <p>Så här går du vidare</p>
- <ul>
- <li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
- <li>Spara ned samtliga privata dokument till din dator</li>
- <li>Klicka på länken nedan</li>
- <li>Läs meddelandet online</li>
- <li>Acceptera</li>
- <li>Ditt konto är nu underkonto</li>
- </ul>
+ <p>$_mailInviteUserAsSubaccountContentInstructionFirst()$</p>
+ <ul>$_mailInviteUserAsSubaccountContentInstructionSecond()$
+</ul>
 
- <p><a href="$hostpart$/account/bsa/$supervisor.id$">Detta är länken nedan</a></p>
+ <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsSubaccountContentLink()$</p>
   $poweredBySkrivaPaPara()$
 ####
 ####
-mailSubaccountAcceptedTitle=Kontoförfrågan
+mailSubaccountAcceptedTitle=$_mailSubaccountAcceptedTitle()$
 ###
 mailSubaccountAcceptedContent=
-  <p>Hej $user.fullnameOrEmail$,</p>
-  <p>$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.</p>
+  <p>$_mailSubaccountAcceptedContentHi()$</p>
+  <p>$_mailSubaccountAcceptedContentBody()$</p>
   $poweredBySkrivaPaPara()$
 ####
-appendixList=$if(isattachments)$Bilagor: $attachments:{a | $a$ };separator=", "$ <br />$endif$
+appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $a$ };separator=", "$ <br />$endif$
 ###
-sigattachlist=$if(hassigattachments)$Begärda bilagor: $sigattachments:{sa|$sa.name:strong()$ från $sa.sigs:noescape()$};separator="; "$ <br />$endif$
+sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ från $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###

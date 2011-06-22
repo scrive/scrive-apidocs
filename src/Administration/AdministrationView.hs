@@ -103,7 +103,7 @@ adminUserPage::KontrakcjaTemplates ->User -> PaymentAccountModel -> IO String
 adminUserPage templates user paymentModel =
     renderTemplate templates "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "user" $ userAdminView user
+        field "user" $ userFields user
         field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
@@ -113,7 +113,7 @@ adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> Fields -> IO String
 adminUserUsageStatsPage templates user morefields =
     renderTemplate templates "userusagestats" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "user" $ userAdminView user
+        field "user" $ userFields user
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
@@ -162,7 +162,7 @@ mkUserInfoView (userdetails', docstats', userstats') = do
   field "userdetails" $ userBasicFields userdetails'
   field "docstats" $ docstats'
   field "userstats" $ userstats'
-  field "adminview" $ userAdminView userdetails'
+  field "adminview" $ userFields userdetails'
                
                                    
 data StatsView = StatsView 
@@ -218,72 +218,44 @@ data AdminUsersPageParams = AdminUsersPageParams {
                              startletter::Maybe String,
                              page::Int
                             } 
-                     
-{-| Users full view (for templates) -}
-data UserAdminView = UserAdminView {
-                     uavuserfstname::String
-                   , uavusersndname::String
-                   , uavuserpersonalnumber::String
-                   , uavusercompanyname::String
-                   , uavusercompanyposition::String
-                   , uavusercompanynumber::String
-                   , uavuseraddress::String
-                   , uavuserzip::String
-                   , uavusercity::String
-                   , uavusercountry::String
-                   , uavuserphone::String
-                   , uavusermobile::String
-                   , uavuseremail::String 
-                   , uavaccounttype::[Option]
-                   , uavaccountplan::[Option]
-                   , uavsigneddocstorage::String
-                   , uavuserpaymentmethod::[Option]
-                   , uavpaymentaccounttype ::[Option]
-                   , uavfreetrialexpirationdate :: Maybe String
-                   , uavpaymentaccountfreesignatures ::String
-                   , uavtmppaymentchangeenddate ::Maybe String
-                   , uavcustompaymentchange::PaymentChangeView
-                   , uavtemppaymentchange:: Maybe PaymentChangeView
-                   , uavuserid::String
-                   } deriving (Data, Typeable)
-                    
-{-| Conversion from 'User' to 'UserAdminView'  -}   
-userAdminView ::User -> UserAdminView
-userAdminView u =  UserAdminView {
-                     uavuserfstname =  toString $ userfstname $ userinfo u
-                   , uavusersndname =  toString $ usersndname $ userinfo u
-                   , uavuserpersonalnumber =  toString $ userpersonalnumber $ userinfo u
-                   , uavusercompanyname =  toString $ usercompanyname $ userinfo u
-                   , uavusercompanyposition =  toString $ usercompanyposition $ userinfo u
-                   , uavusercompanynumber =  toString $ usercompanynumber $ userinfo u
-                   , uavuseraddress =  toString $ useraddress$ userinfo u
-                   , uavuserzip =  toString $ userzip  $ userinfo u
-                   , uavusercity =  toString $ usercity $ userinfo u
-                   , uavusercountry =  toString $ usercountry $ userinfo u
-                   , uavuserphone =  toString $ userphone $ userinfo u
-                   , uavusermobile =  toString $ usermobile $ userinfo u
-                   , uavuseremail =  toString $ unEmail $ useremail $ userinfo u
-                   , uavaccounttype = for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
+                            
+{-| Full fields set about user -}   
+userFields ::User -> Fields
+userFields u =  do
+        field "fstname" $ toString $ userfstname $ userinfo u
+        field "sndname" $ toString $ usersndname $ userinfo u
+        field "personalnumber" $ toString $ userpersonalnumber $ userinfo u
+        field "companyname" $  toString $ usercompanyname $ userinfo u
+        field "companyposition" $  toString $ usercompanyposition $ userinfo u
+        field "companynumber" $  toString $ usercompanynumber $ userinfo u
+        field "address" $ toString $ useraddress$ userinfo u
+        field "zip" $  toString $ userzip  $ userinfo u
+        field "city" $  toString $ usercity $ userinfo u
+        field "country" $ toString $ usercountry $ userinfo u
+        field "phone" $ toString $ userphone $ userinfo u
+        field "mobile" $ toString $ usermobile $ userinfo u
+        field "email" $  toString $ unEmail $ useremail $ userinfo u
+        field "accounttype" $  for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
-                   , uavaccountplan = for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
+        field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
-                   , uavsigneddocstorage = show (signeddocstorage $ usersettings u)
-                   , uavuserpaymentmethod = for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
+        field "signeddocstorage" $ show (signeddocstorage $ usersettings u)
+        field "paymentmethod" $ for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)        
-                   , uavpaymentaccounttype = for (allValues::[PaymentAccountType]) 
+        field "paymentaccounttype" $ for (allValues::[PaymentAccountType]) 
                                                                          (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
                                                                                  then soption show show x
                                                                                  else option show show x)      
-                   , uavfreetrialexpirationdate = showDateOnly <$> userfreetrialexpirationdate u
-                   , uavpaymentaccountfreesignatures = show $ paymentaccountfreesignatures $ userpaymentaccount u
-                   , uavtmppaymentchangeenddate = fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
-                   , uavtemppaymentchange = fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
-                   , uavcustompaymentchange = getChangeView $ custompaymentchange $ userpaymentpolicy  u
-                   , uavuserid = show (userid u)                                        
-                   }           
+        field "freetrialexpirationdate" $ showDateOnly <$> userfreetrialexpirationdate u
+        field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
+        field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
+        field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
+        field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
+        field "id" $ show (userid u)                                        
+       
                                      
 letters::[String]
 letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]

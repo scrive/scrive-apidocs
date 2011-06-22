@@ -31,7 +31,7 @@ modalSignInviteView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>	$_modalSignInviteViewFooterClose()$	Stäng</p>
+        <p>$_modalSignInviteViewFooterClose()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>

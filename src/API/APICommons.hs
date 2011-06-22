@@ -1,16 +1,25 @@
 {-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -XTupleSections#-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  API.IntegrationAPIUtils
+-- Module      :  API.APICommons
 -- Maintainer  :  mariusz@skrivapa.se
 -- Stability   :  development
 -- Portability :  portable
 --
--- Constans and data structures used by integration API.
+-- Constans and data structures used by many other API's
 -- Some low level helpers.
+--
+-- !! Constants described here should be used between all API's
+-- There are constants for stuff like document type, document state, to say thet a signatory is viewer etc.
+-- Don't invent them yourself. Don't return a 'human readable' string. Use stuff from here.
+--
+-- !! JSON priners (like the one api_documents) should be shared as much as posible
+--
+-- Also if there is a common reader for more then one api 
+-- , like for files or signatories it should be put here
 -----------------------------------------------------------------------------
-module API.IntegrationAPIUtils (
+module API.APICommons (
             api_document
           , SignatoryTMP(..)
           , getSignatoryTMP
@@ -18,6 +27,7 @@ module API.IntegrationAPIUtils (
           , toSignatoryDetails
           , fillFields
           , toDocumentType
+          , getFiles
         ) where
 
 
@@ -34,6 +44,8 @@ import Control.Monad.Trans
 import Misc
 import Data.Maybe
 import Data.Foldable (fold)
+import Data.Functor
+import Control.Monad
 
 
 {- -}
@@ -111,10 +123,11 @@ toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = Template Offer
 -} 
 api_document_type::Document ->  DOCUMENT_TYPE
 api_document_type doc   
-    | isTemplate doc && isContract doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    | isTemplate doc && isOffer doc = DOCUMENT_TYPE_OFFER_TEMPLATE
-    | isContract doc = DOCUMENT_TYPE_CONTRACT
-    | otherwise  = DOCUMENT_TYPE_OFFER 
+    | Template Contract == documenttype doc  = DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    | Template Offer == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
+    | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
+    | Signable Offer == documenttype doc = DOCUMENT_TYPE_OFFER
+    | otherwise = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
     
     
 api_document_status::Document -> DOCUMENT_STATUS 
@@ -160,6 +173,11 @@ api_signatory sl = JSObject $ toJSObject $  [
      Nothing -> []
     ++ 
     [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]  
+    ++ 
+    [("fields", JSArray $ for (signatoryotherfields $ signatorydetails sl) $ \fd -> 
+                    JSObject $ toJSObject $ [ ("name", JSString $ toJSString $ BS.toString $ fieldlabel fd)
+                                            , ("value", JSString $ toJSString $ BS.toString $ fieldvalue fd)]
+    )]
     
 api_document_tag::DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject $ [
@@ -210,7 +228,7 @@ data SignatoryTMP = SignatoryTMP {
                 personalnumber::Maybe BS.ByteString,
                 companynumber::Maybe BS.ByteString,
                 email::Maybe BS.ByteString,
-                fields :: [(BS.ByteString,BS.ByteString)]    
+                fields :: [(BS.ByteString,Maybe BS.ByteString)]    
             } deriving Show      
 
 getSignatoryTMP::(APIContext c) => APIFunction c (Maybe SignatoryTMP)
@@ -224,7 +242,7 @@ getSignatoryTMP = do
     fields <- apiLocal "fields" $ apiMapLocal $ do
                                         name <- apiAskBS "name"
                                         value <- apiAskBS "value"
-                                        return $ pairMaybe name value
+                                        return $ (, value) <$> name
     return $ Just $ SignatoryTMP
                 { fstname = fstname
                 , sndname = sndname
@@ -236,14 +254,22 @@ getSignatoryTMP = do
                 }
 
 toSignatoryDetails::SignatoryTMP -> SignatoryDetails
-toSignatoryDetails sTMP = makeSignatoryNoPlacements 
-                                (fold $ fstname sTMP)  
-                                (fold $ sndname sTMP)
-                                (fold $ email sTMP)
-                                (SignOrder 1)
-                                (fold $ company sTMP)
-                                (fold $ personalnumber sTMP)
-                                (fold $ companynumber sTMP)
+toSignatoryDetails sTMP = 
+    let sig = makeSignatoryNoPlacements 
+                 (fold $ fstname sTMP)  
+                 (fold $ sndname sTMP)
+                 (fold $ email sTMP)
+                 (SignOrder 1)
+                 (fold $ company sTMP)
+                 (fold $ personalnumber sTMP)
+                 (fold $ companynumber sTMP)
+    in sig  {signatoryotherfields = for (fields sTMP) $ \(name, mvalue) -> 
+                                        FieldDefinition { fieldlabel = name,
+                                                          fieldvalue = maybe BS.empty id mvalue,
+                                                          fieldplacements = [],
+                                                          fieldfilledbyauthor = isJust mvalue
+                                                        }
+            }                                            
 
 mergeSignatoryWithTMP::(APIContext c) => SignatoryTMP  -> SignatoryLink-> APIFunction c SignatoryLink
 mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do              
@@ -257,6 +283,16 @@ mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do
     , signatoryotherfields = fillFields (signatoryotherfields sd) (fields sTMP)
   }}
 
-fillFields:: [FieldDefinition] -> [(BS.ByteString,BS.ByteString)] ->  [FieldDefinition]
-fillFields (f:fs) nv = (f {fieldvalue = fromMaybe (fieldvalue f) $ lookup (fieldlabel f) nv}) : fillFields fs nv
+fillFields:: [FieldDefinition] -> [(BS.ByteString,Maybe BS.ByteString)] ->  [FieldDefinition]
+fillFields (f:fs) nv = (f {fieldvalue = fromMaybe (fieldvalue f) $ join $ lookup (fieldlabel f) nv}) : fillFields fs nv
 fillFields [] _ = []                
+
+
+
+-- High level commons. Used buy some simmilar API's, but not all of them
+getFiles :: (APIContext c) => APIFunction c [(BS.ByteString, BS.ByteString)]
+getFiles = fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
+    name    <- apiAskBS     "name"
+    content <- apiAskBase64 "content"
+    when (isNothing name || isNothing content) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
+    return $ Just (fromJust name, fromJust content)    

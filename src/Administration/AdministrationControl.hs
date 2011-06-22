@@ -35,6 +35,7 @@ module Administration.AdministrationControl(
           , handleQuarantinePost
           , handleMigrateForDeletion
           , handleUnquarantineAll
+          , migrateDocsNoAuthor
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -55,7 +56,6 @@ import Payments.PaymentsControl(getPaymentChangeChange)
 import MinutesTime
 import FlashMessage
 import System.Directory
-import Data.List (isPrefixOf,sort, foldl')
 import User.UserControl
 import User.UserView
 import Data.Maybe
@@ -72,6 +72,8 @@ import Templates.Templates
 import InputValidation
 import Templates.Langs
 import Text.Printf
+
+import Data.List
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -756,3 +758,17 @@ showAdminTranslations = do
      tstats <- liftIO $ getTranslationStats
      liftIO $ adminTranslationsPage (ctxtemplates ctx) tstats
 
+migrateDocsNoAuthor :: Kontra Response
+migrateDocsNoAuthor = do
+  ctx <- get
+  guard (isJust (ctxmaybeuser ctx))
+  let Just user = ctxmaybeuser ctx
+  guard (useremail (userinfo user) == Email (fromString "ericwnormand@gmail.com"))
+  udocs <- query $ GetDocuments Nothing
+  qdocs <- query $ GetQuarantinedDocuments Nothing
+  let docswithnoauthor = [d | d <- udocs ++ qdocs
+                             , isNothing $ getAuthorSigLink d]
+  res <- forM docswithnoauthor (update . MakeFirstSignatoryAuthor . documentid)
+  liftIO $ print (intercalate "\n" $ [r | Left r <- res])
+  liftIO $ print ("successful: " ++ show (length [r | Right r <- res]))
+  sendRedirect LinkMain

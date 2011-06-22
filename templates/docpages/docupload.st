@@ -1,15 +1,15 @@
 ####    Pages for documents - main part of system
-contractuploadname=AVTAL
+contractuploadname=$_contractuploadname()$
 ####
-offeruploadname=OFFERT
+offeruploadname=$_offeruploadname()$
 ####
-orderuploadname=ORDER-BEKRÄFTELSE
+orderuploadname=$_orderuploadname()$
 ####
-contractuploadprompttext=Välj det dokument som du vill skicka till din motpart för påskrift.
+contractuploadprompttext=$_contractuploadprompttext()$
 ####
-offeruploadprompttext=Välj den offert som du vill skicka till din motpart.
+offeruploadprompttext=$_offeruploadprompttext()$
 ####
-orderuploadprompttext=Välj den orderbekräftelse som du vill skicka till.
+orderuploadprompttext=$_orderuploadprompttext()$
 ####
 uploadPage=   
 $loadingdialog()$
@@ -26,19 +26,19 @@ $loadingdialog()$
     <div id="step1select" class="current">
       <span class="step1select clickArea"> </span>
       <span class="step1select step1icon"> </span>
-      <span class="step1select text">Välj dokument</span>
+      <span class="step1select text">$_step1select()$</span>
     </div>
     
     <div id="step2select">
       <span class="step2select clickArea"> </span>
       <span class="step2select step2icon"> </span>
-      <span class="step2select text">Fyll i uppgifter</span>
+      <span class="step2select text">$_step2select()$</span>
     </div>
     
     <div id="step3select">
       <span class="step3select clickArea"> </span>
       <span class="step3select step3icon"> </span>
-      <span class="step3select text">Underteckna och skicka!</span>
+      <span class="step3select text">$_step3select()$</span>
     </div>
     
     <div id="signStepsMenuEmptyStep"></div>
@@ -52,8 +52,7 @@ $if(!isprocessselected)$
  <td>
    <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
     <p class="text" style="padding-top:40px">
-       Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen för att gå vidare.
-    </p>
+       $_signStepsBodyUploadBoxStep1Info()$</p>
    </div>
  </td>
   $processes:{process |
@@ -82,15 +81,15 @@ $elseif(!showTemplates)$
   <form action="/d" method="post" enctype="multipart/form-data" > 
     <div>
         <input type="hidden" name="doctype" value="$selectedprocess.id$" />
-        <span class="header">Välj fil från dator</span><br/>
-        <span class="text">OBS! Endast PDF</span> 
+        <span class="header">$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$</span><br/>
+        <span class="text">$_signStepsBodyUploadBoxStep1UpLoadOnlyPDF()$</span> 
       <br/>
       <div class="signStepsButtonContainer">
         <a class="btn-small green" style="overflow:hidden;height:34px;width:114px" >  
           <div class="left"> </div>
-          <div class="label" style="width:80px"> Välj fil </div> 
+          <div class="label" style="width:80px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div> 
           <div class="right"> </div>
-          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
         </a>
        </div>
       <div class="filelist" style="padding-left:10px;display:none"></div>
@@ -102,13 +101,13 @@ $elseif(!showTemplates)$
 <td>
 <div class="signStepsBodyUploadBox $if(showTemplates)$ selected $endif$">  
     <div>
-        <span class="header">Välj mall</span><br/>
-        <span class="text">Sparad på SkrivaPå</span> 
+        <span class="header">$_signStepsBodyUploadBoxStep1ChooseTemplate()$</span><br/>
+        <span class="text">$_signStepsBodyUploadBoxStep1TemplateSaved()$</span>
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
         <a class="btn-small green selectTemplateButton" href="/?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
           <div class="left"> </div>
-          <div class="label" style="width:80px"> Välj mall </div> 
+          <div class="label" style="width:80px">$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$</div>
           <div class="right"> </div>
         </a>
       </div>

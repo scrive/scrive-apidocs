@@ -5,29 +5,29 @@ signatoriesBox=
 <div class="float-right signViewBodyBox">$signatories:{signatory|
   $if(!signatory.current)$ $signatoryBox()$ $endif$ }$ </div>
 ####
-signatorysignedcontracttext=Undertecknat
+signatorysignedcontracttext=$_signatorysignedcontracttext()$
 ####
-signatorysignedoffertext=Accepterat offert
+signatorysignedoffertext=$_signatorysignedoffertext()$
 ####
-signatorysignedordertext=Ordern bekräftad
+signatorysignedordertext=$_signatorysignedordertext()$
 ####
-signatorycanceledcontracttext=Dokumentet återkallad
+signatorycanceledcontracttext=$_signatorycanceledcontracttext()$
 ####
-signatorycanceledoffertext=Offert återkallad
+signatorycanceledoffertext=$_signatorycanceledoffertext()$
 ####
-signatorycanceledordertext=Order återkallad
+signatorycanceledordertext=$_signatorycanceledordertext()$
 ####
-contractauthorissecretarytext=Avsändare: Ej undertecknande part
+contractauthorissecretarytext=$_contractauthorissecretarytext()$
 ####
-offerauthorissecretarytext=Avsändare
+offerauthorissecretarytext=$_offerauthorissecretarytext()$
 ####
-orderauthorissecretarytext=Avsändare
+orderauthorissecretarytext=$_orderauthorissecretarytext()$
 ####
-contractremindagainbuttontext=Skicka dokumentet igen
+contractremindagainbuttontext=$_contractremindagainbuttontext()$
 ####
-offerremindagainbuttontext=Skicka offert igen
+offerremindagainbuttontext=$_offerremindagainbuttontext()$
 ####
-orderremindagainbuttontext=Skicka orderbekräftelse igen
+orderremindagainbuttontext=$_orderremindagainbuttontext()$
 ####
 signatoryBox =
 <div class="signViewBodyRight  $if(signatory.author)$author$endif$">
@@ -82,25 +82,25 @@ signatoryBox =
 ####
 signatoryMessage=
 $if(signatory.signdate)$
-    $process.signatorysignedtext$
+    $process.signatorysignedtext$ $signatory.signdate$
 $elseif(signatory.datamismatch)$
-        Felaktig e-legitmation
+        $_signatoryMessageIfSignatoryDatamismatch()$
 $elseif(timedout)$
-        Förfallodatum har passerat
+        $_signatoryMessageIfTimedout()$
 $elseif(cancel)$
      $process.signatorycanceledtext$
 $elseif(datamismatch)$
 
 $elseif(signatory.rejecteddate)$
-    Avvisat $signatory.rejecteddate$
+    $_signatoryMessageIfSignatoryRejecteddate()$	$signatory.rejecteddate$
 $elseif(signatory.seendate)$        
-    Granskat online $signatory.seendate$
+    $_signatoryMessageIfSignatorySeendate()$ $signatory.seendate$
 $elseif(signatory.readdate)$
-    Läst e-post $signatory.readdate$
+    $_signatoryMessageIfSignatoryReaddate()$ $signatory.readdate$
 $elseif(signatory.deliveredEmail)$
-    Har ej granskat online
+    $_signatoryMessageIfSignatoryDeliveredEmail()$
 $else$
-    Har ej levererats
+    $_signatoryMessageIfElse()$
 $endif$
 ###       
 secretaryMessage = 
@@ -115,7 +115,7 @@ reminderForm =
         $if(signatory.signdate)$
             $process.remindagainbuttontext$
         $else$ 
-            Skicka påminnelse 
+            $_reminderFormSendReminder()$
         $endif$
     </div> 
   </a>
@@ -128,7 +128,7 @@ reminderForm =
                     $if(signatory.signdate)$
                         $process.remindagainbuttontext$
                     $else$ 
-                        Skicka påminnelse 
+                        $_reminderFormHead()$
                     $endif$
                   </h2>
             </span>
@@ -142,13 +142,13 @@ reminderForm =
         <div class="modal-footer">
            <input type="hidden" name="sign" value="automatic" />
            <div class="float-left">
-                <a  class="close cancel">Avbryt</a>
-                <a  class="editer message"> Skriv eget meddelande </a>
+                <a  class="close cancel">$_reminderFormFooterCancel()$</a>
+                <a  class="editer message">$_reminderFormFooterOwnMessage()$</a>
            </div>
            <a href="#" class="btn-small green float-right submiter">
                 <div class="left"></div>
                 <div class="label">
-                   $if(signatory.signdate)$ Skicka $else$ Skicka påminnelse $endif$
+                   $if(signatory.signdate)$ $_reminderFormSend()$ $else$ $_reminderFormSendReminder()$$endif$
                 <div class="btn-symbol green arrow-left"></div></div>
                 <div class="right"></div>
             </a>
@@ -164,7 +164,7 @@ changeEmailForm =
 <a class="btn-tiny blue replacebynextonclick">
                 <div class="left"></div>
                 <div class="label">
-                     Skicka inbjudan till ny adress
+                     $_changeEmailFormSendToNew()$
                 </div>
                 <div class="right"></div>
   </a>
@@ -173,7 +173,7 @@ changeEmailForm =
   <a class="btn-tiny blue submit">
                 <div class="left"></div>
                 <div class="label">
-                     Skicka
+                     $_changeEmailFormSend()$
                 </div>
                 <div class="right"></div>
   </a>

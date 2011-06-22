@@ -72,7 +72,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
   $(pls).each(function () {
     var pl = this;
     var d = placementToHTML(label, value);
-    var page = $("#page" + pl.page);
+    var page = $("#documentBox #page" + pl.page);
     d.offset({left: pl.x, top: pl.y});
     page.append(d);
     pagewidth = $("input[name='width']",page).val();
@@ -563,11 +563,15 @@ function authorToHTML(sig) {
     return false;
   });
 
+  var authorsignorder = $("#authorsignorder");
   if(sig.signatory) {
     sigentry.find(".partyrole input:radio").first().attr("checked", "true");
+    authorsignorder.val(sig.signorder);
+    if (sig.signorder > 1) {
+      showSigningOrderRelatedElements();
+    }
   } else {
     sigentry.find(".partyrole input:radio").last().attr("checked", "true");
-    var authorsignorder = $("#authorsignorder");
     authorsignorder.hide();
     makeNonSignatory(authorsignorder);
   }
@@ -575,7 +579,7 @@ function authorToHTML(sig) {
   $("#peopleList ol").append(
       $("<li>").append(
           $("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " (Avsändare)").append(
-              newSignOrderListElement(sig.signatory ? 1 : "-")
+              newSignOrderListElement(sig.signatory ? sig.signorder : "-")
           )
       )
   );
@@ -1449,8 +1453,11 @@ safeReady(function() {
 		             appendTo: "body",
 		             helper: function(event) {
 		               var field = $(this);
-		               var input = field.find("input");
-		               return placedFieldHelper(input.attr("value"));
+                               var input = field.find("input");
+		               var text = input.val();
+                               if (text === "")
+                                   text = input.attr("infotext");
+		               return placedFieldHelper(text);
 		             },
 		             start: function(event, ui) {
                        showCoordinateAxes(ui.helper);
@@ -1537,7 +1544,16 @@ safeReady(function() {
 safeReady(function() {
   $("#showexistingattachments").click(function() {
     $("#attachmentselectlist").show();
+    $("#attachmentback").show();
     $("#attachmentbuttons").hide();
+    return false;
+  });
+
+  $("#attachmentback").click(function() {
+    $("#attachmentselectlist").hide();
+    $("#attachmentback").hide();
+    $("#attachmentbuttons").show();
+    return false;
   });
 });
 

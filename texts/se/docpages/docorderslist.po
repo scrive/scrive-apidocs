@@ -1,0 +1,131 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_ReminderFooterOk"
+msgstr "Ok"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_ReminderFooterCancel"
+msgstr "Avbryt"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_ReminderBodyMulti2"
+msgstr " orderbekräftelse.          "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_ReminderBodyMulti"
+msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter för "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_ReminderBodySingel"
+msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_ReminderHead"
+msgstr "Skicka påminnelse"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipSigned"
+msgstr "Status: Signerat"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipOpened"
+msgstr "Status: Granskat online"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipRead"
+msgstr "Status: Läst e-post"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipViewedOnline"
+msgstr "Status: Granskat online"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipDelivered"
+msgstr "Status: Levererat"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipSent"
+msgstr "Status: Skickat"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipCancelled"
+msgstr "Status: Avbrutet"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tooltipDraft"
+msgstr "Status: Utkast"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesSigned"
+msgstr "Signerat"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesOpened"
+msgstr "Granskat online"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesRead"
+msgstr "Läst e-post"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesDelivered"
+msgstr "Levererat"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesSent"
+msgstr "Skickat"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesCancelled"
+msgstr "Avbrutet"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_tablestatusesDraft"
+msgstr "Utkast"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SortDoc"
+msgstr "Dokument "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SortPartys"
+msgstr "Parter "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SortTime"
+msgstr "Senaste händelse "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SortStatus"
+msgstr "Status "
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SearchDoc"
+msgstr "Sök dokument"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_Delete"
+msgstr "Radera"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_CantRemoveActiveOrders"
+msgstr "Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först."
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SendReminder"
+msgstr "Skicka påminnelse"
+
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_options"
+msgstr "Alternativ"
+

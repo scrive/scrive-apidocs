@@ -67,6 +67,7 @@ data DocProcessInfo =
   , processrestartbuttontext :: String
   , processcancelbuttontext :: String
   , processcancelbyauthormodaltitle :: String
+  , processrejectbuttontext :: String
   , processsignatorysignmodaltitle :: String
   , processsignatorysignmodalcontent :: String
   , processsignbuttontext :: String
@@ -86,6 +87,7 @@ data DocProcessInfo =
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
   , processmailremindnotsignedcontent :: String
+  , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
   , processflashmessagecanceled :: String
@@ -152,6 +154,7 @@ contractProcess =
   , processrestartbuttontext = "contractrestartbuttontext"
   , processcancelbuttontext = "contractcancelbuttontext"
   , processcancelbyauthormodaltitle = "contractcancelbyauthormodaltitle"
+  , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
   , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
   , processsignbuttontext = "contractsignbuttontext"
@@ -171,6 +174,7 @@ contractProcess =
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
+  , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageContractCanceled"
@@ -237,6 +241,7 @@ offerProcess =
   , processrestartbuttontext = "offerrestartbuttontext"
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelbyauthormodaltitle = "offercancelbyauthormodaltitle"
+  , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
   , processsignbuttontext = "offersignbuttontext"
@@ -256,6 +261,7 @@ offerProcess =
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
+  , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageOfferCanceled"
@@ -322,6 +328,7 @@ orderProcess =
   , processrestartbuttontext = "orderrestartbuttontext"
   , processcancelbuttontext = "ordercancelbuttontext"
   , processcancelbyauthormodaltitle = "ordercancelbyauthormodaltitle"
+  , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
   , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
   , processsignbuttontext = "ordersignbuttontext"
@@ -341,6 +348,7 @@ orderProcess =
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+  , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageOrderCanceled"

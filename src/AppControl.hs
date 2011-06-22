@@ -14,7 +14,10 @@ module AppControl
 
 import API.IntegrationAPI
 import API.Service.ServiceState
-import API.WebshopAPI
+import API.Service.ServiceControl
+import API.UserAPI
+import API.MailAPI
+
 import ActionSchedulerState
 import AppView as V
 import Crypto
@@ -60,9 +63,6 @@ import ListUtil
 import Network.Socket
 import System.Directory
 import System.Time
-import API.Service.ServiceControl
-import CoopAPI
-import API.MailAPI
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -74,7 +74,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import InspectXMLInstances ()
 import InspectXML
---import Templates.Langs
+import User.Lang
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -129,186 +129,186 @@ data AppGlobals
 -}
 handleRoutes :: Kontra Response
 handleRoutes = msum [
-       hGetAllowHttp $ handleHomepage
-     , hPost $ handleMainReaload
+       hGetAllowHttp0 $ handleHomepage
+     , hPost0 $ handleMainReaload
 
      -- static pages
-     , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage             
-     , dir "priser"          $ hGetAllowHttp $ handlePriceplanPage              
-     , dir "sakerhet"        $ hGetAllowHttp $ handleSecurityPage             
-     , dir "juridik"         $ hGetAllowHttp $ handleLegalPage                 
-     , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage 
-     , dir "allmana-villkor" $ hGetAllowHttp $ handleTermsPage         
-     , dir "om-skrivapa"     $ hGetAllowHttp $ handleAboutPage             
-     , dir "partners"        $ hGetAllowHttp $ handlePartnersPage             
-     , dir "kunder"          $ hGetAllowHttp $ handleClientsPage                
+     , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
+     , dir "priser"          $ hGetAllowHttp0 $ handlePriceplanPage              
+     , dir "sakerhet"        $ hGetAllowHttp0 $ handleSecurityPage             
+     , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage                 
+     , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage 
+     , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage         
+     , dir "om-skrivapa"     $ hGetAllowHttp0 $ handleAboutPage
+     , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage             
+     , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
        
      -- this is SMTP to HTTP gateway  
-     , dir "mailapi" $ handleMailAPI
+     , dir "mailapi" $ mailAPI
 
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
-     , dir "s" $ hGet                         $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken $ BankID.handleSignPostBankID
-     , dir "d" $ hGet                         $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost         $ BankID.handleIssuePostBankID
+     , dir "s" $ hGet4                        $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPostNoXToken3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2                        $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1        $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hGet  $ DocControl.handleSTable
-     , dir "s" $ hGet  $ DocControl.handleSignShow
-     , dir "s" $ hGet  $ DocControl.handleAttachmentDownloadForViewer
-     , dir "s" $ param "sign" $ hPostNoXToken $ DocControl.signDocument
-     , dir "s" $ param "cancel" $ hPostNoXToken $ DocControl.rejectDocument
-     , dir "s" $ param "acceptaccount" $ hPostNoXToken $ DocControl.handleAcceptAccountFromSign
-     , dir "s" $ param "declineaccount" $ hPostNoXToken $ DocControl.handleDeclineAccountFromSign
-     , dir "s" $ param "sigattachment" $ hPostNoXToken $ DocControl.handleSigAttach
+     , dir "s" $ hGet0 $ DocControl.handleSTable
+     , dir "s" $ hGet3 $ DocControl.handleSignShow
+     , dir "s" $ hGet4 $ DocControl.handleAttachmentDownloadForViewer
+     , dir "s" $ param "sign"           $ hPostNoXToken3 $ DocControl.signDocument
+     , dir "s" $ param "cancel"         $ hPostNoXToken3 $ DocControl.rejectDocument
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ DocControl.handleAcceptAccountFromSign
+     , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ DocControl.handleDeclineAccountFromSign
+     , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ DocControl.handleSigAttach
        
-     , dir "sv" $ hGet $ DocControl.handleAttachmentViewForViewer
+     , dir "sv" $ hGet3 $ DocControl.handleAttachmentViewForViewer
      
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "a"                     $ hGet  $ DocControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost $ DocControl.handleAttachmentArchive
-     , dir "a" $ param "share"     $ hPost $ DocControl.handleAttachmentShare
-     , dir "a" $ dir "rename"      $ hPost $ DocControl.handleAttachmentRename
-     , dir "a"                     $ hPost $ DocControl.handleCreateNewAttachment
+     , dir "a"                     $ hGet0  $ DocControl.showAttachmentList
+     , dir "a" $ param "archive"   $ hPost0 $ DocControl.handleAttachmentArchive
+     , dir "a" $ param "share"     $ hPost0 $ DocControl.handleAttachmentShare
+     , dir "a" $ dir "rename"      $ hPost1 $ DocControl.handleAttachmentRename
+     , dir "a"                     $ hPost0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet  $ DocControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost $ DocControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hPost $ DocControl.handleTemplateShare
-     , dir "t" $ param "template" $ hPost  $ DocControl.handleCreateFromTemplate
-     , dir "t" $ hPost  $ DocControl.handleCreateNewTemplate
+     , dir "t" $ hGet0  $ DocControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost0 $ DocControl.handleTemplateArchive
+     , dir "t" $ param "share" $ hPost0 $ DocControl.handleTemplateShare
+     , dir "t" $ param "template" $ hPost0  $ DocControl.handleCreateFromTemplate
+     , dir "t" $ hPost0  $ DocControl.handleCreateNewTemplate
      
-     , dir "o" $ hGet  $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hPost  $ DocControl.handleOffersArchive
-     , dir "o" $ param "remind" $ hPost $ DocControl.handleBulkOfferRemind
-     , dir "o" $ hPost $ DocControl.handleOffersReload
+     , dir "o" $ hGet0  $ DocControl.showOfferList
+     , dir "o" $ param "archive" $ hPost0  $ DocControl.handleOffersArchive
+     , dir "o" $ param "remind" $ hPost0 $ DocControl.handleBulkOfferRemind
+     , dir "o" $ hPost0 $ DocControl.handleOffersReload
      
-     , dir "or" $ hGet  $ DocControl.showOrdersList
-     , dir "or" $ param "archive" $ hPost  $ DocControl.handleOrdersArchive
-     , dir "or" $ param "remind" $ hPost $ DocControl.handleBulkOrderRemind
-     , dir "or" $ hPost $ DocControl.handleOrdersReload
+     , dir "or" $ hGet0  $ DocControl.showOrdersList
+     , dir "or" $ param "archive" $ hPost0  $ DocControl.handleOrdersArchive
+     , dir "or" $ param "remind" $ hPost0 $ DocControl.handleBulkOrderRemind
+     , dir "or" $ hPost0 $ DocControl.handleOrdersReload
      
-     , dir "d"                     $ hGet  $ DocControl.showContractsList
-     , dir "d"                     $ hGet  $ DocControl.handleIssueShowGet
-     , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGet
-     , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGetForSignatory
-     , dir "d" $ {- param "doc" $ -} hPost $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost $ DocControl.handleContractArchive
-     , dir "d" $ param "remind"    $ hPost $ DocControl.handleBulkContractRemind
-     , dir "d"                     $ hPost $ DocControl.handleContractsReload
-     , dir "d"                     $ hPost $ DocControl.handleIssueShowPost
-     , dir "d"                     $ hGet  $ DocControl.handleAttachmentDownloadForAuthor
+     , dir "d"                     $ hGet2  $ DocControl.handleAttachmentDownloadForAuthor     
+     , dir "d"                     $ hGet0  $ DocControl.showContractsList
+     , dir "d"                     $ hGet1  $ DocControl.handleIssueShowGet
+     , dir "d"                     $ hGet2  $ DocControl.handleIssueShowTitleGet
+     , dir "d"                     $ hGet4  $ DocControl.handleIssueShowTitleGetForSignatory
+     , dir "d" $ {- param "doc" $ -} hPost0 $ DocControl.handleIssueNewDocument
+     , dir "d" $ param "archive"   $ hPost0 $ DocControl.handleContractArchive
+     , dir "d" $ param "remind"    $ hPost0 $ DocControl.handleBulkContractRemind
+     , dir "d"                     $ hPost0 $ DocControl.handleContractsReload
+     , dir "d"                     $ hPost1 $ DocControl.handleIssueShowPost
+
      
-     , dir "df"                    $ hGet  $ DocControl.handleFileGet
-     , dir "dv"                    $ hGet  $ DocControl.handleAttachmentViewForAuthor
+     , dir "df"                    $ hGet2  $ DocControl.handleFileGet
+     , dir "dv"                    $ hGet1  $ DocControl.handleAttachmentViewForAuthor
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
-     , dir "resend"  $ hPost $ DocControl.handleResend
-     , dir "changeemail" $ hPost $ DocControl.handleChangeSignatoryEmail
-     -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
-     , dir "restart" $ hPost $ DocControl.handleRestart
-     , dir "cancel"  $ hPost $ DocControl.handleCancel
+     , dir "resend"  $ hPost2 $ DocControl.handleResend
+     , dir "changeemail" $ hPost2 $ DocControl.handleChangeSignatoryEmail
+     -- , dir "withdrawn" $ hPost0 $ DocControl.handleWithdrawn
+     , dir "restart" $ hPost1 $ DocControl.handleRestart
+     , dir "cancel"  $ hPost1 $ DocControl.handleCancel
      
-     , dir "pages"  $ hGetAjax $ DocControl.showPage
-     , dir "pages"  $ hGetAjax $ DocControl.showPageForSignatory 
-     , dir "templates" $ hGetAjax $ DocControl.getTemplatesForAjax
-     , dir "template"  $ hPost $ DocControl.handleCreateFromTemplate
+     , dir "pages"  $ hGetAjax3 $ DocControl.showPage
+     , dir "pages"  $ hGetAjax5 $ DocControl.showPageForSignatory
+     , dir "templates" $ hGetAjax0 $ DocControl.getTemplatesForAjax
+     , dir "template"  $ hPost0 $ DocControl.handleCreateFromTemplate
            
-     , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocument
-     , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocumentForSignatory
+     , dir "pagesofdoc" $ hGetAjax1 $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hGetAjax3 $ DocControl.handlePageOfDocumentForSignatory
 
      -- UserControl
-     , dir "account"                    $ hGet  $ UserControl.handleUserGet
-     , dir "account"                    $ hPost $ UserControl.handleUserPost
-     , dir "account" $ dir "subaccount" $ hGet  $ UserControl.handleGetSubaccount
-     , dir "account" $ dir "subaccount" $ hPost $ UserControl.handlePostSubaccount
-     , dir "account" $ dir "sharing" $ hGet $ UserControl.handleGetSharing
-     , dir "account" $ dir "sharing" $ hPost $ UserControl.handlePostSharing
-     , dir "account" $ dir "security" $ hGet $ UserControl.handleGetUserSecurity
-     , dir "account" $ dir "security" $ hPost $ UserControl.handlePostUserSecurity
-     , dir "account" $ dir "bsa" $ hGet $ UserControl.handleGetBecomeSubaccountOf
-     , dir "account" $ dir "bsa" $ hPost $ UserControl.handlePostBecomeSubaccountOf
-     , dir "contacts"  $ hGet  $ Contacts.showContacts
-     , dir "contacts"  $ hPost $ Contacts.handleContactsChange
-     , dir "accepttos" $ hGet  $ UserControl.handleAcceptTOSGet
-     , dir "accepttos" $ hPost $ UserControl.handleAcceptTOSPost
+     , dir "account"                    $ hGet0  $ UserControl.handleUserGet
+     , dir "account"                    $ hPost0 $ UserControl.handleUserPost
+     , dir "account" $ dir "subaccount" $ hGet0  $ UserControl.handleGetSubaccount
+     , dir "account" $ dir "subaccount" $ hPost0 $ UserControl.handlePostSubaccount
+     , dir "account" $ dir "sharing" $ hGet0 $ UserControl.handleGetSharing
+     , dir "account" $ dir "sharing" $ hPost0 $ UserControl.handlePostSharing
+     , dir "account" $ dir "security" $ hGet0 $ UserControl.handleGetUserSecurity
+     , dir "account" $ dir "security" $ hPost0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "bsa" $ hGet1 $ UserControl.handleGetBecomeSubaccountOf
+     , dir "account" $ dir "bsa" $ hPost1 $ UserControl.handlePostBecomeSubaccountOf
+     , dir "contacts"  $ hGet0  $ Contacts.showContacts
+     , dir "contacts"  $ hPost0 $ Contacts.handleContactsChange
+     , dir "accepttos" $ hGet0  $ UserControl.handleAcceptTOSGet
+     , dir "accepttos" $ hPost0 $ UserControl.handleAcceptTOSPost
 
      -- super user only
-     , dir "stats"      $ hGet  $ Administration.showStats
-     , dir "createuser" $ hPost $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ hPostNoXToken handleSendgridEvent
-     , dir "adminonly" $ hGet $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ hGet Administration.showAdminUserAdvanced
-     , dir "adminonly" $ dir "useradminforsales" $ hGet $ Administration.showAdminUsersForSales
-     , dir "adminonly" $ dir "useradminforpayments" $ hGet $ Administration.showAdminUsersForPayments
-     , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers . Just 
-     , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers Nothing
-     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ Administration.showAdminUserUsageStats
-     , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserEnableTrustWeaverStorage
-     , dir "adminonly" $ dir "db" $ hGet $ Administration.indexDB
+     , dir "stats"      $ hGet0  $ Administration.showStats
+     , dir "createuser" $ hPost0 $ Administration.handleCreateUser
+     , dir "sendgrid" $ dir "events" $ hPostNoXToken0 handleSendgridEvent
+     , dir "adminonly" $ hGet0 $ Administration.showAdminMainPage
+     , dir "adminonly" $ dir "advuseradmin" $ hGet0 Administration.showAdminUserAdvanced
+     , dir "adminonly" $ dir "useradminforsales" $ hGet0 $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ Administration.showAdminUsersForPayments
+     , dir "adminonly" $ dir "useradmin" $ hGet1 $ Administration.showAdminUsers . Just 
+     , dir "adminonly" $ dir "useradmin" $ hGet0 $ Administration.showAdminUsers Nothing
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ Administration.showAdminUserUsageStats
+     , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserEnableTrustWeaverStorage
+     , dir "adminonly" $ dir "db" $ hGet0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-     , dir "adminonly" $ dir "quarantine" $ hGet  $ Administration.handleShowQuarantine
-     , dir "adminonly" $ dir "quarantine" $ hPost $ Administration.handleQuarantinePost
+     , dir "adminonly" $ dir "quarantine" $ hGet0  $ Administration.handleShowQuarantine
+     , dir "adminonly" $ dir "quarantine" $ hPost0 $ Administration.handleQuarantinePost
 
-     , dir "adminonly" $ dir "cleanup"           $ hPost $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "statistics"        $ hGet  $ Administration.handleStatistics
-     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet  $ Administration.getUsersDetailsToCSV
-     , dir "adminonly" $ dir "payments"          $ hGet  $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hGet  $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hPost $ Payments.handleAccountModelsChange
+     , dir "adminonly" $ dir "cleanup"           $ hPost0 $ Administration.handleDatabaseCleanup
+     , dir "adminonly" $ dir "statistics"        $ hGet0  $ Administration.handleStatistics
+     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet0  $ Administration.getUsersDetailsToCSV
+     , dir "adminonly" $ dir "payments"          $ hGet0  $ Payments.handlePaymentsModelForViewView
+     , dir "adminonly" $ dir "advpayments"       $ hGet0  $ Payments.handlePaymentsModelForEditView
+     , dir "adminonly" $ dir "advpayments"       $ hPost0 $ Payments.handleAccountModelsChange
 
-     , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
-     , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
-     , dir "adminonly" $ dir "translations" $ hGet $ Administration.showAdminTranslations
+     , dir "adminonly" $ dir "services" $ hGet0 $ Administration.showServicesPage
+     , dir "adminonly" $ dir "services" $ param "create" $ hPost0 $ Administration.handleCreateService
+     , dir "adminonly" $ dir "translations" $ hGet0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
 
-     , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0
-     , dir "adminonly" $ dir "deletemigrate" $ hGet $ Administration.handleMigrateForDeletion
-     , dir "adminonly" $ dir "migrateattachments" $ hGet $ DocControl.handleMigrateDocumentAuthorAttachments
+     , dir "adminonly" $ dir "migrate0" $ hGet0 $ Administration.handleMigrate0
+     , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ Administration.handleMigrateForDeletion
+     , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ DocControl.handleMigrateDocumentAuthorAttachments
+     , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ Administration.migrateDocsNoAuthor
        
-       
---     , dir "adminonly" $ dir "migrateauthor" $ hGet $ DocControl.migrateDocSigLinks
-     , dir "adminonly" $ dir "unquarantineall" $ hGet $ Administration.handleUnquarantineAll
+--     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
+     , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ Administration.handleUnquarantineAll
      
-     , dir "services" $ hGet $ handleShowServiceList
-     , dir "services" $ hGet $ handleShowService
-     , dir "services" $ hPost $ handleChangeService
+     , dir "services" $ hGet0 $ handleShowServiceList
+     , dir "services" $ hGet1 $ handleShowService
+     , dir "services" $ hPost1 $ handleChangeService
      
-     , dir "dave" $ dir "document" $ hGet $ daveDocument
-     , dir "dave" $ dir "user"     $ hGet $ daveUser
+     , dir "dave" $ dir "document" $ hGet1 $ daveDocument
+     , dir "dave" $ dir "user"     $ hGet1 $ daveUser
            
      -- account stuff
-     , dir "logout"      $ hGet  $ handleLogout
-     , dir "login"       $ hGet  $ handleLoginGet
-     , dir "login"       $ hPostNoXToken $ handleLoginPost
-     --, dir "signup"      $ hGet  $ signupPageGet
-     , dir "signup"      $ hPostAllowHttp $ signupPagePost
-     --, dir "vip"         $ hGet  $ signupVipPageGet
+     , dir "logout"      $ hGet0  $ handleLogout
+     , dir "login"       $ hGet0  $ handleLoginGet
+     , dir "login"       $ hPostNoXToken0 $ handleLoginPost
+     --, dir "signup"      $ hGet0  $ signupPageGet
+     , dir "signup"      $ hPostAllowHttp0 $ signupPagePost
+     --, dir "vip"         $ hGet0  $ signupVipPageGet
      --, dir "vip"         $ hPostNoXToken $ signupVipPagePost
-     , dir "amnesia"     $ hPostNoXToken $ forgotPasswordPagePost
-     , dir "amnesia"     $ hGet  $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hPostNoXToken $ UserControl.handlePasswordReminderPost
-     , dir "accountsetup"  $ hGet  $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hPostNoXToken  $ UserControl.handleAccountSetupPost
-     , dir "accountremoval" $ hGet  $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hPostNoXToken  $ UserControl.handleAccountRemovalPost
+     , dir "amnesia"     $ hPostNoXToken0 $ forgotPasswordPagePost
+     , dir "amnesia"     $ hGet2  $ UserControl.handlePasswordReminderGet
+     , dir "amnesia"     $ hPostNoXToken2 $ UserControl.handlePasswordReminderPost
+     , dir "accountsetup"  $ hGet2  $ UserControl.handleAccountSetupGet
+     , dir "accountsetup"  $ hPostNoXToken2  $ UserControl.handleAccountSetupPost
+     , dir "accountremoval" $ hGet2  $ UserControl.handleAccountRemovalGet
+     , dir "accountremoval" $ hPostNoXToken2  $ UserControl.handleAccountRemovalPost
 
      -- viral invite
-     , dir "invite"      $ hPostNoXToken $ UserControl.handleViralInvite
-     , dir "question"    $ hPostAllowHttp $ UserControl.handleQuestion
+     , dir "invite"      $ hPostNoXToken0 $ UserControl.handleViralInvite
+     , dir "question"    $ hPostAllowHttp0 $ UserControl.handleQuestion
      -- e-legitimation stuff
-     , dir "s" $ hGet  $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPost $ BankID.handleSignPostBankID
-     , dir "d" $ hGet  $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
-     , coopAPI
-     , webshopAPI
+     , dir "s" $ hGet4  $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPost3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2  $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1 $ BankID.handleIssuePostBankID
+     , userAPI
      , integrationAPI
      -- static files
      , allowHttp $ serveHTMLFiles
@@ -381,7 +381,7 @@ handleError = do
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = do
-    liftM3 LinkNew DocControl.getDocType getListParamsForSearch (isFieldSet "showTemplates")
+    liftM3 LinkNew DocControl.getDocProcess getListParamsForSearch (isFieldSet "showTemplates")
 
 {- |
    Creates a default amazon configuration based on the
@@ -493,7 +493,7 @@ appHandler appConf appGlobals = do
       let peerip = case addrAddress addr of
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
-
+      let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
       mcompany <- getCompanyFromSession session
@@ -521,7 +521,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = langVersion (fromMaybe defaultValue $ lang <$> usersettings <$> muser ) templates2 
+                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2 
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
                               { TW.signConf = trustWeaverSign appConf

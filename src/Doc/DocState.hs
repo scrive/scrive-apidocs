@@ -2,9 +2,6 @@
 module Doc.DocState 
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
-    , isContract -- fromUtils
-    , isOffer -- fromUtils
-    , matchingType -- fromUtils
     , signatoryname -- fromUtils
     , SignatoryAccount -- fromUtils
     , getSignatoryAccount -- fromUtils
@@ -82,6 +79,7 @@ module Doc.DocState
     , SaveSigAttachment(..)
     , MigrateDocumentAuthorAttachments(..)
     , UnquarantineAll(..)
+    , MakeFirstSignatoryAuthor(..)
     )
 where
 
@@ -132,7 +130,8 @@ getDocumentsByAuthor userid = queryDocs $ \documents ->
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
   documents <- ask
-  return $ IxSet.toList (documents @= userid user)
+  -- this should be looking up by userid, but it would miss docs that aren't yet saved for the user
+  return $ IxSet.toList (documents @= (useremail $ userinfo user))
     
 filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksByUser doc user = 
@@ -159,7 +158,8 @@ signatoryCanView' siglinks docstatus docsignorder =
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = queryDocs $ \documents ->
-    filter (signatoryCanView user) (toList $ documents @= userid user @= userservice user) 
+    -- this should be looking up by userid but it would miss docs that aren't yet saved for the user
+    filter (signatoryCanView user) (toList $ documents @= (useremail $ userinfo user) @= userservice user) 
 
 filterSignatoryLinksBySupervisor :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksBySupervisor doc user =
@@ -176,7 +176,7 @@ supervisorCanView user doc =
 
 getDocumentsBySupervisor :: User -> Query Documents [Document]
 getDocumentsBySupervisor user = queryDocs $ \documents ->
-   filter (supervisorCanView user) (toList $ documents @= userservice user)
+   filter (supervisorCanView user) (toList $ documents @= Supervisor (userid user))
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
@@ -450,7 +450,12 @@ documentFromSignatoryData docid sigindex fstname sndname email company personaln
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
                     , documentcsvupload = Nothing 
-                    , documentsharing = Private }
+                    , documentsharing = Private
+                    , documenttype = newDocType $ documenttype d}
+    newDocType :: DocumentType -> DocumentType
+    newDocType (Signable p) = Signable p
+    newDocType (Template p) = Signable p
+    newDocType dt = dt
     toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
     toNewSigLink (i, sl)
       | i==sigindex = (i, pumpData sl)
@@ -777,7 +782,7 @@ deleteDocumentSignatoryLinks docid users p = do
   now <- getMinuteTimeDB
   modifySignableOrTemplate docid $ \doc ->
     if isDeletableDocument doc
-      then Right . deleteDocumentIfRequired now users $ deleteSigLinks doc
+      then Right $ deleteDocumentIfRequired now users $ deleteSigLinks doc
       else Left "Unable to delete siglinks for this doc"
   where
     deleteSigLinks doc@Document{documentsignatorylinks} =
@@ -970,9 +975,13 @@ getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
     
    It is passed a document 
 -} 
-restartDocument :: DocumentID -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
-restartDocument docid user time ipnumber =
-   modifySignableWithAction docid (\d -> tryToGetRestarted d user time ipnumber)    
+restartDocument :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+restartDocument doc user time ipnumber = do
+   mndoc <- tryToGetRestarted doc user time ipnumber
+   case mndoc of
+        Right newdoc -> newFromDocument (const newdoc) (documentid doc)
+        other -> return other
+   
 
 
 {- | 
@@ -1278,6 +1287,21 @@ migrateDocumentAuthorAttachments docid files =
                          }
           else Left "No documentattachments."
   
+makeFirstSignatoryAuthor :: DocumentID -> Update Documents (Either String Document)
+makeFirstSignatoryAuthor docid =
+  modifySignableOrTemplate docid $ 
+  \doc -> case getAuthorSigLink doc of
+    Just _ -> Left "Already has an author."
+    Nothing -> 
+      let fsig = head (documentsignatorylinks doc)
+          rsig = tail (documentsignatorylinks doc)
+      in Right doc { documentsignatorylinks =
+                        fsig { signatoryroles = SignatoryAuthor : (signatoryroles fsig) }
+                        
+                        :
+                        
+                        rsig
+                   }
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1351,4 +1375,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'migrateDocumentAuthorAttachments
                         , 'unquarantineAll
                         , 'getDocumentByDocumentIDAllEvenQuarantinedDocuments
+                        , 'makeFirstSignatoryAuthor
                         ])

@@ -35,7 +35,7 @@ Flag action-scheduler-test
   Default: True
   
 Flag html-test
-  Description: Build html-test
+  Description: Build kontrakcja-html-test
   Default: True
 
 Executable kontrakcja-server
@@ -52,6 +52,8 @@ Executable kontrakcja-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
   Build-depends: filepath
   Build-depends: base64-bytestring
   Build-depends: tagsoup
@@ -93,6 +95,7 @@ Executable kontrakcja-server
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck
   Build-depends: text
+  Build-depends: transformers
 
   Main-Is: Main.hs
 
@@ -118,6 +121,8 @@ Executable pdfseal
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
   Hs-source-dirs: pdfseal/src pdfseal/inc
@@ -144,6 +149,9 @@ Executable kontrakcja-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -177,6 +185,9 @@ Executable kontrakcja-input-validation-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -212,6 +223,9 @@ Executable kontrakcja-trust-weaver-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -247,6 +261,9 @@ Executable kontrakcja-action-scheduler-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -277,11 +294,14 @@ Executable kontrakcja-action-scheduler-test
               TypeSynonymInstances,
               UndecidableInstances
               
-Executable html-test
+Executable kontrakcja-html-test
   if flag(html-test)
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind

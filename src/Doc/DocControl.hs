@@ -255,6 +255,23 @@ sendInvitationEmail1 ctx document signatorylink = do
                           , email = signatoryemail signatorydetails}]
       , mailInfo = Invitation documentid signatorylinkid
   }
+  
+{- |
+    Send a reminder email
+-}
+sendReminderEmail :: Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> Kontra SignatoryLink
+sendReminderEmail custommessage ctx doc siglink = do
+  mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) custommessage ctx doc siglink
+  mailattachments <- liftIO $ makeMailAttachments ctx doc
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+      to = [MailAddress { fullname = signatoryname $ signatorydetails siglink
+    , email = signatoryemail $ signatorydetails siglink }]
+    , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
+    , attachments = if isJust $ maybesigninfo siglink
+                      then mailattachments
+                      else []
+    }
+  return siglink
 
 {- |
    Send emails to all parties when a document is closed.
@@ -450,7 +467,7 @@ rejectDocument :: DocumentID
                -> Kontra KontraLink
 rejectDocument documentid 
                signatorylinkid1 
-               magichash = withUserPost $ do
+               magichash = do
   Context{ ctxtime, ctxipnumber } <- get
   edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash
   case edoc of
@@ -835,6 +852,9 @@ handleIssueUpdateAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do
     ctx <- get
     mudoc <- updateDocument ctx doc
+    
+    Log.debug $ show mudoc
+    
     udoc <- returnRightOrMZero mudoc
     
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
@@ -1257,6 +1277,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   signatoriesroles           <- getAndConcat "signatoryrole"
   liftIO $ print signatoriesroles
   liftIO $ print signatoriessignorders
+  
 
   -- if the post doesn't contain this one, we parse the old way
   sigids <- getAndConcat "sigid"
@@ -1284,7 +1305,11 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   placedsigids   <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
+  Log.debug $ show placedfieldids
+
+
   authorrole <- getFieldWithDefault "" "authorrole"
+  authorsignorder <- (SignOrder . fromIntegral . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
   
   currentuser <- maybe mzero return $ ctxmaybeuser ctx
   docfunctionality <- getCriticalField (asValidDocumentFunctionality currentuser documentfunctionality) "docfunctionality"
@@ -1320,7 +1345,8 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
       authoraccount = getSignatoryAccount authorsiglink
-  let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 } -- author has sign order set to 0 since he is 'the host' of the document
+  let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
+  Log.debug $ "set author sign order to " ++ (show authorsignorder)
                         
   let isauthorsig = authorrole == "signatory"
       signatories2 = zip signatories roles2
@@ -1351,25 +1377,24 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
     else do
      update $ UpdateDocument ctxtime documentid docname
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
-
               
-
-getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
-getDocumentsForUserByType user docfilter = do
-  mydocuments <- query $ GetDocumentsByUser user 
+{- |
+    This stuff is deeply messed up.  At the moment maybesignatory and maybesupervisor aren't populated
+    until a signatory signs.  This means that to make docs available to signatories, viewers or supervisors
+    until a sign happens (which is never in the case of viewers!) is to lookup by email.  We need to change
+    so we lookup not by email, but by userid only.  This means linking up and saving the docs far earlier for users.
+-}
+getDocumentsForUserByType :: DocumentType -> User -> Kontra [Document]
+getDocumentsForUserByType doctype user = do
+  mydocuments <- query $ GetDocumentsByUser user --docs saved for user, so not included if yet to sign or viewer
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
   usersISupervise <- query $ GetUserSubaccounts $ userid user
-  relatedUsers <- query $ GetUserRelatedAccounts $ userid user
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-  relatedUsersSharedDocuments <- filter ((==) Shared . documentsharing) <$> concat <$> mapM (query . GetDocumentsByAuthor . userid) relatedUsers
-  return . filter docfilter $ nub $
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents ++ relatedUsersSharedDocuments
+  supervised'Documents <- query $ GetDocumentsBySupervisor user --supervised docs saved for user (required if subaccount is deleted), again just saved ones
+  moresupervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise --all supervised docs for undeleted subaccounts
+  return . filter ((\d -> documenttype d == doctype)) $ nub $
+          mydocuments ++ concat friends'Documents ++ supervised'Documents ++ concat moresupervised'Documents
 
--- These should be refactored (showContractsList, showOffersList, show OrdersList).
--- They are the same except for Signable Contract/Offer/Order
--- --EN
-  
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -1378,14 +1403,15 @@ getDocumentsForUserByType user docfilter = do
  -}
 showContractsList :: Kontra (Either KontraLink String)
 showContractsList =
-  let getContracts user = do
-        mydocuments <- query $ GetDocumentsByUser user
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) (Signable Contract) . documenttype) $ 
-          mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageContractsList getContracts
+  showItemList' pageContractsList $ getDocumentsForUserByType (Signable Contract)
+
+showOfferList :: Kontra (Either KontraLink String)
+showOfferList = 
+  showItemList' pageOffersList $ getDocumentsForUserByType (Signable Offer)
+
+showOrdersList :: Kontra (Either KontraLink String)
+showOrdersList = 
+  showItemList' pageOrdersList $ getDocumentsForUserByType (Signable Order)
 
 showTemplatesList :: Kontra (Either KontraLink String)
 showTemplatesList = 
@@ -1393,28 +1419,6 @@ showTemplatesList =
         mydocuments <- query $ GetDocumentsByUser user
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
-
-showOrdersList :: Kontra (Either KontraLink String)
-showOrdersList = 
-  let getOrders user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) (Signable Order) . documenttype) $
-           mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageOrdersList getOrders
-
-showOfferList :: Kontra (Either KontraLink String)
-showOfferList = 
-  let getOffers user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- query $ GetDocumentsBySupervisor user
-        return . filter ((==) (Signable Offer) . documenttype) $
-           mydocuments ++ concat friends'Documents ++ supervised'Documents in
-  showItemList' pageOffersList getOffers
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
@@ -1547,9 +1551,9 @@ basename filename =
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
     input <- getDataFnM (lookInput "doc")
-    mdoctype <- getDocType
-    let doctype = fromMaybe (Signable Contract) mdoctype
-    mdoc <- makeDocumentFromFile doctype input
+    mdocprocess <- getDocProcess
+    let docprocess = fromMaybe (Contract) mdocprocess
+    mdoc <- makeDocumentFromFile (Signable docprocess) input
     liftIO $ print mdoc
     case mdoc of
       Nothing -> return LinkMain
@@ -1625,6 +1629,7 @@ handleAttachmentArchive = do
     
 handleIssueArchive :: Kontra ()
 handleIssueArchive = do
+    Log.debug "handleIssueArchive"
     Context { ctxmaybeuser = Just user } <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
@@ -1714,17 +1719,8 @@ handleIssueBulkRemind doctype = do
           Pending -> do
             let isElegible = isEligibleForReminder (Just user) doc
                 unsignedsiglinks = filter isElegible $ documentsignatorylinks doc
-            sequence . map (sigRemind ctx doc) $ unsignedsiglinks
+            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
           _ -> return []
-      sigRemind :: Context -> Document -> SignatoryLink -> Kontra SignatoryLink
-      sigRemind ctx doc signlink = do
-        mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-              to = [MailAddress { fullname = signatoryname $ signatorydetails signlink
-                                , email = signatoryemail $ signatorydetails signlink }]
-            , mailInfo = Invitation (documentid doc) (signatorylinkid signlink)
-        }
-        return signlink
 
 handleContractsReload :: Kontra KontraLink
 handleContractsReload  = fmap LinkContracts getListParamsForSearch
@@ -1814,7 +1810,7 @@ handleRestart docid = withUserPost $ do
         Left _ -> mzero
         Right doc2 -> do
           addFlashMsg =<< (liftIO $ flashDocumentRestarted ctxtemplates doc2)
-          return $ LinkIssueDoc docid
+          return $ LinkIssueDoc (documentid doc2)
                     
 handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
 handleResend docid signlinkid  = withUserPost $ do
@@ -1828,12 +1824,7 @@ handleResend docid signlinkid  = withUserPost $ do
         Nothing -> mzero
         Just signlink -> do
           customMessage <- getCustomTextField "customtext"  
-          mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink
-          scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-                to = [MailAddress { fullname = signatoryname $ signatorydetails signlink
-                                  , email = signatoryemail $ signatorydetails signlink }]
-              , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
-          }
+          _ <- sendReminderEmail customMessage ctx doc signlink
           addFlashMsg =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
           return (LinkIssueDoc docid)
 
@@ -1892,17 +1883,17 @@ mainPage =  do
                       ctx <- get
                       params <- getListParams
                       showTemplates <- isFieldSet "showTemplates"
-                      mdoctype <- getDocType
-                      liftIO $ uploadPage ctx params mdoctype showTemplates
+                      mdocprocess <- getDocProcess
+                      liftIO $ uploadPage ctx params mdocprocess showTemplates
 
-getDocType :: Kontra (Maybe DocumentType)
-getDocType = getOptionalField asDocType "doctype"
+getDocProcess :: Kontra (Maybe DocumentProcess)
+getDocProcess = getOptionalField asDocType "doctype"
   where
-    asDocType :: String -> Result DocumentType
+    asDocType :: String -> Result DocumentProcess
     asDocType val
-      | val == show Offer = Good $ Signable Offer
-      | val == show Contract = Good $ Signable Contract
-      | val == show Order = Good $ Signable Order
+      | val == show Offer = Good $ Offer
+      | val == show Contract = Good $ Contract
+      | val == show Order = Good $ Order
       | otherwise = Empty
 
 idmethodFromString :: String -> Maybe IdentificationType
@@ -1915,13 +1906,13 @@ getTemplatesForAjax::Kontra Response
 getTemplatesForAjax = do
     ctx <- get 
     params <- getListParams
-    mdoctype <- getDocType
-    case (ctxmaybeuser ctx,mdoctype) of
-            (Just user, Just doctype) -> do
-                let tfilter doc = isTemplate doc && (matchingType doctype $ documenttype doc)
+    mdocprocess <- getDocProcess 
+    case (ctxmaybeuser ctx,mdocprocess) of
+            (Just user, Just docprocess) -> do
+                let tfilter doc = (Template docprocess == documenttype doc)
                 documents <- liftIO $ query $ GetDocumentsByUser user
                 let templates = filter tfilter documents
-                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templates
+                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
             _ -> mzero

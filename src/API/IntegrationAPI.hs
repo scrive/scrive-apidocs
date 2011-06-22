@@ -46,7 +46,7 @@ import Control.Monad.Error
 import API.API
 import Routing
 import API.Service.ServiceState
-import API.IntegrationAPIUtils
+import API.APICommons
 import Doc.DocUtils
 import Company.CompanyState
 import Data.Foldable (fold)
@@ -95,8 +95,8 @@ integrationAPI =  dir "integration" $ msum [
                     , apiCall "set_document_tag"  setDocumentTag
                     , apiCall "remove_document" removeDocument
                     , apiUnknownCall
-                    , dir "connectuser" $ hGet $ connectUserToSession
-                    , dir "connectcompany" $ hGet $ connectCompanyToSession
+                    , dir "connectuser" $ hGet3 $ connectUserToSession
+                    , dir "connectcompany" $ hGet3 $ connectCompanyToSession
                   ]
 --- Real api requests
 getRequestUser:: IntegrationAPIFunction User
@@ -147,11 +147,7 @@ createDocument = do
    mtitle <- apiAskBS "title"
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
-   files <- fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
-                n <- apiAskBS "name"
-                c <- apiAskBase64 "content"
-                when (isNothing n || isNothing c) $ throwApiError API_ERROR_MISSING_VALUE "Problem with uploaded file"
-                return $ Just (fromJust n, fromJust c)
+   files <- getFiles
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
@@ -281,6 +277,4 @@ connectCompanyToSession sid cid ssid = do
     if (loaded) 
      then return $ BackToReferer
      else mzero
-    
 
-                      
