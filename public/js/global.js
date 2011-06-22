@@ -524,7 +524,11 @@ safeReady(function() {
 safeReady(function() {
   $("#addattachmentlink").overlay({
     mask: standardDialogMask,
-    top : standardDialogTop
+    top : standardDialogTop,
+    onBeforeLoad: function() {
+      // remove all attachments that were added but not confirmed
+      $("#tobeattached div").remove();
+    }
   });
 });
 
