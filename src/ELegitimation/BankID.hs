@@ -38,6 +38,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
 import GHC.Unicode (toLower)
 import Data.Either (lefts, rights)
+import Util.HasSomeUserInfo
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -191,8 +192,8 @@ handleSignPostBankID docid signid magic = do
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
                     let Just authorsiglink = getAuthorSigLink document
-                        authorname = personname authorsiglink
-                        authoremail = signatoryemail $ signatorydetails authorsiglink
+                        authorname = getSmartName authorsiglink
+                        authoremail = getEmail authorsiglink
                     liftIO $ print msg
                     Log.debug msg
                     txt <- liftIO $ renderTemplate ctxtemplates "signCanceledDataMismatchModal" $ do

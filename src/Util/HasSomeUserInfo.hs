@@ -8,7 +8,17 @@
 --
 -- Utility for abstracting away destructuring to get a name.
 -----------------------------------------------------------------------------
-module Util.HasSomeUserInfo where
+module Util.HasSomeUserInfo ( 
+  getCompanyName,
+  getCompanyNumber,
+  getEmail,
+  getFirstName,
+  getFullName,
+  getLastName,
+  getPersonalNumber,
+  getSmartName
+  
+  ) where
 
 import Doc.DocStateData
 import User.UserState

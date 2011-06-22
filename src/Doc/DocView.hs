@@ -102,16 +102,16 @@ modalSignAwaitingAuthorLast = do
 modalSendConfirmationView :: Document -> KontraModal
 modalSendConfirmationView document = do
   templates <- ask
-  partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
+  partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
   lift $ renderTemplateForProcess templates document processmodalsendconfirmation $ do
     field "partyListButAuthor" partylist      
-    field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document
+    field "signatory" . listToMaybe $ map (BS.toString . getSmartName) $ partyList document
     documentInfoFields document
 
 modalSendInviteView ::  Document -> KontraModal
 modalSendInviteView document = do
   templates <- ask  
-  partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
+  partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
   lift $ renderTemplate templates  "modalSendInviteView" $ do
     field "partyListButAuthor" partylist
     field "documenttitle" . BS.toString $ documenttitle document
@@ -119,7 +119,7 @@ modalSendInviteView document = do
 modalRejectedView :: Document -> KontraModal
 modalRejectedView document = do
   templates <- ask
-  partylist <-lift $ renderListTemplate templates . map (BS.toString . personname') $ partyList document
+  partylist <-lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyList document
   lift $ renderTemplate templates "modalRejectedView" $ do
     field "partyList" partylist
     field "documenttitle" . BS.toString $ documenttitle document
@@ -159,8 +159,8 @@ modalSignedNotClosedNoAccount document signatorylink actionid magichash = do
 
 modalSignedFields :: KontrakcjaTemplates -> Document -> Fields
 modalSignedFields templates document@Document{ documenttitle } = do
-  field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
-  field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
+  field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . getSmartName) $ partyUnsignedList document
+  field "partyListString" . renderListTemplate templates . map (BS.toString . getSmartName) $ partyList document
   field "signatory" . listToMaybe $ map (BS.toString . getEmail ) $ partyList document
   field "documenttitle" $ BS.toString documenttitle
 
@@ -193,7 +193,7 @@ flashDocumentRestarted templates document =
 flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
 flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
   toFlashMsg OperationDone <$> (renderTemplate templates (template_name maybesigninfo) $ do
-    field "personname" . BS.toString $ personname signlink)
+    field "personname" . BS.toString $ getSmartName signlink)
   where
     template_name =
       maybe "flashRemindMailSentNotSigned"
@@ -290,7 +290,7 @@ flashMessagePleaseSign document templates =
 singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
 singlnkFields document dateformatter sl = do
   field "id" $ show $ signatorylinkid sl
-  field "name" $ BS.toString $ personname sl
+  field "name" $ BS.toString $ getSmartName sl
   field "email" $  ""
   field "company" $ BS.toString . signatorycompany $ signatorydetails sl
   field "author" $ SignatoryAuthor `elem` (signatoryroles sl)
@@ -368,7 +368,7 @@ docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
-    signMatch d = any match $ map (BS.toString . personname) (documentsignatorylinks d)
+    signMatch d = any match $ map (BS.toString . getSmartName) (documentsignatorylinks d)
     
    
 docSortFunc:: SortingFunction Document
@@ -415,7 +415,7 @@ comparePartners doc1 doc2 =
     isMatch _ = False
     compareSignatory :: SignatoryLink -> SignatoryLink -> Ordering
     compareSignatory sl1 sl2 =
-      let splitUp sl = span (\c -> c/=' ') . map toUpper . BS.toString $ personname sl
+      let splitUp sl = span (\c -> c/=' ') . map toUpper . BS.toString $ getSmartName sl
           (fst1, snd1) = splitUp sl1
           (fst2, snd2) = splitUp sl2 in
       case (compare fst1 fst2) of
@@ -897,8 +897,8 @@ pageDocumentForSignatory action document ctx invitedlink  =
       in do
         field "localscripts" localscripts
         field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
-        field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (personname authorsiglink) document invitedlink
-        field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
+        field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (getSmartName authorsiglink) document invitedlink
+        field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . getSmartName) $ partyUnsignedMeAndList magichash document
         field "action" $ show action
         field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
         field "documentinfotext" $  documentInfoText ctx document (Just invitedlink)

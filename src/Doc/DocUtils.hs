@@ -12,6 +12,7 @@
 
 module Doc.DocUtils where
 
+import Util.HasSomeUserInfo
 import Doc.DocStateData
 import API.Service.ServiceState
 import Mails.MailsUtil
@@ -136,17 +137,15 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
 {- |
    Given a SignatoryLink, return a "smart" name: either the name or the email.
  -}
-personname :: SignatoryLink -> BS.ByteString 
-personname = personname' . signatorydetails 
+--personname :: SignatoryLink -> BS.ByteString 
+--personname = getSmartName
 
 {- Same but unwrapped. We need this cause author details are in this format  -}
 {- |
    Given a SignatoryDetails, return a "smart" name: either the name or the email.
  -}
-personname' :: SignatoryDetails -> BS.ByteString 
-personname' signdetails = if BS.null $ signatoryname signdetails
-                          then  signatoryemail signdetails
-                          else  signatoryname  signdetails
+--personname' :: SignatoryDetails -> BS.ByteString 
+--personname' = getSmartName
 
 {- |
    Given a SignatoryLink, returns a tuple containing the name and the email address.
@@ -252,10 +251,7 @@ anyInvitationUndelivered doc =  any isUndelivered $ documentsignatorylinks doc
    Get the full name of a SignatoryDetails.
  -}
 signatoryname :: SignatoryDetails -> BS.ByteString
-signatoryname s = 
-  if BS.null $ signatorysndname s
-  then signatoryfstname s 
-  else signatoryfstname s `BS.append` BS.fromString " " `BS.append` signatorysndname s
+signatoryname = getFullName
 
 -- OTHER UTILS
 
@@ -565,7 +561,7 @@ isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 getAuthorName :: Document -> BS.ByteString
 getAuthorName doc = 
   let Just authorsiglink = getAuthorSigLink doc
-  in personname authorsiglink
+  in getSmartName authorsiglink
 
 
   
