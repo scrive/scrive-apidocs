@@ -673,8 +673,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
         <div class="modal-content">
           <a href=#" id="attachmentback" style="display:none;"> </a>
-          <div>     
-           $_updateAttachmentsDialogChooseAttachment()$</div>
+          <div>$_updateAttachmentsDialogChooseAttachment()$</div>
+          <div id="possibleAttachmentsList">
           <span id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
@@ -683,7 +683,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <span class="text">$_updateAttachmentsDialogUpLoadOnlyPDF()$</span> 
                 </span>
               </div>
-              <br/>
               <div class="signStepsButtonContainer">
                 <a class="btn-small green">  
                   <div class="left"> </div>
@@ -700,7 +699,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <span class="text">$_updateAttachmentsDialogUpLoadSaved()$</span>
                 </span>
               </div>
-              <br/>
               <div class="signStepsButtonContainer">
                 <a id="showexistingattachments" class="btn-small green">  
                   <div class="left"> </div>
@@ -719,6 +717,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
               </ul>
             </div>
           </span>
+          </div>
+          <div id="attachedList">
           <div id="alreadyattached">
             $attachments:{attachment |
             <div class="alreadyattacheditem">
@@ -733,6 +733,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             }$
           </div>
           <div id="tobeattached">
+          </div>
           </div>
         </div>
       </div>

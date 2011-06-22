@@ -372,7 +372,7 @@ msgstr "            "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs"
-msgstr "Begar fran  "
+msgstr "Begär från  "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc"
