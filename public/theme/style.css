@@ -2923,11 +2923,21 @@ table.authorsigattachment {
 table#signViewSigAttachmentBoxList {
     width: 100%;
 }
+
 table#signViewSigAttachmentBoxList td {
     width: 33%;
 }
-table#signViewSigAttachmentBoxList form {
+
+table#signViewSigAttachmentBoxList input.multiFileInput {
     width: 112px;
+    float: left;
+    left: -112px;
+    top: 0px;
+    height: 33px;
+}
+
+table#signViewSigAttachmentBoxList .btn-small .label {
+    text-align: center;
 }
 
 table#signatorysignatoryattachments {
