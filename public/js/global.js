@@ -151,12 +151,8 @@ safeReady(function() {
         return false;
       } else {
         if (countSentOrOpenRows(selectedrows)>0) {
-          var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-          if (listtype=="dokument") {
-            addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.", "red");
-          } else {
-            addFlashMessage("Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.", "red");
-          }
+          var flashtxt = $(".cantdeleteopenflashmsgtxt").text();
+          addFlashMessage(flashtxt, "red");
           return false;
         }
         var deletionDetails = "";

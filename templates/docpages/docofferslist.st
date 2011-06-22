@@ -17,7 +17,10 @@ $loadingdialog()$
 						</div>
                                                 <ul class="tab-dd-opts">
                                                         <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">Skicka påminnelse</a></li>
-							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
+							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a>
+				          <div class="cantdeleteopenflashmsgtxt" style="display:none;">
+				            Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.
+		              </div></li>
 						</ul>
 					</div>
 				</div>
