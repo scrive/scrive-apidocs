@@ -18,7 +18,6 @@ module Doc.DocViewMail ( mailCancelDocumentByAuthor
                        ) where
 
 import API.Service.ServiceState
-import Amazon
 import Doc.DocProcess
 import Doc.DocState
 import Doc.DocUtils

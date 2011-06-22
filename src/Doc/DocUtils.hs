@@ -186,7 +186,7 @@ instance (MaybeUser u) => MaybeUser (Maybe u) where
   getUserID  = join . fmap getUserID
 
 instance MaybeUser ServiceAdmin where
-  getUserID = Just . UserID . unServiceAdmin 
+  getUserID = Just . UserID . unServiceAdmin
 
 {- |  And this is a function for comparison -}
 sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
