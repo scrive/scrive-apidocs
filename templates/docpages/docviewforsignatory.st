@@ -227,8 +227,6 @@ pageDocumentForSignContent=
   <div id="documentBox">
     <div class="waiting4page"></div>
   </div>
-  
-
     $if(notsignedbyme)$
 
     $if(isattachments)$
@@ -287,7 +285,7 @@ pageDocumentForSignContent=
     
     <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
-        <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
           <div class="left"></div>
           <div class="label">$process.rejectbuttontext$</div>
           <div class="right"></div>

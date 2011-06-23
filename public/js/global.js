@@ -341,7 +341,7 @@ safeReady(function() {
     $.ajax({ url: myurl,
              success: function(data) {
                var content = $(data);
-               var errormsg = content.find(".errormsg")
+               var errormsg = content.find(".errormsg");
                if (errormsg.length > 0) {
                    var errdialog = $("<div title='"+localization.problemWithPDF+"'>"
                                    + errormsg.text()
@@ -658,7 +658,7 @@ safeReady(function() {
   saveOverlay("#signbankid",{    mask: standardDialogMask});
 });
    
-safeReady(function() { 
+safeReady(function() {
   saveOverlay("#cancel, .cancel",{	mask: standardDialogMask});
 });
 
