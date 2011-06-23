@@ -672,7 +672,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-body">
 
         <div class="modal-content">
-          <a href=#" id="attachmentback" style="display:none;"> </a>
+          <a href="#" id="attachmentback" style="display:none;"> </a>
           <div>$_updateAttachmentsDialogChooseAttachment()$</div>
           <div id="possibleAttachmentsList">
           <span id="attachmentbuttons">
@@ -764,7 +764,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </span>
         <a class="modal-close close"> </a>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="height:180px;">
         <div class="modal-content">
           <div>$_dialogCsvupload1Body()$</div>
           <div class="signStepsBodyUploadBox">
@@ -785,6 +785,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
             </div>
           </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <a  class="close cancel float-left">Avbryt</a>
       </div>
     </div>
   </form>
