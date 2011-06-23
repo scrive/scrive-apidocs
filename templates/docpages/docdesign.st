@@ -673,7 +673,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-body">
 
         <div class="modal-content">
-          <a href=#" id="attachmentback" style="display:none;"> </a>
+          <a href="#" id="attachmentback" style="display:none;"> </a>
           <div>     
             Välj de bilagor du vill bifoga
           </div>
@@ -768,7 +768,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </span>
         <a class="modal-close close"> </a>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="height:180px;">
         <div class="modal-content">
           <div>     
             Du har valt att göra ett massutskick, för att genomföra detta krävs att du laddar upp ett dokument med formatet .csv
@@ -791,6 +791,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
             </div>
           </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <a  class="close cancel float-left">Avbryt</a>
       </div>
     </div>
   </form>
