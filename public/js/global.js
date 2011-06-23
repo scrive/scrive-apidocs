@@ -341,7 +341,7 @@ safeReady(function() {
     $.ajax({ url: myurl,
              success: function(data) {
                var content = $(data);
-               var errormsg = content.find(".errormsg")
+               var errormsg = content.find(".errormsg");
                if (errormsg.length > 0) {
                    var errdialog = $("<div title='Problem med PDF'>"
                                    + errormsg.text()
@@ -660,7 +660,7 @@ safeReady(function() {
    
 safeReady(function() { 
   $("#cancel, .cancel").overlay({	mask: standardDialogMask,
-                                    top : standardDialogTop,
+                                  top : standardDialogTop
                                 });
 });
 
