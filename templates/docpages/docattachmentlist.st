@@ -13,11 +13,11 @@ $loadingdialog()$
                 <div class="col float-left">
                     <div class="tab-dd float-left">
                         <div class="tab-dd-button">
-                          <a href="javascript:;"><p>$_pageAttachmentListOptions()$</p></a>
+                          <a href="javascript:;"><p>$_options()$</p></a>
                         </div>
                         <ul class="tab-dd-opts">
                             <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listShare">$_pageAttachmentListShare()$</a></li>
-                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_pageAttachmentListDelete()$</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
                         </ul>
                     </div>
 
@@ -32,7 +32,7 @@ $loadingdialog()$
                 </div>
 
                 <div class="col float-right">
-                      $searchBox(infotext='$_pageAttachmentListSearchInfo()$')$
+                      $searchBox(infotext=_pageAttachmentListSearchInfo())$
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -43,20 +43,20 @@ $loadingdialog()$
                             <th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
-                                <a href="$currentlink$&amp;sorting=time">$_pageAttachmentListSortTimeUp()$<em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$<em> ▲</em></a>
                                $elseif(params.sorting.time)$
-                                <a href="$currentlink$&amp;sorting=timeREV">$_pageAttachmentListSortTimeDown()$<em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=timeREV">$_SortTime()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=time">$_pageAttachmentListSortTime()$</a>
+                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$</a>
                                $endif$
                             </th>
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&amp;sorting=title">$_pageAttachmentListSortTemplateUp()$<em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$<em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&amp;sorting=titleREV">$_pageAttachmentListSortTemplateDown()$<em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">$_SortTemplate()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=title">$_pageAttachmentListSortTemplate()$</a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$</a>
                                $endif$
                             </th>
                             <th style="width: 100px;"></th>

@@ -5,7 +5,7 @@ pageAcceptTOS =
         <div class="modal-header">
             <span class="modal-icon message"></span>
             <span class="modal-title">
-                <h2>Vänligen acceptera användarvillkoren</h2>
+                <h2>$_PleaseAcceptTOS()$</h2>
             </span>
             <a class="modal-close close"> </a>
         </div>
@@ -15,11 +15,11 @@ pageAcceptTOS =
             </div>
         </div>
         <div class="modal-footer">
-            <div style="float:left"><input type="checkbox" name="tos" id="tos" /> <label for="tos">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/> </div>
+            <div style="float:left"><input type="checkbox" name="tos" id="tos" /> <label for="tos">$_ReadUnderstoodTOS()$</label><br/> </div>
             <a href="#" class="btn-small green float-right submit submiter" id="editing-invite-text-finished">
                 <div class="left"></div>
                 <div class="label">
-                    <p>Skicka</p>
+                    <p>$_send()$</p>
                     <div class="btn-symbol green arrow-left"></div>
                 </div>
                 <div class="right"></div>

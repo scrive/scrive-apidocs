@@ -1,18 +1,18 @@
 ####
 pageDocumentForViewerHelpers=
 <span class="templating_insert"> 
-  <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
+  <div id="signatory_template" class="signatorybox" alt="$_pageDocumentForViewerHelpersPartyName()$">
   <input name="signatoryname" type="text" value="" autocomplete="off"
-         infotext="Fullständigt namn" /><br/>
+         infotext="$_signatoryname()$" /><br/>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="Företag" /><br/>
+         infotext="$_signatorycompany()$" /><br/>
   <input name="signatorypersonalnumber" type="text" value="" autocomplete="off"
-         infotext="Pers.nr" /><br/>
+         infotext="$_signatorypersonalnumber()$" /><br/>
   <input name="signatorycompanynumber" type="text" value="" autocomplete="off"
-         infotext="Org.nr" /><br/>
+         infotext="$_signatorycompanynumber()$" /><br/>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="E-post" /><br/>
-  <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
+         infotext="$_signatoryemail()$" /><br/>
+  <small><a onclick="return signatoryremove(this.parentNode);" href="#">$_signatoryremove()$</a></small>
   </div>
 </span>,
 <script type="text/javascript"> 
@@ -22,7 +22,7 @@ pageDocumentForViewerHelpers=
   $endif$
 </script>
 ###
-pageDocumentForViewerContent = 
+pageDocumentForViewerContent=
   <div class="localdialogs">
     <div style="display: none">
       $pageDocumentForViewerHelpers()$
@@ -38,7 +38,7 @@ pageDocumentForViewerContent =
      </span>
      <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
-         Ladda ned PDF
+         $_pageDocumentForViewerContentDownloadPDF()$
        </a>
      </span>
   </div>

@@ -38,6 +38,11 @@ Flag html-test
   Description: Build kontrakcja-html-test
   Default: True
 
+Flag docstate-test
+  Description: Build kontrakcja-docstate-test
+  Default: True
+
+
 Executable kontrakcja-server
   if flag(server)
     Buildable: True
@@ -314,6 +319,44 @@ Executable kontrakcja-html-test
   cpp-options: -DHtmlTest=Main
 
   Main-is: HtmlTest.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable kontrakcja-docstate-test
+  if flag(docstate-test)
+    Buildable: True
+  else
+    Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  Hs-source-dirs: test/src src pdfseal/inc
+
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  cpp-options: -DDocStateTest=Main
+
+  Main-is: DocStateTest.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

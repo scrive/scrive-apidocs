@@ -11,12 +11,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: docpages/doclist.st:pageContractsList
-msgid "_ReminderFooterOk"
-msgstr "OK"
+msgid "_SortParty"
+msgstr "Parter"
 
 #: docpages/doclist.st:pageContractsList
-msgid "_ReminderFooterCancel"
-msgstr "Avbryt"
+msgid "_ReminderBodyIfSingel"
+msgstr "\t            Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet "
 
 #: docpages/doclist.st:pageContractsList
 msgid "_ReminderBodyIfMulti2"

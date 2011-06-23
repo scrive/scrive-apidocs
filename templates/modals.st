@@ -809,7 +809,7 @@ $if(loginModal)$
         </div>
         <div class="modal-footer">
           <div class="float-left">
-            <a class="close cancel">$_loginModalFooterCancel()$</a>
+            <a class="close cancel">$_cancel()$</a>
             <a href="#" class="txt-link message">$_loginModalFooterForgotPassword()$</a>
           </div>
           <a href="#" class="btn-small blue float-right submit">
@@ -846,7 +846,7 @@ $if(loginModal)$
         </div>  
         <div class="modal-footer">
           <div class="float-left">
-            <a class="close cancel">$_loginModalForgotPasswordFooterCancel()$</a>
+            <a class="close cancel">$_cancel()$</a>
             <a href="#" class="txt-link message">$_loginModalForgotPasswordFooterLogIn()$</a>
           </div>
           <a href="#" class="btn-small green float-right submit">
@@ -908,7 +908,7 @@ modalNewPasswordView=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_modalNewPasswordViewFooterCancel()$</a>
+        <a class="close cancel">$_cancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
@@ -947,7 +947,7 @@ modalInviteUserAsSubaccount=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-	    <a class="close cancel">$_modalInviteUserAsSubaccountFooterCancel()$</a>
+	    <a class="close cancel">$_cancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
 	    <div class="left"></div>
@@ -982,7 +982,7 @@ modalDoYouWantToBeSubaccount=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-	    <a class="close cancel">$_modalDoYouWantToBeSubaccountFooterCancel()$</a>
+	    <a class="close cancel">$_cancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
 	    <div class="left"></div>
@@ -1014,7 +1014,7 @@ modalError=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalErrorFooterOk()$</p>
+        <p>$_ok()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -1043,7 +1043,7 @@ signCanceledDataMismatchModal=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_signCanceledDataMismatchModalFooterOk()$</p>
+        <p>$_ok()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -1069,7 +1069,7 @@ signAwaitingAuthorLast=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_signAwaitingAuthorLastFooterOk()$</p>
+        <p>$_ok()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>

@@ -6,7 +6,7 @@ pageDocumentDesign=
   </script>
   <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
-<div id="signStepsWrapper">
+<div id="signStepsWrapper" style="display:none">
 
   <div id="signStepsContainer" class="follow" >
     
@@ -238,8 +238,8 @@ pageDocumentDesign=
                   <div style="padding-bottom:2px;padding-left:1px;">$_signStepsBodyFunctionsBoxChooseVerification()$</div>
                   <select name="validationmethod"
                           id="validationdropdown">
-                    <option value="email" $if(emailselected)$selected="selected"$endif$>$_signStepsBodyFunctionsBoxEmail()$</option>
-                    <option value="eleg" $if(elegselected)$selected="selected"$endif$>$_signStepsBodyFunctionsBoxEleg()$</option>
+                    <option value="email" $if(emailselected)$selected="selected"$endif$>$_email()$</option>
+                    <option value="eleg" $if(elegselected)$selected="selected"$endif$>$_eleg()$</option>
                   </select>
                 </div>
                 $endif$
@@ -289,7 +289,7 @@ pageDocumentDesign=
                   <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-small blue center">
                     <div class="left"></div>
                     <div class="label" style="width:134px;">
-                       <span style="padding-left:9px;padding-right:9px">$_signinviteSkrivaPa()$</span>
+                       <span style="padding-left:9px;padding-right:9px">$_skrivapa()$</span>
                       <span class="btn-symbol cross"></span>
                     </div> 
                     <div class="right"></div>
@@ -424,7 +424,7 @@ pageDocumentDesign=
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
                     <div class="label" style="width:120px">
-                    <span>$_signinviteSkrivaPa2()$</span>
+                    <span>$_skrivapa()$</span>
                       <span class="icon cross"></span>
                     </div> 
                     <div class="right"></div>
@@ -569,8 +569,8 @@ validationdropdown=
   <span>$_validationdropdownChooseVMethod()$</span>
   <select name="validationmethod"
           id="validationdropdown">
-    <option value="email" $if(emailselected)$selected="selected"$endif$>$_validationdropdownIfEmail()$</option>
-    <option value="eleg" $if(elegselected)$selected="selected"$endif$>$_validationdropdownIfEleg()$</option>
+    <option value="email" $if(emailselected)$selected="selected"$endif$>$_email()$</option>
+    <option value="eleg" $if(elegselected)$selected="selected"$endif$>$_eleg()$</option>
   </select>
 </div> 
 #####
@@ -584,7 +584,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
     <input type="hidden" name="sigattachments" value="true" />
     
-    <div class="modal-container">
+    <div class="modal-container" style="width:740px;left:-50px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -592,9 +592,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </span>
         <a class="modal-close close"> </a>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="padding-left:20px;padding-right:20px;">
         <div class="modal-content">
-          <div>     
+          <div style="padding-bottom:10px;">     
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
           <table id="sigattachmenttable">
@@ -610,7 +610,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <tbody>
               $sigattachments:{a|
               <tr>
-                <td><a href="#" class="minus"></a></td>
+                <td class="centralised"><a href="#" class="minus"></a></td>
                 <td><input type="text" name="sigattachname"
                            value="$a.attachmentname$" /></td>
                 <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
@@ -619,19 +619,19 @@ pageDocumentForAuthorHelpersLocalDialogs=
                     <option selected="selected">$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$</option>
                   </select>
                 </td>
-                <td>
+                <td class="centralised">
                   <span class="selectedsigspan">
                     <ul class="selectedsigs">
                       $a.signatories:{s|
                       <li>
                         $s.signame$ 
                         <a href="#" class="remove">x</a>
-                        <span style="display:none" class="sigemail">$s.email$</span>
+                        <span style="display:none" class="sigemail">$s.sigemail$</span>
                       </li>
                       }$
                     </ul>
                     <input type="hidden" name="sigattachemails"
-                           value="$a.sigemails$" />
+                           value="$a.signatories:{s | $s.sigemail$}; separator=", "$" />
                   </span>
                 </td>
               </tr>
@@ -642,13 +642,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         <div class="float-left">
-          <a class="close cancel">$_pageDocumentForAuthorHelpersLocalDialogsCancel()$</a>
+          <a class="close cancel">$_cancel()$</a>
         </div>
         <a class="btn-small green float-right submiter">
           <div class="left"></div>
           <div class="label">
             <p>
-              $_pageDocumentForAuthorHelpersLocalDialogsSave()$
+              $_save()$
             </p>
             <div class="btn-symbol green arrow-left"></div>
           </div>
@@ -672,9 +672,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-body">
 
         <div class="modal-content">
-          <a href=#" id="attachmentback" style="display:none;"> </a>
-          <div>     
-           $_updateAttachmentsDialogChooseAttachment()$</div>
+          <a href="#" id="attachmentback" style="display:none;"> </a>
+          <div>$_updateAttachmentsDialogChooseAttachment()$</div>
+          <div id="possibleAttachmentsList">
           <span id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
@@ -683,7 +683,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <span class="text">$_updateAttachmentsDialogUpLoadOnlyPDF()$</span> 
                 </span>
               </div>
-              <br/>
               <div class="signStepsButtonContainer">
                 <a class="btn-small green">  
                   <div class="left"> </div>
@@ -700,7 +699,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <span class="text">$_updateAttachmentsDialogUpLoadSaved()$</span>
                 </span>
               </div>
-              <br/>
               <div class="signStepsButtonContainer">
                 <a id="showexistingattachments" class="btn-small green">  
                   <div class="left"> </div>
@@ -719,6 +717,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
               </ul>
             </div>
           </span>
+          </div>
+          <div id="attachedList">
           <div id="alreadyattached">
             $attachments:{attachment |
             <div class="alreadyattacheditem">
@@ -734,11 +734,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           <div id="tobeattached">
           </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <div class="float-left">
-          <a class="close cancel">$_updateAttachmentsDialogUpLoadChooseExistingAttachmentFooterCancel()$</a>
+          <a class="close cancel">$_cancel()$</a>
         </div>
         <a class="btn-small green float-right submitAttachments">
           <div class="left"></div>
@@ -763,7 +764,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </span>
         <a class="modal-close close"> </a>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="height:180px;">
         <div class="modal-content">
           <div>$_dialogCsvupload1Body()$</div>
           <div class="signStepsBodyUploadBox">
@@ -784,6 +785,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
             </div>
           </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <a  class="close cancel float-left">Avbryt</a>
       </div>
     </div>
   </form>
@@ -846,10 +850,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
                       <th class="rownumbercol">&nbsp;</th>
                         <th>$_firstname()$</th>
                         <th>$_lastname()$</th>
-                        <th>$_Email()$</th>
+                        <th>$_email()$</th>
                         <th>$_company()$</th>
-                        <th>$_dialogCsvupload2CSVDataPersonalNumber()$</th>
-                        <th>$_dialogCsvupload2CSVDataOrgNumber()$</th>
+                        <th>$_personnumber()$</th>
+                        <th>$_orgnumber()$</th>
                       $csvcustomfields: {csvcustomfield |
                       <th>$csvcustomfield$</th>
                       }$
@@ -928,7 +932,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_dialogConfirmAdvancedFooterCancel()$</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submiter toadvanced">
         <div class="left"></div>
         <div class="label">
@@ -960,7 +964,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_dialogConfirmBasicChangeToFooterCancel()$</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submiter tobasic">
         <div class="left"></div>
         <div class="label">
@@ -996,11 +1000,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-footer">
       <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a class="close cancel float-left">$_dialogConfirmSigninviteFooterCancel()$</a>
+        <a class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small blue float-right submiter signhidden">
         <div class="left"></div>
         <div class="label">
-            <p>$_SkrivaPa()$</p>
+            <p>$_skrivapa()$</p>
           <span class="btn-symbol cross"></span>
         </div>
         <div class="right"></div>
@@ -1058,7 +1062,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-footer">
       <input type="hidden" name="final" value="automatic" />
-        <a  class="close cancel float-left">$_dialogConfirmTextSendIfNotNormalOrFieldsFooterCancel()$</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submiter">
         <div class="left"></div>
         <div class="label">
@@ -1086,13 +1090,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_editInviteTextDialogFooterCancel()$</a>
+        <a class="close cancel">$_cancel()$</a>
         <a class="editer message">$_editInviteTextDialogFooterOwnMessage()$</a>
       </div>
       <a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
         <div class="left"></div>
         <div class="label">
-            <p>$_editInviteTextDialogFooterOk()$</p>
+            <p>$_ok()$</p>
           <div class="btn-symbol green arrow-left"></div>
         </div>
         <div class="right"></div>

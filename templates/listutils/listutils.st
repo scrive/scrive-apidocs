@@ -4,7 +4,7 @@ pagingFooter=	<div class="table-paginate">
                         <div class="left"></div>
                         <div class="label">
                             <div class="btn-symbol black arrow-right"></div>
-                            <p>Bakåt</p>
+                            <p>$_pagingFooterPrevious()$</p>
                         </div>
                         <div class="right"></div>
                     </a>
@@ -13,7 +13,7 @@ pagingFooter=	<div class="table-paginate">
                     <a href="$currentlink$&amp;page=$elements.nextPage$" class="btn-tiny black float-right">
                         <div class="left"></div>
                         <div class="label">
-                            <p>Nästa</p>
+                            <p>$_pagingFooterNext()$</p>
                             <div class="btn-symbol black arrow-left"></div>
                         </div>
                         <div class="right"></div>
@@ -38,7 +38,7 @@ pagingFooter=	<div class="table-paginate">
 searchBox=
 <div class="searchBox float-right">
 <input type="text" class="tab-search float-left" name="search" value="$if(params.search)$$params.search$$endif$" infotext="$infotext$" />
-<a href="#" class="btn-tiny black float-right submit"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
+<a href="#" class="btn-tiny black float-right submit"><div class="left"></div><div class="label">$_searchBoxSearch()$</div><div class="right"></div></a>
 </div>
 ###    
 ####
@@ -52,24 +52,24 @@ listLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>Radera</h2>
+          <h2>$_listLocalDialogsHeadDelete()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
           <div>
-            Är du säker att du vill radera <span class="deletionDetails"></span>.
+            $_listLocalDialogsBody()$<span class="deletionDetails"></span>?
           </div>
         </div>
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">Avbryt</div> 
+          <div class="label">$_listLocalDialogsFooterCancel()$</div>
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>OK</p></div>
+          <div class="label"><p>$_listLocalDialogsFooterOk()$</p></div>
           <div class="right"></div>
         </a>
       </div>
@@ -78,6 +78,7 @@ listLocalDialogs=
 
 </div>
 ####
+<!--- Same as the above? Should be deleted? -Oskar
 ####
 listLocalDialogs=
 <div class="localdialogs">
@@ -89,24 +90,24 @@ listLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>Radera</h2>
+          <h2>$_listLocalDialogsHeadDelete()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
           <div>
-            Är du säker att du vill radera <span class="deletionDetails"></span>.
+            $_listLocalDialogsBody()$<span class="deletionDetails"></span>?
           </div>
         </div>
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">Avbryt</div> 
+          <div class="label">$_listLocalDialogsFooterCancel()$</div>
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>OK</p></div>
+          <div class="label"><p>$_listLocalDialogsFooterOk()$</p></div>
           <div class="right"></div>
         </a>
       </div>
@@ -114,4 +115,4 @@ listLocalDialogs=
   </form>
 
 </div>
-####           
+####           --->

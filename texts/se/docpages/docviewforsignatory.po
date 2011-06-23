@@ -1,0 +1,181 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signViewSigAttachmentBoxHead"
+msgstr "Begärda bilagor"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signViewSigAttachmentBoxChooseFile"
+msgstr "Välj fil"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signViewNotsignedbymeAttachmentBoxHead"
+msgstr "Bilaga"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signStepsTitleRowTextContainerDownloadPDF"
+msgstr "Ladda ned PDF"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signStepsContainerSignedbymeHasattachmentDoc"
+msgstr "Dokument"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signStepsContainerSignedbymeHasattachmentAttachments"
+msgstr "Bilagor"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signStepsBodyRequestedAttachmentsSubhead"
+msgstr "Bägarda bilagor:"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signStepsBodyAttachmentsSubhead"
+msgstr "Bifogade bilagor:"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_signGuardCBox"
+msgstr "Jag intygar att:              <br/>1. Samtliga undertecknande parter är korrekta.              <br/>2. Att jag granskat och förstått dokumentet.              <br/>3. Att jag har befogenhet att skriva på dokumentet."
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_pageDocumentForSignContentRejectFooterReject"
+msgstr "Avvisa"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_pageDocumentForSignContentRejectFooterOwnMessage"
+msgstr "Skriv eget meddelande"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_pageDocumentForSignContentElegSubhead"
+msgstr "Välj typ av e-legitimation"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_pageDocumentForSignContentElegBody3"
+msgstr " för att läsa mer."
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_pageDocumentForSignContentElegBody2ClickHere"
+msgstr "Klicka här"
+
+#: docpages/docviewforsignatory.st:pageDocumentForSignContent
+msgid "_pageDocumentForSignContentElegBody1"
+msgstr "Har du ingen e-legitimation? Du kan ladda ned en              e-legitimation från din internetbank eller från              Telia. "
+
+#: docpages/docviewforsignatory.st:ordersignguardwarntext
+msgid "_ordersignguardwarntext"
+msgstr "För att bekräfta måste du först klicka i kryssrutan"
+
+#: docpages/docviewforsignatory.st:ordersignbuttontext
+msgid "_ordersignbuttontext"
+msgstr "Bekräfta order"
+
+#: docpages/docviewforsignatory.st:ordersignatorysignmodaltitle
+msgid "_ordersignatorysignmodaltitle"
+msgstr "Är du säker att du vill bekräfta ordern?"
+
+#: docpages/docviewforsignatory.st:ordersignatorysignmodalcontent
+msgid "_ordersignatorysignmodalcontent2"
+msgstr ". När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg."
+
+#: docpages/docviewforsignatory.st:ordersignatorysignmodalcontent
+msgid "_ordersignatorysignmodalcontent1"
+msgstr "Genom att klicka ”bekräfta order” kommer du att bekräfta ordern "
+
+#: docpages/docviewforsignatory.st:ordersignatorycancelmodaltitle
+msgid "_ordersignatorycancelmodaltitleHead"
+msgstr "Är du säker på att du vill avvisa?"
+
+#: docpages/docviewforsignatory.st:ordersignatorycancelmodaltitle
+msgid "_ordersignatorycancelmodaltitleBody2"
+msgstr ".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på \"skriv eget meddelande\".          "
+
+#: docpages/docviewforsignatory.st:ordersignatorycancelmodaltitle
+msgid "_ordersignatorycancelmodaltitleBody"
+msgstr " När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela "
+
+#: docpages/docviewforsignatory.st:orderrejectbuttontext
+msgid "_orderrejectbuttontext"
+msgstr "Avvisa order"
+
+#: docpages/docviewforsignatory.st:offersignguardwarntext
+msgid "_offersignguardwarntext"
+msgstr "För att acceptera måste du först klicka i kryssrutan"
+
+#: docpages/docviewforsignatory.st:offersignbuttontext
+msgid "_offersignbuttontext"
+msgstr "Acceptera offert"
+
+#: docpages/docviewforsignatory.st:offersignatorysignmodaltitle
+msgid "_offersignatorysignmodaltitle"
+msgstr "Är du säker att du vill acceptera offerten?"
+
+#: docpages/docviewforsignatory.st:offersignatorysignmodalcontent
+msgid "_offersignatorysignmodalcontent2"
+msgstr ". När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg."
+
+#: docpages/docviewforsignatory.st:offersignatorysignmodalcontent
+msgid "_offersignatorysignmodalcontent1"
+msgstr " Genom att klicka på \"acceptera offert\" kommer du att acceptera offerten "
+
+#: docpages/docviewforsignatory.st:offersignatorycancelmodaltitle
+msgid "_offersignatorycancelmodaltitleHead"
+msgstr "Är du säker på att du vill avvisa?"
+
+#: docpages/docviewforsignatory.st:offersignatorycancelmodaltitle
+msgid "_offersignatorycancelmodaltitleBody2"
+msgstr ".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på \"skriv eget meddelande\".          "
+
+#: docpages/docviewforsignatory.st:offersignatorycancelmodaltitle
+msgid "_offersignatorycancelmodaltitleBody"
+msgstr "När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela "
+
+#: docpages/docviewforsignatory.st:offerrejectbuttontext
+msgid "_offerrejectbuttontext"
+msgstr "Avvisa offert"
+
+#: docpages/docviewforsignatory.st:contractsignguardwarntext
+msgid "_contractsignguardwarntext"
+msgstr "För att underteckna måste du först klicka i kryssrutan"
+
+#: docpages/docviewforsignatory.st:contractsignbuttontext
+msgid "_contractsignbuttontext"
+msgstr "SkrivaPå"
+
+#: docpages/docviewforsignatory.st:contractsignatorysignmodaltitle
+msgid "_contractsignatorysignmodaltitle"
+msgstr "Är du säker att du vill underteckna?"
+
+#: docpages/docviewforsignatory.st:contractsignatorysignmodalcontent
+msgid "_contractsignatorysignmodalcontent2"
+msgstr "undertecknat blir             avtalet <strong>juridiskt bindande</strong> och            det färdigställda avtalet skickas till din            e-post."
+
+#: docpages/docviewforsignatory.st:contractsignatorysignmodalcontent
+msgid "_contractsignatorysignmodalcontent1"
+msgstr "När "
+
+#: docpages/docviewforsignatory.st:contractsignatorycancelmodaltitle
+msgid "_contractsignatorycancelmodaltitleHead"
+msgstr "Avvisa"
+
+#: docpages/docviewforsignatory.st:contractsignatorycancelmodaltitle
+msgid "_contractsignatorycancelmodaltitleBody"
+msgstr "När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela "
+
+#: docpages/docviewforsignatory.st:contractrejectbuttontext
+msgid "_contractrejectbuttontext"
+msgstr "Avvisa dokument"
+
+#~ msgid "_pageDocumentForSignContentRejectFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_pageDocumentForSignContentElegFotterCancel"
+#~ msgstr "Avbryt"
+

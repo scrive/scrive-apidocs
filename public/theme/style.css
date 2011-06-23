@@ -2834,23 +2834,25 @@ a#cancel {
     width: 140px;
 }
 
+#possibleAttachmentsList {
+    height: 160px;
+    overflow: auto;
+}
+
+#attachedList {
+    max-height: 140px;
+    overflow: auto;
+}
+
 div.existingattachments {
     overflow: auto;
-    height: 128px;
-    width: 474px;
-    clear: left;
-}
-
-#update-attachments-dialog .modal-content, #update-sigattachments-dialog .modal-content {
-    height: 225px;
-}
-
-div#alreadyattached, div#tobeattached {
-    width: 474px;
+    height: 140px;
+    margin-top: 10px;
 }
 
 #update-sigattachments-dialog .plus {
     background-image: url(images/iconPlus.png);
+    background-repeat: no-repeat;
     width: 16px;
     height: 16px;
     display: block;
@@ -2858,28 +2860,40 @@ div#alreadyattached, div#tobeattached {
 }
 
 th.minusbutton {
-    width: 16px;
+    width: 19px;
 }
 
 th.attachmentname {
-    width: 15%;
+    width: 175px;
 }
 
 th.attachmentdesc {
-    width: 30%;
+    width: 185px;
 }
 
 th.attachmentsigs {
-    width: 20%;
+    width: 150px;
 }
 
 th.attachmentsels {
-    width: 30%;
+    width: 145px;
 }
 
 table#sigattachmenttable {
     margin: 0;
     padding: 0;
+}
+
+table#sigattachmenttable th {
+    text-align: left;
+}
+
+table#sigattachmenttable td {
+    vertical-align: top;
+}
+
+table#sigattachmenttable td.centralised {
+    padding-top: 5px;
 }
 
 table#sigattachmenttable a.minus {
@@ -2889,6 +2903,10 @@ table#sigattachmenttable a.minus {
     background-repeat: no-repeat;
     background-image: url(images/iconMinus.png);
     align: left;
+}
+
+table#sigattachmenttable textarea {
+    resize: none;
 }
 
 table#sigattachmenttable {
@@ -2906,11 +2924,21 @@ table.authorsigattachment {
 table#signViewSigAttachmentBoxList {
     width: 100%;
 }
+
 table#signViewSigAttachmentBoxList td {
     width: 33%;
 }
-table#signViewSigAttachmentBoxList form {
+
+table#signViewSigAttachmentBoxList input.multiFileInput {
     width: 112px;
+    float: left;
+    left: -112px;
+    top: 0px;
+    height: 33px;
+}
+
+table#signViewSigAttachmentBoxList .btn-small .label {
+    text-align: center;
 }
 
 table#signatorysignatoryattachments {
