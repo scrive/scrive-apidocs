@@ -353,7 +353,7 @@ function docstateToHTML() {
     updateStatus(this);
   });
   $("#signStepsWrapper").show();
-
+  stayontop($('#signStepsContainer.follow'));
 }
 
 function getDragStatus(field){
