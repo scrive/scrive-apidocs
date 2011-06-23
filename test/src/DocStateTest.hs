@@ -3,7 +3,7 @@
 
 module DocStateTest where
 
-import Test.HUnit (assert, assertFailure, Assertion, assertBool)
+import Test.HUnit (assert, assertFailure, Assertion, assertBool, assertEqual)
 import Test.Framework (Test, testGroup, defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 
@@ -39,7 +39,8 @@ docStateTests :: [Test]
 docStateTests = [
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
-  testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs
+  testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs,
+  testThat "when I call update document, it doesn't change the document id" testDocumentUpdateDoesNotChangeID
                 ]
                 
 testThat :: String -> Assertion -> Test
@@ -48,7 +49,7 @@ testThat s a = testCase s (withTestState a)
 testNewDocumentDependencies :: Assertion
 testNewDocumentDependencies = do
   -- setup
-  mt <- liftIO $ getMinutesTime
+  mt <- whatTimeIsIt
   author <- assumingBasicUser
   -- execute
   doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
@@ -58,7 +59,7 @@ testNewDocumentDependencies = do
 testDocumentCanBeCreatedAndFetchedByID :: Assertion
 testDocumentCanBeCreatedAndFetchedByID = do
   -- setup
-  mt <- liftIO $ getMinutesTime
+  mt <- whatTimeIsIt
   author <- assumingBasicUser
 
   doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
@@ -72,7 +73,7 @@ testDocumentCanBeCreatedAndFetchedByID = do
 testDocumentCanBeCreatedAndFetchedByAllDocs :: Assertion
 testDocumentCanBeCreatedAndFetchedByAllDocs = do
   -- setup
-  mt <- liftIO $ getMinutesTime
+  mt <- whatTimeIsIt
   author <- assumingBasicUser
   -- execute
   doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
@@ -83,6 +84,19 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = do
     Just _ -> assertSuccess
     Nothing -> assertFailure "Could not read in new document I just created."
 
+testDocumentUpdateDoesNotChangeID :: Assertion
+testDocumentUpdateDoesNotChangeID = do
+  -- setup
+  mt <- whatTimeIsIt
+  author <- assumingBasicUser
+  doc <- assumingBasicContract mt author
+  --execute
+  let sd = signatoryDetailsFromUser author
+  enewdoc <- update $ UpdateDocument mt (documentid doc) "Test Document" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], (userid author, Nothing)) [EmailIdentification] Nothing AdvancedFunctionality 
+  --assert
+  case enewdoc of
+    Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
+    Right newdoc -> assertEqual "document ids should be equal" (documentid doc) (documentid newdoc)
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
@@ -120,6 +134,20 @@ addNewUser' :: Maybe Int -> String -> String -> String -> IO (Maybe User)
 addNewUser' msuperid firstname secondname email = do
   muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword (fmap UserID msuperid) Nothing Nothing
   return muser
+
+whatTimeIsIt :: IO (MinutesTime)
+whatTimeIsIt = liftIO $ getMinutesTime
+
+assumingBasicContract :: MinutesTime -> User -> IO (Document)
+assumingBasicContract mt author = do
+  doc <- update $ NewDocument author "Test Document" (Signable Contract) mt
+  mdoc <- query $ GetDocumentByDocumentID (documentid doc)
+  case mdoc of
+    Nothing -> do
+      assertFailure "Could not create + store document."
+      return blankDocument
+    Just d -> return d
+  
 
 assumingBasicUser :: IO (User)
 assumingBasicUser = do
@@ -176,3 +204,37 @@ blankUser = User {
               , userapikey = Nothing
               , userrecordstatus = LiveUser
               }
+
+blankDocument :: Document 
+blankDocument =
+          Document
+          { documentid                   = DocumentID 0
+          , documenttitle                = BS.empty
+          , documentsignatorylinks       = []
+          , documentfiles                = []
+          , documentstatus               = Preparation
+          , documenttype                 = Signable Contract
+          , documentfunctionality        = BasicFunctionality
+          , documentctime                = MinutesTime 0 0
+          , documentmtime                = MinutesTime 0 0
+          , documentdaystosign           = Nothing
+          , documenttimeouttime          = Nothing
+          , documentlog                  = []
+          , documentinvitetext           = BS.empty
+          , documentsealedfiles          = []
+          , documenttrustweaverreference = Nothing
+          , documentallowedidtypes       = []
+          , documentcsvupload            = Nothing
+          , documentcancelationreason    = Nothing
+          , documentinvitetime           = Nothing
+          , documentsharing              = Doc.DocState.Private
+          , documentrejectioninfo        = Nothing
+          , documenttags                 = []
+          , documentservice              = Nothing
+          , documentauthorattachments    = []
+          , documentoriginalcompany      = Nothing
+          , documentrecordstatus         = LiveDocument
+          , documentquarantineexpiry     = Nothing
+          , documentsignatoryattachments = []
+          , documentattachments          = []
+          }
