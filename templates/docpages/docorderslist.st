@@ -17,7 +17,7 @@ $loadingdialog()$
 			  </div>
               <ul class="tab-dd-opts">
                 <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>
-				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$</a>
+				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a>
 				          <div class="cantdeleteopenflashmsgtxt" style="display:none;">$_CantRemoveActiveOrders()$</div></li>
 			  </ul>
 			</div>
@@ -195,11 +195,11 @@ $loadingdialog()$
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_ReminderFooterCancel()$</div>
+          <div class="label">$_cancel()$</div>
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>$_ReminderFooterOk()$</p></div>
+          <div class="label"><p>$_ok()$</p></div>
           <div class="right"></div>
         </a>
       </div>

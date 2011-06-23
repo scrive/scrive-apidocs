@@ -2834,19 +2834,20 @@ a#cancel {
     width: 140px;
 }
 
+#possibleAttachmentsList {
+    height: 160px;
+    overflow: auto;
+}
+
+#attachedList {
+    max-height: 140px;
+    overflow: auto;
+}
+
 div.existingattachments {
     overflow: auto;
-    height: 128px;
-    width: 474px;
-    clear: left;
-}
-
-#update-attachments-dialog .modal-content, #update-sigattachments-dialog .modal-content {
-    height: 225px;
-}
-
-div#alreadyattached, div#tobeattached {
-    width: 474px;
+    height: 140px;
+    margin-top: 10px;
 }
 
 #update-sigattachments-dialog .plus {
