@@ -80,7 +80,7 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 								<h2>Accenture Management Consulting</h2>
 								<h3>"Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen."</h3>
 								<em>- Ola Brundin, Accenture Management Consulting</em>
-								<a href="http://www.eventbook.se">www.eventbook.se</a>
+								<a href="http://www.accenture.com/se-en/Pages/index.aspx">www.accenture.com</a>
 							</li>
 						</ul>
 					</div>
