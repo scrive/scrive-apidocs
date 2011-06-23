@@ -13,7 +13,7 @@ $loadingdialog()$
 				<div class="col float-left">
 					<div class="tab-dd">
                                                 <div class="tab-dd-button">
-						        <a href="javascript:;"><p>$_Options()$</p></a>
+						        <a href="javascript:;"><p>$_options()$</p></a>
 						</div>
                                                 <ul class="tab-dd-opts">
                                                         <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>

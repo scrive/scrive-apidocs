@@ -11,10 +11,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: docpages/doclist.st:pageContractsList
-msgid "_SortParty"
-msgstr "Parter"
-
-#: docpages/doclist.st:pageContractsList
 msgid "_ReminderBodyIfSingel"
 msgstr "\t            Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet "
 
@@ -27,138 +23,73 @@ msgid "_ReminderBodyIfMulti"
 msgstr "\t            Är du säker att du vill skicka en påminnelse til berörda parter för "
 
 #: docpages/doclist.st:pageContractsList
-msgid "_ReminderBodyIfSingel"
-msgstr "\t            Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_ReminderHead"
-msgstr "\tSkicka påminnelse"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipsigned"
-msgstr "Status: Signerat"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipopened"
-msgstr "Status: Granskat online"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipread"
-msgstr "Status: Läst e-post"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipreviewed"
-msgstr "Status: Granskat online"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipdelivered"
-msgstr "Status: Levererat"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipsent"
-msgstr "Status: Skickat"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipcancelled"
-msgstr "Status: Avbrutet"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tooltipdraft"
-msgstr "Status: Utkast"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesSigned"
-msgstr "Signerat"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesViewedOnline"
-msgstr "Granskat online"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesEmailOpened"
-msgstr "Läst e-post"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesDelivered"
-msgstr "Levererat"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesSent"
-msgstr "Skickat"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesCancelled"
-msgstr "Avbrutet"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_tablestatusesDraft"
-msgstr "Utkast"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_DocSortElse"
-msgstr "Dokument "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_DocSortDown"
-msgstr "Dokument "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_DocSortUp"
-msgstr "Dokument "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_PartysSortElse"
-msgstr "Parter "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_PartysSortDown"
-msgstr "Parter "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_PartysSortUp"
-msgstr "Parter "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_TimeSortElse"
-msgstr "Senaste händelse "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_TimeSortDown"
-msgstr "Senaste händelse "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_TimeSortUp"
-msgstr "Senaste händelse "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_StatusSortElse"
-msgstr "Status "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_StatusSortDown"
-msgstr "Status "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_StatusSortUp"
-msgstr "Status "
-
-#: docpages/doclist.st:pageContractsList
-msgid "_SearchDoc"
-msgstr "Sök dokument"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_Delete"
-msgstr "Radera"
-
-#: docpages/doclist.st:pageContractsList
 msgid "_CantRemoveActiveDocuments"
 msgstr "Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först."
 
-#: docpages/doclist.st:pageContractsList
-msgid "_SendReminder"
-msgstr "Skicka påminnelse"
-
-#: docpages/doclist.st:pageContractsList
-msgid "_Options"
-msgstr "Alternativ"
+#~ msgid "_SortParty"
+#~ msgstr "Parter"
+#~ msgid "_ReminderHead"
+#~ msgstr "\tSkicka påminnelse"
+#~ msgid "_tooltipsigned"
+#~ msgstr "Status: Signerat"
+#~ msgid "_tooltipopened"
+#~ msgstr "Status: Granskat online"
+#~ msgid "_tooltipread"
+#~ msgstr "Status: Läst e-post"
+#~ msgid "_tooltipreviewed"
+#~ msgstr "Status: Granskat online"
+#~ msgid "_tooltipdelivered"
+#~ msgstr "Status: Levererat"
+#~ msgid "_tooltipsent"
+#~ msgstr "Status: Skickat"
+#~ msgid "_tooltipcancelled"
+#~ msgstr "Status: Avbrutet"
+#~ msgid "_tooltipdraft"
+#~ msgstr "Status: Utkast"
+#~ msgid "_tablestatusesSigned"
+#~ msgstr "Signerat"
+#~ msgid "_tablestatusesViewedOnline"
+#~ msgstr "Granskat online"
+#~ msgid "_tablestatusesEmailOpened"
+#~ msgstr "Läst e-post"
+#~ msgid "_tablestatusesDelivered"
+#~ msgstr "Levererat"
+#~ msgid "_tablestatusesSent"
+#~ msgstr "Skickat"
+#~ msgid "_tablestatusesCancelled"
+#~ msgstr "Avbrutet"
+#~ msgid "_tablestatusesDraft"
+#~ msgstr "Utkast"
+#~ msgid "_DocSortElse"
+#~ msgstr "Dokument "
+#~ msgid "_DocSortDown"
+#~ msgstr "Dokument "
+#~ msgid "_DocSortUp"
+#~ msgstr "Dokument "
+#~ msgid "_PartysSortElse"
+#~ msgstr "Parter "
+#~ msgid "_PartysSortDown"
+#~ msgstr "Parter "
+#~ msgid "_PartysSortUp"
+#~ msgstr "Parter "
+#~ msgid "_TimeSortElse"
+#~ msgstr "Senaste händelse "
+#~ msgid "_TimeSortDown"
+#~ msgstr "Senaste händelse "
+#~ msgid "_TimeSortUp"
+#~ msgstr "Senaste händelse "
+#~ msgid "_StatusSortElse"
+#~ msgstr "Status "
+#~ msgid "_StatusSortDown"
+#~ msgstr "Status "
+#~ msgid "_StatusSortUp"
+#~ msgstr "Status "
+#~ msgid "_SearchDoc"
+#~ msgstr "Sök dokument"
+#~ msgid "_Delete"
+#~ msgstr "Radera"
+#~ msgid "_SendReminder"
+#~ msgstr "Skicka påminnelse"
+#~ msgid "_Options"
+#~ msgstr "Alternativ"
 

@@ -11,12 +11,32 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: docpages/docofferslist.st:pageOffersList
-msgid "_OfferReminderFooterOk"
-msgstr "OK"
+msgid "_tablestatusesConfirmed"
+msgstr "Bekräftat"
 
 #: docpages/docofferslist.st:pageOffersList
-msgid "_OfferReminderFooterCancel"
-msgstr "Avbryt"
+msgid "_tablestatusesCandelled"
+msgstr "Avbrutet"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_SortSender"
+msgstr "Avsändare "
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_SortReciever"
+msgstr "Mottagare "
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_SortCompany"
+msgstr "Företag "
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_OfferReminderHead"
+msgstr "Skicka påminnelse"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_OfferReminderBodySingel"
+msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter i offerter "
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_OfferReminderBodyMulti2"
@@ -27,114 +47,51 @@ msgid "_OfferReminderBodyMulti"
 msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter för "
 
 #: docpages/docofferslist.st:pageOffersList
-msgid "_OfferReminderBodySingel"
-msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter i offerter "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_OfferReminderHead"
-msgstr "Skicka påminnelse"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipsigned"
-msgstr "Status: Bekräftat	"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipopened"
-msgstr "Status: Granskat online	"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipread"
-msgstr "Status: Läst e-post	"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipreviewed"
-msgstr "Status: Granskat online	"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipdelivered"
-msgstr "Status: Levererat	"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipsent"
-msgstr "Status: Skickat	"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipcancelled"
-msgstr "Status: Avbrutet"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tooltipdraft"
-msgstr "Status: Utkast"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesConfirmed"
-msgstr "Bekräftat"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesViewedOnline"
-msgstr "Granskat online"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesEmailOpened"
-msgstr "Läst e-post"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesDelivered"
-msgstr "Levererat"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesSent"
-msgstr "Skickat"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesCandelled"
-msgstr "Avbrutet"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_tablestatusesDraft"
-msgstr "Utkast"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SortDoc"
-msgstr "Dokument "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SortSender"
-msgstr "Avsändare "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SortCompany"
-msgstr "Företag "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SortReciever"
-msgstr "Mottagare "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SortTime"
-msgstr "Senaste händelse "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SortStatus"
-msgstr "Status "
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SearchDoc"
-msgstr "Sök dokument"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_Delete"
-msgstr "Radera"
-
-#: docpages/docofferslist.st:pageOffersList
 msgid "_CantRemoveActiveOffers"
 msgstr "Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först."
 
-#: docpages/docofferslist.st:pageOffersList
-msgid "_SendReminder"
-msgstr "Skicka påminnelse"
-
-#: docpages/docofferslist.st:pageOffersList
-msgid "_Options"
-msgstr "Alternativ"
+#~ msgid "_Options"
+#~ msgstr "Alternativ"
+#~ msgid "_OfferReminderFooterOk"
+#~ msgstr "OK"
+#~ msgid "_OfferReminderFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_tooltipsigned"
+#~ msgstr "Status: Bekräftat\t"
+#~ msgid "_tooltipopened"
+#~ msgstr "Status: Granskat online\t"
+#~ msgid "_tooltipread"
+#~ msgstr "Status: Läst e-post\t"
+#~ msgid "_tooltipreviewed"
+#~ msgstr "Status: Granskat online\t"
+#~ msgid "_tooltipdelivered"
+#~ msgstr "Status: Levererat\t"
+#~ msgid "_tooltipsent"
+#~ msgstr "Status: Skickat\t"
+#~ msgid "_tooltipcancelled"
+#~ msgstr "Status: Avbrutet"
+#~ msgid "_tooltipdraft"
+#~ msgstr "Status: Utkast"
+#~ msgid "_tablestatusesViewedOnline"
+#~ msgstr "Granskat online"
+#~ msgid "_tablestatusesEmailOpened"
+#~ msgstr "Läst e-post"
+#~ msgid "_tablestatusesDelivered"
+#~ msgstr "Levererat"
+#~ msgid "_tablestatusesSent"
+#~ msgstr "Skickat"
+#~ msgid "_tablestatusesDraft"
+#~ msgstr "Utkast"
+#~ msgid "_SortDoc"
+#~ msgstr "Dokument "
+#~ msgid "_SortTime"
+#~ msgstr "Senaste händelse "
+#~ msgid "_SortStatus"
+#~ msgstr "Status "
+#~ msgid "_SearchDoc"
+#~ msgstr "Sök dokument"
+#~ msgid "_Delete"
+#~ msgstr "Radera"
+#~ msgid "_SendReminder"
+#~ msgstr "Skicka påminnelse"
 

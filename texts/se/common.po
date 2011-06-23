@@ -96,6 +96,7 @@ msgstr "Avbrutet"
 msgid "_skrivapa"
 msgstr "SkrivaPå"
 
+#: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
@@ -208,6 +209,7 @@ msgstr "Avbryt"
 msgid "_Subaccounts"
 msgstr "Underkonton"
 
+#: docpages/doclist.st:pageContractsList
 #: docpages/doctemplatelist.st:pageTemplatesList
 #: docpages/docofferslist.st:pageOffersList
 #: docpages/docattachmentlist.st:pageAttachmentList
@@ -221,11 +223,18 @@ msgstr "Senaste händelse"
 msgid "_SortTemplate"
 msgstr "Mall"
 
+#: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_SortStatus"
 msgstr "Status"
 
+#: docpages/doclist.st:pageContractsList
+#: docpages/docorderslist.st:pageOrdersList
+msgid "_SortParty"
+msgstr "Parter"
+
+#: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_SortDoc"
