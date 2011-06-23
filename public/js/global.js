@@ -99,8 +99,8 @@ function swedishString(names) {
 /* 
  * make edit bar stay at the top
  */
-safeReady(function () {
-  var menu = $('#signStepsContainer.follow');
+function stayontop(menu) {
+
   if(menu.size() > 0) {
     var pos = menu.offset();
     var signStepsWrapper = $("#signStepsWrapper");
@@ -115,7 +115,7 @@ safeReady(function () {
       }
     });
   }
-});
+}
 
 function countSentOrOpenRows(selectedrows) {
    var notviewers = selectedrows.not(".viewer");

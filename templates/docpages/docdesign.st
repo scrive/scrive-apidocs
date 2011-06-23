@@ -6,7 +6,7 @@ pageDocumentDesign=
   </script>
   <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
-<div id="signStepsWrapper">
+<div id="signStepsWrapper" style="display:none">
 
   <div id="signStepsContainer" class="follow" >
     
