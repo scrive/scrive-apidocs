@@ -180,7 +180,7 @@ $if(pending)$
 <div id="signViewBottomBox"> 
   $if(contract)$
   <div id="signViewBottomBoxContainerLeft">
-    <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+    <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
       <div class="left"></div>
       <div class="label">Avvisa dokument</div>
       <div class="right"></div>
