@@ -13,11 +13,11 @@ $loadingdialog()$
 		  <div class="col float-left">
 			<div class="tab-dd">
               <div class="tab-dd-button">
-				<a href="javascript:;"><p>$_Options()$</p></a>
+				<a href="javascript:;"><p>$_options()$</p></a>
 			  </div>
               <ul class="tab-dd-opts">
                 <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>
-				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_Delete()$</a>
+				<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a>
 				          <div class="cantdeleteopenflashmsgtxt" style="display:none;">$_CantRemoveActiveDocuments()$</div></li>
 			  </ul>
 			</div>
@@ -37,38 +37,38 @@ $loadingdialog()$
 				<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
 				<th style="width: 65px;">
                   $if(params.sorting.statusREV)$
-                  <a href="$currentlink$&amp;sorting=status">$_StatusSortUp()$<em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=status">$_SortStatus()$<em> ▲</em></a>
                   $elseif(params.sorting.status)$
-                  <a href="$currentlink$&amp;sorting=statusREV">$_StatusSortDown()$<em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=statusREV">$_SortStatus()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=status">$_StatusSortElse()$</a>
+                  <a href="$currentlink$&amp;sorting=status">$_SortStatus()$</a>
                   $endif$
                 </th>
 				<th style="width: 140px;">
                   $if(params.sorting.timeREV)$
-                  <a href="$currentlink$&amp;sorting=time">$_TimeSortUp()$<em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=time">$_SortTime()$<em> ▲</em></a>
                   $elseif(params.sorting.time)$
-                  <a href="$currentlink$&amp;sorting=timeREV">$_TimeSortDown()$<em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=timeREV">$_SortTime()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=time">$_TimeSortElse()$</a>
+                  <a href="$currentlink$&amp;sorting=time">$_SortTime()$</a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.partnerREV)$
-                  <a href="$currentlink$&amp;sorting=partner">$_PartysSortUp()$<em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=partner">$_SortParty()$<em> ▲</em></a>
                   $elseif(params.sorting.partner)$
-                  <a href="$currentlink$&amp;sorting=partnerREV">$_PartysSortDown()$<em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=partnerREV">$_SortParty()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=partner">$_PartysSortElse()$</a>
+                  <a href="$currentlink$&amp;sorting=partner">$_SortParty()$</a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.titleREV)$
-                  <a href="$currentlink$&amp;sorting=title">$_DocSortUp()$<em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=title">$_SortDoc()$<em> ▲</em></a>
                   $elseif(params.sorting.title)$
-                  <a href="$currentlink$&amp;sorting=titleREV">$_DocSortDown()$<em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=titleREV">$_SortDoc()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=title">$_DocSortElse()$</a>
+                  <a href="$currentlink$&amp;sorting=title">$_SortDoc()$</a>
                   $endif$
                 </th>
 				<th></th>
@@ -195,11 +195,11 @@ $loadingdialog()$
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_ReminderFooterCancel()$</div> 
+          <div class="label">$_cancel()$</div>
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>$_ReminderFooterOk()$</p></div>
+          <div class="label"><p>$_ok()$</p></div>
           <div class="right"></div>
         </a>
       </div>

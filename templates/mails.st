@@ -457,7 +457,7 @@ $messages:noescape()$
 $endif$
 
 <p>$_mailMismatchSignatoryContentBestRegards()$</p>
-<p>$_mailMismatchSignatoryContentSkrivaPa()$</p>
+<p>$_skrivapa()$</p>
 ####
 mailMismatchAuthorTitle=$_mailMismatchAuthorTitle()$
 ####
@@ -473,7 +473,7 @@ mailMismatchAuthorContent=
 $messages:noescape()$
 
 <p>$_mailMismatchAuthorContentBestRegards()$</p>
-<p>$_mailMismatchAuthorContentSkrivaPa()$</p>
+<p>$_skrivapa()$</p>
 ####
 mailInviteUserAsSubaccountTitle=$_mailInviteUserAsSubaccountTitle()$
 ###

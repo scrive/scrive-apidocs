@@ -5,10 +5,10 @@ showUser =
    <div class="tab-header">
    </div>
    <ul class="tabs">
-       <li class="active"><a href="/account">Användaruppgifter</a></li>
-       <li><a href="/account/security">Kontoinställningar</a></li>
-       $if(issubaccounts)$<li><a href="/account/subaccount">Underkonton</a></li>$endif$
-       <li><a href="/account/sharing">Delning</a></li>
+       <li class="active"><a href="/account">$_HeadUserInfo()$</a></li>
+       <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+       $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
+       <li><a href="/account/sharing">$_sharing()$</a></li>
    </ul>
    <div class="tab-container">
        <div class="tab-content account">
@@ -25,27 +25,27 @@ showUser =
                <div class="account-body">
                    <table>
                        <tr>
-                           <td>Förnamn:</td>
+                           <td>$_firstname()$:</td>
                            <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                           <td>Efternamn:</td>
+                           <td>$_lastname()$:</td>
                            <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                           <td>Personnummer</td>
+                           <td>$_personnumber()$:</td>
                            <td><input type="text" name="personalnumber" value="$personalnumber$" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                           <td>E-post:</td>
+                           <td>$_email()$:</td>
                            <td><input type="email" name="email" value="$email$" autocomplete="off" disabled=""/></td>
                        </tr>
                        <tr>
-                           <td>Telefonnummer:</td>
+                           <td>$_phone()$:</td>
                            <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                           <td>Befattning:</td>
+                           <td>$_companyposition()$:</td>
                            <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
                        </tr>
                    </table>
@@ -64,27 +64,27 @@ showUser =
                <div class="account-body">
                    <table>
                        <tr>
-                           <td>Företag:</td>
+                           <td>$_comapny()$:</td>
                            <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
-                           <td>Org. nr:</td>
+                           <td>$_orgnumber()$:</td>
                            <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$ /></td>
                        </tr>
                        <tr>
-                           <td>Adress:</td>
+                           <td>$_address()$:</td>
                            <td><input type="text" name="address" value="$address$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
-                           <td>Postnummer:</td>
+                           <td>$_zip()$:</td>
                            <td><input type="email" name="zip" value="$zip$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
-                           <td>Postort:</td>
+                           <td>$_city()$:</td>
                            <td><input type="text" name="city" value="$city$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
-                           <td>Land:</td>
+                           <td>$_country()$:</td>
                            <td><input type="text" name="country" value="$country$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                    </table>
@@ -94,7 +94,7 @@ showUser =
                 <a href="#" class="btn-small green submit">
                    <div class="left"></div>
                    <div class="label">
-                       <p>Spara ändringar</p>
+                       <p>$_SaveChanges()$</p>
                    </div>
                    <div class="right"></div>
                 </a>

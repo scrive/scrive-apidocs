@@ -155,7 +155,7 @@ pageDocumentForAuthor=
       <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
         <div class="left"></div>
         <div class="label" style="width:120px">
-          <span>$_signViewBottomBoxContainerRightSkrivapa()$</span>
+          <span>$_skrivapa()$</span>
           <span class="icon cross"></span>
         </div>
         <div class="right"></div>
@@ -181,7 +181,7 @@ pageDocumentForAuthor=
         </div>
         <div class="modal-footer">
           <div class="float-left">
-            <a class="close cancel">$_cancelByAuthorDialogCancel()$</a>
+            <a class="close cancel">$_cancel()$</a>
             <a class="editer message">$_cancelByAuthorDialogOwnMessage()$</a>
           </div>
           <a class="btn-small red float-right submiter">
@@ -218,12 +218,12 @@ pageDocumentForAuthor=
         </div>
         <div class="modal-footer">
           <input type="hidden" name="sign" value="automatic" id="signauto" />
-          <a class="close cancel float-left">$_dialogConfirmSignByAuthorFooterCancel()$</a>
+          <a class="close cancel float-left">$_cancel()$</a>
 
           <a href="#" class="btn-small blue float-right submiter signhidden" id="editing-invite-text-finished">
             <div class="left"></div>
             <div class="label">
-              <p>$_dialogConfirmSignByAuthorFooterSkrivapa()$</p>
+              <p>$_skrivapa()$</p>
               <span class="btn-symbol cross"></span>
             </div>
             <div class="right"></div>

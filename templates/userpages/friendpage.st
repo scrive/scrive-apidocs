@@ -6,21 +6,21 @@ viewFriends =
 		<div class="tab-header">
 		</div>
 		<ul class="tabs">
-		   <li><a href="/account">Användaruppgifter</a></li>
-                   <li><a href="/account/security">Kontoinställningar</a></li>
-                   $if(issubaccounts)$<li><a href="/account/subaccount">Underkonton</a></li>$endif$
-                   <li class="active"><a href="/account/sharing">Delning</a></li>
+		   <li><a href="/account">$_HeadUserInfo()$</a></li>
+                   <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+                   $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
+                   <li class="active"><a href="/account/sharing">$_sharing()$</a></li>
 		</ul>
-                <div class="listtype" style="display:none;">vänner</div>
+                <div class="listtype" style="display:none;">$_friends()$</div>
 		<div class="tab-container">
 			<div class="tab-content">
 				<div class="col float-left">
 					<div class="tab-dd">
                                                 <div class="tab-dd-button">
-						  <a href="javascript:;"><p>Alternativ</p></a>
+						  <a href="javascript:;"><p>$_options()$</p></a>
                                                 </div>
 						<ul class="tab-dd-opts">
-							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
+							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
 						</ul>
 					</div>
 				</div>
@@ -30,7 +30,7 @@ viewFriends =
                                     <a class="btn-tiny blue submit float-right" href="#">
                                       <div class="left"></div>
                                       <div class="label">
-                                        <span>Ok</span>
+                                        <span>$_ok()$</span>
                                       </div>
                                       <div class="right"></div>
                                     </a>
@@ -45,11 +45,11 @@ viewFriends =
 							<th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
 							<th style="width: 110px;">
                               $if(params.sorting.emailREV)$
-                                <a href="$currentlink$&amp;sorting=email">Mailadress <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=email">$_SortEmail()$<em> ▲</em></a>
                                $elseif(params.sorting.email)$
-                                <a href="$currentlink$&amp;sorting=emailREV">Mailadress <em> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=emailREV">$_SortEmail()$<em> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=email">Mailadress </a>
+                                <a href="$currentlink$&amp;sorting=email">$_SortEmail()$</a>
                                $endif$ 
                             </th>
 							<th style="width: 52px;text-align:center"></th>

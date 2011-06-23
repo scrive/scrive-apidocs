@@ -16,7 +16,7 @@ showFileImagesPending=
 ####
 showFileImagesError=
 <div class="errormsg">
- Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.
+ $_showFileImagesError()$
 </div>
 ####
 ###

@@ -33,11 +33,11 @@ listShareDialog=
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_listShareDialogFooterCancel()$</div> 
+          <div class="label">$_cancel()$</div>
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>$_listShareDialogFooterOk()$</p></div>
+          <div class="label"><p>$_ok()$</p></div>
           <div class="right"></div>
         </a>
       </div>

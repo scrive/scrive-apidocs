@@ -41,7 +41,7 @@ activatePageViewNotValidLink=
             <td><input type="email" name="email" value="$if(email)$$email$$endif$" /></td>
           </tr>
         </table>
-        <input type="submit" name="resendActivate" value="$_activatePageViewNotValidLinkSend()$"  class="validateEmail" />
+        <input type="submit" name="resendActivate" value="$_send()$"  class="validateEmail" />
       </form>
     </div>
 ####

@@ -5,26 +5,26 @@ viewSubaccounts =
       <div id="tab-viewer">
 	<div class="tab-header"></div>
 	<ul class="tabs">
-	  <li><a href="/account">Användaruppgifter</a></li>
-          <li><a href="/account/security">Kontoinställningar</a></li>
-          <li class="active"><a href="/account/subaccount" class="listtype">Underkonton</a></li>
-          <li><a href="/account/sharing">Delning</a></li>
+	  <li><a href="/account">$_HeadUserInfo()$</a></li>
+          <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+          <li class="active"><a href="/account/subaccount" class="listtype">$_Subaccounts()$</a></li>
+          <li><a href="/account/sharing">$_sharing()$</a></li>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content">
 	    <div class="col float-left">
 	      <div class="tab-dd">
                 <div class="tab-dd-button">
-		  <a href="javascript:;"><p>Alternativ</p></a>
+		  <a href="javascript:;"><p>$_options()$</p></a>
                 </div>
 		<ul class="tab-dd-opts">
-		  <li><a href="javascript:;" class="subaccount-add-sub">Lägg till</a></li>
-		  <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
+		  <li><a href="javascript:;" class="subaccount-add-sub">$_AddSubaccount()$</a></li>
+		  <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
 		</ul>
 	      </div>
 	    </div>
 	    <div class="col float-right">
-	      $searchBox(infotext='Sök underkonto')$
+	      $searchBox(infotext=_SearchSubaccount())$
 	    </div>
 	    <div class="clearfix"></div>
 	  </div>
@@ -35,47 +35,47 @@ viewSubaccounts =
 		  <th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
 		  <th style="width: 75px;">
                     $if(params.sorting.fstnameREV)$
-                    <a href="$currentlink$&amp;sorting=fstname">Förnamn  <em> ▲</em></a>
+                    <a href="$currentlink$&amp;sorting=fstname">$_firstname()$<em> ▲</em></a>
                     $elseif(params.sorting.fstname)$
-                    <a href="$currentlink$&amp;sorting=fstnameREV">Förnamn  <em> ▼</em></a>
+                    <a href="$currentlink$&amp;sorting=fstnameREV">$_firstname()$<em> ▼</em></a>
                     $else$
-                    <a href="$currentlink$&amp;sorting=fstname">Förnamn  </a>
+                    <a href="$currentlink$&amp;sorting=fstname">$_firstname()$</a>
                     $endif$
                   </th>
 		  <th style="width: 90px;">
                     $if(params.sorting.sndnameREV)$
-                    <a href="$currentlink$&amp;sorting=sndname">Efternamn  <em> ▲</em></a>
+                    <a href="$currentlink$&amp;sorting=sndname">$_lastname()$<em> ▲</em></a>
                     $elseif(params.sorting.sndname)$
-                    <a href="$currentlink$&amp;sorting=sndnameREV">Efternamn  <em> ▼</em></a>
+                    <a href="$currentlink$&amp;sorting=sndnameREV">$_lastname()$<em> ▼</em></a>
                     $else$
-                    <a href="$currentlink$&amp;sorting=sndname">Efternamn  </a>
+                    <a href="$currentlink$&amp;sorting=sndname">$_lastname()$</a>
                     $endif$   
                   </th>
 		  <th style="width: 60px;">
                     $if(params.sorting.companypositionREV)$
-                    <a href="$currentlink$&amp;sorting=companyposition">Befattning  <em> ▲</em></a>
+                    <a href="$currentlink$&amp;sorting=companyposition">$_companyposition()$<em> ▲</em></a>
                     $elseif(params.sorting.companyposition)$
-                    <a href="$currentlink$&amp;sorting=companypositionREV">Befattning  <em> ▼</em></a>
+                    <a href="$currentlink$&amp;sorting=companypositionREV">$_companyposition()$<em> ▼</em></a>
                     $else$
-                    <a href="$currentlink$&amp;sorting=companyposition">Befattning  </a>
+                    <a href="$currentlink$&amp;sorting=companyposition">$_companyposition()$</a>
                     $endif$ 
                   </th>
 		  <th style="width: 115px;">
                     $if(params.sorting.phoneREV)$
-                    <a href="$currentlink$&amp;sorting=phone">Telefonnummer  <em> ▲</em></a>
+                    <a href="$currentlink$&amp;sorting=phone">$_phone()$<em> ▲</em></a>
                     $elseif(params.sorting.phone)$
-                    <a href="$currentlink$&amp;sorting=phoneREV">Telefonnummer  <em> ▼</em></a>
+                    <a href="$currentlink$&amp;sorting=phoneREV">$_phone()$<em> ▼</em></a>
                     $else$
-                    <a href="$currentlink$&amp;sorting=phone">Telefonnummer </a>
+                    <a href="$currentlink$&amp;sorting=phone">$_phone()$</a>
                     $endif$ 
                   </th>
 		  <th style="width: 110px;">
                     $if(params.sorting.emailREV)$
-                    <a href="$currentlink$&amp;sorting=email">Mailadress <em> ▲</em></a>
+                    <a href="$currentlink$&amp;sorting=email">$_email()$<em> ▲</em></a>
                     $elseif(params.sorting.email)$
-                    <a href="$currentlink$&amp;sorting=emailREV">Mailadress <em> ▼</em></a>
+                    <a href="$currentlink$&amp;sorting=emailREV">$_email()$<em> ▼</em></a>
                     $else$
-                    <a href="$currentlink$&amp;sorting=email">Mailadress </a>
+                    <a href="$currentlink$&amp;sorting=email">$_email()$</a>
                     $endif$ 
                   </th>
 		  <th style="width: 52px;text-align:center"> <a class="icon small add subaccount-add-sub"> </a></th>
