@@ -626,12 +626,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
                       <li>
                         $s.signame$ 
                         <a href="#" class="remove">x</a>
-                        <span style="display:none" class="sigemail">$s.email$</span>
+                        <span style="display:none" class="sigemail">$s.sigemail$</span>
                       </li>
                       }$
                     </ul>
                     <input type="hidden" name="sigattachemails"
-                           value="$a.sigemails$" />
+                           value="$a.signatories:{s | $s.sigemail$}; separator=", "$" />
                   </span>
                 </td>
               </tr>
