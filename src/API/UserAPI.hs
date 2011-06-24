@@ -34,6 +34,7 @@ import Data.Maybe
 import Control.Monad.Reader
 import Text.JSON
 import qualified Data.ByteString as BS
+import Util.HasSomeUserInfo
 
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction a = APIFunction UserAPIContext a
@@ -79,8 +80,8 @@ sendReminder = do
   _ <- forM siglinkstoremind $ (\signlink -> do
                               mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-                                to = [MailAddress {fullname = signatoryname $ signatorydetails signlink
-                                                  , email = signatoryemail $ signatorydetails signlink}]
+                                to = [MailAddress {fullname = getFullName signlink
+                                                  , email = getEmail signlink}]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
   return $ toJSObject []       

@@ -151,9 +151,10 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
    Given a SignatoryLink, returns a tuple containing the name and the email address.
    
    Useful for sending emails.
+   Refactor note: change this to getNameEmailPair, move to Util.HasSomeUserInfo
  -}
 emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
-emailFromSignLink sl = (signatoryname $ signatorydetails sl, signatoryemail $ signatorydetails sl) 
+emailFromSignLink sl = (getFullName sl, getEmail sl) 
 
 -- where does this go? -EN
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
@@ -247,12 +248,6 @@ undeliveredSignatoryLinks doc = filter isUndelivered $ documentsignatorylinks do
 anyInvitationUndelivered :: Document -> Bool
 anyInvitationUndelivered doc =  any isUndelivered $ documentsignatorylinks doc
 
-{- |
-   Get the full name of a SignatoryDetails.
- -}
-signatoryname :: SignatoryDetails -> BS.ByteString
-signatoryname = getFullName
-
 -- OTHER UTILS
 
 -- | Indicates which signatories were activated (received
@@ -292,12 +287,6 @@ signatoryDetailsFromUser user =
                      , signatoryotherfields              = []
                      }
                      
-{- |
-   
- -}
-isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
-isMatchingSignatoryLink user sigLink = isSigLinkForUser user sigLink
-
 {- |
    Add some history to a document.
  -}
@@ -397,12 +386,6 @@ removeFieldsAndPlacements sd = sd { signatoryfstnameplacements = []
 replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
 replaceSignOrder signorder sd = sd { signatorysignorder = signorder
                                    }
-
-{- |
-   Get the Just SignatoryLink from doc that has sid. Nothing when not found.
- -}
-signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
-signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
 
 {- |
    Does this SignatoryLink belong to the User with userid?
@@ -576,8 +559,8 @@ buildattach d (f:fs) a =
   case sigLinkForEmail d (signatoryattachmentemail f) of
     Nothing -> buildattach d fs a
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
-      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
+      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)
+      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (getFullName sl, getEmail sl):sigs):(delete (nx, dx, sigs) a))
 
 sameDocID :: Document -> Document -> Bool
 sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)

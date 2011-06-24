@@ -25,9 +25,11 @@ import MinutesTime
 import Misc
 import Redirect
 import User.UserControl
+import Util.HasSomeUserInfo
 import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
+import Util.SignatoryLinkUtils
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -143,7 +145,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- FIXME: log status change
     | otherwise = 
          return ()
-    where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
+    where msignalink = maybe Nothing (getSigLinkFor document) msignalinkid
 
 -- EMAILS
 
@@ -154,8 +156,8 @@ sendElegDataMismatchEmails ctx document = do
                         , not $ siglinkIsAuthor sl]
         Just (ELegDataMismatch msg badid _ _ _) = documentcancelationreason document
         badsig = fromJust $ find (\sl -> badid == signatorylinkid sl) (documentsignatorylinks document)
-        badname  = BS.toString $ signatoryname  $ signatorydetails badsig
-        bademail = BS.toString $ signatoryemail $ signatorydetails badsig
+        badname  = BS.toString $ getFullName badsig
+        bademail = BS.toString $ getEmail badsig
     forM_ signlinks $ sendDataMismatchEmailSignatory ctx document badid badname msg
     sendDataMismatchEmailAuthor ctx document badname bademail
 
@@ -169,19 +171,19 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
         mail <- mailMismatchSignatory 
                   ctx 
                 document 
-                (BS.toString $ signatoryemail $ signatorydetails authorsl) 
-                (BS.toString $ signatoryname  $ signatorydetails authorsl) 
+                (BS.toString $ getEmail authorsl) 
+                (BS.toString $ getFullName authorsl) 
                 (ctxhostpart ctx ++ (show $ LinkSignDoc document signatorylink))
-                (BS.toString $ signatoryname $ signatorydetails signatorylink) 
+                (BS.toString $ getFullName signatorylink) 
                 badname
                 msg
                 isbad
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = signatoryname sigdets, email = signatoryemail sigdets }]}
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = getFullName sigdets, email = getEmail sigdets }]}
           
 sendDataMismatchEmailAuthor :: Context -> Document -> String -> String -> IO ()
 sendDataMismatchEmailAuthor ctx document badname bademail = do
-    let authorname = signatoryname $ signatorydetails $ fromJust $ getAuthorSigLink document
-        authoremail = signatoryemail $ signatorydetails $ fromJust $ getAuthorSigLink document
+    let authorname = getFullName $ fromJust $ getAuthorSigLink document
+        authoremail = getEmail $ fromJust $ getAuthorSigLink document
     mail <- mailMismatchAuthor ctx document (BS.toString authorname) badname bademail
     scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
     
@@ -200,8 +202,8 @@ sendDocumentErrorEmailToAuthor ctx document = do
   let authordetails = signatorydetails $ fromJust $ getAuthorSigLink document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress { fullname = signatoryname authordetails
-                          , email = signatoryemail authordetails}]
+        to = [MailAddress { fullname = getFullName authordetails
+                          , email = getEmail authordetails}]
   }
 
 {- |
@@ -215,8 +217,8 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
       Document { documentid } = document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress { fullname = signatoryname signatorydetails
-                          , email = signatoryemail signatorydetails}]
+        to = [MailAddress { fullname = getFullName signatorydetails
+                          , email = getEmail signatorydetails}]
       , mailInfo = Invitation documentid  signatorylinkid
   }
 
@@ -251,8 +253,8 @@ sendInvitationEmail1 ctx document signatorylink = do
   -- ?? Do we need to read in the contents? -EN
   _attachmentcontent <- getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress {fullname = signatoryname signatorydetails
-                          , email = signatoryemail signatorydetails}]
+        to = [MailAddress {fullname = getFullName signatorydetails
+                          , email = getEmail signatorydetails}]
       , mailInfo = Invitation documentid signatorylinkid
   }
   
@@ -264,8 +266,8 @@ sendReminderEmail custommessage ctx doc siglink = do
   mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) custommessage ctx doc siglink
   mailattachments <- liftIO $ makeMailAttachments ctx doc
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-      to = [MailAddress { fullname = signatoryname $ signatorydetails siglink
-    , email = signatoryemail $ signatorydetails siglink }]
+      to = [MailAddress { fullname = getFullName siglink
+    , email = getEmail siglink }]
     , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
     , attachments = if isJust $ maybesigninfo siglink
                       then mailattachments
@@ -280,8 +282,8 @@ sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
     let signatorylinks = documentsignatorylinks document
     let mailAddressFromSignatoryLink signatorylink = 
-            MailAddress { fullname = signatoryname $ signatorydetails $ signatorylink
-                        , email = signatoryemail $ signatorydetails $ signatorylink
+            MailAddress { fullname = getFullName signatorylink
+                        , email = getEmail signatorylink
                         }
 
     mail <- mailDocumentClosed (ctxtemplates ctx) ctx document
@@ -298,8 +300,8 @@ sendClosedEmails ctx document = do
 sendAwaitingEmail :: Context -> Document -> IO ()
 sendAwaitingEmail ctx document = do
   let Just authorsiglink = getAuthorSigLink document
-      authoremail = signatoryemail $ signatorydetails authorsiglink
-      authorname  = signatoryname  $ signatorydetails authorsiglink
+      authoremail = getEmail authorsiglink
+      authorname  = getFullName authorsiglink
   mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx authorname document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
 
@@ -322,8 +324,8 @@ sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || siglinkIsAuthor sl]
   forM_ activatedSignatories $ \sl -> do
-    let semail = signatoryemail $ signatorydetails  sl
-        sname = signatoryname $ signatorydetails  sl
+    let semail = getEmail sl
+        sname = getFullName sl
     mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document signalink
     scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = sname, email = semail }]}
 
@@ -1872,7 +1874,7 @@ failIfNotAuthor document user = guard (isUserAuthor document user)
 
 checkLinkIDAndMagicHash :: Document -> SignatoryLinkID -> MagicHash -> Kontra ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
-    case signlinkFromDocById document linkid of
+    case getSigLinkFor document linkid of
       Just SignatoryLink { signatorymagichash } -> if signatorymagichash == magichash1 
                                                     then return ()
                                                     else mzero
@@ -2075,7 +2077,7 @@ handleSigAttach docid siglinkid mh = do
     Left _ -> do
       liftIO $ print "Doc doesn't exist."
       mzero
-    Right doc -> case signlinkFromDocById doc siglinkid of
+    Right doc -> case getSigLinkFor doc siglinkid of
       Nothing -> do
         liftIO $ print "No siglink."
         mzero
