@@ -13,13 +13,7 @@ wholePage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body>
-        $bodystart()$
-        <div class="mainContainer">
-            $content:noescape()$
-        </div>
-        $bodyend()$ 
-      </body>
+      $standardBody(unwrappedbody=content)$
     </html>
 
 ####
@@ -60,12 +54,61 @@ standardHeaderContents=
        <script src="/js/main.js" 
                 type="text/javascript"></script>
 ####
-bodystart=
-        $header()$
+standardBodyWithQueryCol=
+       $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$
+####
+contentsWithQueryCol=
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $unwrappedbody:noescape()$
+           </div>
+         </div>
+####
+standardBody=
+       $standardBodyWrapper(unwrappedbody=contentsWithoutQueryCol(unwrappedbody=unwrappedbody))$
+####
+contentsWithoutQueryCol=
+         <div class="mainContainer">
+           $unwrappedbody:noescape()$
+         </div>
+####
+standardBodyWrapper=
+      <body>
+       $header()$
         <div class="mainContainer960" >
           $flashmessages()$
           $loginModal()$
         <div id="body-container">
+          $unwrappedbody:noescape()$
+                                        <div class="clearfix"></div>
+                                        <div class="spacer40"></div>
+                                        $if(showCreateAccount)$    
+                                        <div class="try-skrivapa">
+                                          <div class="left">
+                                            <h3>Skapa konto nu!</h3>
+                                            <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                          </div>
+                                          <div class="right">
+                                            <form method="post" action="$linksignup$" class="requestAccount">
+                                              <input class="shiny float-left"
+                                                     name="email" type="email"
+                                                     infotext="Fyll i din e-postadress"
+                                                     /> <a href="#" class="submit
+                                                                           new-btn-small green2 center
+                                                                           float-right"><p>Skapa konto!</p></a>
+                                              <input type="submit" class="hidden" />
+                                            </form>
+                                          </div>
+                                        </div>
+                                        $endif$ 
+        </div>
+        </div>
+        
+        $pageFooter()$
+      </body>               
 ####
 queryColumn=
 <div class="white thin box">
@@ -107,34 +150,6 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                                                 </form>
 
                                         </div>
-####
-bodyend=
-                                        <div class="clearfix"></div>
-                                        <div class="spacer40"></div>
-                                        $if(showCreateAccount)$    
-                                        <div class="try-skrivapa">
-                                          <div class="left">
-                                            <h3>Skapa konto nu!</h3>
-                                            <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
-                                          </div>
-                                          <div class="right">
-                                            <form method="post" action="$linksignup$" class="requestAccount">
-                                              <input class="shiny float-left"
-                                                     name="email" type="email"
-                                                     infotext="Fyll i din e-postadress"
-                                                     /> <a href="#" class="submit
-                                                                           new-btn-small green2 center
-                                                                           float-right"><p>Skapa konto!</p></a>
-                                              <input type="submit" class="hidden" />
-                                            </form>
-                                          </div>
-                                        </div>
-                                        $endif$ 
-        </div>
-        </div>
-        
-        $pageFooter()$
-
 ####
 pageFooter=
 <div id="footer-container" class="newdesign">

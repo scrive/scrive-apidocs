@@ -10,18 +10,7 @@ partnersPage=
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
         $endif$
       </head>
-      <body>
-         $bodystart()$
-         <div class="left-column">
-           $queryColumn()$
-         </div>
-         <div class="right-column">
-           <div class="mainContainer">
-             $partnersPageContents()$
-           </div>
-         </div>
-         $bodyend()$ 
-      </body>
+      $standardBodyWithQueryCol(unwrappedbody=partnersPageContents())$
     </html>
 ###
 partnersPageContents=

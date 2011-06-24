@@ -11,16 +11,7 @@ termsPage=
         $endif$
       </head>
       <body>
-         $bodystart()$
-         <div class="left-column">
-           $queryColumn()$
-         </div>
-         <div class="right-column">
-           <div class="mainContainer">
-             $termsPageContents()$
-           </div>
-         </div>
-         $bodyend()$ 
+         $standardBodyWithQueryCol(unwrappedbody=termsPageContents())$
       </body>
     </html>
 ###

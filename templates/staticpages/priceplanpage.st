@@ -10,13 +10,7 @@ priceplanPage=
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
         $endif$
       </head>
-      <body>
-         $bodystart()$
-         <div class="mainContainer">
-           $priceplanPageContents()$
-         </div>
-         $bodyend()$ 
-      </body>
+      $standardBody(unwrappedbody=priceplanPageContents())$
     </html>
 ###
 priceplanPageContents=
