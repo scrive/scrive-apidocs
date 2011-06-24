@@ -29,6 +29,7 @@ import Util.HasSomeUserInfo
 import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
+import Util.SignatoryLinkUtils
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -144,7 +145,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- FIXME: log status change
     | otherwise = 
          return ()
-    where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
+    where msignalink = maybe Nothing (getSigLinkFor document) msignalinkid
 
 -- EMAILS
 
@@ -1873,7 +1874,7 @@ failIfNotAuthor document user = guard (isUserAuthor document user)
 
 checkLinkIDAndMagicHash :: Document -> SignatoryLinkID -> MagicHash -> Kontra ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
-    case signlinkFromDocById document linkid of
+    case getSigLinkFor document linkid of
       Just SignatoryLink { signatorymagichash } -> if signatorymagichash == magichash1 
                                                     then return ()
                                                     else mzero
@@ -2076,7 +2077,7 @@ handleSigAttach docid siglinkid mh = do
     Left _ -> do
       liftIO $ print "Doc doesn't exist."
       mzero
-    Right doc -> case signlinkFromDocById doc siglinkid of
+    Right doc -> case getSigLinkFor doc siglinkid of
       Nothing -> do
         liftIO $ print "No siglink."
         mzero

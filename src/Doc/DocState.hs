@@ -5,7 +5,6 @@ module Doc.DocState
     , SignatoryAccount -- fromUtils
     , getSignatoryAccount -- fromUtils
     , isDeletableDocument -- fromUtils
-    , isMatchingSignatoryLink
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks
     , ArchiveDocuments(..)
@@ -103,7 +102,7 @@ import Misc
 import User.UserState
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-
+import Util.SignatoryLinkUtils
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = queryDocs $ \documents ->
@@ -135,7 +134,7 @@ getDocumentsByUser user = do
 filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksByUser doc user = 
     [sl | sl <- documentsignatorylinks doc
-        , isMatchingSignatoryLink user sl     -- user must match
+        , isSigLinkFor user sl     -- user must match
         , not $ signatorylinkdeleted sl    ]  -- filter out deleted links
     
 signatoryCanView :: User -> Document -> Bool
@@ -723,7 +722,7 @@ getDocumentStatsByUser user time = do
       isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) . documentmtime
       allsigns = filter (isSigned . relevantSigLink) sigdocs
       relevantSigLink :: Document -> Maybe SignatoryLink
-      relevantSigLink doc = listToMaybe $ filter (isMatchingSignatoryLink user) (documentsignatorylinks doc)
+      relevantSigLink doc = listToMaybe $ filter (isSigLinkFor user) (documentsignatorylinks doc)
       isSigned :: Maybe SignatoryLink -> Bool
       isSigned = maybe False (isJust . maybesigninfo)
   return DocStats { doccount          = doccount'

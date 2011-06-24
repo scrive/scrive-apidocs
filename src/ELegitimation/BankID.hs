@@ -39,6 +39,7 @@ import GHC.Word
 import GHC.Unicode (toLower)
 import Data.Either (lefts, rights)
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -136,7 +137,7 @@ handleSignPostBankID docid signid magic = do
     checkLinkIDAndMagicHash document signid magic
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     let Just siglink@SignatoryLink 
-            { signatorydetails = details } = signlinkFromDocById document signid
+            { signatorydetails = details } = getSigLinkFor document signid
 
     -- valid transaction?
     ELegTransaction { transactionsignatorylinkid = mtsignid

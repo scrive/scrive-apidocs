@@ -85,6 +85,7 @@ import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -350,7 +351,7 @@ documentBasicViewFields templates crtime user doc = do
     field "processname" $ renderTextForProcess templates doc processname 
   where
     signatorylinklist =
-      filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  
+      filter (isSigLinkFor user) $ documentsignatorylinks doc  
     
     fromTimeout f =
       case (documenttimeouttime doc, documentstatus doc) of

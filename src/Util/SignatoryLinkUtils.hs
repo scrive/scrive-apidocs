@@ -13,6 +13,7 @@ module Util.SignatoryLinkUtils where
 import Doc.DocStateData
 import User.UserState
 import Util.HasSomeUserInfo
+import Data.List
 
 import qualified Data.ByteString as BS
 
@@ -20,15 +21,18 @@ class SignatoryLinkIdentity a where
   isSigLinkFor :: a -> SignatoryLink -> Bool
 
 instance SignatoryLinkIdentity BS.ByteString where
-  isSigLinkFor bs sl = email == getEmail sl
+  isSigLinkFor email sl = email == getEmail sl
   
+instance SignatoryLinkIdentity Email where
+  isSigLinkFor (Email email) sl = email == getEmail sl
+
 instance SignatoryLinkIdentity UserID where
   isSigLinkFor uid sl = Just uid == maybesignatory sl
   
 instance SignatoryLinkIdentity Signatory where
   isSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
   
-instance SignatoryLinkIdentity (SignatoryLinkIdentity, SignatoryLinkIdentity) where
+instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
   isSigLinkFor (a, b) sl = isSigLinkFor a sl || isSigLinkFor b sl
   
 instance SignatoryLinkIdentity SignatoryLinkID where
@@ -39,6 +43,10 @@ instance SignatoryLinkIdentity User where
   
 instance SignatoryLinkIdentity Supervisor where
   isSigLinkFor (Supervisor uid) sl = Just uid == maybesupervisor sl
-  
+
+instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
+  isSigLinkFor (Just a) sl = isSigLinkFor a sl
+  isSigLinkFor Nothing  _  = False
+
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)

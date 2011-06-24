@@ -288,12 +288,6 @@ signatoryDetailsFromUser user =
                      }
                      
 {- |
-   
- -}
-isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
-isMatchingSignatoryLink user sigLink = isSigLinkForUser user sigLink
-
-{- |
    Add some history to a document.
  -}
 appendHistory :: Document -> [DocumentHistoryEntry] -> Document
@@ -392,12 +386,6 @@ removeFieldsAndPlacements sd = sd { signatoryfstnameplacements = []
 replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
 replaceSignOrder signorder sd = sd { signatorysignorder = signorder
                                    }
-
-{- |
-   Get the Just SignatoryLink from doc that has sid. Nothing when not found.
- -}
-signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
-signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
 
 {- |
    Does this SignatoryLink belong to the User with userid?
