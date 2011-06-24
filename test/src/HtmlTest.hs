@@ -14,6 +14,8 @@ import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
 import System.IO
 
+import Misc
+import Templates.Langs
 import Templates.TemplatesFiles
 
 main :: IO ()
@@ -42,8 +44,9 @@ isIncluded (name, _) = not $ name `elem` excludedTemplates
 
 testValidXml :: Assertion
 testValidXml = do
-  templates <- mapM getTemplates templatesFilesPath
-  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat templates
+  ts <- mapM getTemplates templatesFilesPath
+  texts <- mapM getTextTemplates allValues
+  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat ts ++ concat texts
   assertSuccess
 
 assertTemplateIsValidXML :: (String, String) -> Assertion
