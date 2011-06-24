@@ -39,10 +39,11 @@ import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
 import System.IO hiding (stderr)              
+import Util.HasSomeUserInfo
                          
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
-    Seal.Person { Seal.fullname = (BS.toString $ signatoryname details) ++ 
+    Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++ 
                                   if not (BS.null $ signatorypersonalnumber details)
                                      then " (" ++ (BS.toString $ signatorypersonalnumber details) ++ ")"
                                      else ""
@@ -87,7 +88,7 @@ personsFromDocument document =
               , signinfo
               , siglinkIsAuthor sl
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
-              , map head $ words $ BS.toString $ signatoryname signatorydetails
+              , map head $ words $ BS.toString $ getFullName signatorydetails
               )
                   where fullnameverified = maybe False (\s -> signaturefstnameverified s
                                                         && signaturelstnameverified s)
@@ -175,7 +176,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
-                                       field "personname" $  listToMaybe $ map  (BS.toString . signatoryname)  signatoriesdetails
+                                       field "personname" $  listToMaybe $ map  (BS.toString . getFullName)  signatoriesdetails
                                        field "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time

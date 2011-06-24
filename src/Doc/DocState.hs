@@ -2,7 +2,6 @@
 module Doc.DocState 
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
-    , signatoryname -- fromUtils
     , SignatoryAccount -- fromUtils
     , getSignatoryAccount -- fromUtils
     , isDeletableDocument -- fromUtils
