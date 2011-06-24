@@ -161,6 +161,7 @@ pageFooter=
       <ul>
         <li><a href="/">Hem</a></li>
         <li><a href="/om-skrivapa">Om SkrivaPå</a></li>
+        <li><a href="http://support.skrivapa.se">Support & Feedback</a></li>
         <li><a href="/partners">Partners</a></li>
         <li><a href="/kunder">Kunder</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
@@ -199,6 +200,21 @@ pageFooter=
     </div>
   </div>
 </div>
+<script type="text/javascript" src="//asset0.zendesk.com/external/zenbox/v2.1/zenbox.js"></script>
+<style type="text/css" media="screen, projection">
+  @import url(//asset0.zendesk.com/external/zenbox/v2.1/zenbox.css);
+</style>
+<script type="text/javascript">
+  if (typeof(Zenbox) !== "undefined") {
+    Zenbox.init({
+      dropboxID:   "20010532",
+      url:         "https://skrivapa.zendesk.com",
+      tabID:       "support",
+      tabColor:    "black",
+      tabPosition: "Right"
+    });
+  }
+</script>
 $preloadImages()$
 #####
 ##### Preload images. Added by Eric Normand from http://dev.iceburg.net/jquery/jqModal/
