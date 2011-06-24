@@ -69,7 +69,7 @@ partyUnsignedMeAndList magichash document =
 partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                    , isSignatory sl
-                                                   , not $ siglinkIsAuthor sl]
+                                                   , not $ isAuthor sl]
   
 joinWith :: [a] -> [[a]] -> [a]
 joinWith _ [] = []

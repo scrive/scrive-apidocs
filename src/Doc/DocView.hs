@@ -759,7 +759,7 @@ pageDocumentForAuthor ctx
        field "linkcancel" $ show $ LinkCancel document
        field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
-       field "documentinfotext" $ documentInfoText ctx document (find (siglinkIsAuthor) documentsignatorylinks)
+       field "documentinfotext" $ documentInfoText ctx document (find isAuthor documentsignatorylinks)
        documentAuthorInfo document
        documentInfoFields document
        documentViewFields document
@@ -975,8 +975,8 @@ signatoryLinkFields
       field "role" $ if isSignatory siglnk
                      then "signatory"
                      else "viewer"
-      field "secretary"  $ (siglinkIsAuthor siglnk) &&  not (isSignatory siglnk)              
-      field "author" $ (siglinkIsAuthor siglnk)
+      field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)              
+      field "author" $ (isAuthor siglnk)
       signatoryStatusFields document siglnk showDateOnly
 
 signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
@@ -1119,7 +1119,7 @@ signedByMeFields :: Document -> Maybe SignatoryLink -> Fields
 signedByMeFields _document siglnk = do
   field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
   field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
-  field "iamauthor" $ maybe False siglinkIsAuthor siglnk
+  field "iamauthor" $ maybe False isAuthor siglnk
 
 
 documentViewFields:: Document -> Fields

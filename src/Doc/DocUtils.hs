@@ -57,12 +57,6 @@ isDeletableDocument :: Document -> Bool
 isDeletableDocument doc = not $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]
 
 {- |
-   Is the given SignatoryLink marked as a signatory (someone who can must sign)?
- -}
-isSignatory :: SignatoryLink -> Bool
-isSignatory sl = SignatoryPartner `elem` signatoryroles sl
-
-{- |
    Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?
  -}
 hasSigned :: SignatoryLink -> Bool
@@ -124,7 +118,7 @@ partyUnsignedMeAndList magichash document =
 partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                    , isSignatory sl
-                                                   , not $ siglinkIsAuthor sl]
+                                                   , not $ isAuthor sl]
 
 {- |
    Insert the first list between each list of the second list.
@@ -221,7 +215,7 @@ instance  MaybeAttachment Document where
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
   | n<0 || n>=slcount = Left $ "signatory with index " ++ show n ++ " doesn't exist."
-  | n==0 && slcount>0 && siglinkIsAuthor (head sls) = Left "author can't be set from csv"
+  | n==0 && slcount>0 && isAuthor (head sls) = Left "author can't be set from csv"
   | otherwise = Right n
   where slcount = length sls
 
@@ -265,7 +259,7 @@ documentcurrentsignorder doc =
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
             && SignatoryPartner `elem` signatoryroles siglnk -- we exclude non-signatories
-            && not (siglinkIsAuthor siglnk) -- we omit author
+            && not (isAuthor siglnk) -- we omit author
 
 {- |
    Build a SignatoryDetails from a User with no fields
@@ -395,7 +389,7 @@ canUserInfoViewDirectly userid email doc =
   case getSigLinkFor doc (userid, email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
-    Just siglink | siglinkIsAuthor siglink                                     -> True
+    Just siglink | isAuthor siglink                                     -> True
     Just _       | Preparation == documentstatus doc                           -> False
     Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
     _                                                                          -> False
@@ -411,7 +405,7 @@ canUserViewDirectly user = canUserInfoViewDirectly (userid user) (unEmail $ user
  -}
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink = 
-  (not $ siglinkIsAuthor siglink) &&
+  (not $ isAuthor siglink) &&
   signorder >= signatorysignorder (signatorydetails siglink)
 
 {- |
@@ -420,14 +414,8 @@ isActivatedSignatory signorder siglink =
  -}
 isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
 isCurrentSignatory signorder siglink =
-  (not $ siglinkIsAuthor siglink) &&
+  (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
-
-{- |
-   Is this SignatoryLink an author?
- -}
-siglinkIsAuthor :: SignatoryLink -> Bool
-siglinkIsAuthor siglink = SignatoryAuthor `elem` signatoryroles siglink
 
 {- |
    Is the Author of this Document a signatory (not a Secretary)?
@@ -442,7 +430,7 @@ isAuthorSignatory document =
    Is this user the author of doc?
  -}
 isUserAuthor :: Document -> User -> Bool
-isUserAuthor doc user = maybe False siglinkIsAuthor $ getSigLinkFor doc user
+isUserAuthor doc user = maybe False isAuthor $ getSigLinkFor doc user
 
 {- |
    Does the author of this doc have this userid?

@@ -50,3 +50,25 @@ instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
 
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
+
+class SignatoryLinkQueries a where
+  {- |
+   Is this SignatoryLink an author?
+   -}
+  isAuthor :: a -> Bool
+  {- |
+   Is the given SignatoryLink marked as a signatory (someone who can must sign)?
+   -}
+  isSignatory :: a -> Bool
+  
+instance SignatoryLinkQueries SignatoryLink where
+  isAuthor sl = SignatoryAuthor `elem` signatoryroles sl
+  isSignatory sl = SignatoryPartner `elem` signatoryroles sl
+
+instance (SignatoryLinkQueries a) => SignatoryLinkQueries (Maybe a) where
+  isAuthor msl = maybe False isAuthor msl
+  isSignatory msl = maybe False isSignatory msl
+  
+instance (SignatoryLinkIdentity a) => SignatoryLinkQueries (Document, a) where
+  isAuthor (doc, a) = isAuthor (getSigLinkFor doc a)
+  isSignatory (doc, a) = isSignatory (getSigLinkFor doc a)

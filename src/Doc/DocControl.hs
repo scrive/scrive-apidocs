@@ -153,7 +153,7 @@ sendElegDataMismatchEmails :: Context -> Document -> IO ()
 sendElegDataMismatchEmails ctx document = do
     let signlinks = [sl | sl <- documentsignatorylinks document
                         , isActivatedSignatory (documentcurrentsignorder document) sl
-                        , not $ siglinkIsAuthor sl]
+                        , not $ isAuthor sl]
         Just (ELegDataMismatch msg badid _ _ _) = documentcancelationreason document
         badsig = fromJust $ find (\sl -> badid == signatorylinkid sl) (documentsignatorylinks document)
         badname  = BS.toString $ getFullName badsig
@@ -231,7 +231,7 @@ sendInvitationEmails ctx document = do
   print document
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , not $ siglinkIsAuthor sl]
+                      , not $ isAuthor sl]
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
 {- |
@@ -322,7 +322,7 @@ makeMailAttachments ctx document = do
 sendRejectEmails :: (Maybe String) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
-                                 , isActivatedSignatory (documentcurrentsignorder document) sl || siglinkIsAuthor sl]
+                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
     let semail = getEmail sl
         sname = getFullName sl
@@ -713,7 +713,7 @@ handleIssueSend document = do
 
 markDocumentAuthorReadAndSeen :: Document -> MinutesTime -> Word32 -> Kontra ()
 markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
-  mapM_ mark $ filter siglinkIsAuthor documentsignatorylinks
+  mapM_ mark $ filter isAuthor documentsignatorylinks
   where
     mark SignatoryLink{signatorylinkid, signatorymagichash} = do
       update $ MarkInvitationRead documentid signatorylinkid time

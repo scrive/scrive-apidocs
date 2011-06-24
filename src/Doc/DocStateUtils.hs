@@ -35,6 +35,7 @@ import Happstack.Data.IxSet as IxSet
 import Happstack.State
 import MinutesTime
 import Misc
+import Util.SignatoryLinkUtils
 
 {- |
     Cleans out all the deleted and quarantined documents
@@ -157,7 +158,7 @@ dropFeature DaysToSignUse doc = doc {documentdaystosign = Nothing}
 dropFeature MultiplePartiesUse doc = doc {documentsignatorylinks = take 2 $ documentsignatorylinks doc}
 dropFeature SecretaryUse doc = doc {documentsignatorylinks = map makeAuthorSignatory $ documentsignatorylinks doc} 
     where makeAuthorSignatory sl = 
-            if (siglinkIsAuthor sl && not (isSignatory sl))
+            if (isAuthor sl && not (isSignatory sl))
               then sl {signatoryroles = SignatoryPartner : (signatoryroles sl) }
               else sl
 dropFeature SpecialRoleUse doc = doc {documentsignatorylinks = map standarizeRoles $ documentsignatorylinks doc} 
@@ -172,13 +173,13 @@ dropFeature SpecialRoleUse doc = doc {documentsignatorylinks = map standarizeRol
              
 dropFeature AuthorCustomFieldUse doc = doc {documentsignatorylinks = map dropAuthorCustomFields $ documentsignatorylinks doc}  
    where
-        dropAuthorCustomFields sl =  if (siglinkIsAuthor sl)
+        dropAuthorCustomFields sl =  if isAuthor sl
                                         then sl {signatorydetails  = (signatorydetails sl) {signatoryotherfields = []} }
                                         else sl
 
 dropFeature AuthorPlacementUse doc =  doc {documentsignatorylinks = map dropAuthorPlacementFields $ documentsignatorylinks doc}  
     where
-       dropAuthorPlacementFields sl =  if (siglinkIsAuthor sl)
+       dropAuthorPlacementFields sl =  if isAuthor sl
                                         then sl {signatorydetails  = (signatorydetails sl) {
                                               signatoryfstnameplacements = []
                                             , signatorysndnameplacements = []
@@ -203,7 +204,7 @@ dropFeature SigPlacementUse doc =  doc {documentsignatorylinks = map dropPlaceme
                                             
 dropFeature SignOrderUse doc = doc {documentsignatorylinks = map dropOrder $ documentsignatorylinks doc}  
     where dropOrder sl = sl {signatorydetails = (signatorydetails sl)
-                {signatorysignorder = SignOrder $ if (siglinkIsAuthor sl) then 0 else 1}}
+                {signatorysignorder = SignOrder $ if isAuthor sl then 0 else 1}}
           
 dropFeature AttachmentUse doc = doc { documentauthorattachments    = []
                                     , documentsignatoryattachments = []

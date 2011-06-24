@@ -169,7 +169,7 @@ supervisorCanView :: User -> Document -> Bool
 supervisorCanView user doc =
     let supersiglinks = filterSignatoryLinksBySupervisor doc user
         isSupervisedSignatory = signatoryCanView' supersiglinks (documentstatus doc) (documentcurrentsignorder doc)
-        isSupervisedAuthor = any siglinkIsAuthor supersiglinks
+        isSupervisedAuthor = any isAuthor supersiglinks
     in isSupervisedAuthor || isSupervisedSignatory
 
 getDocumentsBySupervisor :: User -> Query Documents [Document]
@@ -493,7 +493,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
                  }
         maybesign link = link
         allbutauthor = [sl | sl <- newsignatorylinks
-                           , not $ siglinkIsAuthor sl]
+                           , not $ isAuthor sl]
         signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
         allsignedbutauthor = all signatoryHasSigned allbutauthor
         isallsigned = all signatoryHasSigned newsignatorylinks
@@ -580,7 +580,7 @@ authorSignDocument documentid time ipnumber msiginfo =
                   sigdetails = map signatorydetails (documentsignatorylinks document)
                   -- are there no signatories besides the author
                   authorOnly = Prelude.null [sl | sl <- documentsignatorylinks document
-                                                , not $ siglinkIsAuthor sl
+                                                , not $ isAuthor sl
                                                 , isSignatory sl]
                   newsiglinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                   signeddocument = document { documenttimeouttime = timeout
@@ -1003,8 +1003,8 @@ clearSignInfofromDoc doc = do
   let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
       Just asl = getAuthorSigLink doc
   newSignLinks <- sequence $ map (uncurry $ signLinkFromDetails) signatoriesDetails
-  let Just authorsiglink = find siglinkIsAuthor newSignLinks
-      othersiglinks = filter (not . siglinkIsAuthor) newSignLinks
+  let Just authorsiglink = find isAuthor newSignLinks
+      othersiglinks = filter (not . isAuthor) newSignLinks
       newsiglinks = copySignatoryAccount asl authorsiglink : othersiglinks
   return doc {documentstatus = Preparation,
               documenttimeouttime = Nothing,
@@ -1099,7 +1099,7 @@ signableFromSharedDocumentID user = newFromDocument $ \doc ->
     }
     where replaceAuthorSigLink :: User -> Document -> SignatoryLink -> SignatoryLink
           replaceAuthorSigLink usr _ sl 
-            | siglinkIsAuthor sl = replaceSignatoryUser sl usr
+            | isAuthor sl = replaceSignatoryUser sl usr
             | otherwise = sl
 
 

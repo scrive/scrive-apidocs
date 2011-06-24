@@ -23,7 +23,6 @@ import Doc.DocProcess
 import Doc.DocState
 import Doc.DocStorage
 import Doc.DocView
-import Doc.DocUtils
 import Happstack.State (update, query)
 import Misc
 import System.Directory
@@ -40,7 +39,8 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import System.IO hiding (stderr)              
 import Util.HasSomeUserInfo
-                         
+import Util.SignatoryLinkUtils                         
+
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++ 
@@ -86,7 +86,7 @@ personsFromDocument document =
                 , Seal.numberverified = numberverified}
               , maybe signinfo id maybeseeninfo
               , signinfo
-              , siglinkIsAuthor sl
+              , isAuthor sl
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
               , map head $ words $ BS.toString $ getFullName signatorydetails
               )
@@ -153,7 +153,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       paddeddocid = pad0 20 (show docid)
 
       initials = concatComma initialsx
-      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _, _)  = do
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderTemplateForProcess templates document processseenhistentry $ do
                         personFields personInfo
                         documentInfoFields document
@@ -166,7 +166,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
                             , Seal.histcomment = pureString signDesc}      
-          return $ if (isAuthor) 
+          return $ if (isauthor) 
                     then [signEvent]
                     else [seenEvent,signEvent]
       invitationSentEntry = case documentinvitetime document of

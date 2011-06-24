@@ -17,6 +17,7 @@ import Happstack.State
 import Misc
 import Payments.PaymentsState as Payments
 
+import Util.SignatoryLinkUtils
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Data.Maybe
@@ -132,7 +133,7 @@ documentInvariants = [
 -}
 documentHasOneAuthor :: Document -> Maybe String
 documentHasOneAuthor document =
-  case filter siglinkIsAuthor $ documentsignatorylinks document of
+  case filter isAuthor $ documentsignatorylinks document of
     [_] -> Nothing
     a -> Just $ "document must have one author (has " ++ show (length a) ++ ")"
     
