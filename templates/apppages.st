@@ -176,7 +176,7 @@ pageFooter=
       <ul>
         <li><a href="/">Hem</a></li>
         <li><a href="/om-skrivapa">Om SkrivaPå</a></li>
-        <li><a href="http://support.skrivapa.se">Support & Feedback</a></li>
+        <li><a href="http://support.skrivapa.se">Support &amp; Feedback</a></li>
         <li><a href="/partners">Partners</a></li>
         <li><a href="/kunder">Kunder</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
