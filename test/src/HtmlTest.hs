@@ -108,7 +108,7 @@ removeDocTypeDeclaration s =
     else s
 
 {-
-  this is kind of wrong.  but it pretty much seems to work.  i really really really need to make nicer :-(
+  this is wrong.  but it pretty much seems to work.  i really really really need to make nicer :-(  but then again, this is just a test.
 -}
 
 data TagState = NotTag | Tag
