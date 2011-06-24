@@ -7,16 +7,16 @@ msgstr ""
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_yourSigningPluginFailed"
-msgstr "Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. "
+msgstr "Din signerings plugin misslyckades med att signera dokumentet. Var vÃ¤nlig och kontakta din e-legitimationsleverantÃ¶r. "
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_youMustSetParnerEmail"
-msgstr "Du måste ange e-post till motpart."
+msgstr "Du mÃ¥ste ange e-post till motpart."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_youCanNotInviteSameEmail"
@@ -28,7 +28,7 @@ msgstr "Verifierar signatur..."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_tbsGenerationMessage3"
-msgstr ". Undertecknande parter är:"
+msgstr ". Undertecknande parter Ã¤r:"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_tbsGenerationMessage2"
@@ -40,31 +40,23 @@ msgstr "Du undertecknar "
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_startingSaveSigning"
-msgstr "Inleder säker signering . . ."
-
-#: javascript-langs.st:javascriptLocalisation
-msgid "_sndname"
-msgstr "Efternamn"
+msgstr "Inleder sÃ¤ker signering . . ."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_setAllFields"
-msgstr "Var vänlig namnge alla skapade fält"
+msgstr "Var vÃ¤nlig namnge alla skapade fÃ¤lt"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_secretaryCantSign"
-msgstr "Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll."
+msgstr "Du kan inte underteckna nÃ¤r du Ã¤r sekreterare. Om du vill underteckna, gÃ¥ tillbaks till steg 2 och byt roll."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_repetedEmailAddress"
-msgstr "Du kan ej använda samma e-post för mer än 1 användare"
+msgstr "Du kan ej anvÃ¤nda samma e-post fÃ¶r mer Ã¤n 1 anvÃ¤ndare"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_problemWithPDF"
 msgstr "Problem med PDF"
-
-#: javascript-langs.st:javascriptLocalisation
-msgid "_personamNumber"
-msgstr "Pers. nr"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_offerSignatory"
@@ -72,7 +64,7 @@ msgstr "Mottagare"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_offerAuthor"
-msgstr "Avsändare"
+msgstr "AvsÃ¤ndare"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_nonsignatory"
@@ -84,11 +76,11 @@ msgstr "Du har inte Telias e-legitimation installerad."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_noNordeaInstalled"
-msgstr "Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank."
+msgstr "Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation frÃ¥n Nordeas internetbank."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_noBankIdInstalled"
-msgstr "Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken."
+msgstr "Du har inte BankID installerat. Du kan ladda ned BankID frÃ¥n din internetbank. FÃ¶ljande banker tillhandahÃ¥ller BankID via internetbanken."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_niceEmail"
@@ -96,7 +88,7 @@ msgstr "Personens e-mail"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_mustFillFieldsBeforeSigning"
-msgstr "Du måste fylla i tomma fält innan du kan underteckna."
+msgstr "Du mÃ¥ste fylla i tomma fÃ¤lt innan du kan underteckna."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_multipleSignatory"
@@ -104,11 +96,11 @@ msgstr "Massutskick"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_missingSignatoryNames"
-msgstr "Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen."
+msgstr "Du har inte skrivit in nÃ¥got namn pÃ¥ en eller flera motparter. VÃ¤nligen fÃ¶rsÃ¶k igen."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_missingNames"
-msgstr "Du har inte namngett alla fält. Vänligen försök igen."
+msgstr "Du har inte namngett alla fÃ¤lt. VÃ¤nligen fÃ¶rsÃ¶k igen."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_loadingTweets"
@@ -120,19 +112,15 @@ msgstr "Laddar upp . . ."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_ie6NotSupported"
-msgstr "Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen uppgradera till en modern webbläsare"
-
-#: javascript-langs.st:javascriptLocalisation
-msgid "_fstname"
-msgstr "Förnamn"
+msgstr "Din webblÃ¤sare, Internet Explorer 6, stÃ¶ds inte lÃ¤ngre. VÃ¤nligen uppgradera till en modern webblÃ¤sare"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_fieldName"
-msgstr "Namnge fältet"
+msgstr "Namnge fÃ¤ltet"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_emptyOrNotValidEmail"
-msgstr "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen."
+msgstr "Du har inte skrivit in en e-post eller e-posten Ã¤r felaktig. VÃ¤nligen fÃ¶rsÃ¶k igen."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_differentSignatories"
@@ -143,37 +131,41 @@ msgid "_contractSignatory"
 msgstr "Part "
 
 #: javascript-langs.st:javascriptLocalisation
-msgid "_companyNumber"
-msgstr "Org. nr"
-
-#: javascript-langs.st:javascriptLocalisation
 msgid "_cantSendReminder2"
-msgstr " som inte är skickade eller öppna."
+msgstr " som inte Ã¤r skickade eller Ã¶ppna."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_cantSendReminder1"
-msgstr "Det går inte att skicka påminnelser för "
-
-#: javascript-langs.st:javascriptLocalisation
-msgid "_cantRemoveActiveOffers"
-msgstr "Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först."
-
-#: javascript-langs.st:javascriptLocalisation
-msgid "_cantRemoveActiveDocuments"
-msgstr "Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först."
+msgstr "Det gÃ¥r inte att skicka pÃ¥minnelser fÃ¶r "
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_backToStepTwoAndFillPersonNumber"
-msgstr "Var vänlig gå tillbaka till steg 2 och fyll i personnummer."
+msgstr "Var vÃ¤nlig gÃ¥ tillbaka till steg 2 och fyll i personnummer."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_atLeastOneSignatoryRequired"
-msgstr "Du måste ha minst en undertecknande part."
+msgstr "Du mÃ¥ste ha minst en undertecknande part."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_addRequiredAttachments"
-msgstr "Var vänlig bifoga begärda bilagor."
+msgstr "Var vÃ¤nlig bifoga begÃ¤rda bilagor."
 
+#~ msgid "_sndname"
+#~ msgstr "Efternamn"
+#~ msgid "_personamNumber"
+#~ msgstr "Pers. nr"
+#~ msgid "_fstname"
+#~ msgstr "FÃ¶rnamn"
+#~ msgid "_companyNumber"
+#~ msgstr "Org. nr"
+#~ msgid "_cantRemoveActiveOffers"
+#~ msgstr ""
+#~ "Det gÃ¥r inte att radera orderbekrÃ¤ftelser som Ã¤r skickade eller Ã¶ppna, "
+#~ "var vÃ¤nlig och Ã¥terkalla dokumentet fÃ¶rst."
+#~ msgid "_cantRemoveActiveDocuments"
+#~ msgstr ""
+#~ "Det gÃ¥r inte att radera dokument som Ã¤r skickade eller Ã¶ppna, var vÃ¤nlig "
+#~ "och Ã¥terkalla dokumentet fÃ¶rst."
 #~ msgid "_phone"
 #~ msgstr "Telefonnummer"
 #~ msgid "_email"

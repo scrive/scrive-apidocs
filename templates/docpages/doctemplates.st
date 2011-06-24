@@ -12,7 +12,7 @@ templatesForAjax=
                 </div> 
                 <div class="float-right search" style="margin-top: 30px;margin-right:30px;">
                    <form action="$currentlink$" method="POST">
-                      $searchBox(infotext=_SearchTemplate()')$
+                      $searchBox(infotext=_SearchTemplate())$
                    </form>
                 </div>
                 <div class="clearfix"></div>

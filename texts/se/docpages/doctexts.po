@@ -147,7 +147,7 @@ msgstr "Du har skickat en inbjudan att acceptera offerten. Vänligen inväntan a
 
 #: docpages/doctexts.st:contractstatusinfotext
 msgid "_contractstatusinfotext"
-msgstr "Du har valt att undertecknasist. Vänligen invänta övriga partersunderskrift."
+msgstr "Du har valt att underteckna sist. Vänligen invänta övriga partersunderskrift."
 
 #: docpages/doctexts.st:ordersignedinfotext
 msgid "_ordersignedinfotextFrom"

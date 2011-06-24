@@ -40,7 +40,7 @@ msgstr "accepterar offerten med "
 
 #: docpages/docseal.st:contractSignHistEntry
 msgid "_contractSignHistEntry"
-msgstr "undertecknar dokumentet online med "
+msgstr " undertecknar dokumentet online med "
 
 #: docpages/docseal.st:orderSeenHistEntry
 msgid "_orderSeenHistEntry"

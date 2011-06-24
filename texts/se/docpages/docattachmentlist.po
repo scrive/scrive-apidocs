@@ -20,7 +20,7 @@ msgstr "Sök dokument"
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListNewAttachment"
-msgstr "Ny Bilagor"
+msgstr "Nya Bilagor"
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListIfShared"

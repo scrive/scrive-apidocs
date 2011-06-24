@@ -55,11 +55,11 @@ $loadingdialog()$
                 </th>
 				<th style="width: 300px;">
                   $if(params.sorting.partnerREV)$
-                  <a href="$currentlink$&amp;sorting=partner">$_SortPartys()$<em> ▲</em></a>
+                  <a href="$currentlink$&amp;sorting=partner">$_SortParty()$<em> ▲</em></a>
                   $elseif(params.sorting.partner)$
-                  <a href="$currentlink$&amp;sorting=partnerREV">$_SortPartys()$<em style="text-color:red"> ▼</em></a>
+                  <a href="$currentlink$&amp;sorting=partnerREV">$_SortParty()$<em style="text-color:red"> ▼</em></a>
                   $else$
-                  <a href="$currentlink$&amp;sorting=partner">$_SortPartys()$</a>
+                  <a href="$currentlink$&amp;sorting=partner">$_SortParty()$</a>
                   $endif$
                 </th>
 				<th style="width: 300px;">
@@ -151,28 +151,28 @@ $loadingdialog()$
 	  </div>
 	</div>
 	<div id="tooltip-draft" class="hidden">
-	  <div class="icon status draft"></div><p>$_tooltipDraft()$</p>
+	  <div class="icon status draft"></div><p>$_tooltipdraft()$</p>
 	</div>
     <div id="tooltip-cancelled" class="hidden">
-      <div class="icon status cancelled"></div><p>$_tooltipCancelled()$</p>
+      <div class="icon status cancelled"></div><p>$_tooltipcancelled()$</p>
     </div>
     <div id="tooltip-sent" class="hidden">
-      <div class="icon status sent"></div><p>$_tooltipSent()$</p>
+      <div class="icon status sent"></div><p>$_tooltipsent()$</p>
     </div>
     <div id="tooltip-delivered" class="hidden">
-      <div class="icon status delivered"></div><p>$_tooltipDelivered()$</p>
+      <div class="icon status delivered"></div><p>$_tooltipdelivered()$</p>
     </div>
     <div id="tooltip-reviewed" class="hidden">
-      <div class="icon status reviewed"></div><p>$_tooltipViewedOnline()$</p>
+      <div class="icon status reviewed"></div><p>$_tooltipreviewed()$</p>
     </div>
     <div id="tooltip-read" class="hidden">
-      <div class="icon status read"></div><p>$_tooltipRead()$</p>
+      <div class="icon status read"></div><p>$_tooltipread()$</p>
     </div>
     <div id="tooltip-opened" class="hidden">
-      <div class="icon status opened"></div><p>$_tooltipOpened()$</p>
+      <div class="icon status opened"></div><p>$_tooltipopened()$</p>
     </div>
     <div id="tooltip-signed" class="hidden">
-      <div class="icon status signed"></div><p>$_tooltipSigned()$</p>
+      <div class="icon status signed"></div><p>$_tooltipsigned()$</p>
     </div>
   </form>
   $listLocalDialogs()$
