@@ -487,7 +487,7 @@ mailInviteUserAsSubaccountContent=
  <ul>$_mailInviteUserAsSubaccountContentInstructionSecond()$
 </ul>
 
- <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsSubaccountContentLink()$</p>
+ <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsSubaccountContentLink()$</a></p>
   $poweredBySkrivaPaPara()$
 ####
 ####

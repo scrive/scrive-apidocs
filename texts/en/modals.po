@@ -188,7 +188,7 @@ msgstr "Privatperson"
 
 #: modals.st:accountFromSignInputs
 msgid "_accountFromSignInputsBodyAcceptTOS"
-msgstr "Jag har läst och accepterat <a target=\"_blank\" href=\"/allmana-villkor\">SkrivaPå Allmänna Villkor"
+msgstr "Jag har läst och accepterat <a target=\"_blank\" href=\"/allmana-villkor\">SkrivaPå Allmänna Villkor</a>"
 
 #: modals.st:accountFromSignInputs
 msgid "_accountFromSignInputsBodySecureOriginal"
@@ -376,7 +376,7 @@ msgstr "          $partyListString:noescape()$ har nu undertecknat och          
 
 #: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewClosedHasAccountNotLoggedInHeader"
-msgstr "Du har undertecknat dokumentet $documenttitle$</h3>      "
+msgstr "Du har undertecknat dokumentet $documenttitle$"
 
 #: modals.st:modalRejectedView
 msgid "_modalRejectedViewClose"

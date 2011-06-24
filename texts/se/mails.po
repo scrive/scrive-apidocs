@@ -88,7 +88,7 @@ msgstr "<strong>$author$</strong> vill påminna dig om att du inte bekräftat or
 
 #: mails.st:remindMailNotSignedOrderStandardHeader
 msgid "_remindMailNotSignedOrderStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong"
+msgstr "Hej <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedOrderContent
 msgid "_remindMailNotSignedOrderContentPartys"
@@ -348,7 +348,7 @@ msgstr "Förfrågan att göra till underkonto"
 
 #: mails.st:mailInviteUserAsSubaccountContent
 msgid "_mailInviteUserAsSubaccountContentLink"
-msgstr "Detta är länken nedan</a>"
+msgstr "Detta är länken nedan"
 
 #: mails.st:mailInviteUserAsSubaccountContent
 msgid "_mailInviteUserAsSubaccountContentInstructionSecond"
@@ -620,7 +620,7 @@ msgstr "Hej $authorname$,"
 
 #: mails.st:invitationMailDeliveredAfterDeferredContent
 msgid "_invitationMailDeliveredAfterDeferredContentBody"
-msgstr "Vi meddelade dig tidigare om att vi hade problem att nå mottagarens server. Efter upprepade försök har vår server lyckats leverera inbjudan till dokumentet <strong>$documenttitle$</strong> till $email$.<"
+msgstr "Vi meddelade dig tidigare om att vi hade problem att nå mottagarens server. Efter upprepade försök har vår server lyckats leverera inbjudan till dokumentet <strong>$documenttitle$</strong> till $email$."
 
 #: mails.st:invitationMailDeferredTitle
 msgid "_invitationMailDeferredTitle"

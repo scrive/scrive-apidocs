@@ -406,7 +406,8 @@ modalSignedViewClosedHasAccountNotLoggedIn=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-        <h3>$_modalSignedViewClosedHasAccountNotLoggedInHeader()$	</span>
+        <h3>$_modalSignedViewClosedHasAccountNotLoggedInHeader()$</h3>
+      </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
@@ -439,7 +440,8 @@ modalSignedViewClosedHasAccountLoggedIn=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>$_modalSignedViewClosedHasAccountLoggedInHeader()$</span>
+      <h3>$_modalSignedViewClosedHasAccountLoggedInHeader()$</h3>
+    </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
@@ -654,7 +656,8 @@ modalSignedViewOrderNotClosedHasAccountLoggedIn=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>$_modalSignedViewOrderNotClosedHasAccountLoggedInHeader()$</span>
+      <h3>$_modalSignedViewOrderNotClosedHasAccountLoggedInHeader()$</h3>
+    </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
@@ -741,7 +744,7 @@ accountFromSignInputs=
         <div style="padding:10px 50px;">
          <div>
           <input type="checkbox" name="tos" id="tos" style="width: auto"/>
-          <label for="tos" style="padding-left:5px;">$_accountFromSignInputsBodyAcceptTOS()$</a></label>
+          <label for="tos" style="padding-left:5px;">$_accountFromSignInputsBodyAcceptTOS()$</label>
          </div>
          <table style="width: 250px; margin-top: 5px"><tbody><tr>
            <td><input style="width: auto" id="accountTypePrivate" type="radio" name="accounttype" value="PrivateAccount" /> <label for="accountTypePrivate">$_accountFromSignInputsPrivateAccount()$</label></td>

@@ -204,7 +204,7 @@ msgstr "        Dokumentet är nu bindande. SkrivaPå har verifierat denna trans
 
 #: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewClosedHasAccountNotLoggedInHeader"
-msgstr "Du har undertecknat dokumentet $documenttitle$</h3>      "
+msgstr "Du har undertecknat dokumentet $documenttitle$"
 
 #: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterLogIn"
@@ -540,7 +540,7 @@ msgstr "          Vill du säkra ditt original? SkrivaPå kan även arkivera ett
 
 #: modals.st:accountFromSignInputs
 msgid "_accountFromSignInputsBodyAcceptTOS"
-msgstr "Jag har läst och accepterat <a target=\"_blank\" href=\"/allmana-villkor\">SkrivaPå Allmänna Villkor"
+msgstr "Jag har läst och accepterat <a target=\"_blank\" href=\"/allmana-villkor\">SkrivaPå Allmänna Villkor</a>"
 
 #: modals.st:accountFromSignFooter
 msgid "_accountFromSignFooterYesArchive"
