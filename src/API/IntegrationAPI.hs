@@ -53,6 +53,8 @@ import Data.Foldable (fold)
 import User.UserState
 import System.Random (randomIO)
 import User.Password
+import Util.SignatoryLinkUtils
+
 {- | 
   Definition of integration API
 -}
@@ -122,7 +124,7 @@ embeddDocumentFrame = do
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No such document"
     let doc = fromJust mdocument
     mcompany <- lift_M (update . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
-    msiglink <- liftMM (return . sigLinkForEmail doc) (apiAskBS "email")
+    msiglink <- liftMM (return . getSigLinkFor doc) (apiAskBS "email")
     case (mcompany,msiglink) of
          (Just company,Nothing) -> do
              ssid <- createServiceSession sid (Left $ companyid $ company) location

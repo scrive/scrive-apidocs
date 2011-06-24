@@ -34,6 +34,7 @@ import Misc
 import Control.Monad.State (get)
 import Control.Monad.Trans (liftIO)
 import Happstack.State     (query)
+import Util.SignatoryLinkUtils
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -108,7 +109,7 @@ getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   case mdoc of
     Nothing  -> return $ Left DBResourceNotAvailable
     Just doc ->
-      case getSigLinkBySigLinkID sigid doc of
+      case getSigLinkFor doc sigid of
         Just siglink | signatorymagichash siglink == mh -> return $ Right doc
         _ -> return $ Left DBResourceNotAvailable
 

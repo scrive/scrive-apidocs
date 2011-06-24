@@ -19,6 +19,7 @@ import Mails.MailsUtil
 import Misc
 import Templates.Templates 
 import User.UserState
+import Util.SignatoryLinkUtils
 
 import Control.Monad
 import Data.List hiding (insert)
@@ -311,7 +312,7 @@ allowsIdentification document idtype = idtype `elem` documentallowedidtypes docu
    Is the user able to view the doc?
  -}
 isViewer :: Document -> User -> Bool
-isViewer doc user = any (isSigLinkForUser user) $ documentsignatorylinks doc
+isViewer doc user = any (isSigLinkFor user) $ documentsignatorylinks doc
 
 -- Not ready to refactor this quite yet.
 isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
@@ -334,7 +335,7 @@ isEligibleForReminder' :: User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder' user document siglink = 
   isActivatedSignatory (documentcurrentsignorder document) siglink
   && isUserAuthor document user
-  && not (isSigLinkForUser user siglink)
+  && not (isSigLinkFor user siglink)
   && isDocumentEligibleForReminder document
   && not (isUndelivered siglink)
   && not (isDeferred siglink)
@@ -353,7 +354,7 @@ isEligibleForReminder'' muser document@Document{documentstatus} siglink =
     && isSignatoryPartner
   where
     userIsAuthor = maybe False (isUserAuthor document) muser
-    isUserSignator = maybe False (flip isSigLinkForUser siglink) muser
+    isUserSignator = maybe False (flip isSigLinkFor siglink) muser
     wasSigned = isJust (maybesigninfo siglink) && not (isUserSignator && (documentstatus == AwaitingAuthor))
     isClosed' = documentstatus == Closed
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
@@ -384,64 +385,14 @@ removeFieldsAndPlacements sd = sd { signatoryfstnameplacements = []
     Sets the sign order on some signatory details.
 -}
 replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
-replaceSignOrder signorder sd = sd { signatorysignorder = signorder
-                                   }
-
-{- |
-   Does this SignatoryLink belong to the User with userid?
- -}
-isSigLinkForUserID :: UserID -> SignatoryLink -> Bool
-isSigLinkForUserID userid siglink = Just userid == maybesignatory siglink
-
-isSigLinkForSupervisor :: UserID -> SignatoryLink -> Bool
-isSigLinkForSupervisor userid siglink = Just userid == maybesupervisor siglink
-
-
-{- |
-   Get the SignatoryLink for a given UserID from a Document.
- -}
-getSigLinkForUserID :: Document -> UserID -> Maybe SignatoryLink
-getSigLinkForUserID doc uid = find (isSigLinkForUserID uid) $ documentsignatorylinks doc
-
-{- |
-   Does the siglink belong to a user with userid and email?
- -}
-isSigLinkForUserInfo :: UserID -> BS.ByteString -> SignatoryLink -> Bool
-isSigLinkForUserInfo userid email siglink = 
-    Just userid == maybesignatory siglink
-       || isSigLinkForEmail email siglink
-       
-       
-isSigLinkForEmail :: BS.ByteString -> SignatoryLink -> Bool
-isSigLinkForEmail email siglink = email == signatoryemail (signatorydetails siglink)
-
-sigLinkForEmail :: Document -> BS.ByteString -> Maybe SignatoryLink
-sigLinkForEmail doc email = find (isSigLinkForEmail email) (documentsignatorylinks doc)
-
-{- |
-   Given a document, a userid, and an email, return the SignatoryLink that belongs to the User with the email or userid.
- -}
-getSigLinkForUserInfo :: UserID -> BS.ByteString -> Document -> Maybe SignatoryLink
-getSigLinkForUserInfo userid email document = find (isSigLinkForUserInfo userid email) $ documentsignatorylinks document
-
-{- |
-   Does the SignatoryLink belong to User?
- -}
-isSigLinkForUser :: User -> SignatoryLink -> Bool
-isSigLinkForUser user = isSigLinkForUserInfo (userid user) (unEmail $ useremail $ userinfo user)
-
-{- |
-   Get the siglink for a specific user.
--}
-getSigLinkForUser :: Document -> User -> Maybe SignatoryLink
-getSigLinkForUser doc user = find (isSigLinkForUser user) $ documentsignatorylinks doc
-
+replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
+                                
 {- |
    Can the user view this document directly? (not counting friends)
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc = 
-  case getSigLinkForUserInfo userid email doc of
+  case getSigLinkFor doc (userid, email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
     Just siglink | siglinkIsAuthor siglink                                     -> True
@@ -454,19 +405,6 @@ canUserInfoViewDirectly userid email doc =
  -}
 canUserViewDirectly :: User -> Document -> Bool
 canUserViewDirectly user = canUserInfoViewDirectly (userid user) (unEmail $ useremail $ userinfo user)
-
-{- |
-   Is this SignatoryLinkID for this SignatoryLink?
- -}
-isSigLinkIDForSigLink :: SignatoryLinkID -> SignatoryLink -> Bool
-isSigLinkIDForSigLink siglinkid siglink = siglinkid == signatorylinkid siglink
-
-{- |
-   Get the SignatoryLink from Document with SignatoryLinkID.
- -}
-getSigLinkBySigLinkID :: SignatoryLinkID -> Document -> Maybe SignatoryLink
-getSigLinkBySigLinkID siglinkid = 
-  find (isSigLinkIDForSigLink siglinkid) . documentsignatorylinks
 
 {- |
    Has the signatory's sign order come up?
@@ -504,20 +442,19 @@ isAuthorSignatory document =
    Is this user the author of doc?
  -}
 isUserAuthor :: Document -> User -> Bool
-isUserAuthor doc user = maybe False siglinkIsAuthor $ getSigLinkForUser doc user
+isUserAuthor doc user = maybe False siglinkIsAuthor $ getSigLinkFor doc user
 
 {- |
    Does the author of this doc have this userid?
  -}
 isUserIDAuthor :: Document -> UserID -> Bool
-isUserIDAuthor doc userid = maybe False (isSigLinkForUserID userid) $ getAuthorSigLink doc
+isUserIDAuthor doc userid = maybe False (isSigLinkFor userid) $ getAuthorSigLink doc
 
 {- |
    Is the document deleted for this userid?
  -}
 isDeletedForUserID :: Document -> UserID -> Bool
-isDeletedForUserID doc userid = maybe False signatorylinkdeleted $ getSigLinkForUserID doc userid
-
+isDeletedForUserID doc userid = maybe False signatorylinkdeleted $ getSigLinkFor doc userid
 
 {- | Add a tag to tag list -}
 addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
@@ -545,8 +482,6 @@ getAuthorName :: Document -> BS.ByteString
 getAuthorName doc = 
   let Just authorsiglink = getAuthorSigLink doc
   in getSmartName authorsiglink
-
-
   
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
@@ -556,7 +491,7 @@ buildattach :: Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
 buildattach _ [] a = a
 buildattach d (f:fs) a =
-  case sigLinkForEmail d (signatoryattachmentemail f) of
+  case getSigLinkFor d (signatoryattachmentemail f) of
     Nothing -> buildattach d fs a
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
       Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)

@@ -858,7 +858,7 @@ documentSigAttachmentViewFields docid sls msignlink atts = do
   field "sigattachments" $ map sigAttachmentFields atts
   where
     sigAttachmentFields a = do
-      let mattachlink = find (isSigLinkForEmail (signatoryattachmentemail a)) sls
+      let mattachlink = find (isSigLinkFor (signatoryattachmentemail a)) sls
       field "signame" $ maybe "No name" (BS.toString . getFullName) mattachlink
       field "email" $ signatoryattachmentemail a
       field "name" $ signatoryattachmentname a

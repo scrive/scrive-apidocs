@@ -364,7 +364,7 @@ handleAcceptAccountFromSign documentid
   edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
   case edoc of
     Left _ -> mzero
-    Right document -> case getSigLinkBySigLinkID signatorylinkid document of
+    Right document -> case getSigLinkFor document signatorylinkid of
       Nothing -> mzero
       Just signatorylink -> do
         case (muser, Closed == documentstatus document) of
@@ -386,7 +386,7 @@ handleDeclineAccountFromSign documentid
   edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
   case edoc of
     Left _ -> mzero
-    Right document -> case getSigLinkBySigLinkID signatorylinkid document of
+    Right document -> case getSigLinkFor document signatorylinkid of
       Nothing -> mzero
       Just signatorylink -> do
         handleAccountRemovalFromSign actionid magichash
@@ -514,7 +514,7 @@ handleSignShow documentid
   edocument <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash1
   case edocument of
     Left _ -> mzero -- not allowed to view
-    Right document -> case getSigLinkBySigLinkID signatorylinkid1 document of
+    Right document -> case getSigLinkFor document signatorylinkid1 of
       Nothing -> mzero -- signatory link does not exist
       Just invitedlink -> do
         liftIO $ print document
@@ -1822,7 +1822,7 @@ handleResend docid signlinkid  = withUserPost $ do
     Left _ -> mzero
     Right doc -> do
       failIfNotAuthor doc user -- only author can resend
-      case getSigLinkBySigLinkID signlinkid doc of
+      case getSigLinkFor doc signlinkid of
         Nothing -> mzero
         Just signlink -> do
           customMessage <- getCustomTextField "customtext"  

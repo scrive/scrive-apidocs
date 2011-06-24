@@ -162,7 +162,7 @@ getDocumentsBySignatory user = queryDocs $ \documents ->
 filterSignatoryLinksBySupervisor :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksBySupervisor doc user =
     [sl | sl <- documentsignatorylinks doc
-        , isSigLinkForSupervisor (userid user) sl
+        , isSigLinkFor (Supervisor (userid user)) sl
         , not $ signatorylinkdeleted sl]
 
 supervisorCanView :: User -> Document -> Bool
@@ -760,7 +760,7 @@ archiveDocuments userid useremail docs = do
   mdocs <- mapM (\d -> deleteDocumentSignatoryLinks (fst d) (snd d) isSignatoryOrSupervisor) docs
   return $ sequence mdocs
   where isSignatoryOrSupervisor :: SignatoryLink -> Bool
-        isSignatoryOrSupervisor sl = isSigLinkForUserInfo userid useremail sl || isSigLinkForSupervisor userid sl
+        isSignatoryOrSupervisor sl = isSigLinkFor (userid, useremail) sl || isSigLinkFor (Supervisor userid) sl
 
 archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
 archiveDocumentForAll docid = deleteDocumentSignatoryLinks docid [] (const True)

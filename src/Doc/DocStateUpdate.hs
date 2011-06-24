@@ -6,13 +6,13 @@ module Doc.DocStateUpdate
     
 import DBError
 import Doc.DocState
-import Doc.DocUtils
 import Kontra
 import Misc
 import Control.Monad.State (get)
 import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
+import Util.SignatoryLinkUtils
 
 {- |
    Mark document seen securely.
@@ -38,7 +38,7 @@ restartDocument doc= do
   case ctxmaybeuser of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> case getAuthorSigLink doc of
-      Just authorsiglink | isSigLinkForUser user authorsiglink -> do
+      Just authorsiglink | isSigLinkFor user authorsiglink -> do
         enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber 
         case enewdoc of
           Right newdoc -> return $ Right newdoc
