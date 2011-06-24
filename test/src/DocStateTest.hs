@@ -40,7 +40,8 @@ docStateTests = [
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs,
-  testThat "when I call update document, it doesn't change the document id" testDocumentUpdateDoesNotChangeID
+  testThat "when I call update document, it doesn't change the document id" testDocumentUpdateDoesNotChangeID,
+  testThat "when I call update document, i can change the title" testDocumentUpdateCanChangeTitle
                 ]
                 
 testThat :: String -> Assertion -> Test
@@ -97,6 +98,20 @@ testDocumentUpdateDoesNotChangeID = do
   case enewdoc of
     Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
     Right newdoc -> assertEqual "document ids should be equal" (documentid doc) (documentid newdoc)
+
+testDocumentUpdateCanChangeTitle :: Assertion
+testDocumentUpdateCanChangeTitle = do
+  -- setup
+  mt <- whatTimeIsIt
+  author <- assumingBasicUser
+  doc <- assumingBasicContract mt author
+  --execute
+  let sd = signatoryDetailsFromUser author
+  enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], (userid author, Nothing)) [EmailIdentification] Nothing AdvancedFunctionality 
+  --assert
+  case enewdoc of
+    Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
+    Right newdoc -> assertEqual "document name should be different" (documenttitle newdoc) "New Title"
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
