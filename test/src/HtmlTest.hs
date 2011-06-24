@@ -86,7 +86,7 @@ checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 
 parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
 parseTemplateAsXML (name, rawtxt) =
-  let preparedtxt = "<template>\n" ++ (clearTemplatingStuff rawtxt) ++ "\n</template>"
+  let preparedtxt = "<template>\n" ++ (clearTemplating rawtxt) ++ "\n</template>"
       prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
       mklinewithno no line --okay, i did indenting in a horrible way, it's just a test!
         | no<10  = (show no) ++ ".    |" ++ line
@@ -97,25 +97,57 @@ parseTemplateAsXML (name, rawtxt) =
     Left msg -> Left $ msg ++ "\n" ++ prettyprinttxt
     r@(Right _) -> r
 
-clearTemplatingStuff :: String -> String
-clearTemplatingStuff = clearTemplatingStuff' In_Html
+clearTemplating :: String -> String
+clearTemplating = clearTemplating' NotTag NotTemplateCode
 
+data TagState = NotTag | Tag
+data TemplateCodeState = NotTemplateCode | TemplateCode
 
+clearTemplating'  :: TagState -> TemplateCodeState -> String -> String
+clearTemplating' _ _ [] = []
+clearTemplating' ts tcs ('\\':'$':xs) = '$' : clearTemplating' ts tcs xs
+clearTemplating' NotTag NotTemplateCode ('<':xs) = '<' : clearTemplating' Tag NotTemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('$':'i':'f':xs) = "<template-if>" ++ (clearTemplating' NotTag TemplateCode xs)
+clearTemplating' NotTag NotTemplateCode ('$':'e':'l':'s':'e':xs) = "</template-if><template-if>" ++ clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('$':'e':'n':'d':'i':'f':'$':xs) = "</template-if>" ++ clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag TemplateCode ('|':xs) = "<template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':';':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':':':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':'$':xs) = "</template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs 
+clearTemplating' Tag NotTemplateCode ('>':xs) = '>' : clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' ts NotTemplateCode ('$':xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts NotTemplateCode ('}':';':xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts NotTemplateCode ('}':':':xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts NotTemplateCode ('}':'$':xs) = clearTemplating' ts NotTemplateCode xs 
+clearTemplating' ts TemplateCode ('|':xs) = clearTemplating' ts NotTemplateCode xs
+clearTemplating' ts TemplateCode ('$':xs) = clearTemplating' ts NotTemplateCode xs
+clearTemplating' ts TemplateCode (_:xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts tcs (x:xs) = x : clearTemplating' ts tcs xs
+
+{-
 --this stuff is a very basic way of clearing out the templating stuff
---probably a better way
-data ClearState = In_Html | In_Dollars
+--probably a better way, this is very messy.  i think i couldn't explain how it works even!
+--but it's meant to be a finite state machine that strips out all the stuff in $$'s and
+--replaces ifs with template-case elems.
+data ClearState = In_Html | TemplateCode | In_If | In_Else
 
 clearTemplatingStuff' :: ClearState -> String -> String
 clearTemplatingStuff' _ [] = []
-clearTemplatingStuff' In_Html ('\\':'$':xs) = '$' : clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Html ('$':xs) = clearTemplatingStuff' In_Dollars xs
-clearTemplatingStuff' In_Html ('}':';':xs) = clearTemplatingStuff' In_Dollars xs
-clearTemplatingStuff' In_Html ('}':':':xs) = clearTemplatingStuff' In_Dollars xs
+clearTemplatingStuff' In_Html ('\\':'$':xs) = '$' : clearTemplatingStuff' In_Html xs --escaped dollars in html
+clearTemplatingStuff' In_Html ('$':'i':'f':xs) = clearTemplatingStuff' In_If xs
+clearTemplatingStuff' In_Html ('$':'e':'l':'s':'e':xs) = clearTemplatingStuff' In_Else xs
+clearTemplatingStuff' In_Html ('$':'e':'n':'d':'i':'f':'$':xs) = "</template-case>" ++ clearTemplatingStuff' In_Html xs
+clearTemplatingStuff' In_Html ('$':xs) = clearTemplatingStuff' TemplateCode xs
+clearTemplatingStuff' In_Html ('}':';':xs) = clearTemplatingStuff' TemplateCode xs
+clearTemplatingStuff' In_Html ('}':':':xs) = clearTemplatingStuff' TemplateCode xs
 clearTemplatingStuff' In_Html ('}':'$':xs) = clearTemplatingStuff' In_Html xs
 clearTemplatingStuff' In_Html (x:xs) = x : clearTemplatingStuff' In_Html xs 
-clearTemplatingStuff' In_Dollars ('$':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Dollars ('|':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Dollars (_:xs) = clearTemplatingStuff' In_Dollars xs
+clearTemplatingStuff' TemplateCode ('$':xs) = clearTemplatingStuff' In_Html xs
+clearTemplatingStuff' TemplateCode ('|':xs) = clearTemplatingStuff' In_Html xs
+clearTemplatingStuff' In_If ('$':xs) = "<template-case>" ++ clearTemplatingStuff' In_Html xs
+clearTemplatingStuff' In_Else ('$':xs) = "</template-case><template-case>" ++ clearTemplatingStuff' In_Html xs
+clearTemplatingStuff' nonHtmlState (_:xs) = clearTemplatingStuff' nonHtmlState xs
+-}
 
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
