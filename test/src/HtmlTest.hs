@@ -5,6 +5,7 @@
 module HtmlTest where
 
 import Data.Char
+import Data.List
 import Test.Framework (Test, testGroup, defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
@@ -86,7 +87,7 @@ checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 
 parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
 parseTemplateAsXML (name, rawtxt) =
-  let preparedtxt = "<template>\n" ++ (clearTemplatingStuff rawtxt) ++ "\n</template>"
+  let preparedtxt = "<template>\n" ++ (clearTemplating rawtxt) ++ "\n</template>"
       prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
       mklinewithno no line --okay, i did indenting in a horrible way, it's just a test!
         | no<10  = (show no) ++ ".    |" ++ line
@@ -97,25 +98,42 @@ parseTemplateAsXML (name, rawtxt) =
     Left msg -> Left $ msg ++ "\n" ++ prettyprinttxt
     r@(Right _) -> r
 
-clearTemplatingStuff :: String -> String
-clearTemplatingStuff = clearTemplatingStuff' In_Html
+clearTemplating :: String -> String
+clearTemplating = clearTemplating' NotTag NotTemplateCode . removeDocTypeDeclaration
 
+removeDocTypeDeclaration :: String -> String
+removeDocTypeDeclaration s =
+  if "<!DOCTYPE" `isPrefixOf` s
+    then tail $ dropWhile (/= '>') s
+    else s
 
---this stuff is a very basic way of clearing out the templating stuff
---probably a better way
-data ClearState = In_Html | In_Dollars
+{-
+  this is wrong.  but it pretty much seems to work.  i really really really need to make nicer :-(  but then again, this is just a test.
+-}
 
-clearTemplatingStuff' :: ClearState -> String -> String
-clearTemplatingStuff' _ [] = []
-clearTemplatingStuff' In_Html ('\\':'$':xs) = '$' : clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Html ('$':xs) = clearTemplatingStuff' In_Dollars xs
-clearTemplatingStuff' In_Html ('}':';':xs) = clearTemplatingStuff' In_Dollars xs
-clearTemplatingStuff' In_Html ('}':':':xs) = clearTemplatingStuff' In_Dollars xs
-clearTemplatingStuff' In_Html ('}':'$':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Html (x:xs) = x : clearTemplatingStuff' In_Html xs 
-clearTemplatingStuff' In_Dollars ('$':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Dollars ('|':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Dollars (_:xs) = clearTemplatingStuff' In_Dollars xs
+data TagState = NotTag | Tag
+data TemplateCodeState = NotTemplateCode | TemplateCode
+
+clearTemplating'  :: TagState -> TemplateCodeState -> String -> String
+clearTemplating' _ _ [] = []
+clearTemplating' ts tcs ('\\':'$':xs) = '$' : clearTemplating' ts tcs xs
+clearTemplating' NotTag NotTemplateCode ('<':xs) = '<' : clearTemplating' Tag NotTemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('$':'i':'f':xs) = "<template-if>" ++ (clearTemplating' NotTag TemplateCode xs)
+clearTemplating' NotTag NotTemplateCode ('$':'e':'l':'s':'e':xs) = "</template-if><template-if>" ++ clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('$':'e':'n':'d':'i':'f':'$':xs) = "</template-if>" ++ clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag TemplateCode ('|':xs) = "<template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':';':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':':':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':'$':xs) = "</template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs 
+clearTemplating' Tag NotTemplateCode ('>':xs) = '>' : clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' ts NotTemplateCode ('$':xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts NotTemplateCode ('}':';':xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts NotTemplateCode ('}':':':xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts NotTemplateCode ('}':'$':xs) = clearTemplating' ts NotTemplateCode xs 
+clearTemplating' ts TemplateCode ('|':xs) = clearTemplating' ts NotTemplateCode xs
+clearTemplating' ts TemplateCode ('$':xs) = clearTemplating' ts NotTemplateCode xs
+clearTemplating' ts TemplateCode (_:xs) = clearTemplating' ts TemplateCode xs
+clearTemplating' ts tcs (x:xs) = x : clearTemplating' ts tcs xs
 
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
