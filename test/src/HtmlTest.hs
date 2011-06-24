@@ -5,6 +5,7 @@
 module HtmlTest where
 
 import Data.Char
+import Data.List
 import Test.Framework (Test, testGroup, defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
@@ -98,7 +99,17 @@ parseTemplateAsXML (name, rawtxt) =
     r@(Right _) -> r
 
 clearTemplating :: String -> String
-clearTemplating = clearTemplating' NotTag NotTemplateCode
+clearTemplating = clearTemplating' NotTag NotTemplateCode . removeDocTypeDeclaration
+
+removeDocTypeDeclaration :: String -> String
+removeDocTypeDeclaration s =
+  if "<!DOCTYPE" `isPrefixOf` s
+    then tail $ dropWhile (/= '>') s
+    else s
+
+{-
+  this is kind of wrong.  but it pretty much seems to work.  i really really really need to make nicer :-(
+-}
 
 data TagState = NotTag | Tag
 data TemplateCodeState = NotTemplateCode | TemplateCode
@@ -123,31 +134,6 @@ clearTemplating' ts TemplateCode ('|':xs) = clearTemplating' ts NotTemplateCode 
 clearTemplating' ts TemplateCode ('$':xs) = clearTemplating' ts NotTemplateCode xs
 clearTemplating' ts TemplateCode (_:xs) = clearTemplating' ts TemplateCode xs
 clearTemplating' ts tcs (x:xs) = x : clearTemplating' ts tcs xs
-
-{-
---this stuff is a very basic way of clearing out the templating stuff
---probably a better way, this is very messy.  i think i couldn't explain how it works even!
---but it's meant to be a finite state machine that strips out all the stuff in $$'s and
---replaces ifs with template-case elems.
-data ClearState = In_Html | TemplateCode | In_If | In_Else
-
-clearTemplatingStuff' :: ClearState -> String -> String
-clearTemplatingStuff' _ [] = []
-clearTemplatingStuff' In_Html ('\\':'$':xs) = '$' : clearTemplatingStuff' In_Html xs --escaped dollars in html
-clearTemplatingStuff' In_Html ('$':'i':'f':xs) = clearTemplatingStuff' In_If xs
-clearTemplatingStuff' In_Html ('$':'e':'l':'s':'e':xs) = clearTemplatingStuff' In_Else xs
-clearTemplatingStuff' In_Html ('$':'e':'n':'d':'i':'f':'$':xs) = "</template-case>" ++ clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Html ('$':xs) = clearTemplatingStuff' TemplateCode xs
-clearTemplatingStuff' In_Html ('}':';':xs) = clearTemplatingStuff' TemplateCode xs
-clearTemplatingStuff' In_Html ('}':':':xs) = clearTemplatingStuff' TemplateCode xs
-clearTemplatingStuff' In_Html ('}':'$':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Html (x:xs) = x : clearTemplatingStuff' In_Html xs 
-clearTemplatingStuff' TemplateCode ('$':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' TemplateCode ('|':xs) = clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_If ('$':xs) = "<template-case>" ++ clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' In_Else ('$':xs) = "</template-case><template-case>" ++ clearTemplatingStuff' In_Html xs
-clearTemplatingStuff' nonHtmlState (_:xs) = clearTemplatingStuff' nonHtmlState xs
--}
 
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
