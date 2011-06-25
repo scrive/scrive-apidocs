@@ -52,7 +52,6 @@ import Text.JSON
 import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
-import Doc.DocState
 import Data.Ratio
 import qualified Data.ByteString.Base64 as BASE64
 

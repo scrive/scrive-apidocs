@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendGridEvents
@@ -65,11 +64,13 @@ handleSendgridEvent = do
          -- we update SentEmailInfo of given email. if email is reported
          -- delivered, dropped or bounced we remove it from the system.
          -- that way we can keep track of emails that were "lost".
-         Just Action{actionID, actionType = atype@SentEmailInfo{seiEmail}} -> do
+         Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
                  Log.debug "Updating SentEmailInfo..."
-                 _ <- update $ UpdateActionType actionID $ atype {
-                       seiEventType = et
+                 _ <- update $ UpdateActionType actionID $ SentEmailInfo {
+                       seiEmail = seiEmail
+                     , seiMailInfo = seiMailInfo
+                     , seiEventType = et
                      , seiLastModification = now
                  }
                  let removeAction = case et of

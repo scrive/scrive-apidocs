@@ -42,6 +42,9 @@ Flag docstate-test
   Description: Build kontrakcja-docstate-test
   Default: True
 
+Flag allow-warnings
+  Description: Disable -Werror flag
+  Default: False
 
 Executable kontrakcja-server
   if flag(server)
@@ -51,7 +54,9 @@ Executable kontrakcja-server
 
   Hs-source-dirs: src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
+  GHC-Options: -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded

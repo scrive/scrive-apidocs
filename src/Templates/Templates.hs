@@ -91,6 +91,7 @@ module Templates.Templates
     , Lang(..)
     ) where
 
+import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Templates.TemplatesLoader (langVersion,readAllLangsTemplates,renderTemplateMain,templateList,KontrakcjaMultilangTemplates,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime,Lang(..))
 import Text.StringTemplate.Base hiding (ToSElem,toSElem)
@@ -102,6 +103,9 @@ import qualified Text.StringTemplate.Classes as HST
 
 class (MonadIO a) => TemplatesMonad a where
         getTemplates :: a KontrakcjaTemplates
+
+instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
+        getTemplates = ask
 
 -- | Filling template with a given name using given attributes.  It
 -- never fail, just returns empty message and writes something in the

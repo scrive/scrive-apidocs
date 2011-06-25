@@ -93,10 +93,6 @@ instance TemplatesMonad (ServerPartT (StateT Context IO)) where
             ctx <- get
             return (ctxtemplates ctx)
 
-instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
-        getTemplates = ask
-
-
 {- |
    A list of default user emails.  These should start out as the users
    in a brand new system.

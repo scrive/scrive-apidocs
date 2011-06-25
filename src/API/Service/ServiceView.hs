@@ -14,27 +14,9 @@ module API.Service.ServiceView(
             , servicesListPage
 ) where
 
-import KontraLink
 import Templates.Templates 
-import Templates.TemplatesUtils 
 import Text.StringTemplate.GenericStandard()
-import Control.Applicative
-import Data.ByteString.UTF8 (toString)
-import Data.List (isPrefixOf, isInfixOf)
-import Data.Char
-import Data.Typeable
-import Data.Data
-import Payments.PaymentsView
-import Payments.PaymentsState
-import Payments.PaymentsUtils
 import Misc
-import MinutesTime
-import User.UserView
-import User.UserState
-import Doc.DocState
-import API.Service.ServiceState
-import Happstack.State (query)
-import Control.Monad
 import API.Service.ServiceState
 
 serviceAdminPage :: KontrakcjaTemplates -> Service -> IO String

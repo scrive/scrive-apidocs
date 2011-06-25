@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE CPP #-}
 
 -----------------------------------------------------------------------------
@@ -18,35 +17,12 @@ module  API.Service.ServiceControl(
           ) where
 import Control.Monad.State
 import Data.Functor
-import AppView
-import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update,query)
 import Misc
 import Kontra
-import Administration.AdministrationView
-import Payments.PaymentsState
-import Doc.DocState
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import KontraLink
-import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
-import MinutesTime
-import FlashMessage
-import System.Directory
-import Data.List (isPrefixOf,sort, foldl')
-import User.UserControl
-import User.UserView
 import Data.Maybe
-import Redirect
-import System.Process
-import System.IO (hClose)
-import qualified TrustWeaver as TW
-import Data.Char
-import Happstack.Util.Common
-import API.Service.ServiceState
-import Data.Monoid
-import qualified Data.IntMap as IntMap
-import Templates.Templates
 import API.Service.ServiceState
 import API.Service.ServiceView
 import Doc.DocUtils
@@ -58,7 +34,7 @@ handleChangeService sid = do
     mservice <- query $ GetService sid
     if ((isJust mservice) && sameUser (ctxmaybeuser ctx) (serviceadmin <$> mservice))
        then do
-           let service = fromJust mservice
+           --let service = fromJust mservice
            nicename <- getFieldUTFWithDefault BS.empty "nicename"
            invitationmain <- getFieldUTFWithDefault BS.empty "documentinvitationmail"
            update $ UpdateService sid nicename invitationmain

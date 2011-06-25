@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.Integration
@@ -25,24 +24,13 @@ import MinutesTime
 import Misc
 import Session
 import Kontra
-import qualified User.UserControl as UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Doc.DocControl as DocControl
-import qualified Data.Map as Map
-import Templates.Templates (renderTemplate, KontrakcjaTemplates, getTemplatesModTime)
 import Happstack.State (update)
-import Redirect
-import PayEx.PayExInterface -- Import so at least we check if it compiles
+import PayEx.PayExInterface () -- Import so at least we check if it compiles
 import InputValidation
-import System.Directory
-import ListUtil
-import Data.Word
-import System.Time
 import Text.JSON
-import Text.JSON.String
 import Control.Monad.Reader
-import Control.Monad.Error
 import API.API
 import Routing
 import API.Service.ServiceState
@@ -52,7 +40,6 @@ import Company.CompanyState
 import Data.Foldable (fold)
 import User.UserState
 import System.Random (randomIO)
-import User.Password
 import Util.SignatoryLinkUtils
 
 {- | 
@@ -69,7 +56,7 @@ instance APIContext IntegrationAPIContext where
         mservice <- integrationService
         mbody <- apiBody 
         case (mservice, mbody)  of
-             (Just service, Right body) -> return $ Right $ IntegrationAPIContext {ibody=body,service=service}
+             (Just service, Right body2) -> return $ Right $ IntegrationAPIContext {ibody=body2,service=service}
              (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
              (_,Left s) -> return $ Left $ (API_ERROR_PARSING,"Parsing error: " ++ s) 
     
@@ -100,8 +87,10 @@ integrationAPI =  dir "integration" $ msum [
                     , dir "connectuser" $ hGet3 $ connectUserToSession
                     , dir "connectcompany" $ hGet3 $ connectCompanyToSession
                   ]
+
 --- Real api requests
-getRequestUser:: IntegrationAPIFunction User
+-- unused function, commenting for now
+{-getRequestUser:: IntegrationAPIFunction User
 getRequestUser = do
     sid <- serviceid <$> service <$> ask
     memail <- apiAskBS "email"
@@ -111,7 +100,7 @@ getRequestUser = do
     let user = fromJust muser
     --srv <-  service <$> ask
     --when (not $ elem (userid $ user) $ serviceusers srv) $ throwApiError "User has not accepted this service"
-    return user
+    return user-}
 
 
 embeddDocumentFrame :: IntegrationAPIFunction APIResponse
@@ -131,7 +120,7 @@ embeddDocumentFrame = do
              returnLink $ LinkConnectCompanySession sid  (companyid company) ssid $ LinkIssueDoc (documentid doc)
          (Nothing, Just siglink) ->  do
              returnLink $ LinkSignDoc doc siglink
-         (Just company, Just siglink) -> do
+         (Just _company, Just siglink) -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink)) 
                 then do
                      ssid <- createServiceSession sid  (Right $ fromJust $ maybesignatory siglink) location
@@ -161,7 +150,7 @@ createDocument = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
    doc <- case mtemplate of
-            Just template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
+            Just _template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
             Nothing -> createAPIDocument company doctype title files involved tags
    liftIO $ putStrLn $ show $ doc         
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]         

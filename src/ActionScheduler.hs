@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
-
 module ActionScheduler (
       ActionScheduler
     , runScheduler
@@ -78,7 +76,7 @@ evaluateAction Action{actionID, actionType = ViralInvitationSent{}} =
 evaluateAction Action{actionID, actionType = AccountCreated{}} =
     deleteAction actionID
 
-evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning state uid (docid, _) token} = do
+evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid doclinkdataid@(docid, _) token} = do
     case state of
          NothingSent ->
              sendReminder 
@@ -100,10 +98,15 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                       (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
                       (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
                       -- | TODO - so other option for order | THIS WILL GIVE A WARNING TILL IT IS FIXED
+                      _ -> error "Case for order not implemented yet"
                 mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
-            let new_atype = (actionType action) { acbsState = ReminderSent }
-            _ <- update $ UpdateActionType actionID new_atype
+            _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
+                  acbsState = ReminderSent
+                , acbsUserID = uid
+                , acbsDocLinkDataID = doclinkdataid
+                , acbsToken = token
+            }
             _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
