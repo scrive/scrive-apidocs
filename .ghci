@@ -1,3 +1,4 @@
+:set -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
 :set -DMIN_VERSION_template_haskell(a,b,c)=1
 :set -DMIN_VERSION_happstack_server(a,b,c)=1
 :set -isrc -ipdfseal/src -ipdfseal/inc -itest/src
