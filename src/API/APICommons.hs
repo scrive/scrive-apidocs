@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -XTupleSections#-}
+{-# LANGUAGE TupleSections #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.APICommons

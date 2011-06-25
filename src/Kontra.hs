@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP, IncoherentInstances #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
 module Kontra
     ( module User.UserState
     , module User.Password

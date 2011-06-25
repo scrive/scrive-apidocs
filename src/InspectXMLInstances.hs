@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wall -XOverlappingInstances  -fno-warn-orphans -Werror #-}
-
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  InspectXMLInstances

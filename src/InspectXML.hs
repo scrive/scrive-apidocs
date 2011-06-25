@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -XOverlappingInstances -XIncoherentInstances  -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  InspectXML

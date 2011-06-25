@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -Wall -XOverlappingInstances -XTypeSynonymInstances -XIncoherentInstances  -fwarn-tabs -fwarn-incomplete-record-updates -fno-warn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
+{-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-monomorphism-restriction #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates

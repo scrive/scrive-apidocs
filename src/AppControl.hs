@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
 {- |
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}

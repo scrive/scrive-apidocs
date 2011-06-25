@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
--fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
 import Doc.DocState

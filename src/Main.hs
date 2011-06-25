@@ -1,6 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
--fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
 module Main where
 
 import Control.Concurrent (forkIO, killThread)

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -fno-warn-orphans -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module API.Service.ServiceState
     ( ServiceID(..)
     , ServiceAdmin(..)

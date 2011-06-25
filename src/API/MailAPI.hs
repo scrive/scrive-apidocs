@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -Werror #-}
 module API.MailAPI where
-
 
 import Doc.DocState
 import Kontra
