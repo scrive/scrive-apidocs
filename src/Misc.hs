@@ -45,22 +45,12 @@ selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(Stri
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
   maybepressed <- getDataFn (look button)
-#if MIN_VERSION_happstack_server(0,5,1)
   either (\_ -> selectFormAction rest) (\_ -> action) maybepressed
-#else
-  if isJust maybepressed
-     then action
-     else selectFormAction rest
-#endif
 
 guardFormAction :: (HasRqData m, MonadIO m,ServerMonad m, MonadPlus m) => String -> m ()
 guardFormAction button = do
   maybepressed <- getDataFn (look button)
-#if MIN_VERSION_happstack_server(0,5,1)
   either (\_ -> mzero) (\_ -> return ()) maybepressed
-#else
-  guard (isJust maybepressed)
-#endif
 
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
@@ -177,11 +167,7 @@ safehead _ (x:_) = x
 getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a
 getDataFnM fun = do
   m <- getDataFn fun
-#if MIN_VERSION_happstack_server(0,5,1)
   either (\_ -> mzero) (return) m
-#else
-  maybe mzero return m
-#endif
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
@@ -189,11 +175,7 @@ getDataFnM fun = do
 getDataFn' :: (HasRqData m, MonadIO m, ServerMonad m) => RqData a -> m (Maybe a)
 getDataFn' fun = do
   m <- getDataFn fun
-#if MIN_VERSION_happstack_server(0,5,1)
   either (\_ -> return Nothing) (return . Just ) m
-#else
-  return m
-#endif
 
 -- | This is a nice attempt at generating database queries directly
 -- from URL parts.
@@ -220,11 +202,7 @@ getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do 
-#if MIN_VERSION_happstack_server(0,5,1)
          inputs <- asks (\(a, b, _c) -> a ++ b)
-#else
-         inputs <- asks fst 
-#endif
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
