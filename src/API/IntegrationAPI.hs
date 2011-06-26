@@ -37,7 +37,6 @@ import API.APICommons
 import Doc.DocUtils
 import Company.CompanyState
 import Data.Foldable (fold)
-import User.UserState
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
 

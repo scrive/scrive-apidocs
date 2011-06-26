@@ -20,7 +20,7 @@ serviceAdminPage=
 
 <div id="tab-viewer">
    <div class="tab-header">
-        <center><h3> <strong> $name$ </strong></h3>
+        <center><h3> <strong> $name$ </strong></h3></center>
    </div>
    <div class="tab-container">
        <div class="tab-content account">
@@ -102,11 +102,6 @@ serviceAdminPage=
                        <tr>
                            <td>Repeat new password:</td>
                            <td><input type="password" name="newpassword2" infotext=""/>  </td>
-                       </tr>
-                       <tr>
-                           <td></td>
-                     
-                           </td>
                        </tr>
                    </table>
                            <div style="height:30px">
