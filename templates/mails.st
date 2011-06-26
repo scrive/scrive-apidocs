@@ -31,7 +31,7 @@ mailDocumentAwaitingForAuthorContent=
     <p>$_mailDocumentAwaitingForAuthorContentHi()$</p>
     <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
     <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
-    $poweredBySkrivaPaPara()$
+    $footer:noescape()$
 #####
 mailDocumentClosedTitle=$_mailDocumentClosedTitle()$
 #####
@@ -40,7 +40,7 @@ mailContractClosedContent=
       <p>$_mailContractClosedContentHi()$</p>
       <p>$_mailContractClosedContentSignedBy()$</p>
       <p>$_mailContractClosedContentAttached()$</p> 
-      $poweredBySkrivaPaPara()$
+      $footer:noescape()$
     </span>
 ####
 mailOfferClosedContent=
@@ -48,8 +48,7 @@ mailOfferClosedContent=
       <p>$_mailOfferClosedContentHi()$</p>
       <p>$_mailOfferClosedContentOfferAccepted()$</p>
       <p>$_mailOfferClosedContentAttached()$</p>
-
-      $poweredBySkrivaPaPara()$
+      $footer:noescape()$
     </span>
 ####
 mailOrderClosedContent=
@@ -57,8 +56,7 @@ mailOrderClosedContent=
       <p>$_mailOrderClosedContentHi()$</p>
       <p>$_mailOrderClosedContentViewed()$</p>
       <p>$_mailOrderClosedContentAttached()$</p>
-
-      $poweredBySkrivaPaPara()$
+      $footer:noescape()$
     </span>
 ####
 mailRejectMailTitle=$_mailRejectMailTitle()$
@@ -66,18 +64,18 @@ mailRejectMailTitle=$_mailRejectMailTitle()$
 mailRejectContractMailContent=
       $mailRejectMailContentHeader()$
       <p>$_mailRejectContractMailContentContractRejected()$</p>
-      $poweredBySkrivaPaPara()$
+      $footer:noescape()$
 ####
 mailRejectOfferMailContent=
       $mailRejectMailContentHeader()$
       <p>$_mailRejectOfferMailContentOfferRejected()$</p>
-      $poweredBySkrivaPaPara()$
+      $footer:noescape()$
 ###
 mailRejectOrderMailContent=
       $mailRejectMailContentHeader()$
       <p>$_mailRejectOrderMailContentHasRejected()$
       </p>
-      $poweredBySkrivaPaPara()$
+      $footer:noescape()$
 ###
 mailRejectMailContentHeader=
       $if(customMessage)$

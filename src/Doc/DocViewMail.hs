@@ -15,7 +15,6 @@ module Doc.DocViewMail ( mailCancelDocumentByAuthor
                        , mailRejectMailContent
                        ) where
 
-import API.Service.ServiceState
 import Doc.DocProcess
 import Doc.DocState
 import Doc.DocUtils
@@ -25,13 +24,14 @@ import KontraLink
 import Mails.SendMail
 import Misc
 import Templates.Templates 
-import Templates.TemplatesLoader
 import Templates.TemplatesUtils
-
+import Data.Functor
+import API.Service.ServiceState
 import Data.Maybe
-import Happstack.State (query) 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import Happstack.State (query)
+import Control.Monad
 
 mailDocumentRemind :: KontrakcjaTemplates 
                    -> Maybe (BS.ByteString) 
@@ -83,8 +83,8 @@ remindMailNotSignedContent :: KontrakcjaTemplates
                            -> IO String                                
 remindMailNotSignedContent templates forMail customMessage ctx document signlink =  
     let link = if (forMail)
-                then (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
-                else (ctxhostpart ctx) ++ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+                then makeFullLink ctx document $ show (LinkSignDoc document signlink)
+                else makeFullLink ctx document $ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         mauthorsiglink = getAuthorSigLink document
         creatorname = maybe "" (BS.toString . getSmartName) mauthorsiglink
         timetosigninfo = case (documenttimeouttime document) of 
@@ -100,10 +100,10 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
 
         footer =    if (forMail) 
                      then if (isNothing customMessage)
-                           then renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)] 
+                           then mailFooter ctx document
                            else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                      else do
-                       this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)] 
+                       this <- mailFooter ctx document
                        with <- renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                        replaceOnEdit' templates this with                 
         header   = if (isNothing customMessage) 
@@ -140,8 +140,8 @@ remindMailSignedContent templates customMessage ctx document signlink = do
               then remindMailSignedStandardHeader templates document signlink
               else return . BS.toString $ fromJust customMessage
   editableheader <- makeEditable' templates "customtext" header
-  skv <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)]
-  return $ editableheader ++ skv
+  footer <- mailFooter  ctx document
+  return $ editableheader ++ footer
       
 remindMailSignedStandardHeader :: KontrakcjaTemplates 
                                -> Document 
@@ -177,7 +177,7 @@ mailRejectMailContent templates customMessage ctx  username  document  rejector 
            field "username" username
            field "documenttitle" $ documenttitle document
            field "rejectorName" $ getSmartName rejector
-           field "ctxhostpart" $ ctxhostpart ctx
+           field "footer" $ mailFooter ctx document
            field "customMessage" $ customMessage
 
 
@@ -204,12 +204,12 @@ mailInvitationToSignOrViewContent :: KontrakcjaTemplates
                                   -> IO String        
 mailInvitationToSignOrViewContent templates 
                                   forMail 
-                                  Context{ctxhostpart}
+                                  ctx
                                   document@Document{ documenttimeouttime, documentinvitetext, documenttitle }
                                   msiglink = do
   let link = case msiglink of
-                Just siglink -> ctxhostpart ++ show (LinkSignDoc document siglink)
-                Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+                Just siglink -> makeFullLink ctx document (show (LinkSignDoc document siglink))
+                Nothing -> makeFullLink ctx document "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
       Just authorsiglink = getAuthorSigLink document
       creatorname = BS.toString $ getSmartName authorsiglink
       issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
@@ -231,10 +231,10 @@ mailInvitationToSignOrViewContent templates
                           
       footer =    if (forMail) 
                     then if (BS.null documentinvitetext)
-                           then renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
+                           then mailFooter ctx document
                            else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                     else do
-                          this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
+                          this <- mailFooter ctx document
                           with <- renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                           replaceOnEdit' templates this with            
       header   =  if (BS.null documentinvitetext) 
@@ -278,40 +278,8 @@ mailInvitationToSignOrViewContent templates
                                   field "sigs" sigs)
 
 
-mailInvitationFromService :: Context -> Service -> Document -> SignatoryLink -> IO Mail
-mailInvitationFromService ctx service doc sl = do
-  templates <- toKontrakcjaTemplates [("invitationmail",BS.toString $ servicedocumentinvitationmail service)]
-  content <- renderTemplate templates "invitationmail" $ do
-    field "documenttitle" $ BS.toString  $ documenttitle doc
-    field "documentid" $ show $ documentid doc 
-    field "documentlink" $ (ctxhostpart ctx)++ show (LinkSignDoc doc sl)       
-    field "email" $ getEmail sl
-  htmlContent <- wrapHTML (ctxtemplates ctx) $ content++"\n"
-  return $ emptyMail {title = BS.fromString "Invitation", content = BS.fromString htmlContent}
-
 mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToSign templates ctx doc sl = do
-  mservice <- liftMM (query . GetService) (return $ getService doc)
-  case (mservice) of
-    Nothing -> mailInvitationToSign' templates ctx doc sl
-    Just service -> mailInvitationFromService ctx service doc sl
-      
-mailInvitationToSend :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToSend templates ctx doc sl = do
-  mservice <- liftMM (query . GetService) (return $ getService doc)
-  case (mservice) of
-    Nothing -> mailInvitationToSend' templates ctx doc sl
-    Just service -> mailInvitationFromService ctx service doc sl
-
-mailInvitationToView :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail    
-mailInvitationToView templates ctx doc sl  = do
-    mservice <- liftMM (query . GetService) (return $ getService doc)
-    case (mservice) of
-      Nothing -> mailInvitationToView' templates ctx doc sl
-      Just service -> mailInvitationFromService ctx service doc sl
-
-mailInvitationToSign' :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToSign' templates ctx document@Document { documenttitle } siglink = do
+mailInvitationToSign templates ctx document@Document { documenttitle } siglink = do
   let Just authorsiglink = getAuthorSigLink document
       authorname = getSmartName authorsiglink
   title <- renderTemplate templates "mailInvitationToSignTitle" [ ("documenttitle", BS.toString documenttitle)
@@ -320,8 +288,8 @@ mailInvitationToSign' templates ctx document@Document { documenttitle } siglink 
   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just siglink)
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-mailInvitationToSend' :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToSend' templates ctx document@Document{documenttitle} signaturelink = do
+mailInvitationToSend :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSend templates ctx document@Document{documenttitle} signaturelink = do
   let Just authorsiglink = getAuthorSigLink document
       authorname = getSmartName authorsiglink
   title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle", BS.toString documenttitle),
@@ -329,8 +297,8 @@ mailInvitationToSend' templates ctx document@Document{documenttitle} signatureli
   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just signaturelink)
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-mailInvitationToView' :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToView' templates ctx document@Document{documenttitle} signaturelink = do
+mailInvitationToView :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToView templates ctx document@Document{documenttitle} signaturelink = do
   let Just authorsiglink = getAuthorSigLink document
       authorname = getSmartName authorsiglink
   title <- renderTemplate templates "mailInvitationToViewTitle" [("documenttitle", BS.toString documenttitle),
@@ -339,14 +307,14 @@ mailInvitationToView' templates ctx document@Document{documenttitle} signatureli
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
     
 mailDocumentClosed :: KontrakcjaTemplates -> Context -> Document -> IO Mail
-mailDocumentClosed templates (Context {ctxhostpart}) document@Document{documenttitle} = 
+mailDocumentClosed templates ctx document@Document{documenttitle} = 
    do
      title <- renderTemplate templates "mailDocumentClosedTitle" [("documenttitle",BS.toString  documenttitle )] 
      partylist <- renderListTemplate templates $  map (BS.toString . getSmartName) $ partyList document
      content <- wrapHTML templates =<< (renderTemplateForProcess templates document processmailclosedcontent $ do
         field "documenttitle" $ BS.toString documenttitle 
         field "partylist" $ partylist
-        field "ctxhostpart" $ ctxhostpart)
+        field "footer" $ mailFooter ctx document)
      return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 
@@ -374,10 +342,10 @@ mailCancelDocumentByAuthorContent templates forMail customMessage ctx document =
         let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
             footer = if forMail
                      then if isNothing customMessage
-                          then renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart", ctxhostpart ctx)] 
+                          then mailFooter ctx document
                           else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                      else do
-                       this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart", ctxhostpart ctx)] 
+                       this <- mailFooter ctx document
                        with <- renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                        replaceOnEdit' templates this with
             header = case customMessage of 
@@ -463,3 +431,23 @@ makeEditable' templates name this = renderTemplate templates "makeEditable" [("n
 
 replaceOnEdit':: KontrakcjaTemplates -> String->String->IO String
 replaceOnEdit' templates this with =  renderTemplate templates "replaceOnEdit" [("this",this),("with",with)]
+
+
+mailFooter :: Context -> Document -> IO String
+mailFooter ctx doc =  do
+    mservice <- liftMM (query . GetService) (return $ documentservice doc)
+    case join $ servicemailfooter <$> serviceui <$> mservice of
+         Just footer -> return $ BS.toString footer
+         Nothing -> renderTemplate (ctxtemplates ctx) "poweredBySkrivaPaPara" $ 
+                        field "ctxhostpart" $ ctxhostpart ctx
+    
+    
+makeFullLink:: Context -> Document -> String ->  IO String
+makeFullLink ctx doc link= do
+    mservice <- liftMM (query . GetService) (return $ documentservice doc)
+    case join $ servicelocation <$> servicesettings <$> mservice of
+         Just (ServiceLocation location) -> return $ BS.toString location ++ link
+         Nothing -> return $ ctxhostpart ctx ++ link
+    
+    
+    

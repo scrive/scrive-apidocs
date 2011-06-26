@@ -118,8 +118,20 @@ embeddedErrorPage = do
     simpleResponse content
 
 serviceFields:: Maybe Service -> String -> Fields
-serviceFields _ location = field "location" location
-
+serviceFields (Just service) location = do 
+    field "location" location
+    field "buttons" $ isJust $ servicebuttons $ serviceui service
+    field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
+    field "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
+    field "background"  $ servicebackground $ serviceui service   
+    field "overlaybackground"  $ serviceoverlaybackground $ serviceui service   
+    field "barsbackground"  $ servicebarsbackground $ serviceui service
+    field "logo" $ isJust $ servicelogo $ serviceui service
+    field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
+    
+    
+serviceFields Nothing location = 
+    field "location" location
 
 sitemapPage :: Kontra String
 sitemapPage = do

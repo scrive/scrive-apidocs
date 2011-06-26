@@ -1069,13 +1069,11 @@ function hideFlashMessages(event) {
 
 function addFlashMessage(msg, type){
     var flashmsgbox = $('.flashmsgbox');    
-    flashmsgbox.children().remove();
-    var logo = "" 
-    if (!whitelabel) logo = "<div class='skrivapa-logo float-left'></div>"                        
+    flashmsgbox.children().remove();         
     flashmsgbox.append(
 	  "<div class='flash-container " + type + "'>"
         + "<div class='flash-content'>"
-		+ logo
+		+ "<div class='skrivapa-logo float-left'></div>"          
         + "<div class='flash-icon " + type + "'></div>"
         + "<div class='flash-body'>" + msg + "</div>"
 		+ "<div class='flash-close modal-close'></div></div></div>"
@@ -1099,7 +1097,7 @@ function prepareEditor(textarea) {
  
 standardDialogMask = "#333333"
 standardDialogTop  = "10%"    
-whitelabel = false;                     
+                
                      
 $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
   var invalidEmailErrMsg = localization.emptyOrNotValidEmail;

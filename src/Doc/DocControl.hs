@@ -203,6 +203,7 @@ sendDocumentErrorEmailToAuthor ctx document = do
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
         to = [MailAddress { fullname = getFullName authordetails
                           , email = getEmail authordetails}]
+        , from = documentservice document   
   }
 
 {- |
@@ -219,6 +220,7 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
         to = [MailAddress { fullname = getFullName signatorydetails
                           , email = getEmail signatorydetails}]
       , mailInfo = Invitation documentid  signatorylinkid
+      , from = documentservice document   
   }
 
 {- |
@@ -255,6 +257,7 @@ sendInvitationEmail1 ctx document signatorylink = do
         to = [MailAddress {fullname = getFullName signatorydetails
                           , email = getEmail signatorydetails}]
       , mailInfo = Invitation documentid signatorylinkid
+      , from = documentservice document 
   }
   
 {- |
@@ -271,6 +274,7 @@ sendReminderEmail custommessage ctx doc siglink = do
     , attachments = if isJust $ maybesigninfo siglink
                       then mailattachments
                       else []
+    , from = documentservice doc                  
     }
   return siglink
 
@@ -290,6 +294,7 @@ sendClosedEmails ctx document = do
     scheduleEmailSendout (ctxesenforcer ctx) $ 
                          mail { to = map mailAddressFromSignatoryLink signatorylinks
                               , attachments = mailattachments
+                              , from = documentservice document 
                               }
 
 
@@ -302,7 +307,8 @@ sendAwaitingEmail ctx document = do
       authoremail = getEmail authorsiglink
       authorname  = getFullName authorsiglink
   mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx authorname document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [MailAddress {fullname = authorname, email = authoremail}]
+                                                    , from = documentservice document  }
 
 makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
 makeMailAttachments ctx document = do
@@ -326,7 +332,8 @@ sendRejectEmails customMessage ctx document signalink = do
     let semail = getEmail sl
         sname = getFullName sl
     mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document signalink
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = sname, email = semail }]}
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [MailAddress { fullname = sname, email = semail}]
+                                                      , from = documentservice document }
 
 -- END EMAILS
 
@@ -504,8 +511,6 @@ handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra String
 handleSignShow documentid 
                signatorylinkid1
                magichash1 = do
-  doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
-  setCurrentService doc1
   Context { ctxtime
           , ctxipnumber 
           , ctxflashmessages } <- get
@@ -1582,10 +1587,10 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = 
         Right content -> return content
     if BSL.null content
       then do
-        liftIO $ print "No content"
+        Log.debug "No content"
         return Nothing
       else do
-          liftIO $ print "Got the content, creating document"
+          Log.debug "Got the content, creating document"
           let title = BS.fromString (basename filename)
           doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title

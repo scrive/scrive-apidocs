@@ -5,7 +5,7 @@ module Session
     , SessionId
     , getUserFromSession
     , getCompanyFromSession
-    , getServiceFromSession
+    , getLocationFromSession
     , handleSession
     , updateSessionWithContextData
     , getELegTransactions
@@ -27,7 +27,6 @@ module Session
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
-import Data.Functor
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
@@ -164,14 +163,24 @@ data SessionData7 = SessionData7
     , service7          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
     } deriving (Ord,Eq,Show,Typeable)
 
+data SessionData8 = SessionData8 
+    { userID8           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , expires8          :: MinutesTime       -- ^ when does this session expire
+    , hash8             :: MagicHash         -- ^ session security token
+    , elegtransactions8 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken8           :: MagicHash         -- ^ Random string to prevent CSRF
+    , service8          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
+    , company8        :: Maybe CompanyID
+    } deriving (Ord,Eq,Show,Typeable)
+
 data SessionData = SessionData 
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires          :: MinutesTime       -- ^ when does this session expire
     , hash             :: MagicHash         -- ^ session security token
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
-    , service          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
-    , company        :: Maybe CompanyID
+    , location         :: String   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
+    , company          :: Maybe CompanyID
     } deriving (Ord,Eq,Show,Typeable)
 
 $(deriveSerialize ''SessionData3) 
@@ -194,9 +203,13 @@ $(deriveSerialize ''SessionData7)
 instance Version (SessionData7) where
     mode = extension 7 (Proxy :: Proxy SessionData6)
 
+$(deriveSerialize ''SessionData8) 
+instance Version (SessionData8) where
+    mode = extension 8 (Proxy :: Proxy SessionData7)
+    
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-    mode = extension 8 (Proxy :: Proxy SessionData7)
+    mode = extension 9 (Proxy :: Proxy SessionData8)
 
 
 instance Migrate SessionData0 SessionData1 where
@@ -274,16 +287,27 @@ instance Migrate SessionData6 SessionData7 where
                     , service7          = Nothing
                     }
                     
-instance Migrate SessionData7 SessionData where
+instance Migrate SessionData7 SessionData8 where
     migrate SessionData7{} =
+        SessionData8 { userID8           = Nothing
+                    , expires8          = MinutesTime 0 0
+                    , hash8             = MagicHash 0
+                    , elegtransactions8 = []
+                    , xtoken8           = MagicHash 0
+                    , service8          = Nothing
+                    , company8          = Nothing
+                    }
+                    
+instance Migrate SessionData8 SessionData where
+    migrate SessionData8{} =
         SessionData { userID           = Nothing
                     , expires          = MinutesTime 0 0
                     , hash             = MagicHash 0
                     , elegtransactions = []
                     , xtoken           = MagicHash 0
-                    , service          = Nothing
+                    , location         = ""
                     , company          = Nothing
-                    }
+                    }                    
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
                        , sessionData::SessionData
@@ -453,15 +477,15 @@ emptySessionData = do
                          , hash = magicHash
                          , elegtransactions = []
                          , xtoken = xhash
-                         , service = Nothing
+                         , location = ""
                          , company = Nothing
                          }  
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, elegtransactions, service, company} =
+isSessionDataEmpty SessionData{userID, elegtransactions, location, company} =
        userID == Nothing
-    && Prelude.null elegtransactions && service == Nothing && company == Nothing
+    && Prelude.null elegtransactions && location == "" && company == Nothing
 
 -- | Return ID for temporary session (not written to db)
 tempSessionID :: SessionId
@@ -480,14 +504,11 @@ getUserFromSession s =
 
 getCompanyFromSession :: Session -> ServerPartT IO (Maybe Company)
 getCompanyFromSession s = case (company $ sessionData s) of
-        Just i -> query $ GetCompany (fst <$> (service $ sessionData s)) i
+        Just i -> query $ GetCompany i -- This needs a fix
         _ -> return Nothing 
 
-getServiceFromSession :: Session -> ServerPartT IO (Maybe (Service,String))               
-getServiceFromSession s = 
-    case (service $ sessionData s) of
-        Just (i,location) -> (fmap (\srv -> (srv,location))) <$> (query $ GetService i)
-        _ -> return Nothing    
+getLocationFromSession :: Session -> ServerPartT IO String
+getLocationFromSession s = return $ location $ sessionData s
 
 
 -- | Handles session timeout. Starts new session when old session timed out.
@@ -508,14 +529,13 @@ handleSession = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: Session -> Maybe UserID -> Maybe (ServiceID,String) -> [ELegTransaction] -> ServerPartT IO ()
-updateSessionWithContextData (Session i sd) u srvs trans = do
+updateSessionWithContextData :: Session -> Maybe UserID -> [ELegTransaction] -> ServerPartT IO ()
+updateSessionWithContextData (Session i sd) u trans = do
     now <- liftIO getMinutesTime
     let newsd = sd {
         userID = u
         , expires = 60 `minutesAfter` now
         , elegtransactions = trans
-        , service = srvs
     }
     if i == tempSessionID && not (isSessionDataEmpty newsd)
        then do
@@ -591,29 +611,28 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: (MonadIO m) => ServiceID -> Either CompanyID UserID -> String ->  m SessionId
-createServiceSession sid userorcompany location= do
+createServiceSession:: (MonadIO m) => Either CompanyID UserID -> String ->  m SessionId
+createServiceSession userorcompany loc= do
     sd <- liftIO emptySessionData
     session <-  update $ NewSession $  sd {
               userID = either (const Nothing) Just userorcompany
             , company = either Just (const Nothing) userorcompany
-            , service = Just (sid,location)
-             }
+            , location = loc
+            }
     return $ sessionId  session       
     
 -- This is used to connect user or company to session when it was created by same service
-loadServiceSession::(MonadIO m,Functor m) => ServiceID -> Either CompanyID UserID -> SessionId -> ServerPartT m Bool
-loadServiceSession  sid userorcompany ssid  = do
+loadServiceSession::(MonadIO m,Functor m) => Either CompanyID UserID -> SessionId -> ServerPartT m Bool
+loadServiceSession userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of
         Nothing -> return False
         Just session@(Session{sessionData}) -> 
-            case (Just sid == (fst <$> service sessionData) , userorcompany) of
-              (True, Left cid) -> if (company sessionData == Just cid) 
+            case (userorcompany) of
+              (Left cid) -> if (company sessionData == Just cid) 
                                      then startSessionCookie session >> return True
                                      else return False
-              (True, Right uid) -> if (userID sessionData == Just uid) 
+              (Right uid) -> if (userID sessionData == Just uid) 
                                      then startSessionCookie session >> return True
-                                     else return False
-              _ -> return False                   
+                                     else return False          
                                      

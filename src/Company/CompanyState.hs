@@ -112,10 +112,10 @@ modifyCompany sid cid action = do
                 modify (updateIx cid newcompany)
                 return $ Right newcompany
 
-getCompany :: (Maybe ServiceID) -> CompanyID -> Query Companies (Maybe Company)
-getCompany sid cid = do
+getCompany ::CompanyID -> Query Companies (Maybe Company)
+getCompany cid = do
   companies <- ask
-  return $ getOne (companies @= sid @= cid)
+  return $ getOne (companies @= cid)
 
 getCompanyByExternalID :: (Maybe ServiceID) -> ExternalCompanyID -> Query Companies (Maybe Company)
 getCompanyByExternalID sid ecid = do

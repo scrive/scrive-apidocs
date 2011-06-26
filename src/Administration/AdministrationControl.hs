@@ -480,9 +480,15 @@ handleCreateService = onlySuperUser $ do
          (Just name,Just admin) -> do 
             pwdBS <- getFieldUTFWithDefault mempty "password"
             pwd <- liftIO $ createPassword pwdBS
-            _ <- update $ CreateService (ServiceID name) pwd (ServiceAdmin $ unUserID $ userid admin)
+            mservice <- update $ CreateService (ServiceID name) pwd (ServiceAdmin $ unUserID $ userid admin)
+            case mservice of
+                Just srvs -> do
+                    location <- getFieldUTF "location"
+                    update $ UpdateServiceSettings (serviceid srvs) (servicesettings srvs) 
+                                    {servicelocation = ServiceLocation <$> location}
+                _ -> mzero                    
             return LoopBack
-         _ -> return LinkMain
+         _ -> mzero
           
 {- Services page-}
 showServicesPage :: Kontra Response

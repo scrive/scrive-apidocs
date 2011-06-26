@@ -6,6 +6,7 @@ import qualified Data.ByteString as BS
 
 import User.UserState
 import Doc.DocStateData
+import API.Service.ServiceState
 
 data SendGridEventType =
       Processed
@@ -29,8 +30,18 @@ data Mail = Mail
     , title       :: BS.ByteString
     , content     :: BS.ByteString
     , attachments :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
-    , from        :: Maybe User
+    , from        :: Maybe ServiceID
     , mailInfo    :: MailInfo 
+    } deriving (Eq, Ord, Show, Typeable)
+
+
+data Mail2 = Mail2
+    { to2          :: [MailAddress]
+    , title2       :: BS.ByteString
+    , content2     :: BS.ByteString
+    , attachments2 :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
+    , from2        :: Maybe User
+    , mailInfo2    :: MailInfo 
     } deriving (Eq, Ord, Show, Typeable)
 
 data Mail1 = Mail1
@@ -61,13 +72,16 @@ instance Version SendGridEventType
 instance Version Mail0
 instance Version Mail1 where
     mode = extension 1 (Proxy :: Proxy Mail0)
-instance Version Mail where
+instance Version Mail2 where
     mode = extension 2 (Proxy :: Proxy Mail1)
-
+    
+instance Version Mail where
+    mode = extension 3 (Proxy :: Proxy Mail2)
+    
 instance Version MailInfo
 instance Version MailAddress
 
-$(deriveSerializeFor [''SendGridEventType, ''Mail, ''Mail1, ''Mail0, ''MailAddress, ''MailInfo])
+$(deriveSerializeFor [''SendGridEventType, ''Mail, ''Mail2, ''Mail1, ''Mail0, ''MailAddress, ''MailInfo])
 
 instance Migrate Mail0 Mail1 where
     migrate Mail0 {
@@ -91,7 +105,7 @@ instance Migrate Mail0 Mail1 where
         , mailInfo1 = mailInfo0
     }
 
-instance Migrate Mail1 Mail where
+instance Migrate Mail1 Mail2 where
         migrate (Mail1
                  { fullname1    
                  , email1       
@@ -100,11 +114,26 @@ instance Migrate Mail1 Mail where
                  , attachments1 
                  , from1        
                  , mailInfo1    
+                 }) = Mail2
+                    { to2 = [MailAddress fullname1 email1]
+                    , title2 = title1
+                    , content2 = content1
+                    , attachments2 = attachments1
+                    , from2 = from1
+                    , mailInfo2 = mailInfo1
+                    }
+instance Migrate Mail2 Mail where
+        migrate (Mail2
+                 { to2 
+                 , title2 
+                 , content2 
+                 , attachments2 
+                 , mailInfo2 
                  }) = Mail
-                    { to = [MailAddress fullname1 email1]
-                    , title = title1
-                    , content = content1
-                    , attachments = attachments1
-                    , from = from1
-                    , mailInfo = mailInfo1
+                    { to = to2
+                    , title = title2
+                    , content = content2
+                    , attachments = attachments2
+                    , from = Nothing
+                    , mailInfo = mailInfo2
                     }

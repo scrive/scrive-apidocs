@@ -43,8 +43,8 @@ import User.UserState
 import Doc.DocState
 import API.Service.ServiceState
 import Happstack.State (query)
-import Control.Monad
 import Templates.Langs
+import Util.HasSomeUserInfo
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplate templates "adminsmain" ()
@@ -136,13 +136,13 @@ statsPage templates stats sysinfo =
         field "adminlink" $ show $ LinkAdminOnly
 
 servicesAdminPage::KontrakcjaTemplates -> [Service] -> IO String
-servicesAdminPage templates services= 
+servicesAdminPage templates services= do
     renderTemplate templates "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly
         field "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldIO "admin"  $ liftM (fmap $ show . useremail . userinfo) $ query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin service
-        
+            fieldIO "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
+            field "location" $ show $ servicelocation $ servicesettings service
         
 adminTranslationsPage::KontrakcjaTemplates -> [(Lang,TranslationStats)] ->  IO String
 adminTranslationsPage templates stats =  

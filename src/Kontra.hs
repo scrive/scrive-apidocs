@@ -26,7 +26,6 @@ module Kontra
     , param
     , currentService
     , currentServiceID
-    , setCurrentService
     , HasService(..)
     )
     where
@@ -245,9 +244,4 @@ class HasService a where
 instance HasService Document where
     getService = documentservice
     
-setCurrentService :: (HasService a) => a -> Kontra ()
-setCurrentService a = do
-   ctx <- get 
-   srv <- liftMM (query . GetService) (return $ getService a)
-   put ctx {ctxservice = srv}
 

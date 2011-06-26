@@ -130,7 +130,7 @@ getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
   documents <- ask
   -- this should be looking up by userid, but it would miss docs that aren't yet saved for the user
-  return $ IxSet.toList (documents @= (useremail $ userinfo user))
+  return $  filter (\d -> documentservice d == userservice user) $ IxSet.toList (documents @= (useremail $ userinfo user))
     
 filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksByUser doc user = 

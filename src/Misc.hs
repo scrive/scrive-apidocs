@@ -402,6 +402,19 @@ whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c
 whenMaybe False _ = return Nothing
 
+
+getFileField:: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
+getFileField name = do
+    finput <- getDataFn (lookInput name)
+    liftIO $ putStrLn $ show finput
+    case finput of
+        Right (Input contentspec _ _)-> 
+            case contentspec of
+                Left filepath -> joinEmpty <$> Just . concatChunks <$> (liftIO $ BSL.readFile filepath)
+                Right content -> return $ joinEmpty . Just $ concatChunks content
+        _ -> return Nothing
+        
+        
 -- | Pack value to just unless we have 'mzero'.  Since we can not check
 -- emptyness of string in templates we want to pack it in maybe.
 nothingIfEmpty::(Eq a, Monoid a) => a -> Maybe a
@@ -577,8 +590,8 @@ mapSnd f = fmap (onSnd f)
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
-
-
+mapPair::(Functor f) => (a -> b) -> f (a,a)  -> f (b,b)
+mapPair f = fmap (\(a1,a2) -> (f a1, f a2)) 
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []

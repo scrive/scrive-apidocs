@@ -93,6 +93,9 @@ data KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
     | LinkAttachmentForAuthor DocumentID FileID
     | LinkAttachmentForViewer DocumentID SignatoryLinkID MagicHash FileID
+    | LinkServiceLogo ServiceID
+    | LinkServiceButtonsBody ServiceID
+    | LinkServiceButtonsRest ServiceID
 
 
 {- |
@@ -171,4 +174,7 @@ instance Show KontraLink where
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/d/" ++ show did ++ "/" ++ show fid
     showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/s/" ++ show did ++ "/" ++ show sid ++ "/" ++ show mh ++ "/" ++ show fid
-    
+    showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
+    showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
+    showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
+        

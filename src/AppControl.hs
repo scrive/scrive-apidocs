@@ -277,8 +277,12 @@ handleRoutes = msum [
      
      , dir "services" $ hGet0 $ handleShowServiceList
      , dir "services" $ hGet1 $ handleShowService
-     , dir "services" $ hPost1 $ handleChangeService
-     
+     , dir "services" $ dir "ui" $ hPost1 $ handleChangeServiceUI
+     , dir "services" $ dir "password" $ hPost1 $ handleChangeServicePassword
+     , dir "services" $ dir "settings" $ hPost1 $ handleChangeServiceSettings
+     , dir "services" $ dir "logo" $ hGet1 handleServiceLogo
+     , dir "services" $ dir "buttons_body" $ hGet1 handleServiceButtonsBody
+     , dir "services" $ dir "buttons_rest" $ hGet1 handleServiceButtonsRest
      , dir "dave" $ dir "document" $ hGet1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ daveUser
            
@@ -467,9 +471,8 @@ appHandler appConf appGlobals = do
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'  
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
-      let newservice =  fmap (\srv -> (serviceid srv,ctxlocation ctx'))  $ ctxservice ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      updateSessionWithContextData session newsessionuser newservice newelegtrans
+      updateSessionWithContextData session newsessionuser newelegtrans
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -495,7 +498,8 @@ appHandler appConf appGlobals = do
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
       mcompany <- getCompanyFromSession session
-      mservice <- getServiceFromSession session
+      location <- getLocationFromSession session
+      mservice <- query . GetServiceByLocation . toServiceLocation =<< currentLink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -532,8 +536,8 @@ appHandler appConf appGlobals = do
                 , ctxfilecache = filecache appGlobals
                 , ctxxtoken = getSessionXToken session
                 , ctxcompany = mcompany
-                , ctxservice = fst <$> mservice
-                , ctxlocation = fromMaybe "" $ snd <$> mservice
+                , ctxservice = mservice
+                , ctxlocation = location
                 , ctxadminaccounts = map (Email . BS.fromString) (admins appConf)
                 }
       return ctx

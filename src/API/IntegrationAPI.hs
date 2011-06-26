@@ -68,7 +68,7 @@ integrationService = do
     case mservice of 
          Just service -> do
              passwd <- getFieldUTFWithDefault BS.empty "password"
-             if (verifyPassword (servicepassword service) passwd)
+             if (verifyPassword (servicepassword $ servicesettings service) passwd)
                 then return $ Just service
                 else return Nothing
          Nothing -> return Nothing
@@ -105,8 +105,10 @@ getRequestUser = do
 embeddDocumentFrame :: IntegrationAPIFunction APIResponse
 embeddDocumentFrame = do
     ctx <- lift $ get
-    let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show l)]
-    sid <-  serviceid <$> service <$> ask
+    srvs <-  service <$> ask
+    let sid = serviceid srvs
+    let slocation = fromMaybe (ctxhostpart ctx) $ show <$> (servicelocation $ servicesettings srvs)
+    let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> apiAskString "location"
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No such document"
@@ -115,17 +117,15 @@ embeddDocumentFrame = do
     msiglink <- liftMM (return . getSigLinkFor doc) (apiAskBS "email")
     case (mcompany,msiglink) of
          (Just company,Nothing) -> do
-             ssid <- createServiceSession sid (Left $ companyid $ company) location
-             returnLink $ LinkConnectCompanySession sid  (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         (Nothing, Just siglink) ->  do
-             returnLink $ LinkSignDoc doc siglink
+             ssid <- createServiceSession (Left $ companyid $ company) location
+             returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
          (Just _company, Just siglink) -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink)) 
                 then do
-                     ssid <- createServiceSession sid  (Right $ fromJust $ maybesignatory siglink) location
+                     ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
                 else returnLink $ LinkSignDoc doc siglink     
-         _ -> throwApiError API_ERROR_MISSING_VALUE "Company or email connected to document must be provided"             
+         _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."             
         
 
 createDocument  :: IntegrationAPIFunction APIResponse
@@ -255,15 +255,15 @@ removeDocument = do
      and redirect user to referer
 -}     
 connectUserToSession :: ServiceID -> UserID -> SessionId -> Kontra KontraLink
-connectUserToSession sid uid ssid = do
-    loaded <- loadServiceSession sid (Right uid) ssid
+connectUserToSession _ uid ssid = do
+    loaded <- loadServiceSession (Right uid) ssid
     if (loaded) 
      then return $ BackToReferer
      else mzero
 
 connectCompanyToSession :: ServiceID -> CompanyID -> SessionId -> Kontra KontraLink
-connectCompanyToSession sid cid ssid = do
-    loaded <- loadServiceSession sid (Left cid) ssid
+connectCompanyToSession _ cid ssid = do
+    loaded <- loadServiceSession (Left cid) ssid
     if (loaded) 
      then return $ BackToReferer
      else mzero
