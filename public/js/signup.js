@@ -28,7 +28,7 @@ safeReady(function() {
     hideEverything();
     displayAccoutTypeChoice();
     displayAdditionalInfo();
-    
+
     $("#tosCBox").change(displayAccoutTypeChoice);
     $("input[name=accounttype]").change(displayAdditionalInfo);
 });
