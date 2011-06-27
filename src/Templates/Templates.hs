@@ -1,5 +1,4 @@
 {-# LANGUAGE OverlappingInstances #-}
-{-# OPTIONS_GHC -fno-warn-monomorphism-restriction #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates
@@ -92,6 +91,7 @@ module Templates.Templates
     , Lang(..)
     ) where
 
+import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Templates.TemplatesLoader (langVersion,readAllLangsTemplates,renderTemplateMain,templateList,KontrakcjaMultilangTemplates,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime,Lang(..))
@@ -155,12 +155,13 @@ instance (ToSElem a) => Field a where
         s <- get 
         put ((a,return $ toSElem b):s)
 
-
-instance Field (Fields) where 
-  field a b =  do
-        s <- get 
-        let val = fmap (toSElem . Map.fromList) $ sequence $ map packIO $ execState b [] 
-        put ((a, val):s)
+instance Field (Fields) where
+  field a b = do
+    s <- get
+    put ((a, val):s)
+    where
+      val :: Stringable a => IO (SElem a)
+      val = toSElem . Map.fromList <$> (sequence $ map packIO $ execState b [])
 
 instance Field [Fields] where 
   field a fs =  do
