@@ -575,7 +575,7 @@ handleIssueShowGet docid = do
           (Just (DesignStep3 _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
           _ -> do
             -- authors get a view with buttons
-            case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
+            case (isAuthor (document, ctxmaybeuser), isAttachment document, documentstatus document) of
               (True, True, Preparation) -> liftIO $ Right <$> pageAttachmentDesign ctx document
               (_, True, _) -> liftIO $ Right <$> pageAttachmentView ctx document 
               (True, _, _) -> do
@@ -625,7 +625,7 @@ handleIssueShowPost docid = withUserPost $ do
     Left _ -> mzero
     Right document -> do
       Context { ctxmaybeuser = Just user } <- get
-      guard (isUserAuthor document user) -- still need this because friend can read document
+      guard (isAuthor (document, user)) -- still need this because friend can read document
       sign <- isFieldSet "sign"
       send <- isFieldSet "final"
       template <- isFieldSet "template"
@@ -1857,7 +1857,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
       case edoc of
         Left _ -> return LinkMain
         Right doc -> do
-          guard $ isUserAuthor doc user
+          guard $ isAuthor (doc, user)
           mnewdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid email
           case mnewdoc of 
             Right newdoc -> do
@@ -1874,7 +1874,7 @@ sendCancelMailsForDocument customMessage ctx document = do
   liftIO $ forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))
 
 failIfNotAuthor :: Document -> User -> Kontra ()
-failIfNotAuthor document user = guard (isUserAuthor document user)
+failIfNotAuthor document user = guard (isAuthor (document, user))
 
 checkLinkIDAndMagicHash :: Document -> SignatoryLinkID -> MagicHash -> Kontra ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
@@ -1932,7 +1932,7 @@ handleCreateFromTemplate = withUserPost $ do
       let user = fromJust ctxmaybeuser
       document <- queryOrFail $ GetDocumentByDocumentID $ did
       sharedWithUser <- isShared user document
-      enewdoc <- case (isUserAuthor document user, sharedWithUser) of
+      enewdoc <- case (isAuthor (document, user), sharedWithUser) of
         (True, _) -> update $ SignableFromDocumentID did
         (_, True) -> update $ SignableFromSharedDocumentID user did
         _ -> mzero

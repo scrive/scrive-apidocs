@@ -332,7 +332,7 @@ documentBasicViewFields templates crtime user doc = do
     field "authorname" $ getAuthorName doc
     field "signatories" $ map (singlnkFields doc (showDateAbbrev crtime)) $ filter isSignatory $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
-    field "doclink"  $ if isUserAuthor doc user || null signatorylinklist
+    field "doclink"  $ if isAuthor (doc, user) || null signatorylinklist
                         then show . LinkIssueDoc $ documentid doc
                         else show $ LinkSignDoc doc (head signatorylinklist)
     {- FIXME: to know if a user is superuser we need to consult Context... we do not have it here
@@ -343,8 +343,8 @@ documentBasicViewFields templates crtime user doc = do
     field "timeoutdate" $ fromTimeout show
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
-    field "isauthor" $ isUserAuthor doc user
-    field "isviewer" $ (not $ isUserAuthor doc user) && isViewer doc user
+    field "isauthor" $ isAuthor (doc, user)
+    field "isviewer" $ (not $ isAuthor (doc, user)) && isViewer (doc, user)
     field "isshared" $ (documentsharing doc)==Shared
     field "processname" $ renderTextForProcess templates doc processname 
   where
@@ -949,7 +949,7 @@ signatoryLinkFields
     , signatorydetails
     , invitationdeliverystatus
   } =
-  let isCurrentUserAuthor = maybe False (isUserAuthor document) muser
+  let isCurrentUserAuthor = isAuthor (document, muser)
       current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap getEmail muser) == (Just $ getEmail signatorydetails)) 
       isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
     in do

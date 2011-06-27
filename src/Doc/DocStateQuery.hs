@@ -52,7 +52,7 @@ getDocByDocID docid = do
           liftIO $ print "does not exist"
           return $ Left DBResourceNotAvailable
         Just doc ->
-          case isUserAuthor doc user of
+          case isAuthor (doc, user) of
             True  -> do
               liftIO $ print "Is the author"
               return $ Right doc
@@ -61,8 +61,8 @@ getDocByDocID docid = do
               usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
               usersImSupervising <- query $ GetUserSubaccounts  (userid user)
               related <- query $ GetUserRelatedAccounts  (userid user)
-              let canAcces =    (any (isUserAuthor doc) $ usersImSupervising ++ usersImFriendsWith)
-                             || ((any (isUserAuthor doc) related) && (Shared == documentsharing doc))
+              let canAcces = (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith)))
+                              || ((any isAuthor (zip (repeat doc) related)) && (Shared == documentsharing doc))
               case (canAcces) of
                 True  -> return $ Right doc
                 False -> return $ Left DBResourceNotAvailable

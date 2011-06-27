@@ -56,12 +56,6 @@ isDeletableDocument :: Document -> Bool
 isDeletableDocument doc = not $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]
 
 {- |
-   Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?
- -}
-hasSigned :: SignatoryLink -> Bool
-hasSigned sl = isJust $ maybesigninfo sl
-
-{- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
    See also: partyListButAuthor to exclude the author.
  -}
@@ -126,29 +120,6 @@ joinWith :: [a] -> [[a]] -> [a]
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ joinWith s xs
-
-{- Either a signatory name or email address. We dont want to show empty strings -}
-{- |
-   Given a SignatoryLink, return a "smart" name: either the name or the email.
- -}
---personname :: SignatoryLink -> BS.ByteString 
---personname = getSmartName
-
-{- Same but unwrapped. We need this cause author details are in this format  -}
-{- |
-   Given a SignatoryDetails, return a "smart" name: either the name or the email.
- -}
---personname' :: SignatoryDetails -> BS.ByteString 
---personname' = getSmartName
-
-{- |
-   Given a SignatoryLink, returns a tuple containing the name and the email address.
-   
-   Useful for sending emails.
-   Refactor note: change this to getNameEmailPair, move to Util.HasSomeUserInfo
- -}
-emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
-emailFromSignLink sl = (getFullName sl, getEmail sl) 
 
 -- where does this go? -EN
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
@@ -217,18 +188,6 @@ checkCSVSigIndex sls n
   | n==0 && slcount>0 && isAuthor (head sls) = Left "author can't be set from csv"
   | otherwise = Right n
   where slcount = length sls
-
-{- |
-   Is this SignatoryLink undelivered?
- -}
-isUndelivered :: SignatoryLink -> Bool
-isUndelivered sl = invitationdeliverystatus sl == Undelivered
-
-{- |
-   Is this SignatoryLink Deferred?
- -}
-isDeferred :: SignatoryLink -> Bool
-isDeferred sl = invitationdeliverystatus sl == Deferred
 
 {- |
    Given a Document, return all of the undelivered signatorylinks.
@@ -301,12 +260,6 @@ isELegDataMismatch _                            = False
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
-{- |
-   Is the user able to view the doc?
- -}
-isViewer :: Document -> User -> Bool
-isViewer doc user = any (isSigLinkFor user) $ documentsignatorylinks doc
-
 -- Not ready to refactor this quite yet.
 isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder muser doc siglink = isEligibleForReminder'' muser doc siglink
@@ -327,7 +280,7 @@ isClosed doc = documentstatus doc == Closed
 isEligibleForReminder' :: User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder' user document siglink = 
   isActivatedSignatory (documentcurrentsignorder document) siglink
-  && isUserAuthor document user
+  && isAuthor (document, user)
   && not (isSigLinkFor user siglink)
   && isDocumentEligibleForReminder document
   && not (isUndelivered siglink)
@@ -346,8 +299,8 @@ isEligibleForReminder'' muser document@Document{documentstatus} siglink =
     && (isClosed' || not wasSigned)
     && isSignatoryPartner
   where
-    userIsAuthor = maybe False (isUserAuthor document) muser
-    isUserSignator = maybe False (flip isSigLinkFor siglink) muser
+    userIsAuthor = isAuthor (document, muser)
+    isUserSignator = isSigLinkFor muser siglink
     wasSigned = isJust (maybesigninfo siglink) && not (isUserSignator && (documentstatus == AwaitingAuthor))
     isClosed' = documentstatus == Closed
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
@@ -388,7 +341,7 @@ canUserInfoViewDirectly userid email doc =
   case getSigLinkFor doc (userid, email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
-    Just siglink | isAuthor siglink                                     -> True
+    Just siglink | isAuthor siglink                                            -> True
     Just _       | Preparation == documentstatus doc                           -> False
     Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
     _                                                                          -> False
@@ -416,32 +369,6 @@ isCurrentSignatory signorder siglink =
   (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
-{- |
-   Is the Author of this Document a signatory (not a Secretary)?
- -}
-isAuthorSignatory :: Document -> Bool
-isAuthorSignatory document =
-  case getAuthorSigLink document of
-    Just siglink -> isSignatory siglink
-    _ -> False
-
-{- |
-   Is this user the author of doc?
- -}
-isUserAuthor :: Document -> User -> Bool
-isUserAuthor doc user = maybe False isAuthor $ getSigLinkFor doc user
-
-{- |
-   Does the author of this doc have this userid?
- -}
-isUserIDAuthor :: Document -> UserID -> Bool
-isUserIDAuthor doc userid = maybe False (isSigLinkFor userid) $ getAuthorSigLink doc
-
-{- |
-   Is the document deleted for this userid?
- -}
-isDeletedForUserID :: Document -> UserID -> Bool
-isDeletedForUserID doc userid = maybe False signatorylinkdeleted $ getSigLinkFor doc userid
 
 {- | Add a tag to tag list -}
 addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
@@ -460,15 +387,6 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Ju
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 
-{- |
-   Given a Document, return the best guess at the author's name:
-     * First Name + Last Name
-     * email address if no name info
--}
-getAuthorName :: Document -> BS.ByteString
-getAuthorName doc = 
-  let Just authorsiglink = getAuthorSigLink doc
-  in getSmartName authorsiglink
   
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd

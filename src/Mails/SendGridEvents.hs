@@ -32,6 +32,7 @@ import Data.List
 import qualified AppLogger as Log
 import MinutesTime
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 data SendgridEvent =
     SendgridEvent {

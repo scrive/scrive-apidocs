@@ -27,6 +27,8 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Data.Functor
 import API.Service.ServiceState
+import Util.SignatoryLinkUtils
+
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS

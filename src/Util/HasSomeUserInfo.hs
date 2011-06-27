@@ -10,6 +10,7 @@
 -- company number, company name, and personal number.
 -----------------------------------------------------------------------------
 module Util.HasSomeUserInfo ( 
+  emailFromSignLink,
   getCompanyName,
   getCompanyNumber,
   getEmail,
@@ -87,3 +88,12 @@ instance HasSomeUserInfo SignatoryLink where
   getFirstName      = signatoryfstname        . signatorydetails
   getLastName       = signatorysndname        . signatorydetails
   getPersonalNumber = signatorypersonalnumber . signatorydetails
+
+{- |
+   Given a SignatoryLink, returns a tuple containing the name and the email address.
+   
+   Useful for sending emails.
+   Refactor note: change this to getNameEmailPair, move to Util.HasSomeUserInfo
+ -}
+emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
+emailFromSignLink sl = (getFullName sl, getEmail sl) 

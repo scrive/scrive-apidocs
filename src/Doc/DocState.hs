@@ -903,7 +903,7 @@ shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Docum
 shareDocuments user docidlist = do
   mdocs <- forM docidlist $ \docid ->
     modifySignableOrTemplate docid $ \doc ->
-        if isUserAuthor doc user
+        if isAuthor (doc, user)
           then Right $ doc { documentsharing = Shared }
           else Left $ "Can't share document unless you are the author"
   return $ sequence mdocs
@@ -992,7 +992,7 @@ tryToGetRestarted :: Document -> User -> MinutesTime -> Word32 -> Update Documen
 tryToGetRestarted doc user time ipnumber = 
   if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
   then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
-  else if (not $ isUserAuthor doc user)
+  else if (not $ isAuthor (doc, user))
        then return $ Left $ "Can't restart document if you are not it's author"
        else do 
          doc' <- clearSignInfofromDoc doc

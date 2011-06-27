@@ -37,7 +37,6 @@ module Doc.DocStateData
     , SignatoryAttachment(..)
     , Supervisor(..)
     , documentHistoryToDocumentLog
-    , getAuthorSigLink
     ) where
 
 import API.Service.ServiceState
@@ -46,7 +45,6 @@ import Control.Monad
 import Data.Bits
 import Data.Data (Data)
 import Data.Int
-import Data.List
 import Data.Maybe
 import Data.Word
 import Happstack.Data
@@ -2821,11 +2819,6 @@ instance Version FileID where
 
 type Documents = IxSet Document
 
-{- |
-   Get the author's signatory link.
- -}
-getAuthorSigLink :: Document -> Maybe SignatoryLink
-getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignatorylinks
 
 instance Indexable Document where
         empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
@@ -2859,15 +2852,8 @@ instance Indexable Document where
                                              , not (signatorylinkdeleted siglink)
                                              , Just userid <- [maybesignatory siglink]
                                              ] :: [UserID])
-                      , ixFun (\x ->
-                          case getAuthorSigLink x of
-                               Just asl ->
-                                   case maybesignatory asl of
-                                        Just uid -> if not (signatorylinkdeleted asl) 
-                                                    then [Author uid]
-                                                    else []
-                                        Nothing -> []
-                               Nothing -> [])
+                      , ixFun (\x -> [ Author uid | sl@SignatoryLink{ maybesignatory = Just uid } <- documentsignatorylinks x
+                                                  , SignatoryAuthor `elem` signatoryroles sl])
                       ]
                                                     
 instance Component Documents where

@@ -18,7 +18,6 @@ import API.API
 import API.APICommons hiding (SignatoryTMP(..))
 import Doc.DocControl
 import Doc.DocState
-import Doc.DocUtils
 import Kontra
 import Misc
 import Doc.DocViewMail
@@ -98,7 +97,7 @@ getUserDoc :: UserAPIFunction Document
 getUserDoc = do
   author <- user <$> ask  
   mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-  when (isNothing mdocument || (not $ isUserAuthor (fromJust mdocument) author)) $
+  when (isNothing mdocument || (not $ isAuthor ((fromJust mdocument), author))) $
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
                                
@@ -148,7 +147,7 @@ getTemplate = do
   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
   when (isNothing mtemplate) $ throwApiError API_ERROR_NO_DOCUMENT "No template exists with this ID"
   let Just temp = mtemplate
-  when (not $ isUserAuthor temp author) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
+  when (not $ isAuthor (temp, author)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
   when (not $ isTemplate temp) $ throwApiError API_ERROR_OTHER "This document is not a template"
   return temp
   

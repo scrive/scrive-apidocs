@@ -13,6 +13,8 @@ import Doc.DocStateData
 import User.UserState
 import Util.HasSomeUserInfo
 import Data.List
+import Mails.MailsUtil
+import Data.Maybe
 
 import qualified Data.ByteString as BS
 
@@ -40,6 +42,9 @@ instance SignatoryLinkIdentity SignatoryLinkID where
 instance SignatoryLinkIdentity User where
   isSigLinkFor u sl = isSigLinkFor (userid u, getEmail u) sl
   
+instance SignatoryLinkIdentity Author where
+  isSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl
+  
 instance SignatoryLinkIdentity Supervisor where
   isSigLinkFor (Supervisor uid) sl = Just uid == maybesupervisor sl
 
@@ -50,24 +55,82 @@ instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
 
-class SignatoryLinkQueries a where
-  {- |
-   Is this SignatoryLink an author?
-   -}
-  isAuthor :: a -> Bool
-  {- |
-   Is the given SignatoryLink marked as a signatory (someone who can must sign)?
-   -}
-  isSignatory :: a -> Bool
+class MaybeSignatoryLink a where
+  getMaybeSignatoryLink :: a -> Maybe SignatoryLink
   
-instance SignatoryLinkQueries SignatoryLink where
-  isAuthor sl = SignatoryAuthor `elem` signatoryroles sl
-  isSignatory sl = SignatoryPartner `elem` signatoryroles sl
+instance MaybeSignatoryLink SignatoryLink where
+  getMaybeSignatoryLink = Just
 
-instance (SignatoryLinkQueries a) => SignatoryLinkQueries (Maybe a) where
-  isAuthor msl = maybe False isAuthor msl
-  isSignatory msl = maybe False isSignatory msl
+instance (MaybeSignatoryLink msl) => MaybeSignatoryLink (Maybe msl) where
+  getMaybeSignatoryLink (Just sl) = getMaybeSignatoryLink sl
+  getMaybeSignatoryLink Nothing   = Nothing
   
-instance (SignatoryLinkIdentity a) => SignatoryLinkQueries (Document, a) where
-  isAuthor (doc, a) = isAuthor (getSigLinkFor doc a)
-  isSignatory (doc, a) = isSignatory (getSigLinkFor doc a)
+instance (SignatoryLinkIdentity a) => MaybeSignatoryLink (Document, a) where
+  getMaybeSignatoryLink (d, a) = getSigLinkFor d a
+  
+{- |
+   Is the Author of this Document a signatory (not a Secretary)?
+ -}
+isAuthorSignatory :: Document -> Bool
+isAuthorSignatory document =
+  case getAuthorSigLink document of
+    Just siglink -> isSignatory siglink
+    _ -> False
+
+{- |
+   Get the author's signatory link.
+ -}
+getAuthorSigLink :: Document -> Maybe SignatoryLink
+getAuthorSigLink = find isAuthor . documentsignatorylinks
+
+{- |
+   Given a Document, return the best guess at the author's name:
+     * First Name + Last Name
+     * email address if no name info
+-}
+getAuthorName :: Document -> BS.ByteString
+getAuthorName doc = 
+  let Just authorsiglink = getAuthorSigLink doc
+  in getSmartName authorsiglink
+
+{- |
+   Is this SignatoryLink undelivered?
+ -}
+isUndelivered :: (MaybeSignatoryLink msl) => msl -> Bool
+isUndelivered msl = maybe False ((==) Undelivered . invitationdeliverystatus) (getMaybeSignatoryLink msl)
+
+{- |
+   Is this SignatoryLink Deferred?
+ -}
+isDeferred :: (MaybeSignatoryLink msl) => msl -> Bool
+isDeferred msl = maybe False ((==) Delivered . invitationdeliverystatus) (getMaybeSignatoryLink msl)
+
+{- |
+   Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?
+ -}
+hasSigned :: (MaybeSignatoryLink msl) => msl -> Bool
+hasSigned msl = maybe False (isJust . maybesigninfo) (getMaybeSignatoryLink msl)
+
+{- |
+   Is this SignatoryLink an author?
+ -}
+isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
+isAuthor msl = maybe False (elem SignatoryAuthor . signatoryroles) (getMaybeSignatoryLink msl)
+
+{- |
+   Is the given SignatoryLink marked as a signatory (someone who can must sign)?
+ -}
+isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool
+isSignatory msl = maybe False (elem SignatoryPartner . signatoryroles) (getMaybeSignatoryLink msl)
+
+{- |
+   Is the user able to view the doc?
+ -}
+isViewer :: (MaybeSignatoryLink msl) => msl -> Bool
+isViewer msl = isJust (getMaybeSignatoryLink msl)
+
+{- |
+   Is the document deleted for this signatory link?
+ -} 
+isDeletedFor :: (MaybeSignatoryLink a) => a -> Bool
+isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
