@@ -52,7 +52,7 @@ listLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>$_listLocalDialogsHeadDelete()$</h2>
+          <h2>$_delete()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
@@ -65,11 +65,11 @@ listLocalDialogs=
       </div>
       <div class="modal-footer">        
         <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_listLocalDialogsFooterCancel()$</div>
+          <div class="label">$_cancel()$</div>
         </a>
         <a class="btn-small green float-right submiter" href="#">
           <div class="left"></div>
-          <div class="label"><p>$_listLocalDialogsFooterOk()$</p></div>
+          <div class="label"><p>$_ok()$</p></div>
           <div class="right"></div>
         </a>
       </div>
@@ -78,41 +78,3 @@ listLocalDialogs=
 
 </div>
 ####
-<!--- Same as the above? Should be deleted? -Oskar
-####
-listLocalDialogs=
-<div class="localdialogs">
-
-  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-delete-confirm" rel=".listForm">
-    <input type="hidden" name="archive" value="true" />
-    <input type="hidden" name="remove" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2>$_listLocalDialogsHeadDelete()$</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div>
-            $_listLocalDialogsBody()$<span class="deletionDetails"></span>?
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">        
-        <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_listLocalDialogsFooterCancel()$</div>
-        </a>
-        <a class="btn-small green float-right submiter" href="#">
-          <div class="left"></div>
-          <div class="label"><p>$_listLocalDialogsFooterOk()$</p></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-
-</div>
-####           --->

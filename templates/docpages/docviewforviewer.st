@@ -5,13 +5,13 @@ pageDocumentForViewerHelpers=
   <input name="signatoryname" type="text" value="" autocomplete="off"
          infotext="$_signatoryname()$" /><br/>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="$_signatorycompany()$" /><br/>
+         infotext="$_company()$" /><br/>
   <input name="signatorypersonalnumber" type="text" value="" autocomplete="off"
-         infotext="$_signatorypersonalnumber()$" /><br/>
+         infotext="$_personnumber()$" /><br/>
   <input name="signatorycompanynumber" type="text" value="" autocomplete="off"
-         infotext="$_signatorycompanynumber()$" /><br/>
+         infotext="$_orgnumber()$" /><br/>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="$_signatoryemail()$" /><br/>
+         infotext="$_email()$" /><br/>
   <small><a onclick="return signatoryremove(this.parentNode);" href="#">$_signatoryremove()$</a></small>
   </div>
 </span>,

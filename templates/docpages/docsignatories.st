@@ -115,7 +115,7 @@ reminderForm =
         $if(signatory.signdate)$
             $process.remindagainbuttontext$
         $else$ 
-            $_reminderFormSendReminder()$
+            $_send()$
         $endif$
     </div> 
   </a>
@@ -142,13 +142,13 @@ reminderForm =
         <div class="modal-footer">
            <input type="hidden" name="sign" value="automatic" />
            <div class="float-left">
-                <a  class="close cancel">$_reminderFormFooterCancel()$</a>
+                <a  class="close cancel">$_cancel()$</a>
                 <a  class="editer message">$_reminderFormFooterOwnMessage()$</a>
            </div>
            <a href="#" class="btn-small green float-right submiter">
                 <div class="left"></div>
                 <div class="label">
-                   $if(signatory.signdate)$ $_reminderFormSend()$ $else$ $_reminderFormSendReminder()$$endif$
+                   $if(signatory.signdate)$ $_send()$ $else$ $_reminderFormSendReminder()$$endif$
                 <div class="btn-symbol green arrow-left"></div></div>
                 <div class="right"></div>
             </a>
@@ -164,7 +164,7 @@ changeEmailForm =
 <a class="btn-tiny blue replacebynextonclick">
                 <div class="left"></div>
                 <div class="label">
-                     $_changeEmailFormSendToNew()$
+                     $_send()$
                 </div>
                 <div class="right"></div>
   </a>
@@ -173,7 +173,7 @@ changeEmailForm =
   <a class="btn-tiny blue submit">
                 <div class="left"></div>
                 <div class="label">
-                     $_changeEmailFormSend()$
+                     $_send()$
                 </div>
                 <div class="right"></div>
   </a>

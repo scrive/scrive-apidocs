@@ -2,13 +2,13 @@
 mailCancelDocumentByAuthorTitle=$_mailCancelDocumentByAuthorTitle()$
 ####
 mailCancelContractByAuthorStandardHeader=
-    <p>$_mailCancelContractByAuthorStandardHi()$</p>
+    <p>$_hi()$,</p>
 ######
 mailCancelOfferByAuthorStandardHeader=
-    <p>$_mailCancelOfferByAuthorStandardHi()$</p>
+    <p>$_hi()$,</p>
 ######
 mailCancelOrderByAuthorStandardHeader=
-    <p>$_mailCancelOrderByAuthorStandardHi()$</p>
+    <p>$_hi()$,</p>
 ######
 mailCancelContractByAuthorContent=
     $header:noescape()$
@@ -28,7 +28,7 @@ mailCancelOrderByAuthorContent=
 mailDocumentAwaitingForAuthorTitle=$_mailDocumentAwaitingForAuthorTitle()$
 ######
 mailDocumentAwaitingForAuthorContent=
-    <p>$_mailDocumentAwaitingForAuthorContentHi()$</p>
+    <p>$_hi()$,</p>
     <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
     <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
     $footer:noescape()$
@@ -37,7 +37,7 @@ mailDocumentClosedTitle=$_mailDocumentClosedTitle()$
 #####
 mailContractClosedContent=
     <span>
-      <p>$_mailContractClosedContentHi()$</p>
+      <p>$_hi()$,</p>
       <p>$_mailContractClosedContentSignedBy()$</p>
       <p>$_mailContractClosedContentAttached()$</p> 
       $footer:noescape()$
@@ -45,7 +45,7 @@ mailContractClosedContent=
 ####
 mailOfferClosedContent=
     <span>
-      <p>$_mailOfferClosedContentHi()$</p>
+      <p>$_hi()$,</p>
       <p>$_mailOfferClosedContentOfferAccepted()$</p>
       <p>$_mailOfferClosedContentAttached()$</p>
       $footer:noescape()$
@@ -53,7 +53,7 @@ mailOfferClosedContent=
 ####
 mailOrderClosedContent=
     <span>
-      <p>$_mailOrderClosedContentHi()$</p>
+      <p>$_hi()$,</p>
       <p>$_mailOrderClosedContentViewed()$</p>
       <p>$_mailOrderClosedContentAttached()$</p>
       $footer:noescape()$
@@ -82,7 +82,7 @@ mailRejectMailContentHeader=
        $customMessage:noescape()$ 
       $else$
       <div class="editable" name="customtext">
-      <p>$_mailRejectMailContentHeaderIfNotCustomHi()$</p>
+      <p>$_hi()$,</p>
       </div>
       $endif$
 ####
@@ -157,37 +157,42 @@ mailInvitationToSignOrderContent=
     $legalparagraph()$
 ###
 mailInvitationToSignContractDefaultHeader=
-    <p>$_mailInvitationToSignContractDefaultHeader()$</p>
+    <p>$_hi()$ $personname$,
+      <br/><br/>
+      <strong>$creatorname$</strong>$_mailInvitationToSignContractDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToSignContractDefaultHeaderBody2()$</p>
 ####
 mailInvitationToSignOfferDefaultHeader=
-    <p>$_mailInvitationToSignOfferDefaultHeader()$</p>
+    <p>$_hi()$ $personname$,
+      <br/><br/>
+      <strong>$creatorname$</strong>$_mailInvitationToSignOfferDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToSignOfferDefaultHeaderBody2()$</p>
 ####
 mailInvitationToSignOrderDefaultHeader=
-    <p>$_mailInvitationToSignOrderDefaultHeader()$ </p>
+    <p>$_hi()$ $personname$,
+      <br/><br/>
+      <strong>$creatorname$</strong>$_mailInvitationToSignOrderDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToSignOrderDefaultHeaderBody2()$</p>
 ####
 mailInvitationToViewDefaultHeader=
-    <p>$_mailInvitationToViewDefaultHeader()$	Hej $personname$,
+    <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
-    </p>
+      <strong>$creatorname$</strong> $_mailInvitationToViewDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToViewDefaultHeaderBody2()$</p>
 ####
 remindMailSignedTitle=$documenttitle$
 ###
 remindMailSignedContractStandardHeader=
     <span>
-      <p>$_remindMailSignedContractStandardHeaderHi()$</p>
+      <p>$_hi()$ <strong>$personname$</strong></p>
       <p>$_remindMailSignedContractStandardHeaderSendRequest()$</p>
     </span>
 ####
 remindMailSignedOfferStandardHeader=
     <span>
-      <p>$_remindMailSignedOfferStandardHeaderHi()$</p>
+      <p>$_hi()$ <strong>$personname$</strong></p>
       <p>$_remindMailSignedOfferStandardHeaderSendRequest()$</p>
     </span>
 ####
 remindMailSignedOrderStandardHeader=
     <span>
-      <p>$_remindMailSignedOrderStandardHeaderHi()$</p>
+      <p>$_hi()$ <strong>$personname$</strong></p>
       <p>$_remindMailSignedOrderStandardHeaderSendRequest()$</p>
     </span>
 ####
@@ -195,19 +200,19 @@ remindMailNotSignedTitle=$_remindMailNotSignedTitle()$
 ########
 remindMailNotSignedContractStandardHeader=
     <span>
-      <p>$_remindMailNotSignedContractStandardHeaderHi()$</p>
+      <p>$_hi()$ <strong>$personname$</strong></p>
       <p>$_remindMailNotSignedContractStandardHeaderRemind()$</p>
     </span>
 #####
 remindMailNotSignedOfferStandardHeader=
     <span>
-      <p>$_remindMailNotSignedOfferStandardHeaderHi()$</p>
+      <p>$_hi()$ <strong>$personname$</strong></p>
       <p>$_remindMailNotSignedOfferStandardHeaderRemind()$</p>
     </span>
 #####
 remindMailNotSignedOrderStandardHeader=
     <span>
-      <p>$_remindMailNotSignedOrderStandardHeaderHi()$</p>
+      <p>$_hi()$ <strong>$personname$</strong></p>
       <p>$_remindMailNotSignedOrderStandardHeaderRemind()$</p>
     </span>
 #####
@@ -283,7 +288,7 @@ $poweredBySkrivaPaPara()$
 inviteSubaccountMailTitle=$_inviteSubaccountMailTitle()$
 ####
 inviteSubaccountMailContent=
-    <p>$_inviteSubaccountMailContentHi()$</p>
+    <p>$_hi()$ <strong>$personname$</strong>,</p>
 
     <p>$_inviteSubaccountMailContentBodyFirst()$</p>
 
@@ -297,7 +302,7 @@ inviteSubaccountMailContent=
 mailAccountBySigningContractReminderTitle=$_mailAccountBySigningContractReminderTitle()$
 ###
 mailAccountBySigningContractReminderContent=
-<p>$_mailAccountBySigningContractReminderContentHi()$</p>
+<p>$_hi()$ <strong>$personname$</strong>,</p>
 
 <p>$_mailAccountBySigningContractReminderContentBody()$</p>
 
@@ -308,7 +313,7 @@ $poweredBySkrivaPaPara()$
 mailAccountBySigningOfferReminderTitle= $_mailAccountBySigningOfferReminderTitle()$
 ###
 mailAccountBySigningOfferReminderContent=
-<p>$_mailAccountBySigningOfferReminderContentHi()$</p>
+<p>$_hi()$ <strong>$personname$</strong>,</p>
 
 <p>$_mailAccountBySigningOfferReminderContentBody()$</p>
 
@@ -319,7 +324,7 @@ $poweredBySkrivaPaPara()$
 mailViralInviteTitle=$_mailViralInviteTitle()$
 ###
 mailViralInviteContent=
-    <p>$_mailViralInviteContentHi()$</p>
+    <p>$_hi()$,</p>
 
     <p>$_mailViralInviteContentBodyFirst()$</p>
 
@@ -336,7 +341,7 @@ mailNewAccountCreatedByAdminTitle=$_mailNewAccountCreatedByAdminTitle()$
 ####
 mailNewAccountCreatedByAdminContentHeader=
  
-    <p>$_mailNewAccountCreatedByAdminContentHeaderHi()$</p>
+    <p>$_hi()$ <strong>$personname$</strong>,</p>
 
     <p>$_mailNewAccountCreatedByAdminContentHeaderBody()$</p>
 
@@ -358,7 +363,7 @@ invitationMailDeferredTitle=$_invitationMailDeferredTitle()$
 ###
 invitationMailDeferredContent=
     <span>
-      <p>$_invitationMailDeferredContentHi()$</p>
+      <p>$_hi()$ $authorname$,</p>
       <p>$_invitationMailDeferredContentBodyFirst()$</p>
       <p>$_invitationMailDeferredContentBodySecond()$<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
       $poweredBySkrivaPaPara()$
@@ -368,7 +373,7 @@ invitationMailDeliveredAfterDeferredTitle=$_invitationMailDeliveredAfterDeferred
 ###
 invitationMailDeliveredAfterDeferredContent=
     <span>
-      <p>$_invitationMailDeliveredAfterDeferredContentHi()$</p>
+      <p>$_hi()$ $authorname$,</p>
       <p>$_invitationMailDeliveredAfterDeferredContentBody()$</p>
       $poweredBySkrivaPaPara()$
     </span>
@@ -377,7 +382,7 @@ invitationMailUndeliveredTitle=$_invitationMailUndeliveredTitle()$
 ###
 invitationMailUndeliveredContent=
     <span>
-      <p>$_invitationMailUndeliveredContentHi()$</p>
+      <p>$_hi()$ $authorname$,</p>
        <p>$_invitationMailUndeliveredContentBody()$</p>
        <p>$_invitationMailUndeliveredContentInstruction()$</p>
       $poweredBySkrivaPaPara()$
@@ -386,7 +391,7 @@ invitationMailUndeliveredContent=
 mailDocumentErrorTitle=$_mailDocumentErrorTitle()$
 ###
 mailDocumentErrorContent=
-    <p>$_mailDocumentErrorContentHi()$</p>
+    <p>$_hi()$,</p>
     <p>$_mailDocumentErrorContentBodyFirst()$</p>
     <p>$_mailDocumentErrorContentBodySecond()$</p>
     <p>$_mailDocumentErrorContentBodyThird()$</p>
@@ -396,7 +401,7 @@ mailDocumentErrorContent=
 passwordChangeLinkMailTitle= $_passwordChangeLinkMailTitle()$
 ###
 passwordChangeLinkMailContent=
-    <p>$_passwordChangeLinkMailContentHi()$</p>
+    <p>$_hi()$ $personname$,</p>
     <p>$_passwordChangeLinkMailContentBody()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
     $poweredBySkrivaPaPara()$
 ###
@@ -443,7 +448,7 @@ legalparagraph=
 mailMismatchSignatoryTitle=$_mailMismatchSignatoryTitle()$
 ####
 mailMismatchSignatoryContent=
-<p>$_mailMismatchSignatoryContentHi()$</p>
+<p>$_hi()$ $signame$,</p>
 
 <p>$_mailMismatchSignatoryContentBodyFirst()$</p>
 
@@ -460,7 +465,7 @@ $endif$
 mailMismatchAuthorTitle=$_mailMismatchAuthorTitle()$
 ####
 mailMismatchAuthorContent=
-<p>$_mailMismatchAuthorContentHi()$</p>
+<p>$_hi()$ $authorname$,</p>
 
 <p>$_mailMismatchAuthorContentBodyFirst()$</p>
 
@@ -476,7 +481,7 @@ $messages:noescape()$
 mailInviteUserAsSubaccountTitle=$_mailInviteUserAsSubaccountTitle()$
 ###
 mailInviteUserAsSubaccountContent=
-  <p>$_mailInviteUserAsSubaccountContentHi()$</p>
+  <p>$_hi()$ $invited.fullnameOrEmail$,</p>
   <p>$_mailInviteUserAsSubaccountContentBodyFirst()$</p>
 
  <p>$_mailInviteUserAsSubaccountContentBodySecond()$</p>
@@ -492,7 +497,7 @@ mailInviteUserAsSubaccountContent=
 mailSubaccountAcceptedTitle=$_mailSubaccountAcceptedTitle()$
 ###
 mailSubaccountAcceptedContent=
-  <p>$_mailSubaccountAcceptedContentHi()$</p>
+  <p>$_hi()$ $user.fullnameOrEmail$,</p>
   <p>$_mailSubaccountAcceptedContentBody()$</p>
   $poweredBySkrivaPaPara()$
 ####

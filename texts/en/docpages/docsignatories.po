@@ -12,91 +12,91 @@ msgstr ""
 
 #: docpages/docsignatories.st:signatorysignedordertext
 msgid "_signatorysignedordertext"
-msgstr "Ordern bekräftad"
+msgstr "Order confirmed"
 
 #: docpages/docsignatories.st:signatorysignedoffertext
 msgid "_signatorysignedoffertext"
-msgstr "Accepterat offert"
+msgstr "Accepted offer"
 
 #: docpages/docsignatories.st:signatorysignedcontracttext
 msgid "_signatorysignedcontracttext"
-msgstr "Undertecknat"
+msgstr "Signed"
 
 #: docpages/docsignatories.st:signatorycanceledordertext
 msgid "_signatorycanceledordertext"
-msgstr "Order återkallad"
+msgstr "Order withdrawn"
 
 #: docpages/docsignatories.st:signatorycanceledoffertext
 msgid "_signatorycanceledoffertext"
-msgstr "Offert återkallad"
+msgstr "Offer withdrawn"
 
 #: docpages/docsignatories.st:signatorycanceledcontracttext
 msgid "_signatorycanceledcontracttext"
-msgstr "Dokumentet återkallad"
+msgstr "Document withdrawn"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfTimedout"
-msgstr "Förfallodatum har passerat"
+msgstr "Expired"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfSignatorySeendate"
-msgstr "Granskat online"
+msgstr "Reviewed online"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfSignatoryRejecteddate"
-msgstr "Avvisat"
+msgstr "Rejected"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfSignatoryReaddate"
-msgstr "Läst e-post"
+msgstr "E-mail read"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfSignatoryDeliveredEmail"
-msgstr "Har ej granskat online"
+msgstr "Has not reviewed online"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfSignatoryDatamismatch"
-msgstr "Felaktig e-legitmation"
+msgstr "Incorrect e-ID"
 
 #: docpages/docsignatories.st:signatoryMessage
 msgid "_signatoryMessageIfElse"
-msgstr "Har ej levererats"
+msgstr "Has not been delivered"
 
 #: docpages/docsignatories.st:reminderForm
 msgid "_reminderFormSendReminder"
-msgstr "Skicka påminnelse "
+msgstr "Send reminder"
 
 #: docpages/docsignatories.st:reminderForm
 msgid "_reminderFormHead"
-msgstr "Skicka påminnelse "
+msgstr "Send reminder"
 
 #: docpages/docsignatories.st:reminderForm
 msgid "_reminderFormFooterOwnMessage"
-msgstr " Skriv eget meddelande "
+msgstr "Write own message"
 
 #: docpages/docsignatories.st:orderremindagainbuttontext
 msgid "_orderremindagainbuttontext"
-msgstr "Skicka orderbekräftelse igen"
+msgstr "Send order confirmation again"
 
 #: docpages/docsignatories.st:orderauthorissecretarytext
 msgid "_orderauthorissecretarytext"
-msgstr "Avsändare"
+msgstr "Sender"
 
 #: docpages/docsignatories.st:offerremindagainbuttontext
 msgid "_offerremindagainbuttontext"
-msgstr "Skicka offert igen"
+msgstr "Send offer again"
 
 #: docpages/docsignatories.st:offerauthorissecretarytext
 msgid "_offerauthorissecretarytext"
-msgstr "Avsändare"
+msgstr "Sender"
 
 #: docpages/docsignatories.st:contractremindagainbuttontext
 msgid "_contractremindagainbuttontext"
-msgstr "Skicka dokumentet igen"
+msgstr "Send document again"
 
 #: docpages/docsignatories.st:contractauthorissecretarytext
 msgid "_contractauthorissecretarytext"
-msgstr "Avsändare: Ej undertecknande part"
+msgstr "Sender: Non-signing party"
 
 #~ msgid "_reminderFormSend"
 #~ msgstr "Skicka"

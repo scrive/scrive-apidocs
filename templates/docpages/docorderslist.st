@@ -142,8 +142,8 @@ $loadingdialog()$
 			<!--
 			   <div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 			   -->
-                        <div class="icon status read float-left"></div><div class="float-left">$_tablestatusesRead()$&nbsp;</div>
-			<div class="icon status opened float-left"></div><div class="float-left">$_tablestatusesOpened()$&nbsp;</div>
+                        <div class="icon status read float-left"></div><div class="float-left">$_tablestatusesEmailOpened()$&nbsp;</div>
+			<div class="icon status opened float-left"></div><div class="float-left">$_tablestatusesViewedOnline()$&nbsp;</div>
 			<div class="icon status signed float-left"></div><div class="float-left">$_tablestatusesSigned()$&nbsp;</div>
 		  </div>
           $pagingFooter()$

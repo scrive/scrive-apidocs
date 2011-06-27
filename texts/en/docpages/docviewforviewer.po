@@ -12,19 +12,19 @@ msgstr ""
 
 #: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 msgid "_signatoryremove"
-msgstr "Ta bort"
+msgstr "Remove"
 
 #: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 msgid "_signatoryname"
-msgstr "Fullständigt namn"
+msgstr "Full name"
 
 #: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 msgid "_pageDocumentForViewerHelpersPartyName"
-msgstr "Namn på avtalspart"
+msgstr "Name of party"
 
 #: docpages/docviewforviewer.st:pageDocumentForViewerContent
 msgid "_pageDocumentForViewerContentDownloadPDF"
-msgstr "Ladda ned PDF"
+msgstr "Download PDF"
 
 #, fuzzy
 #~ msgid "_personalnumber"
@@ -37,3 +37,4 @@ msgstr "Ladda ned PDF"
 #~ msgstr "E-post"
 #~ msgid "_signatorycompany"
 #~ msgstr "Företag"
+

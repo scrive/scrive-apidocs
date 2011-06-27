@@ -12,19 +12,19 @@ msgstr ""
 
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_ReminderBodySingel"
-msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse "
+msgstr "            Are you sure you want to send a reminder to the parties involved in the order confirmation"
 
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_ReminderBodyMulti2"
-msgstr " orderbekräftelse.          "
+msgstr "order confirmations?          "
 
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_ReminderBodyMulti"
-msgstr "            Är du säker att du vill skicka en påminnelse til berörda parter för "
+msgstr "            Are you sure you want to send reminders to the parties involved in the"
 
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_CantRemoveActiveOrders"
-msgstr "Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först."
+msgstr "It is not possible to delete order confirmations that are sent or open, please withdraw the document first."
 
 #, fuzzy
 #~ msgid "__tablestatusesViewedOnline"

@@ -447,10 +447,6 @@ msgid "_modalAccountRemovedHeader"
 msgstr "Raderat"
 
 #: modals.st:modalAccountRemoved
-msgid "_modalAccountRemovedFooter"
-msgstr "Ok"
-
-#: modals.st:modalAccountRemoved
 msgid "_modalAccountRemovedBody"
 msgstr "Din kopia av dokumentet \"$documenttitle$\" är nu raderat tillsammans från SkrivaPå tillsammans med ditt konto."
 

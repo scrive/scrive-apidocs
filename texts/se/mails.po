@@ -58,25 +58,13 @@ msgstr "Begärda bilagor:"
 msgid "_remindMailSignedOrderStandardHeaderSendRequest"
 msgstr "<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen <strong>$documenttitle$</strong>        till dig som du har bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med detta mail."
 
-#: mails.st:remindMailSignedOrderStandardHeader
-msgid "_remindMailSignedOrderStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
-
 #: mails.st:remindMailSignedOfferStandardHeader
 msgid "_remindMailSignedOfferStandardHeaderSendRequest"
 msgstr "<strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>        till dig. Offerten har accepterats av dig via tjänsten SkrivaPå. Den accepterade offerten bifogas med detta mail."
 
-#: mails.st:remindMailSignedOfferStandardHeader
-msgid "_remindMailSignedOfferStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
-
 #: mails.st:remindMailSignedContractStandardHeader
 msgid "_remindMailSignedContractStandardHeaderSendRequest"
 msgstr "<strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>        till dig. Dokumentet har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas med detta mail."
-
-#: mails.st:remindMailSignedContractStandardHeader
-msgid "_remindMailSignedContractStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedTitle
 msgid "_remindMailNotSignedTitle"
@@ -85,10 +73,6 @@ msgstr "Påminnelse att underteckna  $documenttitle$"
 #: mails.st:remindMailNotSignedOrderStandardHeader
 msgid "_remindMailNotSignedOrderStandardHeaderRemind"
 msgstr "<strong>$author$</strong> vill påminna dig om att du inte bekräftat ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern genom att följa instruktionerna nedan.      "
-
-#: mails.st:remindMailNotSignedOrderStandardHeader
-msgid "_remindMailNotSignedOrderStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedOrderContent
 msgid "_remindMailNotSignedOrderContentPartys"
@@ -105,10 +89,6 @@ msgstr "Översiktlig information"
 #: mails.st:remindMailNotSignedOfferStandardHeader
 msgid "_remindMailNotSignedOfferStandardHeaderRemind"
 msgstr "<strong>$author$</strong> vill påminna dig om att du inte accepterat offerten <strong>$documenttitle$</strong> ännu.        Acceptera offerten genom att följa instruktionerna nedan.      "
-
-#: mails.st:remindMailNotSignedOfferStandardHeader
-msgid "_remindMailNotSignedOfferStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedOfferContent
 msgid "_remindMailNotSignedOfferContentSender"
@@ -130,10 +110,6 @@ msgstr "Översiktlig information"
 msgid "_remindMailNotSignedContractStandardHeaderRemind"
 msgstr "<strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu."
 
-#: mails.st:remindMailNotSignedContractStandardHeader
-msgid "_remindMailNotSignedContractStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
-
 #: mails.st:remindMailNotSignedContractContent
 msgid "_remindMailNotSignedContractContentPartys"
 msgstr "Parter:"
@@ -149,10 +125,6 @@ msgstr "Översiktlig information"
 #: mails.st:passwordChangeLinkMailTitle
 msgid "_passwordChangeLinkMailTitle"
 msgstr "Nytt lösenord"
-
-#: mails.st:passwordChangeLinkMailContent
-msgid "_passwordChangeLinkMailContentHi"
-msgstr "Hej $personname$,"
 
 #: mails.st:passwordChangeLinkMailContent
 msgid "_passwordChangeLinkMailContentBody"
@@ -199,10 +171,6 @@ msgid "_mailViralInviteTitle"
 msgstr "Inbjudan från $invitername$"
 
 #: mails.st:mailViralInviteContent
-msgid "_mailViralInviteContentHi"
-msgstr "Hej,"
-
-#: mails.st:mailViralInviteContent
 msgid "_mailViralInviteContentBodyUserName"
 msgstr "Användarnamn:<br/>    "
 
@@ -223,10 +191,6 @@ msgid "_mailSubaccountAcceptedTitle"
 msgstr "Kontoförfrågan"
 
 #: mails.st:mailSubaccountAcceptedContent
-msgid "_mailSubaccountAcceptedContentHi"
-msgstr "Hej $user.fullnameOrEmail$,"
-
-#: mails.st:mailSubaccountAcceptedContent
 msgid "_mailSubaccountAcceptedContentBody"
 msgstr "$invited.fullnameOrEmail$ har accepterat att bli ett underkonto."
 
@@ -242,10 +206,6 @@ msgstr "        <strong>$rejectorName$</strong> har avvisat offerten <strong>$do
 msgid "_mailRejectMailTitle"
 msgstr "Avvisat: $documenttitle$"
 
-#: mails.st:mailRejectMailContentHeader
-msgid "_mailRejectMailContentHeaderIfNotCustomHi"
-msgstr "Hej,"
-
 #: mails.st:mailRejectContractMailContent
 msgid "_mailRejectContractMailContentContractRejected"
 msgstr "        <strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.      "
@@ -255,20 +215,12 @@ msgid "_mailOrderClosedContentViewed"
 msgstr "Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$  och SkrivaPå har utfärdat ett verifikat för bekräftelsen. "
 
 #: mails.st:mailOrderClosedContent
-msgid "_mailOrderClosedContentHi"
-msgstr "Hej,"
-
-#: mails.st:mailOrderClosedContent
 msgid "_mailOrderClosedContentAttached"
 msgstr "Bifogat med detta mail finner du en PDF med orderbekräftelsen och verifikatet."
 
 #: mails.st:mailOfferClosedContent
 msgid "_mailOfferClosedContentOfferAccepted"
 msgstr "Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. "
-
-#: mails.st:mailOfferClosedContent
-msgid "_mailOfferClosedContentHi"
-msgstr "Hej,"
 
 #: mails.st:mailOfferClosedContent
 msgid "_mailOfferClosedContentAttached"
@@ -283,10 +235,6 @@ msgid "_mailNewAccountCreatedByAdminContentUserName"
 msgstr "Användarnamn:<br/>    "
 
 #: mails.st:mailNewAccountCreatedByAdminContentHeader
-msgid "_mailNewAccountCreatedByAdminContentHeaderHi"
-msgstr "Hej <strong>$personname$</strong>,"
-
-#: mails.st:mailNewAccountCreatedByAdminContentHeader
 msgid "_mailNewAccountCreatedByAdminContentHeaderBody"
 msgstr "$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå.     SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt.     Spara pengar, frustration och miljö och använd SkrivaPå istället.     Du kan spara mellan 50-250kr/dokument!"
 
@@ -297,10 +245,6 @@ msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    "
 #: mails.st:mailMismatchSignatoryTitle
 msgid "_mailMismatchSignatoryTitle"
 msgstr "Problem med matchning av personuppgifter"
-
-#: mails.st:mailMismatchSignatoryContent
-msgid "_mailMismatchSignatoryContentHi"
-msgstr "Hej $signame$"
 
 #: mails.st:mailMismatchSignatoryContent
 msgid "_mailMismatchSignatoryContentBodySecond"
@@ -321,10 +265,6 @@ msgstr "Med Vänliga Hälsningar"
 #: mails.st:mailMismatchAuthorTitle
 msgid "_mailMismatchAuthorTitle"
 msgstr "Felaktiga personuppgifter"
-
-#: mails.st:mailMismatchAuthorContent
-msgid "_mailMismatchAuthorContentHi"
-msgstr "Hej $authorname$"
 
 #: mails.st:mailMismatchAuthorContent
 msgid "_mailMismatchAuthorContentErrorReport"
@@ -359,10 +299,6 @@ msgid "_mailInviteUserAsSubaccountContentInstructionFirst"
 msgstr "Så här går du vidare"
 
 #: mails.st:mailInviteUserAsSubaccountContent
-msgid "_mailInviteUserAsSubaccountContentHi"
-msgstr "Hej $invited.fullnameOrEmail$,"
-
-#: mails.st:mailInviteUserAsSubaccountContent
 msgid "_mailInviteUserAsSubaccountContentBodySecond"
 msgstr "Vänligen iaktta försiktighet innan du accepterar. Särskilt om du  har privata dokument i kontot."
 
@@ -375,16 +311,24 @@ msgid "_mailInvitationToViewTitle"
 msgstr "Inbjudan från $creatorname$ till $documenttitle$"
 
 #: mails.st:mailInvitationToViewDefaultHeader
-msgid "_mailInvitationToViewDefaultHeader"
-msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.    "
+msgid "_mailInvitationToViewDefaultHeaderBody2"
+msgstr " online via tjänsten SkrivaPå.    "
+
+#: mails.st:mailInvitationToViewDefaultHeader
+msgid "_mailInvitationToViewDefaultHeaderBody1"
+msgstr "har bjudit in dig att se dokumentet "
 
 #: mails.st:mailInvitationToSignTitle
 msgid "_mailInvitationToSignTitle"
 msgstr "Inbjudan från $creatorname$ till $documenttitle$"
 
 #: mails.st:mailInvitationToSignOrderDefaultHeader
-msgid "_mailInvitationToSignOrderDefaultHeader"
-msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har skickat orderbekräftelsen <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta ordern genom att följa instruktionerna nedan.    "
+msgid "_mailInvitationToSignOrderDefaultHeaderBody2"
+msgstr " till dig och önskar din bekräftelse. Bekräfta ordern genom att följa instruktionerna nedan.     "
+
+#: mails.st:mailInvitationToSignOrderDefaultHeader
+msgid "_mailInvitationToSignOrderDefaultHeaderBody1"
+msgstr " har skickat orderbekräftelsen "
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentSender"
@@ -407,8 +351,12 @@ msgid "_mailInvitationToSignOrderContentIfNotSignatoryInstruction"
 msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
 
 #: mails.st:mailInvitationToSignOfferDefaultHeader
-msgid "_mailInvitationToSignOfferDefaultHeader"
-msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong>  till dig och önskar din accept.      Acceptera offerten genom att följa instruktionerna nedan.    "
+msgid "_mailInvitationToSignOfferDefaultHeaderBody2"
+msgstr "  till dig och önskar din accept.      Acceptera offerten genom att följa instruktionerna nedan.    "
+
+#: mails.st:mailInvitationToSignOfferDefaultHeader
+msgid "_mailInvitationToSignOfferDefaultHeaderBody1"
+msgstr " har skickat offerten "
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentSender"
@@ -431,8 +379,12 @@ msgid "_mailInvitationToSignOfferContentIfNotSignatoryInstruction"
 msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
 
 #: mails.st:mailInvitationToSignContractDefaultHeader
-msgid "_mailInvitationToSignContractDefaultHeader"
-msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.    "
+msgid "_mailInvitationToSignContractDefaultHeaderBody2"
+msgstr " online via tjänsten SkrivaPå.    "
+
+#: mails.st:mailInvitationToSignContractDefaultHeader
+msgid "_mailInvitationToSignContractDefaultHeaderBody1"
+msgstr " har bjudit in dig att underteckna dokumentet "
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentSender"
@@ -457,10 +409,6 @@ msgstr "Du har endast behörighet att se detta dokument    Klicka på länken ne
 #: mails.st:mailDocumentErrorTitle
 msgid "_mailDocumentErrorTitle"
 msgstr "SkrivaPå could no handle $documenttitle$"
-
-#: mails.st:mailDocumentErrorContent
-msgid "_mailDocumentErrorContentHi"
-msgstr "Hej,"
 
 #: mails.st:mailDocumentErrorContent
 msgid "_mailDocumentErrorContentBodyThird"
@@ -494,33 +442,17 @@ msgstr "Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partyl
 msgid "_mailDocumentAwaitingForAuthorContentInstruction"
 msgstr "För att färdigställa dokumentet gör följande:<br/>      1. Klicka på länken<br/>      <a href=\"$documentlink$\">$documenttitle$</a><br/>      <br/>      2. Granska uppgifterna<br/>      3. Underteckna För att avtalet skall färdigställas krävs din underskrift."
 
-#: mails.st:mailDocumentAwaitingForAuthorContent
-msgid "_mailDocumentAwaitingForAuthorContentHi"
-msgstr "Hej,"
-
 #: mails.st:mailContractClosedContent
 msgid "_mailContractClosedContentSignedBy"
 msgstr "Dokumentet <strong>$documenttitle$</strong> har undertecknats         av $partylist:noescape()$. Avtalet är nu bindande."
 
 #: mails.st:mailContractClosedContent
-msgid "_mailContractClosedContentHi"
-msgstr "Hej,"
-
-#: mails.st:mailContractClosedContent
 msgid "_mailContractClosedContentAttached"
 msgstr "Det färdigställda dokumentet bifogas med detta mail."
-
-#: mails.st:mailCancelOrderByAuthorStandardHeader
-msgid "_mailCancelOrderByAuthorStandardHi"
-msgstr "Hej,"
 
 #: mails.st:mailCancelOrderByAuthorContent
 msgid "_mailCancelOrderByAuthorContentBody"
 msgstr "      <strong>$creatorname$</strong>   har valt att återkalla orderbekräftelsen  $documenttitle$.    "
-
-#: mails.st:mailCancelOfferByAuthorStandardHeader
-msgid "_mailCancelOfferByAuthorStandardHi"
-msgstr "Hej,"
 
 #: mails.st:mailCancelOfferByAuthorContent
 msgid "_mailCancelOfferByAuthorContentBody"
@@ -529,10 +461,6 @@ msgstr "      <strong>$creatorname$</strong>   har valt att återkalla offerten 
 #: mails.st:mailCancelDocumentByAuthorTitle
 msgid "_mailCancelDocumentByAuthorTitle"
 msgstr "Återkallelsenotis: $documenttitle$"
-
-#: mails.st:mailCancelContractByAuthorStandardHeader
-msgid "_mailCancelContractByAuthorStandardHi"
-msgstr "Hej,"
 
 #: mails.st:mailCancelContractByAuthorContent
 msgid "_mailCancelContractByAuthorContentBody"
@@ -547,10 +475,6 @@ msgid "_mailAccountBySigningOfferReminderContentInstruction"
 msgstr "Gör så här:<br/>1. Klicka på länken<br/><a href=\"$ctxhostpart$$activationlink$\">$ctxhostpart$$activationlink$</a><br/>2. Definiera lösenord och acceptera villkoren<br/>3. Färdig"
 
 #: mails.st:mailAccountBySigningOfferReminderContent
-msgid "_mailAccountBySigningOfferReminderContentHi"
-msgstr "Hej <strong>$personname$</strong>,"
-
-#: mails.st:mailAccountBySigningOfferReminderContent
 msgid "_mailAccountBySigningOfferReminderContentBody"
 msgstr "Du har inte bekräftat att du vill spara din offert \"$documenttitle$\" hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt inom 72h. Det kostar ingenting att spara offerten."
 
@@ -563,10 +487,6 @@ msgid "_mailAccountBySigningContractReminderContentInstruction"
 msgstr "Gör så här:<br/>1. Klicka på länken<br/><a href=\"$ctxhostpart$$activationlink$\">$ctxhostpart$$activationlink$</a><br/>2. Definiera lösenord och acceptera villkoren<br/>3. Färdig"
 
 #: mails.st:mailAccountBySigningContractReminderContent
-msgid "_mailAccountBySigningContractReminderContentHi"
-msgstr "Hej <strong>$personname$</strong>,"
-
-#: mails.st:mailAccountBySigningContractReminderContent
 msgid "_mailAccountBySigningContractReminderContentBody"
 msgstr "Du har inte bekräftat att du vill spara ditt dokument \"$documenttitle$\" hos SkrivaPå. SkrivaPås system kommer att radera dokumentet automatiskt inom 72h. Det kostar ingenting att spara dokumentet."
 
@@ -577,10 +497,6 @@ msgstr "   Detta e-postmeddelande innehåller konfidentiell information och får
 #: mails.st:inviteSubaccountMailTitle
 msgid "_inviteSubaccountMailTitle"
 msgstr "Inbjudan från $supervisorname$ till underkonto"
-
-#: mails.st:inviteSubaccountMailContent
-msgid "_inviteSubaccountMailContentHi"
-msgstr "Hej <strong>$personname$</strong>,"
 
 #: mails.st:inviteSubaccountMailContent
 msgid "_inviteSubaccountMailContentClickLink"
@@ -603,20 +519,12 @@ msgid "_invitationMailUndeliveredContentInstruction"
 msgstr "Kontrollera vilken som är mottagarens korrekta adress<br/>       2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>       <a href=\"$ctxhostpart$$unsigneddoclink$\">$ctxhostpart$$unsigneddoclink$</a><br/>       <br/>       3. Klicka \"Starta om\"<br/>       4. Skriv in rätt e-postadress och skicka igen      "
 
 #: mails.st:invitationMailUndeliveredContent
-msgid "_invitationMailUndeliveredContentHi"
-msgstr "Hej $authorname$,"
-
-#: mails.st:invitationMailUndeliveredContent
 msgid "_invitationMailUndeliveredContentBody"
 msgstr "Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle$</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.       Processen har därmed avbrutits. Gör så här om du vill börja om:"
 
 #: mails.st:invitationMailDeliveredAfterDeferredTitle
 msgid "_invitationMailDeliveredAfterDeferredTitle"
 msgstr "Lyckosam leverans"
-
-#: mails.st:invitationMailDeliveredAfterDeferredContent
-msgid "_invitationMailDeliveredAfterDeferredContentHi"
-msgstr "Hej $authorname$,"
 
 #: mails.st:invitationMailDeliveredAfterDeferredContent
 msgid "_invitationMailDeliveredAfterDeferredContentBody"
@@ -627,16 +535,47 @@ msgid "_invitationMailDeferredTitle"
 msgstr "Problem med leverans"
 
 #: mails.st:invitationMailDeferredContent
-msgid "_invitationMailDeferredContentHi"
-msgstr "Hej $authorname$,"
-
-#: mails.st:invitationMailDeferredContent
 msgid "_invitationMailDeferredContentBodySecond"
 msgstr "Vi fortsätter försöka att nå mottagarens server och meddelar inom kort hur det gått. Klicka på länken nedan om du vill stoppa våra försök eller om du vill ändra e-post adressen.<br />      "
 
 #: mails.st:invitationMailDeferredContent
 msgid "_invitationMailDeferredContentBodyFirst"
 msgstr "Vi skickar detta meddelande för att meddela att vårt system har identifierat ett problem med mottagarens e-postserver. Antingen finns inte e-postadressen eller så ligger mottagarens e-postserver nere för tillfället. Vänligen kontrollera att mottagarens e-post är korrekt."
+
+#: mails.st:mailCancelContractByAuthorStandardHeader
+#: mails.st:mailCancelOfferByAuthorStandardHeader
+#: mails.st:mailCancelOrderByAuthorStandardHeader
+#: mails.st:mailDocumentAwaitingForAuthorContent
+#: mails.st:mailContractClosedContent
+#: mails.st:mailOfferClosedContent
+#: mails.st:mailOrderClosedContent
+#: mails.st:mailRejectMailContentHeader
+#: mails.st:mailInvitationToSignContractDefaultHeader
+#: mails.st:mailInvitationToSignOfferDefaultHeader
+#: mails.st:mailInvitationToSignOrderDefaultHeader
+#: mails.st:mailInvitationToViewDefaultHeader
+#: mails.st:remindMailSignedContractStandardHeader
+#: mails.st:remindMailSignedOfferStandardHeader
+#: mails.st:remindMailSignedOrderStandardHeader
+#: mails.st:remindMailNotSignedContractStandardHeader
+#: mails.st:remindMailNotSignedOfferStandardHeader
+#: mails.st:remindMailNotSignedOrderStandardHeader
+#: mails.st:inviteSubaccountMailContent
+#: mails.st:mailAccountBySigningContractReminderContent
+#: mails.st:mailAccountBySigningOfferReminderContent
+#: mails.st:mailViralInviteContent
+#: mails.st:mailNewAccountCreatedByAdminContentHeader
+#: mails.st:invitationMailDeferredContent
+#: mails.st:invitationMailDeliveredAfterDeferredContent
+#: mails.st:invitationMailUndeliveredContent
+#: mails.st:mailDocumentErrorContent
+#: mails.st:passwordChangeLinkMailContent
+#: mails.st:mailMismatchSignatoryContent
+#: mails.st:mailMismatchAuthorContent
+#: mails.st:mailInviteUserAsSubaccountContent
+#: mails.st:mailSubaccountAcceptedContent
+msgid "_hi"
+msgstr "Hej"
 
 #: mails.st:noonehadsignedtext
 msgid "_contracthassignedformailtext"
@@ -646,6 +585,14 @@ msgstr "Har undertecknat"
 msgid "_appendixListAttachment"
 msgstr "Bilagor:"
 
+#~ msgid "_mailViralInviteContentHi"
+#~ msgstr "Hej,"
+#~ msgid "_mailSubaccountAcceptedContentHi"
+#~ msgstr "Hej $user.fullnameOrEmail$,"
+#~ msgid "_mailMismatchSignatoryContentHi"
+#~ msgstr "Hej $signame$"
+#~ msgid "_mailMismatchAuthorContentHi"
+#~ msgstr "Hej $authorname$"
 #~ msgid "_mailMismatchAuthorContentSkrivaPa"
 #~ msgstr "SkrivaPå"
 #~ msgid "_mailMismatchSignatoryContentSkrivaPa"

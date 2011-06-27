@@ -1,0 +1,472 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docdesign.st:validationdropdown
+msgid "_validationdropdownChooseVMethod"
+msgstr "Choose verification method"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoadSaved"
+msgstr "Stored by Scrive"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoadOnlyPDF"
+msgstr "OBSERVE! PDF only!"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoadFooterAttach"
+msgstr "Attachment"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoadChooseFile"
+msgstr "Select file"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoadChooseExistingAttachment"
+msgstr "Select attachment"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoadChooseAttachment"
+msgstr "Select attachment"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogUpLoad"
+msgstr "Select file from computer"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogHead"
+msgstr "Select attachment"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_updateAttachmentsDialogChooseAttachment"
+msgstr "Select the files you want to attach          "
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_switchercheckboxSignLast"
+msgstr "Sign last"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_switchercheckboxNotSignatory"
+msgstr "Non-signing party"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step3selectIfTemplate"
+msgstr "Finish and save"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step3selectIfNotTemplate"
+msgstr "Sign and send!"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step2selectIfisbasic"
+msgstr "Enter info &amp; Send!"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step2selectIfTemplate"
+msgstr "Design template"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step2selectIfElse"
+msgstr "Enter data"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_step1selectIfTemplate"
+msgstr "Select template"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsTitleRowTextContainerIfTemplate"
+msgstr "TEMPLATE:"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsMenuEmptyStepSaveAsTemplate"
+msgstr "SAVE AS TEMPLATE"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsFunctionalityChangeToSimplified"
+msgstr "CHANGE TO SIMPLIFIED PROCESS"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsFunctionalityChangeToAdvanced"
+msgstr "CHANGE TO ADVANCED PROCESS"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionssaveTemplate"
+msgstr "Save template"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsRemovePerson"
+msgstr "REMOVE PERSON"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsNextStep"
+msgstr "Next step"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsBoxChooseVerification"
+msgstr "Select verification method"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStepsBodyFunctionsAddPerson"
+msgstr "ADD PERSON"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_signStepsBodyDaysLeftToSign"
+msgstr "days"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStep2ContentSignOrder"
+msgstr "SIGNING ORDER"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_signStep2ContentPersons"
+msgstr "PERSONS"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_save"
+msgstr "Save"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_personpanePart1"
+msgstr "PARTY 1"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsRecipient"
+msgstr "Recipient"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsMinusbutton"
+msgstr "            "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsHead"
+msgstr "Request attachment"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs"
+msgstr "Request from"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsels"
+msgstr "            "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentname"
+msgstr "Attachment"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc"
+msgstr "Description"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_pageDocumentForAuthorHelpersLocalDialogsAddAttachment"
+msgstr "Add attachment"
+
+#: docpages/docdesign.st:ordertitle
+msgid "_ordertitle"
+msgstr "ORDER CONFIRMATION"
+
+#: docpages/docdesign.st:orderstep1text
+msgid "_orderstep1text"
+msgstr "Select order confirmation"
+
+#: docpages/docdesign.st:ordersendtext
+msgid "_ordersendtext"
+msgstr "Send order confirmation"
+
+#: docpages/docdesign.st:ordername
+msgid "_ordername"
+msgstr "Order confirmation"
+
+#: docpages/docdesign.st:orderexpirywarntext
+msgid "_orderexpirywarntext"
+msgstr "OBSERVE: If you choose an expiration date, you cannot withdraw the invitation before the expiration. This is controlled by the Swedish Law of Contrats. BUT IS THIS TRUE IN UK? LJSGHKUEHGUEKGBEG"
+
+#: docpages/docdesign.st:orderexpirytext
+msgid "_orderexpirytext"
+msgstr "Expiration date"
+
+#: docpages/docdesign.st:orderconfirmsendtitle
+msgid "_orderconfirmsendtitle"
+msgstr "Send order confirmation"
+
+#: docpages/docdesign.st:orderconfirmsendtext
+msgid "_orderconfirmsendtext"
+msgstr "Are you sure you want to send the order confirmation"
+
+#: docpages/docdesign.st:offertitle
+msgid "_offertitle"
+msgstr "OFFER"
+
+#: docpages/docdesign.st:offerstep1text
+msgid "_offerstep1text"
+msgstr "Select offer"
+
+#: docpages/docdesign.st:offersendtext
+msgid "_offersendtext"
+msgstr "Send offer"
+
+#: docpages/docdesign.st:offername
+msgid "_offername"
+msgstr "Offer"
+
+#: docpages/docdesign.st:offerexpirywarntext
+msgid "_offerexpirywarntext"
+msgstr "OBSERVE: If you choose an expiration date, you cannot withdraw the invitation before the expiration. This is controlled by the Swedish Law of Contrats. BUT IS THIS TRUE IN UK? LJSGHKUEHGUEKGBEG"
+
+#: docpages/docdesign.st:offerexpirytext
+msgid "_offerexpirytext"
+msgstr "Expiration date"
+
+#: docpages/docdesign.st:offerconfirmsendtitle
+msgid "_offerconfirmsendtitle"
+msgstr "Send offer"
+
+#: docpages/docdesign.st:offerconfirmsendtext
+msgid "_offerconfirmsendtext"
+msgstr "Are you sure you want to send the offer"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_invitetextSaveTemplate"
+msgstr "Save template"
+
+#: docpages/docdesign.st:pageDocumentDesign
+#: docpages/docdesign.st:validationdropdown
+msgid "_eleg"
+msgstr "E-legitimation"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_editinvitetextlinkInviteText"
+msgstr "INVITATION MESSAGE"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_editinvitetextlink"
+msgstr "ADJUST INVITATION MESSAGE"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_editInviteTextDialogHead"
+msgstr "Invitation message"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_editInviteTextDialogFooterOwnMessage"
+msgstr "Write your own message"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload2Head"
+msgstr "Multi send: Review data"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload2FooterNext"
+msgstr "Next"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload2FooterBack"
+msgstr "Back"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload2CSVProblemNext"
+msgstr "Next"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload2CSVProblemBack"
+msgstr "Back"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload2CSVMultiChooseFile"
+msgstr "Select file"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload1Head"
+msgstr "Multi send"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload1ChooseFileToUpLoad"
+msgstr "Select file to up-load"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload1ChooseFile"
+msgstr "Select file"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload1CSVOnly"
+msgstr "OBSERVE! .CSV only!"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogCsvupload1Body"
+msgstr "            You have chosen to multi send. To complete this you are required to up-load a document with format .csv          "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmTextSendNormalBody2"
+msgstr "?               After they have signed, you will recive an e-mail with a link to a Scrive page where you can sign the document."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmTextSendNormalBody1"
+msgstr "Do you want to send an invitation to sign the document to "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmTextSendIfNotNormalOrFieldsTo"
+msgstr " to"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteSubHead"
+msgstr "Choose type of e-legitimation"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteSubBody3"
+msgstr " to read more."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteSubBody2ClickHere"
+msgstr "Click here"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteSubBody"
+msgstr "No e-ID? You can download an e-ID from you online              bank or from Telia.Har du ingen e-legitimation?"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteHead"
+msgstr "Sign"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteBody3"
+msgstr "with e-mail."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteBody2"
+msgstr "When you have signed, an invitation will be automatically sent to             "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSigninviteBody"
+msgstr "Are you sure you want to sign the document"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSendinviteBody5"
+msgstr " to"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSendinviteBody4"
+msgstr "Do you want to send an invitation to fill in and sign the document"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSendinviteBody3"
+msgstr "You have created fields for the parties to fill in before they sign. When all counterparties have signed,               you will recive an e-mail with a link to a Scrive page where you can sign the document."
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSendinviteBody2To"
+msgstr " to"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmSendinviteBody"
+msgstr "You have choosen a secretary role, and will not sign. Are you sure you want to sent an invitation to sign the document"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmBasicChangeToHead"
+msgstr "Do you want to change to simplified process?"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmBasicChangeToChangeProcess"
+msgstr "Change process"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmBasicChangeToBody2"
+msgstr "When you change, all changes you have made, exept those for party 1 and party 2, will disappear.             Are you sure you want to change process?"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmBasicChangeToBody"
+msgstr "You can change to simplified process to make the process even smoother. You can of course change back whenever you want to if you have payplan Business or Enterprise, or if you are in a trial period.           "
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmAdvancedChangeToHead"
+msgstr "Do you want to change to advanced process?"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmAdvancedChangeToFooterChangeProcess"
+msgstr "Change process"
+
+#: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+msgid "_dialogConfirmAdvancedBody"
+msgstr "You can change to advanced process to enjoy more advanced features such as expiration date, templates, multi send etc. You can use the advanced process if you have payplan Business or Enterprise, or if you are in a trial period."
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_daystosigncheckboxExpDate"
+msgstr "Expiration date"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_daystosigncheckboxActivateExpDate"
+msgstr "Activatr expiration date"
+
+#: docpages/docdesign.st:contracttitle
+msgid "_contracttitle"
+msgstr "DOCUMENT"
+
+#: docpages/docdesign.st:contractstep1text
+msgid "_contractstep1text"
+msgstr "Select document"
+
+#: docpages/docdesign.st:contractsendtext
+msgid "_contractsendtext"
+msgstr "Send"
+
+#: docpages/docdesign.st:contractname
+msgid "_contractname"
+msgstr "Contract"
+
+#: docpages/docdesign.st:contractexpirywarntext
+msgid "_contractexpirywarntext"
+msgstr "OBSERVE: If you choose an expiration date, you cannot withdraw the invitation before the expiration. This is controlled by the Swedish Law of Contrats. BUT IS THIS TRUE IN UK? LJSGHKUEHGUEKGBEG"
+
+#: docpages/docdesign.st:contractexpirytext
+msgid "_contractexpirytext"
+msgstr "To be signed within"
+
+#: docpages/docdesign.st:contractconfirmsendtitle
+msgid "_contractconfirmsendtitle"
+msgstr "Send invitation"
+
+#: docpages/docdesign.st:contractconfirmsendtext
+msgid "_contractconfirmsendtext"
+msgstr " "
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_authorsignatoryradioSenderSign"
+msgstr "Signing party"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_authorsignatoryradioSenderNotSign"
+msgstr "Non-signing party"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_addsigattachmentlink"
+msgstr "REQUEST ATTACHMENT"
+
+#: docpages/docdesign.st:pageDocumentDesign
+msgid "_addattachmentlink"
+msgstr "ADD ATTACHMENT"
+
+#~ msgid "_updateAttachmentsDialogUpLoadChooseExistingAttachmentFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_pageDocumentForAuthorHelpersLocalDialogsSave"
+#~ msgstr "Spara"
+#~ msgid "_pageDocumentForAuthorHelpersLocalDialogsCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_validationdropdownIfEleg"
+#~ msgstr "E-Legitimation"
+#~ msgid "_validationdropdownIfEmail"
+#~ msgstr "E-post"
+#~ msgid "_signinviteSkrivaPa2"
+#~ msgstr "SkrivaPå"
+#~ msgid "_signinviteSkrivaPa"
+#~ msgstr "SkrivaPå"
+#~ msgid "_signStepsBodyFunctionsBoxEleg"
+#~ msgstr "E-Legitimation"
+#~ msgid "_signStepsBodyFunctionsBoxEmail"
+#~ msgstr "E-post"
+
