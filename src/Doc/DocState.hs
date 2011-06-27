@@ -352,6 +352,9 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                                (Just cu, Just (Right newsigindex)) 
                                  -> Just cu{csvsignatoryindex=newsigindex}
                                _ -> Nothing
+                 updatedFstFileName  = case (documentfiles document) of
+                                         (f:fs) -> (f {filename= docname} :fs)
+                                         fs -> fs
              return $ Right $ document 
                     { documentsignatorylinks         = alllinks
                     , documentdaystosign             = daystosign 
@@ -361,6 +364,7 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documentallowedidtypes         = idtypes
                     , documentcsvupload              = csvupload
                     , documentfunctionality          = docfunctionality
+                    , documentfiles                  = updatedFstFileName
                     }
          else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
