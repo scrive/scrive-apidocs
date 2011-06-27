@@ -412,7 +412,7 @@ pageDocumentDesign=
                 <div class="sendbutton" style="$if(!process.isauthorsend)$display:none;$else$padding-top:20px;$endif$">
                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                     <div class="left"></div>
-                    <div class="label" style="width:120px">
+                    <div class="label" style="min-width: 120px;">
 		                  <span>$process.sendbuttontext$</span>
                       <span class="btn-symbol green arrow-left"
                             style="position:relative;top:3px;right:0px"></span>
@@ -424,7 +424,7 @@ pageDocumentDesign=
                 <div class="signbutton">
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
-                    <div class="label" style="width:120px">
+                    <div class="label" style="min-width: 120px;">
                       <span>SkrivaPå </span>
                       <span class="icon cross"></span>
                     </div> 
