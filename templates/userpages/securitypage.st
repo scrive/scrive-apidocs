@@ -32,25 +32,7 @@ showUserSecurity =
                        </tr>
                    </table>
                </div>
-             
-           </div>
-
-           <div class="col">
-               <div class="account-header">
-                   <h2>Språkinställningar</h2>
-               </div>
-               <div class="account-body">
-                   <table>
-                       <tr>
-                           <td>Användarspråk:</td>
-                           <td><select name="lang"> 
-                                     <option $if(lang.se)$ selected="" $endif$ value="LANG_SE"> Svenska </option>
-                                     <option $if(lang.en)$ selected="" $endif$ value="LANG_EN"> Engelska </option>
-                               </select>
-                            </td>
-                       </tr>
-                   </table>
-               </div>
+ 
 
 
              <div class="account-footer">
