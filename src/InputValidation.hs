@@ -1,4 +1,4 @@
-{- | 
+{- |
     The input validation rules.
 -}
 module InputValidation
@@ -86,7 +86,7 @@ data Result a = Good a
                 | Bad ValidationMessage
                 | Empty
 
-instance (Monoid a) => Monoid (Result a) where 
+instance (Monoid a) => Monoid (Result a) where
     mappend (Good a1) (Good a2) = Good $ mappend a1 a2
     mappend Empty a = a
     mappend a Empty = a
@@ -96,7 +96,7 @@ instance (Monoid a) => Monoid (Result a) where
 
 instance Monad Result where
   return = Good
-  
+
   Good x >>= f = f x
   Bad msg >>= _ = Bad msg
   Empty >>= _ = Empty
@@ -107,7 +107,7 @@ isGood _ = False
 
 fromGood:: Result a -> a
 fromGood (Good a) = a
-fromGood _ = error "Trying to get good from bad" 
+fromGood _ = error "Trying to get good from bad"
 
 
 {- |
@@ -116,7 +116,7 @@ fromGood _ = error "Trying to get good from bad"
     given a Nothing.
 -}
 getOptionalField :: (String -> Result a) -> String -> Kontra (Maybe a)
-getOptionalField validate = 
+getOptionalField validate =
     getValidateAndHandle validate optionalFieldHandler
 
 getOptionalFieldList :: (String -> Result a) -> String -> Kontra [Maybe a]
@@ -133,7 +133,7 @@ optionalFieldHandler result =
     Use this to get a field that has a default value when Empty.
 -}
 getDefaultedField :: a -> (String -> Result a) -> String -> Kontra (Maybe a)
-getDefaultedField d validate = 
+getDefaultedField d validate =
     getValidateAndHandle validate (defaultedFieldHandler d)
 
 getDefaultedFieldList :: a -> (String -> Result a) -> String -> Kontra [Maybe a]
@@ -152,7 +152,7 @@ defaultedFieldHandler d result =
     If there is not input then it will display a flash message warning them.
 -}
 getRequiredField :: (String -> Result a) -> String -> Kontra (Maybe a)
-getRequiredField validate = 
+getRequiredField validate =
     getValidateAndHandle validate requiredFieldHandler
 
 getRequiredFieldList :: (String -> Result a) -> String -> Kontra [Maybe a]
@@ -172,7 +172,7 @@ requiredFieldHandler result =
     bad has happened.
 -}
 getCriticalField :: (String -> Result a) -> String -> Kontra a
-getCriticalField validate = 
+getCriticalField validate =
     getValidateAndHandle validate criticalFieldHandler
 
 getCriticalFieldList :: (String -> Result a) -> String -> Kontra [a]
@@ -266,14 +266,14 @@ formatRawValueInfo (Just xs) = (show $ length xs) ++ " chars"
     Interprets the Result as a Maybe,
     so you get a Just for sensible input,
     but a Nothing for invalid or empty input.
--} 
+-}
 asMaybe :: (Input, Result a) -> Kontra (Maybe a)
 asMaybe (_,Good x) = return $ Just x
 asMaybe _        = return Nothing
 
 {- |
     If the result is Empty then this uses the
-    given default value.  
+    given default value.
 -}
 withDefault :: a -> (Input, Result a) -> Kontra (Input, Result a)
 withDefault d (input, Empty) = return $ (input, Good d)
@@ -288,7 +288,7 @@ withRequiredFlash (input, Empty) = return $ (input, Bad flashMessageMissingRequi
 withRequiredFlash x     = return x
 
 flashMessageMissingRequiredField :: ValidationMessage
-flashMessageMissingRequiredField = 
+flashMessageMissingRequiredField =
     flashMessage "flashMessageMissingRequiredField" Nothing
 
 {- |
@@ -318,10 +318,10 @@ withFailureIfBad (_,Empty) = return Nothing
     * Between the @ character and the full-stop you must have one of the following: Full-stop ., Hyphen -, ASCII letters a-z and A-Z, digits 0-9.
     * After the full-stop there must be either two, three or four characters and these can be: ASCII letters a-z and A-Z.
     * Size: Up to 200 characters
-  Also emails are lowercased.  
+  Also emails are lowercased.
 -}
 asValidEmail :: String -> Result BS.ByteString
-asValidEmail input = 
+asValidEmail input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 200 fieldtemplate
@@ -364,7 +364,7 @@ asValidPassword input =
     >>= mkByteString
     where fieldtemplate = "passwordFieldName"
           checkContainsAlphaAndDigit :: String -> Result String
-          checkContainsAlphaAndDigit pwd 
+          checkContainsAlphaAndDigit pwd
               | any isAlpha pwd && any isDigit pwd = return pwd
               | otherwise = Bad $ flashMessageNeedsLetterAndDigit fieldtemplate
 
@@ -387,7 +387,7 @@ asDirtyPassword input =
     White list: Space, Apostrophe ', Hyphen -, Alphabetic characters
     Size: Up to 100 chars
 -}
-asValidName :: String -> Result BS.ByteString 
+asValidName :: String -> Result BS.ByteString
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -412,7 +412,7 @@ asValidCompanyName input =
 
 {- |
     Creates a clean and validated company or individual number.
-    White list: Alphabetic characters, Numeric characters, punctuation 
+    White list: Alphabetic characters, Numeric characters, punctuation
     Size: From 4 to 50 chars
 -}
 asValidCompanyNumber :: String -> Result BS.ByteString
@@ -423,7 +423,7 @@ asValidCompanyNumber input =
     >>= checkLengthIsMax 50 fieldtemplate
     >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')] fieldtemplate
     >>= mkByteString
-    where fieldtemplate = "companyNumberFieldName"     
+    where fieldtemplate = "companyNumberFieldName"
 
 {- |
     Creates a clean and validated address.
@@ -467,20 +467,20 @@ asValidCheckBox input =
                            | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
 
 
-{- | 
+{- |
     No idea how this validator should look like
--} 
+-}
 asValidPhone :: String -> Result BS.ByteString
 asValidPhone input =
     stripWhitespace input
     >>= mkByteString
-    
+
 {-|
     Gets the cleaned up number of days to sign.
     This'll make sure you get a number in the range 1-99.
 -}
 asValidDaysToSign :: String -> Result Int
-asValidDaysToSign input = 
+asValidDaysToSign input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= parseAsInt fieldtemplate
@@ -533,7 +533,7 @@ asValidBool :: String -> Result Bool
 asValidBool input =
     checkIfEmpty input
     >>= parseAsBool
-  where 
+  where
     parseAsBool :: String -> Result Bool
     parseAsBool xs = return $ "TRUE" == map toUpper xs
 
@@ -597,17 +597,17 @@ asValidInviteText input =
     where fieldtemplate = "inviteTextFieldName"
           bad = Bad $ flashMessageInvalidFormat fieldtemplate
           parseAsXml :: String -> Result (Content Posn)
-          parseAsXml xs = 
+          parseAsXml xs =
             case xmlParse' "asValidInviteText" $ "<p>" ++ xs ++ "</p>" of
               (Right (Document _ _ root _)) -> return $ CElem root undefined
               _ -> bad
           checkContent :: Content Posn -> Result (Content Posn)
           checkContent x@(CElem (Elem name atts cnt) _)
-              | isValidElemName name 
-                && all (isValidAtt name) atts 
+              | isValidElemName name
+                && all (isValidAtt name) atts
                 && all isValidChild cnt = return x
               | otherwise = bad
-          checkContent x@(CString _ _ _) = return x 
+          checkContent x@(CString _ _ _) = return x
           checkContent x@(CRef _ _) = return x
           checkContent x@(CMisc (Comment _) _) = return x
           checkContent _ = bad
@@ -619,13 +619,13 @@ asValidInviteText input =
           isValidElemName :: Name -> Bool
           isValidElemName n = n `elem` ["br", "em", "li", "ol", "p", "span", "strong", "ul"]
           isValidAtt :: Name -> Attribute -> Bool
-          isValidAtt elemname (attname, attvalue) = 
-              "span"==elemname 
-              && attname=="style" 
+          isValidAtt elemname (attname, attvalue) =
+              "span"==elemname
+              && attname=="style"
               && isValidAttValue attvalue
           isValidAttValue :: AttValue -> Bool
-          isValidAttValue (AttValue (Left v:[])) = 
-              v `elem` ["text-decoration: underline;", 
+          isValidAttValue (AttValue (Left v:[])) =
+              v `elem` ["text-decoration: underline;",
                         "text-decoration: line-through;"]
           isValidAttValue _ = False
           ignoreXml :: String -> Content Posn -> Result String
@@ -640,7 +640,7 @@ mkByteString = return . BS.fromString
     Lower cases everything
 -}
 mkLowerCase :: String -> Result String
-mkLowerCase = return . map toLower 
+mkLowerCase = return . map toLower
 
 {- |
     Checks the lower bound of a number
@@ -651,7 +651,7 @@ checkWithinLowerBound lowerbound fieldtemplate val
     | otherwise = Bad $ flashMessageNumberBelowMinimum fieldtemplate lowerbound
 
 flashMessageNumberBelowMinimum :: (Num a, Show a) => String -> a -> ValidationMessage
-flashMessageNumberBelowMinimum fieldtemplate lowerbound = 
+flashMessageNumberBelowMinimum fieldtemplate lowerbound =
     flashMessageWithFieldName fieldtemplate "flashMessageNumberBelowMinimum"  . Just $ field "min" (show lowerbound)
 
 {- |
@@ -663,7 +663,7 @@ checkWithinUpperBound upperbound fieldtemplate val
     | otherwise = Bad $ flashMessageNumberAboveMaximum fieldtemplate upperbound
 
 flashMessageNumberAboveMaximum :: (Num a, Show a) => String -> a -> ValidationMessage
-flashMessageNumberAboveMaximum fieldtemplate upperbound = 
+flashMessageNumberAboveMaximum fieldtemplate upperbound =
     flashMessageWithFieldName fieldtemplate "flashMessageNumberAboveMaximum" . Just $ field "max" (show upperbound)
 
 {- |
@@ -684,7 +684,7 @@ flashMessageNotAValidInteger fieldtemplate =
     When there are invalid chars the flash message depends on what those chars were.
 -}
 checkOnly :: [Char -> Bool] -> String -> String -> Result String
-checkOnly ps fieldtemplate str = 
+checkOnly ps fieldtemplate str =
     case invalidChars of
         [] | null invalidChars -> return str
         _ | ' ' `elem` invalidChars -> Bad $ flashMessageInvalidSpaceInInput fieldtemplate
@@ -699,35 +699,35 @@ flashMessageInvalidSpaceInInput fieldtemplate =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidSpaceInInput" Nothing
 
 flashMessageInvalidUnprintableCharsInInput :: String -> ValidationMessage
-flashMessageInvalidUnprintableCharsInInput fieldtemplate = 
+flashMessageInvalidUnprintableCharsInInput fieldtemplate =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidUnprintableCharsInInput" Nothing
 
 flashMessageInvalidPrintableCharsInInput :: String -> String -> ValidationMessage
-flashMessageInvalidPrintableCharsInInput fieldtemplate invalidchars = 
+flashMessageInvalidPrintableCharsInInput fieldtemplate invalidchars =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidPrintableCharsInInput" . Just $ field "invalidchar" (head invalidchars)
 
 {- |
     Checks that a string meets the min length restriction.
 -}
 checkLengthIsMin :: Int -> String -> String -> Result String
-checkLengthIsMin minlength fieldtemplate xs 
+checkLengthIsMin minlength fieldtemplate xs
     | length xs < minlength =  Bad $ flashMessageInputLessThanMinLength fieldtemplate minlength
     | otherwise = return xs
 
 flashMessageInputLessThanMinLength :: String -> Int -> ValidationMessage
-flashMessageInputLessThanMinLength fieldtemplate minlength = 
+flashMessageInputLessThanMinLength fieldtemplate minlength =
     flashMessageWithFieldName fieldtemplate "flashMessageInputLessThanMinLength" . Just $ field "minlength" minlength
 
 {- |
     Checks that a string doesn't exceed the max length restriction.
 -}
 checkLengthIsMax :: Int -> String -> String -> Result String
-checkLengthIsMax maxlength fieldtemplate xs 
+checkLengthIsMax maxlength fieldtemplate xs
     | length xs > maxlength =  Bad $ flashMessageInputExceedsMaxLength fieldtemplate maxlength
     | otherwise = return xs
 
 flashMessageInputExceedsMaxLength :: String -> Int -> ValidationMessage
-flashMessageInputExceedsMaxLength fieldtemplate maxlength = 
+flashMessageInputExceedsMaxLength fieldtemplate maxlength =
     flashMessageWithFieldName fieldtemplate "flashMessageInputExceedsMaxLength" . Just $ field "maxlength" maxlength
 
 {- |

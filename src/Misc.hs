@@ -140,13 +140,13 @@ openDocumentMac filename = do
     return ()
 
 openDocument :: String -> IO ()
-openDocument filename = 
-  openDocumentMac filename `catch` 
-  (\_e -> 
-    openDocumentWindows filename `catch` 
-    (\_e -> 
-      openDocumentGnome filename `catch` 
-      (\_e -> 
+openDocument filename =
+  openDocumentMac filename `catch`
+  (\_e ->
+    openDocumentWindows filename `catch`
+    (\_e ->
+      openDocumentGnome filename `catch`
+      (\_e ->
         return ())))
 
 toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
@@ -201,7 +201,7 @@ getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 -- (either from a @POST@ or a @GET@)
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
-    = do 
+    = do
          inputs <- asks (\(a, b, _c) -> a ++ b)
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
@@ -218,16 +218,16 @@ instance Version MagicHash
 
 instance Show MagicHash where
   showsPrec _prec (MagicHash x) = (++) (pad0 16 (showHex x ""))
-    
+
 
 instance Read MagicHash where
-  readsPrec _prec = let make (i,v) = (MagicHash i,v) 
+  readsPrec _prec = let make (i,v) = (MagicHash i,v)
                     in map make . readHex
 
 
 instance FromReqURI MagicHash where
     fromReqURI = readM
- 
+
 
 -- | Create an external process with arguments. Feed it input, collect
 -- exit code, stdout and stderr.
@@ -240,7 +240,7 @@ readProcessWithExitCode'
     -> [String]                                    -- ^ any arguments
     -> BSL.ByteString                              -- ^ standard input
     -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
-readProcessWithExitCode' cmd args input = 
+readProcessWithExitCode' cmd args input =
   withSystemTempFile "process" $ \_inputname inputhandle -> do
     BSL.hPutStr inputhandle input
     hFlush inputhandle
@@ -296,9 +296,9 @@ readCurl :: [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
 readCurl args input = readProcessWithExitCode' curl_exe args input
-  
 
--- | Run action, record failure if any. 
+
+-- | Run action, record failure if any.
 logErrorWithDefault :: IO (Either String a)  -- ^ action to run
                     -> b                     -- ^ default value in case action failed
                     -> (a -> IO b)           -- ^ action that uses value
@@ -307,7 +307,7 @@ logErrorWithDefault c d f = do
     c' <- c
     case c' of
         Right c'' ->  f c''
-        Left err  ->  do 
+        Left err  ->  do
                 Log.error err
                 return d
 
@@ -340,12 +340,12 @@ for = flip map
 -- @(Maybe a)@ 'sequenceMM' does the same, but is aware that first
 -- computation can also fail, and so it joins two posible fails.
 sequenceMM :: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
-sequenceMM = (fmap join) . sequenceA 
+sequenceMM = (fmap join) . sequenceA
 
 liftMM ::(Monad m) => (a -> m (Maybe b)) -> m (Maybe a) -> m (Maybe b)
 liftMM f v = do
     mv <- v
-    case mv of 
+    case mv of
          Just a -> f a
          _ -> return Nothing
 
@@ -353,15 +353,15 @@ liftMM f v = do
 lift_M ::(Monad m) => (a -> m b) -> m (Maybe a) -> m (Maybe b)
 lift_M f v = do
     mv <- v
-    case mv of 
+    case mv of
          Just a -> liftM Just (f a)
          _ -> return Nothing
 
 when_::(Monad m) => Bool -> m a -> m ()
-when_ b c =  when b $ c >> return () 
+when_ b c =  when b $ c >> return ()
 
 maybe' :: a -> Maybe a -> a
-maybe' a ma = maybe a id ma   
+maybe' a ma = maybe a id ma
 
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = isJust <$> getField name
@@ -408,13 +408,13 @@ getFileField name = do
     finput <- getDataFn (lookInput name)
     liftIO $ putStrLn $ show finput
     case finput of
-        Right (Input contentspec _ _)-> 
+        Right (Input contentspec _ _)->
             case contentspec of
                 Left filepath -> joinEmpty <$> Just . concatChunks <$> (liftIO $ BSL.readFile filepath)
                 Right content -> return $ joinEmpty . Just $ concatChunks content
         _ -> return Nothing
-        
-        
+
+
 -- | Pack value to just unless we have 'mzero'.  Since we can not check
 -- emptyness of string in templates we want to pack it in maybe.
 nothingIfEmpty::(Eq a, Monoid a) => a -> Maybe a
@@ -422,8 +422,8 @@ nothingIfEmpty a = if mempty == a then Nothing else Just a
 
 -- | Failing if inner value is empty
 joinEmpty::(MonadPlus m, Monoid a, Ord a) => m a -> m a
-joinEmpty m = do 
-                mv <- m 
+joinEmpty m = do
+                mv <- m
                 if mv == mempty
                  then mzero
                  else return mv
@@ -435,7 +435,7 @@ mapIf cond f = map (\a -> if (cond a) then f a else a)
 {-| This function is useful when creating 'Typeable' instance when we
 want a specific name for type.  Example of use:
 
-  > instance Typeable Author where typeOf _ = mkTypeOf "XX_Author" 
+  > instance Typeable Author where typeOf _ = mkTypeOf "XX_Author"
 
 -}
 mkTypeOf :: String -> TypeRep
@@ -475,7 +475,7 @@ thd3 (_,_,c) = c
 isSecure::(ServerMonad m,Functor m) => m Bool
 isSecure = do
      (Just (BS.fromString "http") /=) <$> (getHeaderM "scheme")
-     
+
 isHTTPS :: (ServerMonad m) => m Bool
 isHTTPS = do
     rq <- askRq
@@ -488,7 +488,7 @@ getHostpart = do
   let hostpart = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
   return $ scheme ++ "://" ++ hostpart
-     
+
 getSecureLink :: (ServerMonad m, Functor m) => m String
 getSecureLink = (++) "https://" <$>  currentLinkBody
 
@@ -510,7 +510,7 @@ currentLinkBody = do
                      else a2
   return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
 
-       
+
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 
@@ -518,7 +518,7 @@ encodeString :: String -> String
 encodeString = URL.encode . map (toEnum . ord)
 
 qs :: [(String, Either a String)] -> String
-qs qsPairs = 
+qs qsPairs =
     let relevantPairs = [ (k, v) | (k, Right v) <- qsPairs ]
         empties       = [ encodeString k | (k, "") <- relevantPairs ]
         withValues    = [ encodeString k ++ "=" ++ encodeString v | (k, v) <- relevantPairs, length v > 0 ]
@@ -540,14 +540,14 @@ pairMaybe _ _ = Nothing
 
 maybeReadM::(Monad m,Read a,Functor m) =>  m (Maybe String) -> m (Maybe a)
 maybeReadM c = join <$> fmap maybeRead <$> c
-            
-maybeRead::(Read a) => String -> Maybe a            
+
+maybeRead::(Read a) => String -> Maybe a
 maybeRead s = case reads s of
             [(v,"")] -> Just v
             _        -> Nothing
 
 class URLAble a where
-   encodeForURL::a -> String            
+   encodeForURL::a -> String
 
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
@@ -567,7 +567,7 @@ fromRight (Right b) = b
 fromRight _ = error "Reading Right for Left"
 
 
-joinB:: Maybe Bool -> Bool 
+joinB:: Maybe Bool -> Bool
 joinB (Just b) = b
 joinB _ = False
 
@@ -591,15 +591,15 @@ propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
 mapPair::(Functor f) => (a -> b) -> f (a,a)  -> f (b,b)
-mapPair f = fmap (\(a1,a2) -> (f a1, f a2)) 
+mapPair f = fmap (\(a1,a2) -> (f a1, f a2))
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []
     where
         splitOver' [] _ []  = []
         splitOver' c _ []  = [reverse c]
-        splitOver' c a b@(bh:bt) = 
-            if (a `isPrefixOf` b)  
+        splitOver' c a b@(bh:bt) =
+            if (a `isPrefixOf` b)
              then (reverse c) : (splitOver' [] a (drop (length a) b) )
-             else splitOver' (bh:c) a bt 
+             else splitOver' (bh:c) a bt
 

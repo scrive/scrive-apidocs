@@ -48,7 +48,7 @@ apiContextForMail = do
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-            
+
     -- content at this point is basically full MIME email as it was received by SMTP server
     -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
     eresult <- parseEmailMessage (concatChunks content)
@@ -65,7 +65,7 @@ apiContextForMail = do
 
 mailAPI :: Kontra Response
 mailAPI = do
-    methodM POST 
+    methodM POST
     apiResponse $ do
               mcontext <- apiContext
               case mcontext  of
@@ -73,12 +73,12 @@ mailAPI = do
                   Left emsg -> return $ uncurry apiError emsg
 
 maybeFail :: (Monad m) => String -> Maybe a -> m a
-maybeFail msg = maybe (fail msg) return 
+maybeFail msg = maybe (fail msg) return
 
-{- 
+{-
 
 { "title": "Title of the document",
-  "persons": [ 
+  "persons": [
            { "firstName": "Gracjan",
              "lastName": "Polak",
              "personNumber": "1412341234"
@@ -92,13 +92,13 @@ parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.By
 parseEmailMessageToParts content = (mime, parts mime)
   where
     mime = MIME.parseMIMEMessage (BSC.unpack content)
-    parts mimevalue = case MIME.mime_val_content mimevalue of 
+    parts mimevalue = case MIME.mime_val_content mimevalue of
         MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
         MIME.Multi more -> concatMap parts more
-  
+
 parseEmailMessage :: (Monad m, MonadIO m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
-  let (mime, allParts) = parseEmailMessageToParts content 
+  let (mime, allParts) = parseEmailMessageToParts content
       isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
       typesOfParts = map fst allParts
@@ -113,17 +113,17 @@ parseEmailMessage content = runErrorT $ do
   let pdfBinary = snd pdf
   let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
   let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
-  
+
   let charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
-  let recode mimetype content' = 
+  let recode mimetype content' =
         case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
           Left result' -> return $ BS.concat (BSL.toChunks (result'))
-          Right errmsg -> fail (show $ IConv.reportConversionError errmsg) 
-  recodedPlain <- recode (fst plain) (snd plain)   
-    
+          Right errmsg -> fail (show $ IConv.reportConversionError errmsg)
+  recodedPlain <- recode (fst plain) (snd plain)
+
   json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
   return (json,pdfBinary,from,to)
-  
+
 
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
 -- handleMailCommand (JSObject json) content from to = runErrorT $ do
@@ -135,15 +135,15 @@ handleMailCommand = do
     -- addres. example: api+1234@api.skrivapa.se here '1234' is
     -- extension and can be used as for example password
     let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
-    
+
     Context { ctxtime, ctxipnumber } <- askKontraContext
     (maybeUser :: Maybe User) <- liftIO $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
     (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
-  
+
     title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
 
     apikey <- fromMaybe extension <$> (apiAskString "apikey")
-  
+
     case apikey of
         "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
         "998877665544332211" -> return ()
@@ -157,7 +157,7 @@ handleMailCommand = do
         Just "order" -> return (Signable Order)
         Just z -> fail $ "Unsupported document type '" ++ z ++ "', should be one of ['contract', 'offer', 'order']"
         -- magic below defaults to (Signable Contract), but looks up first True in a list of options
-        _ -> return $ fromJust $ lookup True 
+        _ -> return $ fromJust $ lookup True
              [ ("contract" `isInfixOf` toStr, Signable Contract)
              , ("offer" `isInfixOf` toStr,    Signable Offer)
              , ("order" `isInfixOf` toStr,    Signable Order)
@@ -166,17 +166,17 @@ handleMailCommand = do
 
     (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
-  
+
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
     let userDetails = signatoryDetailsFromUser user
-        
+
     (doc :: Document) <- lift $ update $ NewDocument user title doctype ctxtime
     (_ :: ()) <- lift $ lift $ DocControl.handleDocumentUpload (documentid doc) content title
-    (_ :: Either String Document) <- lift $ update $ UpdateDocument ctxtime (documentid doc) title 
+    (_ :: Either String Document) <- lift $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
                                     (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user)
                                     [EmailIdentification] Nothing AdvancedFunctionality
-  
+
     (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
 
     (newdocument :: Document) <- case eithernewdocument of

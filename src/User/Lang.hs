@@ -14,11 +14,11 @@ import Data.List
 
 
 
-data Lang =    LANG_SE 
-            |  LANG_EN 
+data Lang =    LANG_SE
+            |  LANG_EN
     deriving (Bounded, Enum, Show, Read, Ord, Eq, Typeable)
 
-instance Version Lang 
+instance Version Lang
 
 
 

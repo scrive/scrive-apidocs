@@ -13,11 +13,11 @@ import qualified Language.Haskell.TH as TH
 
 class InspectXML a where
     inspectXML ::(Show a) =>  a -> String
-    inspectXML = concatMap escape . show 
+    inspectXML = concatMap escape . show
         where escape '<' = "&lt;"
               escape '>' = "&gt;"
               escape c   = [c]
-    
+
 table :: [Char] -> [Char] -> [Char]
 table a b = "<table><tbody><tr><td valign='top' style='padding-right:5px'> "++ a ++" </td><td> </td><td> "++ b ++" </td></tr></tbody></table>"
 
@@ -30,9 +30,9 @@ deriveInspectXML name = do
       u fname fields = do
         n <- mapM (\f -> TH.newName f) fields
         let s = TH.nameBase fname
-        TH.match (TH.conP fname (map TH.varP n)) 
+        TH.match (TH.conP fname (map TH.varP n))
                    (TH.normalB [|  table s (concat (zipWith table fields $(TH.listE (map (\x -> TH.varE 'inspectXML `TH.appE` TH.varE x) n))))
-                                       
+
                                |]) []
   let pcon (TH.NormalC fname fields) = do
                           let k = namesOfNormal fields
@@ -40,9 +40,9 @@ deriveInspectXML name = do
       pcon (TH.RecC fname fields) = do
                           let k = namesOfRec fields
                           u fname k
-      d fname cons = 
+      d fname cons =
         [d| instance InspectXML $(TH.conT fname) where
-              inspectXML x = $( TH.caseE (TH.varE 'x) 
+              inspectXML x = $( TH.caseE (TH.varE 'x)
                               (map pcon cons) ) |]
 
   case info of

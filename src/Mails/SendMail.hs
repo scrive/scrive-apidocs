@@ -76,7 +76,7 @@ emptyMail = Mail
     , from           = Nothing
     , mailInfo       = None
 }
--- 
+--
 newtype Mailer = Mailer { sendMail :: ActionID -> Mail -> IO Bool }
 
 createSendgridMailer :: MailsConfig -> Mailer
@@ -96,7 +96,7 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
                     , "-k", "--ssl", "--mail-from"
                     , "<" ++ (ourInfoEmail config) ++ ">"
                     ] ++ concatMap mailRcpt to
-                    
+
             Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
             (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
             case code of
@@ -160,20 +160,20 @@ createWholeContent :: (String, String) -> String -> String -> ActionID -> Mail -
 createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) = do
   fromHeader <- do
       otheraddres <- (fmap (servicemailfromaddress . servicesettings)) <$> liftMM  (query . GetService) (return from)
-      case (join otheraddres) of 
+      case (join otheraddres) of
          Nothing -> return $ "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
          Just address ->  return $ "From: <"++ BS.toString address++ ">\r\n"
-  let mailtos = createMailTos mail 
+  let mailtos = createMailTos mail
       -- FIXME: add =?UTF8?B= everywhere it is needed here
-      headerEmail = 
+      headerEmail =
           -- FIXME: encoded word should not be longer than 75 bytes including everything
           "Subject: " ++ mailEncode title ++ "\r\n" ++
           "To: " ++ mailtos ++ "\r\n" ++
           fromHeader ++
-          "X-SMTPAPI:  {\"unique_args\": " ++ 
+          "X-SMTPAPI:  {\"unique_args\": " ++
                        "{\"mailinfo\": \""++(show mailInfo)++"\", "++
                        "\"id\": \""++(show mailId)++"\"} "++
-                       
+
                       "}\r\n" ++
           "MIME-Version: 1.0\r\n" ++
           "Content-Type: multipart/mixed; boundary=" ++ boundaryMixed ++ "\r\n" ++
@@ -193,9 +193,9 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
           "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
-      attach (fname,fcontent) = BSL.fromString (headerAttach fname) `BSL.append` 
+      attach (fname,fcontent) = BSL.fromString (headerAttach fname) `BSL.append`
                                 BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode fcontent]
-  return $ BSL.concat $ 
+  return $ BSL.concat $
                      [ BSL.fromString headerEmail
                      , BSL.fromString headerContent
                      , BSL.fromString headerContentText

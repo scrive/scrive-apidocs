@@ -57,8 +57,8 @@ import qualified MemCache
 import API.Service.ServiceState
 import FlashMessage
 import Company.CompanyState
-  
-data Context = Context 
+
+data Context = Context
     { ctxmaybeuser           :: Maybe User
     , ctxhostpart            :: String
     , ctxflashmessages       :: [FlashMessage]
@@ -69,7 +69,7 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action
     , ctxgscmd               :: String
     , ctxproduction          :: Bool
-    , ctxtemplates           :: KontrakcjaTemplates 
+    , ctxtemplates           :: KontrakcjaTemplates
     , ctxesenforcer          :: MVar ()
     , ctxtwconf              :: TW.TrustWeaverConf
     , ctxelegtransactions    :: [ELegTransaction]
@@ -111,7 +111,7 @@ initialUsers = map (Email . BS.fromString)
    Whether the user is an administrator.
 -}
 isSuperUser :: [Email] -> Maybe User -> Bool
-isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins 
+isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins
 isSuperUser _ _ = False
 
 {- |
@@ -123,10 +123,10 @@ onlySuperUser a = do
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
-          
+
 {- |
    Adds an Eleg Transaction to the context.
--}           
+-}
 addELegTransaction :: ELegTransaction -> Kontra ()
 addELegTransaction tr = do
     ctx@Context { ctxelegtransactions = currenttrans } <- get
@@ -134,7 +134,7 @@ addELegTransaction tr = do
 
 {- |
    Adds a flash message to the context.
--}  
+-}
 addFlashMsg :: FlashMessage -> Kontra ()
 addFlashMsg flash =
     modify (\ctx@Context{ ctxflashmessages = flashmessages } ->
@@ -142,18 +142,18 @@ addFlashMsg flash =
 
 {- |
    Clears all the flash messages from the context.
--}                  
-clearFlashMsgs:: Kontra ()                       
+-}
+clearFlashMsgs:: Kontra ()
 clearFlashMsgs = modify (\ctx -> ctx { ctxflashmessages = [] })
 
 
 {- |
    Adds a modal from string
--}  
+-}
 addModal :: KontraModal ->  Kontra ()
 addModal flash = do
-  ctx <- get  
-  fm <- liftIO $ runReaderT flash (ctxtemplates ctx)  
+  ctx <- get
+  fm <- liftIO $ runReaderT flash (ctxtemplates ctx)
   put $  ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
 
 {- |
@@ -168,7 +168,7 @@ addModalT = addFlashMsg
 logUserToContext :: Maybe User -> Kontra ()
 logUserToContext user =  do
   ctx <- get
-  put $ ctx { ctxmaybeuser = user}    
+  put $ ctx { ctxmaybeuser = user}
 
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do
@@ -218,7 +218,7 @@ queryOrFailIfLeft q = do
   returnRightOrMZero mres
 
 -- | if it's not a just, mzero. Otherwise, return the value
-returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a     
+returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a
 returnJustOrMZero = maybe mzero return
 
 returnRightOrMZero :: (MonadPlus m, Monad m) => Either a b -> m b
@@ -239,9 +239,9 @@ currentServiceID  ctx = serviceid <$> currentService ctx
 
 
 class HasService a where
-    getService:: a -> Maybe ServiceID 
-    
+    getService:: a -> Maybe ServiceID
+
 instance HasService Document where
     getService = documentservice
-    
+
 

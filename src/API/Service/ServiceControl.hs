@@ -9,12 +9,12 @@
 --
 -----------------------------------------------------------------------------
 module  API.Service.ServiceControl(
-              handleShowService 
-            , handleShowServiceList  
+              handleShowService
+            , handleShowServiceList
             , handleChangeServiceUI
             , handleChangeServicePassword
             , handleChangeServiceSettings
-            , handleServiceLogo 
+            , handleServiceLogo
             , handleServiceButtonsBody
             , handleServiceButtonsRest
           ) where
@@ -53,7 +53,7 @@ handleChangeServiceUI sid = do
            let ui = serviceui service
            update $ UpdateServiceUI sid $ ui {
               servicemailfooter = joinEmpty $ mailfooter `mplus` (servicemailfooter ui)
-            , servicebuttons = (pairMaybe buttonBody buttonRest) `mplus`  
+            , servicebuttons = (pairMaybe buttonBody buttonRest) `mplus`
                                (mapFst (`fromMaybe` buttonBody) $ mapSnd (`fromMaybe` buttonRest) $ (servicebuttons  ui))
             , servicebackground = joinEmpty $ background `mplus` (servicebackground ui)
             , serviceoverlaybackground = joinEmpty $ overlaybackground `mplus` (serviceoverlaybackground ui)
@@ -76,12 +76,12 @@ handleChangeServiceUI sid = do
         _ -> do
            addFlashMsg $ toFlashMsg OperationFailed "UI setting not saved"
            return LoopBack
-       
+
 handleChangeServicePassword :: ServiceID -> Kontra KontraLink
 handleChangeServicePassword sid = do
     ctx <- get
     mservice <- query $ GetService sid
-    case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice) 
+    case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
             password <- getFieldUTFWithDefault BS.empty "oldpassword"
@@ -93,7 +93,7 @@ handleChangeServicePassword sid = do
                     update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
                     addFlashMsg $ toFlashMsg OperationDone "Password changed"
                     return LoopBack
-                else do 
+                else do
                     addFlashMsg $ toFlashMsg OperationFailed "Not changed"
                     return LoopBack
      _ -> do
@@ -101,7 +101,7 @@ handleChangeServicePassword sid = do
          return LoopBack
 
 
-       
+
 handleChangeServiceSettings :: ServiceID -> Kontra KontraLink
 handleChangeServiceSettings sid = do
     ctx <- get
@@ -111,29 +111,29 @@ handleChangeServiceSettings sid = do
             location <- getFieldUTF "location"
             admin <- liftMM (query . GetUserByEmail Nothing) (fmap Email <$> getFieldUTF "admin")
             mailfromaddress <- getFieldUTF "mailfromaddress"
-            update $ UpdateServiceSettings sid $ (servicesettings service)  
+            update $ UpdateServiceSettings sid $ (servicesettings service)
                         {   servicelocation = (ServiceLocation <$> location) `mplus` (servicelocation $ servicesettings  service)
-                          , servicemailfromaddress  = mailfromaddress `mplus` (servicemailfromaddress $ servicesettings  service) 
+                          , servicemailfromaddress  = mailfromaddress `mplus` (servicemailfromaddress $ servicesettings  service)
                           , serviceadmin =  fromMaybe (serviceadmin $ servicesettings service) (ServiceAdmin <$> unUserID <$> userid <$> admin)
                         }
             addFlashMsg $ toFlashMsg OperationDone "Settings changed"
             return LoopBack
-            
+
      _ -> do
          addFlashMsg $ toFlashMsg OperationFailed "Not changed"
          return LoopBack
-    
-       
+
+
 handleShowService :: ServiceID -> Kontra (Either KontraLink String)
 handleShowService sid = do
     ctx <- get
     mservice <- query $ GetService sid
-    if ((isJust mservice) 
+    if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
             || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)))
        then liftIO $  Right <$> serviceAdminPage (ctxtemplates ctx)  (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
        else return $ Left LinkMain
-       
+
 handleShowServiceList  :: Kontra String
 handleShowServiceList = do
     ctx <- get
@@ -141,26 +141,26 @@ handleShowServiceList = do
          (Just user, False) -> do
              srvs <- query $ GetServicesForAdmin $ ServiceAdmin $ unUserID $ userid user
              liftIO $ servicesListPage (ctxtemplates ctx) srvs
-         (_, True) -> do             
+         (_, True) -> do
              srvs <- query $ GetServices
              liftIO $ servicesListPage (ctxtemplates ctx) srvs
-         _ -> mzero       
+         _ -> mzero
 
 handleServiceLogo :: ServiceID -> Kontra Response
 handleServiceLogo sid = do
     mlogo <- join <$> fmap (servicelogo . serviceui) <$> (query $ GetService sid)
-    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $ 
+    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mlogo) Nothing
-    
-     
+
+
 handleServiceButtonsBody:: ServiceID -> Kontra Response
 handleServiceButtonsBody sid = do
     mimg <- join <$> fmap (fmap fst . servicebuttons . serviceui) <$> (query $ GetService sid)
-    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $ 
+    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mimg) Nothing
 
 handleServiceButtonsRest:: ServiceID -> Kontra Response
 handleServiceButtonsRest sid = do
     mimg <- join <$> fmap (fmap snd . servicebuttons . serviceui) <$> (query $ GetService sid)
-    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $ 
+    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mimg) Nothing

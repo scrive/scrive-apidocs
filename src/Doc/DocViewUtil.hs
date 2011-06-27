@@ -4,15 +4,15 @@ module Doc.DocViewUtil ( personname,
                          partyListButAuthor,
                          partySignedList,
                          partyUnsignedMeAndList,
-                         partyUnsignedList,  
+                         partyUnsignedList,
                          joinWith,
                          emailFromSignLink,
-                         renderListTemplate,  
+                         renderListTemplate,
                          buildattach
                        ) where
 import Doc.DocState
 import Misc
-import Templates.Templates 
+import Templates.Templates
 
 import Data.Maybe
 import qualified Data.ByteString as BS
@@ -27,7 +27,7 @@ hasSigned sl = isJust $ maybesigninfo sl
 partyList :: Document -> [SignatoryDetails]
 partyList document = [signatorydetails sl | sl <- documentsignatorylink document
                                           , isSignatory sl]
-  
+
 partyUnsignedList :: Document -> [SignatoryDetails]
 partyUnsignedList document = [signatorydetails sl | sl <- documentsignatorylink document
                                                   , isSignatory sl
@@ -68,28 +68,28 @@ partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                    , isSignatory sl
                                                    , not $ isAuthor sl]
-  
+
 joinWith :: [a] -> [[a]] -> [a]
 joinWith _ [] = []
 joinWith _ [x] = x
-joinWith s (x:xs) = x ++ s ++ (joinWith s xs)  
+joinWith s (x:xs) = x ++ s ++ (joinWith s xs)
 
 {- Either a signatory name or email address. We dont want to show empty strings -}
-personname :: SignatoryLink -> BS.ByteString 
-personname = personname' . signatorydetails 
+personname :: SignatoryLink -> BS.ByteString
+personname = personname' . signatorydetails
 
 {- Same but unwrapped. We need this cause author details are in this format  -}
-personname' :: SignatoryDetails -> BS.ByteString 
+personname' :: SignatoryDetails -> BS.ByteString
 personname' signdetails = if (BS.null $ signatoryname $ signdetails)
                            then  signatoryemail $ signdetails
                            else  signatoryname $ signdetails
 
 {- Function for changing SignatoryLink into our inner email address so u dont have to unwrap every time-}
 emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)
-emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl) 
+emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl)
 
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list = if (length list > 1)
-                          then  renderTemplate templates "morethenonelist" [("list",init list),("last", [last list])]   
-                          else  renderTemplate templates "nomorethanonelist" [("list",list)]   
+                          then  renderTemplate templates "morethenonelist" [("list",init list),("last", [last list])]
+                          else  renderTemplate templates "nomorethanonelist" [("list",list)]
 

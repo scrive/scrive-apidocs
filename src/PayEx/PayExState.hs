@@ -1,9 +1,9 @@
 -- |Simple session support
 module PayEx.PayExState
-    (   PaymentId(..) 
+    (   PaymentId(..)
       , PaymentPosition(..)
-      , PaymentState(..) 
-      , PaymentMethod(..) 
+      , PaymentState(..)
+      , PaymentMethod(..)
       , Payment(..)
       , Payments
       , emptyPayment
@@ -25,7 +25,7 @@ import Data.Generics
 import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
-import Happstack.State 
+import Happstack.State
 import User.UserState (UserID(..), PaymentMethod(..))
 import Doc.DocState
 import MinutesTime
@@ -42,29 +42,29 @@ data PaymentPosition = PaymentForSigning DocumentID |
 data PaymentState =  Waiting | Send | Finished | Failed String PaymentState
                      deriving (Eq, Ord, Show, Typeable, Data)
 
-data Payment = Payment { -- | Each payment needs to be identified uniquely 
+data Payment = Payment { -- | Each payment needs to be identified uniquely
                                 paymentId::PaymentId,
-                                -- | State of this payment  
-                                paymentState::PaymentState,  
+                                -- | State of this payment
+                                paymentState::PaymentState,
                                 -- | When transaction should occur
                                 paymentDate::MinutesTime,
-                                -- | Transaction number returned by payEx  
+                                -- | Transaction number returned by payEx
                                 transactionNumber::String,
                                 -- | Guid that is returned by PayEx
                                 orderRef::String,
-                                --Url where user can make a payment  
-                                redirectUrl::String,  
+                                --Url where user can make a payment
+                                redirectUrl::String,
                                 -- | Each payment is connected with a user
                                 userId::UserID,
-                                -- | We can charge user for many things durring one payment  
+                                -- | We can charge user for many things durring one payment
                                 positions::[(PaymentPosition,Money)],
                                 -- | This is set when we calculated value of this Payment, bacause prices can change in time
                                 avaiblePaymentMethods::[PaymentMethod],
-                                -- | Did we try to uer autopay functionality with this payment 
+                                -- | Did we try to uer autopay functionality with this payment
                                 triedAutopay::Bool,
                                 -- | When were we trying to check if transaction is finished
                                 completeAttempts::[MinutesTime]
-                       }        
+                       }
                   deriving (Eq, Ord, Show)
 
 instance Typeable Payment where typeOf _ = mkTypeOf "Payment"
@@ -74,24 +74,24 @@ deriving instance Data Payment
 
 instance Show PaymentId where
   show = show . unPaymentId
-  
+
 instance Read PaymentId where
-  readsPrec prec = let make (i,v) = (PaymentId i,v) 
-                     in map make . readsPrec prec 
-                     
+  readsPrec prec = let make (i,v) = (PaymentId i,v)
+                     in map make . readsPrec prec
+
 $(deriveSerialize ''PaymentId)
-instance Version PaymentId  
+instance Version PaymentId
 
 $(deriveSerialize ''PaymentPosition)
-instance Version PaymentPosition 
+instance Version PaymentPosition
 
 $(deriveSerialize ''PaymentState)
-instance Version PaymentState  
+instance Version PaymentState
 
 $(deriveSerialize ''Payment)
 instance Version (Payment)
-                         
-  
+
+
 $(inferIxSet "Payments" ''Payment 'noCalcs [''PaymentId, ''UserID, ''DocumentID])
 
 instance Component (Payments) where
@@ -116,19 +116,19 @@ emptyPayment :: Payment
 emptyPayment = Payment {  paymentId=PaymentId 0,
                           paymentState = Waiting ,
                           orderRef="",
-                          transactionNumber="",  
+                          transactionNumber="",
                           redirectUrl="",
                           userId=UserID 0,
                           positions=[],
                           avaiblePaymentMethods=[],
                           paymentDate = MinutesTime 0 0,
                           triedAutopay = False,
-                          completeAttempts = []  
-                       }        
+                          completeAttempts = []
+                       }
 
-  
 
---DB FUNCTIONS  
+
+--DB FUNCTIONS
 
 -- |get the session data associated with the supplied SessionId
 getPayment :: PaymentId -> Query Payments (Maybe (Payment))
@@ -138,8 +138,8 @@ getPayment paymentId = (return . getOne . (@= (paymentId :: PaymentId))) =<< ask
 -- returns: the SessionId
 newPayment :: Payment -> Update Payments Payment
 newPayment payment =
-    do 
-       payments <- ask 
+    do
+       payments <- ask
        paymentId <- getUnique payments PaymentId
        let npayment = payment {paymentId = paymentId}
        modify $ insert $ npayment
@@ -150,8 +150,8 @@ updatePayment payment = modify (updateIx (paymentId payment) payment)
 
 getUserPayments :: UserID -> Query Payments [Payment]
 getUserPayments userid = do
-                           payments <- ask                    
-                           return $ toList (payments @= userid) 
+                           payments <- ask
+                           return $ toList (payments @= userid)
 
 getPaymentForDocumentSigning :: DocumentID -> Query Payments (Maybe Payment)
 getPaymentForDocumentSigning docid = do
@@ -177,14 +177,14 @@ getPaymentsThatNeedCheck now = do
                                                           then False
                                                           else (now > 30 `minutesAfter` lastattempt)
                                             _ -> True
-                                                
-                                                      
-                            
 
-$(mkMethods ''Payments 
+
+
+
+$(mkMethods ''Payments
   [ 'getPayment
   , 'newPayment
-  , 'getUserPayments 
+  , 'getUserPayments
   , 'updatePayment
   , 'getPaymentForDocumentSigning
   , 'mergeForUser

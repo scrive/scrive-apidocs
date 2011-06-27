@@ -101,18 +101,18 @@ data SignatureInfo = SignatureInfo { signatureinfotext        :: String
                                    , signaturepersnumverified :: Bool
                                    }
     deriving (Eq, Ord, Typeable)
-             
+
 -- added by Eric Normand for template system
 -- Defines a new field to be placed in a contract
 data FieldDefinition0 = FieldDefinition0
-    { fieldlabel0 :: BS.ByteString 
+    { fieldlabel0 :: BS.ByteString
     , fieldvalue0 :: BS.ByteString
     , fieldplacements0 :: [FieldPlacement]
     }
     deriving (Eq, Ord, Typeable)
 
 data FieldDefinition = FieldDefinition
-    { fieldlabel :: BS.ByteString 
+    { fieldlabel :: BS.ByteString
     , fieldvalue :: BS.ByteString
     , fieldplacements :: [FieldPlacement]
     , fieldfilledbyauthor :: Bool
@@ -131,7 +131,7 @@ data FieldPlacement = FieldPlacement
 -- end of updates for template system
 
 data SignatoryDetails0 = SignatoryDetails0
-    { signatoryname00      :: BS.ByteString  -- "Gracjan Polak" 
+    { signatoryname00      :: BS.ByteString  -- "Gracjan Polak"
     , signatorycompany00   :: BS.ByteString  -- SkrivaPå
     , signatorynumber00    :: BS.ByteString  -- 123456789
     , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
@@ -139,36 +139,36 @@ data SignatoryDetails0 = SignatoryDetails0
     deriving (Eq, Ord, Typeable)
 
 data SignatoryDetails1 = SignatoryDetails1
-    { signatoryname1      :: BS.ByteString  
-    , signatorycompany1   :: BS.ByteString  
-    , signatorynumber1    :: BS.ByteString  
-    , signatoryemail1     :: BS.ByteString  
+    { signatoryname1      :: BS.ByteString
+    , signatorycompany1   :: BS.ByteString
+    , signatorynumber1    :: BS.ByteString
+    , signatoryemail1     :: BS.ByteString
     , signatorynameplacements1 :: [FieldPlacement]
     , signatorycompanyplacements1 :: [FieldPlacement]
     , signatoryemailplacements1 :: [FieldPlacement]
     , signatorynumberplacements1 :: [FieldPlacement]
     , signatoryotherfields1 :: [FieldDefinition]
-    } 
+    }
     deriving (Eq, Ord, Typeable)
 
 data SignatoryDetails2 = SignatoryDetails2
-    { signatoryfstname2   :: BS.ByteString 
-    , signatorysndname2   :: BS.ByteString 
-    , signatorycompany2   :: BS.ByteString 
-    , signatorynumber2    :: BS.ByteString 
-    , signatoryemail2     :: BS.ByteString 
+    { signatoryfstname2   :: BS.ByteString
+    , signatorysndname2   :: BS.ByteString
+    , signatorycompany2   :: BS.ByteString
+    , signatorynumber2    :: BS.ByteString
+    , signatoryemail2     :: BS.ByteString
     , signatorynameplacements2 :: [FieldPlacement]
     , signatorycompanyplacements2 :: [FieldPlacement]
     , signatoryemailplacements2 :: [FieldPlacement]
     , signatorynumberplacements2 :: [FieldPlacement]
     , signatoryotherfields2 :: [FieldDefinition]
-    }     
+    }
     deriving (Eq, Ord, Typeable)
 
 
 data SignatoryDetails3 = SignatoryDetails3
-    { signatoryfstname3   :: BS.ByteString  -- "Gracjan Polak" 
-    , signatorysndname3   :: BS.ByteString  -- "Gracjan Polak" 
+    { signatoryfstname3   :: BS.ByteString  -- "Gracjan Polak"
+    , signatorysndname3   :: BS.ByteString  -- "Gracjan Polak"
     , signatorycompany3   :: BS.ByteString  -- SkrivaPå
     , signatorynumber3    :: BS.ByteString  -- 123456789
     , signatoryemail3     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
@@ -183,8 +183,8 @@ data SignatoryDetails3 = SignatoryDetails3
     deriving (Eq, Ord, Typeable)
 
 data SignatoryDetails4 = SignatoryDetails4
-    { signatoryfstname4        :: BS.ByteString  -- "Gracjan" 
-    , signatorysndname4        :: BS.ByteString  -- "Polak" 
+    { signatoryfstname4        :: BS.ByteString  -- "Gracjan"
+    , signatorysndname4        :: BS.ByteString  -- "Polak"
     , signatorycompany4        :: BS.ByteString  -- SkrivaPå
     , signatorypersonalnumber4 :: BS.ByteString  -- 123456789
     , signatorycompanynumber4  :: BS.ByteString  -- 123456789
@@ -201,8 +201,8 @@ data SignatoryDetails4 = SignatoryDetails4
     deriving (Eq, Ord, Typeable)
 
 data SignatoryDetails = SignatoryDetails
-    { signatoryfstname        :: BS.ByteString  -- "Gracjan" 
-    , signatorysndname        :: BS.ByteString  -- "Polak" 
+    { signatoryfstname        :: BS.ByteString  -- "Gracjan"
+    , signatorysndname        :: BS.ByteString  -- "Polak"
     , signatorycompany        :: BS.ByteString  -- SkrivaPå
     , signatorypersonalnumber :: BS.ByteString  -- 123456789
     , signatorycompanynumber  :: BS.ByteString  -- 123456789
@@ -220,10 +220,10 @@ data SignatoryDetails = SignatoryDetails
     }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink0 = SignatoryLink0 
+data SignatoryLink0 = SignatoryLink0
     { signatorylinkid0    :: SignatoryLinkID
-    , signatoryname0      :: BS.ByteString 
-    , signatorycompany0   :: BS.ByteString 
+    , signatoryname0      :: BS.ByteString
+    , signatorycompany0   :: BS.ByteString
     , signatoryemail0     :: BS.ByteString
     , maybesignatory0     :: Maybe Signatory
     , maybesigninfo0      :: Maybe SignInfo
@@ -231,7 +231,7 @@ data SignatoryLink0 = SignatoryLink0
     }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink1 = SignatoryLink1 
+data SignatoryLink1 = SignatoryLink1
     { signatorylinkid1    :: SignatoryLinkID
     , signatorydetails1   :: SignatoryDetails
     , maybesignatory1     :: Maybe Signatory
@@ -240,7 +240,7 @@ data SignatoryLink1 = SignatoryLink1
     }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink2 = SignatoryLink2 
+data SignatoryLink2 = SignatoryLink2
     { signatorylinkid2    :: SignatoryLinkID
     , signatorydetails2   :: SignatoryDetails
     , signatorymagichash2 :: MagicHash
@@ -250,14 +250,14 @@ data SignatoryLink2 = SignatoryLink2
     }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink3 = SignatoryLink3 
+data SignatoryLink3 = SignatoryLink3
     { signatorylinkid3    :: SignatoryLinkID
     , signatorydetails3   :: SignatoryDetails
     , signatorymagichash3 :: MagicHash
     , maybesignatory3     :: Maybe Signatory
     , maybesigninfo3      :: Maybe SignInfo
     , maybeseeninfo3      :: Maybe SignInfo
-    }        
+    }
     deriving (Eq, Ord, Typeable)
 
 data SignatoryLink4 = SignatoryLink4
@@ -271,7 +271,7 @@ data SignatoryLink4 = SignatoryLink4
     }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink5 = SignatoryLink5 
+data SignatoryLink5 = SignatoryLink5
     { signatorylinkid5          :: SignatoryLinkID
     , signatorydetails5         :: SignatoryDetails
     , signatorymagichash5       :: MagicHash
@@ -280,10 +280,10 @@ data SignatoryLink5 = SignatoryLink5
     , maybeseeninfo5            :: Maybe SignInfo
     , invitationdeliverystatus5 :: MailsDeliveryStatus
     , signatorysignatureinfo5   :: Maybe SignatureInfo
-    }    
+    }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink6 = SignatoryLink6 
+data SignatoryLink6 = SignatoryLink6
     { signatorylinkid6          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails6         :: SignatoryDetails    -- ^ details of this person as filled in invitation
     , signatorymagichash6       :: MagicHash           -- ^ authentication code
@@ -292,10 +292,10 @@ data SignatoryLink6 = SignatoryLink6
     , maybeseeninfo6            :: Maybe SignInfo      -- ^ when a person has first seen this document
     , invitationdeliverystatus6 :: MailsDeliveryStatus -- ^ status of email delivery
     , signatorysignatureinfo6   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
-    }    
+    }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink7 = SignatoryLink7 
+data SignatoryLink7 = SignatoryLink7
     { signatorylinkid7          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails7         :: SignatoryDetails    -- ^ details of this person as filled in invitation
     , signatorymagichash7       :: MagicHash           -- ^ authentication code
@@ -306,25 +306,25 @@ data SignatoryLink7 = SignatoryLink7
     , signatorysignatureinfo7   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
     , signatoryroles7           :: [SignatoryRole]
     , signatorylinkdeleted7     :: Bool
-    }    
+    }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink8 = SignatoryLink8 
+data SignatoryLink8 = SignatoryLink8
     { signatorylinkid8          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails8         :: SignatoryDetails    -- ^ details of this person as filled in invitation
     , signatorymagichash8       :: MagicHash           -- ^ authentication code
     , maybesignatory8           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
     , maybesigninfo8            :: Maybe SignInfo      -- ^ when a person has signed this document
     , maybeseeninfo8            :: Maybe SignInfo      -- ^ when a person has first seen this document
-    , maybereadinvite8          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read 
+    , maybereadinvite8          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
     , invitationdeliverystatus8 :: MailsDeliveryStatus -- ^ status of email delivery
     , signatorysignatureinfo8   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
     , signatoryroles8           :: [SignatoryRole]
     , signatorylinkdeleted8     :: Bool
-    }    
+    }
     deriving (Eq, Ord, Typeable)
 
-data SignatoryLink = SignatoryLink 
+data SignatoryLink = SignatoryLink
     { signatorylinkid          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails         :: SignatoryDetails    -- ^ details of this person as filled in invitation
     , signatorymagichash       :: MagicHash           -- ^ authentication code
@@ -332,12 +332,12 @@ data SignatoryLink = SignatoryLink
     , maybesupervisor          :: Maybe UserID        -- ^ if this document has been saved to an account with a supervisor, this is the userid
     , maybesigninfo            :: Maybe SignInfo      -- ^ when a person has signed this document
     , maybeseeninfo            :: Maybe SignInfo      -- ^ when a person has first seen this document
-    , maybereadinvite          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read 
+    , maybereadinvite          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
     , invitationdeliverystatus :: MailsDeliveryStatus -- ^ status of email delivery
     , signatorysignatureinfo   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
     , signatoryroles           :: [SignatoryRole]
     , signatorylinkdeleted     :: Bool
-    }    
+    }
     deriving (Eq, Ord, Typeable)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
@@ -360,7 +360,7 @@ data SignInfo0 = SignInfo0
 
 newtype Signatory = Signatory { unSignatory :: UserID }
     deriving (Eq, Ord, Typeable)
-             
+
 newtype Supervisor = Supervisor { unSupervisor :: UserID }
                    deriving (Eq, Ord, Typeable)
 
@@ -373,17 +373,17 @@ newtype Supervisor = Supervisor { unSupervisor :: UserID }
    * AwaitingAuthor: Everyone has signed but the author.
    * Closed: Everybody signed. This is final state.
    * Canceled: Author has canceled the document.
-   * Timedout: This works as autocancel and has exactly same 
+   * Timedout: This works as autocancel and has exactly same
      properties.
 
    Transitions:
    * Preparation to Pending: When invitations are sent.
-   * Preparation to Cancel: mail about cancel to 
+   * Preparation to Cancel: mail about cancel to
      all who have signed it already is sent.
      TODO: Should other parties get an email?
-   * Preparation to Timedout: mail about timeout to 
+   * Preparation to Timedout: mail about timeout to
      all who have signed it already is sent.
-   * Pending to Closed: When everyone has signed. 
+   * Pending to Closed: When everyone has signed.
      Info about closed deal is sent to everybody involved.
    * Pending to AwaitingAuthor: When all signatories have signed and there were fields.
      Info is sent to author.
@@ -398,21 +398,21 @@ newtype Supervisor = Supervisor { unSupervisor :: UserID }
    * Closed: nothing
    * Canceled: edit back to Preparation
    * Timedout: edit back to Preparation
-  
+
    Archived bit:
    * This bit just moves document out of main view.
  -}
 
-data DocumentStatus = Preparation 
-                    | Pending  
-                    | Closed 
-                    | Canceled 
+data DocumentStatus = Preparation
+                    | Pending
+                    | Closed
+                    | Canceled
                     | Timedout
                     | Rejected
                     | AwaitingAuthor
                     | DocumentError String
     deriving (Eq, Ord, Typeable)
-                    
+
 data DocumentType0 = Contract0 | ContractTemplate0 | Offer0 | OfferTemplate0 | Attachment0 | AttachmentTemplate0
     deriving (Eq, Ord, Typeable)
 
@@ -448,11 +448,11 @@ data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTi
                                                           }    -- changed state from Preparatio to Pending
     deriving (Eq, Ord, Typeable)
 
-data DocumentHistoryEntry 
-    = DocumentHistoryCreated 
+data DocumentHistoryEntry
+    = DocumentHistoryCreated
       { dochisttime :: MinutesTime
       }
-    | DocumentHistoryInvitationSent 
+    | DocumentHistoryInvitationSent
       { dochisttime :: MinutesTime
       , ipnumber :: Word32
       , dochistsignatories :: [SignatoryDetails]
@@ -501,10 +501,10 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
 documentHistoryToDocumentLog :: DocumentHistoryEntry -> DocumentLogEntry
-documentHistoryToDocumentLog DocumentHistoryCreated 
+documentHistoryToDocumentLog DocumentHistoryCreated
       { dochisttime
       } = DocumentLogEntry dochisttime $ BS.fromString "Document created"
-documentHistoryToDocumentLog DocumentHistoryInvitationSent 
+documentHistoryToDocumentLog DocumentHistoryInvitationSent
       { dochisttime
       , ipnumber
       } = DocumentLogEntry dochisttime $ BS.fromString $ "Invitations sent to signatories" ++ formatIP ipnumber
@@ -532,7 +532,7 @@ documentHistoryToDocumentLog DocumentHistoryRestarted
       , ipnumber
       } = DocumentLogEntry dochisttime $ BS.fromString $ "Document restarted" ++ formatIP ipnumber
 
-data DocStats = DocStats 
+data DocStats = DocStats
                 { doccount          :: !Int
                 , signaturecount    :: !Int
                 , signaturecount1m  :: !Int
@@ -543,12 +543,12 @@ data DocStats = DocStats
                 }
     deriving (Eq, Ord, Typeable, Data) -- Data instance used for View modules (quite incorrectly there, please remove ASAP)
 
-    
+
 data Document11 = Document11
     { documentid11               :: DocumentID
     , documenttitle11            :: BS.ByteString
     , documentauthor11           :: Author
-    , documentsignatorylinks11   :: [SignatoryLink]  
+    , documentsignatorylinks11   :: [SignatoryLink]
     , documentfiles11            :: [File]
     , documentsealedfiles11      :: [File]
     , documentstatus11           :: DocumentStatus
@@ -556,7 +556,7 @@ data Document11 = Document11
     , documentmtime11            :: MinutesTime
     , documentchargemode11       :: ChargeMode
     , documentdaystosign11       :: Maybe Int
-    , documenttimeouttime11      :: Maybe TimeoutTime 
+    , documenttimeouttime11      :: Maybe TimeoutTime
     , documentdeleted11          :: Bool
     , documenthistory11          :: [DocumentHistoryEntry]
     , documentinvitetext11       :: BS.ByteString
@@ -571,12 +571,12 @@ data Document11 = Document11
     }
     deriving (Eq, Ord, Typeable)
 
-    
+
 data Document12 = Document12
     { documentid12               :: DocumentID
     , documenttitle12            :: BS.ByteString
     , documentauthor12           :: Author
-    , documentsignatorylinks12   :: [SignatoryLink]  
+    , documentsignatorylinks12   :: [SignatoryLink]
     , documentfiles12            :: [File]
     , documentsealedfiles12      :: [File]
     , documentstatus12           :: DocumentStatus
@@ -585,7 +585,7 @@ data Document12 = Document12
     , documentmtime12            :: MinutesTime
     , documentchargemode12       :: ChargeMode
     , documentdaystosign12       :: Maybe Int
-    , documenttimeouttime12      :: Maybe TimeoutTime 
+    , documenttimeouttime12      :: Maybe TimeoutTime
     -- | If true, this Document will not appear in the document list
     , documentdeleted12          :: Bool
     , documenthistory12          :: [DocumentHistoryEntry]
@@ -600,12 +600,12 @@ data Document12 = Document12
     , authorotherfields12 :: [FieldDefinition]
     }
     deriving (Eq, Ord, Typeable)
-    
+
 data Document13 = Document13
     { documentid13               :: DocumentID
     , documenttitle13            :: BS.ByteString
     , documentauthor13           :: Author
-    , documentsignatorylinks13   :: [SignatoryLink]  
+    , documentsignatorylinks13   :: [SignatoryLink]
     , documentfiles13            :: [File]
     , documentsealedfiles13      :: [File]
     , documentstatus13           :: DocumentStatus
@@ -614,7 +614,7 @@ data Document13 = Document13
     , documentmtime13            :: MinutesTime
     , documentchargemode13       :: ChargeMode
     , documentdaystosign13       :: Maybe Int
-    , documenttimeouttime13      :: Maybe TimeoutTime 
+    , documenttimeouttime13      :: Maybe TimeoutTime
     -- | If true, this Document will not appear in the document list
     , documentdeleted13          :: Bool
     , documenthistory13          :: [DocumentHistoryEntry]
@@ -635,7 +635,7 @@ data Document14 = Document14
     { documentid14                   :: DocumentID
     , documenttitle14                :: BS.ByteString
     , documentauthor14               :: Author                  -- to be moved to siglinks
-    , documentsignatorylinks14       :: [SignatoryLink]  
+    , documentsignatorylinks14       :: [SignatoryLink]
     , documentfiles14                :: [File]
     , documentsealedfiles14          :: [File]
     , documentstatus14               :: DocumentStatus
@@ -643,11 +643,11 @@ data Document14 = Document14
     , documentctime14                :: MinutesTime
     , documentmtime14                :: MinutesTime
     , documentchargemode14           :: ChargeMode              -- to be removed
-    , documentdaystosign14           :: Maybe Int    
-    , documenttimeouttime14          :: Maybe TimeoutTime 
+    , documentdaystosign14           :: Maybe Int
+    , documenttimeouttime14          :: Maybe TimeoutTime
     , documentdeleted14              :: Bool                    -- to be moved to links
-    , documenthistory14              :: [DocumentHistoryEntry]  -- to be made into plain text 
-    , documentinvitetext14           :: BS.ByteString             
+    , documenthistory14              :: [DocumentHistoryEntry]  -- to be made into plain text
+    , documentinvitetext14           :: BS.ByteString
     , documenttrustweaverreference14 :: Maybe BS.ByteString
     , documentallowedidtypes14       :: [IdentificationType]
     , documentcsvupload14            :: Maybe CSVUpload
@@ -665,19 +665,19 @@ data Document15 = Document15
     { documentid15                   :: DocumentID
     , documenttitle15                :: BS.ByteString
     , documentauthor15               :: Author                  -- to be moved to siglinks
-    , documentsignatorylinks15       :: [SignatoryLink]  
+    , documentsignatorylinks15       :: [SignatoryLink]
     , documentfiles15                :: [File]
     , documentsealedfiles15          :: [File]
     , documentstatus15               :: DocumentStatus
     , documenttype15                 :: DocumentType
     , documentctime15                :: MinutesTime
     , documentmtime15                :: MinutesTime
-    , documentdaystosign15           :: Maybe Int    
+    , documentdaystosign15           :: Maybe Int
     , documenttimeouttime15          :: Maybe TimeoutTime
     , documentinvitetime15           :: Maybe SignInfo
     , documentdeleted15              :: Bool                    -- to be moved to links
-    , documentlog15                  :: [DocumentLogEntry]      -- to be made into plain text 
-    , documentinvitetext15           :: BS.ByteString             
+    , documentlog15                  :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext15           :: BS.ByteString
     , documenttrustweaverreference15 :: Maybe BS.ByteString
     , documentallowedidtypes15       :: [IdentificationType]
     , documentcsvupload15            :: Maybe CSVUpload
@@ -695,19 +695,19 @@ data Document16 = Document16
     { documentid16                     :: DocumentID
     , documenttitle16                  :: BS.ByteString
     , documentauthor16                 :: Author                  -- to be moved to siglinks
-    , documentsignatorylinks16         :: [SignatoryLink]  
+    , documentsignatorylinks16         :: [SignatoryLink]
     , documentfiles16                  :: [File]
     , documentsealedfiles16            :: [File]
     , documentstatus16                 :: DocumentStatus
     , documenttype16                   :: DocumentType
     , documentctime16                  :: MinutesTime
     , documentmtime16                  :: MinutesTime
-    , documentdaystosign16             :: Maybe Int    
+    , documentdaystosign16             :: Maybe Int
     , documenttimeouttime16            :: Maybe TimeoutTime
     , documentinvitetime16             :: Maybe SignInfo
     , documentdeleted16                :: Bool                    -- to be moved to links
-    , documentlog16                    :: [DocumentLogEntry]      -- to be made into plain text 
-    , documentinvitetext16             :: BS.ByteString             
+    , documentlog16                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext16             :: BS.ByteString
     , documenttrustweaverreference16   :: Maybe BS.ByteString
     , documentallowedidtypes16         :: [IdentificationType]
     , documentcsvupload16              :: Maybe CSVUpload
@@ -726,7 +726,7 @@ data Document17 = Document17
     { documentid17                     :: DocumentID
     , documenttitle17                  :: BS.ByteString
     , documentauthor17                 :: Author                  -- to be moved to siglinks
-    , documentsignatorylinks17         :: [SignatoryLink]  
+    , documentsignatorylinks17         :: [SignatoryLink]
     , documentfiles17                  :: [File]
     , documentsealedfiles17            :: [File]
     , documentstatus17                 :: DocumentStatus
@@ -734,12 +734,12 @@ data Document17 = Document17
     , documentfunctionality17          :: DocumentFunctionality
     , documentctime17                  :: MinutesTime
     , documentmtime17                  :: MinutesTime
-    , documentdaystosign17             :: Maybe Int    
+    , documentdaystosign17             :: Maybe Int
     , documenttimeouttime17            :: Maybe TimeoutTime
     , documentinvitetime17             :: Maybe SignInfo
     , documentdeleted17                :: Bool                    -- to be moved to links
-    , documentlog17                    :: [DocumentLogEntry]      -- to be made into plain text 
-    , documentinvitetext17             :: BS.ByteString             
+    , documentlog17                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext17             :: BS.ByteString
     , documenttrustweaverreference17   :: Maybe BS.ByteString
     , documentallowedidtypes17         :: [IdentificationType]
     , documentcsvupload17              :: Maybe CSVUpload
@@ -766,7 +766,7 @@ data Document18 = Document18
     , documentfunctionality18          :: DocumentFunctionality
     , documentctime18                  :: MinutesTime
     , documentmtime18                  :: MinutesTime
-    , documentdaystosign18             :: Maybe Int    
+    , documentdaystosign18             :: Maybe Int
     , documenttimeouttime18            :: Maybe TimeoutTime
     , documentinvitetime18             :: Maybe SignInfo
     , documentdeleted18                :: Bool                    -- to be moved to links
@@ -785,7 +785,7 @@ data Document18 = Document18
     , documentcancelationreason18      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
     , documentsharing18                :: DocumentSharing
     } deriving Typeable
-                
+
 
 data Document19 = Document19
     { documentid19                     :: DocumentID
@@ -799,7 +799,7 @@ data Document19 = Document19
     , documentfunctionality19          :: DocumentFunctionality
     , documentctime19                  :: MinutesTime
     , documentmtime19                  :: MinutesTime
-    , documentdaystosign19             :: Maybe Int    
+    , documentdaystosign19             :: Maybe Int
     , documenttimeouttime19            :: Maybe TimeoutTime
     , documentinvitetime19             :: Maybe SignInfo
     , documentdeleted19                :: Bool                    -- to be moved to links
@@ -832,7 +832,7 @@ data Document20 = Document20
     , documentfunctionality20          :: DocumentFunctionality
     , documentctime20                  :: MinutesTime
     , documentmtime20                  :: MinutesTime
-    , documentdaystosign20             :: Maybe Int    
+    , documentdaystosign20             :: Maybe Int
     , documenttimeouttime20            :: Maybe TimeoutTime
     , documentinvitetime20             :: Maybe SignInfo
     , documentdeleted20                :: Bool                    -- to be moved to links
@@ -867,7 +867,7 @@ data Document21 = Document21
     , documentfunctionality21          :: DocumentFunctionality
     , documentctime21                  :: MinutesTime
     , documentmtime21                  :: MinutesTime
-    , documentdaystosign21             :: Maybe Int    
+    , documentdaystosign21             :: Maybe Int
     , documenttimeouttime21            :: Maybe TimeoutTime
     , documentinvitetime21             :: Maybe SignInfo
     , documentdeleted21                :: Bool                    -- to be moved to links
@@ -902,7 +902,7 @@ data Document22 = Document22
     , documentfunctionality22          :: DocumentFunctionality
     , documentctime22                  :: MinutesTime
     , documentmtime22                  :: MinutesTime
-    , documentdaystosign22             :: Maybe Int    
+    , documentdaystosign22             :: Maybe Int
     , documenttimeouttime22            :: Maybe TimeoutTime
     , documentinvitetime22             :: Maybe SignInfo
     , documentdeleted22                :: Bool                    -- to be moved to links
@@ -937,7 +937,7 @@ data Document23 = Document23
     , documentfunctionality23          :: DocumentFunctionality
     , documentctime23                  :: MinutesTime
     , documentmtime23                  :: MinutesTime
-    , documentdaystosign23             :: Maybe Int    
+    , documentdaystosign23             :: Maybe Int
     , documenttimeouttime23            :: Maybe TimeoutTime
     , documentinvitetime23             :: Maybe SignInfo
     , documentlog23                    :: [DocumentLogEntry]      -- to be made into plain text
@@ -964,7 +964,7 @@ data Document24 = Document24
     , documentfunctionality24          :: DocumentFunctionality
     , documentctime24                  :: MinutesTime
     , documentmtime24                  :: MinutesTime
-    , documentdaystosign24             :: Maybe Int    
+    , documentdaystosign24             :: Maybe Int
     , documenttimeouttime24            :: Maybe TimeoutTime
     , documentinvitetime24             :: Maybe SignInfo
     , documentlog24                    :: [DocumentLogEntry]      -- to be made into plain text
@@ -993,7 +993,7 @@ data Document25 = Document25
     , documentfunctionality25          :: DocumentFunctionality
     , documentctime25                  :: MinutesTime
     , documentmtime25                  :: MinutesTime
-    , documentdaystosign25             :: Maybe Int    
+    , documentdaystosign25             :: Maybe Int
     , documenttimeouttime25            :: Maybe TimeoutTime
     , documentinvitetime25             :: Maybe SignInfo
     , documentlog25                    :: [DocumentLogEntry]      -- to be made into plain text
@@ -1024,7 +1024,7 @@ data Document = Document
     , documentfunctionality          :: DocumentFunctionality
     , documentctime                  :: MinutesTime
     , documentmtime                  :: MinutesTime
-    , documentdaystosign             :: Maybe Int    
+    , documentdaystosign             :: Maybe Int
     , documenttimeouttime            :: Maybe TimeoutTime
     , documentinvitetime             :: Maybe SignInfo
     , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
@@ -1042,7 +1042,7 @@ data Document = Document
     , documentrecordstatus           :: DocumentRecordStatus
     , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
     , documentauthorattachments      :: [AuthorAttachment]
-    , documentsignatoryattachments   :: [SignatoryAttachment]    
+    , documentsignatoryattachments   :: [SignatoryAttachment]
     }
 
 
@@ -1063,43 +1063,43 @@ data CSVUpload = CSVUpload
     { csvtitle :: BS.ByteString
     , csvcontents  :: [[BS.ByteString]]
     , csvsignatoryindex :: Int
-    } 
+    }
     deriving (Eq, Ord, Typeable)
-    
-data File0 = File0 
+
+data File0 = File0
     { fileid0       :: FileID
     , filename0     :: BS.ByteString
-    , filepdf0      :: BS.ByteString 
+    , filepdf0      :: BS.ByteString
     , filejpgpages0 :: [BS.ByteString]
     }
     deriving (Eq, Ord, Typeable)
 
-data File1 = File1 
+data File1 = File1
     { fileid1       :: FileID
     , filename1     :: BS.ByteString
-    , filepdf1      :: BS.ByteString 
+    , filepdf1      :: BS.ByteString
     , filejpgpages1 :: JpegPages
     }
     deriving (Eq, Ord, Typeable)
 
-data File2 = File2 
+data File2 = File2
     { fileid2       :: FileID
     , filename2     :: BS.ByteString
-    , filepdf2      :: BS.ByteString 
+    , filepdf2      :: BS.ByteString
     }
     deriving (Eq, Ord, Typeable)
 
-data File = File 
+data File = File
     { fileid          :: FileID
     , filename        :: BS.ByteString
     , filestorage     :: FileStorage
     }
     deriving (Typeable)
-             
+
 -- for Author Attachment and Signatory Attachments, obviously -EN
 data AuthorAttachment = AuthorAttachment { authorattachmentfile :: File }
                       deriving (Eq, Ord, Typeable)
-                               
+
 data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: Maybe File
                                                , signatoryattachmentemail           :: BS.ByteString
                                                , signatoryattachmentname            :: BS.ByteString
@@ -1107,18 +1107,18 @@ data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile        
                                                }
                          deriving (Eq, Ord, Typeable)
 
-             
+
 
 data JpegPages0 = JpegPagesPending0
-               | JpegPages0 [BS.ByteString]   
-               | JpegPagesError0 BS.ByteString 
+               | JpegPages0 [BS.ByteString]
+               | JpegPagesError0 BS.ByteString
     deriving (Eq, Ord, Typeable)
 
 data JpegPages = JpegPagesPending
                | JpegPages [(BS.ByteString,Int,Int)]  -- Data + width + height (scaled with some resolution)
-               | JpegPagesError BS.ByteString 
+               | JpegPagesError BS.ByteString
     deriving (Eq, Ord, Typeable)
-               
+
 data FileStorage = FileStorageMemory BS.ByteString
                  | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
                  | FileStorageDisk FilePath -- ^ filepath
@@ -1131,7 +1131,7 @@ instance Eq Document where
 
 instance Ord Document where
     compare a b | documentid a == documentid b = EQ
-                | otherwise = compare (documentmtime b,documenttitle a,documentid a) 
+                | otherwise = compare (documentmtime b,documenttitle a,documentid a)
                                       (documentmtime a,documenttitle b,documentid b)
                               -- see above: we use reverse time here!
 
@@ -1140,15 +1140,15 @@ instance Eq File where
 
 instance Ord File where
     compare a b | fileid a == fileid b = EQ
-                | otherwise = compare (fileid a,filename a) 
+                | otherwise = compare (fileid a,filename a)
                                       (fileid b,filename b)
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
 
-instance Show JpegPages where 
+instance Show JpegPages where
     show JpegPagesPending = "penging"
-    show (JpegPages l) = show l   
+    show (JpegPages l) = show l
     show (JpegPagesError c) = "error " ++ (show c)
 
 deriving instance Show Document
@@ -1190,21 +1190,21 @@ deriving instance Show SignatureInfo
 
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
-    
+
 instance Show Supervisor where
   showsPrec prec (Supervisor userid) = showsPrec prec userid
 
 instance Show DocumentID where
-    showsPrec prec (DocumentID val) = 
+    showsPrec prec (DocumentID val) =
          showsPrec prec val
 
 instance Read DocumentID where
-    readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v) 
-                     in map makeDocumentID . readsPrec prec 
+    readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v)
+                     in map makeDocumentID . readsPrec prec
 
 instance Read SignatoryLinkID where
-    readsPrec prec = let make (i,v) = (SignatoryLinkID i,v) 
-                     in map make . readsPrec prec 
+    readsPrec prec = let make (i,v) = (SignatoryLinkID i,v)
+                     in map make . readsPrec prec
 
 instance Show File where
     showsPrec _prec file = (++) (BS.toString (filename file))
@@ -1213,8 +1213,8 @@ instance Show FileID where
     showsPrec prec (FileID val) = showsPrec prec val
 
 instance Read FileID where
-    readsPrec prec = let make (i,v) = (FileID i,v) 
-                     in map make . readsPrec prec 
+    readsPrec prec = let make (i,v) = (FileID i,v)
+                     in map make . readsPrec prec
 
 instance FromReqURI DocumentID where
     fromReqURI = readM
@@ -1224,7 +1224,7 @@ instance FromReqURI SignatoryLinkID where
 
 instance FromReqURI FileID where
     fromReqURI = readM
-    
+
 $(deriveSerialize ''AuthorAttachment)
 instance Version AuthorAttachment
 
@@ -1278,7 +1278,7 @@ instance Version SignatureInfo0
 $(deriveSerialize ''SignatureInfo)
 instance Version SignatureInfo where
     mode = extension 1 (Proxy :: Proxy SignatureInfo0)
-    
+
 instance Migrate SignatureInfo0 SignatureInfo where
     migrate (SignatureInfo0
             { signatureinfotext0
@@ -1294,9 +1294,9 @@ instance Migrate SignatureInfo0 SignatureInfo where
             , signaturelstnameverified = False
             , signaturepersnumverified = False
             }
-    
+
 instance Migrate SignInfo0 SignInfo where
-    migrate (SignInfo0 
+    migrate (SignInfo0
              { signtime0
              }) = SignInfo
                 { signtime = signtime0
@@ -1367,9 +1367,9 @@ instance Version SignatoryLink where
 
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
-             { signatoryname00 
+             { signatoryname00
              , signatorycompany00
-             , signatorynumber00 
+             , signatorynumber00
              , signatoryemail00
              }) = SignatoryDetails1
                 { signatoryname1 = signatoryname00
@@ -1498,7 +1498,7 @@ instance Migrate SignatoryDetails4 SignatoryDetails where
                 }
 
 instance Migrate SignatoryLink0 SignatoryLink1 where
-    migrate (SignatoryLink0 
+    migrate (SignatoryLink0
           { signatorylinkid0
           , signatoryname0
           , signatorycompany0
@@ -1506,9 +1506,9 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
           , maybesignatory0
           , maybesigninfo0
           , maybeseentime0
-          }) = SignatoryLink1 
+          }) = SignatoryLink1
           { signatorylinkid1 = signatorylinkid0
-          , signatorydetails1 = SignatoryDetails 
+          , signatorydetails1 = SignatoryDetails
                                { signatoryfstname = signatoryname0
                                , signatorysndname = BS.empty
                                , signatorycompany = signatorycompany0
@@ -1530,26 +1530,26 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
           }
 
 instance Migrate SignatoryLink1 SignatoryLink2 where
-    migrate (SignatoryLink1 
+    migrate (SignatoryLink1
              { signatorylinkid1
              , signatorydetails1
              , maybesignatory1
              , maybesigninfo1
              , maybeseentime1
-             }) = SignatoryLink2 
+             }) = SignatoryLink2
                 { signatorylinkid2 = signatorylinkid1
                 , signatorydetails2 = signatorydetails1
                 , maybesignatory2 = maybesignatory1
                 , maybesigninfo2 = maybesigninfo1
                 , maybeseentime2 = maybeseentime1
-                , signatorymagichash2 = MagicHash $ 
-                                       fromIntegral (unSignatoryLinkID signatorylinkid1) + 
+                , signatorymagichash2 = MagicHash $
+                                       fromIntegral (unSignatoryLinkID signatorylinkid1) +
                                                         0xcde156781937458e37
-                } 
+                }
 
 
 instance Migrate SignatoryLink2 SignatoryLink3 where
-      migrate (SignatoryLink2 
+      migrate (SignatoryLink2
           { signatorylinkid2
           , signatorydetails2
           , signatorymagichash2
@@ -1567,20 +1567,20 @@ instance Migrate SignatoryLink2 SignatoryLink3 where
 
 
 instance Migrate SignatoryLink3 SignatoryLink4 where
-      migrate (SignatoryLink3 
-          { signatorylinkid3    
-          , signatorydetails3   
-          , signatorymagichash3 
-          , maybesignatory3     
-          , maybesigninfo3      
-          , maybeseeninfo3   
-          }) = SignatoryLink4 
+      migrate (SignatoryLink3
+          { signatorylinkid3
+          , signatorydetails3
+          , signatorymagichash3
+          , maybesignatory3
+          , maybesigninfo3
+          , maybeseeninfo3
+          }) = SignatoryLink4
           { signatorylinkid4    = signatorylinkid3
           , signatorydetails4   = signatorydetails3
           , signatorymagichash4 = signatorymagichash3
           , maybesignatory4     = maybesignatory3
           , maybesigninfo4      = maybesigninfo3
-          , maybeseeninfo4      = maybeseeninfo3 
+          , maybeseeninfo4      = maybeseeninfo3
           , invitationdeliverystatus4 = Delivered
           }
 
@@ -1626,7 +1626,7 @@ instance Migrate SignatoryLink5 SignatoryLink6 where
              }
 
 instance Migrate SignatoryLink6 SignatoryLink7 where
-    migrate (SignatoryLink6 
+    migrate (SignatoryLink6
              { signatorylinkid6
              , signatorydetails6
              , signatorymagichash6
@@ -1649,7 +1649,7 @@ instance Migrate SignatoryLink6 SignatoryLink7 where
                 }
 
 instance Migrate SignatoryLink7 SignatoryLink8 where
-    migrate (SignatoryLink7 
+    migrate (SignatoryLink7
              { signatorylinkid7
              , signatorydetails7
              , signatorymagichash7
@@ -1716,7 +1716,7 @@ instance Version Author
 
 $(deriveSerialize ''Signatory)
 instance Version Signatory where
-  
+
 $(deriveSerialize ''Supervisor)
 instance Version Supervisor where
 
@@ -1743,7 +1743,7 @@ instance Version Document12 where
 $(deriveSerialize ''Document13)
 instance Version Document13 where
     mode = extension 13 (Proxy :: Proxy Document12)
-    
+
 $(deriveSerialize ''Document14)
 instance Version Document14 where
     mode = extension 14 (Proxy :: Proxy Document13)
@@ -1797,11 +1797,11 @@ instance Version Document where
     mode = extension 26 (Proxy :: Proxy Document25)
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
-        migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
+        migrate (DocumentHistoryCreated0 { dochisttime0 }) =
             DocumentHistoryCreated dochisttime0
-        migrate (DocumentHistoryInvitationSent0 { dochisttime0 
+        migrate (DocumentHistoryInvitationSent0 { dochisttime0
                                                 , ipnumber0
-                                                }) 
+                                                })
             = DocumentHistoryInvitationSent dochisttime0 ipnumber0 []
 
 
@@ -1859,7 +1859,7 @@ instance Migrate Document11 Document12 where
                 , authornumberplacements12 =  authornumberplacements11
                 , authorotherfields12 = authorotherfields11
                 }
-                
+
 instance Migrate Document12 Document13 where
     migrate (Document12
                 { documentid12
@@ -2274,7 +2274,7 @@ instance Migrate Document18 Document19 where
                 , documentcancelationreason19      = documentcancelationreason18
                 , documentsharing19                = documentsharing18
                 , documentrejectioninfo19          = Nothing
-                }             
+                }
 
 instance Migrate Document19 Document20 where
     migrate (Document19
@@ -2340,7 +2340,7 @@ instance Migrate Document19 Document20 where
                 , documentsharing20                = documentsharing19
                 , documentrejectioninfo20          = documentrejectioninfo19
                 , documenttags20                   = []
-                }             
+                }
 
 
 instance Migrate Document20 Document21 where
@@ -2375,7 +2375,7 @@ instance Migrate Document20 Document21 where
              , documentcancelationreason20
              , documentsharing20
              , documentrejectioninfo20
-             , documenttags20   
+             , documenttags20
              }) = Document21
                 { documentid21                     = documentid20
                 , documenttitle21                  = documenttitle20
@@ -2407,9 +2407,9 @@ instance Migrate Document20 Document21 where
                 , documentcancelationreason21      = documentcancelationreason20
                 , documentsharing21                = documentsharing20
                 , documentrejectioninfo21          = documentrejectioninfo20
-                , documenttags21                   = documenttags20   
+                , documenttags21                   = documenttags20
                 , documentservice21                = Nothing
-                }        
+                }
 
 
 instance Migrate Document21 Document22 where
@@ -2477,7 +2477,7 @@ instance Migrate Document21 Document22 where
                 , documentcancelationreason22      = documentcancelationreason21
                 , documentsharing22                = documentsharing21
                 , documentrejectioninfo22          = documentrejectioninfo21
-                , documenttags22                   = documenttags21   
+                , documenttags22                   = documenttags21
                 , documentservice22                = documentservice21
                 , documentattachments22            = []
                 }
@@ -2530,7 +2530,7 @@ instance Migrate Document22 Document23 where
                 , documentcancelationreason23      = documentcancelationreason22
                 , documentsharing23                = documentsharing22
                 , documentrejectioninfo23          = documentrejectioninfo22
-                , documenttags23                   = documenttags22   
+                , documenttags23                   = documenttags22
                 , documentservice23                = documentservice22
                 , documentattachments23            = documentattachments22
                 }
@@ -2584,7 +2584,7 @@ instance Migrate Document23 Document24 where
                 , documentcancelationreason24      = documentcancelationreason23
                 , documentsharing24                = documentsharing23
                 , documentrejectioninfo24          = documentrejectioninfo23
-                , documenttags24                   = documenttags23  
+                , documenttags24                   = documenttags23
                 , documentservice24                = documentservice23
                 , documentattachments24            = documentattachments23
                 , documentoriginalcompany24        = Nothing
@@ -2646,7 +2646,7 @@ instance Migrate Document24 Document25 where
                 , documentquarantineexpiry25       = Nothing
                 , documentattachments25            = documentattachments24
                 }
-                
+
 
 instance Migrate Document25 Document where
     migrate (Document25
@@ -2736,7 +2736,7 @@ instance Version DocumentRecordStatus where
 
 $(deriveSerialize ''DocumentFunctionality)
 instance Version DocumentFunctionality where
-    
+
 $(deriveSerialize ''ChargeMode)
 instance Version ChargeMode where
 
@@ -2753,12 +2753,12 @@ $(deriveSerialize ''File0)
 instance Version File0 where
 
 instance Migrate File0 File1 where
-    migrate (File0 
+    migrate (File0
              { fileid0
              , filename0
              , filepdf0
              , filejpgpages0
-             }) = File1 
+             }) = File1
                 { fileid1 = fileid0
                 , filename1 = filename0
                 , filepdf1 = filepdf0
@@ -2770,11 +2770,11 @@ instance Version File1 where
     mode = extension 1 (Proxy :: Proxy File0)
 
 instance Migrate File1 File2 where
-    migrate (File1 
+    migrate (File1
                 { fileid1
                 , filename1
                 , filepdf1
-                }) = File2 
+                }) = File2
                 { fileid2 = fileid1
                 , filename2 = filename1
                 , filepdf2 = filepdf1
@@ -2789,7 +2789,7 @@ instance Migrate File2 File where
                 { fileid2
                 , filename2
                 , filepdf2
-                }) = File 
+                }) = File
                 { fileid = fileid2
                 , filename = filename2
                 , filestorage = FileStorageMemory filepdf2
@@ -2822,21 +2822,21 @@ type Documents = IxSet Document
 
 instance Indexable Document where
         empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
-                      , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory 
+                      , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory
                                                                 (filter (not . signatorylinkdeleted)
                                                                  (documentsignatorylinks x))))) :: [Signatory])
-                      , ixFun (\x -> (map Supervisor (catMaybes (map maybesupervisor 
+                      , ixFun (\x -> (map Supervisor (catMaybes (map maybesupervisor
                                                                 (filter (not . signatorylinkdeleted)
                                                                  (documentsignatorylinks x))))) :: [Supervisor])
                       -- shouldn't be using emails really, need to start savings docs for users earlier
-                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails) 
+                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails)
                                      (filter (not . signatorylinkdeleted)
                                        (documentsignatorylinks x)) :: [Email])
-                               
-                      -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 
+
+                      -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
                       -- the scope of a single document! FIXME
                       , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])
-                      , ixFun (\x -> map fileid (documentfiles x 
+                      , ixFun (\x -> map fileid (documentfiles x
                                                  ++ documentsealedfiles x
                                                  ++ map authorattachmentfile (documentauthorattachments x)
                                                  ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
@@ -2855,7 +2855,7 @@ instance Indexable Document where
                       , ixFun (\x -> [ Author uid | sl@SignatoryLink{ maybesignatory = Just uid } <- documentsignatorylinks x
                                                   , SignatoryAuthor `elem` signatoryroles sl])
                       ]
-                                                    
+
 instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty

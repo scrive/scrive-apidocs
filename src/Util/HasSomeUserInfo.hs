@@ -9,7 +9,7 @@
 -- Utility for abstracting away destructuring to get a name, email,
 -- company number, company name, and personal number.
 -----------------------------------------------------------------------------
-module Util.HasSomeUserInfo ( 
+module Util.HasSomeUserInfo (
   emailFromSignLink,
   getCompanyName,
   getCompanyNumber,
@@ -19,7 +19,7 @@ module Util.HasSomeUserInfo (
   getLastName,
   getPersonalNumber,
   getSmartName
-  
+
   ) where
 
 import Doc.DocStateData
@@ -44,9 +44,9 @@ getSmartName :: (HasSomeUserInfo a) => a -> BS.ByteString
 getSmartName a =
   let fn = T.strip $ E.decodeUtf8 $ getFullName a
       em = T.strip $ E.decodeUtf8 $ getEmail    a
-  in if T.all isSpace fn 
-     then E.encodeUtf8 em 
-     else E.encodeUtf8 fn    
+  in if T.all isSpace fn
+     then E.encodeUtf8 em
+     else E.encodeUtf8 fn
 
 -- | Anything that might have a first name and last name.
 class HasSomeUserInfo a where
@@ -56,7 +56,7 @@ class HasSomeUserInfo a where
   getFirstName      :: a -> BS.ByteString
   getLastName       :: a -> BS.ByteString
   getPersonalNumber :: a -> BS.ByteString
-  
+
 instance HasSomeUserInfo UserInfo where
   getCompanyName    = usercompanyname
   getCompanyNumber  = usercompanynumber
@@ -64,7 +64,7 @@ instance HasSomeUserInfo UserInfo where
   getFirstName      = userfstname
   getLastName       = usersndname
   getPersonalNumber = userpersonalnumber
-  
+
 instance HasSomeUserInfo User where
   getCompanyName    = usercompanyname     . userinfo
   getCompanyNumber  = usercompanynumber   . userinfo
@@ -80,7 +80,7 @@ instance HasSomeUserInfo SignatoryDetails where
   getFirstName      = signatoryfstname
   getLastName       = signatorysndname
   getPersonalNumber = signatorypersonalnumber
-  
+
 instance HasSomeUserInfo SignatoryLink where
   getCompanyName    = signatorycompany        . signatorydetails
   getCompanyNumber  = signatorycompanynumber  . signatorydetails
@@ -91,9 +91,9 @@ instance HasSomeUserInfo SignatoryLink where
 
 {- |
    Given a SignatoryLink, returns a tuple containing the name and the email address.
-   
+
    Useful for sending emails.
    Refactor note: change this to getNameEmailPair, move to Util.HasSomeUserInfo
  -}
 emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
-emailFromSignLink sl = (getFullName sl, getEmail sl) 
+emailFromSignLink sl = (getFullName sl, getEmail sl)

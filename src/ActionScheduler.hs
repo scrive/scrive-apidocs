@@ -32,7 +32,7 @@ import Misc
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
 
-type ActionScheduler a = ReaderT SchedulerData' IO a 
+type ActionScheduler a = ReaderT SchedulerData' IO a
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler sched sd =
@@ -79,7 +79,7 @@ evaluateAction Action{actionID, actionType = AccountCreated{}} =
 evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid doclinkdataid@(docid, _) token} = do
     case state of
          NothingSent ->
-             sendReminder 
+             sendReminder
          ReminderSent ->
              deleteAction actionID
     where
@@ -151,8 +151,8 @@ oldScheduler = do
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- query $ GetTimeoutedButPendingDocuments now
-    forM_ docs $ \doc -> do 
-        _ <- update $ TimeoutDocument (documentid doc) now 
+    forM_ docs $ \doc -> do
+        _ <- update $ TimeoutDocument (documentid doc) now
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 
 deleteQuarantinedDocuments :: MinutesTime -> ActionScheduler ()

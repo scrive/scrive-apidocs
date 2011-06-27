@@ -70,7 +70,7 @@ readAppConfig = readConf `catch` printDefault
         Log.server $ "Example configuration:"
         Log.server $ show (defaultConf "kontrakcja")
         error "Config file error"
-         
+
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -120,7 +120,7 @@ initDatabaseEntries = do
               _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing Nothing
               return ()
           Just _ -> return () -- user exist, do not add it
-  
+
 
 uploadOldFilesToAmazon :: AppConf -> IO ()
 uploadOldFilesToAmazon appConf = do
@@ -176,18 +176,18 @@ main = Log.withLogger $ do
                   Log.server $ "Using store " ++ store appConf
                   startSystemState' (store appConf) stateProxy)
               (\control -> do
-                  Log.server $ "Creating checkpoint before exit" 
+                  Log.server $ "Creating checkpoint before exit"
                   createCheckpoint control
-                  Log.server $ "Closing transaction system" 
+                  Log.server $ "Closing transaction system"
                   shutdownSystem control)
               (\control -> do
 
                   -- start the http server
-                  Exception.bracket 
+                  Exception.bracket
                            (do
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
-                              t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port }) 
+                              t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates es_enforcer
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
@@ -204,7 +204,7 @@ main = Log.withLogger $ do
                                           _ <- forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination
-                                          Log.server $ "Termination request received" 
+                                          Log.server $ "Termination request received"
 
                   return ())
 
@@ -236,23 +236,23 @@ defaultConf progName
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
-opts = [ 
+opts = [
        {-
-       , Option [] ["no-validate"] 
-         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } })) 
+       , Option [] ["no-validate"]
+         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } }))
          "Turn off HTML validation"
-       , Option [] ["validate"]    
-         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } })) 
+       , Option [] ["validate"]
+         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } }))
          "Turn on HTML validation"
        -}
-          Option [] ["store"]       
-         (ReqArg (\h c -> c {store = h}) "PATH") 
+          Option [] ["store"]
+         (ReqArg (\h c -> c {store = h}) "PATH")
          "The directory used for database storage."
-       , Option [] ["static"]      
-         (ReqArg (\h c -> c {static = h}) "PATH") 
-         "The directory searched for static files" 
-       , Option [] ["production"]    
-         (NoArg (\ c -> c { production = True })) 
+       , Option [] ["static"]
+         (ReqArg (\h c -> c {static = h}) "PATH")
+         "The directory searched for static files"
+       , Option [] ["production"]
+         (NoArg (\ c -> c { production = True }))
          "Turn on production environment"
        ]
 

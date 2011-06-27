@@ -1,15 +1,15 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  TrustWeaver
--- Maintainer  :  
+-- Maintainer  :
 -- Stability   :  development
 -- Portability :  portable
 --
--- TrustWeaver interface 
+-- TrustWeaver interface
 --
 -----------------------------------------------------------------------------
 
-module TrustWeaver 
+module TrustWeaver
     ( TrustWeaverConf(..)
     , signDocument
     , signDocumentEx -- for testing purposes
@@ -23,7 +23,7 @@ module TrustWeaver
     where
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
-import Text.XML.HaXml.XmlContent.Parser 
+import Text.XML.HaXml.XmlContent.Parser
 import SOAP.SOAP ()
 
 import Control.Concurrent
@@ -49,7 +49,7 @@ instance HTypeable (SignRequest) where
 instance XmlContent (SignRequest) where
     toContents (SignRequest pdfdata senderTag receiverTag) =
         let base64data = BSC.unpack (Base64.encode pdfdata) in
-        [CElem (Elem "SignRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
+        [CElem (Elem "SignRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"]
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
                          , mkElemC "OutputType" (toText "PDF")
@@ -88,7 +88,7 @@ instance HTypeable (ValidateRequest) where
 instance XmlContent (ValidateRequest) where
     toContents (ValidateRequest pdfdata) =
         let base64data = BSC.unpack (Base64.encode pdfdata) in
-        [CElem (Elem "ValidateRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
+        [CElem (Elem "ValidateRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"]
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
                          , mkElemC "OutputType" (toText "PDF")
@@ -127,10 +127,10 @@ instance HTypeable (RegisterSectionRequest) where
     toHType _ = Defined "RegisterSectionRequest" [] []
 instance XmlContent (RegisterSectionRequest) where
     toContents (RegisterSectionRequest name) =
-        [CElem (Elem "RegisterSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
-                         [mkElemC "Request" 
+        [CElem (Elem "RegisterSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"]
+                         [mkElemC "Request"
                                       [ mkElemC "Name" (toText name)
-                                      , mkElemC "StorageSectionInfo" 
+                                      , mkElemC "StorageSectionInfo"
                                                     [ mkElemC "CountryOfEstablishment" (toText "SE")
                                                     -- , mkElemC "FriendlyName" (toText "???")
                                                     ]
@@ -158,8 +158,8 @@ instance HTypeable (EnableSectionRequest) where
     toHType _ = Defined "RegisterSectionRequest" [] []
 instance XmlContent (EnableSectionRequest) where
     toContents (EnableSectionRequest name) =
-        [CElem (Elem "EnableSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
-                         [mkElemC "Request" 
+        [CElem (Elem "EnableSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"]
+                         [mkElemC "Request"
                                       [ mkElemC "Name" (toText name)
                                       ]]) ()]
     parseContents = error "Do not parse RegisterSectionRequest"
@@ -183,16 +183,16 @@ instance XmlContent (EnableSectionResponse) where
             }
         } `adjustErr` ("in <EnableSectionResponse>, "++)
 
-data StoreInvoiceRequest = StoreInvoiceRequest String String String BS.ByteString 
+data StoreInvoiceRequest = StoreInvoiceRequest String String String BS.ByteString
 
 instance HTypeable (StoreInvoiceRequest) where
     toHType _ = Defined "StoreInvoiceRequest" [] []
 instance XmlContent (StoreInvoiceRequest) where
     toContents (StoreInvoiceRequest documentid documentdate ownertwname pdfdata) =
         let base64data = BSC.unpack (Base64.encode pdfdata) in
-        [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"] 
-                         [mkElemC "Request" 
-                                      [ mkElemC "Document" 
+        [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"]
+                         [mkElemC "Request"
+                                      [ mkElemC "Document"
                                                     [ mkElemC "Data" (toText base64data)
                                                     , mkElemC "DocumentFormat" (toText "PDF")
                                                     , mkElemC "ImplicitSignatureInfo"
@@ -200,7 +200,7 @@ instance XmlContent (StoreInvoiceRequest) where
                                                               , mkElemC "AuditCategory" (toText "CADESA")
                                                               ]
                                                     ]
-                                      , mkElemC "InvoiceInfo" 
+                                      , mkElemC "InvoiceInfo"
                                                     [ mkElemC "InvoiceNo" (toText documentid)
                                                     , mkElemC "InvoiceDate" (toText documentdate)
                                                     -- , mkElemC "PurchaseOrderNo" (toText 1)
@@ -238,8 +238,8 @@ instance HTypeable (GetInvoiceRequest) where
     toHType _ = Defined "GetInvoiceRequest" [] []
 instance XmlContent (GetInvoiceRequest) where
     toContents (GetInvoiceRequest supplierReference) =
-        [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"] 
-                         [mkElemC "Request" 
+        [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"]
+                         [mkElemC "Request"
                                       [ mkElemC "Reference" (toText supplierReference)
                                       ]
                          ]) ()]
@@ -300,7 +300,7 @@ signDocument' :: TrustWeaverConf
               -> String
               -> IO (Either String BS.ByteString)
 signDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata senderTag receiverTag = do
-  result <- makeSoapCall url 
+  result <- makeSoapCall url
             "http://www.trustweaver.com/tsswitch#Sign"
             cert certpwd
            (SignRequest pdfdata senderTag receiverTag)
@@ -318,7 +318,7 @@ signDocumentEx :: TrustWeaverConf
                -> String
                -> String
                -> IO (Either String BS.ByteString)
-signDocumentEx twconf pdfdata senderTag receiverTag = retry twconf $ signDocument' twconf pdfdata senderTag receiverTag 
+signDocumentEx twconf pdfdata senderTag receiverTag = retry twconf $ signDocument' twconf pdfdata senderTag receiverTag
 
 validateDocument' :: TrustWeaverConf
                   -> BS.ByteString
@@ -398,11 +398,11 @@ enableSection :: TrustWeaverConf
               -> IO (Either String (String,String,String))
 enableSection twconf = retry twconf . enableSection' twconf
 
-storeInvoice' :: TrustWeaverConf 
-             -> String 
-             -> String 
-             -> String 
-             -> BS.ByteString 
+storeInvoice' :: TrustWeaverConf
+             -> String
+             -> String
+             -> String
+             -> BS.ByteString
              -> IO (Either String String)
 storeInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} documentid documentdate ownertwname pdfdata = do
   result <- makeSoapCall url
@@ -413,16 +413,16 @@ storeInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} documenti
   return (fmap extract result)
 storeInvoice' _ _ _ _ _ = return $ Left "Not possible: storeInvoice' without storageConf"
 
-storeInvoice :: TrustWeaverConf 
-             -> String 
-             -> String 
-             -> String 
-             -> BS.ByteString 
+storeInvoice :: TrustWeaverConf
+             -> String
+             -> String
+             -> String
+             -> BS.ByteString
              -> IO (Either String String)
 storeInvoice twconf documentid documentdate ownertwname pdfdata = retry twconf $ storeInvoice' twconf documentid documentdate ownertwname pdfdata
 
-getInvoice' :: TrustWeaverConf 
-           -> String 
+getInvoice' :: TrustWeaverConf
+           -> String
            -> IO (Either String BS.ByteString)
 getInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} reference = do
   result <- makeSoapCall url
@@ -433,7 +433,7 @@ getInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} reference =
   return (fmap extract result)
 getInvoice' _ _ = return $ Left "Not possible: getInvoice' without storageConf"
 
-getInvoice :: TrustWeaverConf 
-           -> String 
+getInvoice :: TrustWeaverConf
+           -> String
            -> IO (Either String BS.ByteString)
 getInvoice twconf = retry twconf . getInvoice' twconf

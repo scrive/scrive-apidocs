@@ -5,10 +5,10 @@
 -- Stability   :  develpment
 -- Portability :  portable
 --
--- Almoust all the stuff that is visible under /adminsonly path 
+-- Almoust all the stuff that is visible under /adminsonly path
 --
 -----------------------------------------------------------------------------
-module Administration.AdministrationView( 
+module Administration.AdministrationView(
             adminMainPage
           , adminUsersAdvancedPage
           , adminUsersPage
@@ -25,8 +25,8 @@ module Administration.AdministrationView(
           , StatsView(..)) where
 
 import KontraLink
-import Templates.Templates 
-import Templates.TemplatesUtils 
+import Templates.Templates
+import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import Control.Applicative
 import Data.ByteString.UTF8 (toString)
@@ -143,9 +143,9 @@ servicesAdminPage templates services= do
             field "name"  $ show $ serviceid service
             fieldIO "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
-        
+
 adminTranslationsPage::KontrakcjaTemplates -> [(Lang,TranslationStats)] ->  IO String
-adminTranslationsPage templates stats =  
+adminTranslationsPage templates stats =
     renderTemplate templates "adminTranslations" $
         field "langs" $ for stats $ \(lang, stat) -> do
             field "name" $ show lang
@@ -162,9 +162,9 @@ mkUserInfoView (userdetails', docstats', userstats') = do
   field "docstats" $ docstats'
   field "userstats" $ userstats'
   field "adminview" $ userFields userdetails'
-               
-                                   
-data StatsView = StatsView 
+
+
+data StatsView = StatsView
                  { svDoccount          :: Int
                  , svSignaturecount    :: Int
                  , svUsercount         :: Int
@@ -172,10 +172,10 @@ data StatsView = StatsView
                  , svAdmininvitecount  :: Int
                  } deriving (Data, Typeable)
 
-{-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
-intervals::[a] ->  [Option]                                                      
+{-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}
+intervals::[a] ->  [Option]
 intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length users) - 1)]) ++ [length users]
-  where 
+  where
     intervals' (a:(a':as))  = (Option {oValue= show a , oText = (show $ a+1) ++"-"++(show a'), oSelected=False}):intervals' (a':as)
     intervals' _ = []
 
@@ -202,12 +202,12 @@ avaibleUsers (AdminUsersPageParams {search=Just searchString}) =  searchUsers se
 avaibleUsers (AdminUsersPageParams {startletter=Just startLetter}) =  startLetterUsers startLetter
 avaibleUsers _  = id
 
-startLetterUsers :: (UserBased a) => String->[a]->[a]                
+startLetterUsers :: (UserBased a) => String->[a]->[a]
 startLetterUsers startletter = filter (\u -> (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ userfullname $ getUser u) ||
                                             (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))
-searchUsers :: (UserBased a) => String->[a]->[a]   
+searchUsers :: (UserBased a) => String->[a]->[a]
 searchUsers searchString =  filter (\u -> (isInfixOf (map toUpper searchString) $ map toUpper $ toString $ userfullname $ getUser u) ||
-                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))                                            
+                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))
 
 
 
@@ -216,9 +216,9 @@ data AdminUsersPageParams = AdminUsersPageParams {
                              search::Maybe String,
                              startletter::Maybe String,
                              page::Int
-                            } 
-                            
-{-| Full fields set about user -}   
+                            }
+
+{-| Full fields set about user -}
 userFields ::User -> Fields
 userFields u =  do
         field "fstname" $ toString $ userfstname $ userinfo u
@@ -243,18 +243,18 @@ userFields u =  do
         field "signeddocstorage" $ show (signeddocstorage $ usersettings u)
         field "paymentmethod" $ for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
                                                                                  then soption show show x
-                                                                                 else option show show x)        
-        field "paymentaccounttype" $ for (allValues::[PaymentAccountType]) 
+                                                                                 else option show show x)
+        field "paymentaccounttype" $ for (allValues::[PaymentAccountType])
                                                                          (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
                                                                                  then soption show show x
-                                                                                 else option show show x)      
+                                                                                 else option show show x)
         field "freetrialexpirationdate" $ showDateOnly <$> userfreetrialexpirationdate u
         field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
         field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
         field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
         field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
-        field "id" $ show (userid u)                                        
-       
-                                     
+        field "id" $ show (userid u)
+
+
 letters::[String]
 letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]

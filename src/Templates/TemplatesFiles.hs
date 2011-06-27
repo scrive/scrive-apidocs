@@ -8,9 +8,9 @@
 -- Names of all templates files with some utils
 -----------------------------------------------------------------------------
 module Templates.TemplatesFiles
-    (   templatesFilesPath 
-      , templateFilePath 
-      , templateFiles 
+    (   templatesFilesPath
+      , templateFilePath
+      , templateFiles
       , getTemplates
     ) where
 
@@ -40,7 +40,7 @@ templateFiles = ["landpages.st",
                  "userpages/subaccountslist.st",
                  "userpages/friendpage.st",
                  "userpages/securitypage.st",
-                 "userpages/userotherpages.st",                     
+                 "userpages/userotherpages.st",
                  "docpages/doclist.st",
                  "docpages/doctemplatelist.st",
                  "docpages/docofferslist.st",
@@ -76,41 +76,41 @@ templateFiles = ["landpages.st",
                  "javascript-langs.st"]
 
 
-getTemplates :: String -> IO [(String, String)]            
-getTemplates fp = 
+getTemplates :: String -> IO [(String, String)]
+getTemplates fp =
     withFile fp ReadMode $ \handle -> do
         hSetEncoding handle utf8
         parseTemplates handle
-        
+
 
 parseTemplates :: Handle -> IO [(String,String)]
 parseTemplates handle = do
     e <- hIsEOF handle
-    if (e) 
+    if (e)
         then return []
         else do
                t  <- parseTemplate handle
                ts <- parseTemplates handle
-               return $ (maybeToList t) ++ ts 
+               return $ (maybeToList t) ++ ts
 
-parseTemplate :: Handle -> IO (Maybe (String, String))                              
+parseTemplate :: Handle -> IO (Maybe (String, String))
 parseTemplate handle = do
     ls <- parseLines handle
-    let (name,t) = break (==  '=') $ head ls 
+    let (name,t) = break (==  '=') $ head ls
     if (null ls || null (name) || null t)
-        then return Nothing   
+        then return Nothing
         else do
-            let template = intercalate "\r\n" ((tail t): (tail ls)) 
+            let template = intercalate "\r\n" ((tail t): (tail ls))
             return $ Just (filter isAlphaNum name,template)
 
-parseLines :: Handle -> IO [String]                                    
+parseLines :: Handle -> IO [String]
 parseLines handle = do
     l <- hGetLine handle
     e <- hIsEOF handle
-    if (isPrefixOf ("#") l) 
+    if (isPrefixOf ("#") l)
         then return []
         else if e
             then return [l]
             else fmap ((:) l) (parseLines handle)
 
-    
+
