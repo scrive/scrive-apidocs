@@ -7,7 +7,21 @@
 --
 -- Utility for abstracting away finding signatory links for given information
 -----------------------------------------------------------------------------
-module Util.SignatoryLinkUtils where
+module Util.SignatoryLinkUtils (
+  
+  isSigLinkFor,
+  isAuthorSignatory,
+  getAuthorSigLink,
+  getAuthorName,
+  isUndelivered,
+  isDeferred,
+  hasSigned,
+  isAuthor,
+  isSignatory,
+  isViewer,
+  isDeletedFor,
+  getSigLinkFor
+       ) where
 
 import Doc.DocStateData
 import User.UserState
