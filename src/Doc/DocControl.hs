@@ -731,10 +731,14 @@ handleIssueSaveAsTemplate document = do
           addFlashMsg =<< (liftIO $ flashDocumentTemplateSaved $ ctxtemplates ctx)
           return $ LinkTemplates emptyListParams       
 
+
+-- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
+--        But this probably is gone now.
 handleIssueChangeToContract :: Document -> Kontra KontraLink
 handleIssueChangeToContract document = do
   ctx <- get
-  mcontract <- update $ SignableFromDocumentID $ documentid document 
+  when (isNothing $ ctxmaybeuser ctx) mzero
+  mcontract <- update $ SignableFromDocumentIDWithUpdatedAuthor (fromJust $ ctxmaybeuser ctx) (documentid document)
   case mcontract of 
     Right contract -> do   
       mncontract <- updateDocument ctx contract
@@ -1927,10 +1931,9 @@ handleCreateFromTemplate = withUserPost $ do
       let user = fromJust ctxmaybeuser
       document <- queryOrFail $ GetDocumentByDocumentID $ did
       sharedWithUser <- isShared user document
-      enewdoc <- case (isUserAuthor document user, sharedWithUser) of
-        (True, _) -> update $ SignableFromDocumentID did
-        (_, True) -> update $ SignableFromSharedDocumentID user did
-        _ -> mzero
+      enewdoc <- if (isUserAuthor document user ||  sharedWithUser) 
+                    then update $ SignableFromDocumentIDWithUpdatedAuthor user did
+                    else mzero
       case enewdoc of
         Right newdoc -> return $ LinkIssueDoc $ documentid newdoc
         Left _ -> mzero

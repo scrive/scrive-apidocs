@@ -65,8 +65,7 @@ module Doc.DocState
     , GetSharedTemplates(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
-    , SignableFromDocumentID(..)
-    , SignableFromSharedDocumentID(..)
+    , SignableFromDocumentIDWithUpdatedAuthor(..)
     , DocumentFromSignatoryData(..)
 --    , MigrateToSigLinks(..)
     , ExtendDocumentQuarantine(..)
@@ -1090,11 +1089,11 @@ justTemplates docs = (docs @= Template Offer) ||| (docs @= Template Contract) ||
 signableFromDocument :: Document -> Update Documents Document
 signableFromDocument doc = insertNewDocument $ templateToDocument doc
 
-signableFromDocumentID :: DocumentID -> Update Documents (Either String Document)
-signableFromDocumentID = newFromDocument $ templateToDocument
 
-signableFromSharedDocumentID :: User -> DocumentID -> Update Documents (Either String Document)
-signableFromSharedDocumentID user = newFromDocument $ \doc -> 
+-- You basicly always want to update author data. Not only if you want to change author
+-- This is due to the fact that author personal data could get changed
+signableFromDocumentIDWithUpdatedAuthor :: User -> DocumentID -> Update Documents (Either String Document)
+signableFromDocumentIDWithUpdatedAuthor user = newFromDocument $ \doc -> 
     (templateToDocument doc) {
           documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
                                    -- FIXME: Need to remove authorfields?
@@ -1366,8 +1365,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getUserTemplates
                         , 'getSharedTemplates
                         , 'signableFromDocument
-                        , 'signableFromDocumentID
-                        , 'signableFromSharedDocumentID
+                        , 'signableFromDocumentIDWithUpdatedAuthor
                         , 'documentFromSignatoryData
                         , 'templateFromDocument
 --                        , 'migrateToSigLinks
