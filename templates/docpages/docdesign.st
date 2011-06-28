@@ -70,6 +70,7 @@ pageDocumentDesign=
         $endif$
         $endif$
 
+        $if(!isorder)$
         $if(isbasic)$
         $if(process.hasadvancedview)$
         <div class="signStepsFunctionalityChange  extraLink">
@@ -80,6 +81,7 @@ pageDocumentDesign=
         <div class="signStepsFunctionalityChange extraLink">
           <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">BYT TILL FÖRENKLAD PROCESS</a></small>
         </div>
+        $endif$
         $endif$
       </div>
     </div>

@@ -185,7 +185,9 @@ getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
     
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user = 
-  case (getValueForProcess documenttype processadvancedview, preferreddesignmode $ usersettings user) of
+  if documenttype == Signable Order 
+   then AdvancedFunctionality
+   else case (getValueForProcess documenttype processadvancedview, preferreddesignmode $ usersettings user) of
     (Just True, Nothing) -> BasicFunctionality
     (Just True, Just BasicMode) -> BasicFunctionality
     _ -> AdvancedFunctionality

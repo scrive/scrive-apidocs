@@ -651,6 +651,7 @@ pageDocumentDesign ctx
        field "confirmsendtext" $ getProcessText processconfirmsendtext
        field "expirytext" $ getProcessText processexpirytext
 
+
 documentAttachmentDesignFields :: [AuthorAttachment] -> Fields
 documentAttachmentDesignFields atts = do
   field "isattachments" $ not $ null atts
@@ -667,6 +668,7 @@ documentFunctionalityFields Document{documenttype, documentfunctionality} = do
   -- it might not really be basic, it's just if there isn't an advanced mode we pretend we are
   field "isbasic" $ documentfunctionality==BasicFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
   field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (Just False == getValueForProcess documenttype processadvancedview) 
+  field "isorder" $ documenttype == Signable Order
 
 documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
 documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do
