@@ -70,6 +70,7 @@ pageDocumentDesign=
         $endif$
         $endif$
 
+        $if(!isorder)$
         $if(isbasic)$
         $if(process.hasadvancedview)$
         <div class="signStepsFunctionalityChange  extraLink">
@@ -80,6 +81,7 @@ pageDocumentDesign=
         <div class="signStepsFunctionalityChange extraLink">
           <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">$_signStepsFunctionalityChangeToSimplified()$</a></small>
         </div>
+        $endif$
         $endif$
       </div>
     </div>
@@ -411,7 +413,7 @@ pageDocumentDesign=
                 <div class="sendbutton" style="$if(!process.isauthorsend)$display:none;$else$padding-top:20px;$endif$">
                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                     <div class="left"></div>
-                    <div class="label">
+                    <div class="label" style="min-width: 120px;">
 		                  <span>$process.sendbuttontext$</span>
                       <span class="btn-symbol green arrow-left"
                             style="position:relative;top:3px;right:0px"></span>
@@ -423,7 +425,7 @@ pageDocumentDesign=
                 <div class="signbutton">
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
-                    <div class="label" style="width:120px">
+                    <div class="label" style="min-width: 120px;">
                     <span>$_skrivapa()$</span>
                       <span class="icon cross"></span>
                     </div> 

@@ -64,8 +64,7 @@ module Doc.DocState
     , GetSharedTemplates(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
-    , SignableFromDocumentID(..)
-    , SignableFromSharedDocumentID(..)
+    , SignableFromDocumentIDWithUpdatedAuthor(..)
     , DocumentFromSignatoryData(..)
 --    , MigrateToSigLinks(..)
     , ExtendDocumentQuarantine(..)
@@ -185,7 +184,9 @@ getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
 
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user =
-  case (getValueForProcess documenttype processadvancedview, preferreddesignmode $ usersettings user) of
+  if documenttype == Signable Order 
+   then AdvancedFunctionality
+   else case (getValueForProcess documenttype processadvancedview, preferreddesignmode $ usersettings user) of
     (Just True, Nothing) -> BasicFunctionality
     (Just True, Just BasicMode) -> BasicFunctionality
     _ -> AdvancedFunctionality
@@ -351,6 +352,9 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                                (Just cu, Just (Right newsigindex))
                                  -> Just cu{csvsignatoryindex=newsigindex}
                                _ -> Nothing
+                 updatedFstFileName  = case (documentfiles document) of
+                                         (f:fs) -> (f {filename= docname} :fs)
+                                         fs -> fs
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
                     , documentdaystosign             = daystosign
@@ -360,6 +364,7 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documentallowedidtypes         = idtypes
                     , documentcsvupload              = csvupload
                     , documentfunctionality          = docfunctionality
+                    , documentfiles                  = updatedFstFileName
                     }
          else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
@@ -1089,11 +1094,11 @@ justTemplates docs = (docs @= Template Offer) ||| (docs @= Template Contract) ||
 signableFromDocument :: Document -> Update Documents Document
 signableFromDocument doc = insertNewDocument $ templateToDocument doc
 
-signableFromDocumentID :: DocumentID -> Update Documents (Either String Document)
-signableFromDocumentID = newFromDocument $ templateToDocument
 
-signableFromSharedDocumentID :: User -> DocumentID -> Update Documents (Either String Document)
-signableFromSharedDocumentID user = newFromDocument $ \doc ->
+-- You basicly always want to update author data. Not only if you want to change author
+-- This is due to the fact that author personal data could get changed
+signableFromDocumentIDWithUpdatedAuthor :: User -> DocumentID -> Update Documents (Either String Document)
+signableFromDocumentIDWithUpdatedAuthor user = newFromDocument $ \doc -> 
     (templateToDocument doc) {
           documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
                                    -- FIXME: Need to remove authorfields?
@@ -1365,8 +1370,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getUserTemplates
                         , 'getSharedTemplates
                         , 'signableFromDocument
-                        , 'signableFromDocumentID
-                        , 'signableFromSharedDocumentID
+                        , 'signableFromDocumentIDWithUpdatedAuthor
                         , 'documentFromSignatoryData
                         , 'templateFromDocument
 --                        , 'migrateToSigLinks
