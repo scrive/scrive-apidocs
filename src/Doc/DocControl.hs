@@ -1907,16 +1907,18 @@ idmethodFromString idmethod
   | idmethod == "eleg"  = Just ELegitimationIdentification
   | otherwise           = Nothing
 
-getTemplatesForAjax::Kontra Response                      
+getTemplatesForAjax::Kontra Response
 getTemplatesForAjax = do
-    ctx <- get 
+    ctx <- get
     params <- getListParams
-    mdocprocess <- getDocProcess 
+    mdocprocess <- getDocProcess
     case (ctxmaybeuser ctx,mdocprocess) of
             (Just user, Just docprocess) -> do
                 let tfilter doc = (Template docprocess == documenttype doc)
-                documents <- liftIO $ query $ GetDocumentsByUser user
-                let templates = filter tfilter documents
+                userdocs <- liftIO $ query $ GetDocumentsByUser user
+                relatedusers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
+                shareddocs <- liftIO $ query $ GetSharedTemplates (map userid relatedusers)
+                let templates = filter tfilter $ nub (userdocs ++ shareddocs)
                 content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged

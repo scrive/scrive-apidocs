@@ -572,13 +572,17 @@ getAuthorName doc =
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
   
-buildattach :: Document -> [SignatoryAttachment] 
+buildattach :: String -> Document -> [SignatoryAttachment] 
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])] 
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-buildattach _ [] a = a
-buildattach d (f:fs) a =
+buildattach _ _ [] a = a
+buildattach csvstring d (f:fs) a =
   case sigLinkForEmail d (signatoryattachmentemail f) of
-    Nothing -> buildattach d fs a
+    Nothing -> if signatoryattachmentemail f == BS.fromString "csv"
+               then case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
+                 Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(BS.fromString csvstring, BS.fromString "csv")]):a)
+                 Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (BS.fromString csvstring, BS.fromString "csv"):sigs):(delete (nx, dx, sigs) a))
+               else buildattach csvstring d fs a
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
-      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
+      Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl))]):a)
+      Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
