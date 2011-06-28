@@ -93,7 +93,7 @@ instance (APIContext c) => APICall (APIFunction c APIResponse) where
         case mcontext  of
              Right apicontext -> do
                  res <- fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT action apicontext
-                 Log.debug $ "API call result: " ++ show res
+                 Log.debug $ "API call result: " ++ encode res
                  return res
              Left emsg -> return $ uncurry apiError emsg
 
