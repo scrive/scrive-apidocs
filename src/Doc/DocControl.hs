@@ -1920,8 +1920,10 @@ getTemplatesForAjax = do
     case (ctxmaybeuser ctx,mdocprocess) of
             (Just user, Just docprocess) -> do
                 let tfilter doc = (Template docprocess == documenttype doc)
-                documents <- liftIO $ query $ GetDocumentsByUser user
-                let templates = filter tfilter documents
+                userdocs <- liftIO $ query $ GetDocumentsByUser user
+                relatedusers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
+                shareddocs <- liftIO $ query $ GetSharedTemplates (map userid relatedusers)
+                let templates = filter tfilter $ nub (userdocs ++ shareddocs)
                 content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged

@@ -209,6 +209,7 @@ mailInvitationToSignOrViewContent templates
                                   ctx
                                   document@Document{ documenttimeouttime, documentinvitetext, documenttitle }
                                   msiglink = do
+  csvstring <- renderTemplate templates "csvsendoutsignatoryattachmentstring" () 
   let link = case msiglink of
                 Just siglink -> makeFullLink ctx document (show (LinkSignDoc document siglink))
                 Nothing -> makeFullLink ctx document "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
@@ -252,7 +253,7 @@ mailInvitationToSignOrViewContent templates
                                    ,("documenttitle", BS.toString documenttitle)
                                    ]
                      else return $ BS.toString documentinvitetext
-      sigattachments = for (buildattach document (documentsignatoryattachments document) [])
+      sigattachments = for (buildattach csvstring document (documentsignatoryattachments document) [])
                        (\(n, _, sigs) -> (n, renderListTemplate templates (map (BS.toString . fst) sigs)))
 
   header' <- header

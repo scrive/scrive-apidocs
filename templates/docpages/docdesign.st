@@ -619,6 +619,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <td>
                   <select class="signatoryselector">
                     <option selected="selected">$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$</option>
+                    $if(isvalidcsv)$
+                    <option value="csv">Massutskick</option>
+                    $endif$
                   </select>
                 </td>
                 <td class="centralised">
@@ -1164,4 +1167,6 @@ contractexpirytext=$_contractexpirytext()$
 offerexpirytext=$_offerexpirytext()$
 ####
 orderexpirytext=$_orderexpirytext()$
+####
+csvsendoutsignatoryattachmentstring=Massutskick
 ####

@@ -391,16 +391,20 @@ isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-buildattach :: Document -> [SignatoryAttachment]
+buildattach :: String -> Document -> [SignatoryAttachment] 
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-buildattach _ [] a = a
-buildattach d (f:fs) a =
+buildattach _ _ [] a = a
+buildattach csvstring d (f:fs) a =
   case getSigLinkFor d (signatoryattachmentemail f) of
-    Nothing -> buildattach d fs a
+    Nothing -> if signatoryattachmentemail f == BS.fromString "csv"
+               then case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
+                 Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(BS.fromString csvstring, BS.fromString "csv")]):a)
+                 Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (BS.fromString csvstring, BS.fromString "csv"):sigs):(delete (nx, dx, sigs) a))
+               else buildattach csvstring d fs a
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)
-      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (getFullName sl, getEmail sl):sigs):(delete (nx, dx, sigs) a))
+      Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)
+      Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (getFullName sl, getEmail sl):sigs):(delete (nx, dx, sigs) a))
 
 sameDocID :: Document -> Document -> Bool
 sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)

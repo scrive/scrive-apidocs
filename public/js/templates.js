@@ -1518,23 +1518,50 @@ safeReady(function() {
     });
 });
 
+function valEqualsInfotext(f) {
+  return f.val() === f.attr("infotext");
+}
+
+function realVal(f) {
+  if(valEqualsInfotext(f)) {
+    return "";
+  } else {
+    return f.val();
+  }
+}
+
 safeReady(function() {
     var personpane = $("#personpane");
     $("#update-sigattachments-dialog a.plus").click(function() {
         var persondetails = personpane.find(".persondetails");
         var sigdetails = persondetails.not(".authordetails").has("input:radio[value='signatory']:checked");
         var sigoptions = $();
+    var csvindex = personpane.closest("form").find("input[type='hidden'][name='csvsigindex']").attr("value");
+    console.log(csvindex);
         sigdetails.each(function(i, e) {
             var sig = $(e);
-            var fn = sig.find("input[name='signatoryfstname']").val();
-            var sn = sig.find("input[name='signatorysndname']").val();
-            var em = sig.find("input[name='signatoryemail']").val();
-            sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
+      var fnfield = sig.find("input[name='signatoryfstname']");
+      var snfield = sig.find("input[name='signatorysndname']");
+      var emfield = sig.find("input[name='signatoryemail']");
+      if(!valEqualsInfotext(emfield) &&
+         (!valEqualsInfotext(fnfield) || !valEqualsInfotext(snfield))
+        ) { // must have an email and some
+        // name!
+        var fn = realVal(fnfield);
+        var sn = realVal(snfield);
+        var em = emfield.val();
+        sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
+      } else if(csvindex === ("" + (i + 1))) {
+        sigoptions = sigoptions.add($('<option value="csv">Massutskick</option>'));
+      }
         });
 
         console.log(sigoptions);
         $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" >'))).append($("<td />").append($('<textarea name="sigattachdesc" >'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
+                                                         .append($('<ul class="selectedsigs" />'))
+                                                         .append($('<input type="hidden" name="sigattachemails" />')))));
 
+            
         return false;
     });
     $("select.signatoryselector").live('change', function() {
@@ -1543,6 +1570,7 @@ safeReady(function() {
         if (opt.text() !== localization.offerSignatory) {
             //console.log(opt);
             var inp = sel.parents("tr").find("input[name='sigattachemails']");
+      $("li#allsigs").remove();
             var newemail = opt.val();
             var oldemails = inp.val();
             console.log(newemail);
