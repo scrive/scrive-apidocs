@@ -620,6 +620,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <td>
                   <select class="signatoryselector">
                     <option selected="selected">Mottagare</option>
+                    $if(isvalidcsv)$
+                    <option value="csv">Massutskick</option>
+                    $endif$
                   </select>
                 </td>
                 <td class="centralised">
@@ -1181,4 +1184,6 @@ contractexpirytext=Undertecknas inom
 offerexpirytext=Förfallodatum
 ####
 orderexpirytext=Förfallodatum
+####
+csvsendoutsignatoryattachmentstring=Massutskick
 ####

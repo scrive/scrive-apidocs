@@ -456,7 +456,14 @@ documentFromSignatoryData docid sigindex fstname sndname email company personaln
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
                     , documentcsvupload = Nothing 
                     , documentsharing = Private
-                    , documenttype = newDocType $ documenttype d}
+                    , documenttype = newDocType $ documenttype d
+                    , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
+                    }
+    replaceCSV :: SignatoryAttachment -> SignatoryAttachment
+    replaceCSV sa =
+      if signatoryattachmentemail sa == BS.fromString "csv"
+      then sa { signatoryattachmentemail = email }
+      else sa
     newDocType :: DocumentType -> DocumentType
     newDocType (Signable p) = Signable p
     newDocType (Template p) = Signable p

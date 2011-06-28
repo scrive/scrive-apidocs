@@ -616,6 +616,7 @@ pageDocumentDesign ctx
              $ zip fields ([1..]::[Int])
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
+     csvstring <- renderTemplate (ctxtemplates ctx) "csvsendoutsignatoryattachmentstring" ()     
      csvfields <- documentCsvFields templates document
      renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields $ signatorydetails authorsiglink
@@ -632,7 +633,7 @@ pageDocumentDesign ctx
        designViewFields step
        documentAttachmentDesignFields (documentauthorattachments document)
        documentAuthorAttachments attachments
-       documentSignatoryAttachments document (documentsignatoryattachments document)
+       documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
        field "process" processFields
    where
      getProcessText = renderTextForProcess (ctxtemplates ctx) document
@@ -751,6 +752,7 @@ pageDocumentForAuthor ctx
        templates = ctxtemplates ctx
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
+     csvstring <- renderTemplate (ctxtemplates ctx) "csvsendoutsignatoryattachmentstring" ()
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document               
@@ -764,7 +766,7 @@ pageDocumentForAuthor ctx
        documentInfoFields document
        documentViewFields document
        documentAttachmentViewFields documentid Nothing (documentauthorattachments document)
-       documentSigAttachmentViewFields documentid documentsignatorylinks Nothing (documentsignatoryattachments document)
+       documentSigAttachmentViewFields csvstring documentid documentsignatorylinks Nothing (documentsignatoryattachments document)
        field "process" processFields
    where
      getProcessText = renderTextForProcess (ctxtemplates ctx) document
@@ -799,6 +801,7 @@ pageDocumentForViewer ctx
     let documentdaystosignboxvalue = maybe 7 id documentdaystosign
         authorsiglink = fromJust $ getAuthorSigLink document
    in do
+     csvstring <- renderTemplate (ctxtemplates ctx) "csvsendoutsignatoryattachmentstring" ()
      invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document
      documentinfotext <- documentInfoText ctx document Nothing
@@ -827,7 +830,7 @@ pageDocumentForViewer ctx
        documentInfoFields document 
        documentViewFields document
        documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
-       documentSigAttachmentViewFields documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
+       documentSigAttachmentViewFields csvstring documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
        documentAuthorInfo document
        field "process" $ field "title" $ renderTextForProcess (ctxtemplates ctx) document processtitle
        signatoryMessageProcessFields ctx document
@@ -852,14 +855,16 @@ documentAttachmentViewFields docid msignlink atts = do
         Just signlink -> show (LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) fileid)
         Nothing -> show (LinkAttachmentForAuthor docid fileid)
     
-documentSigAttachmentViewFields :: DocumentID -> [SignatoryLink] -> Maybe SignatoryLink -> [SignatoryAttachment] -> Fields
-documentSigAttachmentViewFields docid sls msignlink atts = do
+documentSigAttachmentViewFields :: String -> DocumentID -> [SignatoryLink] -> Maybe SignatoryLink -> [SignatoryAttachment] -> Fields
+documentSigAttachmentViewFields csvstring docid sls msignlink atts = do
   field "hassigattachments" $ length atts > 0
   field "sigattachments" $ map sigAttachmentFields atts
   where
     sigAttachmentFields a = do
       let mattachlink = find (isSigLinkForEmail (signatoryattachmentemail a)) sls
-      field "signame" $ maybe "No name" (BS.toString . signatoryname . signatorydetails) mattachlink
+      if (signatoryattachmentemail a) == BS.fromString "csv" 
+        then field "signame" csvstring
+        else field "signame" $ maybe "No name" (BS.toString . signatoryname . signatorydetails) mattachlink
       field "email" $ signatoryattachmentemail a
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
@@ -876,12 +881,13 @@ pageDocumentForSignatory :: KontraLink
                     -> Context
                     -> SignatoryLink
                     -> IO String 
-pageDocumentForSignatory action document ctx invitedlink  =
+pageDocumentForSignatory action document ctx invitedlink  = do
+  csvstring <- renderTemplate (ctxtemplates ctx) "csvsendoutsignatoryattachmentstring" ()
   renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
-    mainFields
-    field "process" processFields
+    mainFields csvstring
+    field "process" $ processFields csvstring
     where
-    mainFields =
+    mainFields csvstring =
       let authorsiglink = fromJust $ getAuthorSigLink document
           localscripts =
             "var docstate = "
@@ -911,16 +917,16 @@ pageDocumentForSignatory action document ctx invitedlink  =
         documentViewFields document
         signedByMeFields document (Just invitedlink)
         documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
-        documentSigAttachmentViewFields (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
+        documentSigAttachmentViewFields csvstring (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
         documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
         field "hasmysigattachments" hassigattachments
-    getProcessTextWithFields f = renderTemplateForProcess (ctxtemplates ctx) document f mainFields
+    getProcessTextWithFields f csvstring = renderTemplateForProcess (ctxtemplates ctx) document f (mainFields csvstring)
     getProcessText = renderTextForProcess (ctxtemplates ctx) document
-    processFields = do
+    processFields csvstring = do
       field "signatorysignmodaltitle" $ getProcessText processsignatorysignmodaltitle
-      field "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent
+      field "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent csvstring
       field "signbuttontext" $ getProcessText processsignbuttontext
-      field "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle
+      field "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle csvstring
       field "rejectbuttontext" $ getProcessText processrejectbuttontext
       field "title" $ getProcessText processtitle
       field "requiressignguard" $ getValueForProcess document processrequiressignguard
@@ -1298,9 +1304,9 @@ documentAuthorAttachments attachments =
                       field "attachmentid" $ show (documentid doc)
                       field "attachmentname" $ documenttitle doc)
 
-documentSignatoryAttachments :: Document -> [SignatoryAttachment] -> Fields
-documentSignatoryAttachments doc attachments =
-  let ats = buildattach doc attachments []
+documentSignatoryAttachments :: String -> Document -> [SignatoryAttachment] -> Fields
+documentSignatoryAttachments csvstring doc attachments =
+  let ats = buildattach csvstring doc attachments []
   in field "sigattachments" $
      for ats (\(n, d, sigs) -> do
                  field "attachmentname" n
