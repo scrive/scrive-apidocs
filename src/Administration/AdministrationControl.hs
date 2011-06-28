@@ -84,57 +84,57 @@ eitherFlash action = do
     Right value -> return value
 
 
-{- | Main page. Redirects users to other admin panels -} 
+{- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontra Response
 showAdminMainPage = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
-  content <- liftIO $ adminMainPage ctxtemplates 
-  renderFromBody TopEmpty kontrakcja content 
+  content <- liftIO $ adminMainPage ctxtemplates
+  renderFromBody TopEmpty kontrakcja content
 
-{- | Process view for advanced user administration -}                    
+{- | Process view for advanced user administration -}
 showAdminUserAdvanced :: Kontra Response
 showAdminUserAdvanced = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
   users <- query $ GetAllUsers
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
-  renderFromBody TopEmpty kontrakcja content 
+  renderFromBody TopEmpty kontrakcja content
 
-{- | Process view for finding a user in basic administration. If provided with userId string as param 
-it allows to edit user details -}     
-showAdminUsers :: Maybe UserID -> Kontra Response 
+{- | Process view for finding a user in basic administration. If provided with userId string as param
+it allows to edit user details -}
+showAdminUsers :: Maybe UserID -> Kontra Response
 showAdminUsers Nothing = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPage ctxtemplates users params
-  renderFromBody TopEmpty kontrakcja content 
+  renderFromBody TopEmpty kontrakcja content
 
-showAdminUsers (Just userId) = onlySuperUser $ do 
+showAdminUsers (Just userId) = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
   muser <- query $ GetUserByUserID userId
-  case muser of 
-    Nothing -> mzero     
-    Just user -> do   
+  case muser of
+    Nothing -> mzero
+    Just user -> do
       paymentmodel <- query $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
       content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
-      renderFromBody TopEmpty kontrakcja content 
+      renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForSales :: Kontra Response
-showAdminUsersForSales = onlySuperUser $ do 
+showAdminUsersForSales = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForSales ctxtemplates users params
-  renderFromBody TopEmpty kontrakcja content 
+  renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForPayments :: Kontra Response
-showAdminUsersForPayments = onlySuperUser $ do 
+showAdminUsersForPayments = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForPayments ctxtemplates users params
-  renderFromBody TopEmpty kontrakcja content 
+  renderFromBody TopEmpty kontrakcja content
 
 getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
 getUsersAndStats = do
@@ -154,9 +154,9 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   Just user <- query $ GetUserByUserID userid
   content <- liftIO $ adminUserUsageStatsPage ctxtemplates user $ do
     fieldsFromStats [user] documents
-  renderFromBody TopEmpty kontrakcja content 
-  
-  
+  renderFromBody TopEmpty kontrakcja content
+
+
 {- Shows table of all users-}
 showAllUsersTable :: Kontra Response
 showAllUsersTable = onlySuperUser $ do
@@ -201,31 +201,31 @@ indexDB :: Kontra Response
 indexDB = onlySuperUser $ do
     Context {ctxtemplates} <- lift get
     files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-    content <- liftIO $ databaseContent ctxtemplates (sort files) 
+    content <- liftIO $ databaseContent ctxtemplates (sort files)
     renderFromBody TopEmpty kontrakcja content
-    
+
 getUsersDetailsToCSV :: Kontra Response
 getUsersDetailsToCSV = onlySuperUser $ do
       x <- query $ ExportUsersDetailsToCSV
       let response = toResponseBS (fromString "text/csv")   (L.fromChunks [x])
-      return response    
-        
-    
-    
-{- | Handling user details change. It reads user info change, user settings change , paymentpolicy and payment account change -}     
+      return response
+
+
+
+{- | Handling user details change. It reads user info change, user settings change , paymentpolicy and payment account change -}
 handleUserChange :: String -> Kontra KontraLink
 handleUserChange a = onlySuperUser $
                      do
                      let (muserId::Maybe UserID) = readM a
                      _ <- getAsStrictBS "change"
-                     case muserId of 
-                       Nothing -> mzero   
-                       Just userId ->    
-                        do 
+                     case muserId of
+                       Nothing -> mzero
+                       Just userId ->
+                        do
                           muser <- query $ GetUserByUserID userId
-                          case muser of 
-                             Nothing -> mzero     
-                             Just user -> do   
+                          case muser of
+                             Nothing -> mzero
+                             Just user -> do
                                            --Reading changes from params using dedicated functions for each user part
                                            freetrialexpirationdate <- join . (fmap parseMinutesTimeMDY) <$> getField "freetrialexpirationdate"
                                            infoChange <- getUserInfoChange
@@ -246,14 +246,14 @@ handleUserEnableTrustWeaverStorage a =
                   do
                     let (muserId::Maybe UserID) = readM a
                     _ <- getAsStrictBS "enabletrustweaver"
-                    case muserId of 
-                       Nothing -> mzero   
-                       Just userId ->    
-                        do 
+                    case muserId of
+                       Nothing -> mzero
+                       Just userId ->
+                        do
                           muser <- query $ GetUserByUserID userId
-                          case muser of 
-                             Nothing -> mzero     
-                             Just user -> 
+                          case muser of
+                             Nothing -> mzero
+                             Just user ->
                                      case signeddocstorage (usersettings user) of
                                        Just _ -> do
                                          -- FIXME: add text: was already enabled
@@ -265,7 +265,7 @@ handleUserEnableTrustWeaverStorage a =
                                          (superAdminUsername, superAdminPwd, sectionPath) <-
                                              eitherFlash $ liftIO $ TW.registerAndEnableSection ctxtwconf name
                                          let newsettings = (usersettings user)
-                                                           { signeddocstorage = 
+                                                           { signeddocstorage =
                                                                  Just (TrustWeaverStorage
                                                                        { storagetwenabled = True
                                                                        , storagetwname = fromString name
@@ -276,7 +276,7 @@ handleUserEnableTrustWeaverStorage a =
                                                            }
 
                                          _ <- update $ SetUserSettings userId newsettings
-                                         
+
                                          return $ LinkUserAdmin $ Just userId)
                                             `mplus` (return $ LinkUserAdmin $ Just userId)
 
@@ -295,7 +295,7 @@ databaseCleanupWorker = do
   let events = filter ("events-" `isPrefixOf`) contents
   let lastcheckpoint = last (sort checkpoints)
   let cutoffevent = "events-" ++ drop 12 lastcheckpoint
-  let eventsToRemove = filter (< cutoffevent) events 
+  let eventsToRemove = filter (< cutoffevent) events
   let checkpointsToRemove = filter (< lastcheckpoint) checkpoints
   mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
   getDirectoryContents "_local/kontrakcja_state" --This can be dropped
@@ -315,30 +315,30 @@ handleCreateUser = onlySuperUser $ do
 
     -- FIXME: where to redirect?
     return LinkStats
-          
-{- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
+
+{- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
 getUserInfoChange :: Kontra (UserInfo -> UserInfo)
-getUserInfoChange = do      
-                     muserfstname        <- getFieldUTF "userfstname" 
-                     musersndname        <- getFieldUTF "usersndname" 
-                     muserpersonalnumber <- getFieldUTF "userpersonalnumber" 
-                     musercompanyname    <- getFieldUTF "usercompanyname" 
-                     musercompanyposition    <- getFieldUTF "usercompanyposition" 
-                     musercompanynumber  <- getFieldUTF "usercompanynumber" 
-                     museraddress        <- getFieldUTF "useraddress" 
-                     muserzip            <- getFieldUTF "userzip" 
-                     musercity           <- getFieldUTF "usercity" 
-                     musercountry        <- getFieldUTF "usercountry" 
+getUserInfoChange = do
+                     muserfstname        <- getFieldUTF "userfstname"
+                     musersndname        <- getFieldUTF "usersndname"
+                     muserpersonalnumber <- getFieldUTF "userpersonalnumber"
+                     musercompanyname    <- getFieldUTF "usercompanyname"
+                     musercompanyposition    <- getFieldUTF "usercompanyposition"
+                     musercompanynumber  <- getFieldUTF "usercompanynumber"
+                     museraddress        <- getFieldUTF "useraddress"
+                     muserzip            <- getFieldUTF "userzip"
+                     musercity           <- getFieldUTF "usercity"
+                     musercountry        <- getFieldUTF "usercountry"
                      muserphone          <- getFieldUTF "userphone"
-                     musermobile         <- getFieldUTF "usermobile" 
-                     museremail          <- fmap (fmap Email) $ getFieldUTF "useremail" 
+                     musermobile         <- getFieldUTF "usermobile"
+                     museremail          <- fmap (fmap Email) $ getFieldUTF "useremail"
                      return (\UserInfo {
-                                    userfstname      
-                                  , usersndname 
+                                    userfstname
+                                  , usersndname
                                   , userpersonalnumber
                                   , usercompanyname
                                   , usercompanyposition
-                                  , usercompanynumber 
+                                  , usercompanynumber
                                   , useraddress
                                   , userzip
                                   , usercity
@@ -361,34 +361,34 @@ getUserInfoChange = do
                                           , usermobile = maybe' usermobile musermobile
                                           , useremail =  maybe' useremail museremail
                                         })
-                                        
+
 {- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
 getUserSettingsChange :: Kontra (UserSettings -> UserSettings)
-getUserSettingsChange =  do 
-                          maccounttype          <- readField "accounttype" 
-                          maccountplan          <- readField "accountplan" 
-                          msigneddocstorage     <- readField "signeddocstorage" 
-                          muserpaymentmethod    <- readField "userpaymentmethod" 
+getUserSettingsChange =  do
+                          maccounttype          <- readField "accounttype"
+                          maccountplan          <- readField "accountplan"
+                          msigneddocstorage     <- readField "signeddocstorage"
+                          muserpaymentmethod    <- readField "userpaymentmethod"
                           return (\UserSettings {
-                                   accounttype 
-                                 , accountplan 
-                                 , signeddocstorage 
+                                   accounttype
+                                 , accountplan
+                                 , signeddocstorage
                                  , userpaymentmethod
                                  , preferreddesignmode
                                  , lang }
                                        -> UserSettings {
-                                            accounttype  = maybe' accounttype  maccounttype 
+                                            accounttype  = maybe' accounttype  maccounttype
                                           , accountplan = maybe' accountplan maccountplan
-                                          , signeddocstorage  = maybe' signeddocstorage  msigneddocstorage 
+                                          , signeddocstorage  = maybe' signeddocstorage  msigneddocstorage
                                           , userpaymentmethod =  maybe' userpaymentmethod muserpaymentmethod
                                           , preferreddesignmode = preferreddesignmode
                                           , lang = lang
                                           })
-                                          
+
 {- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}
 getUserPaymentAccountChange :: Kontra (UserPaymentAccount -> UserPaymentAccount)
-getUserPaymentAccountChange =  do 
-                          mpaymentaccountfreesignatures        <- readField "paymentaccountfreesignatures" 
+getUserPaymentAccountChange =  do
+                          mpaymentaccountfreesignatures        <- readField "paymentaccountfreesignatures"
                           return (\UserPaymentAccount {
                                    paymentAgreementRef
                                  , paymentaccountfreesignatures
@@ -396,10 +396,10 @@ getUserPaymentAccountChange =  do
                                     -> UserPaymentAccount  {
                                             paymentAgreementRef  = paymentAgreementRef
                                           , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
-                                        })        
+                                        })
 
 replace0SignatoryLinkID :: SignatoryLink -> Kontra SignatoryLink
-replace0SignatoryLinkID l 
+replace0SignatoryLinkID l
     | (signatorylinkid l == SignatoryLinkID 0) = do
                                                   liftIO $ print "changed 0 linkid"
                                                   linkid <- update $ GetUniqueSignatoryLinkID
@@ -413,7 +413,7 @@ replace0MagicHash l
                                                magichash <- update $ GetMagicHash
                                                return l { signatorymagichash = magichash }
     | otherwise = return l
-                          
+
 migrate0SignatoryLinks :: [SignatoryLink] -> Kontra [SignatoryLink]
 migrate0SignatoryLinks links = do
     l1 <- sequence $ map replace0SignatoryLinkID links
@@ -428,7 +428,7 @@ migrate0SignatoryLinks links = do
  -}
 handleMigrate0 :: Kontra Response
 handleMigrate0 = onlySuperUser $ do
- ctx <- get   
+ ctx <- get
  documents <- query $ GetDocuments $ currentServiceID ctx
  d2 <- sequence $ map (\d -> do
                                links <- migrate0SignatoryLinks $ documentsignatorylinks d
@@ -440,36 +440,36 @@ handleMigrate0 = onlySuperUser $ do
 
 {- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!! -}
 getUserPaymentPolicyChange :: Kontra (UserPaymentPolicy -> UserPaymentPolicy)
-getUserPaymentPolicyChange =  do 
+getUserPaymentPolicyChange =  do
                           mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "tmppaymentchangeenddate"
-                          mpaymentaccounttype        <- readField "paymentaccounttype" 
+                          mpaymentaccounttype        <- readField "paymentaccounttype"
                           customPaymentChange        <- getPaymentChangeChange "custom"
                           tempPaymentChange          <- getPaymentChangeChange "temp"
                           return (\UserPaymentPolicy {
-                                    paymentaccounttype 
+                                    paymentaccounttype
                                   , custompaymentchange
                                   , temppaymentchange
                                   }
                                     -> UserPaymentPolicy  {
-                                            paymentaccounttype   = maybe' paymentaccounttype   mpaymentaccounttype 
+                                            paymentaccounttype   = maybe' paymentaccounttype   mpaymentaccounttype
                                           , custompaymentchange = customPaymentChange custompaymentchange
                                           , temppaymentchange = case  mtmppaymentchangeenddate of
-                                                                 Nothing ->  Nothing 
+                                                                 Nothing ->  Nothing
                                                                  Just enddate -> case temppaymentchange of
-                                                                                   Nothing -> Just (enddate,tempPaymentChange emptyChange) 
-                                                                                   Just (_,change) -> Just (enddate, tempPaymentChange change) 
-                                                 
-                                        })      
-                                        
-{- | Reads params and returns structured params for user managment pages. -}                                        
+                                                                                   Nothing -> Just (enddate,tempPaymentChange emptyChange)
+                                                                                   Just (_,change) -> Just (enddate, tempPaymentChange change)
+
+                                        })
+
+{- | Reads params and returns structured params for user managment pages. -}
 getAdminUsersPageParams :: Kontra AdminUsersPageParams
 getAdminUsersPageParams = do
-  search <- getDataFn' (look "search")         
-  startletter <-  getDataFn' (look "startletter")         
-  mpage <-  getDataFn' (look "page")         
+  search <- getDataFn' (look "search")
+  startletter <-  getDataFn' (look "startletter")
+  mpage <-  getDataFn' (look "page")
   let (mpage'::Maybe Int) = join $ fmap readM mpage
   return $ AdminUsersPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
-                                                                          
+
 
 {- Create service-}
 handleCreateService :: Kontra KontraLink
@@ -477,61 +477,61 @@ handleCreateService = onlySuperUser $ do
     mname<- getFieldUTF "name"
     madmin <- liftMM  (query . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
     case (mname,madmin) of
-         (Just name,Just admin) -> do 
+         (Just name,Just admin) -> do
             pwdBS <- getFieldUTFWithDefault mempty "password"
             pwd <- liftIO $ createPassword pwdBS
             mservice <- update $ CreateService (ServiceID name) pwd (ServiceAdmin $ unUserID $ userid admin)
             case mservice of
                 Just srvs -> do
                     location <- getFieldUTF "location"
-                    update $ UpdateServiceSettings (serviceid srvs) (servicesettings srvs) 
+                    update $ UpdateServiceSettings (serviceid srvs) (servicesettings srvs)
                                     {servicelocation = ServiceLocation <$> location}
-                _ -> mzero                    
+                _ -> mzero
             return LoopBack
          _ -> mzero
-          
+
 {- Services page-}
 showServicesPage :: Kontra Response
 showServicesPage = onlySuperUser $ do
   Context {ctxtemplates} <- lift get
   services <- query GetServices
   content <- liftIO $ servicesAdminPage ctxtemplates services
-  renderFromBody TopEmpty kontrakcja content 
-    
-                     
-{-                     
+  renderFromBody TopEmpty kontrakcja content
+
+
+{-
 Sales leads stats:
 
-User name	
-User email	
-Total finalized docs (total signatures)	
-Sales rep (editable, free text)	
-Status (1-5) (editable, free text)	
-Subaccounts	
-User company	
-User title	
-User phone	
-Date TOS accepted	
+User name
+User email
+Total finalized docs (total signatures)
+Sales rep (editable, free text)
+Status (1-5) (editable, free text)
+Subaccounts
+User company
+User title
+User phone
+Date TOS accepted
 Subacc (y/n)/Superaccount
 -}
 
 {-
 Billing stats:
 
-Superuser Company name	
-Superuser email	
-Payment plan	
-Next billing date	
-Last billing date	
-Last billing total fee	
-Current plan price	
-Current per signature price	
+Superuser Company name
+Superuser email
+Payment plan
+Next billing date
+Last billing date
+Last billing total fee
+Current plan price
+Current per signature price
 Current TW storage price
 -}
 
 {-
 
-Nr of Users	
+Nr of Users
 Total nr of signatures	*
 Total nr of signatures of finished docs (these are the ones we charge for)	*
 Nr of docs with cross status	*
@@ -548,15 +548,15 @@ Nr of Signups after finalized contract  TODO
 -}
 
 {-
-Total nr of signatures	
-Total nr of signatures of finished docs (these are the ones we charge for)	
-Nr of docs with cross status	
-Nr of docs with blue status	
-Nr of docs with green status	
-Nr of docs with yellow status	
-Nr of docs with orange status	
-Nr of docs with red status	
-Nr of docs with red exclamation mark status	
+Total nr of signatures
+Total nr of signatures of finished docs (these are the ones we charge for)
+Nr of docs with cross status
+Nr of docs with blue status
+Nr of docs with green status
+Nr of docs with yellow status
+Nr of docs with orange status
+Nr of docs with red status
+Nr of docs with red exclamation mark status
 Nr of friend invites
 -}
 
@@ -564,54 +564,54 @@ Nr of friend invites
 {-
 User list:
 
-Email	
-Name	
-Title	
-Company	
-Phone	
-Sales rep	
-Used signatures total	
-Used signatures last 1 month	
+Email
+Name
+Title
+Company
+Phone
+Sales rep
+Used signatures total
+Used signatures last 1 month
 Used signatures last 2 months
 Used signatures last 3 months
 Used signatures last 6 months
 Used signatures last 12 months
 -}
 
-data DocStatsL = DocStatsL                     
+data DocStatsL = DocStatsL
                 { dsAllDocuments :: !Int
                 , dsPreparationDocuments :: !Int
                 , dsPendingDocuments :: !Int
                 , dsCanceledDocuments :: !Int
                 , dsTimedOutDocuments :: !Int
-                , dsClosedDocuments :: !Int  
+                , dsClosedDocuments :: !Int
                 , dsRejectedDocuments :: !Int
                 , dsAwaitingAuthorDocuments :: !Int
                 , dsErrorDocuments :: !Int
                 , dsAllSignatures :: !Int
                 , dsSignaturesInClosed :: !Int
-                  
+
                 , dsAllUsers :: !Int
-                , dsViralInvites :: !Int  
+                , dsViralInvites :: !Int
                 , dsAdminInvites :: !Int
                 }
 
 docStatsZero :: DocStatsL
 docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 
-addStats :: DocStatsL -> DocStatsL -> DocStatsL                     
-addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14) = 
+addStats :: DocStatsL -> DocStatsL -> DocStatsL
+addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14) =
       DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11) (a12+b12) (a13+b13) (a14+b14)
 
 countSignatures :: Document -> Int
-countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks 
+countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
 
 calculateStatsFromDocuments :: [Document] -> IntMap.IntMap DocStatsL
-calculateStatsFromDocuments documents = 
+calculateStatsFromDocuments documents =
   foldl' ins IntMap.empty documents
   where
     ins mapfunc doc = foldl' (\m (k,v) -> IntMap.insertWith addStats k v m) mapfunc (stuff doc)
-    stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1 
+    stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1
                                                            , dsAllSignatures = countSignatures doc
                                                            , dsSignaturesInClosed = if documentstatus doc == Closed
                                                                                     then countSignatures doc
@@ -630,8 +630,8 @@ calculateStatsFromDocuments documents =
                       )
                 ]
 
-calculateStatsFromUsers :: [User] -> IntMap.IntMap DocStatsL              
-calculateStatsFromUsers users =                     
+calculateStatsFromUsers :: [User] -> IntMap.IntMap DocStatsL
+calculateStatsFromUsers users =
   foldl' ins IntMap.empty users
   where
     ins mapfunc user = foldl' (\m (k,v) -> IntMap.insertWith addStats k v m) mapfunc (stuff user)
@@ -643,11 +643,11 @@ calculateStatsFromUsers users =
                                 time <- invitetime info
                                 typex <- invitetype info
                                 return (asInt time, case typex of
-                                                         Viral -> docStatsZero { dsViralInvites = 1 } 
+                                                         Viral -> docStatsZero { dsViralInvites = 1 }
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
 
-fieldsForQuarantine :: [Document] -> Fields                
+fieldsForQuarantine :: [Document] -> Fields
 fieldsForQuarantine documents = do
   field "linkquarantine" $ show LinkAdminQuarantine
   field "documents" $ map fieldsForDoc documents
@@ -660,7 +660,7 @@ fieldsForQuarantine documents = do
     fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails, signatorylinkdeleted} = do
       field "siglinkid" $ show signatorylinkid
       field "email" $ signatoryemail signatorydetails
-      field "isrevivable" $ signatorylinkdeleted 
+      field "isrevivable" $ signatorylinkdeleted
 
 handleShowQuarantine :: Kontra Response
 handleShowQuarantine =
@@ -685,7 +685,7 @@ handleQuarantineRevive :: Kontra KontraLink
 handleQuarantineRevive = onlySuperUser $ do
   docid <- getCriticalField asValidDocID "docid"
   sigid <- getCriticalField asValidNumber "siglinkid"
-  _ <- update $ ReviveQuarantinedDocument (DocumentID docid) (SignatoryLinkID sigid)  
+  _ <- update $ ReviveQuarantinedDocument (DocumentID docid) (SignatoryLinkID sigid)
   return LinkAdminQuarantine
 
 handleQuarantineExtend :: Kontra KontraLink
@@ -703,7 +703,7 @@ handleMigrateForDeletion = onlySuperUser $ do
   _ <- update $ MigrateForDeletion users
   liftIO $ putStrLn $ "Migration Done"
   handleShowQuarantine
-  
+
 handleUnquarantineAll :: Kontra KontraLink
 handleUnquarantineAll = onlySuperUser $ do
   res <- update $ UnquarantineAll
@@ -723,7 +723,7 @@ fieldsFromStats users documents = do
         stats' = IntMap.toList (IntMap.unionWith addStats userStats documentStats)
         lastMonthStats = take 30 (reverse stats')
         allMonthsStats = reverse $ IntMap.toList $ IntMap.fromListWith addStats (map ( \(k,v) -> (k `div` 100 * 100, v)) stats')
-    let fieldify showDate (date,stat) = do 
+    let fieldify showDate (date,stat) = do
           field "date" $ showDate date
           field "documents" $ do
             field "all" $ dsAllDocuments stat
@@ -741,12 +741,12 @@ fieldsFromStats users documents = do
             field "all" $ dsAllUsers stat
             field "viralInvites" $ dsViralInvites stat
             field "adminInvites" $ dsAdminInvites stat
-          
+
     field "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
     field "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
 
 handleStatistics :: Kontra Response
-handleStatistics = 
+handleStatistics =
   onlySuperUser $ do
     ctx <- get
     documents <- query $ GetDocuments $ currentServiceID ctx
@@ -754,7 +754,7 @@ handleStatistics =
     content <- renderTemplateM "statisticsPage" $ do
       fieldsFromStats users documents
     renderFromBody TopEmpty kontrakcja content
-    
+
 
 showAdminTranslations :: Kontra String
 showAdminTranslations = do

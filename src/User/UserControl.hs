@@ -34,8 +34,8 @@ import Util.SignatoryLinkUtils
 checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswordsMatch p1 p2 =
     if p1 == p2
-       then Right () 
-       else Left  flashMessagePasswordsDontMatch      
+       then Right ()
+       else Left  flashMessagePasswordsDontMatch
 
 handleUserGet :: Kontra Response
 handleUserGet = do
@@ -44,7 +44,7 @@ handleUserGet = do
          Just user -> do
              content <- liftIO $ showUser (ctxtemplates ctx) user
              renderFromBody TopAccount kontrakcja content
-         Nothing -> sendRedirect $ LinkLogin NotLogged    
+         Nothing -> sendRedirect $ LinkLogin NotLogged
 
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
@@ -67,7 +67,7 @@ getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
     let getValidField = getDefaultedField BS.empty
-    mfstname          <- getValidField asValidName "fstname" 
+    mfstname          <- getValidField asValidName "fstname"
     msndname          <- getValidField asValidName "sndname"
     mpersonalnumber   <- getFieldUTF "personalnumber"
     maddress          <- getValidField asValidAddress "address"
@@ -89,13 +89,13 @@ getUserInfoUpdate  = do
           , useraddress  = fromMaybe (useraddress ui) maddress
           , userzip    = fromMaybe (userzip ui) mzip
           , usercity  = fromMaybe (usercity ui) mcity
-          , usercountry  = fromMaybe (usercountry  ui) mcountry 
+          , usercountry  = fromMaybe (usercountry  ui) mcountry
           , userphone  = fromMaybe (userphone ui) mphone
         }
 
 copyCompanyInfo :: User -> UserInfo -> UserInfo
-copyCompanyInfo fromuser info = 
-  info 
+copyCompanyInfo fromuser info =
+  info
   { usercompanyname = usercompanyname $ userinfo fromuser
   , usercompanynumber = usercompanynumber $ userinfo fromuser
   , useraddress = useraddress $ userinfo fromuser
@@ -111,7 +111,7 @@ handleGetUserSecurity = do
          Just user -> do
              content <- liftIO $ showUserSecurity (ctxtemplates ctx) user
              renderFromBody TopAccount kontrakcja content
-         Nothing -> sendRedirect $ LinkLogin NotLogged    
+         Nothing -> sendRedirect $ LinkLogin NotLogged
 
 handlePostUserSecurity :: Kontra KontraLink
 handlePostUserSecurity = do
@@ -139,7 +139,7 @@ handlePostUserSecurity = do
           Just lang -> do
               _ <-update $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
               return ()
-          Nothing -> return ()    
+          Nothing -> return ()
       return LinkSecurity
     Nothing -> return $ LinkLogin NotLogged
 
@@ -247,7 +247,7 @@ handleDeleteSubaccounts user = do
   return $ LinkSubaccount emptyListParams
 
 {- | I've commented this out for now, because I haven't got anywhere
-     that'll call this.  Em 
+     that'll call this.  Em
 handleSelfDelete :: User -> Kontra KontraLink
 handleSelfDelete user = do
   subaccounts <- query $ GetUserSubaccounts (userid user)
@@ -273,7 +273,7 @@ handleUserDelete deleter deleteeids = do
     [] -> do
       mapM_ performUserDeletion (rights msubaccounts)
       addFlashMsg =<< (liftIO $ flashMessageAccountsDeleted ctxtemplates)
-      return ()   
+      return ()
 
 type UserDeletionDetails = (User, [Document])
 
@@ -310,11 +310,11 @@ lookupUsersRelevantToDoc docid = do
   return $ (docid, catMaybes musers)
   where
   linkedUserIDs = concatMap usersFromSigLink . documentsignatorylinks
-  usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} = 
+  usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} =
     mkList maybesignatory ++ mkList maybesupervisor
   mkList Nothing = []
-  mkList (Just x) = [x] 
-  
+  mkList (Just x) = [x]
+
 handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
 handleTakeOverSubaccount email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- get
@@ -322,8 +322,8 @@ handleTakeOverSubaccount email = do
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname invited, email = email }]}
   addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
-  
-  
+
+
 handleCreateSubaccount :: User -> Kontra ()
 handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
     ctx <- get
@@ -346,7 +346,7 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
 
 handleViralInvite :: Kontra KontraLink
 handleViralInvite = withUserPost $ do
-  getOptionalField asValidEmail "invitedemail" >>= maybe (return ()) 
+  getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
     (\invitedemail -> do
         ctx@Context{ctxmaybeuser = Just user} <- get
         muser <- query $ GetUserByEmail Nothing $ Email invitedemail
@@ -457,7 +457,7 @@ withUserGet action = do
     Just _  -> Right <$> action
     Nothing -> return $ Left $ LinkLogin NotLogged
 
-{- | 
+{- |
      Takes a document and a action
      Runs an action only if current user (from context) is author of document
 | -}
@@ -530,11 +530,11 @@ handleQuestion = do
 
 handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
 handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
-  addModal $ modalDoYouWantToBeSubaccount 
+  addModal $ modalDoYouWantToBeSubaccount
   ctx@Context{ctxmaybeuser = Just user} <- get
   content <- liftIO $ showUser (ctxtemplates ctx) user
   renderFromBody TopAccount kontrakcja content
-    
+
 handlePostBecomeSubaccountOf :: UserID -> Kontra KontraLink
 handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
   ctx@Context{ctxmaybeuser = Just user} <- get
@@ -553,7 +553,7 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
               scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname supervisor
                                                                                   , email = unEmail $ useremail $ userinfo supervisor }]}
           return LinkAccount
-     else do     
+     else do
           return LinkAccount
 
 handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
@@ -591,12 +591,12 @@ handleAccountSetupGet aid hash = do
          Nothing -> do
              muser <- liftMM (query . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
              case muser of
-                  Just user -> 
+                  Just user ->
                     if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
                      then do
                         ctx <- get
                         let email = unEmail $ useremail $ userinfo $ user
-                        content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email 
+                        content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email
                         renderFromBody TopNone kontrakcja content
                     else mzero
                   Nothing -> mzero
@@ -622,12 +622,12 @@ handleAccountSetupFromSign aid hash = do
                return Nothing
     Nothing -> return Nothing
   where
-    getUserIDFromAction :: Kontra (Maybe UserID)            
+    getUserIDFromAction :: Kontra (Maybe UserID)
     getUserIDFromAction = do
       now <- liftIO $ getMinutesTime
       maction <- checkValidity now <$> (query $ GetAction aid)
       case maction of
-        Just action -> 
+        Just action ->
           case actionType action of
             AccountCreatedBySigning _ uid _ token ->
               if token == hash
@@ -888,7 +888,7 @@ handleAccountRemovalGet aid hash = do
            else mzero
         )
 
-handleAccountRemovalFromSign :: ActionID -> MagicHash -> Kontra () 
+handleAccountRemovalFromSign :: ActionID -> MagicHash -> Kontra ()
 handleAccountRemovalFromSign aid hash = do
   _doc <- handleAccountRemoval' aid hash
   return ()

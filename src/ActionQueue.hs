@@ -37,7 +37,7 @@ runActionLoop ctx = do
   case maction of
     Nothing -> threadDelay 1000
     Just action -> do
-                  {- 
+                  {-
                      Here we need to protect from all possible exceptions.
                      -}
                   -- FIXME: protect

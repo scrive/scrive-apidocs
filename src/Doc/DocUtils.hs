@@ -16,7 +16,7 @@ import Doc.DocStateData
 import API.Service.ServiceState
 import Mails.MailsUtil
 import Misc
-import Templates.Templates 
+import Templates.Templates
 import User.UserState
 import Util.SignatoryLinkUtils
 
@@ -33,7 +33,7 @@ class HasSignatoryAccount a where
   getSignatoryAccount :: a -> SignatoryAccount
 
 instance HasSignatoryAccount User where
-  getSignatoryAccount User{userid, usersupervisor} = 
+  getSignatoryAccount User{userid, usersupervisor} =
     (userid, fmap (UserID . unSupervisorID) usersupervisor)
 
 instance HasSignatoryAccount SignatoryAccount where
@@ -62,7 +62,7 @@ isDeletableDocument doc = not $ (documentstatus doc) `elem` [Pending, AwaitingAu
 partyList :: Document -> [SignatoryDetails]
 partyList document = [signatorydetails sl | sl <- documentsignatorylinks document
                                           , isSignatory sl]
-  
+
 {- |
    Given a Document, return all of the signatory details for all signatories who have not yet signed.
  -}
@@ -123,27 +123,27 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 -- where does this go? -EN
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
-renderListTemplate templates list = 
+renderListTemplate templates list =
   if length list > 1
-  then  renderTemplate templates "morethenonelist" [("list", init list), ("last", [last list])]   
-  else  renderTemplate templates "nomorethanonelist" [("list", list)]   
+  then  renderTemplate templates "morethenonelist" [("list", init list), ("last", [last list])]
+  else  renderTemplate templates "nomorethanonelist" [("list", list)]
 
 -- CHECKERS
 
-{- | 
-  We introduce some types that basicly describes the user. No we want a unified way of comparring them.   
+{- |
+  We introduce some types that basicly describes the user. No we want a unified way of comparring them.
 -}
 class MaybeUser u where
   getUserID:: u -> Maybe UserID
-  
+
 instance MaybeUser SignatoryLink where
   getUserID  = maybesignatory
-  
+
 instance MaybeUser  Author where
-  getUserID = Just . unAuthor 
+  getUserID = Just . unAuthor
 
 instance MaybeUser User where
-  getUserID = Just . userid 
+  getUserID = Just . userid
 
 instance MaybeUser UserID where
   getUserID = Just
@@ -155,14 +155,14 @@ instance MaybeUser ServiceAdmin where
   getUserID = Just . UserID . unServiceAdmin
 
 {- |  And this is a function for comparison -}
-sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
+sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool
 sameUser u1 u2 = getUserID u1 == getUserID u2
 
 class MaybeTemplate a where
    isTemplate :: a -> Bool
-   isSignable :: a -> Bool 
+   isSignable :: a -> Bool
    isSignable = not . isTemplate
-       
+
 instance  MaybeTemplate DocumentType where
    isTemplate (Template _) = True
    isTemplate AttachmentTemplate = True
@@ -171,9 +171,9 @@ instance  MaybeTemplate DocumentType where
 instance  MaybeTemplate Document where
    isTemplate =  isTemplate . documenttype
 
-class MaybeAttachment a where   
-   isAttachment :: a -> Bool 
-   
+class MaybeAttachment a where
+   isAttachment :: a -> Bool
+
 instance  MaybeAttachment DocumentType where
    isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
 
@@ -223,9 +223,9 @@ documentcurrentsignorder doc =
    Build a SignatoryDetails from a User with no fields
  -}
 signatoryDetailsFromUser :: User -> SignatoryDetails
-signatoryDetailsFromUser user = 
-    SignatoryDetails { signatoryfstname                  = getFirstName      user 
-                     , signatorysndname                  = getLastName       user 
+signatoryDetailsFromUser user =
+    SignatoryDetails { signatoryfstname                  = getFirstName      user
+                     , signatorysndname                  = getLastName       user
                      , signatoryemail                    = getEmail          user
                      , signatorycompany                  = getCompanyName    user
                      , signatorypersonalnumber           = getPersonalNumber user
@@ -239,12 +239,12 @@ signatoryDetailsFromUser user =
                      , signatorycompanynumberplacements  = []
                      , signatoryotherfields              = []
                      }
-                     
+
 {- |
    Add some history to a document.
  -}
 appendHistory :: Document -> [DocumentHistoryEntry] -> Document
-appendHistory document history = 
+appendHistory document history =
     document { documentlog = documentlog document ++ map documentHistoryToDocumentLog history }
 
 {- |
@@ -278,7 +278,7 @@ isClosed doc = documentstatus doc == Closed
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
 isEligibleForReminder' :: User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder' user document siglink = 
+isEligibleForReminder' user document siglink =
   isActivatedSignatory (documentcurrentsignorder document) siglink
   && isAuthor (document, user)
   && not (isSigLinkFor user siglink)
@@ -287,11 +287,11 @@ isEligibleForReminder' user document siglink =
   && not (isDeferred siglink)
   && isClosed document
   && isSignatory siglink
-  
-isEligibleForReminder'' :: Maybe User -> Document -> SignatoryLink -> Bool  
+
+isEligibleForReminder'' :: Maybe User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder'' muser document@Document{documentstatus} siglink =
-  signatoryActivated 
-    && userIsAuthor 
+  signatoryActivated
+    && userIsAuthor
     && not isUserSignator
     && not dontShowAnyReminder
     && invitationdeliverystatus siglink /= Undelivered
@@ -306,14 +306,14 @@ isEligibleForReminder'' muser document@Document{documentstatus} siglink =
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     isSignatoryPartner = SignatoryPartner `elem` signatoryroles siglink
-    
--- Please define this better. Maybe in the positive?    
+
+-- Please define this better. Maybe in the positive?
 {- |
    Is this document eligible for a reminder (depends on documentstatus)?
  -}
 isDocumentEligibleForReminder :: Document -> Bool
 isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, Canceled, Rejected]
-    
+
 {- |
     Removes the field placements and the custom fields.
 -}
@@ -332,12 +332,12 @@ removeFieldsAndPlacements sd = sd { signatoryfstnameplacements = []
 -}
 replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
 replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
-                                
+
 {- |
    Can the user view this document directly? (not counting friends)
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
-canUserInfoViewDirectly userid email doc = 
+canUserInfoViewDirectly userid email doc =
   case getSigLinkFor doc (userid, email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
@@ -356,7 +356,7 @@ canUserViewDirectly user = canUserInfoViewDirectly (userid user) (unEmail $ user
    Has the signatory's sign order come up?
  -}
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
-isActivatedSignatory signorder siglink = 
+isActivatedSignatory signorder siglink =
   (not $ isAuthor siglink) &&
   signorder >= signatorysignorder (signatorydetails siglink)
 
@@ -373,9 +373,9 @@ isCurrentSignatory signorder siglink =
 {- | Add a tag to tag list -}
 addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
 addTag ((DocumentTag n v):ts) (n',v') = if n == n'
-                           then (DocumentTag n v') : ts 
+                           then (DocumentTag n v') : ts
                            else (DocumentTag n v)  : (addTag ts (n',v'))
-addTag _ (n,v) = [DocumentTag n v]        
+addTag _ (n,v) = [DocumentTag n v]
 
 {- |
    The user with id uid is a friend of user.
@@ -387,12 +387,12 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Ju
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 
-  
+
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
-  
-buildattach :: Document -> [SignatoryAttachment] 
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])] 
+
+buildattach :: Document -> [SignatoryAttachment]
+               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
 buildattach _ [] a = a
 buildattach d (f:fs) a =

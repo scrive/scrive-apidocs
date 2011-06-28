@@ -5,19 +5,19 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Schema for all api calls. API calls are working as reader some APIContext. 
--- API context contains (at least) JSON Object. Look at IntegrationAPI or WebShopAPI 
+-- Schema for all api calls. API calls are working as reader some APIContext.
+-- API context contains (at least) JSON Object. Look at IntegrationAPI or WebShopAPI
 -- for some examples.
 -----------------------------------------------------------------------------
 module API.API(
-     -- Main stuff to build new API instance  
+     -- Main stuff to build new API instance
        APIFunction
-     , APIRequestBody  
-     , APIResponse  
+     , APIRequestBody
+     , APIResponse
      , APIContext(..)
      , APICall(..)
      , apiUnknownCall
-     -- Diggers for JSON embedded params 
+     -- Diggers for JSON embedded params
      , apiAskBS
      , apiAskString
      , apiAskInteger
@@ -32,7 +32,7 @@ module API.API(
      , apiBody
      , apiError
      , apiResponse
-     -- Errors 
+     -- Errors
      , throwApiError
      , API_ERROR(..)
       ) where
@@ -61,9 +61,9 @@ type APIRequestBody = JSValue
 {- | API functions are build over Kontra with a ability to exit, and with some context -}
 type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra') a
 
-{- |  Used to convert json object to HTTP response-} 
-apiResponse ::  Kontra APIResponse ->  Kontra Response   
-apiResponse action = action >>= simpleResponse . encode                         
+{- |  Used to convert json object to HTTP response-}
+apiResponse ::  Kontra APIResponse ->  Kontra Response
+apiResponse action = action >>= simpleResponse . encode
 
 {- | Used to build api routing tables
      Routing table could look like
@@ -75,11 +75,11 @@ apiResponse action = action >>= simpleResponse . encode
           ]
     APICall can be build from Kontra or from APIFunction over some APIContext,
     as long as they hold response JSON inside.
-    
+
 -}
 class APICall a where
     apiCall :: String -> a -> Kontra Response
-    
+
 instance APICall (Kontra APIResponse) where
     apiCall s action = dir "api" $ dir s $ do
                     methodM POST 
@@ -98,23 +98,23 @@ instance (APIContext c) => APICall (APIFunction c APIResponse) where
              Left emsg -> return $ uncurry apiError emsg
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
-apiUnknownCall ::  Kontra Response        
+apiUnknownCall ::  Kontra Response
 apiUnknownCall = dir "api" $ apiResponse $  return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
 
 
 
 
-{- Each API can have its own context. For example WebShop has a context containing user, 
-   while integration API has a context containing service. 
+{- Each API can have its own context. For example WebShop has a context containing user,
+   while integration API has a context containing service.
    But each context has to be able get read from HTTP params and should have JSON object inside.
 -}
 
 class APIContext a where
-    apiContext::Kontra (Either (API_ERROR,String) a)       
+    apiContext::Kontra (Either (API_ERROR,String) a)
     body:: a -> APIRequestBody
     newBody:: APIRequestBody -> a -> a
-        
-  
+
+
 -- When building API calls you wan't to dig into JSON object with params
 -- Here are some helper functions for that. Some can be localized (like in ReaderMonad) to subcontext.
 
@@ -125,20 +125,20 @@ apiAskString::(APIContext c) => String -> APIFunction c (Maybe String)
 apiAskString s = apiLocal s (fromString <$> askBody)
     where
         fromString (JSString string) = Just $ fromJSString string
-        fromString _ = Nothing 
+        fromString _ = Nothing
 
 apiAskInteger::(APIContext c) => String -> APIFunction c (Maybe Integer)
 apiAskInteger s = apiLocal s (fromNumerator <$> askBody)
     where
         fromNumerator (JSRational _ r) = Just $ numerator r
-        fromNumerator _ = Nothing 
-        
-apiAskBase64::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)        
+        fromNumerator _ = Nothing
+
+apiAskBase64::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)
 apiAskBase64 s =  do
-    coded <- (fmap $ BASE64.decode)  <$> apiAskBS s 
-    case coded of 
+    coded <- (fmap $ BASE64.decode)  <$> apiAskBS s
+    case coded of
          Just (Right r) -> return $ Just r
-         _ -> return Nothing 
+         _ -> return Nothing
 
 
 apiAskStringMap::(APIContext c) => APIFunction c (Maybe [(String,String)])
@@ -146,18 +146,18 @@ apiAskStringMap = join <$> fmap (foldl getStr (Just [])) <$> apiAskMap
     where
         getStr (Just l) (key,JSString string) = Just $ (key,fromJSString string):l
         getStr _ _ = Nothing
-        
+
 apiAskMap::(APIContext c) => APIFunction c (Maybe [(String,JSValue)])
 apiAskMap = fromObject <$> askBody
     where
         fromObject (JSObject object) = Just $ fromJSObject object
-        fromObject _ =Nothing 
-  
+        fromObject _ =Nothing
+
 apiAskList:: (APIContext c) => APIFunction c (Maybe [JSValue])
 apiAskList = fromList <$> askBody
     where
         fromList (JSArray list) = Just $ list
-        fromList _ = Nothing 
+        fromList _ = Nothing
 
 apiLocal ::(APIContext c) => String -> APIFunction c (Maybe a) -> APIFunction c (Maybe a)
 apiLocal s digger= do
@@ -165,7 +165,7 @@ apiLocal s digger= do
     case mobj of
          Just obj ->  withReaderT (newBody obj) digger
          Nothing -> return Nothing
-         
+
 apiMapLocal :: (APIContext c) => APIFunction c (Maybe a) -> APIFunction c (Maybe [a])
 apiMapLocal digger = do
     mdiggers <- (fmap $ map (\nbody -> withReaderT (newBody nbody) digger)) <$> apiAskList
@@ -173,22 +173,22 @@ apiMapLocal digger = do
          Just diggers -> runDiggers $ diggers
          Nothing -> return Nothing
      where
-         runDiggers (d:ds) = do 
+         runDiggers (d:ds) = do
              mres <- d
-             case mres of 
+             case mres of
                  Just res -> do
                      mress <- runDiggers ds
                      case mress of
                          Just ress -> return $ Just (res:ress)
-                         _ -> return Nothing 
-                 _ -> return Nothing        
+                         _ -> return Nothing
+                 _ -> return Nothing
          runDiggers _ = return $ Just []
-         
+
 apiAskField:: (APIContext c) => String -> APIFunction c (Maybe JSValue)
 apiAskField s = fromObject <$> askBody
-    where 
+    where
       fromObject (JSObject object) = lookup s $ fromJSObject object
-      fromObject _ = Nothing 
+      fromObject _ = Nothing
 
 askBody :: (APIContext c) => APIFunction c APIRequestBody
 askBody = body <$> ask
@@ -200,7 +200,7 @@ askKontraContext = lift $ lift $ get
 --- This will read JSON object from some HTTP request body parameter
 apiBody ::  Kontra (Either String JSValue)
 apiBody = runGetJSON readJSObject <$> getFieldWithDefault "" "body"
-             
+
 --- ERROR Response
 
 -- Building pure api error.
@@ -212,15 +212,15 @@ apiError code message= toJSObject [
 
 instance Error (API_ERROR,String) where
     strMsg s = (API_ERROR_OTHER,s)
-    
+
 --This will break the execution and send error message to the user
 throwApiError:: (APIContext c) => API_ERROR -> String -> APIFunction c a
-throwApiError = curry throwError 
+throwApiError = curry throwError
 
 
 
-data API_ERROR =   API_ERROR_LOGIN 
-                 | API_ERROR_UNNOWN_CALL 
+data API_ERROR =   API_ERROR_LOGIN
+                 | API_ERROR_UNNOWN_CALL
                  | API_ERROR_PARSING
                  | API_ERROR_NO_USER
                  | API_ERROR_NO_DOCUMENT
@@ -229,11 +229,11 @@ data API_ERROR =   API_ERROR_LOGIN
                  | API_ERROR_ILLEGAL_VALUE
                  | API_ERROR_MISSING_VALUE
                  | API_ERROR_OTHER
-                 
-                 
+
+
 instance SafeEnum API_ERROR where
     fromSafeEnum API_ERROR_LOGIN = 101
-    fromSafeEnum API_ERROR_UNNOWN_CALL = 102    
+    fromSafeEnum API_ERROR_UNNOWN_CALL = 102
     fromSafeEnum API_ERROR_PARSING = 103
     fromSafeEnum API_ERROR_NO_USER = 104
     fromSafeEnum API_ERROR_NO_DOCUMENT = 105

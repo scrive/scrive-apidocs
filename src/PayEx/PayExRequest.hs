@@ -5,7 +5,7 @@
 -- Stability   :  stable
 -- Portability :  portable
 --
---  Datatypes for generating requests to PayEx. PC is wrapper for requests, so we can pack it with 
+--  Datatypes for generating requests to PayEx. PC is wrapper for requests, so we can pack it with
 --  some config or other data that PayEx requeires
 -----------------------------------------------------------------------------
 module PayEx.PayExRequest where
@@ -21,10 +21,10 @@ import KontraLink
 -- import Data.Encoding.ISO88591
 import Templates.Templates (KontrakcjaTemplates)
 import Data.Maybe
--- | Request with configuration and something else wrapper 
+-- | Request with configuration and something else wrapper
 newtype PC a = PC (PayExConfig,a) deriving Show
 
-class PayExRequest a where 
+class PayExRequest a where
   actionName::a-> String
   actionGroup::a -> String
 
@@ -39,19 +39,19 @@ rqHeader (PC (config,a)) content =  [CElem (Elem (actionName a) [mkAttr "xmlns" 
 -- | REQUESTS
 -- | PayExInit starts a request
 
-data  PayExInit  = PayExInit Request KontrakcjaTemplates (Maybe String) Payment 
+data  PayExInit  = PayExInit Request KontrakcjaTemplates (Maybe String) Payment
 
-instance PayExRequest PayExInit where 
-  actionName _ = "Initialize7" 
+instance PayExRequest PayExInit where
+  actionName _ = "Initialize7"
   actionGroup _ = "PxOrder"
-  
+
 instance HTypeable (PC PayExInit) where
     toHType _ = Defined "PayExCall" [] []
-    
+
 instance XmlContent (PC PayExInit) where
     parseContents = error "Never serialize response"
     toContents rq@(PC (config, PayExInit request _templates agreement payment)) =
-         rqHeader rq $ 
+         rqHeader rq $
                    fieldBox $  (setField "accountNumber" $ accountNumber config) >>>
                                (setField "purchaseOperation" "SALE") >>>
                                (setField "price" $ show $ money $ paymentValue payment ) >>>
@@ -71,24 +71,24 @@ instance XmlContent (PC PayExInit) where
                                (setField "cancelUrl" $ "") >>>
                                (setField "clientLanguage" $ "") >>>
                                (addHash $ encryptionKey config)
-                             
+
 -- | Creating reocurring payment agreement
 data  PayExAgreement  = PayExAgreement {
                                           agreementDescription::String,
-                                          agreementMax::Money 
+                                          agreementMax::Money
                                     }
 
-instance PayExRequest PayExAgreement where 
-  actionName _ = "CreateAgreement3" 
+instance PayExRequest PayExAgreement where
+  actionName _ = "CreateAgreement3"
   actionGroup _ = "PxAgreement"
-  
+
 instance HTypeable (PC PayExAgreement) where
     toHType _ = Defined "PayExCall" [] []
-    
+
 instance XmlContent (PC PayExAgreement) where
     parseContents = error "Never serialize response"
     toContents rq@(PC (config, payexagreement)) =
-         rqHeader rq $ 
+         rqHeader rq $
                    fieldBox $  (setField "accountNumber" $ accountNumber config) >>>
                                (setField "merchantRef" "SALE") >>>
                                (setField "description" $ agreementDescription payexagreement) >>>
@@ -98,21 +98,21 @@ instance XmlContent (PC PayExAgreement) where
                                (setField "startDate" $ "") >>>
                                (setField "stopDate" $ "") >>>
                                (addHash $ encryptionKey config)
-                             
+
 -- | Paing using autopay
 data  PayExAutopay  = PayExAutopay String Payment
 
-instance PayExRequest PayExAutopay where 
-  actionName _ = "AutoPay2" 
+instance PayExRequest PayExAutopay where
+  actionName _ = "AutoPay2"
   actionGroup _ = "PxAgreement"
-  
+
 instance HTypeable (PC PayExAutopay) where
     toHType _ = Defined "PayExCall" [] []
-    
+
 instance XmlContent (PC PayExAutopay) where
     parseContents = error "Never serialize response"
     toContents rq@(PC (config, PayExAutopay agreement payment)) =
-         rqHeader rq $ 
+         rqHeader rq $
                    fieldBox $  (setField "accountNumber" $ accountNumber config) >>>
                                (setField "agreementRef" $ agreement) >>>
                                (setField "price" $ show $ money $ paymentValue payment ) >>>
@@ -121,41 +121,41 @@ instance XmlContent (PC PayExAutopay) where
                                (setField "orderId" $ show $ unPaymentId $ paymentId payment) >>>
                                (setField "purchaseOperation" "SALE") >>>
                                (addHash $ encryptionKey config)
-                             
-                             
+
+
 -- | PayExComplete (our implementation) locks money for transaction, but not charges anyone
 data  PayExComplete = PayExComplete Payment
 
-instance PayExRequest PayExComplete where 
+instance PayExRequest PayExComplete where
   actionName _ = "Complete"
   actionGroup _ = "PxOrder"
-  
+
 instance HTypeable (PC PayExComplete) where
     toHType _ = Defined "PayExCall" [] []
-    
+
 instance XmlContent (PC PayExComplete) where
     parseContents = error "Never serialize response"
     toContents rq@(PC (config, PayExComplete payment)) =
-           rqHeader rq $  fieldBox $ 
+           rqHeader rq $  fieldBox $
                                (setField "accountNumber" $ accountNumber config) >>>
                                (setField "orderRef" $ orderRef payment) >>>
                                (addHash $ encryptionKey config)
 
-                            
+
 -- | PayExCapture (our implementation) gives us money we earlier locked
 data PayExCapture = PayExCapture Payment
 
-instance PayExRequest PayExCapture where 
+instance PayExRequest PayExCapture where
   actionName _ = "Capture4"
   actionGroup _ = "PxOrder"
-  
+
 instance HTypeable (PC PayExCapture) where
     toHType _ = Defined "PayExCapture" [] []
-    
+
 instance XmlContent (PC PayExCapture) where
     parseContents = error "Never serialize rq"
     toContents rq@(PC (config, PayExCapture payment)) =
-                 rqHeader rq $ 
+                 rqHeader rq $
                    fieldBox $  (setField "accountNumber" $ accountNumber config) >>>
                                (setField "transactionNumber" $ transactionNumber payment) >>>
                                (setField "amount" $ show $ money $ paymentValue payment) >>>
@@ -163,26 +163,26 @@ instance XmlContent (PC PayExCapture) where
                                (setField "vatAmount" $ "0") >>>
                                (setField "additionalValues" $ "") >>>
                                (addHash $ encryptionKey config)
-                 
-  
+
+
 -- | PayExCancel (our implementation)  unlocks money. If we would do capture we could not cancel
 data PayExCancel = PayExCancel Payment
 
-instance PayExRequest PayExCancel where 
+instance PayExRequest PayExCancel where
   actionName _ = "Cancel2"
   actionGroup _ = "PxOrder"
-  
+
 instance HTypeable (PC PayExCancel) where
     toHType _ = Defined "PayExCapture" [] []
-    
+
 instance XmlContent (PC PayExCancel) where
     parseContents = error "Never serialize rq"
     toContents rq@(PC (config, PayExCancel payment)) =
-                  rqHeader rq $ 
+                  rqHeader rq $
                    fieldBox $  (setField "accountNumber" $ accountNumber config) >>>
                                (setField "transactionNumber" $  transactionNumber payment) >>>
                                (addHash $ encryptionKey config)
-                  
+
 
 
 -- | Wrapping from content
@@ -200,7 +200,7 @@ fieldBox f = f mempty
 setField::String->String->([Content ()],String) -> ([Content ()],String)
 setField n v (l,vs)= (l ++ [mkElemC n (toText $ escapeAmps v)], vs ++ v)
 
-addHash::String -> ([Content ()],String) -> [Content ()] 
+addHash::String -> ([Content ()],String) -> [Content ()]
 addHash _hash (l,_vs)= l -- ++ [ mkElemC "hash" (toText $ md5s $ Str $ encodeString ISO88591 $ vs ++ hash) ]
 
 escapeAmps :: String -> String

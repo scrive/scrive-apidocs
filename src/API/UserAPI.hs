@@ -7,7 +7,7 @@
 --
 -- Simple api that allows some action to be done as system user, but thru the API.
 -- Calls require authorisation with user email and password
--- 
+--
 -----------------------------------------------------------------------------
 
 module API.UserAPI (userAPI)
@@ -43,7 +43,7 @@ instance APIContext UserAPIContext where
     newBody b ctx = ctx {wsbody = b}
     apiContext  = do
         muser <- apiUser
-        mbody <- apiBody 
+        mbody <- apiBody
         case (muser, mbody)  of
              (Just u, Right b) -> return $ Right $ UserAPIContext { wsbody = b, user = u}
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
@@ -54,7 +54,7 @@ apiUser = do
     email <- getFieldUTFWithDefault BS.empty "email"
     muser <- query $ GetUserByEmail Nothing (Email email)
     case muser of
-        Nothing -> return Nothing       
+        Nothing -> return Nothing
         Just user -> do
             passwd <- getFieldUTFWithDefault BS.empty "password"
             if (verifyPassword (userpassword user) passwd)
@@ -68,10 +68,10 @@ userAPI =  dir "userapi" $ msum [ apiCall "sendnewdocument" sendNewDocument
                                  , apiCall "sendReminder" sendReminder
                                  , apiUnknownCall
                                  ]
-           
+
 sendReminder :: UserAPIFunction APIResponse
 sendReminder = do
-  ctx <- askKontraContext  
+  ctx <- askKontraContext
   doc <- getUserDoc
   let siglinkstoremind = [sl | sl <- documentsignatorylinks doc
                              , isSignatory sl
@@ -83,8 +83,8 @@ sendReminder = do
                                                   , email = getEmail signlink}]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
-  return $ toJSObject []       
-                                
+  return $ toJSObject []
+
 
 getDocument :: UserAPIFunction APIResponse
 getDocument = do
@@ -95,18 +95,18 @@ getDocument = do
 
 getUserDoc :: UserAPIFunction Document
 getUserDoc = do
-  author <- user <$> ask  
+  author <- user <$> ask
   mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
   when (isNothing mdocument || (not $ isAuthor ((fromJust mdocument), author))) $
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
-                               
+
 sendFromTemplate :: UserAPIFunction APIResponse
 sendFromTemplate = do
   author <- user <$> ask
-  ctx <- askKontraContext  
+  ctx <- askKontraContext
   temp <- getTemplate
-  signatories <- getSignatories 
+  signatories <- getSignatories
   doc <- update $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
@@ -114,21 +114,21 @@ sendFromTemplate = do
   let saccount = getSignatoryAccount author
   medoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
-          (ctxtime ctx) 
-          (documentid doc) 
+          (ctxtime ctx)
+          (documentid doc)
           (documenttitle doc)
-          (zip signatories (repeat [SignatoryPartner])) 
+          (zip signatories (repeat [SignatoryPartner]))
           Nothing
-          (documentinvitetext doc) 
-          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, saccount) 
-          [EmailIdentification] 
-          Nothing 
+          (documentinvitetext doc)
+          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, saccount)
+          [EmailIdentification]
+          Nothing
           AdvancedFunctionality
   case medoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
       liftIO $ print edoc
-      esdoc <- update $ AuthorSendDocument 
+      esdoc <- update $ AuthorSendDocument
                (documentid edoc)
                (ctxtime ctx)
                (ctxipnumber ctx)
@@ -142,7 +142,7 @@ sendFromTemplate = do
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
 getTemplate :: UserAPIFunction Document
-getTemplate = do 
+getTemplate = do
   author <- user <$> ask
   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
   when (isNothing mtemplate) $ throwApiError API_ERROR_NO_DOCUMENT "No template exists with this ID"
@@ -150,8 +150,8 @@ getTemplate = do
   when (not $ isAuthor (temp, author)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
   when (not $ isTemplate temp) $ throwApiError API_ERROR_OTHER "This document is not a template"
   return temp
-  
-  
+
+
 sendNewDocument :: UserAPIFunction APIResponse
 sendNewDocument = do
   author <- user <$> ask
@@ -168,28 +168,28 @@ sendNewDocument = do
   let doctype = toDocumentType $ fromJust mtype
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
-  ctx <- askKontraContext  
+  ctx <- askKontraContext
   newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
   liftIO $ print newdoc
   _ <- lift $ lift $ handleDocumentUpload (documentid newdoc) content filename
   let saccount = getSignatoryAccount author
   edoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
-          (ctxtime ctx) 
-          (documentid newdoc) 
-          title 
-          (zip signatories (repeat [SignatoryPartner])) 
+          (ctxtime ctx)
+          (documentid newdoc)
+          title
+          (zip signatories (repeat [SignatoryPartner]))
           Nothing
-          (documentinvitetext newdoc) 
-          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], saccount) 
-          [EmailIdentification] 
-          Nothing 
+          (documentinvitetext newdoc)
+          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], saccount)
+          [EmailIdentification]
+          Nothing
           AdvancedFunctionality
   case edoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
       liftIO $ print doc
-      esdoc <- update $ AuthorSendDocument 
+      esdoc <- update $ AuthorSendDocument
                (documentid doc)
                (ctxtime ctx)
                (ctxipnumber ctx)

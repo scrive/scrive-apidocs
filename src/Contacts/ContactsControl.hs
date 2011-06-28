@@ -25,9 +25,9 @@ showContacts ::Kontra Response
 showContacts =  do
   ctx <- lift get
   content <- liftIO $ contactsView (ctxtemplates ctx)
-  renderFromBody TopEmpty kontrakcja content 
+  renderFromBody TopEmpty kontrakcja content
 
-{- | Process view for advanced user administration -}                    
+{- | Process view for advanced user administration -}
 handleContactsChange :: Kontra KontraLink
 handleContactsChange =  do
   addFlashMsg $ toFlashMsg OperationDone "POST"

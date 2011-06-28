@@ -20,14 +20,14 @@ import InputValidation
 import Templates.Templates
 
 
-data CSVProblem = CSVProblem 
+data CSVProblem = CSVProblem
                   { problemrowindex :: Maybe Int
                   , problemcolindex :: Maybe Int
                   , problemdescription :: KontrakcjaTemplates -> IO FlashMessage
                   , problemvalue :: Maybe BS.ByteString
                   }
 
-data CleanCSVData = CleanCSVData 
+data CleanCSVData = CleanCSVData
                     { csvheader :: Maybe [BS.ByteString]
                     , csvbody :: [[BS.ByteString]]
                     }
@@ -50,7 +50,7 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
     that's been scrubbed up as much as possible.
 -}
 cleanCSVContents :: [IdentificationType] -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
-cleanCSVContents allowedidtypes customfieldcount contents = 
+cleanCSVContents allowedidtypes customfieldcount contents =
   let mincols = (if isEleg then 5 else 3) :: Int
       maxcols = 5 + customfieldcount
       cleanData = zipWith (cleanRow mincols maxcols) [0..]
@@ -63,21 +63,21 @@ cleanCSVContents allowedidtypes customfieldcount contents =
         (Nothing, []) -> mkProblemForAll flashMessageNoDataInCSV : rowproblems
         (Just _, []) -> mkProblemForAll flashMessageNoDataInCSVApartFromHeader : rowproblems
         _ -> rowproblems in
-  (problems, CleanCSVData { csvheader = mheader, csvbody = body }) 
-  where 
+  (problems, CleanCSVData { csvheader = mheader, csvbody = body })
+  where
     {- |
         This looks a possible header and separates it out.  The oh so sophisticated rule this uses at the moment
         is that if the first line is invalid use it as a header!
     -}
     lookForHeader :: [([CSVProblem], [BS.ByteString])] -> Maybe [BS.ByteString]
     lookForHeader ((_:_, vals):_) = Just vals
-    lookForHeader _ = Nothing 
+    lookForHeader _ = Nothing
     {- |
         This cleans a single row of data.  It checks both the size of the row
         (meaning how many cols it has), and the values of the fields.
     -}
     cleanRow :: Int -> Int -> Int -> [BS.ByteString] -> ([CSVProblem], [BS.ByteString])
-    cleanRow mincols maxcols row xs = 
+    cleanRow mincols maxcols row xs =
       let fieldresults = zipWith4 cleanField (repeat row) [0..] fieldValidators xs
           fieldproblems = map (fromJust . fst) . filter (isJust . fst) $ fieldresults
           rowsizeproblems = validateRowSize row mincols maxcols xs
@@ -106,7 +106,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
         Good clean -> (Nothing, clean)
         Bad msg -> (Just $ mkProblemForField row col msg failedval, failedval)
       where
-        minimalScrub = filter (\c -> isAlphaNum c || isPunctuation c || isSymbol c || c==' ') . stripWhitespace  
+        minimalScrub = filter (\c -> isAlphaNum c || isPunctuation c || isSymbol c || c==' ') . stripWhitespace
         stripWhitespace = stripLeadingWhitespace . stripTrailingWhitespace
         stripLeadingWhitespace = dropWhile isSpace
         stripTrailingWhitespace = reverse . stripLeadingWhitespace . reverse
@@ -114,7 +114,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
         All the validators that we're going to use to check the field values.
     -}
     fieldValidators :: [String -> Result BS.ByteString]
-    fieldValidators = 
+    fieldValidators =
       [ badIfEmpty flashMessageFirstNameIsRequired . asValidName
       , badIfEmpty flashMessageSecondNameIsRequired . asValidName
       , badIfEmpty flashMessageEmailIsRequired . asValidEmail
@@ -127,7 +127,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
           | isEleg = badIfEmpty flashMessageNumberIsRequired . asValidCompanyNumber
           | otherwise = asValidCompanyNumber
         badIfEmpty :: (KontrakcjaTemplates -> IO FlashMessage) -> Result BS.ByteString -> Result BS.ByteString
-        badIfEmpty msg res = 
+        badIfEmpty msg res =
           case res of
             Empty -> Bad msg
             x -> x
@@ -135,7 +135,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
     {- |
         Handy for constructing problems.
     -}
-    mkProblemForAll msg = CSVProblem 
+    mkProblemForAll msg = CSVProblem
                       { problemrowindex = Nothing
                       , problemcolindex = Nothing
                       , problemdescription = msg
@@ -155,33 +155,33 @@ cleanCSVContents allowedidtypes customfieldcount contents =
                     }
 
 flashMessageNoDataInCSV :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoDataInCSV templates = 
+flashMessageNoDataInCSV templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoDataInCSV" ()
 
 flashMessageNoDataInCSVApartFromHeader :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoDataInCSVApartFromHeader templates = 
+flashMessageNoDataInCSVApartFromHeader templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoDataInCSVApartFromHeader" ()
 
 flashMessageRowLessThanMinColCount :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageRowLessThanMinColCount mincols templates = 
-  toFlashMsg OperationFailed <$> 
+flashMessageRowLessThanMinColCount mincols templates =
+  toFlashMsg OperationFailed <$>
     renderTemplate templates "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
 
 flashMessageRowGreaterThanMaxColCount :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageRowGreaterThanMaxColCount maxcols templates = 
-  toFlashMsg OperationFailed <$> 
+flashMessageRowGreaterThanMaxColCount maxcols templates =
+  toFlashMsg OperationFailed <$>
     renderTemplate templates "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
 
 flashMessageFirstNameIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageFirstNameIsRequired templates = 
+flashMessageFirstNameIsRequired templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageFirstNameIsRequired" ()
 
 flashMessageSecondNameIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageSecondNameIsRequired templates = 
+flashMessageSecondNameIsRequired templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageSecondNameIsRequired" ()
 
 flashMessageEmailIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageEmailIsRequired templates = 
+flashMessageEmailIsRequired templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageEmailIsRequired" ()
 
 flashMessageNumberIsRequired :: KontrakcjaTemplates -> IO FlashMessage

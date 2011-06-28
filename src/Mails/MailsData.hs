@@ -22,7 +22,7 @@ data MailAddress = MailAddress
     { fullname    :: BS.ByteString
     , email       :: BS.ByteString
     } deriving (Eq, Ord, Show, Typeable)
-            
+
 -- | Structure for holding mails. If from is not set mail will be send
 -- as SkrivaPa admin (fromMails Config).
 data Mail = Mail
@@ -31,7 +31,7 @@ data Mail = Mail
     , content     :: BS.ByteString
     , attachments :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
     , from        :: Maybe ServiceID
-    , mailInfo    :: MailInfo 
+    , mailInfo    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)
 
 
@@ -41,7 +41,7 @@ data Mail2 = Mail2
     , content2     :: BS.ByteString
     , attachments2 :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
     , from2        :: Maybe User
-    , mailInfo2    :: MailInfo 
+    , mailInfo2    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)
 
 data Mail1 = Mail1
@@ -51,7 +51,7 @@ data Mail1 = Mail1
     , content1     :: BS.ByteString
     , attachments1 :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
     , from1        :: Maybe User
-    , mailInfo1    :: MailInfo 
+    , mailInfo1    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)
 
 data Mail0 = Mail0 {
@@ -60,7 +60,7 @@ data Mail0 = Mail0 {
     , content0        :: BS.ByteString
     , attachments0    :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
     , from0           :: Maybe User
-    , mailInfo0       :: MailInfo 
+    , mailInfo0       :: MailInfo
     } deriving Typeable
 
 data MailInfo = Invitation DocumentID SignatoryLinkID
@@ -74,10 +74,10 @@ instance Version Mail1 where
     mode = extension 1 (Proxy :: Proxy Mail0)
 instance Version Mail2 where
     mode = extension 2 (Proxy :: Proxy Mail1)
-    
+
 instance Version Mail where
     mode = extension 3 (Proxy :: Proxy Mail2)
-    
+
 instance Version MailInfo
 instance Version MailAddress
 
@@ -107,13 +107,13 @@ instance Migrate Mail0 Mail1 where
 
 instance Migrate Mail1 Mail2 where
         migrate (Mail1
-                 { fullname1    
-                 , email1       
-                 , title1       
-                 , content1     
-                 , attachments1 
-                 , from1        
-                 , mailInfo1    
+                 { fullname1
+                 , email1
+                 , title1
+                 , content1
+                 , attachments1
+                 , from1
+                 , mailInfo1
                  }) = Mail2
                     { to2 = [MailAddress fullname1 email1]
                     , title2 = title1
@@ -124,11 +124,11 @@ instance Migrate Mail1 Mail2 where
                     }
 instance Migrate Mail2 Mail where
         migrate (Mail2
-                 { to2 
-                 , title2 
-                 , content2 
-                 , attachments2 
-                 , mailInfo2 
+                 { to2
+                 , title2
+                 , content2
+                 , attachments2
+                 , mailInfo2
                  }) = Mail
                     { to = to2
                     , title = title2

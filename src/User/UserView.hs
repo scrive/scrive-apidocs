@@ -6,8 +6,8 @@ module User.UserView (
     showUserSecurity,
     pageAcceptTOS,
     activatePageViewNotValidLink,
-    
-    -- mails  
+
+    -- mails
     newUserMail,
     inviteSubaccountMail,
     viralInviteMail,
@@ -15,7 +15,7 @@ module User.UserView (
     mailAccountCreatedBySigningContractReminder,
     mailAccountCreatedBySigningOfferReminder,
     resetPasswordMail,
-    
+
     mailInviteUserAsSubaccount,
     mailSubaccountAccepted,
 
@@ -44,7 +44,7 @@ module User.UserView (
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     flashMessageUserAlreadyActivated,
-    flashMessageChangePasswordEmailSend,  
+    flashMessageChangePasswordEmailSend,
     flashMessageNoRemainedPasswordReminderEmails,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
@@ -53,11 +53,11 @@ module User.UserView (
     flashMessageUserHasBecomeSubaccount,
     flashMessageUserHasLiveDocs,
     flashMessageAccountsDeleted,
-    
+
     --modals
     modalNewPasswordView,
 
-    --utils  
+    --utils
     userBasicFields) where
 
 import Control.Applicative ((<$>))
@@ -69,7 +69,7 @@ import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
 import Misc
-import Templates.Templates 
+import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import qualified Data.ByteString as BS
@@ -78,7 +78,7 @@ import ListUtil
 import FlashMessage
 import Util.HasSomeUserInfo
 
-showUser :: KontrakcjaTemplates -> User -> IO String 
+showUser :: KontrakcjaTemplates -> User -> IO String
 showUser templates user = renderTemplate templates "showUser" $ do
     userFields user
     field "linkaccount" $ show LinkAccount
@@ -87,10 +87,10 @@ userFields :: User -> Fields
 userFields user = do
     let fullname          = BS.toString $ getFullName user
         fullnameOrEmail   = BS.toString $ getSmartName user
-        fullnamePlusEmail = if null fullname 
+        fullnamePlusEmail = if null fullname
                             then              "<" ++ (BS.toString $ getEmail user) ++ ">"
                             else fullname ++ " <" ++ (BS.toString $ getEmail user) ++ ">"
-    field "id" $ show $ userid user 
+    field "id" $ show $ userid user
     field "fstname" $ BS.toString $ getFirstName user
     field "sndname" $ BS.toString $ getLastName user
     field "email" $ BS.toString $ getEmail user
@@ -110,27 +110,27 @@ userFields user = do
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
     field "hassupervisor" $ isJust $ usersupervisor user
-    
+
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
 
 showUserSecurity :: KontrakcjaTemplates -> User -> IO String
 showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
-    field "linksecurity" $ show LinkSecurity 
-    field "fstname" $ BS.toString $ getFirstName user 
+    field "linksecurity" $ show LinkSecurity
+    field "fstname" $ BS.toString $ getFirstName user
     field "sndname" $ BS.toString $ getLastName user
     field "userimagelink" False
     field "lang" $ do
         field "en" $ LANG_EN == (lang $ usersettings user)
         field "se" $ LANG_SE == (lang $ usersettings user)
     menuFields user
-    
+
 pageAcceptTOS :: KontrakcjaTemplates -> IO String
-pageAcceptTOS templates = 
+pageAcceptTOS templates =
   renderTemplate templates "pageAcceptTOS" ()
 
 viewFriends :: KontrakcjaTemplates -> PagedList User -> User -> IO String
-viewFriends templates friends user =  
+viewFriends templates friends user =
   renderTemplate templates "viewFriends" $ do
     field "friends" $ markParity $ map userFields $ list friends
     field "currentlink" $ show $ LinkSharing $ params friends
@@ -142,7 +142,7 @@ menuFields user = do
     field "issubaccounts" $ isAbleToHaveSubaccounts user
 
 viewSubaccounts :: (TemplatesMonad m) => User -> PagedList User -> m String
-viewSubaccounts user subusers =  
+viewSubaccounts user subusers =
   renderTemplateM "viewSubaccounts" $ do
     field "subaccounts" $ markParity $ map userFields $ list subusers
     field "currentlink" $ show $ LinkSubaccount $ params subusers
@@ -294,7 +294,7 @@ modalAccountSetup muser signuplink = do
         supervisorfields Nothing = []
         supervisorfields (Just svis) = [
               ("hassupervisor", "true")
-            , ("supervisorcompany", BS.toString . usercompanyname . userinfo $ svis) 
+            , ("supervisorcompany", BS.toString . usercompanyname . userinfo $ svis)
             , ("supervisoraccounttype", supervisoraccounttype)
             , (supervisoraccounttype, "true")
             ]
@@ -331,16 +331,16 @@ flashMessageLoginRedirectReason templates reason =
 
 flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserDetailsSaved templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserDetailsSaved" () 
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserDetailsSaved" ()
 
 
 flashMessageNoAccountType :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageNoAccountType templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoAccountType" () 
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoAccountType" ()
 
 flashMessageInvalidAccountType :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageInvalidAccountType templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidAccountType" () 
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidAccountType" ()
 
 flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageMustAcceptTOS templates =
@@ -440,11 +440,11 @@ modalNewPasswordView aid hash = do
 modalDoYouWantToBeSubaccount :: KontraModal
 modalDoYouWantToBeSubaccount = do
   renderTemplateM "modalDoYouWantToBeSubaccount" $ ()
-    
-    
+
+
 -------------------------------------------------------------------------------
 
-{- | Basic fields for the user  -}      
+{- | Basic fields for the user  -}
 userBasicFields :: User -> Fields
 userBasicFields u = do
     field "id" $ show $ userid u

@@ -1,7 +1,7 @@
 -- |Simple session support
-module Session 
+module Session
     ( Sessions
-    , Session 
+    , Session
     , SessionId
     , getUserFromSession
     , getCompanyFromSession
@@ -10,7 +10,7 @@ module Session
     , updateSessionWithContextData
     , getELegTransactions
     , getSessionXToken
-    
+
     -- | Functions usefull when we do remember passwords emails
     --, createLongTermSession
     , findSession
@@ -52,14 +52,14 @@ instance Show SessionId where
     showsPrec prec (SessionId v) = showsPrec prec v
 
 instance Read SessionId where
-    readsPrec prec string = 
+    readsPrec prec string =
         [(SessionId k,v) | (k,v) <- readsPrec prec string]
-        
+
 instance FromReqURI SessionId where
     fromReqURI = readM
-    
+
 $(deriveSerialize ''SessionId)
-instance Version SessionId   
+instance Version SessionId
 
 {------------------------------------------------------------------------------}
 -- THIS IS OLD FLASH MESSAGE STRUCTURE, IT'S FOR COMPATIBILITY PURPOSES ONLY.
@@ -96,25 +96,25 @@ data SessionData0 = SessionData0 { userID0 :: Maybe UserID,
                                  } deriving (Ord,Eq,Show,Typeable)
 $(deriveSerialize ''SessionData0)
 instance Version (SessionData0)
-                                   
-data SessionData1 = SessionData1 {  
+
+data SessionData1 = SessionData1 {
                                   userID1 :: Maybe UserID,
                                   flashMessages1 :: [FlashMessage],
                                   expires1 :: MinutesTime
                                }  deriving (Ord,Eq,Show,Typeable)
 
-$(deriveSerialize ''SessionData1) 
+$(deriveSerialize ''SessionData1)
 instance Version (SessionData1) where
    mode = extension 1 (Proxy :: Proxy SessionData0)
-                               
-data SessionData2 = SessionData2 {  
+
+data SessionData2 = SessionData2 {
                                   userID2 :: Maybe UserID,
                                   flashMessages2 :: [FlashMessage],
                                   expires2 :: MinutesTime,
                                   hash2 :: MagicHash
-                               }  deriving (Ord,Eq,Show,Typeable)                               
-                               
-$(deriveSerialize ''SessionData2) 
+                               }  deriving (Ord,Eq,Show,Typeable)
+
+$(deriveSerialize ''SessionData2)
 instance Version (SessionData2) where
    mode = extension 2 (Proxy :: Proxy SessionData1)
 
@@ -135,14 +135,14 @@ data SessionData4 = SessionData4
     , xtoken4           :: MagicHash         -- ^ Random string to prevent CSRF
     } deriving (Ord,Eq,Show,Typeable)
 
-data SessionData5 = SessionData5 
+data SessionData5 = SessionData5
     { userID5           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires5          :: MinutesTime       -- ^ when does this session expire
     , hash5             :: MagicHash         -- ^ session security token
     , elegtransactions5 :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken5           :: MagicHash         -- ^ Random string to prevent CSRF
     } deriving (Ord,Eq,Show,Typeable)
-    
+
 -- | SessionData is everything we want to know about a person clicking
 -- on the other side of the wire.
 data SessionData6 = SessionData6
@@ -154,7 +154,7 @@ data SessionData6 = SessionData6
     , service6          :: Maybe ServiceID   -- ^ Id of the service that we are now working with
     } deriving (Ord,Eq,Show,Typeable)
 
-data SessionData7 = SessionData7 
+data SessionData7 = SessionData7
     { userID7           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires7          :: MinutesTime       -- ^ when does this session expire
     , hash7             :: MagicHash         -- ^ session security token
@@ -163,7 +163,7 @@ data SessionData7 = SessionData7
     , service7          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
     } deriving (Ord,Eq,Show,Typeable)
 
-data SessionData8 = SessionData8 
+data SessionData8 = SessionData8
     { userID8           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires8          :: MinutesTime       -- ^ when does this session expire
     , hash8             :: MagicHash         -- ^ session security token
@@ -173,7 +173,7 @@ data SessionData8 = SessionData8
     , company8        :: Maybe CompanyID
     } deriving (Ord,Eq,Show,Typeable)
 
-data SessionData = SessionData 
+data SessionData = SessionData
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires          :: MinutesTime       -- ^ when does this session expire
     , hash             :: MagicHash         -- ^ session security token
@@ -183,31 +183,31 @@ data SessionData = SessionData
     , company          :: Maybe CompanyID
     } deriving (Ord,Eq,Show,Typeable)
 
-$(deriveSerialize ''SessionData3) 
+$(deriveSerialize ''SessionData3)
 instance Version (SessionData3) where
     mode = extension 3 (Proxy :: Proxy SessionData2)
 
-$(deriveSerialize ''SessionData4) 
+$(deriveSerialize ''SessionData4)
 instance Version (SessionData4) where
     mode = extension 4 (Proxy :: Proxy SessionData3)
 
-$(deriveSerialize ''SessionData5) 
+$(deriveSerialize ''SessionData5)
 instance Version (SessionData5) where
     mode = extension 5 (Proxy :: Proxy SessionData4)
 
-$(deriveSerialize ''SessionData6) 
+$(deriveSerialize ''SessionData6)
 instance Version (SessionData6) where
     mode = extension 6 (Proxy :: Proxy SessionData5)
 
-$(deriveSerialize ''SessionData7) 
+$(deriveSerialize ''SessionData7)
 instance Version (SessionData7) where
     mode = extension 7 (Proxy :: Proxy SessionData6)
 
-$(deriveSerialize ''SessionData8) 
+$(deriveSerialize ''SessionData8)
 instance Version (SessionData8) where
     mode = extension 8 (Proxy :: Proxy SessionData7)
-    
-$(deriveSerialize ''SessionData) 
+
+$(deriveSerialize ''SessionData)
 instance Version (SessionData) where
     mode = extension 9 (Proxy :: Proxy SessionData8)
 
@@ -215,17 +215,17 @@ instance Version (SessionData) where
 instance Migrate SessionData0 SessionData1 where
     migrate (SessionData0 { userID0 = _
                           , flashMessages0 = _
-                          }) = 
+                          }) =
         SessionData1 { userID1 = Nothing
                      , flashMessages1 = []
                      , expires1 = MinutesTime 0 0
                      }
-    
+
 instance Migrate SessionData1 SessionData2 where
     migrate (SessionData1 { userID1 = _
                           , flashMessages1 = _
                           , expires1 = _
-                          }) = 
+                          }) =
         SessionData2 { userID2 = Nothing
                      , flashMessages2 = []
                      , expires2 = MinutesTime 0 0
@@ -243,7 +243,7 @@ instance Migrate SessionData2 SessionData3 where
                     , hash3 = MagicHash 0
                     , elegtransactions3 = []
                     }
-                    
+
 instance Migrate SessionData3 SessionData4 where
     migrate (SessionData3 { userID3 = _
                           , flashMessages3 = _
@@ -286,7 +286,7 @@ instance Migrate SessionData6 SessionData7 where
                     , xtoken7           = MagicHash 0
                     , service7          = Nothing
                     }
-                    
+
 instance Migrate SessionData7 SessionData8 where
     migrate SessionData7{} =
         SessionData8 { userID8           = Nothing
@@ -297,7 +297,7 @@ instance Migrate SessionData7 SessionData8 where
                     , service8          = Nothing
                     , company8          = Nothing
                     }
-                    
+
 instance Migrate SessionData8 SessionData where
     migrate SessionData8{} =
         SessionData { userID           = Nothing
@@ -307,7 +307,7 @@ instance Migrate SessionData8 SessionData where
                     , xtoken           = MagicHash 0
                     , location         = ""
                     , company          = Nothing
-                    }                    
+                    }
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
                        , sessionData::SessionData
@@ -322,13 +322,13 @@ instance Typeable Session where typeOf _ = mkTypeOf "Session"
 
 $(deriveSerialize ''Session)
 instance Version (Session)
-   
+
 type Sessions = IxSet Session
 
 instance Indexable Session where
-        empty = ixSet 
+        empty = ixSet
                 [ ixFun (\x -> [sessionId x])
-                , ixFun (\x -> case userID (sessionData x) of 
+                , ixFun (\x -> case userID (sessionData x) of
                                    Nothing -> []
                                    Just userid -> [userid]
                         )
@@ -377,7 +377,7 @@ delSession sessionId =
     do mSession <- (return . getOne . (@= (sessionId :: SessionId))) =<< get
        case mSession of
          Nothing -> return Nothing
-         Just session -> 
+         Just session ->
              do modify (delete session)
                 return (Just session)
 
@@ -401,7 +401,7 @@ dropExpired now = do
     let expired = (flip filter) (toList  sessions) (\s -> now >  60 `minutesAfter` (expires $ sessionData s))
     sequence_ $ map (modify . delete ) expired
 
-$(mkMethods ''Sessions 
+$(mkMethods ''Sessions
   [ 'getSession
   , 'getSessionByUserId
   , 'updateSession
@@ -418,29 +418,29 @@ data SessionCookieInfo = SessionCookieInfo
     , cookieSessionHash :: MagicHash --  While parsing we depend on it starting with alpha
     }
 
-instance Show (SessionCookieInfo) where         
+instance Show (SessionCookieInfo) where
     show sci = (show $ cookieSessionId sci) ++ "-" ++ (show $ cookieSessionHash sci)
 
-instance Read (SessionCookieInfo) where         
+instance Read (SessionCookieInfo) where
     readsPrec _ s = do
         let (sid,sh) = break (== '-') s
         sid' <- readM sid  --if need to understand that just read about list monad
-        sh' <- readM (drop 1 sh)  
+        sh' <- readM (drop 1 sh)
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
 
 -- | Extract cookie from session.
 cookieInfoFromSession :: Session -> SessionCookieInfo
-cookieInfoFromSession s = SessionCookieInfo 
+cookieInfoFromSession s = SessionCookieInfo
                           { cookieSessionId = sessionId s
                           , cookieSessionHash = hash $ sessionData s
                           }
-                                        
--- | Check if cookie auth token matches. 
-sessionAndCookieHashMatch :: Session -> SessionCookieInfo -> Bool    
+
+-- | Check if cookie auth token matches.
+sessionAndCookieHashMatch :: Session -> SessionCookieInfo -> Bool
 sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessionData session)
 
 
--- | Add a session cookie to browser.  
+-- | Add a session cookie to browser.
 startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m, Functor m) => Session -> m ()
 startSessionCookie session = do
     issecure <- isSecure
@@ -448,26 +448,26 @@ startSessionCookie session = do
     when issecure $ do
         addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
         addCookie ishttps (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
-                                 
+
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
-currentSessionInfoCookie = (optional (readCookieValue "sessionId")) 
+currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
  where optional c = (liftM Just c) `mplus` (return Nothing)
- 
+
 -- | Get current session based on cookies set.
-currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
+currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session)
 currentSession =
     withDataFn currentSessionInfoCookie $ \mscd ->
         case mscd of
             Just scd -> do
-                session <- query $ GetSession $ cookieSessionId scd                           
-                case session of 
+                session <- query $ GetSession $ cookieSessionId scd
+                case session of
                     Just s | sessionAndCookieHashMatch s scd -> return $ Just s
                     _ -> return Nothing
             Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
-emptySessionData :: IO SessionData                     
+emptySessionData :: IO SessionData
 emptySessionData = do
     now       <- getMinutesTime
     magicHash <- randomIO
@@ -479,7 +479,7 @@ emptySessionData = do
                          , xtoken = xhash
                          , location = ""
                          , company = Nothing
-                         }  
+                         }
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
@@ -495,34 +495,34 @@ tempSessionID = SessionId $ -1
 startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) => m Session
 startSession = liftIO emptySessionData >>= return . Session tempSessionID
 
--- | Get 'User' record from database based on userid in session       
-getUserFromSession :: Session -> ServerPartT IO (Maybe User)               
-getUserFromSession s = 
+-- | Get 'User' record from database based on userid in session
+getUserFromSession :: Session -> ServerPartT IO (Maybe User)
+getUserFromSession s =
     case (userID $ sessionData s) of
         Just i -> query $ GetUserByUserID i
-        _ -> return Nothing    
+        _ -> return Nothing
 
 getCompanyFromSession :: Session -> ServerPartT IO (Maybe Company)
 getCompanyFromSession s = case (company $ sessionData s) of
         Just i -> query $ GetCompany i -- This needs a fix
-        _ -> return Nothing 
+        _ -> return Nothing
 
 getLocationFromSession :: Session -> ServerPartT IO String
 getLocationFromSession s = return $ location $ sessionData s
 
 
 -- | Handles session timeout. Starts new session when old session timed out.
-handleSession :: ServerPartT IO Session                  
+handleSession :: ServerPartT IO Session
 handleSession = do
-    msession <- currentSession    
-    case msession of 
+    msession <- currentSession
+    case msession of
         Just session ->do
                       now <- liftIO getMinutesTime
-                      if (now >= (expires $ sessionData $ session)) 
+                      if (now >= (expires $ sessionData $ session))
                           then do
                              _ <- update $ DelSession (sessionId session)
                              startSession
-                          else return session      
+                          else return session
         Nothing -> startSession
 
 -- | Updates session data. If session is temporary and new
@@ -559,7 +559,7 @@ createLongTermSession uid = do
                                       , expires = (60 * 12) `minutesAfter` now
                                       , hash = magicHash
                                       , elegtransactions = []
-                                      }  
+                                      }
     update $ NewSession $ longUserSession
     -}
 
@@ -567,7 +567,7 @@ createLongTermSession uid = do
 findSession :: (MonadIO m) => SessionId -> MagicHash -> m (Maybe Session)
 findSession sid mh = do
     ms <- query $ GetSession $ sid
-    case ms of 
+    case ms of
         Just session ->
             do
                 now <- liftIO getMinutesTime
@@ -579,10 +579,10 @@ findSession sid mh = do
                         _ <- update $ DelSession (sessionId session)
                         return Nothing
         Nothing -> return Nothing
-                
--- | Get session ID from Session.         
+
+-- | Get session ID from Session.
 getSessionId :: Session -> SessionId
-getSessionId = sessionId 
+getSessionId = sessionId
 
 -- | Get session auth token from Session data.
 getSessionMagicHash :: Session -> MagicHash
@@ -619,20 +619,20 @@ createServiceSession userorcompany loc= do
             , company = either Just (const Nothing) userorcompany
             , location = loc
             }
-    return $ sessionId  session       
-    
+    return $ sessionId  session
+
 -- This is used to connect user or company to session when it was created by same service
 loadServiceSession::(MonadIO m,Functor m) => Either CompanyID UserID -> SessionId -> ServerPartT m Bool
 loadServiceSession userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of
         Nothing -> return False
-        Just session@(Session{sessionData}) -> 
+        Just session@(Session{sessionData}) ->
             case (userorcompany) of
-              (Left cid) -> if (company sessionData == Just cid) 
+              (Left cid) -> if (company sessionData == Just cid)
                                      then startSessionCookie session >> return True
                                      else return False
-              (Right uid) -> if (userID sessionData == Just uid) 
+              (Right uid) -> if (userID sessionData == Just uid)
                                      then startSessionCookie session >> return True
-                                     else return False          
-                                     
+                                     else return False
+

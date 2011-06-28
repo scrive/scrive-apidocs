@@ -23,7 +23,7 @@ module Doc.DocStateQuery
     , getDocsByLoggedInUser
     , getDocByDocIDSigLinkIDAndMagicHash
     ) where
-    
+
 import DBError
 import Doc.DocState
 import Doc.DocUtils
@@ -67,14 +67,14 @@ getDocByDocID docid = do
                 True  -> return $ Right doc
                 False -> return $ Left DBResourceNotAvailable
     (_,Just company) -> do
-      liftIO $ putStrLn $ "logged as company"  
+      liftIO $ putStrLn $ "logged as company"
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if (documentoriginalcompany doc == (Just $ companyid company)) 
-                     then return $ Right doc 
+        Just doc -> if (documentoriginalcompany doc == (Just $ companyid company))
+                     then return $ Right doc
                      else return $ Left DBResourceNotAvailable
-    (Nothing,Nothing) -> return $ Left DBNotLoggedIn            
+    (Nothing,Nothing) -> return $ Left DBNotLoggedIn
 
 {- |
    Get all of the documents a user can view.
@@ -99,9 +99,9 @@ getDocsByLoggedInUser = do
    SignatoryLinkID must correspond to a siglink in document.
    MagicHash must match.
  -}
-getDocByDocIDSigLinkIDAndMagicHash :: DocumentID 
-                                   -> SignatoryLinkID 
-                                   -> MagicHash 
+getDocByDocIDSigLinkIDAndMagicHash :: DocumentID
+                                   -> SignatoryLinkID
+                                   -> MagicHash
                                    -> Kontra (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- query $ GetDocumentByDocumentID docid

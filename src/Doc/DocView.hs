@@ -63,7 +63,7 @@ module Doc.DocView (
   , showFilesImages2
   , signatoryDetailsFromUser
   , templatesForAjax
-  , documentsToFixView 
+  , documentsToFixView
   , uploadPage
   ) where
 
@@ -103,13 +103,13 @@ modalSendConfirmationView document = do
   templates <- ask
   partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
   lift $ renderTemplateForProcess templates document processmodalsendconfirmation $ do
-    field "partyListButAuthor" partylist      
+    field "partyListButAuthor" partylist
     field "signatory" . listToMaybe $ map (BS.toString . getSmartName) $ partyList document
     documentInfoFields document
 
 modalSendInviteView ::  Document -> KontraModal
 modalSendInviteView document = do
-  templates <- ask  
+  templates <- ask
   partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
   lift $ renderTemplate templates  "modalSendInviteView" $ do
     field "partyListButAuthor" partylist
@@ -185,7 +185,7 @@ flashDocumentTemplateSaved templates =
 
 flashDocumentRestarted :: KontrakcjaTemplates -> Document -> IO FlashMessage
 flashDocumentRestarted templates document =
-  fmap (toFlashMsg OperationDone) $ 
+  fmap (toFlashMsg OperationDone) $
       renderTemplateForProcess templates document processflashmessagerestarted $ do
       documentInfoFields document
 
@@ -200,12 +200,12 @@ flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
 
 flashMessageCannotCancel :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageCannotCancel templates =
-  fmap (toFlashMsg OperationFailed) $ 
+  fmap (toFlashMsg OperationFailed) $
     renderTemplate templates "flashMessageCannotCancel" ()
 
 flashMessageCanceled :: KontrakcjaTemplates -> Document -> IO FlashMessage
 flashMessageCanceled templates document =
-  fmap (toFlashMsg SigningRelated) $ 
+  fmap (toFlashMsg SigningRelated) $
     renderTemplateForProcess templates document processflashmessagecanceled $ do
       documentInfoFields document
 
@@ -214,11 +214,11 @@ flashAuthorSigned templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashAuthorSigned" ()
 
 flashMessageFailedToParseCSV :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageFailedToParseCSV templates = 
+flashMessageFailedToParseCSV templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageFailedToParseCSV" ()
 
 flashMessageCSVHasTooManyRows :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageCSVHasTooManyRows maxrows templates = 
+flashMessageCSVHasTooManyRows maxrows templates =
   toFlashMsg OperationFailed <$> (renderTemplate templates "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
 
 flashMessageBulkRemindsSent :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
@@ -323,7 +323,7 @@ documentStatusClass ::Document -> StatusClass
 documentStatusClass doc =
   case (map (signatoryStatusClass doc) $ filter isSignatory $ documentsignatorylinks doc) of
     [] -> SCDraft
-    xs -> minimum xs      
+    xs -> minimum xs
 
 documentBasicViewFields :: KontrakcjaTemplates -> MinutesTime -> User -> Document -> Fields
 documentBasicViewFields templates crtime user doc = do
@@ -346,11 +346,11 @@ documentBasicViewFields templates crtime user doc = do
     field "isauthor" $ isAuthor (doc, user)
     field "isviewer" $ (not $ isAuthor (doc, user)) && isViewer (doc, user)
     field "isshared" $ (documentsharing doc)==Shared
-    field "processname" $ renderTextForProcess templates doc processname 
+    field "processname" $ renderTextForProcess templates doc processname
   where
     signatorylinklist =
-      filter (isSigLinkFor user) $ documentsignatorylinks doc  
-    
+      filter (isSigLinkFor user) $ documentsignatorylinks doc
+
     fromTimeout f =
       case (documenttimeouttime doc, documentstatus doc) of
            (Just (TimeoutTime x), Pending) -> Just $ f x
@@ -368,8 +368,8 @@ docSearchFunc s doc =  nameMatch doc || signMatch doc
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
     signMatch d = any match $ map (BS.toString . getSmartName) (documentsignatorylinks d)
-    
-   
+
+
 docSortFunc:: SortingFunction Document
 docSortFunc "status" = compareStatus
 docSortFunc "statusREV" = revCompareStatus
@@ -377,7 +377,7 @@ docSortFunc "title" = viewComparing documenttitle
 docSortFunc "titleREV" = viewComparingRev documenttitle
 docSortFunc "time" = viewComparing documentmtime
 docSortFunc "timeREV" = viewComparingRev documentmtime
-docSortFunc "partner" = comparePartners 
+docSortFunc "partner" = comparePartners
 docSortFunc "partnerREV" = revComparePartners
 docSortFunc "partnercomp" = viewComparing partnerComps
 docSortFunc "partnercompREV" = viewComparingRev partnerComps
@@ -423,7 +423,7 @@ comparePartners doc1 doc2 =
 
 docsPageSize :: Int
 docsPageSize = 100
- 
+
 
 --
 
@@ -449,8 +449,8 @@ pageList' :: String
              -> (ListParams -> KontraLink)
              -> KontrakcjaTemplates
              -> MinutesTime
-             -> User 
-             -> PagedList Document 
+             -> User
+             -> PagedList Document
              -> IO String
 pageList' templatename makeCurrentLink templates ctime user documents =
   renderTemplate templates templatename $ do
@@ -568,7 +568,7 @@ pageAttachmentView = pageAttachment' False Nothing
 pageAttachmentDesign :: Context
                       -> Document
                       -> IO String
-pageAttachmentDesign = pageAttachment' True Nothing 
+pageAttachmentDesign = pageAttachment' True Nothing
 
 pageAttachment' :: Bool
                  -> Maybe SignatoryLink
@@ -589,8 +589,8 @@ pageAttachment'
       field "sigmagichash" $ fmap (show . signatorymagichash) msiglink
       field "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
 
-pageDocumentDesign :: Context 
-             -> Document 
+pageDocumentDesign :: Context
+             -> Document
              -> (Maybe DesignStep)
              -> [Document]
              -> IO String
@@ -601,7 +601,7 @@ pageDocumentDesign ctx
     , documentdaystosign
     , documentinvitetext
   }
-  step 
+  step
   attachments =
    let
        templates = ctxtemplates ctx
@@ -622,7 +622,7 @@ pageDocumentDesign ctx
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
        field "invitationMailContent" $  mailInvitationToSignOrViewContent templates False ctx document Nothing
-       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
+       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
        documentAuthorInfo document
        csvfields
@@ -666,7 +666,7 @@ documentFunctionalityFields Document{documenttype, documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
   -- it might not really be basic, it's just if there isn't an advanced mode we pretend we are
   field "isbasic" $ documentfunctionality==BasicFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
-  field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (Just False == getValueForProcess documenttype processadvancedview) 
+  field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
 
 documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
 documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do
@@ -676,7 +676,7 @@ documentCsvFields templates document@Document{documentallowedidtypes, documentcs
       csvdata = maybe [] (csvbody . snd) mcleancsv
       csvPageSize :: Int = 10
       csvpages = splitCSVDataIntoPages csvPageSize csvdata
-  csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems   
+  csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
   return $ do
     field "csvproblems" $ csvproblemfields
     field "csvproblemcount" $ length csvproblems
@@ -685,7 +685,7 @@ documentCsvFields templates document@Document{documentallowedidtypes, documentcs
     field "csvcustomfields" $ csvcustomfields
     field "isvalidcsv" $ null csvproblems
     field "csvsigindex" $ fmap csvsignatoryindex documentcsvupload
- 
+
 csvPageFields :: [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields
 csvPageFields problems totalrowcount firstrowindex xs = do
   field "csvrows" $ zipWith (csvRowFields problems) [firstrowindex..] xs
@@ -701,9 +701,9 @@ splitCSVDataIntoPages n xs =
 csvRowFields :: [CSVProblem] -> Int -> [BS.ByteString] -> Fields
 csvRowFields problems rowindex xs = do
   field "rownumber" $ rowindex + 1
-  field "csvfields" $ zipWith (csvFieldFields problems rowindex) 
-                              [0..] 
-                              xs 
+  field "csvfields" $ zipWith (csvFieldFields problems rowindex)
+                              [0..]
+                              xs
   field "isproblem" $ any isRelevantProblem problems
   where
     isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
@@ -715,7 +715,7 @@ csvFieldFields :: [CSVProblem] -> Int -> Int -> BS.ByteString -> Fields
 csvFieldFields problems rowindex colindex val = do
   field "value" $ val
   field "isproblem" $ any isRelevantProblem problems
-  where 
+  where
     isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
       case (problemrowindex, problemcolindex) of
         (Just r, Just c) | rowindex==r && colindex==c -> True
@@ -732,10 +732,10 @@ csvProblemFields templates probcount number csvproblem = do
       field "problemdesc" $ desc
       field "isfirstproblem" $ (number==1)
       field "islastproblem" $ (number==probcount)
- 
+
 {- | Showing document to author after we are done with design -}
 
-pageDocumentForAuthor :: Context 
+pageDocumentForAuthor :: Context
              -> Document
              -> IO String
 pageDocumentForAuthor ctx
@@ -751,7 +751,7 @@ pageDocumentForAuthor ctx
    in do
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
-       field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document               
+       field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document
        field "linkcancel" $ show $ LinkCancel document
@@ -781,7 +781,7 @@ pageDocumentForAuthor ctx
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
- -}                                                                                                          
+ -}
 
 pageDocumentForViewer :: Context -> Document -> Maybe SignatoryLink -> IO String
 pageDocumentForViewer ctx
@@ -822,7 +822,7 @@ pageDocumentForViewer ctx
                           field "sigmagichash" $ show $ signatorymagichash siglink
        field "linkissuedocpdf" $ show (LinkIssueDocPDF msignlink document)
        field "documentinfotext" $ documentinfotext
-       documentInfoFields document 
+       documentInfoFields document
        documentViewFields document
        documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
        documentSigAttachmentViewFields documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
@@ -849,7 +849,7 @@ documentAttachmentViewFields docid msignlink atts = do
       field "linkattachment" $ case msignlink of
         Just signlink -> show (LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) fileid)
         Nothing -> show (LinkAttachmentForAuthor docid fileid)
-    
+
 documentSigAttachmentViewFields :: DocumentID -> [SignatoryLink] -> Maybe SignatoryLink -> [SignatoryAttachment] -> Fields
 documentSigAttachmentViewFields docid sls msignlink atts = do
   field "hassigattachments" $ length atts > 0
@@ -862,18 +862,18 @@ documentSigAttachmentViewFields docid sls msignlink atts = do
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
       field "filename" $ fmap filename $ signatoryattachmentfile a
-      field "viewerlink" $ 
+      field "viewerlink" $
         case (msignlink, maybe Nothing maybesigninfo mattachlink, signatoryattachmentfile a) of
           (_, _, Nothing) -> Nothing
           (_, Nothing, _) -> Nothing
           (Nothing, _, Just file) -> Just $ show $ LinkAttachmentForAuthor docid (fileid file)
           (Just signlink, _, Just file) -> Just $ show $ LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) (fileid file)
 
-pageDocumentForSignatory :: KontraLink 
+pageDocumentForSignatory :: KontraLink
                     -> Document
                     -> Context
                     -> SignatoryLink
-                    -> IO String 
+                    -> IO String
 pageDocumentForSignatory action document ctx invitedlink  =
   renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
     mainFields
@@ -926,8 +926,8 @@ pageDocumentForSignatory action document ctx invitedlink  =
       signatoryMessageProcessFields ctx document
 
 documentSingleSignatoryAttachmentsFields :: DocumentID -> SignatoryLinkID -> MagicHash -> [SignatoryAttachment] -> Fields
-documentSingleSignatoryAttachmentsFields docid sid mh atts = 
-  field "mysigattachments" $ for atts 
+documentSingleSignatoryAttachmentsFields docid sid mh atts =
+  field "mysigattachments" $ for atts
   (\a -> do
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
@@ -935,7 +935,7 @@ documentSingleSignatoryAttachmentsFields docid sid mh atts =
       field "viewerlink" $ fmap (show . LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
   )
 
---- Display of signatory                                                             
+--- Display of signatory
 signatoryLinkFields :: Context -> Document -> Maybe SignatoryLink -> SignatoryLink -> Fields
 signatoryLinkFields
   ctx@Context {
@@ -950,7 +950,7 @@ signatoryLinkFields
     , invitationdeliverystatus
   } =
   let isCurrentUserAuthor = isAuthor (document, muser)
-      current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap getEmail muser) == (Just $ getEmail signatorydetails)) 
+      current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap getEmail muser) == (Just $ getEmail signatorydetails))
       isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
     in do
       field "id" $ show signatorylinkid
@@ -965,23 +965,23 @@ signatoryLinkFields
         field "fieldlabel" $ fieldlabel sof
         field "fieldvalue" $ fieldvalue sof
       field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
-      field "allowRemindForm" $ isEligibleForReminder muser document siglnk            
+      field "allowRemindForm" $ isEligibleForReminder muser document siglnk
       field "linkremind" $ show (LinkRemind document siglnk)
       field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
       field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered || invitationdeliverystatus == Deferred) && isActiveDoc)
-      field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk 
+      field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk
       field "role" $ if isSignatory siglnk
                      then "signatory"
                      else "viewer"
-      field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)              
+      field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)
       field "author" $ (isAuthor siglnk)
       signatoryStatusFields document siglnk showDateOnly
 
 signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
-signatoryStatusClass 
+signatoryStatusClass
   Document {
     documentstatus
-  } 
+  }
   SignatoryLink {
     maybesigninfo
   , maybeseeninfo
@@ -1009,8 +1009,8 @@ signatoryStatusFields
     , maybeseeninfo
     , maybereadinvite
     , invitationdeliverystatus
-  } 
-  dateformatter = 
+  }
+  dateformatter =
   let
    datamismatch = case documentcancelationreason document of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid
@@ -1018,10 +1018,10 @@ signatoryStatusFields
    status = signatoryStatusClass document siglnk
    -- the date this document was rejected if rejected by this signatory
    rejectedDate = case documentrejectioninfo document of
-                    Just (rt, slid, _) 
+                    Just (rt, slid, _)
                         | slid == signatorylinkid -> Just $ dateformatter rt
                     _                             -> Nothing
-    in do  
+    in do
       field "status" $ show status
       field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
       field "deliveredEmail" $ (invitationdeliverystatus == Delivered)
@@ -1037,13 +1037,13 @@ packToMString x =
      then Nothing
      else Just $ BS.toString x
 
-signatoriesWithSecretary :: Document -> [SignatoryLink] 
+signatoriesWithSecretary :: Document -> [SignatoryLink]
 signatoriesWithSecretary doc =
-  (filter isSignatory $ documentsignatorylinks doc) ++ 
+  (filter isSignatory $ documentsignatorylinks doc) ++
   case getAuthorSigLink doc of
     Just sl | not $ isSignatory sl -> [sl]
     _ -> []
-    
+
 -- Helper to get document after signing info text
 documentInfoText :: Context -> Document -> Maybe SignatoryLink -> IO String
 documentInfoText ctx document siglnk =
@@ -1052,7 +1052,7 @@ documentInfoText ctx document siglnk =
     field "process" processFields
   where
     mainFields = do
-      documentInfoFields document 
+      documentInfoFields document
       documentAuthorInfo document
       field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
       signedByMeFields document siglnk
@@ -1095,23 +1095,23 @@ documentAuthorInfo document =
       field "authoremail"         $ nothingIfEmpty $ getEmail siglink
       field "authorpersonnumber"  $ nothingIfEmpty $ signatorypersonalnumber $ signatorydetails siglink
       field "authorcompanynumber" $ nothingIfEmpty $ signatorycompanynumber  $ signatorydetails siglink
-  
--- | Fields indication what is a document status 
-documentStatusFields :: Document -> Fields    
+
+-- | Fields indication what is a document status
+documentStatusFields :: Document -> Fields
 documentStatusFields document = do
   field "preparation" $ documentstatus document == Preparation
   field "pending" $ documentstatus document == Pending
-  field "cancel" $ (documentstatus document == Canceled 
+  field "cancel" $ (documentstatus document == Canceled
       && documentcancelationreason document == Just ManualCancel)
   field "timedout" $ documentstatus document == Timedout
   field "rejected" $ documentstatus document == Rejected
   field "signed" $ documentstatus document == Closed
   field "awaitingauthor" $ documentstatus document == AwaitingAuthor
-  field "datamismatch" $ (documentstatus document == Canceled 
+  field "datamismatch" $ (documentstatus document == Canceled
       && case documentcancelationreason document of
            Just (ELegDataMismatch _ _ _ _ _) -> True
            _ -> False)
-  
+
 -- | Info about what is my position on a document
 signedByMeFields :: Document -> Maybe SignatoryLink -> Fields
 signedByMeFields _document siglnk = do
@@ -1127,12 +1127,12 @@ documentViewFields document = do
 
 designViewFields:: (Maybe DesignStep) -> Fields
 designViewFields step = do
-    case step of 
+    case step of
         (Just (DesignStep3 _)) -> field "step3" True
         (Just (DesignStep2 _ _ _ )) -> field "step2" True
         (Just (DesignStep1)) -> field "step1" True
         _ -> field "step2" True
-    field "initialperson" $ 
+    field "initialperson" $
       case step of
         (Just (DesignStep2 _ (Just part) _ )) -> part
         _ -> 0
@@ -1159,16 +1159,16 @@ uploadPage ctx params mdocprocess showTemplates = renderTemplate (ctxtemplates c
         field "name" $ renderTextForProcess (ctxtemplates ctx) (Signable process) processuploadname
         field "uploadprompttext" $ renderTextForProcess (ctxtemplates ctx) (Signable process) processuploadprompttext
 
-       
+
 
 templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentProcess -> PagedList Document -> IO String
-templatesForAjax templates ctime user docprocess doctemplates = 
+templatesForAjax templates ctime user docprocess doctemplates =
     renderTemplate templates "templatesForAjax" $ do
         field "documents" $ markParity $ map (documentBasicViewFields templates ctime user) (list doctemplates)
         field "currentlink" $ show $ LinkNew (Just docprocess) (params doctemplates)  True
         field "processid" $ show docprocess
         pagedListFields doctemplates
-    
+
 -- We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
 jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
@@ -1207,10 +1207,10 @@ buildPlacementJS FieldPlacement {
 
 
 buildSigLinkJS :: SignatoryLink -> [Char]
-buildSigLinkJS (SignatoryLink {signatorydetails, signatoryroles}) = 
-    "{" ++ 
-    buildSigJS' signatorydetails ++ 
-    ", role: " ++ (if SignatoryPartner `elem` signatoryroles 
+buildSigLinkJS (SignatoryLink {signatorydetails, signatoryroles}) =
+    "{" ++
+    buildSigJS' signatorydetails ++
+    ", role: " ++ (if SignatoryPartner `elem` signatoryroles
                  then "\"signatory\""
                  else "\"viewer\"") ++
     "}"
@@ -1262,7 +1262,7 @@ buildJS authordetails signatorydetails =
     sigs = jsArray (map buildSigLinkJS signatorydetails)
 
 defaultInviteMessage :: BS.ByteString
-defaultInviteMessage = BS.empty     
+defaultInviteMessage = BS.empty
 
 
 jsStringFromBS :: BS.ByteString -> String
@@ -1285,7 +1285,7 @@ documentsToFixView templates docs = do
     renderTemplate templates "documentsToFixView" $ do
         field "documents" $ for docs $ \doc -> do
             field "title" $ documenttitle doc
-            field "id" $ show $ documentid doc 
+            field "id" $ show $ documentid doc
             field "involved" $ map getEmail  $ documentsignatorylinks doc
             field "cdate" $  show $ documentctime doc
 

@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------
 module PayEx.PayExView(viewPayment,viewPayments,mailNewPayment) where
 import PayEx.PayExState
-import Kontra 
+import Kontra
 import Doc.DocState
 import Payments.PaymentsState
 import Happstack.State (query)
@@ -31,29 +31,29 @@ data PaymentView = PaymentView
                       { pvId::String,
                         pvPositions:: [String],
                         pvIsSend::Bool,
-                        pvIsWaiting::Bool,  
-                        pvIsFinished::Bool,  
-                        pvIsFailed::Bool,  
-                        pvIsDropped::Bool,  
-                        pvIsInvoiceable::Bool,  
-                        pvValue::String,  
+                        pvIsWaiting::Bool,
+                        pvIsFinished::Bool,
+                        pvIsFailed::Bool,
+                        pvIsDropped::Bool,
+                        pvIsInvoiceable::Bool,
+                        pvValue::String,
                         pvLink::String,
                         pvPayExUrl::String
                       } deriving (Data, Typeable)
 
 toPaymentView::KontrakcjaTemplates -> Payment -> IO PaymentView
-toPaymentView templates payment = do 
+toPaymentView templates payment = do
                                    ps <- sequence $ map (positionInfo templates) (positions payment)
                                    return $ PaymentView
                                              {
-                                              pvId = show $ paymentId payment, 
+                                              pvId = show $ paymentId payment,
                                               pvPositions = ps,
                                               pvIsSend =  Send == paymentState payment ,
-                                              pvIsWaiting=  Waiting == paymentState payment ,  
-                                              pvIsFinished=  Finished == paymentState payment ,  
-                                              pvIsDropped= False ,  
-                                              pvIsInvoiceable = False ,  
-                                              pvIsFailed=  isFailed $ payment ,   
+                                              pvIsWaiting=  Waiting == paymentState payment ,
+                                              pvIsFinished=  Finished == paymentState payment ,
+                                              pvIsDropped= False ,
+                                              pvIsInvoiceable = False ,
+                                              pvIsFailed=  isFailed $ payment ,
                                               pvValue= show $ paymentValue payment,
                                               pvLink= show $ LinkPayExView $ Just $ paymentId payment,
                                               pvPayExUrl = redirectUrl payment
@@ -73,8 +73,8 @@ viewPayments templates payments = do
 
 mailNewPayment::Context -> User -> Payment -> IO Mail
 mailNewPayment ctx _user payment = do
-                                        _pm <- toPaymentView (ctxtemplates ctx) payment 
-                                        title <- renderTemplate (ctxtemplates ctx) "mailNewPaymentTitle" () 
+                                        _pm <- toPaymentView (ctxtemplates ctx) payment
+                                        title <- renderTemplate (ctxtemplates ctx) "mailNewPaymentTitle" ()
                                         content <- renderTemplate (ctxtemplates ctx) "mailNewPaymentContent" $ do
                                                        field "payment" True--pm
                                                        field "ctxhostpart" $ ctxhostpart ctx

@@ -1,9 +1,9 @@
-module AppLogger ( amazon    
+module AppLogger ( amazon
                  , debug
                  , error
                  , forkIOLogWhenError
                  , mail
-                 , security 
+                 , security
                  , server
                  , teardownLogger
                  , trustWeaver
@@ -32,9 +32,9 @@ setupLogger = do
     -- the directory already exists, pretty ugly bug, lets just catch
     -- and ignore the exception
     createDirectoryIfMissing False "log" `catch` (\_ -> return ())
-    
+
     let fmt = tfLogFormatter "%F %T" "$time $msg"
-        
+
     appLog <- fileHandler "log/app.log" INFO
     accessLog <- fileHandler "log/access.log" INFO
     mailLog <- fileHandler "log/mail.log" INFO >>= \lh -> return $ setFormatter lh fmt
@@ -57,7 +57,7 @@ setupLogger = do
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
-    
+
     hSetEncoding (privData accessLog) utf8
     hSetEncoding (privData mailLog) utf8
     hSetEncoding (privData debugLog) utf8
@@ -84,7 +84,7 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.Amazon"
         (setLevel NOTICE . setHandlers [amazonLog])
-    
+
     -- TrustWeaver Log
     updateGlobalLogger
         "Kontrakcja.TrustWeaver"
@@ -109,7 +109,7 @@ setupLogger = do
     updateGlobalLogger
         "Happstack.Server"
         (setLevel NOTICE . setHandlers [stdoutLog])
-        
+
     return $ LoggerHandle allLoggers
 
 -- | Tear down the application logger; i.e. close all associated log handlers.
@@ -119,7 +119,7 @@ teardownLogger (LoggerHandle loggers) = do
 
 -- | Bracket an IO action which denotes the whole scope where the loggers of
 -- the application are needed to installed. Sets them up before running the action
--- and tears them down afterwards. Even in case of an exception. 
+-- and tears them down afterwards. Even in case of an exception.
 withLogger :: IO a -> IO a
 withLogger = bracket setupLogger teardownLogger . const
 
@@ -146,9 +146,9 @@ server msg = liftIO $ noticeM "Happstack.Server" msg
 
 
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
-forkIOLogWhenError errmsg action = 
+forkIOLogWhenError errmsg action =
   liftIO $ do
     _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
     return ()
-  
-  
+
+

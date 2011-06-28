@@ -5,13 +5,13 @@
 -- Stability   :  develpment
 -- Portability :  portable
 --
--- Almoust all the stuff that is visible under /adminsonly path 
+-- Almoust all the stuff that is visible under /adminsonly path
 --
 -----------------------------------------------------------------------------
 module Contacts.ContactsView( contactsView
          ) where
 
-import Templates.Templates 
+import Templates.Templates
 import Text.StringTemplate.GenericStandard()
 
 contactsView :: KontrakcjaTemplates -> IO String

@@ -5,7 +5,7 @@
 -- Module      :  InspectXMLInstances
 --
 -- Instances of InspectXML for SkrivaPa data-types. Moved to this module to use auto-derivation.
--- If someone know how to join InspectXMLInstances with InspectXML he should do it. 
+-- If someone know how to join InspectXMLInstances with InspectXML he should do it.
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
@@ -25,11 +25,11 @@ import qualified Data.ByteString.UTF8 as BS
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
 
-instance (InspectXML a, Show a) => InspectXML (Maybe a) where  
+instance (InspectXML a, Show a) => InspectXML (Maybe a) where
     inspectXML Nothing = "Nothing"
     inspectXML (Just x) = inspectXML x
 
-instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => InspectXML (a, b, c) where  
+instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => InspectXML (a, b, c) where
     inspectXML (a, b, c) = "(" ++ inspectXML a ++"," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
 
 $(deriveInspectXML ''Document)
@@ -46,19 +46,19 @@ $(deriveInspectXML ''SignatoryDetails)
 instance InspectXML DocumentID where
     inspectXML x = "<a href='/dave/document/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML SignatoryLinkID where
-    inspectXML x =  "<a href='/dave/signatorylink/" ++ show x ++ "'>"  ++ show x ++"</a>" 
+    inspectXML x =  "<a href='/dave/signatorylink/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML UserID where
-    inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>" 
+    inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML File where
     inspectXML file= "<a href='" ++ (inspectXML $ LinkFile (fileid file) (filename file)) ++"'>" ++ show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
-                                  
+
 instance InspectXML DocumentLogEntry where
     inspectXML (DocumentLogEntry time text) = show time ++ ": " ++ inspectXML text
-    
+
 --Standard classes - we will just call show with some escaping
 instance InspectXML String where
 instance InspectXML BS.ByteString where
-  inspectXML = inspectXML . BS.toString  
+  inspectXML = inspectXML . BS.toString
 instance InspectXML Bool where
 instance InspectXML Int where
 instance InspectXML Author where
@@ -103,4 +103,4 @@ instance InspectXML Company where
 instance InspectXML CompanyID where
 instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
-        
+

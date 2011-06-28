@@ -2,7 +2,7 @@ module Doc.DocStateUpdate
     ( restartDocument
     , markDocumentSeen
     ) where
-    
+
 import DBError
 import Doc.DocState
 import Kontra
@@ -16,7 +16,7 @@ import Util.SignatoryLinkUtils
 {- |
    Mark document seen securely.
  -}
-markDocumentSeen :: DocumentID 
+markDocumentSeen :: DocumentID
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime.MinutesTime
@@ -26,7 +26,7 @@ markDocumentSeen docid sigid mh time ipnum =
   update $ MarkDocumentSeen docid sigid mh time ipnum
 
 {- |
-   Securely 
+   Securely
  -}
 restartDocument :: Document -> Kontra (Either DBError Document)
 restartDocument doc= do
@@ -38,7 +38,7 @@ restartDocument doc= do
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> case getAuthorSigLink doc of
       Just authorsiglink | isSigLinkFor user authorsiglink -> do
-        enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber 
+        enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber
         case enewdoc of
           Right newdoc -> return $ Right newdoc
           _            -> return $ Left DBResourceNotAvailable

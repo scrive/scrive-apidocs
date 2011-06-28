@@ -24,11 +24,11 @@ wrapHTML :: KontrakcjaTemplates -> String -> IO String
 wrapHTML templates body =  renderTemplate templates "wrapHTML" [("body",body)]
 
 
-{- | 
-   Option one of standard wrappers. It holds two strings and bool. 
+{- |
+   Option one of standard wrappers. It holds two strings and bool.
    Quick note on how to use wrappers:
     (1) Lets say we want to print select a user select box
-    (2) We take users list and  map over it with option userid username  
+    (2) We take users list and  map over it with option userid username
     (3) We pass the result of (2) to templates with name users
     (4) In template we call $users:{n| <option value="$n.oValue$">$n.oText$</option>}$
     (4') Or even better -> we call $users:options()$
@@ -54,14 +54,14 @@ markParity (f:[]) = [markOdd f]
 markParity [] = []
 
 markEven::Fields -> Fields
-markEven f = do 
+markEven f = do
     f
     field "even" True
     field "odd"  False
-              
+
 markOdd::Fields -> Fields
-markOdd f = do 
+markOdd f = do
     f
     field "even" False
     field "odd"  True
-              
+

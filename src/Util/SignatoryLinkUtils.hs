@@ -8,7 +8,7 @@
 -- Utility for abstracting away finding signatory links for given information
 -----------------------------------------------------------------------------
 module Util.SignatoryLinkUtils (
-  
+
   isSigLinkFor,
   isAuthorSignatory,
   getAuthorSigLink,
@@ -37,28 +37,28 @@ class SignatoryLinkIdentity a where
 
 instance SignatoryLinkIdentity BS.ByteString where
   isSigLinkFor email sl = email == getEmail sl
-  
+
 instance SignatoryLinkIdentity Email where
   isSigLinkFor (Email email) sl = email == getEmail sl
 
 instance SignatoryLinkIdentity UserID where
   isSigLinkFor uid sl = Just uid == maybesignatory sl
-  
+
 instance SignatoryLinkIdentity Signatory where
   isSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
-  
+
 instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
   isSigLinkFor (a, b) sl = isSigLinkFor a sl || isSigLinkFor b sl
-  
+
 instance SignatoryLinkIdentity SignatoryLinkID where
   isSigLinkFor slid sl = slid == signatorylinkid sl
 
 instance SignatoryLinkIdentity User where
   isSigLinkFor u sl = isSigLinkFor (userid u, getEmail u) sl
-  
+
 instance SignatoryLinkIdentity Author where
   isSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl
-  
+
 instance SignatoryLinkIdentity Supervisor where
   isSigLinkFor (Supervisor uid) sl = Just uid == maybesupervisor sl
 
@@ -71,17 +71,17 @@ getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
 
 class MaybeSignatoryLink a where
   getMaybeSignatoryLink :: a -> Maybe SignatoryLink
-  
+
 instance MaybeSignatoryLink SignatoryLink where
   getMaybeSignatoryLink = Just
 
 instance (MaybeSignatoryLink msl) => MaybeSignatoryLink (Maybe msl) where
   getMaybeSignatoryLink (Just sl) = getMaybeSignatoryLink sl
   getMaybeSignatoryLink Nothing   = Nothing
-  
+
 instance (SignatoryLinkIdentity a) => MaybeSignatoryLink (Document, a) where
   getMaybeSignatoryLink (d, a) = getSigLinkFor d a
-  
+
 {- |
    Is the Author of this Document a signatory (not a Secretary)?
  -}
@@ -103,7 +103,7 @@ getAuthorSigLink = find isAuthor . documentsignatorylinks
      * email address if no name info
 -}
 getAuthorName :: Document -> BS.ByteString
-getAuthorName doc = 
+getAuthorName doc =
   let Just authorsiglink = getAuthorSigLink doc
   in getSmartName authorsiglink
 
@@ -145,6 +145,6 @@ isViewer msl = isJust (getMaybeSignatoryLink msl)
 
 {- |
    Is the document deleted for this signatory link?
- -} 
+ -}
 isDeletedFor :: (MaybeSignatoryLink a) => a -> Bool
 isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)

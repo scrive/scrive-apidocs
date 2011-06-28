@@ -5,7 +5,7 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Schema for all pages and posts 
+-- Schema for all pages and posts
 -----------------------------------------------------------------------------
 module Routing ( hGet0,           hGet1,           hGet2,           hGet3,           hGet4,           hGet5,
                  hPost0,          hPost1,          hPost2,          hPost3,          hPost4,          hPost5,
@@ -32,16 +32,16 @@ type RedirectOrContent = Either KontraLink String
 
 class Post a where
     hPostWrap :: (Kontra Response -> Kontra Response) -> a -> Kontra Response
-   
-class Get a where 
+
+class Get a where
     hGetWrap :: (Kontra Response -> Kontra Response) -> a -> Kontra Response
 
 class ToResp a where
     toResp:: a -> Kontra Response
-    
+
 instance ToResp Response where
     toResp = return
-    
+
 instance ToResp KontraLink where
     toResp = sendRedirect
 
@@ -50,34 +50,34 @@ instance ToResp String where
 
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
-       
+
 instance Post (Kontra KontraLink) where
     hPostWrap f a = methodM POST >> f (a >>= toResp)
 
 instance (ToResp a ) => Get (Kontra a) where
-    hGetWrap f a = methodM GET >> f (a >>= toResp) 
-    
+    hGetWrap f a = methodM GET >> f (a >>= toResp)
+
 instance (Post r,FromReqURI a) => Post (a -> r) where
     hPostWrap f a =  path $ \s -> hPostWrap f (a s)
-    
+
 instance (Get r,FromReqURI a) => Get (a -> r) where
     hGetWrap f a =  path $ \s -> hGetWrap f (a s)
 
-    
-    
-    
-             
-             
 
-{- To change standard string to page-}    
+
+
+
+
+
+{- To change standard string to page-}
 page:: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
-    ctx <- get 
+    ctx <- get
     if (isNothing $ ctxservice ctx)
      then renderFromBody TopDocument kontrakcja pb
-     else embeddedPage pb 
-     
+     else embeddedPage pb
+
 
 
 
@@ -99,8 +99,8 @@ noRedirect action = do
     if (rsCode response /= 303)
        then return response
        else mzero
-                   
-{- Http and Https checking-}      
+
+{- Http and Https checking-}
 class IOFunction0 a where
 class IOFunction1 a where
 class IOFunction2 a where
@@ -196,7 +196,7 @@ hPostNoXToken5 =  hPostNoXToken
 
 
 hPost :: (Post a) =>  a -> Kontra Response
-hPost = hPostWrap (https . guardXToken) 
+hPost = hPostWrap (https . guardXToken)
 
 hGet :: (Get a) =>  a -> Kontra Response
 hGet = hGetWrap https
@@ -208,16 +208,16 @@ hPostAllowHttp :: (Post a) =>  a -> Kontra Response
 hPostAllowHttp =  hPostWrap allowHttp
 
 hPostNoXToken :: (Post a) =>  a -> Kontra Response
-hPostNoXToken =  hPostWrap (https) 
+hPostNoXToken =  hPostWrap (https)
 
 
 https:: Kontra Response -> Kontra Response
 https action = do
     secure <- isSecure
-    if secure 
+    if secure
        then action
        else sendSecureLoopBack
-              
+
 
 allowHttp:: Kontra Response -> Kontra Response
 allowHttp action = do

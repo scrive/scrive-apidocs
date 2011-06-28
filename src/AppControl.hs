@@ -74,7 +74,7 @@ import InspectXMLInstances ()
 import InspectXML
 import User.Lang
 
-{- | 
+{- |
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
   as well as a handy boolean indicating whether this is a production or
@@ -90,20 +90,20 @@ data AppConf
               , static          :: FilePath                     -- ^ static files directory
               , amazonConfig    :: Maybe (String,String,String) -- ^ bucket, access key, secret key
               , gsCmd           :: String
-              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development 
+              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development
               , trustWeaverSign :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
               , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
               , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
               , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
               , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
               , admins          :: [String]                    -- ^ email addresses of people regarded as admins
-              }              
+              }
       deriving (Show,Read,Eq,Ord)
 
-{- | 
+{- |
   Global application data
 -}
-data AppGlobals 
+data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaMultilangTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
@@ -132,16 +132,16 @@ handleRoutes = msum [
 
      -- static pages
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
-     , dir "priser"          $ hGetAllowHttp0 $ handlePriceplanPage              
-     , dir "sakerhet"        $ hGetAllowHttp0 $ handleSecurityPage             
-     , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage                 
-     , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage 
-     , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage         
+     , dir "priser"          $ hGetAllowHttp0 $ handlePriceplanPage
+     , dir "sakerhet"        $ hGetAllowHttp0 $ handleSecurityPage
+     , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage
+     , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
+     , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage
      , dir "om-skrivapa"     $ hGetAllowHttp0 $ handleAboutPage
-     , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage             
+     , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage
      , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
-       
-     -- this is SMTP to HTTP gateway  
+
+     -- this is SMTP to HTTP gateway
      , dir "mailapi" $ mailAPI
 
      -- e-legitimation stuff
@@ -160,9 +160,9 @@ handleRoutes = msum [
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ DocControl.handleDeclineAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ DocControl.handleSigAttach
-       
+
      , dir "sv" $ hGet3 $ DocControl.handleAttachmentViewForViewer
-     
+
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
@@ -179,18 +179,18 @@ handleRoutes = msum [
      , dir "t" $ param "share" $ hPost0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost0  $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost0  $ DocControl.handleCreateNewTemplate
-     
+
      , dir "o" $ hGet0  $ DocControl.showOfferList
      , dir "o" $ param "archive" $ hPost0  $ DocControl.handleOffersArchive
      , dir "o" $ param "remind" $ hPost0 $ DocControl.handleBulkOfferRemind
      , dir "o" $ hPost0 $ DocControl.handleOffersReload
-     
+
      , dir "or" $ hGet0  $ DocControl.showOrdersList
      , dir "or" $ param "archive" $ hPost0  $ DocControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ DocControl.handleBulkOrderRemind
      , dir "or" $ hPost0 $ DocControl.handleOrdersReload
-     
-     , dir "d"                     $ hGet2  $ DocControl.handleAttachmentDownloadForAuthor     
+
+     , dir "d"                     $ hGet2  $ DocControl.handleAttachmentDownloadForAuthor
      , dir "d"                     $ hGet0  $ DocControl.showContractsList
      , dir "d"                     $ hGet1  $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet2  $ DocControl.handleIssueShowTitleGet
@@ -201,7 +201,7 @@ handleRoutes = msum [
      , dir "d"                     $ hPost0 $ DocControl.handleContractsReload
      , dir "d"                     $ hPost1 $ DocControl.handleIssueShowPost
 
-     
+
      , dir "df"                    $ hGet2  $ DocControl.handleFileGet
      , dir "dv"                    $ hGet1  $ DocControl.handleAttachmentViewForAuthor
 
@@ -211,12 +211,12 @@ handleRoutes = msum [
      -- , dir "withdrawn" $ hPost0 $ DocControl.handleWithdrawn
      , dir "restart" $ hPost1 $ DocControl.handleRestart
      , dir "cancel"  $ hPost1 $ DocControl.handleCancel
-     
+
      , dir "pages"  $ hGetAjax3 $ DocControl.showPage
      , dir "pages"  $ hGetAjax5 $ DocControl.showPageForSignatory
      , dir "templates" $ hGetAjax0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hPost0 $ DocControl.handleCreateFromTemplate
-           
+
      , dir "pagesofdoc" $ hGetAjax1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax3 $ DocControl.handlePageOfDocumentForSignatory
 
@@ -244,7 +244,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "advuseradmin" $ hGet0 Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradminforsales" $ hGet0 $ Administration.showAdminUsersForSales
      , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ Administration.showAdminUsersForPayments
-     , dir "adminonly" $ dir "useradmin" $ hGet1 $ Administration.showAdminUsers . Just 
+     , dir "adminonly" $ dir "useradmin" $ hGet1 $ Administration.showAdminUsers . Just
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ Administration.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserChange
@@ -271,10 +271,10 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ Administration.handleMigrateForDeletion
      , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ DocControl.handleMigrateDocumentAuthorAttachments
      , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ Administration.migrateDocsNoAuthor
-       
+
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
      , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ Administration.handleUnquarantineAll
-     
+
      , dir "services" $ hGet0 $ handleShowServiceList
      , dir "services" $ hGet1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost1 $ handleChangeServiceUI
@@ -285,7 +285,7 @@ handleRoutes = msum [
      , dir "services" $ dir "buttons_rest" $ hGet1 handleServiceButtonsRest
      , dir "dave" $ dir "document" $ hGet1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ daveUser
-           
+
      -- account stuff
      , dir "logout"      $ hGet0  $ handleLogout
      , dir "login"       $ hGet0  $ handleLoginGet
@@ -336,7 +336,7 @@ handleHomepage = do
     _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
-handleSitemapPage = handleWholePage sitemapPage       
+handleSitemapPage = handleWholePage sitemapPage
 
 handlePriceplanPage :: Kontra Response
 handlePriceplanPage = handleWholePage priceplanPage
@@ -375,7 +375,7 @@ handleWholePage f = do
 handleError :: Kontra Response
 handleError = do
     ctx <- get
-    case (ctxservice ctx) of 
+    case (ctxservice ctx) of
          Nothing -> do
             addModal $ V.modalError (ctxtemplates ctx)
             sendRedirect LinkMain
@@ -390,10 +390,10 @@ handleMainReaload = do
    given AppConf
 -}
 defaultAWSAction :: AppConf -> AWS.S3Action
-defaultAWSAction appConf = 
+defaultAWSAction appConf =
     let (bucket,accessKey,secretKey) = maybe ("","","") id (amazonConfig appConf)
-    in 
-    AWS.S3Action 
+    in
+    AWS.S3Action
            { AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
            , AWS.s3bucket = bucket
            , AWS.s3object = ""
@@ -409,28 +409,28 @@ maybeReadTemplates :: MVar (ClockTime, KontrakcjaMultilangTemplates)
 maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
-            then do 
+            then do
                 Log.debug $ "Reloading templates"
                 templates' <- readAllLangsTemplates
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
- 
+
 showNamedHeader :: forall t . (t, HeaderPair) -> [Char]
-showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++ 
-                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]" 
+showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++
+                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]"
 
 showNamedCookie :: ([Char], Cookie) -> [Char]
-showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie 
+showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie
 
 showNamedInput :: ([Char], Input) -> [Char]
 showNamedInput (name,input) = name ++ ": " ++ case inputFilename input of
                                                   Just filename -> filename
                                                   _ -> case inputValue input of
                                                            Left _tmpfilename -> "<<content in /tmp>>"
-                                                           Right value -> show (BSL.toString value) 
-                              
+                                                           Right value -> show (BSL.toString value)
+
 showRequest :: Request -> Maybe [([Char], Input)] -> [Char]
-showRequest rq maybeInputsBody = 
+showRequest rq maybeInputsBody =
     show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
     "post variables:\n" ++
     maybe "" (unlines . map showNamedInput) maybeInputsBody ++
@@ -438,14 +438,14 @@ showRequest rq maybeInputsBody =
     (unlines $ map showNamedHeader (Map.toList $ rqHeaders rq)) ++
     "http cookies:\n" ++
     (unlines $ map showNamedCookie (rqCookies rq))
-    
+
 {- |
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler appConf appGlobals = do
   let quota :: GHC.Int.Int64 = 10000000
-      
+
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
@@ -456,7 +456,7 @@ appHandler appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx')<- toIO ctx $  
+      (res,ctx')<- toIO ctx $
          do
           res <- (handleRoutes) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
@@ -464,11 +464,11 @@ appHandler appConf appGlobals = do
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
              Log.error $ showRequest rq rqcontent
              response <- handleError
-             setRsCode 404 response     
-          ctx' <- get 
-          return (res,ctx')   
-      
-      let newsessionuser = fmap userid $ ctxmaybeuser ctx'  
+             setRsCode 404 response
+          ctx' <- get
+          return (res,ctx')
+
+      let newsessionuser = fmap userid $ ctxmaybeuser ctx'
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
@@ -488,9 +488,9 @@ appHandler appConf appGlobals = do
       -- getAddrInfo is strange that it can throw exceptions
       -- if exception is thrown, whole page load fails with
       -- error notification
-      let hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] } 
-      addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing 
-      let addr = head addrs 
+      let hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
+      addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
+      let addr = head addrs
       let peerip = case addrAddress addr of
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
@@ -523,9 +523,9 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2 
+                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2
                 , ctxesenforcer = esenforcer appGlobals
-                , ctxtwconf = TW.TrustWeaverConf 
+                , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
                               , TW.adminConf = trustWeaverAdmin appConf
                               , TW.storageConf = trustWeaverStorage appConf
@@ -544,16 +544,16 @@ appHandler appConf appGlobals = do
 
 {- |
    Handles submission of the password reset form
--}    
+-}
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
   ctx <- get
   memail <- getOptionalField asValidEmail "email"
-  case memail of 
+  case memail of
     Nothing -> return LoopBack
     Just email -> do
       muser <- query $ GetUserByEmail Nothing $ Email email
-      case muser of 
+      case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
           return LoopBack
@@ -561,13 +561,13 @@ forgotPasswordPagePost = do
           now <- liftIO getMinutesTime
           minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
           case minv of
-            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } -> 
+            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
               case prRemainedEmails of
                 0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
                 n -> do
                   -- I had to make it PasswordReminder because it was complaining about not giving cases
                   -- for the constructors of ActionType
-                  _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken 
+                  _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken
                                                                             , prRemainedEmails = n - 1
                                                                             , prUserID         = prUserID})
                   sendResetPasswordMail ctx (LinkPasswordReminder actionID prToken) user
@@ -590,21 +590,21 @@ _signupPageGet :: Kontra Response
 _signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja  content 
+    V.renderFromBody V.TopNone V.kontrakcja  content
 
-    
+
 _signupVipPageGet :: Kontra Response
 _signupVipPageGet = do
     ctx <- lift get
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja content 
+    V.renderFromBody V.TopNone V.kontrakcja content
 {- |
    Handles submission of the signup form.
    Normally this would create the user, (in the process mailing them an activation link),
    but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
    then we send them a new activation link because probably the old one expired or was lost.
    If they have then we stop the signup.
--}  
+-}
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
     Context { ctxtime = MinutesTime time seconds } <- get
@@ -613,9 +613,9 @@ signupPagePost = do
 _signupVipPagePost :: Kontra KontraLink
 _signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
 
-{- 
+{-
     A comment next to LoopBack says never to use it. Is this function broken?
--}                   
+-}
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip _freetill =  do
   ctx@Context{ctxtemplates,ctxhostpart} <- lift get
@@ -672,7 +672,7 @@ handleLoginGet = do
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
--}  
+-}
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
     memail  <- getOptionalField asDirtyEmail    "email"
@@ -683,7 +683,7 @@ handleLoginPost = do
             -- check the user things here
             maybeuser <- query $ GetUserByEmail Nothing (Email email)
             case maybeuser of
-                Just User{ userid, userpassword } 
+                Just User{ userid, userpassword }
                     | verifyPassword userpassword passwd -> do
                         logUserToContext maybeuser
                         time <- liftIO getMinutesTime
@@ -695,27 +695,27 @@ handleLoginPost = do
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
- 
+
 {- |
    Handles the logout, and sends user back to main page.
--}  
+-}
 handleLogout :: Kontra Response
 handleLogout = do
     logUserToContext Nothing
     sendRedirect LinkMain
-  
+
 {- |
    Serves out the static html files.
 -}
-serveHTMLFiles:: Kontra Response  
+serveHTMLFiles:: Kontra Response
 serveHTMLFiles =  do
     rq <- askRq
     let fileName = last (rqPaths rq)
     if ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
         then do
-            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
+            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName))
                             (const $ return Nothing)
-            case ms of 
+            case ms of
                 (Just s) -> renderFromBody V.TopNone V.kontrakcja $ BS.toString s
                 _      -> mzero
         else mzero
@@ -723,10 +723,10 @@ serveHTMLFiles =  do
 {- |
    Ensures logged in as a super user
 -}
-onlySuperUserGet :: Kontra Response -> Kontra Response  
+onlySuperUserGet :: Kontra Response -> Kontra Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser } <- get 
-    if isSuperUser ctxadminaccounts ctxmaybeuser 
+    Context{ ctxadminaccounts, ctxmaybeuser } <- get
+    if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
         else sendRedirect $ LinkLogin NotLoggedAsSuperUser
 
@@ -742,7 +742,7 @@ daveDocument documentid = onlySuperUserGet $ do
    Used by super users to inspect a particular user.
 -}
 daveUser :: UserID -> Kontra Response
-daveUser userid = onlySuperUserGet $ do 
+daveUser userid = onlySuperUserGet $ do
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 

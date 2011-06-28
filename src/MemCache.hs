@@ -1,4 +1,4 @@
-module MemCache (MemCache, new, put, get) 
+module MemCache (MemCache, new, put, get)
 where
 
 import Control.Concurrent.MVar
@@ -21,7 +21,7 @@ new sizefun sizelimit = do
  -}
 put :: (Ord k) => k -> v -> MemCache k v -> IO ()
 put k v (MemCache mc) = do
-  modifyMVar mc $ \(MemCache' sizefun sizelimit size mmap) -> 
+  modifyMVar mc $ \(MemCache' sizefun sizelimit size mmap) ->
       do
         let newsize = size + sizefun v
         _mmap' <- if not (Map.null mmap) && newsize > sizelimit
@@ -32,7 +32,7 @@ put k v (MemCache mc) = do
                  else return mmap
         let mmap'' = Map.insert k v mmap -- ?? should this be mmap or mmap'
         let mc' = MemCache' sizefun sizelimit newsize mmap''
-        
+
         return (mc', ())
 
 

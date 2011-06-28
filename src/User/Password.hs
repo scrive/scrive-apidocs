@@ -21,7 +21,7 @@ createPassword :: BS.ByteString -> IO Password
 createPassword password = do
   salt <- makeSalt
   return $ Password salt (hashPassword password salt)
-  
+
 randomOctets :: Int -> IO [Octet]
 randomOctets n = do
   randomGen <- newStdGen
@@ -36,7 +36,7 @@ hashPassword password salt =
 
 verifyPassword :: Password -> BS.ByteString -> Bool
 verifyPassword (Password salt hash1) password = hash1 == (hashPassword password salt)
-verifyPassword _ _ = False        
+verifyPassword _ _ = False
 
 $(deriveSerializeFor [ ''Password  ])
 
