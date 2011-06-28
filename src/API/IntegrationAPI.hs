@@ -56,7 +56,7 @@ instance APIContext IntegrationAPIContext where
         mbody <- apiBody
         case (mservice, mbody)  of
              (Just service, Right body2) -> do
-                Log.debug $ "API call from service:" ++ show service  
+                Log.debug $ "API call from service:" ++ show (serviceid service)
                 Log.debug $ "API call body is:" ++ (take 300 $ encode body2)
                 return $ Right $ IntegrationAPIContext {ibody=body2,service=service}
              (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
