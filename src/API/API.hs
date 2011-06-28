@@ -52,6 +52,7 @@ import Control.Monad.Reader
 import Control.Monad.Error
 import Data.Ratio
 import qualified Data.ByteString.Base64 as BASE64
+import qualified AppLogger as Log (debug)
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
@@ -82,6 +83,7 @@ class APICall a where
 instance APICall (Kontra APIResponse) where
     apiCall s action = dir "api" $ dir s $ do
                     methodM POST 
+                    Log.debug $ "API call " ++ s ++ " matched"
                     apiResponse action
 
 
@@ -89,7 +91,10 @@ instance (APIContext c) => APICall (APIFunction c APIResponse) where
     apiCall s action = apiCall s $ do
         mcontext <- apiContext
         case mcontext  of
-             Right apicontext -> fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT action apicontext
+             Right apicontext -> do
+                 res <- fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT action apicontext
+                 Log.debug $ "API call result: " ++ show res
+                 return res
              Left emsg -> return $ uncurry apiError emsg
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}

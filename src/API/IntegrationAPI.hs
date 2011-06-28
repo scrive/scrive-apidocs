@@ -39,6 +39,7 @@ import Company.CompanyState
 import Data.Foldable (fold)
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
+import qualified AppLogger as Log (debug)
 
 {- | 
   Definition of integration API
@@ -54,7 +55,10 @@ instance APIContext IntegrationAPIContext where
         mservice <- integrationService
         mbody <- apiBody 
         case (mservice, mbody)  of
-             (Just service, Right body2) -> return $ Right $ IntegrationAPIContext {ibody=body2,service=service}
+             (Just service, Right body2) -> do
+                Log.debug $ "API call from service:" ++ show service  
+                Log.debug $ "API call body is:" ++ (take 300 $ show body2)
+                return $ Right $ IntegrationAPIContext {ibody=body2,service=service}
              (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
              (_,Left s) -> return $ Left $ (API_ERROR_PARSING,"Parsing error: " ++ s) 
     
