@@ -476,83 +476,83 @@ msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> 
 
 #: mails.st:mailInvitationToSignOfferDefaultHeader
 msgid "_mailInvitationToSignOfferDefaultHeader"
-msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has sent you the offert <strong>$documenttitle$</strong>  and is waiting for your confirmation. Accept the offert by following the instructions below. "
+msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has invited  you to signing the offer  <strong>$documenttitle$</strong> online via the service Scrive."
 
 #: mails.st:mailInvitationToSignContractDefaultHeader
 msgid "_mailInvitationToSignContractDefaultHeader"
-msgstr "Hej $personname$,      <br/><br/>      <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.    "
+msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has invited you to sign the document <strong>$documenttitle$</strong> online via the service Scrive."
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentIfNotSignatoryInstruction"
-msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
+msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentIfSignatoryInstruction"
-msgstr "      1. Klicka på länken <br/>      <a href=\"$link$\">$link$</a><br/>      2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>       4. Färdig   "
+msgstr "      1. Click the linc <br/>      <a href=\"$link$\">$link$</a><br/>      2. Confirm your order <br/>      3. Sign or  (or decline)<br/>       4. Done   "
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentSender"
-msgstr "Avsändare: "
+msgstr "Sender: "
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentPartys"
-msgstr "Parter:"
+msgstr "Parties:"
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentInfo"
-msgstr "Översiktlig information"
+msgstr "General information"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentIfNotSignatoryInstruction"
-msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
+msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentIfSignatoryInstruction"
-msgstr "      1. Klicka på länken <br/>      <a href=\"$link$\">$link$</a><br/>      2. Granska online<br/>      3. Acceptera offert (eller avvisa)<br/>       4. Färdig    "
+msgstr "1. Clic the linc <br/>      <a href=\"\"$link$\"\">$link$</a><br/>      2. Review online<br/>      3. Accept offer (or decline)<br/>       4. Done"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentSender"
-msgstr "Avsändare: "
+msgstr "Sender:"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentPartys"
-msgstr "Parter:"
+msgstr "Parties:"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentInfo"
-msgstr "Översiktlig information"
+msgstr "General information"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentIfNotSignatoryInstruction"
-msgstr "Du har endast behörighet att se detta dokument    Klicka på länken nedan för att se dokumentet:"
+msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentIfSignatoryInstruction"
-msgstr "      <i>Så här går du vidare</i><br/>      1. Klicka på länken <br/>      <a href=\"$link$\">$link$</a><br/>      2. Granska online<br/>      3. Underteckna (eller avvisa)<br/>       4. Färdig    "
+msgstr "<i>This is how to continue</i><br/>      1. Clic the linc <br/>      <a href=\"\"$link$\"\">$link$</a><br/>      2. Review online<br/>      3. Sign  (or decline)<br/>       4. Done"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentSender"
-msgstr "Avsändare: "
+msgstr "Sender:"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentPartys"
-msgstr "Parter:"
+msgstr "Parties:"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentInfo"
-msgstr "Översiktlig information"
+msgstr "General information"
 
 #: mails.st:mailInvitationToSignTitle
 msgid "_mailInvitationToSignTitle"
-msgstr "Inbjudan från $creatorname$ till $documenttitle$"
+msgstr "Invite from $creatorname$ to $documenttitle$"
 
 #: mails.st:mailInvitationToViewTitle
 msgid "_mailInvitationToViewTitle"
-msgstr "Inbjudan från $creatorname$ till $documenttitle$"
+msgstr "Invite from $creatorname$ to $documenttitle$"
 
 #: mails.st:mailRejectMailContentHeader
 msgid "_mailRejectMailContentHeaderIfNotCustomHi"
-msgstr "Hej,"
+msgstr "Hello,"
 
 #: mails.st:mailRejectOrderMailContent
 msgid "_mailRejectOrderMailContentHasRejected"
