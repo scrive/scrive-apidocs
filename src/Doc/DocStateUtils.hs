@@ -21,7 +21,8 @@ module Doc.DocStateUtils (
     , modifySignable
     , modifySignableWithAction 
     , modifySignableOrTemplate
-    , modifySignableOrTemplateWithAction 
+    , modifySignableOrTemplateWithAction
+    , modifyDocumentWithActionTime
     )
 
 where
@@ -94,14 +95,18 @@ modifySignableOrTemplateWithAction:: DocumentID
                -> Update Documents (Either String Document)
 modifySignableOrTemplateWithAction = modifyDocumentWithAction (const True)
 
-
 modifyDocumentWithAction :: (Document -> Bool) -> DocumentID 
-               -> (Document ->  Update Documents (Either String Document)) 
-               -> Update Documents (Either String Document)             
-               
-modifyDocumentWithAction condition docid action = do
+               -> (Document ->  Update Documents (Either String Document))
+               -> Update Documents (Either String Document)                            
+modifyDocumentWithAction = modifyDocumentWithActionTime True
+
+modifyDocumentWithActionTime :: Bool 
+               -> (Document -> Bool) -> DocumentID 
+               -> (Document -> Update Documents (Either String Document))
+               -> Update Documents (Either String Document)                            
+modifyDocumentWithActionTime touchtime condition docid action = do
   documents <- ask
-  case getOne (documents @+ [LiveDocument, QuarantinedDocument] @= docid) of
+  case getOne (documents @= docid @+ [LiveDocument, QuarantinedDocument] ) of
     Nothing -> return $ Left "no such document"
     Just document -> 
       if (condition document)
@@ -110,12 +115,16 @@ modifyDocumentWithAction condition docid action = do
              case actionresult of
                 Left message -> return $ Left message
                 Right newdocument -> do
-                        let newdocumentNoUnsupportedFutures = dropUnsupportedFeatures newdocument
-                        now <- getMinuteTimeDB
                         when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                        modify (updateIx docid $ newdocumentNoUnsupportedFutures {documentmtime=now})
+                        now <- getMinuteTimeDB
+                        let newdocumentNoUnsupportedFutures = 
+                              if touchtime
+                              then (dropUnsupportedFeatures newdocument) { documentmtime = now }
+                              else (dropUnsupportedFeatures newdocument)
+                        modify (updateIx docid $ newdocumentNoUnsupportedFutures )
                         return $ Right newdocument
-       else return $ Left "Document didn't matche condition required for this action"
+       else return $ Left "Document didn't match condition required for this action"
+
 
 -- Feature checking
 

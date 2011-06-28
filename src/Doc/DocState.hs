@@ -1287,8 +1287,8 @@ migrateToSigLinks docid author = do
 
 migrateDocumentAuthorAttachments :: DocumentID -> [File] -> Update Documents (Either String Document)
 migrateDocumentAuthorAttachments docid files =
-  modifySignableOrTemplate docid $
-  \doc -> if length files > 0
+  modifyDocumentWithActionTime False (const True) docid $
+  \doc -> return $ if length files > 0
           then Right doc { documentauthorattachments = for files (\f ->
                                                                    AuthorAttachment { authorattachmentfile = f })
                          , documentattachments = []
