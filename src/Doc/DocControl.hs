@@ -2034,9 +2034,7 @@ migrateDocSigLinks = onlySuperUser $ do
 -}
 
 handleMigrateDocumentAuthorAttachments :: Kontra Response
-handleMigrateDocumentAuthorAttachments = do
-  Context { ctxmaybeuser = Just user } <- get
-  guard (useremail (userinfo user) == Email (BS.fromString "ericwnormand@gmail.com"))
+handleMigrateDocumentAuthorAttachments = onlySuperUser $ do
   docs <- query $ GetDocuments Nothing
   forM_ docs (\doc -> do
                          eatts <- query $ GetDocumentsByDocumentID (documentattachments doc)
