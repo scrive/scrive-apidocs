@@ -235,7 +235,7 @@ setDocumentTag =  do
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
     let doc = fromJust mdocument
-    mtag <- apiLocal "tags" $ do
+    mtag <- apiLocal "tag" $ do
               liftM2 pairMaybe (apiAskBS "name") (apiAskBS "value")
     when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
     let tags = addTag (documenttags doc) (fromJust mtag)
