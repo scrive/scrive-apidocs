@@ -106,6 +106,7 @@ Executable kontrakcja-server
   Build-depends: HUnit, QuickCheck
   Build-depends: text
   Build-depends: transformers
+  Build-depends: unix
 
   Main-Is: Main.hs
 
