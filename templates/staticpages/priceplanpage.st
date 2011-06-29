@@ -98,14 +98,14 @@ priceplanPageContents=
                                 <td>40 kr</td>
                                 <td>35 kr</td>
                                 <td>35 kr</td>
-                                <td>Offer</td>
+                                <td>Offert</td>
                             </tr>
                             <tr>
                                 <td>Standardlagring</td>
                                 <td>500 dok</td>
                                 <td>Obegränsad</td>
                                 <td>Obegränsad</td>
-                                <td>Obegränsad</td>
+                                <td>Offert</td>
                             </tr>
                             <tr class="odd-row">
                                 <td>Trustweaver premiumlagring</td>

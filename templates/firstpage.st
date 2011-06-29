@@ -316,7 +316,7 @@ och anpassning</p>
                                                         </td>
                                                         <td>
                                                                 <h4>29 995kr/år</h4>
-                                                                <a href="/priser">Detaljerad prisplan<a>                                                   
+                                                                <a href="/priser">Detaljerad prisplan</a>                                                   
                                                         </td>
                                                         <td>
                                                                 <h4>Offert</h4>
