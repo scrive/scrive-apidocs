@@ -1037,7 +1037,7 @@ data Document = Document
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
-    , documentattachments            :: [DocumentID]
+    , documentattachments            :: [DocumentID] -- this needs to go away in next migration
     , documentoriginalcompany        :: Maybe CompanyID
     , documentrecordstatus           :: DocumentRecordStatus
     , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
