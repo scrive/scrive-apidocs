@@ -872,7 +872,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	border: 1px solid #ccc;
 	border-radius: 5px;
-	height: 266px;
+	height: 250px;
 	margin-top: 65px;
 	position: relative;
 	width: 938px;
@@ -984,7 +984,7 @@ a.new-btn-small.black p {
 }
 
 .highlight-container.ppfix {
-    height: 1023px;
+    height: 960px;
 }
 
 #body-container .highlight-container .highlight-rows {
@@ -1066,6 +1066,7 @@ a.new-btn-small.black p {
         color: #999;
         font: italic 12px "Georgia";
         padding: 10px;
+        width: 400px;
 }
 
 /* Highlight Ribbon */
