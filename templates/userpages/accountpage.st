@@ -9,6 +9,7 @@ showUser =
        <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
        $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
        <li><a href="/account/sharing">$_sharing()$</a></li>
+       <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
    </ul>
    <div class="tab-container">
        <div class="tab-content account">

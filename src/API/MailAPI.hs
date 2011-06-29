@@ -78,10 +78,10 @@ maybeFail msg = maybe (fail msg) return
 {-
 
 { "title": "Title of the document",
-  "persons": [
-           { "firstName": "Gracjan",
-             "lastName": "Polak",
-             "personNumber": "1412341234"
+  "involved": [
+           { "fstname": "Gracjan",
+             "sndname": "Polak",
+             "personalnumber": "1412341234",
              "email": "gracjan@skrivapa.se"
            }]
 }

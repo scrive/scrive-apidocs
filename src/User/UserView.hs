@@ -4,6 +4,7 @@ module User.UserView (
     viewFriends,
     showUser,
     showUserSecurity,
+    showUserMailAPI,
     pageAcceptTOS,
     activatePageViewNotValidLink,
 
@@ -123,6 +124,11 @@ showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ 
     field "lang" $ do
         field "en" $ LANG_EN == (lang $ usersettings user)
         field "se" $ LANG_SE == (lang $ usersettings user)
+    menuFields user
+
+showUserMailAPI :: KontrakcjaTemplates -> User -> IO String
+showUserMailAPI templates user = renderTemplate templates "showUserMailAPI" $ do
+    field "linkmailapi" $ show LinkUserMailAPI
     menuFields user
 
 pageAcceptTOS :: KontrakcjaTemplates -> IO String

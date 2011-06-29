@@ -110,6 +110,7 @@ msgstr "Scrive"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_sharing"
 msgstr "Sharing"
 
@@ -271,6 +272,7 @@ msgstr "Cancel"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_Subaccounts"
 msgstr "Subaccounts"
 
@@ -327,6 +329,7 @@ msgstr "Send reminder"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_HeadUserInfo"
 msgstr "User info"
 
@@ -334,8 +337,17 @@ msgstr "User info"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_HeadAccountSettings"
 msgstr "Account settings"
+
+#: userpages/accountpage.st:showUser
+#: userpages/subaccountslist.st:viewSubaccounts
+#: userpages/friendpage.st:viewFriends
+#: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
+msgid "_HeadMailApi"
+msgstr "Mail API"
 
 #~ msgid "_Delete"
 #~ msgstr "Radera"

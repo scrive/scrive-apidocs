@@ -110,6 +110,7 @@ msgstr "SkrivaPå"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_sharing"
 msgstr "Delning"
 
@@ -271,6 +272,7 @@ msgstr "Avbryt"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_Subaccounts"
 msgstr "Underkonton"
 
@@ -327,6 +329,7 @@ msgstr "Skicka påminnelse"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_HeadUserInfo"
 msgstr "Användaruppgifter"
 
@@ -334,8 +337,17 @@ msgstr "Användaruppgifter"
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
 msgid "_HeadAccountSettings"
 msgstr "Kontoinställningar"
+
+#: userpages/accountpage.st:showUser
+#: userpages/subaccountslist.st:viewSubaccounts
+#: userpages/friendpage.st:viewFriends
+#: userpages/securitypage.st:showUserSecurity
+#: userpages/mailapipage.st:showUserMailAPI
+msgid "_HeadMailApi"
+msgstr "Mail API"
 
 #~ msgid "_Delete"
 #~ msgstr "Radera"

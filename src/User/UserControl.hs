@@ -104,6 +104,16 @@ copyCompanyInfo fromuser info =
   , usercountry = usercountry $ userinfo fromuser
   }
 
+handleGetUserMailAPI :: Kontra (Either KontraLink Response)
+handleGetUserMailAPI = withUserGet $ do
+    Context { ctxmaybeuser = Just user, ctxtemplates } <- get
+    content <- liftIO $ showUserMailAPI ctxtemplates user
+    renderFromBody TopAccount kontrakcja content
+
+handlePostUserMailAPI :: Kontra KontraLink
+handlePostUserMailAPI = do
+    return LinkUserMailAPI
+
 handleGetUserSecurity :: Kontra Response
 handleGetUserSecurity = do
     ctx <- get
