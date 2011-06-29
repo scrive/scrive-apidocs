@@ -21,7 +21,7 @@ $loadingdialog()$
                         </ul>
                     </div>
 
-                    <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:92px;margin-left: 20px;" >  
+                    <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:160px;margin-left: 20px;" >
                         <div class="left"> </div>
                         <div class="label"> $_createNew()$</div>
                         <div class="right"> </div>

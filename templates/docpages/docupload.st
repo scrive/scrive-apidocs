@@ -85,9 +85,9 @@ $elseif(!showTemplates)$
         <span class="text">$_signStepsBodyUploadBoxStep1UpLoadOnlyPDF()$</span> 
       <br/>
       <div class="signStepsButtonContainer">
-        <a class="btn-small green" style="overflow:hidden;height:34px;width:114px" >  
+        <a class="btn-small green" style="overflow:hidden;height:34px;width:134px" >
           <div class="left"> </div>
-          <div class="label" style="width:80px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div> 
+          <div class="label" style="min-width:100px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div>
           <div class="right"> </div>
           <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
         </a>
@@ -107,7 +107,7 @@ $elseif(!showTemplates)$
       <div class="signStepsButtonContainer" style="height:34px">
         <a class="btn-small green selectTemplateButton" href="/?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
           <div class="left"> </div>
-          <div class="label" style="width:80px">$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$</div>
+          <div class="label" style="min-width:100px">$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$</div>
           <div class="right"> </div>
         </a>
       </div>

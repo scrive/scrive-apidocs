@@ -102,7 +102,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 Våra kunder och våra kunders kunder älskar enkelheten.
                                                 </p>
                                                 <h3>Skapa konto nu!</h3>
-                                                <p class="introtext">1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                                <p class="introtext">14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
                                                         <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
                                                         <input type="submit" class="hidden" />
@@ -267,62 +267,57 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr>
                                                         <th>
                                                                 <h3>Small</h3>
-                                                                <p>För sällananvändare</p>
+                                                                <p>Förbättra processerna i den mindre organisationen</p>
                                                         </th>
                                                         <th>
-                                                                <h3>Medium</h3>
-                                                                <p>Låg volym och enkla behov</p>
+                                                                <h3>Team</h3>
+                                                                <p>Effektivisera teamet med enkla medel</p>
                                                         </th>
                                                         <th>
                                                                 <h3>Business</h3>
-                                                                <p>Medel volym och många användningsområden</p>
+                                                                <p>En helhetslösning för många användningsområden</p>
                                                         </th>
                                                         <th>
                                                                 <h3>Enterprise</h3>
-                                                                <p>Stora volymer och/eller <BR/>komplexa behov</p>
+                                                                <p>Större volymer, integrationer 
+och anpassning</p>
                                                         </th>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td>1 användare</td>
                                                         <td>5 användare</td>
                                                         <td>15 användare</td>
-                                                        <td>Obegränsat antal användare</td>
+                                                        <td>50 användare</td>
+                                                        <td>Offert</td>
                                                 </tr>
                                                 <tr>
-                                                        <td>10 fria signaturer/mån</td>
-                                                        <td>20 fria signaturer/mån</td>
-                                                        <td>50 fria signaturer/mån</td>
-                                                        <td>Min 2.000 signaturer/år</td>
+                                                        <td>250 signaturer/år</td>
+                                                        <td>750 signaturer/år</td>
+                                                        <td>1500 signaturer/år</td>
+                                                        <td>Från 3000 signaturer/år</td>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td>50 dok lagring</td>
-                                                        <td>500 dok lagring</td>
+                                                        <td>500 dok laging</td>
                                                         <td>Obegränsad lagring</td>
                                                         <td>Obegränsad lagring</td>
+                                                        <td>Offert</td>
                                                 </tr>
                                                 <tr>
-                                                        <td>Individuellt arkiv</td>
-                                                        <td>Dela arkiv</td>
-                                                        <td>Dela arkiv</td>
-                                                        <td>Dela arkiv</td>
-                                                </tr>
-                                                <tr class="odd-row">
+                                                        <td>Basfunktioner</td>
                                                         <td>Basfunktioner</td>
                                                         <td>Advancerade funktioner</td>
-                                                        <td>Advancerade funktioner</td>
-                                                        <td>Advancerade funktioner +</td>
+                                                        <td>Anpassad lösning</td>
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
-                                                                <h4>249kr/mån</h4>
+                                                                <h4>4 995kr/år</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
-                                                                <h4>499kr/mån</h4>
+                                                                <h4>14 995kr/år</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
-                                                                <h4>999kr/mån</h4>
+                                                                <h4>29 995kr/år</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>                                                   
                                                         </td>
                                                         <td>
@@ -336,17 +331,16 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <ul class="highlight-rows">
                                                         <li class="top">
                                                                 <h3>Business</h3>
-                                                                <p>Medel volym och många användningsområden</p>
+                                                                <p>En helhetslösning för många användningsområden </p>
                                                         </li>
-                                                        <li class="odd">15 användare</li>
+                                                        <li class="odd">50 användare</li>
                                                         <li>
-                                                                <p>50 fria signaturer/mån</p>
+                                                                <p>1500 signaturer/år</p>
                                                         </li>
                                                         <li class="odd">Obegränsad lagring</li>
-                                                        <li>Dela arkiv</li>
-                                                        <li class="odd">Avancerade funktioner</li>
+                                                        <li>Avancerade funktioner</li>
                                                         <li class="bottom">
-                                                                <h4>999kr/mån</h4>
+                                                                <h4>29 995 kr/år</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>   
                                                         </li>
                                                 </ul>
@@ -355,13 +349,15 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="drop-shadow-container">
                                         <div class="drop-shadow"></div>
                                 </div>
-                                <div class="price-plan-annotation">* Alla priser är exkl moms<br/></div>
-                                <div class="price-plan-annotation">Vi erbjuder också ett frikonto med 3 signaturer per månad och 10 dokument i lagring</div>
+                                <div class="price-plan-annotation">
+                                * Alla priser är exkl moms.<br/>
+                                * Vi erbjuder också ett frikonto för 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.
+                                </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
                                                 <h3>Skapa konto nu!</h3>
-                                                <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                                <p>14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="$linksignup$" class="requestAccount">
