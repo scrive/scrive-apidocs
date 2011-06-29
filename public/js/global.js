@@ -683,7 +683,7 @@ safeReady(function() {
 });
 
 safeReady(function() {
-    saveOverlay("#cancel, .cancel", {
+    saveOverlay("#cancel", {
         mask: standardDialogMask
     });
 });
