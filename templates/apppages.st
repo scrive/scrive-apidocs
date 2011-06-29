@@ -89,7 +89,7 @@ standardBodyWrapper=
                                         <div class="try-skrivapa">
                                           <div class="left">
                                             <h3>Skapa konto nu!</h3>
-                                            <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                            <p>14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                           </div>
                                           <div class="right">
                                             <form method="post" action="$linksignup$" class="requestAccount">
@@ -117,7 +117,7 @@ queryColumn=
 <p>SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. 
 Våra kunder och våra kunders kunder älskar enkelheten.</p>
 <br />
-<p>Vi bjuder på 1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+<p>Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <br />
                                                 <form method="post"
                                                 action="$linksignup$" class="requestAccount">
