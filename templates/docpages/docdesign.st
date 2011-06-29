@@ -404,7 +404,11 @@ pageDocumentDesign=
                 $validationdropdown()$
                 $if(!process.isauthorsend)$
                 <div style="padding-bottom:8px; padding-top: 2px;">
-                  <input id="switchercheckbox" style="position:relative;top:2px" type="checkbox" class="sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
+                  <input id="switchercheckbox"
+                  style="position:relative;top:2px" type="checkbox"
+                  class="sendcheckbox" on=".sendbutton"
+                  off=".signbutton" autocomplete="off" name="signlast"
+                   $if(signlast)$checked="checked" value="on"$else$value="off"$endif$ > 
                   <label for="switchercheckbox" class="usual" style="margin-left:3px;">$_switchercheckboxSignLast()$</label>
                   <label class="secretary"
                   style="margin-left:3px;display:none;">$_switchercheckboxNotSignatory()$</label></input>

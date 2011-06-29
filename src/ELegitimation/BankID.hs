@@ -318,7 +318,7 @@ handleIssuePostBankID docid = withUserPost $ do
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
     transactionid <- getDataFnM $ look "transactionid"
-
+    signlast <- isFieldSet "signlast"
     document <- queryOrFail $ GetDocumentByDocumentID docid
 
     failIfNotAuthor document author
@@ -361,7 +361,7 @@ handleIssuePostBankID docid = withUserPost $ do
                     Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     addFlashMsg $ toFlashMsg OperationFailed "E-legitimationstjänsten misslyckades att verifiera din signatur"
                     -- change me! I should return back to the same page
-                    return $ LinkDesignDoc $ DesignStep3 docid
+                    return $ LinkDesignDoc $ DesignStep3 docid signlast
                 Right (cert, attrs) -> do
                     Log.debug $ show attrs
                     providerType <- providerStringToType provider
@@ -384,7 +384,7 @@ handleIssuePostBankID docid = withUserPost $ do
                             liftIO $ print $ "merge failed: " ++ msg
                             Log.debug $ "merge failed: " ++ msg
                             addFlashMsg $ toFlashMsg OperationFailed $ "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg
-                            return $ LinkDesignDoc $ DesignStep3 docid
+                            return $ LinkDesignDoc $ DesignStep3 docid signlast
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
                             Log.debug $ show mfinal
