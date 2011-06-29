@@ -361,7 +361,7 @@ safeReady(function() {
                 }
             },
             error: repeatForeverWithDelay(1000)
-            });
+        });
     }
 });
 
@@ -513,14 +513,14 @@ safeReady(function() {
 
 // bankid stuff
 /*
-safeReady(function() {
+  safeReady(function() {
   $("#dialog-confirm-sign-eleg .bankid").click(function(){
-    sign2(window.location.pathname,
-          "#dialog-confirm-sign-eleg",
-          "/bankid" + window.location.pathname);
-    return false;
+  sign2(window.location.pathname,
+  "#dialog-confirm-sign-eleg",
+  "/bankid" + window.location.pathname);
+  return false;
   });
-});
+  });
 */
 
 safeReady(function() {
@@ -584,27 +584,36 @@ safeReady(function() {
             }
 
             $("#edit-invite-text-dialog textarea").val(newtxt);
-            var author = $(".authorname .fieldvalue").text();
+            //var author = $(".authorname .fieldvalue").text();
             var sigs = $("#personpane .persondetails");
             var partners = new Array();
 
             if (authorSignes) {
-                signedList.html(signedList.attr("okprefix") + " <strong>" + author + "</strong>");
-                partners.push(author);
-                i++;
+                var fstnamefield = $(".authorfstname .fieldvalue");
+                var sndnamefield = $(".authorsndname .fieldvalue");
+                var mailfield = $(".authoremail .fieldvalue");
+                var res = escapeHTML(fstnamefield.text() + " " + sndnamefield.text()).trim();
+                if (!res) {
+                    res = mailfield.text();
+                }
+                partners.push(res);
+                signedList.html(signedList.attr("okprefix") + " <strong>" + res + "</strong>");
             } else {
                 signedList.html(signedList.attr("alt"));
             }
             //ignore first one (it is author and we added him earlier)
             sigs.slice(1).each(function() {
                 if ($("input:radio:first:checked", this).length > 0) {
-                    var fstnamefield = $("input[name='signatoryfstname']", this);
-                    var sndnamefield = $("input[name='signatorysndname']", this);
-                    var mailfield = $("input[name='signatoryemail']", this)
-                        var res = escapeHTML(fstnamefield.val() + " " + sndnamefield.val());
-                    if ((!mailfield.hasClass("grayed")) && (fstnamefield.hasClass("grayed") && sndnamefield.hasClass("grayed")))
-                        res = mailfield.val();
-                    partners.push(res);
+                    var fstnamefield = $(".sigfstname", this);
+                    var sndnamefield = $(".sigsndname", this);
+                    var mailfield = $(".sigemail", this);
+                    var res = escapeHTML(getValue(fstnamefield) + " " + getValue(sndnamefield)).trim();
+                    if (!res) {
+                        res = getValue(mailfield);
+                    }
+                    if(res) {
+                        partners.push(res);
+                    }
                 }
             });
             $(".partylistupdate").html(swedishList(partners));
@@ -632,7 +641,7 @@ safeReady(function() {
         // -EN
         $('textarea', $(this)).each(function() {
             inputs = inputs.add($("<input name='" + $(this).attr('name') + "' value='" + $(this).val() + "'>"))
-            });
+        });
         inputs.css("display", "none");
         newform.append(inputs);
         newform.submit();
@@ -659,7 +668,7 @@ safeReady(function() {
                 $("#signGuardField").css("border", "1px dotted red");
                 $(".signGuard").change(function() {
                     $("#signGuardField").css("border", "")
-                    });
+                });
                 addFlashMessage(signguardwarntext, "red");
                 return false;
             }
@@ -691,7 +700,7 @@ safeReady(function() {
                 $(".signGuard").parent().css("border", "1px dotted red");
                 $(".signGuard").change(function() {
                     $(this).parent().css("border", "")
-                    });
+                });
                 //addFlashMessage("need text");
                 return false;
             }
@@ -727,7 +736,7 @@ safeReady(function() {
 safeReady(function() {
     $(".validateEmail").click(function() {
         return (emailFieldsValidation($(":email", $(this).parents("form"))))
-        });
+    });
 });
 
 safeReady(function() {
@@ -790,7 +799,7 @@ safeReady(function() {
                 $(".datehere", curr).text("(" + curr.data("dateinput").getValue('dd-mm-yy') + ")");
             },
             min: new Date()
-            });
+        });
         curr.data("dateinput").setValue(new Date());
         localignore = false;
         curr.data("dateinput").addDay(parseInt($(curr.attr("rel")).val()));
@@ -816,7 +825,7 @@ safeReady(function() {
                 curr.text(curr.data("dateinput").getValue('dd-mm-yyyy'));
             },
             min: new Date()
-            });
+        });
         if (input.val() == "") {
             curr.data("dateinput").setValue(new Date());
         } else {
@@ -866,7 +875,7 @@ function showProperSignButtons() {
         }
     } else {
         if (checkBox.attr("checked")) {
-          console.log("global.js:869");
+            console.log("global.js:869");
             checkBox.attr("checked", false).change();
         }
         checkBox.parent().find(".usual").show();
@@ -891,7 +900,7 @@ function emailFieldsValidation(fields) {
     fields.removeClass("noflash");
     fields = fields.filter(function() {
         return ! isExceptionalField($(this))
-        });
+    });
     if (fields.length > 0) {
         var inputs = fields.validator({
             effect: 'failWithFlashOnEmail',
@@ -1023,7 +1032,7 @@ safeReady(function() {
 function prepareForEdit(form) {
     $(".editable", form).each(function() {
         var textarea = $("<textarea style='width:470px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>")
-            var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
+        var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
         wrapper.append(textarea);
         $(this).replaceWith(wrapper);
         var editor = prepareEditor(textarea);
@@ -1127,9 +1136,9 @@ function swedishList(list) {
     for (i = 1; i < list.length; i++) {
         if (i == list.length - 1)
             res += " och " + strong(list[i])
-            else
+        else
             res += ", " + strong(list[i])
-        }
+    }
     return res;
 }
 
@@ -1241,8 +1250,8 @@ $(document).ready(function() {
         li.remove();
 
         if (signorderlisttext !== "-")
-        // non-signatory
-        removeLastSigningOrderPosition();
+            // non-signatory
+            removeLastSigningOrderPosition();
         if (signingOrderEnabled)
             updatePeopleListSignOrder();
 
@@ -1486,7 +1495,7 @@ safeReady(function() {
             success: function(data) {
                 var content = $(data);
                 var errormsg = content.find(".errormsg")
-                    if (errormsg.length > 0) {
+                if (errormsg.length > 0) {
                     var errdialog = $("<div title='" + localization.problemWithPDF + "'>" + errormsg.text() + "</div>");
                     errdialog.dialog({
                         open: function(event, ui) {
@@ -1564,8 +1573,8 @@ function saveOverlay(d, o) {
     $(d).click(function() {
         if ($(this).data("overlay") == undefined) {
             if ($(window).height() < 1650)
-            // never seen screen with bigger respolution
-            top = standardDialogTop;
+                // never seen screen with bigger respolution
+                top = standardDialogTop;
             else
                 o.top = $(this).offset().top - $(document).scrollTop() - 400;
             o.load = true;
