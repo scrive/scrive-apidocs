@@ -63,6 +63,10 @@ msgid "_signatoryMessageIfElse"
 msgstr "Has not been delivered"
 
 #: docpages/docsignatories.st:reminderForm
+msgid "_sendReminder"
+msgstr "SEND REMINDER"
+
+#: docpages/docsignatories.st:reminderForm
 msgid "_reminderFormSendReminder"
 msgstr "Send reminder"
 

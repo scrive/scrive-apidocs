@@ -31,7 +31,7 @@ modalSignInviteView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalSignInviteViewFooterClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -58,7 +58,7 @@ modalOfferCreated=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalOfferCreatedClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -85,7 +85,7 @@ modalOrderCreated=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalOrderCreatedClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -112,7 +112,7 @@ modalOfferSignedHasAccount=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalOfferSignedHasAccountClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -163,22 +163,22 @@ modalAccountSetup=
         <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
         <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
             <td><input id="accountTypePrivate" type="radio" value="PrivateAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(PrivateAccount)$checked="true"$endif$ /> <label for="accountTypePrivate">$_modalAccountSetupIfPrivateAccount()$</label></td>
-            <td><input id="accountTypeCompany" type="radio" value="CompanyAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(CompanyAccount)$checked="true"$endif$ /> <label for="accountTypeCompany">$_modalAccountSetupIfCompanyAccount()$</label></td>
+            <td><input id="accountTypeCompany" type="radio" value="CompanyAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(CompanyAccount)$checked="true"$endif$ /> <label for="accountTypeCompany">$_company()$:</label></td>
             $if(hassupervisor)$
             <td><input type="hidden" name="accounttype" value="$supervisoraccounttype$" /></td>
             $endif$
         </tr></tbody></table>
         <table id="companyInfo"><tbody>
             <tr>
-                <td style="width: 120px">$_modalAccountSetupFirstName()$</td>
+                <td style="width: 120px">$_firstname()$:</td>
                 <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"/></td>
             </tr>
             <tr>
-                <td>$_modalAccountSetupLastName()$</td>
+                <td>$_lastname()$:</td>
                 <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"/></td>
             </tr>
             <tr>
-                <td>$_modalAccountSetupCompany()$</td>
+                <td>$_company()$:</td>
                 <td><input type="text" name="companyname" autocomplete="off"
                     $if(hassupervisor)$
                     disabled="true" value="$supervisorcompany$"
@@ -192,7 +192,7 @@ modalAccountSetup=
                 <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"/></td>
             </tr>
             <tr>
-                <td>$_modalAccountSetupPhone()$</td>
+                <td>$_phone()$:</td>
                 <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"/></td>
             </tr>
         </tbody></table>
@@ -330,7 +330,7 @@ modalSendInviteView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalSendInviteViewClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -357,7 +357,7 @@ modalLoginForSaveView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalLoginForSaveViewClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -384,7 +384,7 @@ modalRejectedView=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalRejectedViewClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -421,13 +421,13 @@ modalSignedViewClosedHasAccountNotLoggedIn=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_modalSignedViewClosedHasAccountNotLoggedInFooterClose()$</a>
+        <a class="close cancel">$_close()$</a>
         <a href="#" class="txt-link message">$_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>$_modalSignedViewClosedHasAccountNotLoggedInFooterLogIn()$</p>
+          <p>$_login()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -454,7 +454,7 @@ modalSignedViewClosedHasAccountLoggedIn=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalSignedViewClosedHasAccountLoggedInClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -489,13 +489,13 @@ modalSignedViewOrderClosedHasAccountNotLoggedIn=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_modalSignedViewOrderClosedHasAccountNotLoggedInFooterClose()$</a>
-        <a href="#" class="txt-link message">$_modalSignedViewOrderClosedHasAccountNotLoggedInFooterForgotPassword()$</a>
+        <a class="close cancel">$_close()$</a>
+        <a href="#" class="txt-link message">$_forgotpassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>$_modalSignedViewOrderClosedHasAccountNotLoggedInFooterLogIn()$</p>
+          <p>$_login()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -522,7 +522,7 @@ modalSignedViewOrderClosedHasAccountLoggedIn=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalSignedViewOrderClosedHasAccountLoggedInFooterClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -601,7 +601,7 @@ modalSignedViewNotClosedHasAccountLoggedIn=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalSignedViewNotClosedHasAccountLoggedInFooterClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -629,13 +629,13 @@ modalSignedViewNotClosedHasAccountNotLoggedIn=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_modalSignedViewNotClosedHasAccountNotLoggedInFooterCLose()$</a>
+        <a class="close cancel">$_close()$</a>
         <a href="#" class="txt-link message">$_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>$_modalSignedViewNotClosedHasAccountNotLoggedInFooterLogIn()$</p>
+          <p>$_login()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -670,7 +670,7 @@ modalSignedViewOrderNotClosedHasAccountLoggedIn=
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
-        <p>$_modalSignedViewOrderNotClosedHasAccountLoggedInFooterClose()$</p>
+        <p>$_close()$</p>
         <div class="btn-symbol green arrow-left"></div>
       </div>
       <div class="right"></div>
@@ -698,13 +698,13 @@ modalSignedViewOrderNotClosedHasAccountNotLoggedIn=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">$_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterClose()$</a>
+        <a class="close cancel">$_close()$</a>
         <a href="#" class="txt-link message">$_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>$_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterLogIn()$</p>
+          <p>$_login()$</p>
         </div>
         <div class="right"></div>
       </a>
@@ -748,12 +748,12 @@ accountFromSignInputs=
          </div>
          <table style="width: 250px; margin-top: 5px"><tbody><tr>
            <td><input style="width: auto" id="accountTypePrivate" type="radio" name="accounttype" value="PrivateAccount" /> <label for="accountTypePrivate">$_accountFromSignInputsPrivateAccount()$</label></td>
-           <td><input style="width: auto" id="accountTypeCompany" type="radio" name="accounttype" value="CompanyAccount" /> <label for="accountTypeCompany">$_accountFromSignInputsCompanyAccount()$</label></td>
+           <td><input style="width: auto" id="accountTypeCompany" type="radio" name="accounttype" value="CompanyAccount" /> <label for="accountTypeCompany">$_company()$</label></td>
          </tr></tbody></table>
          <div style="padding-top:10px">
           <table>
             <tr>
-              <td style="width:120px;">$_accountFromSignInputsPassword()$</td>
+              <td style="width:120px;">$_password()$</td>
               <td><input type="password" name="password" /></td>
             </tr>
             <tr>
@@ -794,7 +794,7 @@ $if(loginModal)$
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            <h1>$_loginModalLogIn()$</h1>
+            <h1>$_login()$</h1>
           </span>
           <a class="modal-close close"> </a>
         </div>
@@ -803,8 +803,8 @@ $if(loginModal)$
             <div class="body">
               <div class="wrapper" style="text-align:right">
                 <input type="hidden" name="referer" value="$referer$" />
-                <span class="txt">$_loginModalEmail()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-                <span class="txt">$_loginModalPassword()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
+                <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+                <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -813,12 +813,12 @@ $if(loginModal)$
         <div class="modal-footer">
           <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
-            <a href="#" class="txt-link message">$_loginModalFooterForgotPassword()$</a>
+            <a href="#" class="txt-link message">$_forgotpassword()$</a>
           </div>
           <a href="#" class="btn-small blue float-right submit">
             <div class="left"></div>
             <div class="label">
-              <p>$_loginModalFooterLogIn()$</p>
+              <p>$_login()$</p>
             </div>
             <div class="right"></div>
           </a>
@@ -833,7 +833,7 @@ $if(loginModal)$
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            <h1>$_loginModalForgotPasswordForgotPassword()$</h1>
+            <h1>$_forgotpassword()$</h1>
           </span>
           <a class="modal-close close"> </a>
         </div>
@@ -841,7 +841,7 @@ $if(loginModal)$
           <div class="modal-content"> 
             <div class="body">
               <div class="wrapper">
-                <span class="txt">$_loginModalForgotPasswordEmail()$</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
+                <span class="txt">$_email()$</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -850,7 +850,7 @@ $if(loginModal)$
         <div class="modal-footer">
           <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
-            <a href="#" class="txt-link message">$_loginModalForgotPasswordFooterLogIn()$</a>
+            <a href="#" class="txt-link message">$_login()$</a>
           </div>
           <a href="#" class="btn-small green float-right submit">
             <div class="left"></div>
@@ -873,8 +873,8 @@ loginModalPart=
     <div class="body">
       <div class="wrapper" style="text-align:right">
         <input type="hidden" name="referer" value="$referer$" />
-        <span class="txt">$_loginModalPartEmail()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-        <span class="txt">$_loginModalPartPassword()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
+        <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+        <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
         <input type="submit" class="hidden" />
       </div>
     </div>

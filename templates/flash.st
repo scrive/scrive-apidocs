@@ -116,23 +116,23 @@ $if(invloginfo)$
 $endif$
 ###
 ###
-emailFieldName=	$_emailFieldName()$
+emailFieldName=	$_email()$
 ###
 passwordFieldName=	$_passwordFieldName()$
 ###
 nameFieldName=	$_nameFieldName()$
 ###
-firstNameFieldName=	$_firstNameFieldName()$
+firstNameFieldName=	$_firstname()$
 ###
-secondNameFieldName=	$_secondNameFieldName()$
+secondNameFieldName=	$_lastname()$
 ###
-companyNameFieldName=	$_companyNameFieldName()$
+companyNameFieldName=	$_company()$
 ###
-companyNumberFieldName=	$_companyNumberFieldName()$
+companyNumberFieldName=	$_orgnumber()$
 ###
 addressFieldName=	$_addressFieldName()$
 ###
-positionFieldName=	$_positionFieldName()$
+positionFieldName=	$_companyposition()$
 ###
 checkBoxFieldName=	$_checkBoxFieldName()$
 ###

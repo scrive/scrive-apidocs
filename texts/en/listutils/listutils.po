@@ -24,7 +24,7 @@ msgstr "Next"
 
 #: listutils/listutils.st:listLocalDialogs
 msgid "_listLocalDialogsBody"
-msgstr "Are you sure that you want to delete"
+msgstr "Are you sure that you want to delete "
 
 #~ msgid "_listLocalDialogsHeadDelete"
 #~ msgstr "Radera"

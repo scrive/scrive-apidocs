@@ -71,16 +71,8 @@ msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader"
 msgstr "Du har bekräftat ordern $documenttitle$"
 
 #: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterLogIn"
-msgstr "Logga in"
-
-#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword"
 msgstr "Glömt lösenord"
-
-#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterClose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved"
@@ -93,10 +85,6 @@ msgstr "          $partyUnsignedListString:noescape()$ har ännu inte          b
 #: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
 msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInHeader"
 msgstr "Du har bekräftat ordern $documenttitle$"
-
-#: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
-msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInFooterClose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
 msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved"
@@ -119,18 +107,6 @@ msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInHeader"
 msgstr "Du har bekräftat ordern $documenttitle$"
 
 #: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterLogIn"
-msgstr "Logga in"
-
-#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterForgotPassword"
-msgstr "Glömt lösenord"
-
-#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterClose"
-msgstr "Stäng"
-
-#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved"
 msgstr "          Orderbekräftelsen har sparats till ditt konto.        "
 
@@ -141,10 +117,6 @@ msgstr "          $partyListString:noescape()$ har nu bekräftat ordern.        
 #: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
 msgid "_modalSignedViewOrderClosedHasAccountLoggedInHeader"
 msgstr "Du har bekräftat ordern $documenttitle$"
-
-#: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
-msgid "_modalSignedViewOrderClosedHasAccountLoggedInFooterClose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
 msgid "_modalSignedViewOrderClosedHasAccountLoggedInBodySaved"
@@ -159,16 +131,8 @@ msgid "_modalSignedViewNotClosedHasAccountNotLoggedInHeader"
 msgstr "Du har undertecknat dokumentet $documenttitle$"
 
 #: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterLogIn"
-msgstr "Logga in"
-
-#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword"
 msgstr "Glömt lösenord"
-
-#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterCLose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved"
@@ -181,10 +145,6 @@ msgstr "          $partyUnsignedListString:noescape()$ har ännu inte          u
 #: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
 msgid "_modalSignedViewNotClosedHasAccountLoggedInHeader"
 msgstr "Du har undertecknat dokumentet $documenttitle$"
-
-#: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
-msgid "_modalSignedViewNotClosedHasAccountLoggedInFooterClose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
 msgid "_modalSignedViewNotClosedHasAccountLoggedInBodySaved"
@@ -207,16 +167,8 @@ msgid "_modalSignedViewClosedHasAccountNotLoggedInHeader"
 msgstr "Du har undertecknat dokumentet $documenttitle$"
 
 #: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterLogIn"
-msgstr "Logga in"
-
-#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword"
 msgstr "Glömt lösenord"
-
-#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
-msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterClose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
 msgid "_modalSignedViewClosedHasAccountNotLoggedInBodySigned"
@@ -229,10 +181,6 @@ msgstr "          Dokumentet har sparats till ditt konto.        "
 #: modals.st:modalSignedViewClosedHasAccountLoggedIn
 msgid "_modalSignedViewClosedHasAccountLoggedInHeader"
 msgstr "Du har undertecknat dokumentet $documenttitle$"
-
-#: modals.st:modalSignedViewClosedHasAccountLoggedIn
-msgid "_modalSignedViewClosedHasAccountLoggedInClose"
-msgstr "Stäng"
 
 #: modals.st:modalSignedViewClosedHasAccountLoggedIn
 msgid "_modalSignedViewClosedHasAccountLoggedInBodySigned"
@@ -251,10 +199,6 @@ msgid "_modalSignInviteViewHeaderIfElse"
 msgstr "Du har undertecknat!"
 
 #: modals.st:modalSignInviteView
-msgid "_modalSignInviteViewFooterClose"
-msgstr "Stäng"
-
-#: modals.st:modalSignInviteView
 msgid "_modalSignInviteViewBodyIfSigned"
 msgstr "Du har undertecknat dokumentet $documenttitle$ och dokumentet har färdigställts."
 
@@ -267,10 +211,6 @@ msgid "_modalSendInviteViewHeader"
 msgstr "Dokumentet <strong>$documenttitle$</strong> skickat!"
 
 #: modals.st:modalSendInviteView
-msgid "_modalSendInviteViewClose"
-msgstr "Stäng"
-
-#: modals.st:modalSendInviteView
 msgid "_modalSendInviteViewBody"
 msgstr "En inbjudan att underteckna har nu skickats        till $partyListButAuthor:noescape()$."
 
@@ -279,20 +219,12 @@ msgid "_modalRejectedViewHeader"
 msgstr "Du har avvisat dokumentet $documenttitle$"
 
 #: modals.st:modalRejectedView
-msgid "_modalRejectedViewClose"
-msgstr "Stäng"
-
-#: modals.st:modalRejectedView
 msgid "_modalRejectedViewBody"
 msgstr "Ett meddelande har skickats till $partyList:noescape()$."
 
 #: modals.st:modalOrderCreated
 msgid "_modalOrderCreatedHeader"
 msgstr "Orderbekräftelsen skickad!"
-
-#: modals.st:modalOrderCreated
-msgid "_modalOrderCreatedClose"
-msgstr "Stäng"
 
 #: modals.st:modalOrderCreated
 msgid "_modalOrderCreatedBody"
@@ -311,20 +243,12 @@ msgid "_modalOfferSignedHasAccountHeader"
 msgstr "Du har accepterat offerten!"
 
 #: modals.st:modalOfferSignedHasAccount
-msgid "_modalOfferSignedHasAccountClose"
-msgstr "Stäng"
-
-#: modals.st:modalOfferSignedHasAccount
 msgid "_modalOfferSignedHasAccountBody"
 msgstr " Offerten har sparats till ditt konto med användarnamn <span style=\"color:#007CAC\">$signatory$</span>."
 
 #: modals.st:modalOfferCreated
 msgid "_modalOfferCreatedHeader"
 msgstr "Offerten skickad!"
-
-#: modals.st:modalOfferCreated
-msgid "_modalOfferCreatedClose"
-msgstr "Stäng"
 
 #: modals.st:modalOfferCreated
 msgid "_modalOfferCreatedBody"
@@ -349,10 +273,6 @@ msgstr "Spara"
 #: modals.st:modalLoginForSaveView
 msgid "_modalLoginForSaveViewHeader"
 msgstr "Konto har skapats"
-
-#: modals.st:modalLoginForSaveView
-msgid "_modalLoginForSaveViewClose"
-msgstr "Stäng"
 
 #: modals.st:modalLoginForSaveView
 msgid "_modalLoginForSaveViewBody"
@@ -403,20 +323,8 @@ msgid "_modalAccountSetupPosition"
 msgstr "Position:"
 
 #: modals.st:modalAccountSetup
-msgid "_modalAccountSetupPhone"
-msgstr "Telefonnummer:"
-
-#: modals.st:modalAccountSetup
-msgid "_modalAccountSetupLastName"
-msgstr "Efternamn:"
-
-#: modals.st:modalAccountSetup
 msgid "_modalAccountSetupIfPrivateAccount"
 msgstr "Privatperson"
-
-#: modals.st:modalAccountSetup
-msgid "_modalAccountSetupIfCompanyAccount"
-msgstr "Företag"
 
 #: modals.st:modalAccountSetup
 msgid "_modalAccountSetupHeaderAcceptTOS"
@@ -425,14 +333,6 @@ msgstr "Vänligen acceptera användarvillkoren"
 #: modals.st:modalAccountSetup
 msgid "_modalAccountSetupFooter"
 msgstr "Skapa konto!"
-
-#: modals.st:modalAccountSetup
-msgid "_modalAccountSetupFirstName"
-msgstr "Förnamn:"
-
-#: modals.st:modalAccountSetup
-msgid "_modalAccountSetupCompany"
-msgstr "Företag:"
 
 #: modals.st:modalAccountSetup
 msgid "_modalAccountSetupChoosePassword"
@@ -471,64 +371,34 @@ msgid "_modalAccountRemovalActivateAccount"
 msgstr "Aktivera konto"
 
 #: modals.st:loginModal
-msgid "_loginModalPassword"
-msgstr "Lösenord"
-
-#: modals.st:loginModalPart
-msgid "_loginModalPartPassword"
-msgstr "Lösenord"
-
-#: modals.st:loginModalPart
-msgid "_loginModalPartEmail"
-msgstr "E-post"
-
-#: modals.st:loginModal
-msgid "_loginModalLogIn"
-msgstr "Logga in"
-
-#: modals.st:loginModal
 msgid "_loginModalForgotPasswordSendNewPassword"
 msgstr "Skicka nytt lösenord"
 
-#: modals.st:loginModal
-msgid "_loginModalForgotPasswordForgotPassword"
-msgstr "Glömt lösenord"
-
-#: modals.st:loginModal
-msgid "_loginModalForgotPasswordFooterLogIn"
-msgstr "Logga in"
-
-#: modals.st:loginModal
-msgid "_loginModalForgotPasswordEmail"
-msgstr "E-post"
-
-#: modals.st:loginModal
-msgid "_loginModalFooterLogIn"
-msgstr "Logga in"
-
-#: modals.st:loginModal
-msgid "_loginModalFooterForgotPassword"
-msgstr "Glömt lösenord"
-
-#: modals.st:loginModal
-msgid "_loginModalEmail"
-msgstr "E-post"
+#: modals.st:modalSignInviteView
+#: modals.st:modalOfferCreated
+#: modals.st:modalOrderCreated
+#: modals.st:modalOfferSignedHasAccount
+#: modals.st:modalSendInviteView
+#: modals.st:modalLoginForSaveView
+#: modals.st:modalRejectedView
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+#: modals.st:modalSignedViewClosedHasAccountLoggedIn
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+#: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
+#: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+#: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_close"
+msgstr "Stäng"
 
 #: modals.st:accountFromSignInputs
 msgid "_accountFromSignInputsPrivateAccount"
 msgstr "Privatperson"
 
 #: modals.st:accountFromSignInputs
-msgid "_accountFromSignInputsPassword"
-msgstr "Lösenord"
-
-#: modals.st:accountFromSignInputs
 msgid "_accountFromSignInputsConfirmPassword"
 msgstr "Bekräfta lösenord"
-
-#: modals.st:accountFromSignInputs
-msgid "_accountFromSignInputsCompanyAccount"
-msgstr "Företag"
 
 #: modals.st:accountFromSignInputs
 msgid "_accountFromSignInputsBodySecureOriginal"
@@ -546,6 +416,84 @@ msgstr "Ja, arkivera"
 msgid "_accountFromSignFooterNoThx"
 msgstr "Nej tack"
 
+#~ msgid "_login"
+#~ msgstr "Logga in"
+#~ msgid "_forgotpassword"
+#~ msgstr "Glömt lösenord"
+#~ msgid "_modalAccountSetupPhone"
+#~ msgstr "Telefonnummer:"
+#~ msgid "_modalAccountSetupLastName"
+#~ msgstr "Efternamn:"
+#~ msgid "_modalAccountSetupIfCompanyAccount"
+#~ msgstr "Företag"
+#~ msgid "_modalAccountSetupFirstName"
+#~ msgstr "Förnamn:"
+#~ msgid "_modalAccountSetupCompany"
+#~ msgstr "Företag:"
+#~ msgid "_loginModalPassword"
+#~ msgstr "Lösenord"
+#~ msgid "_loginModalPartPassword"
+#~ msgstr "Lösenord"
+#~ msgid "_loginModalPartEmail"
+#~ msgstr "E-post"
+#~ msgid "_loginModalForgotPasswordEmail"
+#~ msgstr "E-post"
+#~ msgid "_loginModalEmail"
+#~ msgstr "E-post"
+#~ msgid "_accountFromSignInputsPassword"
+#~ msgstr "Lösenord"
+#~ msgid "_accountFromSignInputsCompanyAccount"
+#~ msgstr "Företag"
+#~ msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterForgotPassword"
+#~ msgstr "Glömt lösenord"
+#~ msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewOrderClosedHasAccountLoggedInFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterCLose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewNotClosedHasAccountLoggedInFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignedViewClosedHasAccountLoggedInClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSignInviteViewFooterClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalSendInviteViewClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalRejectedViewClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalOrderCreatedClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalOfferSignedHasAccountClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalOfferCreatedClose"
+#~ msgstr "Stäng"
+#~ msgid "_modalLoginForSaveViewClose"
+#~ msgstr "Stäng"
+#~ msgid "_loginModalLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_loginModalForgotPasswordForgotPassword"
+#~ msgstr "Glömt lösenord"
+#~ msgid "_loginModalForgotPasswordFooterLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_loginModalFooterLogIn"
+#~ msgstr "Logga in"
+#~ msgid "_loginModalFooterForgotPassword"
+#~ msgstr "Glömt lösenord"
 #~ msgid "_signAwaitingAuthorLastFooterOk"
 #~ msgstr "Ok"
 #~ msgid "_signCanceledDataMismatchModalFooterOk"

@@ -188,7 +188,7 @@ $loadingdialog()$
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <div class="singleremindmsg">$_ReminderBodyIfSingel()$<span class="docname"></span>.
+          <div class="singleremindmsg">$_ReminderBodyIfSingel()$<span class="docname"></span>?
           </div>
           <div class="multipleremindmsg">$_ReminderBodyIfMulti()$<span class="doccount"></span>$_ReminderBodyIfMulti2()$</div>
         </div>

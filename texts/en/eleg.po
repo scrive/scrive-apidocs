@@ -11,7 +11,7 @@ msgstr ""
 
 #: eleg.st:signCanceledDataMismatch
 msgid "_signCanceledDataMismatchBody"
-msgstr "We are sorry. The information in your e-legitimation does not match your personal information."
+msgstr "We are sorry. The information in your e-ID does not match your personal information."
 
 #: eleg.st:signCanceledDataMismatch
 msgid "_signCanceledDataMismatchIncorrectPersonalInfo"

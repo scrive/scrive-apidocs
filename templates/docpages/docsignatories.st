@@ -115,7 +115,7 @@ reminderForm =
         $if(signatory.signdate)$
             $process.remindagainbuttontext$
         $else$ 
-            $_send()$
+            $_sendReminder()$
         $endif$
     </div> 
   </a>

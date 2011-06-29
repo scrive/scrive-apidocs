@@ -11,10 +11,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: userpages/securitypage.st:showUserSecurity
-msgid "_password"
-msgstr "Lösenord"
-
-#: userpages/securitypage.st:showUserSecurity
 msgid "_UserLanguage"
 msgstr "Användarspråk:"
 
@@ -46,3 +42,5 @@ msgstr "Språkinställningar"
 msgid "_English"
 msgstr " Engelska "
 
+#~ msgid "_password"
+#~ msgstr "Lösenord"

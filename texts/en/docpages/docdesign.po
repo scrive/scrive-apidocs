@@ -12,19 +12,19 @@ msgstr ""
 
 #: docpages/docdesign.st:validationdropdown
 msgid "_validationdropdownChooseVMethod"
-msgstr "Choose verification method"
+msgstr "Select verification method"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_updateAttachmentsDialogUpLoadSaved"
-msgstr "Stored by Scrive"
+msgstr "Stored in Scrive"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_updateAttachmentsDialogUpLoadOnlyPDF"
-msgstr "OBSERVE! PDF only!"
+msgstr "PDF only!"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_updateAttachmentsDialogUpLoadFooterAttach"
-msgstr "Attachment"
+msgstr "Attach"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_updateAttachmentsDialogUpLoadChooseFile"
@@ -68,7 +68,7 @@ msgstr "Sign and send!"
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_step2selectIfisbasic"
-msgstr "Enter info &amp; Send!"
+msgstr "Fill in data &amp; Send!"
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_step2selectIfTemplate"
@@ -76,7 +76,7 @@ msgstr "Design template"
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_step2selectIfElse"
-msgstr "Enter data"
+msgstr "Fill in data"
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_step1selectIfTemplate"
@@ -120,7 +120,7 @@ msgstr "ADD PERSON"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_signStepsBodyDaysLeftToSign"
-msgstr "days"
+msgstr " days"
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_signStep2ContentSignOrder"
@@ -377,11 +377,11 @@ msgstr "Change process"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogConfirmBasicChangeToBody2"
-msgstr "When you change, all changes you have made, exept those for party 1 and party 2, will disappear.             Are you sure you want to change process?"
+msgstr "When you change process, all data you have filled in, exept that for party 1 and party 2, will disappear.             Are you sure you want to change process?"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogConfirmBasicChangeToBody"
-msgstr "You can change to simplified process to make the process even smoother. You can of course change back whenever you want to if you have payplan Business or Enterprise, or if you are in a trial period.           "
+msgstr "Change to simplified process to make the process even smoother. You can of course change back whenever you want to if you have payplan Business or Enterprise, or if you are in a trial period.           "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogConfirmAdvancedChangeToHead"
@@ -393,7 +393,7 @@ msgstr "Change process"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogConfirmAdvancedBody"
-msgstr "You can change to advanced process to enjoy more advanced features such as expiration date, templates, multi send etc. You can use the advanced process if you have payplan Business or Enterprise, or if you are in a trial period."
+msgstr "Change to advanced process to enjoy more advanced features such as expiration date, templates, multi send etc. You can use the advanced process if you have payplan Business or Enterprise, or if you are in a trial period."
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_daystosigncheckboxExpDate"
@@ -401,7 +401,7 @@ msgstr "Expiration date"
 
 #: docpages/docdesign.st:pageDocumentDesign
 msgid "_daystosigncheckboxActivateExpDate"
-msgstr "Activatr expiration date"
+msgstr "Activate expiration date"
 
 #: docpages/docdesign.st:contracttitle
 msgid "_contracttitle"
@@ -425,7 +425,7 @@ msgstr "OBSERVE: If you choose an expiration date, you cannot withdraw the invit
 
 #: docpages/docdesign.st:contractexpirytext
 msgid "_contractexpirytext"
-msgstr "To be signed within"
+msgstr "Expiration in"
 
 #: docpages/docdesign.st:contractconfirmsendtitle
 msgid "_contractconfirmsendtitle"

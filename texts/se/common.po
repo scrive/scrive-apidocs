@@ -12,46 +12,55 @@ msgstr ""
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipsigned"
 msgstr "Status: Signerat"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipsent"
 msgstr "Status: Skickat"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipreviewed"
 msgstr "Status: Granskat online"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipread"
 msgstr "Status: Läst e-post"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipopened"
 msgstr "Status: Granskat online"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipdraft"
 msgstr "Status: Utkast"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipdelivered"
 msgstr "Status: Levererat"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tooltipcancelled"
 msgstr "Status: Avbrutet"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tablestatusesViewedOnline"
 msgstr "Granskat online"
 
@@ -68,6 +77,7 @@ msgstr "Skickat"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
+#: docpages/docorderslist.st:pageOrdersList
 msgid "_tablestatusesEmailOpened"
 msgstr "Läst e-post"
 
@@ -106,9 +116,13 @@ msgstr "Delning"
 #: pages.st:activatePageViewNotValidLink
 #: userpages/userotherpages.st:pageAcceptTOS
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: docpages/docsignatories.st:reminderForm
+#: docpages/docsignatories.st:changeEmailForm
+#: apppages.st:queryColumn
 msgid "_send"
 msgstr "Skicka"
 
+#: modals.st:modalAccountSetup
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: javascript-langs.st:javascriptLocalisation
@@ -116,12 +130,25 @@ msgid "_phone"
 msgstr "Telefonnummer"
 
 #: userpages/accountpage.st:showUser
+#: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: javascript-langs.st:javascriptLocalisation
 msgid "_personnumber"
 msgstr "Personnummer"
 
+#: modals.st:accountFromSignInputs
+#: modals.st:loginModal
+#: modals.st:loginModalPart
+#: userpages/securitypage.st:showUserSecurity
+#: apppages.st:loginBox
+msgid "_password"
+msgstr "Lösenord"
+
+#: flash.st:companyNumberFieldName
 #: userpages/accountpage.st:showUser
+#: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: javascript-langs.st:javascriptLocalisation
 msgid "_orgnumber"
 msgstr "Organusationsnummer"
 
@@ -129,14 +156,17 @@ msgstr "Organusationsnummer"
 #: userpages/friendpage.st:viewFriends
 #: docpages/doclist.st:pageContractsList
 #: docpages/doctemplatelist.st:pageTemplatesList
+#: docpages/docofferslist.st:pageOffersList
 #: docpages/docattachmentlist.st:pageAttachmentList
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_options"
 msgstr "Alternativ"
 
+#: modals.st:modalAccountRemoved
 #: modals.st:modalError
 #: modals.st:signCanceledDataMismatchModal
 #: modals.st:signAwaitingAuthorLast
+#: listutils/listutils.st:listLocalDialogs
 #: userpages/friendpage.st:viewFriends
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
@@ -146,27 +176,55 @@ msgstr "Alternativ"
 msgid "_ok"
 msgstr "OK"
 
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+#: modals.st:loginModal
+#: apppages.st:pageLogin
+#: apppages.st:header
+msgid "_login"
+msgstr "Logga in"
+
+#: modals.st:modalAccountSetup
+#: flash.st:secondNameFieldName
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: javascript-langs.st:javascriptLocalisation
 msgid "_lastname"
 msgstr "Efternamn"
 
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+#: modals.st:loginModal
+#: apppages.st:loginBox
+msgid "_forgotpassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:modalAccountSetup
+#: flash.st:firstNameFieldName
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: javascript-langs.st:javascriptLocalisation
 msgid "_firstname"
 msgstr "Förnamn"
 
+#: modals.st:loginModal
+#: modals.st:loginModalPart
+#: flash.st:emailFieldName
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
+#: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 #: docpages/docdesign.st:pageDocumentDesign
 #: docpages/docdesign.st:validationdropdown
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: apppages.st:loginBox
 #: javascript-langs.st:javascriptLocalisation
 msgid "_email"
 msgstr "E-post"
 
+#: listutils/listutils.st:listLocalDialogs
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
 #: docpages/doclist.st:pageContractsList
@@ -177,12 +235,17 @@ msgstr "E-post"
 msgid "_delete"
 msgstr "Radera"
 
+#: flash.st:positionFieldName
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: javascript-langs.st:javascriptLocalisation
 msgid "_companyposition"
 msgstr "Befattning"
 
+#: modals.st:modalAccountSetup
+#: modals.st:accountFromSignInputs
+#: flash.st:companyNameFieldName
+#: docpages/docviewforviewer.st:pageDocumentForViewerHelpers
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 #: javascript-langs.st:javascriptLocalisation
 msgid "_company"
@@ -192,12 +255,14 @@ msgstr "Företag"
 #: modals.st:modalNewPasswordView
 #: modals.st:modalInviteUserAsSubaccount
 #: modals.st:modalDoYouWantToBeSubaccount
+#: listutils/listutils.st:listLocalDialogs
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
 #: docpages/doclistutils.st:listShareDialog
 #: docpages/docviewforauthor.st:pageDocumentForAuthor
 #: docpages/docviewforsignatory.st:pageDocumentForSignContent
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
+#: docpages/docsignatories.st:reminderForm
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_cancel"
 msgstr "Avbryt"

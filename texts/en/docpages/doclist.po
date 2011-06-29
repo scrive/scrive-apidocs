@@ -12,7 +12,7 @@ msgstr ""
 
 #: docpages/doclist.st:pageContractsList
 msgid "_ReminderBodyIfSingel"
-msgstr "\t            Are you sure you want to send a reminder to the parties involved in the document"
+msgstr "Are you sure you want to send a reminder to the parties involved in the document "
 
 #: docpages/doclist.st:pageContractsList
 msgid "_ReminderBodyIfMulti2"
@@ -20,11 +20,11 @@ msgstr " documents?          "
 
 #: docpages/doclist.st:pageContractsList
 msgid "_ReminderBodyIfMulti"
-msgstr "\t            Are you sure you want to send reminders to the parties involved in the"
+msgstr "Are you sure you want to send reminders to the parties involved in the "
 
 #: docpages/doclist.st:pageContractsList
 msgid "_CantRemoveActiveDocuments"
-msgstr "It is not possible to delete documents that are sent or open, please withdraw the document first."
+msgstr "You cannot delete documents that are sent or open, please withdraw the document first."
 
 #~ msgid "_SortParty"
 #~ msgstr "Parter"
