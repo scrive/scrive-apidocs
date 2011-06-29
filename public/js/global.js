@@ -650,13 +650,23 @@ safeReady(function() {
 });
 
 safeReady(function() {
+    var dcs = $("#dialog-confirm-sign");
     saveOverlay("#sign", {
         mask: standardDialogMask,
         load: true,
+        // after finished loading
+        onLoad: function () {
+            if(navigator.platform === 'iPad' || navigator.platform === 'iPhone' || navigator.platform === 'iPod') {
+                console.log(dcs);
+                dcs.css("position", "absolute");
+                dcs.css("top", (window.pageYOffset + 64) + 'px');
+            }
+        },
         onBeforeLoad: function() {
-            var x = this
-            if (!sigFieldsValidation())
+            var x = this;
+            if (!sigFieldsValidation()) {
                 return false;
+            }
             var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
             if (trs.length > 0) {
                 trs.addClass("redborder");
@@ -1582,3 +1592,4 @@ function saveOverlay(d, o) {
         }
     });
 }
+
