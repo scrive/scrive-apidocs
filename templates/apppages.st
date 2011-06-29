@@ -150,8 +150,6 @@ queryColumn=
 
                                         </div>
 ####
-<<<<<<< HEAD
-=======
 bodyend=
                                         <div class="clearfix"></div>
                                         <div class="spacer40"></div>
@@ -180,7 +178,6 @@ bodyend=
         $pageFooter()$
 
 ####
->>>>>>> update_priceplan
 pageFooter=
 <div id="footer-container" class="newdesign">
   <div class="top-border"></div>
