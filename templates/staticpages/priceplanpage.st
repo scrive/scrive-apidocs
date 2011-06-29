@@ -37,7 +37,7 @@ priceplanPageContents=
                                     <p>4 995 kr/år</p>
                                 </th>
                                 <th>
-                                    <h3>Medium</h3>
+                                    <h3>Team</h3>
                                     <p>14 995 kr/år</p>
                                 </th>
                                 <th>
@@ -333,7 +333,7 @@ priceplanPageContents=
                 <br />
                 <br />
                 <div class="big-price-plan">
-                    <h3>Fri användning</h3>
+                    <h2>Fri användning</h2>
                     <p>Vi erbjuder också ett frikonto för 1 användare, 5 fira signaturer per månad och 50 dokument i lagring.</p>
                 </div>
 ###
