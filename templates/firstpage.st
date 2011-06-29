@@ -102,7 +102,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 Våra kunder och våra kunders kunder älskar enkelheten.
                                                 </p>
                                                 <h3>Skapa konto nu!</h3>
-                                                <p class="introtext">1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                                <p class="introtext">14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
                                                         <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
                                                         <input type="submit" class="hidden" />
@@ -270,7 +270,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <p>Förbättra processerna i den mindre organisationen</p>
                                                         </th>
                                                         <th>
-                                                                <h3>Medium</h3>
+                                                                <h3>Team</h3>
                                                                 <p>Effektivisera teamet med enkla medel</p>
                                                         </th>
                                                         <th>
@@ -349,12 +349,15 @@ och anpassning</p>
                                 <div class="drop-shadow-container">
                                         <div class="drop-shadow"></div>
                                 </div>
-                                <div class="price-plan-annotation">Vi erbjuder också ett frikonto för 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</div>
+                                <div class="price-plan-annotation">
+                                * Alla priser är exkl moms.<br/>
+                                * Vi erbjuder också ett frikonto för 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.
+                                </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
                                                 <h3>Skapa konto nu!</h3>
-                                                <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                                <p>14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="$linksignup$" class="requestAccount">

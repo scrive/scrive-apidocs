@@ -16,7 +16,7 @@ msgstr "Skapa konto nu!"
 
 #: apppages.st:standardBodyWrapper
 msgid "_standardBodyWrapperBody"
-msgstr "1 månad full funktionalitet utan kostnad. Inga förpliktelser."
+msgstr "14 dagar full funktionalitet utan kostnad. Inga förpliktelser."
 
 #: apppages.st:queryColumn
 msgid "_queryColumnQuestions"
@@ -36,7 +36,7 @@ msgstr "E-post: info@skrivapa.se"
 
 #: apppages.st:queryColumn
 msgid "_queryColumnBody2"
-msgstr "Vi bjuder på 1 månad full funktionalitet utan kostnad. Inga förpliktelser."
+msgstr "Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga förpliktelser."
 
 #: apppages.st:queryColumn
 msgid "_queryColumnBody1"
