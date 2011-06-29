@@ -589,32 +589,34 @@ function updateAuthorSignOrder() {
 }
 
 function updateSwitcherCheckBox(switcher) {
-    var on = $(switcher.attr("on")),
-    off = $(switcher.attr("off")),
-    checked = switcher.attr("checked");
-    if (checked) {
-        off.hide();
-        on.show();
-    } else {
-        on.hide();
-        off.show();
-    }
+  var on = $(switcher.attr("on"));
+  var off = $(switcher.attr("off"));
+  var checked = switcher.attr("checked");
+  if(checked) {
+    off.hide();
+    on.show();
+  } else {
+    on.hide();
+    off.show();
+  }
 }
 
 function updateSignSendButton(authorsignorder) {
     // it can be 1, N (number of signatories + 1) or '-'.
     // '-' means author is not signatory, 1 that author
     // signs first and N that author signs last
-    var switcher = $("#switchercheckbox"),
-    asoval = authorsignorder.val();
+  var switcher = $("#switchercheckbox");
+  var asoval = authorsignorder.val();
     // in safari after page loads it's null, in other browsers it's 1
     // (yet another browser awesomeness), so we need to check if it's
     // not null so we won't get 'sign last' option enabled by default.
-    if (asoval && asoval != 1)
-        switcher.attr("checked", "checked");
-    else
-        switcher.removeAttr("checked");
-    updateSwitcherCheckBox(switcher);
+  if (asoval && asoval != 1) {
+    switcher.attr("checked", "checked");
+  } else {
+    console.log("templates.js:616");
+    switcher.removeAttr("checked");
+  }
+  updateSwitcherCheckBox(switcher);
 }
 
 function personIsSignatory(signorder) {
@@ -1610,4 +1612,10 @@ safeReady(function() {
 
         return false;
     });
+});
+
+safeReady(function(){
+  if(window.location.href.indexOf("authorsignlast") > -1) {
+    $("#switchercheckbox").attr("checked", "checked").change();
+  }
 });

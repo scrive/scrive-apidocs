@@ -572,7 +572,7 @@ handleIssueShowGet docid = do
                     } <- get
         mdstep <- getDesignStep docid
         case (mdstep, documentfunctionality document) of
-          (Just (DesignStep3 _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
+          (Just (DesignStep3 _ _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
           _ -> do
             -- authors get a view with buttons
             case (isAuthor (document, ctxmaybeuser), isAttachment document, documentstatus document) of
@@ -598,13 +598,16 @@ getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
     step3 <- isFieldSet "step3"
     step2 <- isFieldSet "step2"
+    signlast <- isFieldSet "signlast"
+    
     mperson <- getOptionalField asValidNumber "person"
     aftercsvupload <- isFieldSet "aftercsvupload"
     case (step2,step3) of
        (True,_) -> return $ Just $ DesignStep2 docid mperson (if aftercsvupload
                                                                 then (Just AfterCSVUpload)
-                                                                else Nothing)
-       (_,True) -> return $ Just $ DesignStep3 docid
+                                                                else Nothing) signlast
+                   
+       (_,True) -> return $ Just $ DesignStep3 docid signlast
        _ -> return Nothing
 
 {- |
@@ -743,13 +746,14 @@ handleIssueSaveAsTemplate document = do
 handleIssueChangeToContract :: Document -> Kontra KontraLink
 handleIssueChangeToContract document = do
   ctx <- get
+  signlast <- isFieldSet "signlast"
   when (isNothing $ ctxmaybeuser ctx) mzero
   mcontract <- update $ SignableFromDocumentIDWithUpdatedAuthor (fromJust $ ctxmaybeuser ctx) (documentid document)
   case mcontract of
     Right contract -> do
       mncontract <- updateDocument ctx contract
       case mncontract of
-        Right ncontract -> return $ LinkDesignDoc $ DesignStep3 $ documentid ncontract
+        Right ncontract -> return $ LinkDesignDoc $ DesignStep3 (documentid ncontract) signlast
         Left _ -> mzero
     Left _ -> mzero
 
@@ -769,8 +773,9 @@ splitUpDocument doc =
       case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
         (_prob:_, _) -> do
           Context{ctxtemplates} <- get
+          signlast <- isFieldSet "signlast"
           addFlashMsg =<< (liftIO $ flashMessageInvalidCSV ctxtemplates)
-          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload)
+          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- if (isTemplate doc)
                     then return $ Right doc
@@ -795,17 +800,18 @@ handleIssueCSVUpload :: Document -> Kontra KontraLink
 handleIssueCSVUpload document = do
   ctx <- get
   mudoc <- updateDocument ctx document
+  signlast <- isFieldSet "signlast"
   case mudoc of
     Left _ -> mzero
     Right udoc -> do
       mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
       mcsvfile <- getCSVFile "csv"
       case (mcsvsigindex, mcsvfile) of
-        (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
+        (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
         (Nothing, Just _) ->  do
           Log.error "something weird happened, got csv file but there's no relevant person index"
           mzero
-        (Just csvsigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ csvsigindex + 1) Nothing
+        (Just csvsigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ csvsigindex + 1) Nothing signlast
         (Just csvsigindex, Just (title, contents)) ->  do
           let csvupload = CSVUpload
                           { csvtitle = title
@@ -815,7 +821,7 @@ handleIssueCSVUpload document = do
           mndoc <- update $ AttachCSVUpload (documentid udoc) csvupload
           case mndoc of
             Left _ -> mzero
-            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload)
+            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
 makeSigAttachment name desc email =
@@ -852,11 +858,13 @@ handleIssueUpdateSigAttachments doc = do
   sigattachmentdescs  <- getAndConcat "sigattachdesc"
   sigattachmentemails <- getAndConcat "sigattachemails"
 
+  signlast <- isFieldSet "signlast"
+
   let sigattachments = concat $ zipWith3 zipSigAttachments sigattachmentnames sigattachmentdescs sigattachmentemails
   endoc <- update $ UpdateSigAttachments (documentid udoc) sigattachments
   case endoc of
     Left _ -> mzero
-    Right ndoc -> return (LinkDesignDoc (DesignStep3 (documentid ndoc)))
+    Right ndoc -> return (LinkDesignDoc (DesignStep3 (documentid ndoc) signlast))
 
 handleIssueUpdateAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do
@@ -869,7 +877,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
 
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
-
+    signlast <- isFieldSet "signlast"
 
     let existingattachments = map (fileid . authorattachmentfile) (documentauthorattachments udoc)
         idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
@@ -894,7 +902,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     liftIO $ print mndoc
     case mndoc of
         Left _msg -> mzero
-        Right ndoc -> return . LinkDesignDoc . DesignStep3 $ documentid ndoc
+        Right ndoc -> return $ LinkDesignDoc $ DesignStep3 (documentid ndoc) signlast
 
 
 {- |
@@ -906,6 +914,7 @@ handleIssueChangeFunctionality :: Document -> Kontra KontraLink
 handleIssueChangeFunctionality document = do
   ctx <- get
   mudoc <- updateDocument ctx document
+  signlast <- isFieldSet "signlast"
   case mudoc of
     Left _ -> mzero
     Right udoc -> case getAuthorSigLink udoc of
@@ -913,7 +922,7 @@ handleIssueChangeFunctionality document = do
         muser <- handlePreferenceChange authorid
         case muser of
           Left _ -> mzero
-          Right _ -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
+          Right _ -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
       _ -> mzero
   where
     handlePreferenceChange :: UserID -> Kontra (Either String User)

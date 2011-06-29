@@ -866,6 +866,7 @@ function showProperSignButtons() {
         }
     } else {
         if (checkBox.attr("checked")) {
+          console.log("global.js:869");
             checkBox.attr("checked", false).change();
         }
         checkBox.parent().find(".usual").show();

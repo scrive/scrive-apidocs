@@ -2741,6 +2741,14 @@ width: 340px;
     padding-left: 4px;
 }
 
+.signViewBodyRight .field input.fieldvalue{
+    margin:0px;
+    padding:0px;
+    color:#414241;
+    width:200px   
+}
+
+
 .signViewBodyRight .header {
     margin-bottom: 10px;
 }

@@ -306,7 +306,7 @@ function docstateToHTML() {
                 val = localization.company;
                 c = "grayed";
             }
-            $(".signViewBodyRight.author").find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            $(".signViewBodyRight.author").find(".signatoryfields").append(makeFieldValue(c,val));
         }
 
         if (author.personalnumberplacements.length > 0 || author.personalnumber != "") {
@@ -316,7 +316,7 @@ function docstateToHTML() {
                 val = localization.personamNumber;
                 c = "grayed";
             }
-            $(".signViewBodyRight.author").find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            $(".signViewBodyRight.author").find(".signatoryfields").append(makeFieldValue(c,val));
         }
 
         if (author.companynumberplacements.length > 0 || author.companynumber != "") {
@@ -326,7 +326,7 @@ function docstateToHTML() {
                 val = localization.companyNumber;
                 c = "grayed";
             }
-            $(".signViewBodyRight.author").find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            $(".signViewBodyRight.author").find(".signatoryfields").append(makeFieldValue(c,val));
         }
 
         $(author.otherfields).each(function() {
@@ -339,7 +339,7 @@ function docstateToHTML() {
                 val = f.label;
                 c = "grayed";
             }
-            $(".signViewBodyRight.author").find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            $(".signViewBodyRight.author").find(".signatoryfields").append(makeFieldValue(c,val));
         });
     }
 
@@ -369,7 +369,7 @@ function docstateToHTML() {
                         val = localization.company;
                         c = "grayed";
                     }
-                    ff.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+                    ff.find(".signatoryfields").append(makeFieldValue(c,val));
                 }
 
                 if ((s.personalnumberplacements.length > 0 || s.personalnumber != "") && ff.text().indexOf(s.email) > -1) {
@@ -379,7 +379,7 @@ function docstateToHTML() {
                         val = localization.personamNumber;
                         c = "grayed";
                     }
-                    ff.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+                    ff.find(".signatoryfields").append(makeFieldValue(c,val));
                 }
 
                 if ((s.companynumberplacements.length > 0 || s.companynumber != "") && ff.text().indexOf(s.email) > -1) {
@@ -389,7 +389,7 @@ function docstateToHTML() {
                         val = localization.companyNumber;
                         c = "grayed";
                     }
-                    ff.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+                    ff.find(".signatoryfields").append(makeFieldValue(c,val));
                 }
             });
         }
@@ -409,7 +409,7 @@ function docstateToHTML() {
                             val = f.label;
                             c = "grayed";
                         }
-                        ff.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>")
+                        ff.find(".signatoryfields").append(makeFieldValue(c,val))
 
                         }
                 });
@@ -424,7 +424,7 @@ function docstateToHTML() {
                 val = localization.company;
                 c = "grayed";
             }
-            currentsigdiv.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            currentsigdiv.find(".signatoryfields").append(makeFieldValue(c,val));
 
         } else if (currentsig.companyplacements.length > 0) {
             var cfield = buildField(localization.company, currentsig.company, "sig");
@@ -443,7 +443,7 @@ function docstateToHTML() {
                 val = localization.personamNumber;
                 c = "grayed";
             }
-            currentsigdiv.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            currentsigdiv.find(".signatoryfields").append(makeFieldValue(c,val));
 
         } else if (currentsig.personalnumberplacements.length > 0) {
             var cfield = buildField(localization.personamNumber, currentsig.company, "sig");
@@ -462,7 +462,7 @@ function docstateToHTML() {
                 val = localization.companyNumber;
                 c = "grayed";
             }
-            currentsigdiv.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+            currentsigdiv.find(".signatoryfields").append(makeFieldValue(c,val));
 
         } else if (currentsig.companynumberplacements.length > 0) {
             var nfield = buildField(localization.companyNumber, currentsig.number, "sig");
@@ -495,12 +495,16 @@ function docstateToHTML() {
                             val = f.label;
                             c = "grayed";
                         }
-                        ff.find(".signatoryfields").append("<div class='field'>" + "<span class='fieldvalue " + c + "'>" + escapeHTML(val) + "</span>" + "</div>");
+                        ff.find(".signatoryfields").append(makeFieldValue(c,val));
                     }
                 });
             }
         });
     }
+}
+
+function makeFieldValue(c,val){
+    return $("<div class='field'/>").append($("<input readonly='' autocomplete='off' class='fieldvalue "+c+"'/>").val(val))
 }
 
 function getIcon(field) {

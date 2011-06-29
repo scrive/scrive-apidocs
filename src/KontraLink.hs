@@ -25,15 +25,17 @@ data DesignStep2Flag = AfterCSVUpload
 type Person = Int
 
 data DesignStep = DesignStep1
-                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag)
-                | DesignStep3 DocumentID
+                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) SignLast
+                | DesignStep3 DocumentID SignLast
+
+type SignLast = Bool
 
 instance Show DesignStep where
     show DesignStep1 =  ""
-    show (DesignStep2 documentid Nothing _) = "d/" ++ show documentid ++ "?step2"
-    show (DesignStep2 documentid (Just person) Nothing) = "d/" ++ show documentid ++ "?step2&person=" ++ show person
-    show (DesignStep2 documentid (Just person) (Just AfterCSVUpload)) =  "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload"
-    show (DesignStep3 documentid) ="d/" ++ show documentid ++ "?step3"
+    show (DesignStep2 documentid Nothing _ sl) = "d/" ++ show documentid ++ "?step2" ++ (if sl then "&authorsignlast" else "")
+    show (DesignStep2 documentid (Just person) Nothing sl) = "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ (if sl then "&authorsignlast" else "")
+    show (DesignStep2 documentid (Just person) (Just AfterCSVUpload) sl) =  "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload" ++ (if sl then "&authorsignlast" else "")
+    show (DesignStep3 documentid sl) ="d/" ++ show documentid ++ "?step3" ++ (if sl then "&authorsignlast" else "")
 
 {- |
    All the links available for responses
