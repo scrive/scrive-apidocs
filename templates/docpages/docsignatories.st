@@ -37,7 +37,7 @@ signatoryBox =
      $if(!addSignatoryScript)$
      $signatory.fields:{field|
         <div class="field" name="field.fieldlabel">
-            <span class="fieldvalue">$field.fieldvalue$</span>
+            $fieldvalue(value=field.fieldvalue)$
         </div>}$
      $endif$
    </span>
@@ -45,23 +45,24 @@ signatoryBox =
    $if(!addSignatoryScript)$
    $if(signatory.company)$
     <div class="field">
-        <span class="fieldvalue">$signatory.company$</span>
+        $fieldvalue(value=signatory.company)$
     </div>
    $endif$
    $if(signatory.personalnumber)$
      <div class="field">  
-      <span class="fieldvalue">$signatory.personalnumber$</span>
+     $fieldvalue(value=signatory.personalnumber)$
      </div>
    $endif$
    $if(signatory.companynumber)$
      <div class="field">  
-      <span class="fieldvalue">$signatory.companynumber$</span>
+      $fieldvalue(value=signatory.companynumber)$
      </div>
    $endif$
    $endif$
    $if(signatory.email)$
      <div class="field">
-         <span class="fieldvalue">$signatory.email$</span>
+           $fieldvalue(value=signatory.email)$
+           <span class="fieldvalue" style="display:none">$signatory.email$</span>
      </div>
    $endif$
    $if(!signatory.secretary)$ 
@@ -180,3 +181,6 @@ changeEmailForm =
 </form>     
 </div>
 ####
+fieldvalue=
+<input class="fieldvalue" type="text" value="$value$" readonly="" autocomplete="off">
+###
