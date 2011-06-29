@@ -1136,17 +1136,22 @@ documentViewFields document = do
 designViewFields:: (Maybe DesignStep) -> Fields
 designViewFields step = do
     case step of
-        (Just (DesignStep3 _)) -> field "step3" True
-        (Just (DesignStep2 _ _ _ )) -> field "step2" True
+        (Just (DesignStep3 _ _)) -> field "step3" True
+        (Just (DesignStep2 _ _ _ _)) -> field "step2" True
         (Just (DesignStep1)) -> field "step1" True
         _ -> field "step2" True
     field "initialperson" $
       case step of
-        (Just (DesignStep2 _ (Just part) _ )) -> part
+        (Just (DesignStep2 _ (Just part) _ _)) -> part
         _ -> 0
     field "isaftercsvupload" $
       case step of
-        (Just (DesignStep2 _ _ (Just AfterCSVUpload))) -> True
+        (Just (DesignStep2 _ _ (Just AfterCSVUpload) _)) -> True
+        _ -> False
+    field "signlast" $
+      case step of
+        (Just (DesignStep2 _ _ _ True)) -> True
+        (Just (DesignStep3 _ True)) -> True
         _ -> False
 
 
