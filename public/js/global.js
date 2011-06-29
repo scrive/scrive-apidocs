@@ -103,7 +103,7 @@ function stayontop(menu) {
 
     if (menu.size() > 0) {
         var pos = menu.offset();
-        var signStepsWrapper = $("#signStepsWrapper");
+        //var signStepsWrapper = $("#signStepsWrapper");
         var documentBox = $("#documentBox");
         $(window).scroll(function() {
             if ($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')) {
@@ -387,21 +387,21 @@ function escapeHTML(s) {
 
 function allparties() {
     var sigs = $("form .persondetails").filter(":not(.authordetails)");
-    var allparties = new Array();
+    var allpartiesret = new Array();
     sigs.each(function(index) {
         if ($("input:radio:first:checked", this).length > 0) {
 
             var fstnameelem = $("input[name='signatoryfstname']", this);
             if (isMultiPartElem(fstnameelem)) {
-                allparties.push(csvrowcount + " Parter");
+                allpartiesret.push(csvrowcount + " Parter");
             } else {
                 var fstname = fstnameelem.val();
                 var sndname = $("input[name='signatorysndname']", this).val();
-                allparties.push(escapeHTML(fstname + " " + sndname));
+                allpartiesret.push(escapeHTML(fstname + " " + sndname));
             }
         }
     });
-    return allparties;
+    return allpartiesret;
 }
 
 safeReady(function() {
