@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP, IncoherentInstances #-}
-
 module Kontra
     ( module User.UserState
     , module User.Password
@@ -28,7 +26,6 @@ module Kontra
     , param
     , currentService
     , currentServiceID
-    , setCurrentService
     , HasService(..)
     )
     where
@@ -42,18 +39,15 @@ import Doc.DocState
 import Happstack.Server
 import MinutesTime
 import Misc
-import Session
 import Happstack.State (query,QueryEvent)
 import User.UserState
-import User.Password
+import User.Password hiding (Password, NoPassword)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
 import Mails.MailsConfig()
-import Mails.SendMail
 import KontraLink
 import ActionSchedulerState
 import qualified TrustWeaver as TW
@@ -64,16 +58,7 @@ import API.Service.ServiceState
 import FlashMessage
 import Company.CompanyState
 
-#if MIN_VERSION_happstack_server(0,5,1)
-rqInputs2 rq = do
-    let inputs = rqInputsQuery rq 
-    body <- readMVar (rqInputsBody rq)
-    return $ inputs ++ body
-#else
-rqInputs2 rq = return (rqInputs rq)
-#endif
-  
-data Context = Context 
+data Context = Context
     { ctxmaybeuser           :: Maybe User
     , ctxhostpart            :: String
     , ctxflashmessages       :: [FlashMessage]
@@ -84,7 +69,7 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action
     , ctxgscmd               :: String
     , ctxproduction          :: Bool
-    , ctxtemplates           :: KontrakcjaTemplates 
+    , ctxtemplates           :: KontrakcjaTemplates
     , ctxesenforcer          :: MVar ()
     , ctxtwconf              :: TW.TrustWeaverConf
     , ctxelegtransactions    :: [ELegTransaction]
@@ -104,10 +89,6 @@ instance TemplatesMonad (ServerPartT (StateT Context IO)) where
         getTemplates = do
             ctx <- get
             return (ctxtemplates ctx)
-
-instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
-        getTemplates = ask
-
 
 {- |
    A list of default user emails.  These should start out as the users
@@ -130,7 +111,7 @@ initialUsers = map (Email . BS.fromString)
    Whether the user is an administrator.
 -}
 isSuperUser :: [Email] -> Maybe User -> Bool
-isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins 
+isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins
 isSuperUser _ _ = False
 
 {- |
@@ -142,10 +123,10 @@ onlySuperUser a = do
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
-          
+
 {- |
    Adds an Eleg Transaction to the context.
--}           
+-}
 addELegTransaction :: ELegTransaction -> Kontra ()
 addELegTransaction tr = do
     ctx@Context { ctxelegtransactions = currenttrans } <- get
@@ -153,7 +134,7 @@ addELegTransaction tr = do
 
 {- |
    Adds a flash message to the context.
--}  
+-}
 addFlashMsg :: FlashMessage -> Kontra ()
 addFlashMsg flash =
     modify (\ctx@Context{ ctxflashmessages = flashmessages } ->
@@ -161,18 +142,18 @@ addFlashMsg flash =
 
 {- |
    Clears all the flash messages from the context.
--}                  
-clearFlashMsgs:: Kontra ()                       
+-}
+clearFlashMsgs:: Kontra ()
 clearFlashMsgs = modify (\ctx -> ctx { ctxflashmessages = [] })
 
 
 {- |
    Adds a modal from string
--}  
+-}
 addModal :: KontraModal ->  Kontra ()
 addModal flash = do
-  ctx <- get  
-  fm <- liftIO $ runReaderT flash (ctxtemplates ctx)  
+  ctx <- get
+  fm <- liftIO $ runReaderT flash (ctxtemplates ctx)
   put $  ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
 
 {- |
@@ -187,7 +168,7 @@ addModalT = addFlashMsg
 logUserToContext :: Maybe User -> Kontra ()
 logUserToContext user =  do
   ctx <- get
-  put $ ctx { ctxmaybeuser = user}    
+  put $ ctx { ctxmaybeuser = user}
 
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do
@@ -218,7 +199,7 @@ newAccountCreatedBySigningLink user doclinkdata = do
 -- | Schedule mail for send out and awake scheduler
 scheduleEmailSendout :: MonadIO m => MVar () -> Mail -> m ()
 scheduleEmailSendout enforcer mail = do
-    liftIO $ do
+    _ <- liftIO $ do
         newEmailSendoutAction mail
         tryPutMVar enforcer ()
     return ()
@@ -237,7 +218,7 @@ queryOrFailIfLeft q = do
   returnRightOrMZero mres
 
 -- | if it's not a just, mzero. Otherwise, return the value
-returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a     
+returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a
 returnJustOrMZero = maybe mzero return
 
 returnRightOrMZero :: (MonadPlus m, Monad m) => Either a b -> m b
@@ -258,14 +239,9 @@ currentServiceID  ctx = serviceid <$> currentService ctx
 
 
 class HasService a where
-    getService:: a -> Maybe ServiceID 
-    
+    getService:: a -> Maybe ServiceID
+
 instance HasService Document where
     getService = documentservice
-    
-setCurrentService :: (HasService a) => a -> Kontra ()
-setCurrentService a = do
-   ctx <- get 
-   srv <- liftMM (query . GetService) (return $ getService a)
-   put ctx {ctxservice = srv}
+
 

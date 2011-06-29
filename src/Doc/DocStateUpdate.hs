@@ -1,23 +1,22 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module Doc.DocStateUpdate
     ( restartDocument
     , markDocumentSeen
     ) where
-    
+
 import DBError
 import Doc.DocState
-import Doc.DocUtils
 import Kontra
 import Misc
 import Control.Monad.State (get)
 import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
+import Util.SignatoryLinkUtils
 
 {- |
    Mark document seen securely.
  -}
-markDocumentSeen :: DocumentID 
+markDocumentSeen :: DocumentID
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime.MinutesTime
@@ -27,10 +26,10 @@ markDocumentSeen docid sigid mh time ipnum =
   update $ MarkDocumentSeen docid sigid mh time ipnum
 
 {- |
-   Securely 
+   Securely
  -}
 restartDocument :: Document -> Kontra (Either DBError Document)
-restartDocument doc@Document { documentid } = do
+restartDocument doc= do
   Context { ctxtime
           , ctxipnumber
           , ctxmaybeuser
@@ -38,8 +37,8 @@ restartDocument doc@Document { documentid } = do
   case ctxmaybeuser of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> case getAuthorSigLink doc of
-      Just authorsiglink | isSigLinkForUser user authorsiglink -> do
-        enewdoc <- update $ RestartDocument documentid user ctxtime ctxipnumber 
+      Just authorsiglink | isSigLinkFor user authorsiglink -> do
+        enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber
         case enewdoc of
           Right newdoc -> return $ Right newdoc
           _            -> return $ Left DBResourceNotAvailable

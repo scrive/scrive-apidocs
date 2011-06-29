@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
 import Doc.DocState
@@ -8,12 +7,10 @@ import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import PayEx.PayExState
 import ListUtil
 import Session
 import API.Service.ServiceState
-import Data.Maybe
 import Company.CompanyState
 
 {- |
@@ -27,9 +24,9 @@ data LoginRedirectReason = LoginTry
 data DesignStep2Flag = AfterCSVUpload
 type Person = Int
 
-data DesignStep = DesignStep1 
-                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) 
-                | DesignStep3 DocumentID   
+data DesignStep = DesignStep1
+                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag)
+                | DesignStep3 DocumentID
 
 instance Show DesignStep where
     show DesignStep1 =  ""
@@ -52,7 +49,7 @@ data KontraLink
     | LinkOffers ListParams
     | LinkOrders ListParams
     | LinkAttachments ListParams
-    | LinkMain 
+    | LinkMain
     | LinkNew (Maybe DocumentProcess) ListParams Bool
     | LinkAjaxTemplates DocumentProcess ListParams
     | LinkAccount
@@ -82,8 +79,8 @@ data KontraLink
     | LinkAccountCreated ActionID MagicHash String -- email
     | LinkAccountCreatedBySigning ActionID MagicHash
     | LinkAccountRemoval ActionID MagicHash
-    | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
-    | LinkWithdrawn DocumentID 
+    | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
+    | LinkWithdrawn DocumentID
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
@@ -96,6 +93,9 @@ data KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
     | LinkAttachmentForAuthor DocumentID FileID
     | LinkAttachmentForViewer DocumentID SignatoryLinkID MagicHash FileID
+    | LinkServiceLogo ServiceID
+    | LinkServiceButtonsBody ServiceID
+    | LinkServiceButtonsRest ServiceID
 
 
 {- |
@@ -122,27 +122,27 @@ instance Show KontraLink where
     showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkSecurity = (++) "/account/security"
-    showsPrec _ (LinkLandpageSaved document signatorylink) = 
+    showsPrec _ (LinkLandpageSaved document signatorylink) =
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
-    showsPrec _ (LinkIssueDoc documentid) = 
+    showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
-    showsPrec _ (LinkIssueDocPDF Nothing document) = 
+    showsPrec _ (LinkIssueDocPDF Nothing document) =
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
-    showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) = 
+    showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) =
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
-    showsPrec _ (LinkFile fileid filename) = 
+    showsPrec _ (LinkFile fileid filename) =
         (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
-    showsPrec _ (LinkSignDoc document signatorylink) = 
-        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
+    showsPrec _ (LinkSignDoc document signatorylink) =
+        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkAccountFromSign document signatorylink actionid magichash) =
-        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
+        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/" ++ show (signatorymagichash signatorylink) ++
                  "/" ++ show actionid ++
                  "/" ++ show magichash
-    showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
+    showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
@@ -168,10 +168,13 @@ instance Show KontraLink where
     showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
     showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
-    showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid 
+    showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
-    showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid 
+    showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/d/" ++ show did ++ "/" ++ show fid
     showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/s/" ++ show did ++ "/" ++ show sid ++ "/" ++ show mh ++ "/" ++ show fid
-    
+    showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
+    showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
+    showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
+

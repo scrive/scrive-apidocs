@@ -1,0 +1,259 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextElseBodyMailSupport"
+msgstr "support@skrivapa.se"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextElseBody"
+msgstr "Problem Ledsen, det har uppstått ett problem att rendera sigillet på PDF:en. Vänliga ladda upp dokumentet igen. Om problemet upprepar sig var vänlig kontakta "
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextElseHead"
+msgstr "Problem"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextPreparationBody"
+msgstr "Dokumentet är i förberedelsefasen."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextPreparationHead"
+msgstr "Förberedelse"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextElseAwaitingauthorBody"
+msgstr "Dokumentet väntar på att undertecknas av inbjudande part."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextElseAwaitingauthorHead"
+msgstr "Väntar"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextSignedbymeAwaitingauthorBody"
+msgstr "Du har undertecknat och vi inväntar övriga parter."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextSignedbymeAwaitingauthorHead"
+msgstr "Väntar på motpart"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextNotsignedbymeAwaitingauthorBody"
+msgstr "Vänligen kontrollera dokumentet och parternas uppgifter och underteckna längst ned."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextNotsignedbymeAwaitingauthorHead"
+msgstr "Granska"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextRejectedElseImauthorBody"
+msgstr "Dokumentet har avvisats av en motpart"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextRejectedElseImauthorHead"
+msgstr "Avvisat"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextRejectedSignedbymeImauthorBody"
+msgstr "Dokumentet har avvisats av en motpart."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextRejectedSignedbymeImauthorHead"
+msgstr "Avvisat"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextRejectedNotsignedbymeImauthorBody"
+msgstr "Dokumentet har avvisats av en motpart."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextRejectedNotsignedbymeImauthorHead"
+msgstr "Avvisat"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextTimedoutElseImauthorBody"
+msgstr "Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum har passerat och därför har dokumentet avbrutits."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextTimedoutElseImauthorHead"
+msgstr "Förfallodatum har passerat"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextTimedoutSignedbymeImauthorBody"
+msgstr "Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum har passerat och därför har dokumentet avbrutits."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextTimedoutSignedbymeImauthorHead"
+msgstr "Förfallodatum har passerat"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextTimedoutNotsignedbymeImauthorBody"
+msgstr "Du kan inte längre underteckna dokumentet eftersom sista datum för att underteckna passerat."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextTimedoutNotsignedbymeImauthorHead"
+msgstr "Förfallodatum har passerat"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextDatamismatchElseImauthorBody"
+msgstr "Avtalsprocessen är avbruten på grund av                              felaktig matchning mellan en                              undertecknande part och dennes                              e-legitimation."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextDatamismatchElseImauthorHead"
+msgstr "Avtalsprocessen avbruten"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextDatamismatchSignedbymeImauthorBody"
+msgstr "Avtalsprocessen är avbruten på grund av                              felaktig matchning mellan en                              undertecknande part och dennes                              e-legitimation."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextDatamismatchSignedbymeImauthorHead"
+msgstr "Avtalsprocessen avbruten"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextDatamismatchNotsignedbymeImauthorBody"
+msgstr "Avtalsprocessen är avbruten på grund                                av felaktig matchning mellan en                                undertecknande part och dennes                                e-legitimation."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextDatamismatchNotsignedbymeImauthorHead"
+msgstr "Avtalsprocessen avbruten"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextPendingSignedbymeImauthorBody"
+msgstr "Du har undertecknat och vi inväntar övriga parter."
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextPendingSignedbymeImauthorHead"
+msgstr "Väntar på motpart"
+
+#: docpages/doctexts.st:documentInfoText
+msgid "_documentInfoTextPendingNotsignedbymeImauthorHead"
+msgstr "Väntar"
+
+#: docpages/doctexts.st:orderstatusinfotext
+msgid "_orderstatusinfotext"
+msgstr "Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta bekräftelsen."
+
+#: docpages/doctexts.st:offerstatusinfotext
+msgid "_offerstatusinfotext"
+msgstr "Du har skickat en inbjudan att acceptera offerten. Vänligen inväntan accepten."
+
+#: docpages/doctexts.st:contractstatusinfotext
+msgid "_contractstatusinfotext"
+msgstr "Du har valt att underteckna sist. Vänligen invänta övriga partersunderskrift."
+
+#: docpages/doctexts.st:ordersignedinfotext
+msgid "_ordersignedinfotextFrom"
+msgstr "från"
+
+#: docpages/doctexts.st:ordersignedinfotext
+msgid "_ordersignedinfotextHasConfirmed"
+msgstr "har bekräftat ordern"
+
+#: docpages/doctexts.st:offersignedinfotext
+msgid "_offersignedinfotextFrom"
+msgstr "från"
+
+#: docpages/doctexts.st:offersignedinfotext
+msgid "_offersignedinfotextHasAccepted"
+msgstr "har accepterat offerten"
+
+#: docpages/doctexts.st:contractsignedinfotext
+msgid "_contractsignedinfotext"
+msgstr "Samtliga parter har undertecknat dokumentet."
+
+#: docpages/doctexts.st:ordersignedinfoheader
+msgid "_ordersignedinfoheader"
+msgstr "Ordern bekräftad"
+
+#: docpages/doctexts.st:offersignedinfoheader
+msgid "_offersignedinfoheader"
+msgstr "Offert accepterad"
+
+#: docpages/doctexts.st:contractsignedinfoheader
+msgid "_contractsignedinfoheader"
+msgstr "Färdigställt"
+
+#: docpages/doctexts.st:ordercancelledinfotext
+msgid "_ordercancelledinfotext"
+msgstr "har återkallat ordern. Den går således in att acceptera."
+
+#: docpages/doctexts.st:offercancelledinfotext
+msgid "_offercancelledinfotext"
+msgstr "har återkallat offerten. Den går således inte att acceptera."
+
+#: docpages/doctexts.st:contractcancelledinfotext
+msgid "_contractcancelledinfotext"
+msgstr "har återkallat sin inbjudan att underteckna dokumentet."
+
+#: docpages/doctexts.st:ordercancelledinfoheader
+msgid "_ordercancelledinfoheader"
+msgstr "Order återkallad"
+
+#: docpages/doctexts.st:offercancelledinfoheader
+msgid "_offercancelledinfoheader"
+msgstr "Offert återkallad"
+
+#: docpages/doctexts.st:contractcancelledinfoheader
+msgid "_contractcancelledinfoheader"
+msgstr "Dokument återkallat"
+
+#: docpages/doctexts.st:orderpendingauthorinfotext
+msgid "_orderpendingauthorinfotext"
+msgstr "Du har skickat orderbekräftelsen. Orderbekräftelsen har ännu inte bekräftats av din mottagare."
+
+#: docpages/doctexts.st:offerpendingauthorinfotext
+msgid "_offerpendingauthorinfotext"
+msgstr "Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren."
+
+#: docpages/doctexts.st:contractpendingauthorinfotext
+msgid "_contractpendingauthorinfotextIfElse"
+msgstr "Du har endast behörighet att se detta                           dokumentet. Dokumentet har ännu inte                           undertecknats av samtliga parter."
+
+#: docpages/doctexts.st:contractpendingauthorinfotext
+msgid "_contractpendingauthorinfotextIfiamauthor"
+msgstr "Du har skickat inbjudan att                           underteckna. Dokumentet har ännu inte                           undertecknats av samtliga parter."
+
+#: docpages/doctexts.st:orderpendingauthorinfoheader
+msgid "_orderpendingauthorinfoheader"
+msgstr "Väntar på bekräftelse"
+
+#: docpages/doctexts.st:offerpendingauthorinfoheader
+msgid "_offerpendingauthorinfoheader"
+msgstr "Väntar på accept"
+
+#: docpages/doctexts.st:contractpendingauthorinfoheader
+msgid "_contractpendingauthorinfoheader"
+msgstr "Väntar"
+
+#: docpages/doctexts.st:orderpendingauthornotsignedinfotext
+msgid "_orderpendingauthornotsignedinfotext"
+msgstr "Vänligen var noga med att granska ordern innan du bekräftar."
+
+#: docpages/doctexts.st:offerpendingauthornotsignedinfotext
+msgid "_offerpendingauthornotsignedinfotext"
+msgstr "Vänligen var noga med att granska offerten innan du accepterar."
+
+#: docpages/doctexts.st:contractpendingauthornotsignedinfotext
+msgid "_contractpendingauthornotsignedinfotext"
+msgstr "Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar."
+
+#: docpages/doctexts.st:orderpendingauthornotsignedinfoheader
+msgid "_orderpendingauthornotsignedinfoheader"
+msgstr "Granska innan bekräftelse"
+
+#: docpages/doctexts.st:offerpendingauthornotsignedinfoheader
+msgid "_offerpendingauthornotsignedinfoheader"
+msgstr "Granska innan accept"
+
+#: docpages/doctexts.st:contractpendingauthornotsignedinfoheader
+msgid "_contractpendingauthornotsignedinfoheader"
+msgstr "Granska"
+

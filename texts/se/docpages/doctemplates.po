@@ -1,0 +1,23 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/doctemplates.st:templatesForAjax
+msgid "_SearchTemplate"
+msgstr "Sök  mall"
+
+#: docpages/doctemplates.st:templatesForAjax
+msgid "_InfoSelectTemplate"
+msgstr "\tKlicka på den mall du vill använda för att starta processen"
+
+#~ msgid "_SortTemplate"
+#~ msgstr "Mall"
+

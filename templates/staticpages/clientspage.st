@@ -10,18 +10,7 @@ clientsPage=
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
         $endif$
       </head>
-      <body>
-         $bodystart()$
-         <div class="left-column">
-           $queryColumn()$
-         </div>
-         <div class="right-column">
-           <div class="mainContainer">
-             $clientsPageContents()$
-           </div>
-         </div>
-         $bodyend()$ 
-      </body>
+      $standardBodyWithQueryCol(unwrappedbody=clientsPageContents())$
     </html>
 ###
 clientsPageContents=
@@ -80,7 +69,7 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 								<h2>Accenture Management Consulting</h2>
 								<h3>"Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen."</h3>
 								<em>- Ola Brundin, Accenture Management Consulting</em>
-								<a href="http://www.eventbook.se">www.eventbook.se</a>
+								<a href="http://www.accenture.com/se-en/Pages/index.aspx">www.accenture.com</a>
 							</li>
 						</ul>
 					</div>

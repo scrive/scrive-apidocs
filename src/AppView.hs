@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 {- |
    Defines the App level views.
 -}
@@ -9,7 +8,7 @@ module AppView( TopMenu(..)
               , signupPageView
               , signupVipPageView
               , pageLogin
-              , simpleResponse 
+              , simpleResponse
               , ajaxError
               , firstPage
               , sitemapPage
@@ -23,7 +22,7 @@ module AppView( TopMenu(..)
               , clientsPage
               , modalError
               , embeddedErrorPage
-              ) where 
+              ) where
 import API.Service.ServiceState
 import FlashMessage
 import Kontra
@@ -53,15 +52,15 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
    and this is the pretty public name)
 -}
 kontrakcja :: String
-kontrakcja = "SkrivaPå" 
+kontrakcja = "SkrivaPå"
 
 -- * Main Implementation
 
 {- |
    Renders some page body xml into a complete reponse
 -}
-renderFromBody :: TopMenu 
-               -> String 
+renderFromBody :: TopMenu
+               -> String
                -> String
                -> Kontra Response
 renderFromBody _topmenu title content = do
@@ -69,11 +68,11 @@ renderFromBody _topmenu title content = do
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     ctx <- get
-    let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx) 
+    let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
     res <-  simpleResponse =<< (liftIO $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content)
     clearFlashMsgs
     return res
-    
+
 
 {- |
    Renders some page body xml into a complete page of xml
@@ -83,34 +82,34 @@ pageFromBody :: Context
              -> Maybe String
              -> Maybe String
              -> Bool
-             -> String 
+             -> String
              -> String
              -> IO String
- 
+
 pageFromBody ctx@Context{ ctxtemplates }
              loginOn
              referer
              email
-             showCreateAccount 
-             title 
+             showCreateAccount
+             title
              bodytext = do
     renderTemplate ctxtemplates "wholePage" $ do
         field "content" bodytext
         standardPageFields ctx title False showCreateAccount loginOn referer email
-    
+
 
 
 embeddedPage :: String -> Kontra Response
 embeddedPage pb = do
     ctx <- get
-    bdy <- renderTemplateM "embeddedPage" $ do 
+    bdy <- renderTemplateM "embeddedPage" $ do
             field "content" pb
             serviceFields (ctxservice ctx) (ctxlocation ctx)
             standardPageFields ctx "" False False False Nothing Nothing
-    res <- simpleResponse bdy 
+    res <- simpleResponse bdy
     clearFlashMsgs
     return res
-    
+
 embeddedErrorPage :: Kontra Response
 embeddedErrorPage = do
     ctx <- get
@@ -119,8 +118,20 @@ embeddedErrorPage = do
     simpleResponse content
 
 serviceFields:: Maybe Service -> String -> Fields
-serviceFields _ location = field "location" location
+serviceFields (Just service) location = do
+    field "location" location
+    field "buttons" $ isJust $ servicebuttons $ serviceui service
+    field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
+    field "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
+    field "background"  $ servicebackground $ serviceui service
+    field "overlaybackground"  $ serviceoverlaybackground $ serviceui service
+    field "barsbackground"  $ servicebarsbackground $ serviceui service
+    field "logo" $ isJust $ servicelogo $ serviceui service
+    field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
 
+
+serviceFields Nothing location =
+    field "location" location
 
 sitemapPage :: Kontra String
 sitemapPage = do
@@ -169,7 +180,7 @@ renderTemplateAsPage ctx@Context{ctxtemplates} templateName publicpage showCreat
 getLoginOn :: Kontra Bool
 getLoginOn = do
     loginOn <- isFieldSet "logging"
-    return loginOn   
+    return loginOn
 
 getLoginReferer :: Kontra (Maybe String)
 getLoginReferer = do
@@ -183,14 +194,14 @@ standardPageFields :: Context -> String -> Bool -> Bool -> Bool -> Maybe String 
 standardPageFields ctx title publicpage showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
-    mainLinksFields 
+    mainLinksFields
     contextInfoFields ctx
     publicSafeFlagField ctx loginOn publicpage
     loginModal loginOn referer email
 
 {- |
    The contents of the signup page.  This is read from a template.
--}        
+-}
 signupPageView :: KontrakcjaTemplates -> IO String
 signupPageView templates = renderTemplate templates "signupPageView" ()
 
@@ -210,8 +221,8 @@ pageLogin ctx referer email =
    Changing our pages into reponses, and clearing flash messages.
 -}
 simpleResponse::String -> Kontra Response
-simpleResponse s = ok $ toResponseBS   (BS.fromString "text/html;charset=utf-8") (BSL.fromString s) 
-    -- change this to HtmlString from helpers package 
+simpleResponse s = ok $ toResponseBS   (BS.fromString "text/html;charset=utf-8") (BSL.fromString s)
+    -- change this to HtmlString from helpers package
     -- (didn't want to connect it one day before prelaunch)
 
 ajaxError::Kontra Response
@@ -220,8 +231,8 @@ ajaxError = simpleResponse "<script>window.location='/'</script>"
    The landing page contents.  Read from template.
 -}
 firstPage :: Context -> Bool -> Maybe String -> Maybe String ->  IO String
-firstPage ctx loginOn referer email = 
-    renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
+firstPage ctx loginOn referer email =
+    renderTemplate (ctxtemplates ctx) "firstPage"  $ do
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
         mainLinksFields
@@ -230,7 +241,7 @@ firstPage ctx loginOn referer email =
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields::Fields 
+mainLinksFields::Fields
 mainLinksFields = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
@@ -260,8 +271,8 @@ contextInfoFields ctx = do
 -}
 publicSafeFlagField :: Context -> Bool -> Bool -> Fields
 publicSafeFlagField ctx loginOn publicpage = do
-    field "publicsafe" $ publicpage 
-                           && (not loginOn) 
+    field "publicsafe" $ publicpage
+                           && (not loginOn)
                            && (isNothing $ ctxmaybeuser ctx)
 
 flashMessageFields :: KontrakcjaTemplates -> FlashMessage -> Fields
@@ -270,7 +281,7 @@ flashMessageFields templates flash = do
         case t of
              SigningRelated  -> "blue"
              OperationDone   -> "green"
-             OperationFailed -> "red" 
+             OperationFailed -> "red"
              _               -> "") <$> ftype
     field "message" msg
     field "isModal" $ (== Modal) <$> ftype

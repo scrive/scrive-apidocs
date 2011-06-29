@@ -1,0 +1,565 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: modals.st:signCanceledDataMismatchModal
+msgid "_signCanceledDataMismatchModalHeader"
+msgstr "Felaktiga personuppgifter"
+
+#: modals.st:signCanceledDataMismatchModal
+msgid "_signCanceledDataMismatchModalErrorReport"
+msgstr "Felrapport:"
+
+#: modals.st:signCanceledDataMismatchModal
+msgid "_signCanceledDataMismatchModalBodySorry"
+msgstr "Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter."
+
+#: modals.st:signCanceledDataMismatchModal
+msgid "_signCanceledDataMismatchModalBodyAborted"
+msgstr "Avtalsprocessen är därför bruten, var vänliga invänta <br/>         en ny inbjudan eller kontakta <a href=\"mailto:$authoremail$\">$authorname$</a>."
+
+#: modals.st:signAwaitingAuthorLast
+msgid "_signAwaitingAuthorLastHeader"
+msgstr "Dokumentet har undertecknats"
+
+#: modals.st:signAwaitingAuthorLast
+msgid "_signAwaitingAuthorLastBody"
+msgstr "Alla parter har nu undertecknat och dokumentet är bindande."
+
+#: modals.st:modalWelcomeToSkrivaPa
+msgid "_modalWelcomeToSkrivaPaHeader"
+msgstr "Vi bjuder på 1 fri månad med SkrivaPå!"
+
+#: modals.st:modalWelcomeToSkrivaPa
+msgid "_modalWelcomeToSkrivaPaFooter"
+msgstr "Välkommen!"
+
+#: modals.st:modalWelcomeToSkrivaPa
+msgid "_modalWelcomeToSkrivaPaBodyMain"
+msgstr "Med SkrivaPå kan du skriva på och arkivera dokument elektroniskt. Tjänsten går att använda för avtal, offerter och även andra typer av dokument. Givetvis kommer det inte att kosta någonting efter den fria månaden om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:"
+
+#: modals.st:modalWelcomeToSkrivaPa
+msgid "_modalWelcomeToSkrivaPaBodyInstructions"
+msgstr "1. Ladda upp ett dokument<br/>        2. Fyll i motpartens uppgifter<br/>        3. Underteckna och skicka iväg"
+
+#: modals.st:modalWelcomeToSkrivaPa
+msgid "_modalWelcomeToSkrivaPaBodyHint"
+msgstr "Tips: Testa med dig själv först."
+
+#: modals.st:modalWelcomeToSkrivaPa
+msgid "_modalWelcomeToSkrivaPaBodyBestRegards"
+msgstr "Med vänliga hälsningar<br/>        Team SkrivaPå"
+
+#: modals.st:modalSignedViewOrderNotClosedNoAccount
+msgid "_modalSignedViewOrderNotClosedNoAccountHeader"
+msgstr "Du har bekräftat ordern!"
+
+#: modals.st:modalSignedViewOrderNotClosedNoAccount
+msgid "_modalSignedViewOrderNotClosedNoAccountBody"
+msgstr "        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.      "
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader"
+msgstr "Du har bekräftat ordern $documenttitle$"
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterLogIn"
+msgstr "Logga in"
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved"
+msgstr "          Orderbekräftelsen har sparats till ditt konto.        "
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed"
+msgstr "          $partyUnsignedListString:noescape()$ har ännu inte          bekräftat.        "
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInHeader"
+msgstr "Du har bekräftat ordern $documenttitle$"
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved"
+msgstr "        Orderbekräftelsen har sparats till ditt konto.      "
+
+#: modals.st:modalSignedViewOrderNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned"
+msgstr "        $partyUnsignedListString:noescape()$ har ännu inte        bekräftat.      "
+
+#: modals.st:modalSignedViewOrderClosedNoAccount
+msgid "_modalSignedViewOrderClosedNoAccountHeader"
+msgstr "\tDu har bekräftat ordern!"
+
+#: modals.st:modalSignedViewOrderClosedNoAccount
+msgid "_modalSignedViewOrderClosedNoAccountBody"
+msgstr "        Vi har skickat ett original orderbekräftelse till din inkorg.      "
+
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInHeader"
+msgstr "Du har bekräftat ordern $documenttitle$"
+
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterLogIn"
+msgstr "Logga in"
+
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterForgotPassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved"
+msgstr "          Orderbekräftelsen har sparats till ditt konto.        "
+
+#: modals.st:modalSignedViewOrderClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountNotLoggedInBodyConfirmed"
+msgstr "          $partyListString:noescape()$ har nu bekräftat ordern.        "
+
+#: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountLoggedInHeader"
+msgstr "Du har bekräftat ordern $documenttitle$"
+
+#: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountLoggedInFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountLoggedInBodySaved"
+msgstr "        Orderbekräftelsen har sparats till ditt konto.      "
+
+#: modals.st:modalSignedViewOrderClosedHasAccountLoggedIn
+msgid "_modalSignedViewOrderClosedHasAccountLoggedInBodyConfirmed"
+msgstr "        $partyListString:noescape()$ har nu bekräftat ordern.      "
+
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountNotLoggedInHeader"
+msgstr "Du har undertecknat dokumentet $documenttitle$"
+
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterLogIn"
+msgstr "Logga in"
+
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountNotLoggedInFooterCLose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved"
+msgstr "          Dokumentet har sparats till ditt konto.        "
+
+#: modals.st:modalSignedViewNotClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountNotLoggedInBodyNotSigned"
+msgstr "          $partyUnsignedListString:noescape()$ har ännu inte          undertecknat. När alla undertecknat blir dokumentet bindande          och en kopia skickas till din e-post.        "
+
+#: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountLoggedInHeader"
+msgstr "Du har undertecknat dokumentet $documenttitle$"
+
+#: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountLoggedInFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountLoggedInBodySaved"
+msgstr "        Dokumentet har sparats till ditt konto.      "
+
+#: modals.st:modalSignedViewNotClosedHasAccountLoggedIn
+msgid "_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned"
+msgstr "        $partyUnsignedListString:noescape()$ har ännu inte        undertecknat. När alla undertecknat blir dokumentet bindande        och en kopia skickas till din e-post.      "
+
+#: modals.st:modalSignedViewClosedNoAccount
+msgid "_modalSignedViewClosedNoAccountHeader"
+msgstr "Du har undertecknat!"
+
+#: modals.st:modalSignedViewClosedNoAccount
+msgid "_modalSignedViewClosedNoAccountBody"
+msgstr "        Dokumentet är nu bindande. SkrivaPå har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.      "
+
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewClosedHasAccountNotLoggedInHeader"
+msgstr "Du har undertecknat dokumentet $documenttitle$"
+
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterLogIn"
+msgstr "Logga in"
+
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewClosedHasAccountNotLoggedInFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewClosedHasAccountNotLoggedInBodySigned"
+msgstr "          $partyListString:noescape()$ har nu undertecknat och          dokumentet är bindande.        "
+
+#: modals.st:modalSignedViewClosedHasAccountNotLoggedIn
+msgid "_modalSignedViewClosedHasAccountNotLoggedInBodySaved"
+msgstr "          Dokumentet har sparats till ditt konto.        "
+
+#: modals.st:modalSignedViewClosedHasAccountLoggedIn
+msgid "_modalSignedViewClosedHasAccountLoggedInHeader"
+msgstr "Du har undertecknat dokumentet $documenttitle$"
+
+#: modals.st:modalSignedViewClosedHasAccountLoggedIn
+msgid "_modalSignedViewClosedHasAccountLoggedInClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignedViewClosedHasAccountLoggedIn
+msgid "_modalSignedViewClosedHasAccountLoggedInBodySigned"
+msgstr "        $partyListString:noescape()$ har nu undertecknat och        dokumentet är bindande.     "
+
+#: modals.st:modalSignedViewClosedHasAccountLoggedIn
+msgid "_modalSignedViewClosedHasAccountLoggedInBodySaved"
+msgstr "        Dokumentet har sparats till ditt konto.      "
+
+#: modals.st:modalSignInviteView
+msgid "_modalSignInviteViewHeaderIfSigned"
+msgstr "Du har undertecknat dokumentet <strong>$documenttitle$</strong>!"
+
+#: modals.st:modalSignInviteView
+msgid "_modalSignInviteViewHeaderIfElse"
+msgstr "Du har undertecknat!"
+
+#: modals.st:modalSignInviteView
+msgid "_modalSignInviteViewFooterClose"
+msgstr "Stäng"
+
+#: modals.st:modalSignInviteView
+msgid "_modalSignInviteViewBodyIfSigned"
+msgstr "Du har undertecknat dokumentet $documenttitle$ och dokumentet har färdigställts."
+
+#: modals.st:modalSignInviteView
+msgid "_modalSignInviteViewBodyIfElse"
+msgstr "En inbjudan att underteckna har nu skickats till        $partyListButAuthor:noescape()$."
+
+#: modals.st:modalSendInviteView
+msgid "_modalSendInviteViewHeader"
+msgstr "Dokumentet <strong>$documenttitle$</strong> skickat!"
+
+#: modals.st:modalSendInviteView
+msgid "_modalSendInviteViewClose"
+msgstr "Stäng"
+
+#: modals.st:modalSendInviteView
+msgid "_modalSendInviteViewBody"
+msgstr "En inbjudan att underteckna har nu skickats        till $partyListButAuthor:noescape()$."
+
+#: modals.st:modalRejectedView
+msgid "_modalRejectedViewHeader"
+msgstr "Du har avvisat dokumentet $documenttitle$"
+
+#: modals.st:modalRejectedView
+msgid "_modalRejectedViewClose"
+msgstr "Stäng"
+
+#: modals.st:modalRejectedView
+msgid "_modalRejectedViewBody"
+msgstr "Ett meddelande har skickats till $partyList:noescape()$."
+
+#: modals.st:modalOrderCreated
+msgid "_modalOrderCreatedHeader"
+msgstr "Orderbekräftelsen skickad!"
+
+#: modals.st:modalOrderCreated
+msgid "_modalOrderCreatedClose"
+msgstr "Stäng"
+
+#: modals.st:modalOrderCreated
+msgid "_modalOrderCreatedBody"
+msgstr " Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats till <strong>$signatory$</strong>. "
+
+#: modals.st:modalOfferSignedNoAccount
+msgid "_modalOfferSignedNoAccountHeader"
+msgstr "Du har accepterat offerten!"
+
+#: modals.st:modalOfferSignedNoAccount
+msgid "_modalOfferSignedNoAccountBody"
+msgstr "        Offerten är nu bindande. SkrivaPå har verifierat accepten och utfärdat ett verifikat. Ett original av den färdiga accepten har skickats till din inkorg.      "
+
+#: modals.st:modalOfferSignedHasAccount
+msgid "_modalOfferSignedHasAccountHeader"
+msgstr "Du har accepterat offerten!"
+
+#: modals.st:modalOfferSignedHasAccount
+msgid "_modalOfferSignedHasAccountClose"
+msgstr "Stäng"
+
+#: modals.st:modalOfferSignedHasAccount
+msgid "_modalOfferSignedHasAccountBody"
+msgstr " Offerten har sparats till ditt konto med användarnamn <span style=\"color:#007CAC\">$signatory$</span>."
+
+#: modals.st:modalOfferCreated
+msgid "_modalOfferCreatedHeader"
+msgstr "Offerten skickad!"
+
+#: modals.st:modalOfferCreated
+msgid "_modalOfferCreatedClose"
+msgstr "Stäng"
+
+#: modals.st:modalOfferCreated
+msgid "_modalOfferCreatedBody"
+msgstr " Offerten <strong>$documenttitle$</strong> har nu skickats till <strong>$signatory$</strong>."
+
+#: modals.st:modalNewPasswordView
+msgid "_modalNewPasswordViewRepeatPassword"
+msgstr "Upprepa lösenord:"
+
+#: modals.st:modalNewPasswordView
+msgid "_modalNewPasswordViewNewPassword"
+msgstr "Nytt lösenord:"
+
+#: modals.st:modalNewPasswordView
+msgid "_modalNewPasswordViewHeader"
+msgstr "Nytt Lösenord"
+
+#: modals.st:modalNewPasswordView
+msgid "_modalNewPasswordViewFooterSave"
+msgstr "Spara"
+
+#: modals.st:modalLoginForSaveView
+msgid "_modalLoginForSaveViewHeader"
+msgstr "Konto har skapats"
+
+#: modals.st:modalLoginForSaveView
+msgid "_modalLoginForSaveViewClose"
+msgstr "Stäng"
+
+#: modals.st:modalLoginForSaveView
+msgid "_modalLoginForSaveViewBody"
+msgstr "Ditt konto har skapats. En aktiveringslänk har skickats till din inkorg."
+
+#: modals.st:modalInviteUserAsSubaccount
+msgid "_modalInviteUserAsSubaccountHeaderSendRequest"
+msgstr "Skicka förfrågan?"
+
+#: modals.st:modalInviteUserAsSubaccount
+msgid "_modalInviteUserAsSubaccountFooterSendRequest"
+msgstr "Skicka förfrågan"
+
+#: modals.st:modalInviteUserAsSubaccount
+msgid "_modalInviteUserAsSubaccountBodySendSure"
+msgstr "\t          Är du säker att du vill skicka förfrågan till användaren att bli\t          underkonto?\t        "
+
+#: modals.st:modalInviteUserAsSubaccount
+msgid "_modalInviteUserAsSubaccountBodySendRequest"
+msgstr "Skicka en förfrågan till användaren att bli ett underkonto\t          under ditt konto. Det betyder att du blir\t          huvudkonto och kommer att ta över ägarskapet över samtliga underkontots dokument. \t        "
+
+#: modals.st:modalError
+msgid "_modalErrorHeader"
+msgstr "Oops, ett fel har uppstått"
+
+#: modals.st:modalError
+msgid "_modalErrorBody"
+msgstr "Oroa dig inte, vi tittar på problemet"
+
+#: modals.st:modalDoYouWantToBeSubaccount
+msgid "_modalDoYouWantToBeSubaccountHeader"
+msgstr "Vill du acceptera att bli underkonto?"
+
+#: modals.st:modalDoYouWantToBeSubaccount
+msgid "_modalDoYouWantToBeSubaccountFooterAccept"
+msgstr "Acceptera"
+
+#: modals.st:modalDoYouWantToBeSubaccount
+msgid "_modalDoYouWantToBeSubaccountBody"
+msgstr "Om du accepterar blir du underkonto till huvudkontot\t          $supervisor.fullnamePlusEmail$ och huvudkontot tar över\t          ägarskapet över samtliga dokument i ditt konto.  Är du\t          säker att du vill acceptera?\t        "
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupRepeatPassword"
+msgstr "Upprepa lösenord:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupPosition"
+msgstr "Position:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupPhone"
+msgstr "Telefonnummer:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupLastName"
+msgstr "Efternamn:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupIfPrivateAccount"
+msgstr "Privatperson"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupIfCompanyAccount"
+msgstr "Företag"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupHeaderAcceptTOS"
+msgstr "Vänligen acceptera användarvillkoren"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupFooter"
+msgstr "Skapa konto!"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupFirstName"
+msgstr "Förnamn:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupCompany"
+msgstr "Företag:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupChoosePassword"
+msgstr "Välj lösenord:"
+
+#: modals.st:modalAccountSetup
+msgid "_modalAccountSetupBodyAcceptTOS"
+msgstr "Jag har läst och accepterar SkrivaPå Allmänna Villkor"
+
+#: modals.st:modalAccountRemoved
+msgid "_modalAccountRemovedHeader"
+msgstr "Raderat"
+
+#: modals.st:modalAccountRemoved
+msgid "_modalAccountRemovedBody"
+msgstr "Din kopia av dokumentet \"$documenttitle$\" är nu raderat tillsammans från SkrivaPå tillsammans med ditt konto."
+
+#: modals.st:modalAccountRemoved
+msgid "_modalAccountRemovedBestRegards"
+msgstr "Med vänliga hälsningar<br/>        Team SkrivaPå"
+
+#: modals.st:modalAccountRemoval
+msgid "_modalAccountRemovalHeader"
+msgstr "Är du säker?"
+
+#: modals.st:modalAccountRemoval
+msgid "_modalAccountRemovalFooter"
+msgstr "Radera konto"
+
+#: modals.st:modalAccountRemoval
+msgid "_modalAccountRemovalBody"
+msgstr "Är du säker på att du vill radera dokumentet \"Non Disclosure and Immaterial Rights Agreement\" och ditt konto från SkrivaPå"
+
+#: modals.st:modalAccountRemoval
+msgid "_modalAccountRemovalActivateAccount"
+msgstr "Aktivera konto"
+
+#: modals.st:loginModal
+msgid "_loginModalPassword"
+msgstr "Lösenord"
+
+#: modals.st:loginModalPart
+msgid "_loginModalPartPassword"
+msgstr "Lösenord"
+
+#: modals.st:loginModalPart
+msgid "_loginModalPartEmail"
+msgstr "E-post"
+
+#: modals.st:loginModal
+msgid "_loginModalLogIn"
+msgstr "Logga in"
+
+#: modals.st:loginModal
+msgid "_loginModalForgotPasswordSendNewPassword"
+msgstr "Skicka nytt lösenord"
+
+#: modals.st:loginModal
+msgid "_loginModalForgotPasswordForgotPassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:loginModal
+msgid "_loginModalForgotPasswordFooterLogIn"
+msgstr "Logga in"
+
+#: modals.st:loginModal
+msgid "_loginModalForgotPasswordEmail"
+msgstr "E-post"
+
+#: modals.st:loginModal
+msgid "_loginModalFooterLogIn"
+msgstr "Logga in"
+
+#: modals.st:loginModal
+msgid "_loginModalFooterForgotPassword"
+msgstr "Glömt lösenord"
+
+#: modals.st:loginModal
+msgid "_loginModalEmail"
+msgstr "E-post"
+
+#: modals.st:accountFromSignInputs
+msgid "_accountFromSignInputsPrivateAccount"
+msgstr "Privatperson"
+
+#: modals.st:accountFromSignInputs
+msgid "_accountFromSignInputsPassword"
+msgstr "Lösenord"
+
+#: modals.st:accountFromSignInputs
+msgid "_accountFromSignInputsConfirmPassword"
+msgstr "Bekräfta lösenord"
+
+#: modals.st:accountFromSignInputs
+msgid "_accountFromSignInputsCompanyAccount"
+msgstr "Företag"
+
+#: modals.st:accountFromSignInputs
+msgid "_accountFromSignInputsBodySecureOriginal"
+msgstr "          Vill du säkra ditt original? SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.        "
+
+#: modals.st:accountFromSignInputs
+msgid "_accountFromSignInputsBodyAcceptTOS"
+msgstr "Jag har läst och accepterat <a target=\"_blank\" href=\"/allmana-villkor\">SkrivaPå Allmänna Villkor</a>"
+
+#: modals.st:accountFromSignFooter
+msgid "_accountFromSignFooterYesArchive"
+msgstr "Ja, arkivera"
+
+#: modals.st:accountFromSignFooter
+msgid "_accountFromSignFooterNoThx"
+msgstr "Nej tack"
+
+#~ msgid "_signAwaitingAuthorLastFooterOk"
+#~ msgstr "Ok"
+#~ msgid "_signCanceledDataMismatchModalFooterOk"
+#~ msgstr "Ok"
+#~ msgid "_modalErrorFooterOk"
+#~ msgstr "Ok"
+#~ msgid "_modalDoYouWantToBeSubaccountFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_modalInviteUserAsSubaccountFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_modalNewPasswordViewFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_loginModalForgotPasswordFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_loginModalFooterCancel"
+#~ msgstr "Avbryt"
+

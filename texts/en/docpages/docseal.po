@@ -1,0 +1,260 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodEleg"
+msgstr "e-ID"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodElegTelia"
+msgstr "Telia e-ID"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodElegNordea"
+msgstr "Nordea e-ID"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodElegBankID"
+msgstr "BankID"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodEmail"
+msgstr "e-mail"
+
+#: docpages/docseal.st:orderSignHistEntry
+msgid "_orderSignHistEntry"
+msgstr "confirms the order online with"
+
+#: docpages/docseal.st:offerSignHistEntry
+msgid "_offerSignHistEntry"
+msgstr "accepts the offer online with"
+
+#: docpages/docseal.st:contractSignHistEntry
+msgid "_contractSignHistEntry"
+msgstr "signs the document online with"
+
+#: docpages/docseal.st:orderSeenHistEntry
+msgid "_orderSeenHistEntry"
+msgstr "reviews the orderconfirmation online"
+
+#: docpages/docseal.st:offerSeenHistEntry
+msgid "_offerSeenHistEntry"
+msgstr "reviews the offer online"
+
+#: docpages/docseal.st:contractSeenHistEntry
+msgid "_contractSeenHistEntry"
+msgstr "reviews the document online"
+
+#: docpages/docseal.st:orderInvitationSentEntry
+msgid "_orderInvitationSentEntryIfElse"
+msgstr "the parties"
+
+#: docpages/docseal.st:orderInvitationSentEntry
+msgid "_orderInvitationSentEntryIfoneSignatory"
+msgstr "the party"
+
+#: docpages/docseal.st:orderInvitationSentEntry
+msgid "_orderInvitationSentEntry"
+msgstr " sends the orderconfirmations to"
+
+#: docpages/docseal.st:offerInvitationSentEntry
+msgid "_offerInvitationSentEntryIfElse"
+msgstr "the parties"
+
+#: docpages/docseal.st:offerInvitationSentEntry
+msgid "_offerInvitationSentEntryIfoneSignatory"
+msgstr "the party"
+
+#: docpages/docseal.st:offerInvitationSentEntry
+msgid "_offerInvitationSentEntry"
+msgstr " sends the offer to"
+
+#: docpages/docseal.st:contractInvitationSentEntry
+msgid "_contractInvitationSentEntryIfElse"
+msgstr "the parties"
+
+#: docpages/docseal.st:contractInvitationSentEntry
+msgid "_contractInvitationSentEntryIfoneSignatory"
+msgstr "the party"
+
+#: docpages/docseal.st:contractInvitationSentEntry
+msgid "_contractInvitationSentEntry"
+msgstr " sends an invitation to sign to"
+
+#: docpages/docseal.st:orderLastHistEntry
+msgid "_orderLastHistEntry"
+msgstr "    All parties have confirmed the order."
+
+#: docpages/docseal.st:offerLastHistEntry
+msgid "_offerLastHistEntry"
+msgstr "    All parties have accepted the offer."
+
+#: docpages/docseal.st:contractLastHistEntry
+msgid "_contractLastHistEntry"
+msgstr "    All parties have signed the document, the contract is now legally binding."
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow3"
+msgstr "Verify the order confirmation against our database by following the link:"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow2"
+msgstr "by the parites, and is legally binding. Itallic data is safely verifyed by our service."
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow12"
+msgstr "has been confirmed"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow1"
+msgstr "This verification was issued by Scrive and supports that the order confirmation $documentid$"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextshistoryText"
+msgstr "Events"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsdateText"
+msgstr "Date"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextseventsText"
+msgstr "Registered events"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsorgNumberText"
+msgstr "Corporate ID"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextssecretaryText"
+msgstr "Sender"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextspartnerText"
+msgstr "Recipient"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextssignedText"
+msgstr "Order confirmed"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsdocPrefix"
+msgstr "Order confirmation number"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationTitle"
+msgstr "Order confirmation"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow3"
+msgstr "Verify the offer against our database by following the link:"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow2"
+msgstr "by the parites, and is legally binding. Itallic data is safely verifyed by our service."
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow12"
+msgstr "has been accepted"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow1"
+msgstr "This verification was issued by Scrive and supports that the offer $documentid$"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextshistoryText"
+msgstr "Events"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsdateText"
+msgstr "Date"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextseventsText"
+msgstr "Registered events"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsorgNumberText"
+msgstr "Corporate ID"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextssecretaryText"
+msgstr "Sender"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextspartnerText"
+msgstr "Recipient"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextssignedText"
+msgstr "Offer accepted"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsdocPrefix"
+msgstr "Offer number"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationTitle"
+msgstr "Acceptance verification"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow3"
+msgstr "Verify the order confirmation against our database by following the link:"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow2"
+msgstr "by the parites, and is legally binding. Itallic data is safely verifyed by our service."
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow12"
+msgstr "has been signed"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow1"
+msgstr "This verification was issued by Scrive and supports that the document $documentid$"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextshistoryText"
+msgstr "Events"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsdateText"
+msgstr "Date"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextseventsText"
+msgstr "Registered events"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsorgNumberText"
+msgstr "Corporate ID"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextssecretaryText"
+msgstr "Non-signing party"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextspartnerText"
+msgstr "Parties"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextssignedText"
+msgstr "Signed"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsdocPrefix"
+msgstr "Document number"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtexts"
+msgstr "Verification"
+

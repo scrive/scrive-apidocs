@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Werror #-}
 module Crypto (
       AESConf(..)
     , verifyAESConf
@@ -28,7 +27,7 @@ verifyAESConf (AESConf key iv) =
         iv_len  = BS.length iv
 
 aesEncrypt :: AESConf -> ByteString -> ByteString
-aesEncrypt AESConf{aesKey = bskey, aesIV = iv} = 
+aesEncrypt AESConf{aesKey = bskey, aesIV = iv} =
     AES.encryptCBC (initKey bskey) iv . align16
 
 aesDecrypt :: AESConf -> ByteString -> Maybe ByteString

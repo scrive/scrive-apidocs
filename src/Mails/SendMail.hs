@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendMail
@@ -35,7 +34,6 @@ import Control.Applicative
 import Control.Arrow (first)
 import Data.Char (isSpace, toLower)
 import ActionSchedulerState (ActionID)
-import User.UserState 
 import Mails.MailsConfig
 import Mails.MailsData
 import Text.HTML.TagSoup
@@ -43,6 +41,9 @@ import Misc
 import qualified AppLogger as Log
 import Data.ByteString.Internal (c2w,w2c)
 import Data.List
+import API.Service.ServiceState
+import Happstack.State (query)
+import Control.Monad
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
@@ -75,7 +76,7 @@ emptyMail = Mail
     , from           = Nothing
     , mailInfo       = None
 }
--- 
+--
 newtype Mailer = Mailer { sendMail :: ActionID -> Mail -> IO Bool }
 
 createSendgridMailer :: MailsConfig -> Mailer
@@ -83,8 +84,8 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
     where
         reallySend aid mail@Mail{to, title, attachments} = do
             boundaries <- createBoundaries
+            wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
             let mailtos = createMailTos mail
-                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
                 mailRcpt MailAddress {email} = [ "--mail-rcpt"
                                                , "<" ++ BS.toString email ++ ">"
                                                ]
@@ -95,7 +96,7 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
                     , "-k", "--ssl", "--mail-from"
                     , "<" ++ (ourInfoEmail config) ++ ">"
                     ] ++ concatMap mailRcpt to
-                    
+
             Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
             (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
             case code of
@@ -111,8 +112,8 @@ createSendmailMailer config = Mailer{sendMail = reallySend}
     where
         reallySend aid mail@Mail{title, attachments} = do
             boundaries <- createBoundaries
+            wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
             let mailtos = createMailTos mail
-                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
                 sendmailargs =
                     [ "-t" -- get the addresses from the content
                     , "-i" -- ignore single dots in input
@@ -134,8 +135,8 @@ createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = send
             let email' = email $ head to
             tmp <- getTemporaryDirectory
             boundaries <- createBoundaries
-            let wholeContent = createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName aid mail
-                mailtos = createMailTos mail
+            wholeContent <- createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName aid mail
+            let mailtos = createMailTos mail
                 filename = tmp ++ "/Email-" ++ BS.toString email' ++ "-" ++ show aid ++ ".eml"
             Log.mail $ show aid ++ " " ++ mailtos ++ "  [staging: saved to file " ++ filename ++ "]"
             BSL.writeFile filename wholeContent
@@ -155,22 +156,24 @@ createBoundaries = (,) <$> f <*> f
     where
         f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
 
-createWholeContent :: (String, String) -> String -> String -> ActionID -> Mail -> BSLC.ByteString
-createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
-  let mailtos = createMailTos mail 
+createWholeContent :: (String, String) -> String -> String -> ActionID -> Mail -> IO BSLC.ByteString
+createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) = do
+  fromHeader <- do
+      otheraddres <- (fmap (servicemailfromaddress . servicesettings)) <$> liftMM  (query . GetService) (return from)
+      case (join otheraddres) of
+         Nothing -> return $ "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
+         Just address ->  return $ "From: <"++ BS.toString address++ ">\r\n"
+  let mailtos = createMailTos mail
       -- FIXME: add =?UTF8?B= everywhere it is needed here
-      fromHeader =  case from of 
-                Nothing -> "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
-                Just user -> "From: " ++ (mailEncode1 $ BS.toString $ userfullname user) ++ " <"++(BS.toString $ unEmail $ useremail $ userinfo user )++ ">\r\n"
-      headerEmail = 
+      headerEmail =
           -- FIXME: encoded word should not be longer than 75 bytes including everything
           "Subject: " ++ mailEncode title ++ "\r\n" ++
           "To: " ++ mailtos ++ "\r\n" ++
           fromHeader ++
-          "X-SMTPAPI:  {\"unique_args\": " ++ 
+          "X-SMTPAPI:  {\"unique_args\": " ++
                        "{\"mailinfo\": \""++(show mailInfo)++"\", "++
                        "\"id\": \""++(show mailId)++"\"} "++
-                       
+
                       "}\r\n" ++
           "MIME-Version: 1.0\r\n" ++
           "Content-Type: multipart/mixed; boundary=" ++ boundaryMixed ++ "\r\n" ++
@@ -190,9 +193,9 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
           "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
-      attach (fname,fcontent) = BSL.fromString (headerAttach fname) `BSL.append` 
+      attach (fname,fcontent) = BSL.fromString (headerAttach fname) `BSL.append`
                                 BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode fcontent]
-      wholeContent = BSL.concat $ 
+  return $ BSL.concat $
                      [ BSL.fromString headerEmail
                      , BSL.fromString headerContent
                      , BSL.fromString headerContentText
@@ -203,7 +206,7 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
                      ] ++ map attach attachments ++
                      [ BSL.fromString footerEmail
                      ]
-  in wholeContent
+
 
 -- | Convert e-mail from html to txt
 htmlToTxt :: String -> String

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Langs
@@ -9,7 +8,7 @@
 -- Different language versions basic module
 -----------------------------------------------------------------------------
 module Templates.Langs
-    ( 
+    (
           getTextTemplates
         , getTextTemplatesMTime
         , getTranslationStats
@@ -33,7 +32,7 @@ getTextTemplates lang = do
     selectedTrans <- concatMap snd <$> (getTextTemplatesFromDir $ langDir lang)
     defaultTrans  <- concatMap snd <$> (getTextTemplatesFromDir $ langDir defaultValue)
     return $ unionBy (\x y -> fst x == fst y) selectedTrans defaultTrans
-                    
+
 
 getTextTemplatesMTime :: IO ClockTime
 getTextTemplatesMTime = maximum <$> (sequence $ map getRecursiveMTime translationDirs)
@@ -43,8 +42,8 @@ getTranslationStats = do
     Templates.TextTemplates.generatePOTFiles False
     tts <- getTextTemplatesFromDir "pot"
     Templates.TextTemplates.generatePOTFiles True
-    mapM (makeTranslationStats tts) allValues 
-   
+    mapM (makeTranslationStats tts) allValues
+
 makeTranslationStats :: [(String,[(String,String)])] -> Lang -> IO (Lang,TranslationStats)
 makeTranslationStats tts lang = do
      lng <- getTextTemplatesFromDir $ langDir lang
@@ -52,24 +51,24 @@ makeTranslationStats tts lang = do
      return (lang,stats)
 
 translationStats :: [(String,[(String,String)])] -> [(String,[(String,String)])] -> TranslationStats
-translationStats tts lng = 
+translationStats tts lng =
    let
     missing = (map fst tts) \\ (map fst lng)
     extra = (map fst lng) \\ (map fst tts)
-    notSynch = filter (\s -> not $ similarTranslations (fileTranslations s tts) (fileTranslations s lng)) $ (map fst tts) 
+    notSynch = filter (\s -> not $ similarTranslations (fileTranslations s tts) (fileTranslations s lng)) $ (map fst tts)
    in TranslationStats {
      missingFiles = missing
    , extraFiles = extra
    , notSynchronisedFiles  = (notSynch \\ missing)  \\ extra
-   , emptyTranslations = let 
-                          empt = mapSnd (filter (\(_, b) ->  null b)) lng 
+   , emptyTranslations = let
+                          empt = mapSnd (filter (\(_, b) ->  null b)) lng
                           joined = map (\(k,l) -> map (\(a,_) -> (k,a)) l) empt
                         in concat joined
 }
-    
+
 similarTranslations:: [(String,String)] -> [(String,String)] -> Bool
-similarTranslations as bs =  (map fst bs) \\ (map fst as) == (map fst as) \\ (map fst bs)  
-                            
+similarTranslations as bs =  (map fst bs) \\ (map fst as) == (map fst as) \\ (map fst bs)
+
 fileTranslations ::String -> [(String,[(String,String)])] ->  [(String,String)]
 fileTranslations fn = concat . (map snd) . filter (((==) fn) . fst)
 

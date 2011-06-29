@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
-"Last-Translator: Mariusz Rak <mariusz@skrivapa.se>\n"
+"Last-Translator: \n"
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -12,135 +12,135 @@ msgstr ""
 
 #: flash.st:flashMessageAccountsDeleted
 msgid "_flashMessageAccountsDeleted"
-msgstr "Account(s) successfully deleted (spec/translate me please)."
+msgstr "The account(s) where successfully deleted."
 
 #: flash.st:flashMessageUserHasLiveDocs
 msgid "_flashMessageUserHasLiveDocs"
-msgstr "Unable to remove account(s) as there are some remaining documents that need to be finalised (spec/translate me please)."
+msgstr "Unable to remove account(s) as there are some remaining documents that need to be finalised."
 
 #: flash.st:flashMessagePleaseSignOffer
 msgid "_flashMessagePleaseSignOffer"
-msgstr "Du kan acceptera offerten längst ned på sidan."
+msgstr "Accept the offer at the bottom of the page."
 
 #: flash.st:flashMessagePleaseSignContract
 msgid "_flashMessagePleaseSignContract"
-msgstr "Underteckna dokumentet längst ned på sidan."
+msgstr "Sign the document at the bottom of the page."
 
 #: flash.st:flashMessagePleaseSignWithEleg
 msgid "_flashMessagePleaseSignWithEleg"
-msgstr "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
+msgstr "Sign the document at the bottom of the page. E-ID is required to sign."
 
 #: flash.st:flashMessageOnlyHaveRightsToViewDoc
 msgid "_flashMessageOnlyHaveRightsToViewDoc"
-msgstr "Du har endast rättigheter att se detta dokument."
+msgstr "You are only authorized to view this document."
 
 #: flash.st:flashMessageAccountRemovedFromSign
 msgid "_flashMessageAccountRemovedFromSign"
-msgstr "Ditt original är borttaget från SkrivaPå."
+msgstr "Your original documentis removed from Scrive"
 
 #: flash.st:flashMessageAccountActivatedFromSign
 msgid "_flashMessageAccountActivatedFromSign"
-msgstr "Ditt original har arkiverats hos SkrivaPå."
+msgstr "Your original document is now stored by Scrive."
 
 #: flash.st:flashMessageUserHasBecomeSubaccount
 msgid "_flashMessageUserHasBecomeSubaccount"
-msgstr "Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$ och rättigheterna till dinadokument har överförts till huvudkontot."
+msgstr "Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$ and the rights to your documents has been transferred to the main account."
 
 #: flash.st:flashMessageUserInvitedAsSubaccount
 msgid "_flashMessageUserInvitedAsSubaccount"
-msgstr "Din förfrågan har skickats!"
+msgstr "Your request has been sent!"
 
 #: flash.st:flashMessageMultipleAttachmentShareDone
 msgid "_flashMessageMultipleAttachmentShareDone"
-msgstr "Valda bilagor har blivit delade inom din organisation."
+msgstr "Selected attachments has been shared within your organisation."
 
 #: flash.st:flashMessageSingleAttachmentShareDone
 msgid "_flashMessageSingleAttachmentShareDone"
-msgstr "$docname$ har blivit delad inom din organisation."
+msgstr "$docname$ has been shared whitn your organisation."
 
 #: flash.st:flashMessageMultipleTemplateShareDone
 msgid "_flashMessageMultipleTemplateShareDone"
-msgstr "Valda mallar har blivit delade inom din organisation."
+msgstr "Selected templates has been shared within you organisation."
 
 #: flash.st:flashMessageSingleTemplateShareDone
 msgid "_flashMessageSingleTemplateShareDone"
-msgstr "$docname$ har blivit delad inom din organisation."
+msgstr "$docname$ has been shared within your organisation."
 
 #: flash.st:flashMessageCSVSent
 msgid "_flashMessageCSVSent"
-msgstr "Dokumentet är skickat till $doccount$ parter."
+msgstr "The document has been sent to $doccount$ parties."
 
 #: flash.st:flashMessageInvalidCSV
 msgid "_flashMessageInvalidCSV"
-msgstr "Det uppstod ett problem med datan i din .csv. Var vänling och kontrollera och ladda upp igen."
+msgstr "An error occurred involving the data in your CSV-file. Please check it, and upload again."
 
 #: flash.st:flashMessageThanksForTheQuestion
 msgid "_flashMessageThanksForTheQuestion"
-msgstr "Ditt meddelande har skickats! Vi återkommer inom 24h."
+msgstr "Your message has been sent! We will get back to you within 24 hours."
 
 #: flash.st:flashMessageAttachmentArchiveDone
 msgid "_flashMessageAttachmentArchiveDone"
-msgstr "Valda bilagor har blivit raderade."
+msgstr "Selected attachments has been deleted."
 
 #: flash.st:flashMessageTemplateArchiveDone
 msgid "_flashMessageTemplateArchiveDone"
-msgstr "Valda mallar har blivit raderade."
+msgstr "Selected templates has been deleted."
 
 #: flash.st:flashMessageOfferArchiveDone
 msgid "_flashMessageOfferArchiveDone"
-msgstr "Valda offerter har blivit raderade."
+msgstr "Selected offers has been deleted."
 
 #: flash.st:flashMessageContractArchiveDone
 msgid "_flashMessageContractArchiveDone"
-msgstr "Valda dokument har blivit raderade."
+msgstr "Selected documents has been deleted."
 
 #: flash.st:flashMessageNoBulkOfferRemindsSent
 msgid "_flashMessageNoBulkOfferRemindsSent"
-msgstr "Tyvärr, det finns inga mottagare som återstår att acceptera."
+msgstr "Sorry, there are no recipients left to accept."
 
 #: flash.st:flashMessageBulkOfferRemindsSent
 msgid "_flashMessageBulkOfferRemindsSent"
-msgstr "Påminnelse har skickats till alla mottagare som ännu inte accepterat."
+msgstr "Reminders has been sent to all recipients who has not yet accepted."
 
 #: flash.st:flashMessageNoBulkContractRemindsSent
 msgid "_flashMessageNoBulkContractRemindsSent"
-msgstr "Tyvärr, det finns inga parter som återstår att underteckna."
+msgstr "Sorry, there are no recipients left to sign."
 
 #: flash.st:flashMessageBulkContractRemindsSent
 msgid "_flashMessageBulkContractRemindsSent"
-msgstr "Påminnelse har skickats till alla parter som ännu inte signerat."
+msgstr "Reminders has been sent to all recipients who has not yet signed."
 
 #: flash.st:flashMessageNumberIsRequired
 msgid "_flashMessageNumberIsRequired"
-msgstr "Nummer krävs."
+msgstr "Number required."
 
 #: flash.st:flashMessageEmailIsRequired
 msgid "_flashMessageEmailIsRequired"
-msgstr "E-post krävs."
+msgstr "E-mail required."
 
 #: flash.st:flashMessageSecondNameIsRequired
 msgid "_flashMessageSecondNameIsRequired"
-msgstr "Efternamn krävs."
+msgstr "Last name required."
 
 #: flash.st:flashMessageFirstNameIsRequired
 msgid "_flashMessageFirstNameIsRequired"
-msgstr "Förnamn krävs."
+msgstr "First name required."
 
 #: flash.st:flashMessageRowGreaterThanMaxColCount
 msgid "_flashMessageRowGreaterThanMaxColCount"
-msgstr "Raden kan inte ha mer än $maxcols$ kolumner."
+msgstr "The row may not have more than $maxcols$ columns."
 
 #: flash.st:flashMessageRowLessThanMinColCount
 msgid "_flashMessageRowLessThanMinColCount"
-msgstr "Raden behöver åtminstone $mincols$ kolumner."
+msgstr "THe row must at least have $mincols$ columns."
 
 #: flash.st:flashMessageNoDataInCSVApartFromHeader
 msgid "_flashMessageNoDataInCSVApartFromHeader"
-msgstr "Kunde inte hitta några data i filen, kunde bara hitta titlar."
+msgstr "Scrive could not find any data in the file, except for titles."
 
 #: flash.st:flashMessageNoDataInCSV
 msgid "_flashMessageNoDataInCSV"
-msgstr "Kunde inte hitta några data i filen."
+msgstr "Scrive could not find any data in the file."
 
 #: flash.st:flashMessageCSVHasTooManyRows
 msgid "_flashMessageCSVHasTooManyRows"
@@ -300,7 +300,7 @@ msgstr "Välkommen till SkrivaPå!"
 
 #: flash.st:flashMessageActivationLinkNotValid
 msgid "_flashMessageActivationLinkNotValid"
-msgstr "Vi beklagar. Länken är inte längre giltig.<BR>    Vänligen använd \"Glömt lösenord\" för att generera en ny länk."
+msgstr "Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd \"Glömt lösenord\" för att generera en ny länk."
 
 #: flash.st:flashMessageNoRemainedInvitationEmails
 msgid "_flashMessageNoRemainedInvitationEmails"
@@ -320,7 +320,7 @@ msgstr "En användare med samma e-post existerar redan."
 
 #: flash.st:flashMessagePasswordChangeLinkNotValid
 msgid "_flashMessagePasswordChangeLinkNotValid"
-msgstr "Vi beklagar. Länken är inte längre giltig.<BR>     Vänligen använd \"Glömt lösenord\" för att generera en ny länk."
+msgstr "Vi beklagar. Länken är inte längre giltig.<br/>     Vänligen använd \"Glömt lösenord\" för att generera en ny länk."
 
 #: flash.st:flashMessageUserPasswordChanged
 msgid "_flashMessageUserPasswordChanged"
@@ -331,9 +331,8 @@ msgid "_flashMessagePasswordsDontMatch"
 msgstr "\"Nytt lösenord\" matchar inte med \"Upprepa lösenord\""
 
 #: flash.st:flashMessageBadOldPassword
-#, fuzzy
 msgid "_flashMessageBadOldPassword"
-msgstr "Du har skrivit in fel nuvarande lösenord"
+msgstr "You have entered wrong present password."
 
 #: flash.st:flashMessageUserDetailsSaved
 msgid "_flashMessageUserDetailsSaved"

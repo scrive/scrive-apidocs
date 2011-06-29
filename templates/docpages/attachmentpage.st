@@ -17,7 +17,7 @@ pageAttachment=
     <form action="$renamelink$" method="post">
       <div id="signStepsTitleRow">
         <span id="signStepsTitleRowTextContainer">
-          <span class="title">BILAGOR:</span>
+          <span class="title">$_pageAttachmentAttachments()$</span>
           $if(editable)$ 
           <span class="docname">
             <span class="docname-display">
@@ -39,7 +39,7 @@ pageAttachment=
         </span>
         <span class="download">
           <a href="$linkissuedocpdf$" target="_blank">
-            Ladda ned PDF
+            $_pageAttachmentDownloadPDF()$
           </a>
         </span>
       </div>

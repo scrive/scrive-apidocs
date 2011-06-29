@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 module Redirect (sendRedirect,sendSecureLoopBack) where
 
 import Control.Applicative ((<$>))

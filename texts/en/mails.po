@@ -1,0 +1,656 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: mails.st:sigattachlist
+msgid "_sigattachlistRequestedAttachment"
+msgstr "Begärda bilagor:"
+
+#: mails.st:appendixList
+msgid "_appendixListAttachment"
+msgstr "Bilagor:"
+
+#: mails.st:mailSubaccountAcceptedContent
+msgid "_mailSubaccountAcceptedContentBody"
+msgstr "$invited.fullnameOrEmail$ has agreed to become an subaccount."
+
+#: mails.st:mailSubaccountAcceptedContent
+msgid "_mailSubaccountAcceptedContentHi"
+msgstr "Hello $user.fullnameOrEmail$,"
+
+#: mails.st:mailSubaccountAcceptedTitle
+msgid "_mailSubaccountAcceptedTitle"
+msgstr "Account inquiry"
+
+#: mails.st:mailInviteUserAsSubaccountContent
+msgid "_mailInviteUserAsSubaccountContentLink"
+msgstr "This is the linc below"
+
+#: mails.st:mailInviteUserAsSubaccountContent
+msgid "_mailInviteUserAsSubaccountContentInstructionSecond"
+msgstr "<li>Please check that you do not have any private documents in your account archive.</li> <li>Save all private dokuments to your computer</li> <li>Click the linc below</li> <li>Read the message online</li> <li>Accept</li>  <li>Your account is now a subacount</li> "
+
+#: mails.st:mailInviteUserAsSubaccountContent
+msgid "_mailInviteUserAsSubaccountContentInstructionFirst"
+msgstr "This is how you continue"
+
+#: mails.st:mailInviteUserAsSubaccountContent
+msgid "_mailInviteUserAsSubaccountContentBodySecond"
+msgstr "Please review before accepting, especially if you have private documents in the account."
+
+#: mails.st:mailInviteUserAsSubaccountContent
+msgid "_mailInviteUserAsSubaccountContentBodyFirst"
+msgstr "The user $supervisor.fullnamePlusEmail$ has requested to become to become the main account of your account. If you accept, your account will become a subaccount to the sender. You will still be able to see and administrate your agreements and the main account will take over the ownership over all documents in your account."
+
+#: mails.st:mailInviteUserAsSubaccountContent
+msgid "_mailInviteUserAsSubaccountContentHi"
+msgstr "Hello $invited.fullnameOrEmail$,"
+
+#: mails.st:mailInviteUserAsSubaccountTitle
+msgid "_mailInviteUserAsSubaccountTitle"
+msgstr "Inquiry to create a subaccount"
+
+#: mails.st:mailMismatchAuthorContent
+msgid "_mailMismatchAuthorContentSkrivaPa"
+msgstr "Scrive"
+
+#: mails.st:mailMismatchAuthorContent
+msgid "_mailMismatchAuthorContentBestRegards"
+msgstr "Best regards"
+
+#: mails.st:mailMismatchAuthorContent
+msgid "_mailMismatchAuthorContentErrorReport"
+msgstr "<strong>Bug raport:</strong>"
+
+#: mails.st:mailMismatchAuthorContent
+msgid "_mailMismatchAuthorContentBodySecond"
+msgstr "The agreement process for <a href=\"$doclink$\">$documenttitle$</a> has therefor been interrupted. You can choose to start over the the agreement process and send a new invitation to your counterparts, an email has been sent to your conterparts with information about the agreement process cancellation."
+
+#: mails.st:mailMismatchAuthorContent
+msgid "_mailMismatchAuthorContentBodyFirst"
+msgstr "We are sorry, the information given to us in <a href=\"$doclink$\">$documenttitle$</a> do not match the one with  <a href=\"mailto:$bademail$\">$badname$</a>s e-legitimation."
+
+#: mails.st:mailMismatchAuthorContent
+msgid "_mailMismatchAuthorContentHi"
+msgstr "Hello $authorname$"
+
+#: mails.st:mailMismatchAuthorTitle
+msgid "_mailMismatchAuthorTitle"
+msgstr "Incorrect private information"
+
+#: mails.st:mailMismatchSignatoryContent
+msgid "_mailMismatchSignatoryContentSkrivaPa"
+msgstr "Scrive"
+
+#: mails.st:mailMismatchSignatoryContent
+msgid "_mailMismatchSignatoryContentBestRegards"
+msgstr "Best regards"
+
+#: mails.st:mailMismatchSignatoryContent
+msgid "_mailMismatchSignatoryContentBodyIfMessages"
+msgstr "<strong>Bug raport:</strong>"
+
+#: mails.st:mailMismatchSignatoryContent
+msgid "_mailMismatchSignatoryContentBodySecond"
+msgstr "\"The agreement process for <a href=\"\"$doclink$\"\">$documenttitle$</a> has therefor been interrupted. Please wait for a new invitation or contact <a href=\"\"mailto:$authoremail$\"\">$authorname$</a>.\""
+
+#: mails.st:mailMismatchSignatoryContent
+msgid "_mailMismatchSignatoryContentBodyFirst"
+msgstr "We are sorry, some of the information given to us in <a href=\"$doclink$\">$documenttitle$</a> do not match the one with <a href=\"mailto:$bademail$\">$badname$</a>s e-legitimation."
+
+#: mails.st:mailMismatchSignatoryContent
+msgid "_mailMismatchSignatoryContentHi"
+msgstr "Hello $signame$"
+
+#: mails.st:mailMismatchSignatoryTitle
+msgid "_mailMismatchSignatoryTitle"
+msgstr "Problems with matching of private information"
+
+#: mails.st:legalparagraph
+msgid "_legalparagraphBody"
+msgstr "Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras.  Avslöjande, kopiering, distribution eller annan behandling av informationen i meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande ber vi dig omedelbart informera avsändaren samt att därefter radera meddelandet. "
+
+#: mails.st:whohadsignedinfoforpreview
+msgid "_whohadsignedinfoforpreview"
+msgstr "Har undertecknat:"
+
+#: mails.st:whohadsignedofferinfoformail
+msgid "_whohadsignedofferinfoformailIfNotConfirmed"
+msgstr "Har undertecknat:"
+
+#: mails.st:whohadsignedofferinfoformail
+msgid "_whohadsignedofferinfoformailIfConfirmed"
+msgstr "Har bekräftat: "
+
+#: mails.st:whohadsignedorderinfoformail
+msgid "_whohadsignedorderinfoformailIfNotAccepted"
+msgstr "Har accepterat: "
+
+#: mails.st:whohadsignedorderinfoformail
+msgid "_whohadsignedorderinfoformailIfAccepted"
+msgstr "Har accepterat: "
+
+#: mails.st:whohadsignedcontractinfoformail
+msgid "_whohadsignedcontractinfoformailIfNotSigned"
+msgstr "    Har undertecknat: "
+
+#: mails.st:whohadsignedcontractinfoformail
+msgid "_whohadsignedcontractinfoformailIfSigned"
+msgstr "    Har undertecknat: "
+
+#: mails.st:orderhassignedformailtext
+msgid "_orderhassignedformailtext"
+msgstr "Har bekräftat"
+
+#: mails.st:offerhassignedformailtext
+msgid "_offerhassignedformailtext"
+msgstr "Har accepterat"
+
+#: mails.st:contracthassignedformailtext
+msgid "_contracthassignedformailtext"
+msgstr "Har undertecknat"
+
+#: mails.st:noonehadsignedtext
+msgid "_noonehadsignedtext"
+msgstr "    Ingen har undertecknat dokumentet ännu"
+
+#: mails.st:timetosigninfo
+msgid "_timetosigninfo"
+msgstr "Undertecknas senast:"
+
+#: mails.st:passwordChangeLinkMailContent
+msgid "_passwordChangeLinkMailContentBody"
+msgstr "Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>    "
+
+#: mails.st:passwordChangeLinkMailContent
+msgid "_passwordChangeLinkMailContentHi"
+msgstr "Hej $personname$,"
+
+#: mails.st:passwordChangeLinkMailTitle
+msgid "_passwordChangeLinkMailTitle"
+msgstr "Nytt lösenord"
+
+#: mails.st:mailDocumentErrorContent
+msgid "_mailDocumentErrorContentBodyFourth"
+msgstr "We are sorry for the inconveniance."
+
+#: mails.st:mailDocumentErrorContent
+msgid "_mailDocumentErrorContentBodyThird"
+msgstr "The process has therefore been cancelled"
+
+#: mails.st:mailDocumentErrorContent
+msgid "_mailDocumentErrorContentBodySecond"
+msgstr "Our technicians were notified about this issue. We will (most probably) contact you when a fix is available."
+
+#: mails.st:mailDocumentErrorContent
+msgid "_mailDocumentErrorContentBodyFirst"
+msgstr "We are sorry, but we could not handle document <strong>$documenttitle$</strong>.  There are probably very good reasons for this, but they might be hard to explain."
+
+#: mails.st:mailDocumentErrorContent
+msgid "_mailDocumentErrorContentHi"
+msgstr "Hello. "
+
+#: mails.st:mailDocumentErrorTitle
+msgid "_mailDocumentErrorTitle"
+msgstr "SkrivaPå could not handle $documenttitle$"
+
+#: mails.st:invitationMailUndeliveredContent
+msgid "_invitationMailUndeliveredContentInstruction"
+msgstr "Kontrollera vilken som är mottagarens korrekta adress<br/>  2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>       <a href=\"$ctxhostpart$$unsigneddoclink$\">$ctxhostpart$$unsigneddoclink$</a><br/>       <br/>       3. Klicka \"Starta om\"<br/>       4. Skriv in rätt e-postadress och skicka igen      "
+
+#: mails.st:invitationMailUndeliveredContent
+msgid "_invitationMailUndeliveredContentBody"
+msgstr "Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle$</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.       Processen har därmed avbrutits. Gör så här om du vill börja om:"
+
+#: mails.st:invitationMailUndeliveredContent
+msgid "_invitationMailUndeliveredContentHi"
+msgstr "Hej $authorname$,"
+
+#: mails.st:invitationMailUndeliveredTitle
+msgid "_invitationMailUndeliveredTitle"
+msgstr "Felaktig e-post"
+
+#: mails.st:invitationMailDeliveredAfterDeferredContent
+msgid "_invitationMailDeliveredAfterDeferredContentBody"
+msgstr "Vi meddelade dig tidigare om att vi hade problem att nå mottagarens server. Efter upprepade försök har vår server lyckats leverera inbjudan till dokumentet <strong>$documenttitle$</strong> till $email$."
+
+#: mails.st:invitationMailDeliveredAfterDeferredContent
+msgid "_invitationMailDeliveredAfterDeferredContentHi"
+msgstr "Hej $authorname$,"
+
+#: mails.st:invitationMailDeliveredAfterDeferredTitle
+msgid "_invitationMailDeliveredAfterDeferredTitle"
+msgstr "Lyckosam leverans"
+
+#: mails.st:invitationMailDeferredContent
+msgid "_invitationMailDeferredContentBodySecond"
+msgstr "Vi fortsätter försöka att nå mottagarens server och meddelar inom kort hur det gått. Klicka på länken nedan om du vill stoppa våra försök eller om du vill ändra e-post adressen.<br />      "
+
+#: mails.st:invitationMailDeferredContent
+msgid "_invitationMailDeferredContentBodyFirst"
+msgstr "Vi skickar detta meddelande för att meddela att vårt system har identifierat ett problem med mottagarens e-postserver. Antingen finns inte e-postadressen eller så ligger mottagarens e-postserver nere för tillfället. Vänligen kontrollera att mottagarens e-post är korrekt."
+
+#: mails.st:invitationMailDeferredContent
+msgid "_invitationMailDeferredContentHi"
+msgstr "Hej $authorname$,"
+
+#: mails.st:invitationMailDeferredTitle
+msgid "_invitationMailDeferredTitle"
+msgstr "Problem med leverans"
+
+#: mails.st:mailNewAccountCreatedByAdminContent
+msgid "_mailNewAccountCreatedByAdminContentBody"
+msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    "
+
+#: mails.st:mailNewAccountCreatedByAdminContent
+msgid "_mailNewAccountCreatedByAdminContentUserName"
+msgstr "Username:<br/>    "
+
+#: mails.st:mailNewAccountCreatedByAdminContentHeader
+msgid "_mailNewAccountCreatedByAdminContentHeaderBody"
+msgstr "$creatorname$ has invited you to an account at the service Scrive. Scrive is a service for signing and archiving legal documents electronically.  Save money, frustration and environment. Use Scrive instead, you can save between £5 to £25 per document! "
+
+#: mails.st:mailNewAccountCreatedByAdminContentHeader
+msgid "_mailNewAccountCreatedByAdminContentHeaderHi"
+msgstr "Hello <strong>$personname$</strong>,"
+
+#: mails.st:mailNewAccountCreatedByAdminTitle
+msgid "_mailNewAccountCreatedByAdminTitle"
+msgstr "New account"
+
+#: mails.st:mailViralInviteContent
+msgid "_mailViralInviteContentBodyThird"
+msgstr "Please click the linc to activate the account:<br/>    "
+
+#: mails.st:mailViralInviteContent
+msgid "_mailViralInviteContentBodyUserName"
+msgstr "Username:<br/>    "
+
+#: mails.st:mailViralInviteContent
+msgid "_mailViralInviteContentBodySecond"
+msgstr "Scrive is a service for signing and archiving legal documents electronically.  Save money, frustration and the environment. Use Scrive instead, you can save between £5 to £25 per document! "
+
+#: mails.st:mailViralInviteContent
+msgid "_mailViralInviteContentBodyFirst"
+msgstr "$invitername$ has treated you to two months of free service with Scrive.com. The means he/she likes our site and belives you would appreshiate it to. "
+
+#: mails.st:mailViralInviteContent
+msgid "_mailViralInviteContentHi"
+msgstr "Hello,"
+
+#: mails.st:mailViralInviteTitle
+msgid "_mailViralInviteTitle"
+msgstr "This is an invite from $invitername$"
+
+#: mails.st:mailAccountBySigningOfferReminderContent
+msgid "_mailAccountBySigningOfferReminderContentInstruction"
+msgstr "It works like this:<br/>1. Clic the linc<br/><a href=\"$ctxhostpart$$activationlink$\">$ctxhostpart$$activationlink$</a><br/>2. Define passwords and accept the terms of agreement <br/>3. Done"
+
+#: mails.st:mailAccountBySigningOfferReminderContent
+msgid "_mailAccountBySigningOfferReminderContentBody"
+msgstr "\"You have not confirmed that you wan to save your estimate\"\"$documenttitle$\"\" with Scrive. Scrive will erase the estimate within 72h. It doesnt cost anything to save the estimate.\""
+
+#: mails.st:mailAccountBySigningOfferReminderContent
+msgid "_mailAccountBySigningOfferReminderContentHi"
+msgstr "Hello <strong>$personname$</strong>,"
+
+#: mails.st:mailAccountBySigningOfferReminderTitle
+msgid "_mailAccountBySigningOfferReminderTitle"
+msgstr "You have not saved your original"
+
+#: mails.st:mailAccountBySigningContractReminderContent
+msgid "_mailAccountBySigningContractReminderContentInstruction"
+msgstr "It works like this:<br/>1. Clic the linc<br/><a href=\"\"$ctxhostpart$$activationlink$\"\">$ctxhostpart$$activationlink$</a><br/>2. Define password and accept the terms of agreement <br/>3. Done"
+
+#: mails.st:mailAccountBySigningContractReminderContent
+msgid "_mailAccountBySigningContractReminderContentBody"
+msgstr "\"You have not confirmed that you want to save your dokument\"\"$documenttitle$\"\" with Scrive. Scrive will erase the dokument within 72h. It does not cost anything to save the document.\""
+
+#: mails.st:mailAccountBySigningContractReminderContent
+msgid "_mailAccountBySigningContractReminderContentHi"
+msgstr "Hello <strong>$personname$</strong>,"
+
+#: mails.st:mailAccountBySigningContractReminderTitle
+msgid "_mailAccountBySigningContractReminderTitle"
+msgstr "You have not saved your original"
+
+#: mails.st:inviteSubaccountMailContent
+msgid "_inviteSubaccountMailContentClickLink"
+msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    "
+
+#: mails.st:inviteSubaccountMailContent
+msgid "_inviteSubaccountMailContentBodyUserName"
+msgstr "  Användarnamn:<br/>  "
+
+#: mails.st:inviteSubaccountMailContent
+msgid "_inviteSubaccountMailContentBodyFirst"
+msgstr "<strong>$supervisorname$</strong> har bjudit in dig till ett    underkonto på SkrivaPå genom vilket du kan skriva avtal    för organisationen <strong>$companyname$</strong>. Observera att detta konto inte    är avsett för privat bruk då samtliga dokument i kontot    tillhör organisationen"
+
+#: mails.st:inviteSubaccountMailContent
+msgid "_inviteSubaccountMailContentHi"
+msgstr "Hej <strong>$personname$</strong>,"
+
+#: mails.st:inviteSubaccountMailTitle
+msgid "_inviteSubaccountMailTitle"
+msgstr "Inbjudan från $supervisorname$ till underkonto"
+
+#: mails.st:newUserMailContent
+msgid "_newUserMailContentBodyThird"
+msgstr "  Du aktiverar ditt konto genom att klicka på länken nedan. Länken är  giltig i 12 timmar.<br/>    "
+
+#: mails.st:newUserMailContent
+msgid "_newUserMailContentBodyUserName"
+msgstr "  Användarnamn:<br/>  "
+
+#: mails.st:newUserMailContent
+msgid "_newUserMailContentBodySecond"
+msgstr "  Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte  att höra av dig med feedback eller bara en enkel hälsning. Din åsikt  är värdefull."
+
+#: mails.st:newUserMailContent
+msgid "_newUserMailContentBodyFirst"
+msgstr "  Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har  skapat ett konto hos oss. När du aktiverat ditt konto kommer du  kunna använda tjänsten med full funktionalitet med kontoplanen  Business i 1 månad utan kostnad. Väljer du att inte fortsätta med en  betald kontoplan efter testperioden behåller du givetvis tillgång  till samtliga dina dokument på SkrivaPå och kan fortsätta använda  tjänsten genom vår fria kontoplan Free."
+
+#: mails.st:newUserMailContent
+msgid "_newUserMailContentHi"
+msgstr "Hej,"
+
+#: mails.st:newUserMailTitle
+msgid "_newUserMailTitle"
+msgstr "Nytt konto"
+
+#: mails.st:signupLinkEmailPart
+msgid "_signupLinkEmailPartClickLink"
+msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    <br/>    "
+
+#: mails.st:signupLinkEmailPart
+msgid "_signupLinkEmailPartUserName"
+msgstr "Användarnamn:<br/>    "
+
+#: mails.st:remindMailNotSignedOrderContent
+msgid "_remindMailNotSignedOrderContentInstruction"
+msgstr "        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3. Bekräfta ordern (eller avvisa)<br/>         4. Färdig      "
+
+#: mails.st:remindMailNotSignedOrderContent
+msgid "_remindMailNotSignedOrderContentPartys"
+msgstr "Parter:"
+
+#: mails.st:remindMailNotSignedOrderContent
+msgid "_remindMailNotSignedOrderContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentInstruction"
+msgstr "        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3.  Acceptera offert (eller avvisa)<br/>        4. Färdig      "
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentSender"
+msgstr "Avsändare:"
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentPartys"
+msgstr "Parter:"
+
+#: mails.st:remindMailNotSignedOfferContent
+msgid "_remindMailNotSignedOfferContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:remindMailNotSignedContractContent
+msgid "_remindMailNotSignedContractContentInstruction"
+msgstr "        <i>Så här går du vidare</i><br/>        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3. Underteckna (eller avvisa)<br/>         4. Färdig      "
+
+#: mails.st:remindMailNotSignedContractContent
+msgid "_remindMailNotSignedContractContentPartys"
+msgstr "Parter:"
+
+#: mails.st:remindMailNotSignedContractContent
+msgid "_remindMailNotSignedContractContentInfo"
+msgstr "Översiktlig information"
+
+#: mails.st:remindMailNotSignedOrderStandardHeader
+msgid "_remindMailNotSignedOrderStandardHeaderRemind"
+msgstr "<strong>$author$</strong> vill påminna dig om att du inte bekräftat ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern genom att följa instruktionerna nedan.      "
+
+#: mails.st:remindMailNotSignedOrderStandardHeader
+msgid "_remindMailNotSignedOrderStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailNotSignedOfferStandardHeader
+msgid "_remindMailNotSignedOfferStandardHeaderRemind"
+msgstr "<strong>$author$</strong> vill påminna dig om att du inte accepterat offerten <strong>$documenttitle$</strong> ännu.        Acceptera offerten genom att följa instruktionerna nedan.      "
+
+#: mails.st:remindMailNotSignedOfferStandardHeader
+msgid "_remindMailNotSignedOfferStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailNotSignedContractStandardHeader
+msgid "_remindMailNotSignedContractStandardHeaderRemind"
+msgstr "<strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu."
+
+#: mails.st:remindMailNotSignedContractStandardHeader
+msgid "_remindMailNotSignedContractStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailNotSignedTitle
+msgid "_remindMailNotSignedTitle"
+msgstr "Påminnelse att underteckna  $documenttitle$"
+
+#: mails.st:remindMailSignedOrderStandardHeader
+msgid "_remindMailSignedOrderStandardHeaderSendRequest"
+msgstr "<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen <strong>$documenttitle$</strong>        till dig som du har bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med detta mail."
+
+#: mails.st:remindMailSignedOrderStandardHeader
+msgid "_remindMailSignedOrderStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailSignedOfferStandardHeader
+msgid "_remindMailSignedOfferStandardHeaderSendRequest"
+msgstr "<strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>        till dig. Offerten har accepterats av dig via tjänsten SkrivaPå. Den accepterade offerten bifogas med detta mail."
+
+#: mails.st:remindMailSignedOfferStandardHeader
+msgid "_remindMailSignedOfferStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:remindMailSignedContractStandardHeader
+msgid "_remindMailSignedContractStandardHeaderSendRequest"
+msgstr "<strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>        till dig. Dokumentet har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas med detta mail."
+
+#: mails.st:remindMailSignedContractStandardHeader
+msgid "_remindMailSignedContractStandardHeaderHi"
+msgstr "Hej <strong>$personname$</strong>"
+
+#: mails.st:mailInvitationToViewDefaultHeader
+msgid "_mailInvitationToViewDefaultHeader"
+msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has invited you see the document <strong>$documenttitle$</strong> online via the service Scrive."
+
+#: mails.st:mailInvitationToSignOrderDefaultHeader
+msgid "_mailInvitationToSignOrderDefaultHeader"
+msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has sent you the order confirmation <strong>$documenttitle$</strong>  and wishes to get your confirmation. Confirm the order by following the instructions below."
+
+#: mails.st:mailInvitationToSignOfferDefaultHeader
+msgid "_mailInvitationToSignOfferDefaultHeader"
+msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has invited  you to signing the offer  <strong>$documenttitle$</strong> online via the service Scrive."
+
+#: mails.st:mailInvitationToSignContractDefaultHeader
+msgid "_mailInvitationToSignContractDefaultHeader"
+msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> has invited you to sign the document <strong>$documenttitle$</strong> online via the service Scrive."
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentIfNotSignatoryInstruction"
+msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentIfSignatoryInstruction"
+msgstr "      1. Click the linc <br/>      <a href=\"$link$\">$link$</a><br/>      2. Confirm your order <br/>      3. Sign or  (or decline)<br/>       4. Done   "
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentSender"
+msgstr "Sender: "
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentPartys"
+msgstr "Parties:"
+
+#: mails.st:mailInvitationToSignOrderContent
+msgid "_mailInvitationToSignOrderContentInfo"
+msgstr "General information"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentIfNotSignatoryInstruction"
+msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentIfSignatoryInstruction"
+msgstr "1. Clic the linc <br/>      <a href=\"\"$link$\"\">$link$</a><br/>      2. Review online<br/>      3. Accept offer (or decline)<br/>       4. Done"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentSender"
+msgstr "Sender:"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentPartys"
+msgstr "Parties:"
+
+#: mails.st:mailInvitationToSignOfferContent
+msgid "_mailInvitationToSignOfferContentInfo"
+msgstr "General information"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentIfNotSignatoryInstruction"
+msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentIfSignatoryInstruction"
+msgstr "<i>This is how to continue</i><br/>      1. Clic the linc <br/>      <a href=\"\"$link$\"\">$link$</a><br/>      2. Review online<br/>      3. Sign  (or decline)<br/>       4. Done"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentSender"
+msgstr "Sender:"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentPartys"
+msgstr "Parties:"
+
+#: mails.st:mailInvitationToSignContractContent
+msgid "_mailInvitationToSignContractContentInfo"
+msgstr "General information"
+
+#: mails.st:mailInvitationToSignTitle
+msgid "_mailInvitationToSignTitle"
+msgstr "Invite from $creatorname$ to $documenttitle$"
+
+#: mails.st:mailInvitationToViewTitle
+msgid "_mailInvitationToViewTitle"
+msgstr "Invite from $creatorname$ to $documenttitle$"
+
+#: mails.st:mailRejectMailContentHeader
+msgid "_mailRejectMailContentHeaderIfNotCustomHi"
+msgstr "Hello,"
+
+#: mails.st:mailRejectOrderMailContent
+msgid "_mailRejectOrderMailContentHasRejected"
+msgstr "        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.      "
+
+#: mails.st:mailRejectOfferMailContent
+msgid "_mailRejectOfferMailContentOfferRejected"
+msgstr "        <strong>$rejectorName$</strong> has rejected the offer <strong>$documenttitle$</strong>.      has rejected the offer"
+
+#: mails.st:mailRejectContractMailContent
+msgid "_mailRejectContractMailContentContractRejected"
+msgstr "        <strong>$rejectorName$</strong> has declined to sign the document <strong>$documenttitle$</strong>. The agreement process is there for cancelled."
+
+#: mails.st:mailRejectMailTitle
+msgid "_mailRejectMailTitle"
+msgstr "Declines: $documenttitle$"
+
+#: mails.st:mailOrderClosedContent
+msgid "_mailOrderClosedContentAttached"
+msgstr "Attached to this mail you will find a PDF with a orderconfirmation and verification."
+
+#: mails.st:mailOrderClosedContent
+msgid "_mailOrderClosedContentViewed"
+msgstr "The orderconfirmation <strong>$documenttitle$</strong> has been accepted by $partylist:noescape()$  and Scrive has issued a verification for the confirmation."
+
+#: mails.st:mailOrderClosedContent
+msgid "_mailOrderClosedContentHi"
+msgstr "Hello,"
+
+#: mails.st:mailOfferClosedContent
+msgid "_mailOfferClosedContentAttached"
+msgstr "Attached to this mail you will find a PDF with the offer and verification."
+
+#: mails.st:mailOfferClosedContent
+msgid "_mailOfferClosedContentOfferAccepted"
+msgstr "The offer <strong>$documenttitle$</strong> has accepteds by $partylist:noescape()$ and Scrive has issued a verification for the confirmation."
+
+#: mails.st:mailOfferClosedContent
+msgid "_mailOfferClosedContentHi"
+msgstr "Hello,"
+
+#: mails.st:mailContractClosedContent
+msgid "_mailContractClosedContentAttached"
+msgstr "The completed dokument is attached in this mail."
+
+#: mails.st:mailContractClosedContent
+msgid "_mailContractClosedContentSignedBy"
+msgstr "The document <strong>$documenttitle$</strong> has been signes by  $partylist:noescape()$. The agreement is now binding."
+
+#: mails.st:mailContractClosedContent
+msgid "_mailContractClosedContentHi"
+msgstr "Hello,"
+
+#: mails.st:mailDocumentClosedTitle
+msgid "_mailDocumentClosedTitle"
+msgstr "Confirmation: $documenttitle$"
+
+#: mails.st:mailDocumentAwaitingForAuthorContent
+msgid "_mailDocumentAwaitingForAuthorContentInstruction"
+msgstr "To complete the document, do the following:<br/>      1. Clic the linc<br/>      <a href=\"$documentlink$\">$documenttitle$</a><br/>      <br/>      2. Review the details<br/>      3. Sign the agreement for the document to be completed."
+
+#: mails.st:mailDocumentAwaitingForAuthorContent
+msgid "_mailDocumentAwaitingForAuthorContentSignedBy"
+msgstr "The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$.      Therefor its only you left to sign before the documet is complete."
+
+#: mails.st:mailDocumentAwaitingForAuthorContent
+msgid "_mailDocumentAwaitingForAuthorContentHi"
+msgstr "Hello,"
+
+#: mails.st:mailDocumentAwaitingForAuthorTitle
+msgid "_mailDocumentAwaitingForAuthorTitle"
+msgstr "Kindly sign $documenttitle$"
+
+#: mails.st:mailCancelOrderByAuthorContent
+msgid "_mailCancelOrderByAuthorContentBody"
+msgstr "      <strong>$creatorname$</strong>   has chosen to withdrawl the orderconfirmation  $documenttitle$.    "
+
+#: mails.st:mailCancelOfferByAuthorContent
+msgid "_mailCancelOfferByAuthorContentBody"
+msgstr "      <strong>$creatorname$</strong>   has chosen to withdrawl the offer  $documenttitle$.    "
+
+#: mails.st:mailCancelContractByAuthorContent
+msgid "_mailCancelContractByAuthorContentBody"
+msgstr "      <strong>$creatorname$</strong> has chosen to withdrawl the invitation to sign the dokument $documenttitle$.      Therefore the agreementprocess is cancelled and you will not be able to sign the document."
+
+#: mails.st:mailCancelOrderByAuthorStandardHeader
+msgid "_mailCancelOrderByAuthorStandardHi"
+msgstr "Hello,"
+
+#: mails.st:mailCancelOfferByAuthorStandardHeader
+msgid "_mailCancelOfferByAuthorStandardHi"
+msgstr "Hello,"
+
+#: mails.st:mailCancelContractByAuthorStandardHeader
+msgid "_mailCancelContractByAuthorStandardHi"
+msgstr "Hello,"
+
+#: mails.st:mailCancelDocumentByAuthorTitle
+msgid "_mailCancelDocumentByAuthorTitle"
+msgstr "Cancellation notice: $documenttitle$"
+

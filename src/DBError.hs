@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  DBError
@@ -10,14 +9,14 @@
 -- from a DB query or update.
 -----------------------------------------------------------------------------
 
-module DBError 
+module DBError
     ( DBError (..)
     ) where
 
 {- |
    The different types of errors that could occur when accessing the database.
 
-   Note that this type is purposefully lacking more detailed constructors as 
+   Note that this type is purposefully lacking more detailed constructors as
    well as custom error messages. The reason for this is that we do not want
    to "leak" information during a database error. For instance, if a document
    exists for a given DocumentID but the current user does not have access,

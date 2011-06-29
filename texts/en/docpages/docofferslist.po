@@ -1,0 +1,97 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_tablestatusesConfirmed"
+msgstr "Confirmed"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_tablestatusesCandelled"
+msgstr "Cancelled"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_SortSender"
+msgstr "Sender"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_SortReciever"
+msgstr "Recipient"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_SortCompany"
+msgstr "Company"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_OfferReminderHead"
+msgstr "Send reminder"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_OfferReminderBodySingel"
+msgstr "            Are you sure you want to send a reminder to the parties involved in the offer"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_OfferReminderBodyMulti2"
+msgstr "offers?          "
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_OfferReminderBodyMulti"
+msgstr "            Are you sure you want to send reminders to the parties involved in the"
+
+#: docpages/docofferslist.st:pageOffersList
+msgid "_CantRemoveActiveOffers"
+msgstr "It is not possible to delete offers that are sent or open, please withdraw the document first."
+
+#~ msgid "_Options"
+#~ msgstr "Alternativ"
+#~ msgid "_OfferReminderFooterOk"
+#~ msgstr "OK"
+#~ msgid "_OfferReminderFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_tooltipsigned"
+#~ msgstr "Status: Bekräftat\t"
+#~ msgid "_tooltipopened"
+#~ msgstr "Status: Granskat online\t"
+#~ msgid "_tooltipread"
+#~ msgstr "Status: Läst e-post\t"
+#~ msgid "_tooltipreviewed"
+#~ msgstr "Status: Granskat online\t"
+#~ msgid "_tooltipdelivered"
+#~ msgstr "Status: Levererat\t"
+#~ msgid "_tooltipsent"
+#~ msgstr "Status: Skickat\t"
+#~ msgid "_tooltipcancelled"
+#~ msgstr "Status: Avbrutet"
+#~ msgid "_tooltipdraft"
+#~ msgstr "Status: Utkast"
+#~ msgid "_tablestatusesViewedOnline"
+#~ msgstr "Granskat online"
+#~ msgid "_tablestatusesEmailOpened"
+#~ msgstr "Läst e-post"
+#~ msgid "_tablestatusesDelivered"
+#~ msgstr "Levererat"
+#~ msgid "_tablestatusesSent"
+#~ msgstr "Skickat"
+#~ msgid "_tablestatusesDraft"
+#~ msgstr "Utkast"
+#~ msgid "_SortDoc"
+#~ msgstr "Dokument "
+#~ msgid "_SortTime"
+#~ msgstr "Senaste händelse "
+#~ msgid "_SortStatus"
+#~ msgstr "Status "
+#~ msgid "_SearchDoc"
+#~ msgstr "Sök dokument"
+#~ msgid "_Delete"
+#~ msgstr "Radera"
+#~ msgid "_SendReminder"
+#~ msgstr "Skicka påminnelse"
+

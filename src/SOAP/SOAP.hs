@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  SOAP
--- Maintainer  :  
+-- Maintainer  :
 -- Stability   :  development
 -- Portability :  portable
 --
@@ -19,7 +18,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.Lazy as BSL
 import Misc
 import System.Exit
-import Text.XML.HaXml.XmlContent.Parser 
+import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
 import Control.Monad.Trans
@@ -34,14 +33,14 @@ instance HTypeable (SOAP a) where
     toHType _ = Defined "soap" [] []
 instance (XmlContent a) => XmlContent (SOAP a) where
     toContents (SOAP a) =
-        [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"] 
-                         [CElem (Elem "Body" [] 
+        [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"]
+                         [CElem (Elem "Body" []
                          (toContents a)) ()]) ()]
     toContents _ = error "Please do not serialize SOAPFault"
     parseContents = do
         { inElementNS "Envelope" $ do
             { _ <- optional $ elementNS "Header"
-            ; inElementNS "Body" $ choice SOAP 
+            ; inElementNS "Body" $ choice SOAP
                                              (inElementNS "Fault" $ do
                                                 { faultcode <- inElementNS "faultcode" text
                                                 ; faultstring <- inElementNS "faultstring" text
@@ -55,8 +54,8 @@ instance (XmlContent a) => XmlContent (SOAP a) where
         } `adjustErr` ("in <Envelope/Body>, "++)
 
 skipNamespacePrefix :: String -> String -> Bool
-skipNamespacePrefix fqname tomatch = 
-    case break (==':') fqname of 
+skipNamespacePrefix fqname tomatch =
+    case break (==':') fqname of
       (name,"") -> name == tomatch
       (_,':':name) -> name == tomatch
       _ -> False
@@ -74,8 +73,8 @@ tryAndJoinEither action = do
   case result of
     Right value -> return value
     Left (excpt :: E.SomeException) -> return (Left (show excpt))
-    
-makeSoapCall :: (XmlContent request, XmlContent result) 
+
+makeSoapCall :: (XmlContent request, XmlContent result)
                 => String
              -> String
              -> String
@@ -86,7 +85,7 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let input = fpsShowXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
 
-  let args = [ "-X", "POST", 
+  let args = [ "-X", "POST",
                "-k", "--silent", "--show-error",
                "--cert", cert ++ ":" ++ certpwd,
                "--cacert", cert,
@@ -122,15 +121,15 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
-  
+
   let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then BSL.fromChunks [xml1]
             else stdout
 
-  case code of 
+  case code of
     ExitFailure _ -> do
        return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
-    ExitSuccess -> do 
+    ExitSuccess -> do
       Log.debug "Writing /tmp/soap.xml"
       BSL.writeFile "/tmp/soap.xml" xml
       case readXml (BSL.toString xml) of
@@ -159,7 +158,7 @@ makeSoapCallCA url cert action request = do
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
-  
+
   xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then do
               return (BSL.fromChunks [xml1])
@@ -192,7 +191,7 @@ makeSoapCallINSECURE url action request = do
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
-  
+
   xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then do
               return (BSL.fromChunks [xml1])

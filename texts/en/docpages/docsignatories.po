@@ -1,0 +1,105 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docsignatories.st:signatorysignedordertext
+msgid "_signatorysignedordertext"
+msgstr "Order confirmed"
+
+#: docpages/docsignatories.st:signatorysignedoffertext
+msgid "_signatorysignedoffertext"
+msgstr "Accepted offer"
+
+#: docpages/docsignatories.st:signatorysignedcontracttext
+msgid "_signatorysignedcontracttext"
+msgstr "Signed"
+
+#: docpages/docsignatories.st:signatorycanceledordertext
+msgid "_signatorycanceledordertext"
+msgstr "Order withdrawn"
+
+#: docpages/docsignatories.st:signatorycanceledoffertext
+msgid "_signatorycanceledoffertext"
+msgstr "Offer withdrawn"
+
+#: docpages/docsignatories.st:signatorycanceledcontracttext
+msgid "_signatorycanceledcontracttext"
+msgstr "Document withdrawn"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfTimedout"
+msgstr "Expired"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfSignatorySeendate"
+msgstr "Reviewed online"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfSignatoryRejecteddate"
+msgstr "Rejected"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfSignatoryReaddate"
+msgstr "E-mail read"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfSignatoryDeliveredEmail"
+msgstr "Has not reviewed online"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfSignatoryDatamismatch"
+msgstr "Incorrect e-ID"
+
+#: docpages/docsignatories.st:signatoryMessage
+msgid "_signatoryMessageIfElse"
+msgstr "Has not been delivered"
+
+#: docpages/docsignatories.st:reminderForm
+msgid "_reminderFormSendReminder"
+msgstr "Send reminder"
+
+#: docpages/docsignatories.st:reminderForm
+msgid "_reminderFormHead"
+msgstr "Send reminder"
+
+#: docpages/docsignatories.st:reminderForm
+msgid "_reminderFormFooterOwnMessage"
+msgstr "Write own message"
+
+#: docpages/docsignatories.st:orderremindagainbuttontext
+msgid "_orderremindagainbuttontext"
+msgstr "Send order confirmation again"
+
+#: docpages/docsignatories.st:orderauthorissecretarytext
+msgid "_orderauthorissecretarytext"
+msgstr "Sender"
+
+#: docpages/docsignatories.st:offerremindagainbuttontext
+msgid "_offerremindagainbuttontext"
+msgstr "Send offer again"
+
+#: docpages/docsignatories.st:offerauthorissecretarytext
+msgid "_offerauthorissecretarytext"
+msgstr "Sender"
+
+#: docpages/docsignatories.st:contractremindagainbuttontext
+msgid "_contractremindagainbuttontext"
+msgstr "Send document again"
+
+#: docpages/docsignatories.st:contractauthorissecretarytext
+msgid "_contractauthorissecretarytext"
+msgstr "Sender: Non-signing party"
+
+#~ msgid "_reminderFormSend"
+#~ msgstr "Skicka"
+#~ msgid "_changeEmailFormSendToNew"
+#~ msgstr "Skicka inbjudan till ny adress"
+

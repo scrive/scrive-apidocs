@@ -1,14 +1,12 @@
 module Main where
 
-import Control.Concurrent (MVar, newMVar, newEmptyMVar, forkIO, killThread)
+import Control.Concurrent (forkIO, killThread)
 import Happstack.Util.Cron (cron)
 import Happstack.State (waitForTermination)
 import Happstack.Server
   ( Conf(port)
   , simpleHTTPWithSocket
   , nullConf
-  , validator
-  , wdgHTMLValidator
   )
 import Happstack.State
   ( Component
@@ -24,9 +22,8 @@ import System.Exit (exitFailure)
 import System.Console.GetOpt
 import System.Directory (createDirectoryIfMissing)
 import qualified AppLogger as Log
-import AppState (AppState(..))
+import AppState (AppState)
 import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
-import qualified Control.Concurrent (threadDelay)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as Map
 import System.IO
@@ -34,15 +31,12 @@ import Control.Concurrent.MVar
 
 import Crypto
 import Network.BSD
-import Network (PortID(..))
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
-import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import Happstack.State (update,query)
-import Doc.DocControl
 import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
@@ -50,17 +44,16 @@ import Mails.SendMail
 import Templates.Templates (readAllLangsTemplates, getTemplatesModTime)
 import Kontra
 import Misc
-import qualified TrustWeaver as TW
 import qualified MemCache
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
 -}
 readAppConfig :: IO AppConf
-readAppConfig = read `catch` printDefault
+readAppConfig = readConf `catch` printDefault
     where
       filepath = "kontrakcja.conf"
-      read = do
+      readConf = do
         h <- openFile filepath ReadMode
         hSetEncoding h utf8
         c <- hGetContents h
@@ -77,7 +70,7 @@ readAppConfig = read `catch` printDefault
         Log.server $ "Example configuration:"
         Log.server $ show (defaultConf "kontrakcja")
         error "Config file error"
-         
+
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -90,7 +83,7 @@ runTest test = do
               (startTestSystemState' stateProxy)
               (\control -> do
                   shutdownSystem control)
-              (\control -> do
+              (\_control -> do
                  test)
 
 
@@ -124,21 +117,21 @@ initDatabaseEntries = do
       maybeuser <- query $ Kontra.GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing Nothing
+              _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing Nothing
               return ()
           Just _ -> return () -- user exist, do not add it
-  
+
 
 uploadOldFilesToAmazon :: AppConf -> IO ()
 uploadOldFilesToAmazon appConf = do
   files <- query $ GetFilesThatShouldBeMovedToAmazon
   mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files
 
+main :: IO ()
 main = Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  let progName = "kontrakcja"
 
   args <- getArgs
   appConf1 <- readAppConfig
@@ -183,18 +176,18 @@ main = Log.withLogger $ do
                   Log.server $ "Using store " ++ store appConf
                   startSystemState' (store appConf) stateProxy)
               (\control -> do
-                  Log.server $ "Creating checkpoint before exit" 
+                  Log.server $ "Creating checkpoint before exit"
                   createCheckpoint control
-                  Log.server $ "Closing transaction system" 
+                  Log.server $ "Closing transaction system"
                   shutdownSystem control)
               (\control -> do
 
                   -- start the http server
-                  Exception.bracket 
+                  Exception.bracket
                            (do
                               let (iface,port) = httpBindAddress appConf
-                              socket <- listenOn (htonl iface) (fromIntegral port)
-                              t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = fromIntegral port }) 
+                              listensocket <- listenOn (htonl iface) (fromIntegral port)
+                              t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates es_enforcer
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
@@ -208,10 +201,10 @@ main = Log.withLogger $ do
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
                                           initDatabaseEntries
-                                          forkIO $ uploadOldFilesToAmazon appConf
+                                          _ <- forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination
-                                          Log.server $ "Termination request received" 
+                                          Log.server $ "Termination request received"
 
                   return ())
 
@@ -243,23 +236,23 @@ defaultConf progName
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
-opts = [ 
+opts = [
        {-
-       , Option [] ["no-validate"] 
-         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } })) 
+       , Option [] ["no-validate"]
+         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } }))
          "Turn off HTML validation"
-       , Option [] ["validate"]    
-         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } })) 
+       , Option [] ["validate"]
+         (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } }))
          "Turn on HTML validation"
        -}
-          Option [] ["store"]       
-         (ReqArg (\h c -> c {store = h}) "PATH") 
+          Option [] ["store"]
+         (ReqArg (\h c -> c {store = h}) "PATH")
          "The directory used for database storage."
-       , Option [] ["static"]      
-         (ReqArg (\h c -> c {static = h}) "PATH") 
-         "The directory searched for static files" 
-       , Option [] ["production"]    
-         (NoArg (\ c -> c { production = True })) 
+       , Option [] ["static"]
+         (ReqArg (\h c -> c {static = h}) "PATH")
+         "The directory searched for static files"
+       , Option [] ["production"]
+         (NoArg (\ c -> c { production = True }))
          "Turn on production environment"
        ]
 

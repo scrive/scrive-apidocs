@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStateQuery
@@ -24,7 +23,7 @@ module Doc.DocStateQuery
     , getDocsByLoggedInUser
     , getDocByDocIDSigLinkIDAndMagicHash
     ) where
-    
+
 import DBError
 import Doc.DocState
 import Doc.DocUtils
@@ -34,6 +33,7 @@ import Misc
 import Control.Monad.State (get)
 import Control.Monad.Trans (liftIO)
 import Happstack.State     (query)
+import Util.SignatoryLinkUtils
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -52,7 +52,7 @@ getDocByDocID docid = do
           liftIO $ print "does not exist"
           return $ Left DBResourceNotAvailable
         Just doc ->
-          case isUserAuthor doc user of
+          case isAuthor (doc, user) of
             True  -> do
               liftIO $ print "Is the author"
               return $ Right doc
@@ -61,20 +61,20 @@ getDocByDocID docid = do
               usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
               usersImSupervising <- query $ GetUserSubaccounts  (userid user)
               related <- query $ GetUserRelatedAccounts  (userid user)
-              let canAcces =    (any (isUserAuthor doc) $ usersImSupervising ++ usersImFriendsWith)
-                             || ((any (isUserAuthor doc) related) && (Shared == documentsharing doc))
+              let canAcces = (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith)))
+                              || ((any isAuthor (zip (repeat doc) related)) && (Shared == documentsharing doc))
               case (canAcces) of
                 True  -> return $ Right doc
                 False -> return $ Left DBResourceNotAvailable
     (_,Just company) -> do
-      liftIO $ putStrLn $ "logged as company"  
+      liftIO $ putStrLn $ "logged as company"
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if (documentoriginalcompany doc == (Just $ companyid company)) 
-                     then return $ Right doc 
+        Just doc -> if (documentoriginalcompany doc == (Just $ companyid company))
+                     then return $ Right doc
                      else return $ Left DBResourceNotAvailable
-    (Nothing,Nothing) -> return $ Left DBNotLoggedIn            
+    (Nothing,Nothing) -> return $ Left DBNotLoggedIn
 
 {- |
    Get all of the documents a user can view.
@@ -99,16 +99,16 @@ getDocsByLoggedInUser = do
    SignatoryLinkID must correspond to a siglink in document.
    MagicHash must match.
  -}
-getDocByDocIDSigLinkIDAndMagicHash :: DocumentID 
-                                   -> SignatoryLinkID 
-                                   -> MagicHash 
+getDocByDocIDSigLinkIDAndMagicHash :: DocumentID
+                                   -> SignatoryLinkID
+                                   -> MagicHash
                                    -> Kontra (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing  -> return $ Left DBResourceNotAvailable
     Just doc ->
-      case getSigLinkBySigLinkID sigid doc of
+      case getSigLinkFor doc sigid of
         Just siglink | signatorymagichash siglink == mh -> return $ Right doc
         _ -> return $ Left DBResourceNotAvailable
 

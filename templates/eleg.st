@@ -1,14 +1,13 @@
-tbs= Du undertecknar "$documentname$" med transaktionsnummer "$documentnumber$". Undertecknande parter är:
-$tbssigentries$
+tbs=$_tbsYouSignWithEleg()$
 ##
 tbssig=  $firstname$ $lastname$, $number$
 
 ##
 signCanceledDataMismatch=
     <div class="centerdivnarrow">
-      <p class="headline">Felaktiga personuppgifter</p>
+      <p class="headline">$_signCanceledDataMismatchIncorrectPersonalInfo()$</p>
 
-      <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
+      <p>$_signCanceledDataMismatchBody()$</p>
 
       $cancelationMessage$
 

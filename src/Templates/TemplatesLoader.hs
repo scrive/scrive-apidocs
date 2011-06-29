@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fno-warn-orphans -Werror #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.TemplatesLoader
@@ -18,13 +18,13 @@ module Templates.TemplatesLoader
     , getTemplatesModTime
     , toKontrakcjaTemplates
     , getTemplates
-    , readTemplates 
+    , readTemplates
     , readAllLangsTemplates
     , langVersion
     , Lang(..)
     ) where
 
-import Text.StringTemplate 
+import Text.StringTemplate
 import Text.StringTemplate.Classes
 import Control.Monad
 import qualified Data.Map as Map
@@ -52,10 +52,10 @@ langVersion lang mtemplates = mtemplates ! lang
 readAllLangsTemplates :: IO KontrakcjaMultilangTemplates
 readAllLangsTemplates = fmap Map.fromList $ forM allValues $ \lang -> do
     templates <- readTemplates lang
-    return (lang,templates) 
+    return (lang,templates)
 
 
-readTemplates :: Lang -> IO KontrakcjaTemplates 
+readTemplates :: Lang -> IO KontrakcjaTemplates
 readTemplates lang = do
     ts <- mapM getTemplates templatesFilesPath
     texts <- getTextTemplates lang
@@ -64,20 +64,20 @@ readTemplates lang = do
 --This is avaible only for special cases
 renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]
                    -> (KontrakcjaTemplate -> KontrakcjaTemplate) -> IO String
-renderTemplateMain ts name params f = do 
+renderTemplateMain ts name params f = do
     let ts' = setEncoderGroup stringToHtmlString ts
     let noescape = groupStringTemplates [("noescape", newSTMP "$it$" :: StringTemplate String)]
     let mt =  getStringTemplate name $ mergeSTGroups noescape ts'
-    case mt of 
+    case mt of
         Just t -> do
-                let t'= f (setManyAttrib params  t)   
+                let t'= f (setManyAttrib params  t)
                 let (e,p,st) = checkTemplateDeep t'
                 when (not (null e) || not (null p) || not (null st)) $
-                     Log.error $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st)) 
+                     Log.error $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st))
                 return $ render t'
         Nothing -> do
-                Log.error $ "No template named " ++ name 
-                return ""                                   
+                Log.error $ "No template named " ++ name
+                return ""
 
 getTemplatesModTime :: IO ClockTime
 getTemplatesModTime = do
@@ -87,38 +87,38 @@ getTemplatesModTime = do
 
 {- Template checker, printing info about params-}
 templateList :: IO ()
-templateList = do 
-    ts <- fmap concat $ sequence (map getTemplates templatesFilesPath)         
+templateList = do
+    ts <- fmap concat $ sequence (map getTemplates templatesFilesPath)
     let tsnames = map fst ts
     let tsgroup :: KontrakcjaTemplates =  groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) ts
     sequence_ $ map (printTemplateData tsgroup) tsnames
-    
-    
+
+
 printTemplateData :: STGroup String -> String -> IO ()
-printTemplateData tsgroup name = do 
+printTemplateData tsgroup name = do
     let Just t = getStringTemplate name tsgroup
     let (e,p,st) = checkTemplateDeep t
-    putStrLn $ name ++ ": " 
-    if (not $ null e) 
+    putStrLn $ name ++ ": "
+    if (not $ null e)
         then putStrLn $ "PARSE ERROR " ++ (show e)
-        else if (not $ null st)  
+        else if (not $ null st)
              then putStrLn $ "MISSING SUBTEMPLATES " ++ (show st)
              else do
                  sequence_ $ map (putStrLn . ("    " ++ )) p
-                 putStrLn ""    
+                 putStrLn ""
 
 
 
 {- For some reasons the SElem a is not of class ToSElem -}
 instance (Stringable a) => ToSElem (SElem a) where
-   toSElem (STR a) = (STR a)    
-   toSElem (BS a) = (BS a)    
-   toSElem (STSH a) = (STSH a)    
-   toSElem (SM a) = (SM $ fmap (toSElem) a)       
-   toSElem (LI a) = (LI $ fmap (toSElem) a)       
-   toSElem (SBLE a ) = (SBLE $ convert a)       
-   toSElem (SNAT a ) = (SNAT $ convert a)       
-   toSElem SNull = SNull       
+   toSElem (STR a) = (STR a)
+   toSElem (BS a) = (BS a)
+   toSElem (STSH a) = (STSH a)
+   toSElem (SM a) = (SM $ fmap (toSElem) a)
+   toSElem (LI a) = (LI $ fmap (toSElem) a)
+   toSElem (SBLE a ) = (SBLE $ convert a)
+   toSElem (SNAT a ) = (SNAT $ convert a)
+   toSElem SNull = SNull
 
 
 convert :: (Stringable a, Stringable b) => a -> b

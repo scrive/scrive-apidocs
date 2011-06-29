@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module MinutesTime where
 
 import Data.Data
@@ -22,42 +21,42 @@ data MinutesTime = MinutesTime {
 instance Version MinutesTime0
 $(deriveSerialize ''MinutesTime0)
 
-$(deriveSerialize ''MinutesTime) 
+$(deriveSerialize ''MinutesTime)
 instance Version (MinutesTime) where
    mode = extension 1 (Proxy :: Proxy MinutesTime0)
 
 instance Migrate MinutesTime0 MinutesTime where
       migrate (MinutesTime0 m) = MinutesTime  {minutes = m, secs = 0 }
-    
+
 
 instance Show MinutesTime where
-    showsPrec _prec (MinutesTime mins secs) = 
+    showsPrec _prec (MinutesTime mins secs) =
         let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
-        in (++) $ formatCalendarTime defaultTimeLocale 
+        in (++) $ formatCalendarTime defaultTimeLocale
                "%Y-%m-%d, %H:%M:%S" calendartime
 
-showMinutesTimeForAPI :: MinutesTime -> String 
-showMinutesTimeForAPI (MinutesTime mins secs) = 
+showMinutesTimeForAPI :: MinutesTime -> String
+showMinutesTimeForAPI (MinutesTime mins secs) =
         let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
             calendartime = unsafePerformIO $ toCalendarTime clocktime
-        in formatCalendarTime defaultTimeLocale 
+        in formatCalendarTime defaultTimeLocale
                "%Y-%m-%d %H:%M" calendartime
 
 
 
 showDateOnly :: MinutesTime -> String
 showDateOnly (MinutesTime 0 _) = ""
-showDateOnly (MinutesTime mins _) = 
+showDateOnly (MinutesTime mins _) =
         let clocktime = TOD (fromIntegral mins*60) 0
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
-        in formatCalendarTime defaultTimeLocale 
+        in formatCalendarTime defaultTimeLocale
                "%Y-%m-%d" calendartime
 
 swedishTimeLocale :: TimeLocale
-swedishTimeLocale = defaultTimeLocale { months = 
+swedishTimeLocale = defaultTimeLocale { months =
                                             [ ("jan","jan")
                                             , ("feb", "feb")
                                             , ("mar", "mar")
@@ -72,7 +71,7 @@ swedishTimeLocale = defaultTimeLocale { months =
                                             , ("dec", "dec")
                                             ] }
 showDateAbbrev :: MinutesTime -> MinutesTime -> String
-showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _) 
+showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
                    formatCalendarTime swedishTimeLocale "%H:%M" ct
                | ctYear ct1 == ctYear ct =
@@ -93,7 +92,7 @@ fromClockTime :: ClockTime -> MinutesTime
 fromClockTime (TOD secs _picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) (fromIntegral $ (secs `mod` 60))
 
 toClockTime :: MinutesTime -> ClockTime
-toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)   
+toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)
 
 toUTCTime :: MinutesTime -> CalendarTime
 toUTCTime = System.Time.toUTCTime . toClockTime
@@ -102,28 +101,28 @@ parseMinutesTimeMDY::String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
                       t <- parseTime defaultTimeLocale "%d-%m-%Y" s
                       startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
-                      let val = diffDays t startOfTime  
+                      let val = diffDays t startOfTime
                       return (MinutesTime (fromIntegral $ (val *24*60)) 0)
 
 showDateMDY :: MinutesTime -> String
 showDateMDY (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
-                                    in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime  
+                                    in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime
 
 showDateYMD :: MinutesTime -> String
 showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
-                                    in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime  
-                
-minutesAfter::Int -> MinutesTime -> MinutesTime 
+                                    in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime
+
+minutesAfter::Int -> MinutesTime -> MinutesTime
 minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
 
 startOfMonth::MinutesTime->MinutesTime
-startOfMonth t = let 
+startOfMonth t = let
                    CalendarTime {ctDay,ctHour,ctMin,ctSec,ctPicosec} = toUTCTime t
                    diff = (noTimeDiff {tdDay= (-1)*ctDay+1,tdHour=(-1)*ctHour,tdMin=(-1)*ctMin,tdSec=(-1)*ctSec,tdPicosec=(-1)*ctPicosec})
                  in fromClockTime $ addToClockTime diff  (toClockTime t)
-                   
+
 addMonths::Int ->MinutesTime -> MinutesTime
 addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
 
@@ -131,9 +130,9 @@ dateDiffInDays::MinutesTime->MinutesTime -> Int
 dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
-                                     
+
 asInt :: MinutesTime -> Int
-asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay 
+asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay
   where
     -- January counts as 0, so we need to add 1
     CalendarTime {ctYear,ctMonth,ctDay} = toUTCTime m

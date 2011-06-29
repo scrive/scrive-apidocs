@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
-
 module ActionScheduler (
       ActionScheduler
     , runScheduler
@@ -34,7 +32,7 @@ import Misc
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
 
-type ActionScheduler a = ReaderT SchedulerData' IO a 
+type ActionScheduler a = ReaderT SchedulerData' IO a
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler sched sd =
@@ -78,13 +76,14 @@ evaluateAction Action{actionID, actionType = ViralInvitationSent{}} =
 evaluateAction Action{actionID, actionType = AccountCreated{}} =
     deleteAction actionID
 
-evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning state uid (docid, _) token} = do
+evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid doclinkdataid@(docid, _) token} = do
     case state of
          NothingSent ->
-             sendReminder 
+             sendReminder
          ReminderSent ->
              deleteAction actionID
     where
+        sendReminder :: ActionScheduler ()
         sendReminder = do
             now <- liftIO getMinutesTime
             sd <- ask
@@ -99,11 +98,16 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                       (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
                       (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
                       -- | TODO - so other option for order | THIS WILL GIVE A WARNING TILL IT IS FIXED
+                      _ -> error "Case for order not implemented yet"
                 mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
-            let new_atype = (actionType action) { acbsState = ReminderSent }
-            update $ UpdateActionType actionID new_atype
-            update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
+            _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
+                  acbsState = ReminderSent
+                , acbsUserID = uid
+                , acbsDocLinkDataID = doclinkdataid
+                , acbsToken = token
+            }
+            _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
 evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} = do
@@ -114,17 +118,17 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
            -- morph action type into SentEmailInfo
            let email' = email (head (to mail))
            now <- liftIO getMinutesTime
-           update $ UpdateActionType actionID $ SentEmailInfo {
+           _ <- update $ UpdateActionType actionID $ SentEmailInfo {
                  seiEmail            = Email email'
                , seiMailInfo         = mailInfo
                , seiEventType        = Other "passed to sendgrid"
                , seiLastModification = now
            }
-           update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
+           _ <- update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
            return ()
        else do
            now <- liftIO $ getMinutesTime
-           update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
+           _ <- update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
            return ()
 
 evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
@@ -132,7 +136,7 @@ evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
-    update $ DeleteAction aid
+    _ <- update $ DeleteAction aid
     return ()
 
 -- | Old scheduler
@@ -147,14 +151,14 @@ oldScheduler = do
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- query $ GetTimeoutedButPendingDocuments now
-    forM_ docs $ \doc -> do 
-        update $ TimeoutDocument (documentid doc) now 
+    forM_ docs $ \doc -> do
+        _ <- update $ TimeoutDocument (documentid doc) now
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 
 deleteQuarantinedDocuments :: MinutesTime -> ActionScheduler ()
 deleteQuarantinedDocuments now = do
     docs <- query $ GetExpiredQuarantinedDocuments now
     forM_ docs $ \doc -> do
-        update $ EndQuarantineForDocument (documentid doc)
+        _ <- update $ EndQuarantineForDocument (documentid doc)
         Log.debug $ "Document quarantine expired " ++ (show $ documenttitle doc)
 

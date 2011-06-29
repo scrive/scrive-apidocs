@@ -1,0 +1,133 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_signGuardField2"
+msgstr "          <br/>1. Samtliga undertecknande parter är korrekta.          <br/>2. Att jag granskat och förstått dokumentet.          <br/>3. Att jag har befogenhet att skriva på dokumentet."
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_signGuardField1"
+msgstr "Jag intygar att:"
+
+#: docpages/docviewforauthor.st:orderrestartbuttontext
+msgid "_orderrestartbuttontext"
+msgstr "Starta om order"
+
+#: docpages/docviewforauthor.st:ordercancelbyauthormodaltitle
+msgid "_ordercancelbyauthormodaltitleHead"
+msgstr "Är du säker att du vill återkalla orderbekräftelsen?"
+
+#: docpages/docviewforauthor.st:ordercancelbyauthormodaltitle
+msgid "_ordercancelbyauthormodaltitleBody"
+msgstr "När du återkallat orderbekräftelsen kommer nedanstående meddelande att skickas till din motpart."
+
+#: docpages/docviewforauthor.st:ordercancelbuttontext
+msgid "_ordercancelbuttontext"
+msgstr "Återkalla order"
+
+#: docpages/docviewforauthor.st:offerrestartbuttontext
+msgid "_offerrestartbuttontext"
+msgstr "Starta om offert"
+
+#: docpages/docviewforauthor.st:offercancelbyauthormodaltitle
+msgid "_offercancelbyauthormodaltitleHead"
+msgstr "Är du säker att du vill återkalla offerten?"
+
+#: docpages/docviewforauthor.st:offercancelbyauthormodaltitle
+msgid "_offercancelbyauthormodaltitleBody"
+msgstr "När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart."
+
+#: docpages/docviewforauthor.st:offercancelbuttontext
+msgid "_offercancelbuttontext"
+msgstr "Återkalla offert"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorHead"
+msgstr "Underteckna"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorElegSubHead"
+msgstr "Välj typ av e-legitimation"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorElegClickHere2"
+msgstr "för att läsa mer."
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorElegClickHere1"
+msgstr "Klicka här"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorElegBody"
+msgstr "Har du ingen e-legitimation? Du kan ladda ned en                e-legitimation från din internetbank eller från                Telia. "
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorBody3"
+msgstr "undertecknat blir avtalet <strong>juridiskt bindande</strong> och              det färdigställda avtalet skickas till din e-post."
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorBody2"
+msgstr "När"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_dialogConfirmSignByAuthorBody1"
+msgstr "Är du säker att du vill underteckna dokumentet "
+
+#: docpages/docviewforauthor.st:contractrestartbuttontext
+msgid "_contractrestartbuttontext"
+msgstr "Starta om dokument"
+
+#: docpages/docviewforauthor.st:contractcancelbyauthormodaltitle
+msgid "_contractcancelbyauthormodaltitleHead"
+msgstr "Återkalla inbjudan"
+
+#: docpages/docviewforauthor.st:contractcancelbyauthormodaltitle
+msgid "_contractcancelbyauthormodaltitleBody"
+msgstr "Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.          "
+
+#: docpages/docviewforauthor.st:contractcancelbuttontext
+msgid "_contractcancelbuttontext"
+msgstr "Återkalla inbjudan"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_cancelByAuthorDialogOwnMessage"
+msgstr "Skriv eget meddelande"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_RequestedAttachments"
+msgstr "Bägarda bilagor:"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_DownloadPDF"
+msgstr "Ladda ned PDF"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_Document"
+msgstr "Dokument"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_Attachments"
+msgstr "Bilagor"
+
+#: docpages/docviewforauthor.st:pageDocumentForAuthor
+msgid "_Attachment"
+msgstr "Bilaga:"
+
+#~ msgid "_dialogConfirmSignByAuthorFooterSkrivapa"
+#~ msgstr "SkrivaPå"
+#~ msgid "_dialogConfirmSignByAuthorFooterCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_cancelByAuthorDialogCancel"
+#~ msgstr "Avbryt"
+#~ msgid "_signViewBottomBoxContainerRightSkrivapa"
+#~ msgstr "SkrivaPå"
+

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -Werror -fno-warn-unused-do-bind #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendGridEvents
@@ -32,6 +31,8 @@ import qualified Data.ByteString.UTF8 as BS
 import Data.List
 import qualified AppLogger as Log
 import MinutesTime
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 data SendgridEvent =
     SendgridEvent {
@@ -64,11 +65,13 @@ handleSendgridEvent = do
          -- we update SentEmailInfo of given email. if email is reported
          -- delivered, dropped or bounced we remove it from the system.
          -- that way we can keep track of emails that were "lost".
-         Just Action{actionID, actionType = atype@SentEmailInfo{seiEmail}} -> do
+         Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
                  Log.debug "Updating SentEmailInfo..."
-                 update $ UpdateActionType actionID $ atype {
-                       seiEventType = et
+                 _ <- update $ UpdateActionType actionID $ SentEmailInfo {
+                       seiEmail = seiEmail
+                     , seiMailInfo = seiMailInfo
+                     , seiEventType = et
                      , seiLastModification = now
                  }
                  let removeAction = case et of
@@ -145,13 +148,13 @@ handleDeliveredInvitation docid signlinkid = do
                  title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredTitle" ()
                  let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
                  content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredContent" $ do
-                     field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
-                     field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
+                     field "authorname" $ getFullName documentauthordetails
+                     field "email" $ getEmail signlink
                      field "documenttitle" $ BS.toString $ documenttitle doc)
                  scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
                                                                       , content = BS.fromString content
-                                                                      , to = [MailAddress { fullname = signatoryname $ documentauthordetails
-                                                                                          , email = signatoryemail $ documentauthordetails }]
+                                                                      , to = [MailAddress { fullname = getFullName documentauthordetails
+                                                                                          , email = getEmail documentauthordetails }]
                                                                       }
          Nothing -> return ()
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
@@ -172,13 +175,13 @@ handleDeferredInvitation docid signlinkid = do
              title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeferredTitle" ()
              let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
              content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeferredContent" $ do
-                field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
+                field "authorname" $ getFullName documentauthordetails
                 field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                 field "ctxhostpart" $ ctxhostpart ctx)
              scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
                                                                   , content = BS.fromString content
-                                                                  , to = [MailAddress {fullname = signatoryname $ documentauthordetails
-                                                                                      , email = signatoryemail $ documentauthordetails }]
+                                                                  , to = [MailAddress {fullname = getFullName documentauthordetails
+                                                                                      , email = getEmail documentauthordetails }]
                                                                   }
          Left _ -> return ()
 
@@ -192,15 +195,15 @@ handleUndeliveredInvitation docid signlinkid = do
          Just signlink -> do
              _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
              content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredContent" $ do
-                 field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
+                 field "authorname" $ getFullName documentauthordetails
                  field "documenttitle" $ BS.toString $ documenttitle doc
                  field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
                  field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                  field "ctxhostpart" $ ctxhostpart ctx)
              scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
                                                                   , content = BS.fromString content
-                                                                  , to = [MailAddress {fullname = signatoryname $ documentauthordetails
-                                                                                      , email = signatoryemail $ documentauthordetails }]
+                                                                  , to = [MailAddress {fullname = getFullName documentauthordetails
+                                                                                      , email = getEmail documentauthordetails }]
                                                                   }
          Nothing -> return ()
 

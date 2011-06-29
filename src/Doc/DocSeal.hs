@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocSeal
@@ -23,7 +21,6 @@ import Doc.DocProcess
 import Doc.DocState
 import Doc.DocStorage
 import Doc.DocView
-import Doc.DocUtils
 import Happstack.State (update, query)
 import Misc
 import System.Directory
@@ -38,11 +35,13 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
-import System.IO hiding (stderr)              
-                         
+import System.IO hiding (stderr)
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
-    Seal.Person { Seal.fullname = (BS.toString $ signatoryname details) ++ 
+    Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++
                                   if not (BS.null $ signatorypersonalnumber details)
                                      then " (" ++ (BS.toString $ signatorypersonalnumber details) ++ ")"
                                      else ""
@@ -58,7 +57,7 @@ personFromSignatoryDetails details =
                 }
 
 personFields::(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields
-personFields  (person, signinfo,_seeninfo, _ , mprovider, _initials) = do 
+personFields  (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -69,7 +68,7 @@ personFields  (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
 
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
-personsFromDocument document = 
+personsFromDocument document =
     let
         links = filter isSignatory $ documentsignatorylinks document
         x (sl@SignatoryLink { signatorydetails
@@ -85,9 +84,9 @@ personsFromDocument document =
                 , Seal.numberverified = numberverified}
               , maybe signinfo id maybeseeninfo
               , signinfo
-              , siglinkIsAuthor sl
+              , isAuthor sl
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
-              , map head $ words $ BS.toString $ signatoryname signatorydetails
+              , map head $ words $ BS.toString $ getFullName signatorydetails
               )
                   where fullnameverified = maybe False (\s -> signaturefstnameverified s
                                                         && signaturelstnameverified s)
@@ -106,13 +105,13 @@ fieldsFromPlacement value placement  =
                , Seal.w = placementpagewidth placement
                , Seal.h = placementpageheight placement
                }
-               
+
 fieldsFromDefinition :: FieldDefinition -> [Seal.Field]
 fieldsFromDefinition def =
     map (fieldsFromPlacement (BS.toString (fieldvalue def))) (fieldplacements def)
 
 fieldsFromSignatory::SignatoryDetails -> [Seal.Field]
-fieldsFromSignatory sig = 
+fieldsFromSignatory sig =
     (map (fieldsFromPlacement (BS.toString (signatoryfstname sig))) (signatoryfstnameplacements sig))
     ++
     (map (fieldsFromPlacement (BS.toString (signatorysndname sig))) (signatorysndnameplacements sig))
@@ -125,7 +124,7 @@ fieldsFromSignatory sig =
     ++
     (map (fieldsFromPlacement (BS.toString (signatorycompanynumber sig))) (signatorycompanynumberplacements sig))
     ++
-    (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
+    (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))
 
 -- oh boy, this is really network byte order!
 formatIP :: Word32 -> String
@@ -152,20 +151,20 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       paddeddocid = pad0 20 (show docid)
 
       initials = concatComma initialsx
-      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _, _)  = do
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderTemplateForProcess templates document processseenhistentry $ do
                         personFields personInfo
                         documentInfoFields document
-          let seenEvent = Seal.HistEntry 
+          let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
-                            , Seal.histcomment = pureString seenDesc} 
+                            , Seal.histcomment = pureString seenDesc}
           signDesc <- renderTemplateForProcess templates document processsignhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
-                            , Seal.histcomment = pureString signDesc}      
-          return $ if (isAuthor) 
+                            , Seal.histcomment = pureString signDesc}
+          return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
       invitationSentEntry = case documentinvitetime document of
@@ -175,16 +174,16 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
-                                       field "personname" $  listToMaybe $ map  (BS.toString . signatoryname)  signatoriesdetails
+                                       field "personname" $  listToMaybe $ map  (BS.toString . getFullName)  signatoriesdetails
                                        field "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
-                                      , Seal.histcomment = pureString desc 
+                                      , Seal.histcomment = pureString desc
                                       }]
 
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
-      
+
       lastHistEntry = do
                        desc <- renderTemplateForProcess templates document processlasthisentry (documentInfoFields document)
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
@@ -195,10 +194,10 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
 
       -- document fields
       fields = concatMap (fieldsFromSignatory . signatorydetails) (documentsignatorylinks document)
-    
-  in do    
+
+  in do
       Log.debug "Creating seal spec from file."
-      events <- fmap concat $ sequence $ 
+      events <- fmap concat $ sequence $
                     (map makeHistoryEntryFromSignatory signatories) ++
                     [invitationSentEntry] ++
                     [lastHistEntry]
@@ -213,7 +212,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       Log.debug ("finished staticTexts: " ++ show staticTexts)
       let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
       Log.debug ("read texts: " ++ show readtexts)
-      return $ Seal.SealSpec 
+      return $ Seal.SealSpec
             { Seal.input          = inputpath
             , Seal.output         = outputpath
             , Seal.documentNumber = paddeddocid
@@ -226,7 +225,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
             , Seal.staticTexts    = readtexts
             }
 
-sealDocument :: Context 
+sealDocument :: Context
              -> Document
              -> IO (Either String Document)
 sealDocument ctx@Context{ctxdocstore, ctxs3action}
@@ -242,7 +241,7 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action}
   Log.debug $ show newdocument
   return $ Right newdocument
 
-                 
+
 
 {- Someday:
 
@@ -251,14 +250,14 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action}
 
    case signeddocstorage (usersettings author) of
        Nothing -> return ()
-       Just twsettings -> 
+       Just twsettings ->
            do
                _ <- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf (BS.toString $ storagetwname twsettings) documentid
                return ()
  -}
 
 
-sealDocumentFile :: Context 
+sealDocumentFile :: Context
                  -> Document
                  -> File
                  -> IO (Either String Document)
@@ -272,17 +271,17 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
     content <- getFileContents ctx file
     Log.debug ("got file contents: " ++ show (BS.length content))
     BS.writeFile tmpin content
-    Log.debug ("wrote file : " ++ tmppath) 
+    Log.debug ("wrote file : " ++ tmppath)
     config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
     Log.debug (show config)
     Log.debug $ show config
     (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
     case code of
-      ExitSuccess -> 
+      ExitSuccess ->
           do
               newfilepdf1 <- BS.readFile tmpout
-              newfilepdf <- 
+              newfilepdf <-
                   case TW.signConf ctxtwconf of
                       Nothing -> do
                           Log.debug $ "TrustWeaver configuration empty, not doing TrustWeaver signing"
@@ -291,20 +290,20 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                           Log.debug $ "About to TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid
                           x <- TW.signDocument ctxtwconf newfilepdf1
                           case x of
-                              Left errmsg -> 
+                              Left errmsg ->
                                   do
                                       let msg = "Cannot TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ errmsg
-                                      Log.error $ msg 
-                                      Log.trustWeaver $ msg 
+                                      Log.error $ msg
+                                      Log.trustWeaver $ msg
                                       return newfilepdf1
-                              Right result -> 
+                              Right result ->
                                   do
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
               res <- update $ AttachSealedFile documentid filename newfilepdf
               return res
-      ExitFailure _ -> 
+      ExitFailure _ ->
           do
               -- error handling
               systmp <- getTemporaryDirectory

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.MailsConfig
@@ -14,34 +13,34 @@ module Mails.MailsConfig
     ( MailsConfig(..)
     , defaultMailConfig
     ) where
-             
+
 -- | Configuration of mails
-data MailsConfig 
+data MailsConfig
     = MailsSendgrid
       { ourInfoEmail         :: String
       , ourInfoEmailNiceName :: String
       , sendgridSMTP         :: String
       , sendgridRestAPI      :: String
       , sendgridUser         :: String
-      , sendgridPassword     :: String       
-      } 
+      , sendgridPassword     :: String
+      }
     | MailsSendmail
       { ourInfoEmail         :: String
       , ourInfoEmailNiceName :: String
-      } 
+      }
     | MailsLocalOpen
       { ourInfoEmail         :: String
       , ourInfoEmailNiceName :: String
-      } 
+      }
       deriving (Show, Read, Eq, Ord)
-                   
 
 
-defaultMailConfig :: MailsConfig                  
+
+defaultMailConfig :: MailsConfig
 defaultMailConfig = MailsLocalOpen
       { ourInfoEmail          = "development-system@skrivapa.se"
       , ourInfoEmailNiceName  = "Development"
-      } 
+      }
 
 
 {-
@@ -50,7 +49,7 @@ defaultMailConfig = MailsLocalOpen
                 , sendgridSMTP = "smtp://smtp.sendgrid.net"
                 , sendgridRestAPI = "https://sendgrid.com/api"
                 , sendgridUser= "duzyrak@gmail.com"
-                , sendgridPassword = "zimowisko"       
-                , sendMails = False 
-                } 
+                , sendgridPassword = "zimowisko"
+                , sendMails = False
+                }
 -}

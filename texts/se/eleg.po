@@ -1,0 +1,23 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: eleg.st:signCanceledDataMismatch
+msgid "_signCanceledDataMismatchBody"
+msgstr "Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter."
+
+#: eleg.st:signCanceledDataMismatch
+msgid "_signCanceledDataMismatchIncorrectPersonalInfo"
+msgstr "Felaktiga personuppgifter"
+
+#: eleg.st:tbs
+msgid "_tbsYouSignWithEleg"
+msgstr "Du undertecknar \"$documentname$\" med transaktionsnummer \"$documentnumber$\". Undertecknande parter är:$tbssigentries$"
+

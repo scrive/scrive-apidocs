@@ -1,4 +1,3 @@
-
 module ActionQueueState
 where
 import Happstack.Data
@@ -31,7 +30,7 @@ import qualified TrustWeaver as TW
 import Doc.DocState
 import Data.Data (Data)
 
-data Action = TrustWeaverUpload String DocumentID 
+data Action = TrustWeaverUpload String DocumentID
             | AmazonUpload DocumentID FileID
               deriving (Eq, Ord, Show, Typeable, Data)
 
@@ -50,7 +49,7 @@ instance Version Actions where
 instance Component Actions where
   type Dependencies Actions = End
   initialValue = Actions []
-                  
+
 enqueueAction :: Action -> Update Actions ()
 enqueueAction action = do
   -- FIXME: need to use balanced queue, priority queue maybe

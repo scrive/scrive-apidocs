@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStorage
@@ -12,7 +10,7 @@
 -----------------------------------------------------------------------------
 module Doc.DocStorage(
       getFileContents
-    , uploadDocumentFileToAmazon 
+    , uploadDocumentFileToAmazon
     , uploadDocumentFilesToTrustWeaver
     , maybeScheduleRendering
     , preprocessPDF) where
@@ -53,7 +51,7 @@ getFileContents ctx file = do
 {- Upload document to Amazon -}
 uploadDocumentFileToAmazon :: FilePath
                                  -> AWS.S3Action
-                                 -> DocumentID 
+                                 -> DocumentID
                                  -> FileID
                                  -> IO ()
 uploadDocumentFileToAmazon docstore ctxs3action docid fileid1 = do
@@ -67,18 +65,18 @@ uploadDocumentFileToAmazon docstore ctxs3action docid fileid1 = do
   return ()
 
 {- Upload document to TW-}
-uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf 
-                                 -> String 
-                                 -> DocumentID 
+uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf
+                                 -> String
+                                 -> DocumentID
                                  -> IO ()
 uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
   Just document <- query $ GetDocumentByDocumentID documentid
   let twdocumentid = show documentid
   let twdocumentdate = showDateOnly (documentmtime document)
-  let File{filestorage = FileStorageMemory pdfdata} = head $ documentsealedfiles document 
-          
+  let File{filestorage = FileStorageMemory pdfdata} = head $ documentsealedfiles document
+
   -- FIXME: we should retry here if the following fails
-  -- because of external reasons 
+  -- because of external reasons
   reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
   _ <- update $ SetDocumentTrustWeaverReference documentid reference
   return ()
@@ -115,7 +113,7 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
   BS.writeFile sourcepath content
 
   let gs = ctxgscmd ctx
-      gsproc = (proc gs [ "-sDEVICE=jpeg" 
+      gsproc = (proc gs [ "-sDEVICE=jpeg"
                         , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
                         , "-dSAFER"
                         , "-dBATCH"
@@ -131,7 +129,7 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
   (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
   errcontent <- BS.hGetContents errhandle
   outcontent <- BS.hGetContents outhandle
-                 
+
   exitcode <- waitForProcess gsProcHandle
 
   result <- case exitcode of
@@ -146,21 +144,21 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
     ExitSuccess -> do
                   let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
                   let existingPages x = do
-                                          exists <- doesFileExist (pathofx x) 
+                                          exists <- doesFileExist (pathofx x)
                                           if exists
                                             then  fmap (x:) $ existingPages (x+1)
                                             else return []
                   listofpages <- existingPages (1::Integer)
-                  x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x) 
+                  x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x)
                        `catch` \_ -> do
                                     fcontent <- BS.readFile (pathofx x)
                                     return (fcontent,943,1335)
 
                   return (JpegPages x)
   return result
-   
+
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory. -}
-maybeScheduleRendering :: Context 
+maybeScheduleRendering :: Context
                        -> File
                        -> DocumentID
                        -> IO JpegPages
@@ -192,8 +190,8 @@ preprocessPDF ctx content docid = withSystemTempDirectory "preprocess_gs" $ \tmp
   BS.writeFile sourcepath content
 
   let gs = ctxgscmd ctx
-      gsproc = (proc gs [ "-sDEVICE=pdfwrite" 
-                        , "-sOutputFile=" ++ outputpath 
+      gsproc = (proc gs [ "-sDEVICE=pdfwrite"
+                        , "-sOutputFile=" ++ outputpath
                         , "-dSAFER"
                         , "-dBATCH"
                         , "-dNOPAUSE"
@@ -204,7 +202,7 @@ preprocessPDF ctx content docid = withSystemTempDirectory "preprocess_gs" $ \tmp
   (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
   _errcontent <- BSL.hGetContents errhandle
   _outcontent <- BSL.hGetContents outhandle
-                 
+
   exitcode <- waitForProcess gsProcHandle
 
   result <- case exitcode of

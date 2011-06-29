@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Payments.PaymentsUtils
@@ -6,7 +5,7 @@
 -- Stability   :  stable
 -- Portability :  portable
 --
--- Some usefull utils, now only for parsing money 
+-- Some usefull utils, now only for parsing money
 --
 -----------------------------------------------------------------------------
 module Payments.PaymentsUtils(showMoney,readMoney) where
@@ -16,15 +15,15 @@ import Control.Monad
 import Happstack.Util.Common
 
 {-| Money printer. Since show instance is derived by storage module, we provided nicer version -}
-showMoney::Money->String  
+showMoney::Money->String
 showMoney (Money i) = if (i>=0)
                        then (show $ i `div` 100)++"."++(show $ (i `div` 10) `mod` 10) ++ (show $ i `mod` 10)
                        else "-" ++ (showMoney (Money $ -1*i))
-                       
+
 {-| Money parser -}
-readMoney::String->Maybe Money  
+readMoney::String->Maybe Money
 readMoney s = do
-               let (m,r) = break (== '.') s 
+               let (m,r) = break (== '.') s
                main<-readM m
                rest<-(readM $ drop 1 r) `mplus` (return 0)
                let rest' = rest * (if (main>=0) then 1 else -1)

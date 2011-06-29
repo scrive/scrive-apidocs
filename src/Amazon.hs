@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
-
 {-
 All function related to Amazon Web Services
 -}
@@ -56,7 +54,7 @@ uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
              return ()
          Left err -> do -- FIXME: do much better error handling
              putStrLn $ "AWS failed to upload: " ++ bucket ++ "/" ++ url
-             print err 
+             print err
              return ()
 
 uploadFile _ _ _ = do

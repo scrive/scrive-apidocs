@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
 module Cookies where
 
 import Control.Monad.State hiding (State)

@@ -7,12 +7,12 @@ templatesForAjax=
     <div class="tab-container">
             <div class="tab-content" style="background-color:#FFFFFF">
                 <div class="float-left basicinfo"> 
-                    <p>Klicka på den mall du vill använda för att starta processen</p>
+                    <p>$_InfoSelectTemplate()$</p>
                     <a class="backicon float-left" href="/?doctype=$processid$"></a>      
                 </div> 
                 <div class="float-right search" style="margin-top: 30px;margin-right:30px;">
                    <form action="$currentlink$" method="POST">
-                      $searchBox(infotext='Sök  mall')$
+                      $searchBox(infotext=_SearchTemplate())$
                    </form>
                 </div>
                 <div class="clearfix"></div>
@@ -43,11 +43,11 @@ templatesForAjax=
                            -->
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&amp;sorting=title">Mall <em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$<em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&amp;sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">$_SortTemplate()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=title">Mall </a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$</a>
                                $endif$
                             </th>
                             <th></th>

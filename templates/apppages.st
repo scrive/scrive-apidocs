@@ -13,13 +13,7 @@ wholePage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body>
-        $bodystart()$
-        <div class="mainContainer">
-            $content:noescape()$
-        </div>
-        $bodyend()$ 
-      </body>
+      $standardBody(unwrappedbody=content)$
     </html>
 
 ####
@@ -49,6 +43,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
+        <script type="text/javascript">
+                $javascriptLocalisation()$</script>
         <script src="$prefix$/js/global.js"
                 type="text/javascript"></script>
        $if(publicsafe)$
@@ -58,12 +54,61 @@ standardHeaderContents=
        <script src="/js/main.js" 
                 type="text/javascript"></script>
 ####
-bodystart=
-        $header()$
+standardBodyWithQueryCol=
+       $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$
+####
+contentsWithQueryCol=
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $unwrappedbody:noescape()$
+           </div>
+         </div>
+####
+standardBody=
+       $standardBodyWrapper(unwrappedbody=contentsWithoutQueryCol(unwrappedbody=unwrappedbody))$
+####
+contentsWithoutQueryCol=
+         <div class="mainContainer">
+           $unwrappedbody:noescape()$
+         </div>
+####
+standardBodyWrapper=
+      <body>
+       $header()$
         <div class="mainContainer960" >
           $flashmessages()$
           $loginModal()$
         <div id="body-container">
+          $unwrappedbody:noescape()$
+                                        <div class="clearfix"></div>
+                                        <div class="spacer40"></div>
+                                        $if(showCreateAccount)$    
+                                        <div class="try-skrivapa">
+                                          <div class="left">
+                                            <h3>Skapa konto nu!</h3>
+                                            <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                          </div>
+                                          <div class="right">
+                                            <form method="post" action="$linksignup$" class="requestAccount">
+                                              <input class="shiny float-left"
+                                                     name="email" type="email"
+                                                     infotext="Fyll i din e-postadress"
+                                                     /> <a href="#" class="submit
+                                                                           new-btn-small green2 center
+                                                                           float-right"><p>Skapa konto!</p></a>
+                                              <input type="submit" class="hidden" />
+                                            </form>
+                                          </div>
+                                        </div>
+                                        $endif$ 
+        </div>
+        </div>
+        
+        $pageFooter()$
+      </body>               
 ####
 queryColumn=
 <div class="white thin box">
@@ -106,34 +151,6 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
 
                                         </div>
 ####
-bodyend=
-                                        <div class="clearfix"></div>
-                                        <div class="spacer40"></div>
-                                        $if(showCreateAccount)$    
-                                        <div class="try-skrivapa">
-                                          <div class="left">
-                                            <h3>Skapa konto nu!</h3>
-                                            <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
-                                          </div>
-                                          <div class="right">
-                                            <form method="post" action="$linksignup$" class="requestAccount">
-                                              <input class="shiny float-left"
-                                                     name="email" type="email"
-                                                     infotext="Fyll i din e-postadress"
-                                                     /> <a href="#" class="submit
-                                                                           new-btn-small green2 center
-                                                                           float-right"><p>Skapa konto!</p></a>
-                                              <input type="submit" class="hidden" />
-                                            </form>
-                                          </div>
-                                        </div>
-                                        $endif$ 
-        </div>
-        </div>
-        
-        $pageFooter()$
-
-####
 pageFooter=
 <div id="footer-container" class="newdesign">
   <div class="top-border"></div>
@@ -159,6 +176,7 @@ pageFooter=
       <ul>
         <li><a href="/">Hem</a></li>
         <li><a href="/om-skrivapa">Om SkrivaPå</a></li>
+        <li><a href="http://support.skrivapa.se">Support &amp; Feedback</a></li>
         <li><a href="/partners">Partners</a></li>
         <li><a href="/kunder">Kunder</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
@@ -197,6 +215,21 @@ pageFooter=
     </div>
   </div>
 </div>
+<script type="text/javascript" src="//asset0.zendesk.com/external/zenbox/v2.1/zenbox.js"></script>
+<style type="text/css" media="screen, projection">
+  @import url(//asset0.zendesk.com/external/zenbox/v2.1/zenbox.css);
+</style>
+<script type="text/javascript">
+  if (typeof(Zenbox) !== "undefined") {
+    Zenbox.init({
+      dropboxID:   "20010532",
+      url:         "https://skrivapa.zendesk.com",
+      tabID:       "support",
+      tabColor:    "black",
+      tabPosition: "Right"
+    });
+  }
+</script>
 $preloadImages()$
 #####
 ##### Preload images. Added by Eric Normand from http://dev.iceburg.net/jquery/jqModal/

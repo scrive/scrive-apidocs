@@ -1,85 +1,79 @@
 ###
 contractpendingauthornotsignedinfoheader=
-  Granska
+  $_contractpendingauthornotsignedinfoheader()$
 ###
 offerpendingauthornotsignedinfoheader=
-  Granska innan accept
+  $_offerpendingauthornotsignedinfoheader()$
 ###
 orderpendingauthornotsignedinfoheader=
-  Granska innan bekräftelse
+  $_orderpendingauthornotsignedinfoheader()$
 ###
 contractpendingauthornotsignedinfotext=
-  Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
+  $_contractpendingauthornotsignedinfotext()$
 ###
 offerpendingauthornotsignedinfotext=
-  Vänligen var noga med att granska offerten innan du accepterar.
+  $_offerpendingauthornotsignedinfotext()$
 ###
 orderpendingauthornotsignedinfotext=
-  Vänligen var noga med att granska ordern innan du bekräftar.
+  $_orderpendingauthornotsignedinfotext()$
 ###
-contractpendingauthorinfoheader=Väntar
+contractpendingauthorinfoheader=$_contractpendingauthorinfoheader()$
 ###
-offerpendingauthorinfoheader=Väntar på accept
+offerpendingauthorinfoheader=$_offerpendingauthorinfoheader()$
 ###
-orderpendingauthorinfoheader=Väntar på bekräftelse
+orderpendingauthorinfoheader=$_orderpendingauthorinfoheader()$
 ###
 contractpendingauthorinfotext=$if(iamauthor)$
-                              Du har skickat inbjudan att
-                           underteckna. Dokumentet har ännu inte
-                           undertecknats av samtliga parter.
+                              $_contractpendingauthorinfotextIfiamauthor()$
                            $else$
-                           Du har endast behörighet att se detta
-                           dokumentet. Dokumentet har ännu inte
-                           undertecknats av samtliga parter.
+                           $_contractpendingauthorinfotextIfElse()$
                            $endif$
 ###
-offerpendingauthorinfotext=Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
+offerpendingauthorinfotext=$_offerpendingauthorinfotext()$
 ###
-orderpendingauthorinfotext=Du har skickat orderbekräftelsen. Orderbekräftelsen har ännu inte bekräftats av din mottagare.
+orderpendingauthorinfotext=$_orderpendingauthorinfotext()$
 ###
-contractcancelledinfoheader=Dokument återkallat
+contractcancelledinfoheader=$_contractcancelledinfoheader()$
 ###
-offercancelledinfoheader=Offert återkallad
+offercancelledinfoheader=$_offercancelledinfoheader()$
 ###
-ordercancelledinfoheader=Order återkallad
+ordercancelledinfoheader=$_ordercancelledinfoheader()$
 ###
-contractcancelledinfotext=$authorfstname$ $authorsndname$ har återkallat sin inbjudan att underteckna dokumentet.
+contractcancelledinfotext=$authorfstname$ $authorsndname$ $_contractcancelledinfotext()$
 ###
-offercancelledinfotext=$authorfstname$ $authorsndname$ har återkallat offerten. Den går således inte att acceptera.
+offercancelledinfotext=$authorfstname$ $authorsndname$ $_offercancelledinfotext()$
 ###
-ordercancelledinfotext=$authorfstname$ $authorsndname$ har återkallat ordern. Den går således in att acceptera.
+ordercancelledinfotext=$authorfstname$ $authorsndname$ $_ordercancelledinfotext()$
 ###
-contractsignedinfoheader=Färdigställt
+contractsignedinfoheader=$_contractsignedinfoheader()$
 ###
-offersignedinfoheader=Offert accepterad
+offersignedinfoheader=$_offersignedinfoheader()$
 ###
-ordersignedinfoheader=Ordern bekräftad
+ordersignedinfoheader=$_ordersignedinfoheader()$
 ###
-contractsignedinfotext=Samtliga parter har undertecknat dokumentet.
+contractsignedinfotext=$_contractsignedinfotext()$
 ###
 offersignedinfotext=
     $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
-    har accepterat offerten $documenttitle$  från $authorfstname$ $authorsndname$ .
+    $_offersignedinfotextHasAccepted()$	 $documenttitle$ $_offersignedinfotextFrom()$  $authorfstname$ $authorsndname$ .
 ###
 ordersignedinfotext=
     $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
-    har bekräftat ordern $documenttitle$  från $authorfstname$
+    $_ordersignedinfotextHasConfirmed()$ $documenttitle$ $_ordersignedinfotextFrom()$ $authorfstname$
 $authorsndname$ .
 ###
-contractstatusinfotext=Du har valt att underteckna
-sist. Vänligen invänta övriga parters
-underskrift.
+contractstatusinfotext=$_contractstatusinfotext()$
 ###
-offerstatusinfotext=Du har skickat en inbjudan att acceptera offerten. Vänligen inväntan accepten.
+offerstatusinfotext=$_offerstatusinfotext()$
 ###
-orderstatusinfotext=Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta bekräftelsen.
+orderstatusinfotext=$_orderstatusinfotext()$
 ##########
 documentInfoText=
                 $if(pending)$
                      $if(notsignedbyme)$    
                         $if(iamauthor)$
                             <span class="header">
-                                 Väntar
+                                 $_documentInfoTextPendingNotsignedbymeImauthorHead()$
                             </span><br/>
                             <span class="text">
                               $process.statusinfotext$
@@ -95,10 +89,10 @@ documentInfoText=
 
                      $elseif(signedbyme)$
                         <span class="header">
-                             Väntar på motpart
+                             $_documentInfoTextPendingSignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
-                            Du har undertecknat och vi inväntar övriga parter.
+                            $_documentInfoTextPendingSignedbymeImauthorBody()$
                         </span>
                      $else$
                          <span class="header">
@@ -122,40 +116,31 @@ documentInfoText=
 
                      $if(notsignedbyme)$    
                         <span class="header">
-                             Avtalsprocessen avbruten
+                             $_documentInfoTextDatamismatchNotsignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
                         
-                                Avtalsprocessen är avbruten på grund
-                                av felaktig matchning mellan en
-                                undertecknande part och dennes
-                                e-legitimation.
+                                $_documentInfoTextDatamismatchNotsignedbymeImauthorBody()$
 
                         </span>
 
                      $elseif(signedbyme)$
                         <span class="header">
-                             Avtalsprocessen avbruten
+                             $_documentInfoTextDatamismatchSignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
 
-                              Avtalsprocessen är avbruten på grund av
-                              felaktig matchning mellan en
-                              undertecknande part och dennes
-                              e-legitimation.
+                              $_documentInfoTextDatamismatchSignedbymeImauthorBody()$
 
                         </span>
 
                      $else$
                         <span class="header">
-                             Avtalsprocessen avbruten
+                             $_documentInfoTextDatamismatchElseImauthorHead()$
                         </span><br/>
                         <span class="text">
 
-                              Avtalsprocessen är avbruten på grund av
-                              felaktig matchning mellan en
-                              undertecknande part och dennes
-                              e-legitimation.
+                              $_documentInfoTextDatamismatchElseImauthorBody()$
 
                         </span>
  
@@ -165,26 +150,26 @@ documentInfoText=
 
                      $if(notsignedbyme)$    
                         <span class="header">
-                             Förfallodatum har passerat
+                             $_documentInfoTextTimedoutNotsignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Du kan inte längre underteckna dokumentet eftersom sista datum för att underteckna passerat.
+                           $_documentInfoTextTimedoutNotsignedbymeImauthorBody()$
                         </span>
 
                      $elseif(signedbyme)$
                         <span class="header">
-                             Förfallodatum har passerat
+                             $_documentInfoTextTimedoutSignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum har passerat och därför har dokumentet avbrutits.
+                           $_documentInfoTextTimedoutSignedbymeImauthorBody()$
                         </span>
 
                      $else$
                         <span class="header">
-                             Förfallodatum har passerat
+                             $_documentInfoTextTimedoutElseImauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum har passerat och därför har dokumentet avbrutits.
+                           $_documentInfoTextTimedoutElseImauthorBody()$
                         </span>
 
                      $endif$
@@ -194,26 +179,26 @@ documentInfoText=
 
                      $if(notsignedbyme)$    
                         <span class="header">
-                             Avvisat
+                             $_documentInfoTextRejectedNotsignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Dokumentet har avvisats av en motpart.
+                           $_documentInfoTextRejectedNotsignedbymeImauthorBody()$
                         </span>
 
                      $elseif(signedbyme)$
                         <span class="header">
-                             Avvisat
+                             $_documentInfoTextRejectedSignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Dokumentet har avvisats av en motpart.
+                           $_documentInfoTextRejectedSignedbymeImauthorBody()$
                         </span>
 
                      $else$
                         <span class="header">
-                             Avvisat
+                             $_documentInfoTextRejectedElseImauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Dokumentet har avvisats av en motpart
+                           $_documentInfoTextRejectedElseImauthorBody()$
                         </span>
 
                      $endif$
@@ -229,40 +214,40 @@ documentInfoText=
 
                      $if(notsignedbyme)$    
                             <span class="header">
-                                 Granska
+                                 $_documentInfoTextNotsignedbymeAwaitingauthorHead()$
                             </span><br/>
                             <span class="text">
-                              Vänligen kontrollera dokumentet och parternas uppgifter och underteckna längst ned.
+                              $_documentInfoTextNotsignedbymeAwaitingauthorBody()$
                             </span>
                      $elseif(signedbyme)$
                         <span class="header">
-                             Väntar på motpart
+                             $_documentInfoTextSignedbymeAwaitingauthorHead()$
                         </span><br/>
                         <span class="text">
-                            Du har undertecknat och vi inväntar övriga parter.
+                            $_documentInfoTextSignedbymeAwaitingauthorBody()$
                         </span>
                      $else$
                         <span class="header">
-                             Väntar
+                             $_documentInfoTextElseAwaitingauthorHead()$
                         </span><br/>
                         <span class="text">
-                           Dokumentet väntar på att undertecknas av inbjudande part.
+                           $_documentInfoTextElseAwaitingauthorBody()$
                         </span>
                      $endif$
 
                   $elseif(preparation)$
                         <span class="header">
-                              Förberedelse
+                              $_documentInfoTextPreparationHead()$
                         </span><br/>
                         <span class="text">
-                              Dokumentet är i förberedelsefasen.
+                              $_documentInfoTextPreparationBody()$
                         </span>
                   $else$ 
                         <span class="header">
-                             Problem
+                             $_documentInfoTextElseHead()$
                         </span><br/>
                         <span class="text">
-                        Problem Ledsen, det har uppstått ett problem att rendera sigillet på PDF:en. Vänliga ladda upp dokumentet igen. Om problemet upprepar sig var vänlig kontakta <a href="mailto:support@skrivapa.se">support@skrivapa.se</a>
+                        $_documentInfoTextElseBody()$<a href="mailto:support@skrivapa.se">$_documentInfoTextElseBodyMailSupport()$</a>
                         </span>
                   
                   $endif$

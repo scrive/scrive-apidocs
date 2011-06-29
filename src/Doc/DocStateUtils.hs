@@ -1,27 +1,28 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStateUtils
--- Maintainer  :  
+-- Maintainer  :
 -- Stability   :  development
 -- Portability :  portable
 --
 -- This module provides  low level interface for document modifications and some utils
--- Reasons for that: 1) growing number of operations in DocState 
---                   2) Stopping devs from iusing modify function since there is a split to templates and docs 
+-- Reasons for that: 1) growing number of operations in DocState
+--                   2) Stopping devs from iusing modify function since there is a split to templates and docs
 --                      and some updates make no sense on templates.
 -----------------------------------------------------------------------------
 
 module Doc.DocStateUtils (
     -- DB updates
       insertNewDocument
-    , newFromDocument  
+    , newFromDocument
     , queryDocs
     , queryQuarantinedDocs
     , modifySignable
-    , modifySignableWithAction 
+    , modifySignableWithAction
     , modifySignableOrTemplate
-    , modifySignableOrTemplateWithAction 
+    , modifySignableOrTemplateWithAction
+    , modifyDocumentWithActionTime
+
     )
 
 where
@@ -35,6 +36,7 @@ import Happstack.Data.IxSet as IxSet
 import Happstack.State
 import MinutesTime
 import Misc
+import Util.SignatoryLinkUtils
 
 {- |
     Cleans out all the deleted and quarantined documents
@@ -53,10 +55,11 @@ queryQuarantinedDocs queryFunc = do
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
-insertNewDocument doc = do 
+insertNewDocument doc = do
   documents <- ask
   docid <- getUnique64 documents DocumentID
-  let docWithId = doc {documentid = docid}
+  now <- getMinuteTimeDB
+  let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
   modify $ insert docWithId
   return docWithId
 
@@ -68,54 +71,62 @@ newFromDocument f docid = do
     case (getOne (documents @= docid)) of
       Just doc -> fmap Right $ insertNewDocument $ f doc
       Nothing -> return $ Left $ "Document " ++ show docid ++ " does not exist"
-      
+
 -- | There are six methods for update. We want force an exact info if
 -- any operation that changes a document makes sense on templates.
-modifySignable :: DocumentID 
-               -> (Document -> Either String Document) 
+modifySignable :: DocumentID
+               -> (Document -> Either String Document)
                -> Update Documents (Either String Document)
 modifySignable docid action = modifySignableWithAction docid (return . action)
 
 
-modifySignableOrTemplate :: DocumentID 
-               -> (Document -> Either String Document) 
+modifySignableOrTemplate :: DocumentID
+               -> (Document -> Either String Document)
                -> Update Documents (Either String Document)
 modifySignableOrTemplate docid action = modifySignableOrTemplateWithAction docid (return . action)
 
 
-modifySignableWithAction :: DocumentID 
-               -> (Document ->  Update Documents (Either String Document)) 
+modifySignableWithAction :: DocumentID
+               -> (Document ->  Update Documents (Either String Document))
                -> Update Documents (Either String Document)
 modifySignableWithAction  = modifyDocumentWithAction isSignable
 
 
-modifySignableOrTemplateWithAction:: DocumentID 
-               -> (Document ->  Update Documents (Either String Document)) 
+modifySignableOrTemplateWithAction:: DocumentID
+               -> (Document ->  Update Documents (Either String Document))
                -> Update Documents (Either String Document)
 modifySignableOrTemplateWithAction = modifyDocumentWithAction (const True)
 
-
 modifyDocumentWithAction :: (Document -> Bool) -> DocumentID 
-               -> (Document ->  Update Documents (Either String Document)) 
-               -> Update Documents (Either String Document)             
-               
-modifyDocumentWithAction condition docid action = do
+               -> (Document ->  Update Documents (Either String Document))
+               -> Update Documents (Either String Document)                            
+modifyDocumentWithAction = modifyDocumentWithActionTime True
+
+modifyDocumentWithActionTime :: Bool 
+               -> (Document -> Bool) -> DocumentID 
+               -> (Document -> Update Documents (Either String Document))
+               -> Update Documents (Either String Document)                            
+modifyDocumentWithActionTime touchtime condition docid action = do
   documents <- ask
-  case getOne (documents @+ [LiveDocument, QuarantinedDocument] @= docid) of
+  case getOne (documents @= docid @+ [LiveDocument, QuarantinedDocument] ) of
     Nothing -> return $ Left "no such document"
-    Just document -> 
+    Just document ->
       if (condition document)
        then do
              actionresult <- action document
              case actionresult of
                 Left message -> return $ Left message
                 Right newdocument -> do
-                        let newdocumentNoUnsupportedFutures = dropUnsupportedFeatures newdocument
-                        now <- getMinuteTimeDB
                         when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                        modify (updateIx docid $ newdocumentNoUnsupportedFutures {documentmtime=now})
+                        now <- getMinuteTimeDB
+                        let newdocumentNoUnsupportedFutures = 
+                              if touchtime
+                              then (dropUnsupportedFeatures newdocument) { documentmtime = now }
+                              else (dropUnsupportedFeatures newdocument)
+                        modify (updateIx docid $ newdocumentNoUnsupportedFutures )
                         return $ Right newdocument
-       else return $ Left "Document didn't matche condition required for this action"
+       else return $ Left "Document didn't match condition required for this action"
+
 
 -- Feature checking
 
@@ -146,38 +157,38 @@ dropUnsupportedFeatures :: Document -> Document
 dropUnsupportedFeatures doc =
   let unsupported =  filter (not . isSupported (documentfunctionality doc)) allValues
       dropper = foldl (.) id $ map dropFeature unsupported
-  in if (documentstatus doc == Preparation) 
+  in if (documentstatus doc == Preparation)
         then dropper doc
         else doc
-    
+
 dropFeature:: Feature -> Document -> Document
 dropFeature CSVUse doc = doc {documentcsvupload = Nothing}
-dropFeature DaysToSignUse doc = doc {documentdaystosign = Nothing} 
+dropFeature DaysToSignUse doc = doc {documentdaystosign = Nothing}
 dropFeature MultiplePartiesUse doc = doc {documentsignatorylinks = take 2 $ documentsignatorylinks doc}
-dropFeature SecretaryUse doc = doc {documentsignatorylinks = map makeAuthorSignatory $ documentsignatorylinks doc} 
-    where makeAuthorSignatory sl = 
-            if (siglinkIsAuthor sl && not (isSignatory sl))
+dropFeature SecretaryUse doc = doc {documentsignatorylinks = map makeAuthorSignatory $ documentsignatorylinks doc}
+    where makeAuthorSignatory sl =
+            if (isAuthor sl && not (isSignatory sl))
               then sl {signatoryroles = SignatoryPartner : (signatoryroles sl) }
               else sl
-dropFeature SpecialRoleUse doc = doc {documentsignatorylinks = map standarizeRoles $ documentsignatorylinks doc} 
-   where 
+dropFeature SpecialRoleUse doc = doc {documentsignatorylinks = map standarizeRoles $ documentsignatorylinks doc}
+   where
         standarizeRoles :: SignatoryLink -> SignatoryLink
-        standarizeRoles sl = 
+        standarizeRoles sl =
           let standardRoles = [SignatoryPartner, SignatoryAuthor]
               limitedRoles =  filter  (`elem` standardRoles) $ signatoryroles sl
-          in if (Data.List.null limitedRoles) 
+          in if (Data.List.null limitedRoles)
               then sl {signatoryroles  = [SignatoryPartner]}
               else sl {signatoryroles = limitedRoles}
-             
-dropFeature AuthorCustomFieldUse doc = doc {documentsignatorylinks = map dropAuthorCustomFields $ documentsignatorylinks doc}  
+
+dropFeature AuthorCustomFieldUse doc = doc {documentsignatorylinks = map dropAuthorCustomFields $ documentsignatorylinks doc}
    where
-        dropAuthorCustomFields sl =  if (siglinkIsAuthor sl)
+        dropAuthorCustomFields sl =  if isAuthor sl
                                         then sl {signatorydetails  = (signatorydetails sl) {signatoryotherfields = []} }
                                         else sl
 
-dropFeature AuthorPlacementUse doc =  doc {documentsignatorylinks = map dropAuthorPlacementFields $ documentsignatorylinks doc}  
+dropFeature AuthorPlacementUse doc =  doc {documentsignatorylinks = map dropAuthorPlacementFields $ documentsignatorylinks doc}
     where
-       dropAuthorPlacementFields sl =  if (siglinkIsAuthor sl)
+       dropAuthorPlacementFields sl =  if isAuthor sl
                                         then sl {signatorydetails  = (signatorydetails sl) {
                                               signatoryfstnameplacements = []
                                             , signatorysndnameplacements = []
@@ -186,11 +197,11 @@ dropFeature AuthorPlacementUse doc =  doc {documentsignatorylinks = map dropAuth
                                             , signatorypersonalnumberplacements = []
                                             , signatorycompanynumberplacements = []} }
                                         else sl
-dropFeature SigCustomFieldUse doc = doc {documentsignatorylinks = map dropCustomFields $ documentsignatorylinks doc}  
+dropFeature SigCustomFieldUse doc = doc {documentsignatorylinks = map dropCustomFields $ documentsignatorylinks doc}
    where
       dropCustomFields sl =   sl {signatorydetails  = (signatorydetails sl) {signatoryotherfields = []} }
 
-dropFeature SigPlacementUse doc =  doc {documentsignatorylinks = map dropPlacementFields $ documentsignatorylinks doc}  
+dropFeature SigPlacementUse doc =  doc {documentsignatorylinks = map dropPlacementFields $ documentsignatorylinks doc}
     where
        dropPlacementFields sl =  sl {signatorydetails  = (signatorydetails sl) {
                                               signatoryfstnameplacements = []
@@ -199,11 +210,11 @@ dropFeature SigPlacementUse doc =  doc {documentsignatorylinks = map dropPlaceme
                                             , signatoryemailplacements = []
                                             , signatorypersonalnumberplacements = []
                                             , signatorycompanynumberplacements = []} }
-                                            
-dropFeature SignOrderUse doc = doc {documentsignatorylinks = map dropOrder $ documentsignatorylinks doc}  
+
+dropFeature SignOrderUse doc = doc {documentsignatorylinks = map dropOrder $ documentsignatorylinks doc}
     where dropOrder sl = sl {signatorydetails = (signatorydetails sl)
-                {signatorysignorder = SignOrder $ if (siglinkIsAuthor sl) then 0 else 1}}
-          
+                {signatorysignorder = SignOrder $ if isAuthor sl then 0 else 1}}
+
 dropFeature AttachmentUse doc = doc { documentauthorattachments    = []
                                     , documentsignatoryattachments = []
                                     }

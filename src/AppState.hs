@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC -Wall #-}
 {- |
    Stores the top-level application state
  -}
-module AppState 
+module AppState
     ( AppState
     ) where
 
@@ -19,9 +18,9 @@ import API.Service.ServiceState
 import Company.CompanyState
 
 -- |top-level application state
-data AppState = AppState 
+data AppState = AppState
                 deriving (Eq, Ord, Show, Data)
-   
+
 instance Typeable AppState where typeOf _ = mkTypeOf "AppState"
 
 $(deriveSerialize ''AppState)

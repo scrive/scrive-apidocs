@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall -Werror  #-}
 module Mails.MailsData where
 
 import Data.Typeable
@@ -7,6 +6,7 @@ import qualified Data.ByteString as BS
 
 import User.UserState
 import Doc.DocStateData
+import API.Service.ServiceState
 
 data SendGridEventType =
       Processed
@@ -22,7 +22,7 @@ data MailAddress = MailAddress
     { fullname    :: BS.ByteString
     , email       :: BS.ByteString
     } deriving (Eq, Ord, Show, Typeable)
-            
+
 -- | Structure for holding mails. If from is not set mail will be send
 -- as SkrivaPa admin (fromMails Config).
 data Mail = Mail
@@ -30,8 +30,18 @@ data Mail = Mail
     , title       :: BS.ByteString
     , content     :: BS.ByteString
     , attachments :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
-    , from        :: Maybe User
-    , mailInfo    :: MailInfo 
+    , from        :: Maybe ServiceID
+    , mailInfo    :: MailInfo
+    } deriving (Eq, Ord, Show, Typeable)
+
+
+data Mail2 = Mail2
+    { to2          :: [MailAddress]
+    , title2       :: BS.ByteString
+    , content2     :: BS.ByteString
+    , attachments2 :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
+    , from2        :: Maybe User
+    , mailInfo2    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)
 
 data Mail1 = Mail1
@@ -41,7 +51,7 @@ data Mail1 = Mail1
     , content1     :: BS.ByteString
     , attachments1 :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
     , from1        :: Maybe User
-    , mailInfo1    :: MailInfo 
+    , mailInfo1    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)
 
 data Mail0 = Mail0 {
@@ -50,7 +60,7 @@ data Mail0 = Mail0 {
     , content0        :: BS.ByteString
     , attachments0    :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
     , from0           :: Maybe User
-    , mailInfo0       :: MailInfo 
+    , mailInfo0       :: MailInfo
     } deriving Typeable
 
 data MailInfo = Invitation DocumentID SignatoryLinkID
@@ -62,13 +72,16 @@ instance Version SendGridEventType
 instance Version Mail0
 instance Version Mail1 where
     mode = extension 1 (Proxy :: Proxy Mail0)
-instance Version Mail where
+instance Version Mail2 where
     mode = extension 2 (Proxy :: Proxy Mail1)
+
+instance Version Mail where
+    mode = extension 3 (Proxy :: Proxy Mail2)
 
 instance Version MailInfo
 instance Version MailAddress
 
-$(deriveSerializeFor [''SendGridEventType, ''Mail, ''Mail1, ''Mail0, ''MailAddress, ''MailInfo])
+$(deriveSerializeFor [''SendGridEventType, ''Mail, ''Mail2, ''Mail1, ''Mail0, ''MailAddress, ''MailInfo])
 
 instance Migrate Mail0 Mail1 where
     migrate Mail0 {
@@ -92,20 +105,35 @@ instance Migrate Mail0 Mail1 where
         , mailInfo1 = mailInfo0
     }
 
-instance Migrate Mail1 Mail where
+instance Migrate Mail1 Mail2 where
         migrate (Mail1
-                 { fullname1    
-                 , email1       
-                 , title1       
-                 , content1     
-                 , attachments1 
-                 , from1        
-                 , mailInfo1    
+                 { fullname1
+                 , email1
+                 , title1
+                 , content1
+                 , attachments1
+                 , from1
+                 , mailInfo1
+                 }) = Mail2
+                    { to2 = [MailAddress fullname1 email1]
+                    , title2 = title1
+                    , content2 = content1
+                    , attachments2 = attachments1
+                    , from2 = from1
+                    , mailInfo2 = mailInfo1
+                    }
+instance Migrate Mail2 Mail where
+        migrate (Mail2
+                 { to2
+                 , title2
+                 , content2
+                 , attachments2
+                 , mailInfo2
                  }) = Mail
-                    { to = [MailAddress fullname1 email1]
-                    , title = title1
-                    , content = content1
-                    , attachments = attachments1
-                    , from = from1
-                    , mailInfo = mailInfo1
+                    { to = to2
+                    , title = title2
+                    , content = content2
+                    , attachments = attachments2
+                    , from = Nothing
+                    , mailInfo = mailInfo2
                     }

@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-module User.UserState 
+module User.UserState
     ( Email(..)
     , Friend(..)
     , Inviter(..)
@@ -57,7 +56,7 @@ module User.UserState
     , getUserPaymentSchema
     , takeImmediatelyPayment
 ) where
-import API.Service.ServiceState 
+import API.Service.ServiceState
 import Company.CompanyState
 import Control.Applicative
 import Control.Monad
@@ -77,7 +76,7 @@ import Payments.PaymentsState as Payments
 import User.Password
 import User.Lang
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS (unlines) 
+import qualified Data.ByteString.Char8 as BS (unlines)
 import qualified Data.ByteString.UTF8 as BS
 
 newtype UserID = UserID { unUserID :: Int }
@@ -96,7 +95,7 @@ newtype Inviter = Inviter { unInviter :: Int }
     deriving (Eq, Ord, Typeable)
 data InviteType = Viral | Admin
     deriving (Eq, Ord, Typeable)
-data InviteInfo = InviteInfo 
+data InviteInfo = InviteInfo
           { userinviter :: Inviter
           , invitetime :: Maybe MinutesTime
           , invitetype :: Maybe InviteType
@@ -142,16 +141,16 @@ data UserInfo0 = UserInfo0 {
           , userpersonalnumber0            :: BS.ByteString
           , usercompanyname0               :: BS.ByteString
           , usercompanynumber0             :: BS.ByteString
-          , useraddress0                   :: BS.ByteString 
+          , useraddress0                   :: BS.ByteString
           , userzip0                       :: BS.ByteString
           , usercity0                      :: BS.ByteString
           , usercountry0                   :: BS.ByteString
           , userphone0                     :: BS.ByteString
           , usermobile0                    :: BS.ByteString
-          , useremail0                     :: Email 
-          }       
+          , useremail0                     :: Email
+          }
                  deriving (Eq, Ord, Typeable)
-          
+
 data UserInfo = UserInfo {
             userfstname                   :: BS.ByteString
           , usersndname                   :: BS.ByteString
@@ -159,14 +158,14 @@ data UserInfo = UserInfo {
           , usercompanyname               :: BS.ByteString
           , usercompanyposition           :: BS.ByteString
           , usercompanynumber             :: BS.ByteString
-          , useraddress                   :: BS.ByteString 
+          , useraddress                   :: BS.ByteString
           , userzip                       :: BS.ByteString
           , usercity                      :: BS.ByteString
           , usercountry                   :: BS.ByteString
           , userphone                     :: BS.ByteString
           , usermobile                    :: BS.ByteString
-          , useremail                     :: Email 
-          }        
+          , useremail                     :: Email
+          }
     deriving (Eq, Ord, Typeable)
 
 data UserSettings0  = UserSettings0 {
@@ -353,7 +352,7 @@ data User9 = User9
           , userinviter9                   :: Maybe Inviter
           }
     deriving (Eq, Ord, Typeable)
-          
+
 data User8 = User8
           { userid8                        :: UserID
           , userpassword8                  :: Password
@@ -372,7 +371,7 @@ data User8 = User8
     deriving (Eq, Ord, Typeable)
 
 
-data UserStats = UserStats 
+data UserStats = UserStats
                        { usercount :: Int
                        , viralinvitecount :: Int
                        , admininvitecount :: Int
@@ -382,9 +381,9 @@ data UserStats = UserStats
 deriving instance Data UserStats
 
 deriving instance Show TrustWeaverStorage
-deriving instance Show UserAccountType 
+deriving instance Show UserAccountType
 deriving instance Show PaymentMethod
-deriving instance Show UserAccountPlan 
+deriving instance Show UserAccountPlan
 deriving instance Show UserInfo
 deriving instance Show UserSettings
 deriving instance Show DesignMode
@@ -421,19 +420,19 @@ instance Migrate () User8 where
 
 instance Migrate User8 User9 where
     migrate (User8
-               { userid8                     
-                , userpassword8                
-                , usersupervisor8               
-                , usercanhavesubaccounts8        
-                , useraccountsuspended8          
-                , userhasacceptedtermsofservice8  
-                , userinfo8                     
-                , usersettings8                
-                , userpaymentpolicy8             
-                , userpaymentaccount8           
-                , userfriends8                  
-                , userdefaultmainsignatory8 = _       
-                }) = User9 
+               { userid8
+                , userpassword8
+                , usersupervisor8
+                , usercanhavesubaccounts8
+                , useraccountsuspended8
+                , userhasacceptedtermsofservice8
+                , userinfo8
+                , usersettings8
+                , userpaymentpolicy8
+                , userpaymentaccount8
+                , userfriends8
+                , userdefaultmainsignatory8 = _
+                }) = User9
                 { userid9                         = userid8
                 , userpassword9                   = userpassword8
                 , usersupervisor9                 = usersupervisor8
@@ -445,24 +444,24 @@ instance Migrate User8 User9 where
                 , userpaymentpolicy9              = userpaymentpolicy8
                 , userpaymentaccount9             = userpaymentaccount8
                 , userfriends9                    = userfriends8
-                , userinviter9                    = Nothing          
+                , userinviter9                    = Nothing
                 }
 
 instance Migrate User9 User10 where
     migrate (User9
-               { userid9                     
-                , userpassword9                
-                , usersupervisor9               
-                , usercanhavesubaccounts9        
-                , useraccountsuspended9          
-                , userhasacceptedtermsofservice9  
-                , userinfo9                     
-                , usersettings9                
-                , userpaymentpolicy9             
-                , userpaymentaccount9           
-                , userfriends9                  
-                , userinviter9       
-                }) = User10 
+               { userid9
+                , userpassword9
+                , usersupervisor9
+                , usercanhavesubaccounts9
+                , useraccountsuspended9
+                , userhasacceptedtermsofservice9
+                , userinfo9
+                , usersettings9
+                , userpaymentpolicy9
+                , userpaymentaccount9
+                , userfriends9
+                , userinviter9
+                }) = User10
                 { userid10                         = userid9
                 , userpassword10                   = userpassword9
                 , usersupervisor10                 = usersupervisor9
@@ -474,7 +473,7 @@ instance Migrate User9 User10 where
                 , userpaymentpolicy10              = userpaymentpolicy9
                 , userpaymentaccount10             = userpaymentaccount9
                 , userfriends10                    = userfriends9
-                , userinviteinfo10                 = fmap 
+                , userinviteinfo10                 = fmap
                                                        (\inviter ->  InviteInfo
                                                            { userinviter = inviter
                                                            , invitetime = Nothing
@@ -485,19 +484,19 @@ instance Migrate User9 User10 where
 
 instance Migrate User10 User11 where
     migrate (User10
-               { userid10                     
-                , userpassword10                
-                , usersupervisor10               
-                , usercanhavesubaccounts10        
-                , useraccountsuspended10          
-                , userhasacceptedtermsofservice10  
-                , userinfo10                     
-                , usersettings10                
-                , userpaymentpolicy10             
-                , userpaymentaccount10           
-                , userfriends10                  
-                , userinviteinfo10       
-                }) = User11 
+               { userid10
+                , userpassword10
+                , usersupervisor10
+                , usercanhavesubaccounts10
+                , useraccountsuspended10
+                , userhasacceptedtermsofservice10
+                , userinfo10
+                , usersettings10
+                , userpaymentpolicy10
+                , userpaymentaccount10
+                , userfriends10
+                , userinviteinfo10
+                }) = User11
                 { userid11                         = userid10
                 , userpassword11                   = userpassword10
                 , usersupervisor11                 = usersupervisor10
@@ -519,19 +518,19 @@ instance Migrate User10 User11 where
 
 instance Migrate User11 User12 where
     migrate (User11
-               { userid11                     
-                , userpassword11                
-                , usersupervisor11               
-                , useraccountsuspended11          
-                , userhasacceptedtermsofservice11  
-                , userinfo11                     
-                , usersettings11                
-                , userpaymentpolicy11             
-                , userpaymentaccount11           
-                , userfriends11                  
+               { userid11
+                , userpassword11
+                , usersupervisor11
+                , useraccountsuspended11
+                , userhasacceptedtermsofservice11
+                , userinfo11
+                , usersettings11
+                , userpaymentpolicy11
+                , userpaymentaccount11
+                , userfriends11
                 , userinviteinfo11
-                , userlogininfo11       
-                }) = User12 
+                , userlogininfo11
+                }) = User12
                 { userid12                         = userid11
                 , userpassword12                   = userpassword11
                 , usersupervisor12                 = usersupervisor11
@@ -552,18 +551,18 @@ instance Migrate User11 User12 where
 -- between "normal" payment change and free trial.
 instance Migrate User12 User13 where
     migrate (User12
-               { userid12                     
-                , userpassword12                
-                , usersupervisor12               
-                , useraccountsuspended12          
-                , userhasacceptedtermsofservice12  
-                , userinfo12                     
-                , usersettings12                
+               { userid12
+                , userpassword12
+                , usersupervisor12
+                , useraccountsuspended12
+                , userhasacceptedtermsofservice12
+                , userinfo12
+                , usersettings12
                 , userpaymentpolicy12 = Payments.UserPaymentPolicy {temppaymentchange}
-                , userfriends12                  
+                , userfriends12
                 , userinviteinfo12
-                , userlogininfo12       
-                }) = User13 
+                , userlogininfo12
+                }) = User13
                 { userid13                         = userid12
                 , userpassword13                   = userpassword12
                 , usersupervisor13                 = usersupervisor12
@@ -592,22 +591,22 @@ instance Migrate User12 User13 where
 
 instance Migrate User13 User14 where
     migrate (User13
-               {  userid13                   
-                , userpassword13                
-                , usersupervisor13               
-                , useraccountsuspended13        
-                , userhasacceptedtermsofservice13 
-                , userfreetrialexpirationdate13   
-                , usersignupmethod13         
-                , userinfo13              
-                , usersettings13       
-                , userpaymentpolicy13      
-                , userpaymentaccount13 
-                , userfriends13       
-                , userinviteinfo13     
-                , userlogininfo13       
-                , userservice13    
-                }) = User14 
+               {  userid13
+                , userpassword13
+                , usersupervisor13
+                , useraccountsuspended13
+                , userhasacceptedtermsofservice13
+                , userfreetrialexpirationdate13
+                , usersignupmethod13
+                , userinfo13
+                , usersettings13
+                , userpaymentpolicy13
+                , userpaymentaccount13
+                , userfriends13
+                , userinviteinfo13
+                , userlogininfo13
+                , userservice13
+                }) = User14
                 { userid14                         = userid13
                 , userpassword14                   = userpassword13
                 , usersupervisor14                 = usersupervisor13
@@ -627,7 +626,7 @@ instance Migrate User13 User14 where
                 }
 
 instance Migrate User14 User15 where
-  migrate (User14 
+  migrate (User14
                 { userid14
                 , userpassword14
                 , usersupervisor14
@@ -715,20 +714,20 @@ userfullname u = composeFullName (userfstname $ userinfo u, usersndname $ userin
 
 instance Migrate UserInfo0 UserInfo where
     migrate (UserInfo0 {
-            userfstname0  
-          , usersndname0       
-          , userpersonalnumber0    
-          , usercompanyname0    
-          , usercompanynumber0  
-          , useraddress0  
-          , userzip0     
-          , usercity0          
-          , usercountry0   
-          , userphone0          
-          , usermobile0          
-          , useremail0        
+            userfstname0
+          , usersndname0
+          , userpersonalnumber0
+          , usercompanyname0
+          , usercompanynumber0
+          , useraddress0
+          , userzip0
+          , usercity0
+          , usercountry0
+          , userphone0
+          , usermobile0
+          , useremail0
           }) = UserInfo {
-            userfstname = userfstname0 
+            userfstname = userfstname0
           , usersndname = usersndname0
           , userpersonalnumber = userpersonalnumber0
           , usercompanyname = usercompanyname0
@@ -756,7 +755,7 @@ instance Migrate UserSettings0 UserSettings1 where
           , userpaymentmethod1 = userpaymentmethod0
           , preferreddesignmode1 = Nothing
           }
-          
+
 instance Migrate UserSettings1 UserSettings where
     migrate (UserSettings1 {
             accounttype1
@@ -771,7 +770,7 @@ instance Migrate UserSettings1 UserSettings where
           , userpaymentmethod = userpaymentmethod1
           , preferreddesignmode = preferreddesignmode1
           , lang = LANG_SE
-          } 
+          }
 
 isAbleToHaveSubaccounts :: User -> Bool
 isAbleToHaveSubaccounts user = isNothing $ usersupervisor user
@@ -790,7 +789,7 @@ instance Indexable User where
 
 
 instance Version User8 where
-    mode = extension 8 (Proxy :: Proxy ()) 
+    mode = extension 8 (Proxy :: Proxy ())
 
 instance Version User9 where
     mode = extension 9 (Proxy :: Proxy User8)
@@ -815,7 +814,7 @@ instance Version User15 where
 
 instance Version User where
     mode = extension 16 (Proxy :: Proxy User15)
-    
+
 instance Version SignupMethod
 
 instance Version TrustWeaverStorage
@@ -827,7 +826,7 @@ instance Version UserAccountType where
 
 instance Version PaymentMethod
 
-instance Version UserAccountPlan 
+instance Version UserAccountPlan
 
 instance Version UserInfo0
 
@@ -841,7 +840,7 @@ instance Version UserSettings1 where
 
 instance Version UserSettings where
     mode = extension 2 (Proxy :: Proxy UserSettings1)
-    
+
 instance Version DesignMode
 
 instance Version UserRecordStatus
@@ -872,15 +871,15 @@ instance Show ExternalUserID where
     showsPrec prec (ExternalUserID val) = showsPrec prec val
 
 instance Read ExternalUserID where
-    readsPrec prec = let make (i,v) = (ExternalUserID i,v) 
-                     in map make . readsPrec prec 
+    readsPrec prec = let make (i,v) = (ExternalUserID i,v)
+                     in map make . readsPrec prec
 
 instance Show UserID where
     showsPrec prec (UserID val) = showsPrec prec val
 
 instance Read UserID where
-    readsPrec prec = let make (i,v) = (UserID i,v) 
-                     in map make . readsPrec prec 
+    readsPrec prec = let make (i,v) = (UserID i,v)
+                     in map make . readsPrec prec
 
 instance FromReqURI UserID where
     fromReqURI = readM
@@ -889,23 +888,23 @@ instance Show SupervisorID where
     showsPrec prec (SupervisorID val) = showsPrec prec val
 
 instance Read SupervisorID where
-    readsPrec prec = let make (i,v) = (SupervisorID i,v) 
-                     in map make . readsPrec prec 
+    readsPrec prec = let make (i,v) = (SupervisorID i,v)
+                     in map make . readsPrec prec
 
 instance FromReqURI SupervisorID where
     fromReqURI = readM
 
-modifyUser :: UserID 
-           -> (User -> Either String User) 
+modifyUser :: UserID
+           -> (User -> Either String User)
            -> Update Users (Either String User)
 modifyUser uid action = do
   users <- askLive
   case getOne (users @= uid) of
     Nothing -> return $ Left "no such user"
-    Just user -> 
+    Just user ->
         case action user of
           Left message -> return $ Left message
-          Right newuser -> 
+          Right newuser ->
               if userid newuser /= uid
                  then return $ Left "new user must have same id as old one"
               else do
@@ -929,7 +928,7 @@ askLive = do
 getUserByEmail :: Maybe ServiceID  -> Email ->  Query Users (Maybe User)
 getUserByEmail service email = queryUsers $ \users ->
   getOne (users @= email @= service)
-    
+
 getUserByUserID :: UserID -> Query Users (Maybe User)
 getUserByUserID userid = queryUsers $ \users ->
   getOne (users @= userid)
@@ -982,7 +981,7 @@ deleteUser uid = do
       return ()
 
 addUser :: (BS.ByteString, BS.ByteString)
-        -> BS.ByteString 
+        -> BS.ByteString
         -> Password
         -> Maybe UserID
         -> Maybe ServiceID
@@ -993,9 +992,9 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
   liveusers <- askLive
   if (IxSet.size (liveusers @= mservice @= Email email) /= 0) -- a deleted user can re-register as a new user
    then return Nothing  -- "user with same email address exists"
-   else do         
+   else do
         userid <- getUnique allusers UserID --want userid to be unique even against deleted users
-        let user = blankUser {  
+        let user = blankUser {
                    userid                  =  userid
                  , userpassword            =  passwd
                  , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor
@@ -1012,7 +1011,7 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
                                   , usercountry = BS.empty
                                   , userphone = BS.empty
                                   , usermobile = BS.empty
-                                  , useremail =  Email email 
+                                  , useremail =  Email email
                                    }
               , userservice = mservice
               , usercompany = mcompany
@@ -1021,11 +1020,11 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
         return $ Just user
 
 blankUser :: User
-blankUser = User {  
+blankUser = User {
                    userid                  =  UserID 0
                  , userpassword            =  NoPassword
-                 , usersupervisor          =  Nothing 
-                 , useraccountsuspended    =  False  
+                 , usersupervisor          =  Nothing
+                 , useraccountsuspended    =  False
                  , userhasacceptedtermsofservice = Nothing
                  , userfreetrialexpirationdate = Nothing
                  , usersignupmethod = AccountRequest
@@ -1042,7 +1041,7 @@ blankUser = User {
                                   , usercountry = BS.empty
                                   , userphone = BS.empty
                                   , usermobile = BS.empty
-                                  , useremail =  Email BS.empty 
+                                  , useremail =  Email BS.empty
                                    }
                 , usersettings  = UserSettings {
                                     accounttype = PrivateAccount
@@ -1051,7 +1050,7 @@ blankUser = User {
                                   , userpaymentmethod = Undefined
                                   , preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
-                                  }                   
+                                  }
                 , userpaymentpolicy = Payments.initialPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount
               , userfriends = []
@@ -1075,10 +1074,10 @@ setUserSupervisor :: UserID -> UserID -> Update Users (Either String User)
 setUserSupervisor userid supervisorid = do
     msupervisor <- (getOne . (@= supervisorid)) <$> askLive
     let supervisor = fromJust msupervisor
-    modifyUser userid $ \user -> do -- Either String monad 
+    modifyUser userid $ \user -> do -- Either String monad
       let luseremail = BS.toString $ unEmail $ useremail $ userinfo user
           suseremail = BS.toString $ unEmail $ useremail $ userinfo supervisor
-      when (userid == supervisorid) $ 
+      when (userid == supervisorid) $
          failure "cannot be supervisor of yourself"
       when (isJust $ usersupervisor user) $
          failure "user already has a supervisor"
@@ -1087,11 +1086,11 @@ setUserSupervisor userid supervisorid = do
       when (dropWhile (/= '@') luseremail /= dropWhile (/= '@') suseremail) $
          failure $ "users domain names differ " ++ luseremail ++ " vs " ++ suseremail
       return $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
-  
+
 getUserStats :: Query Users UserStats
-getUserStats = queryUsers $ \users -> 
+getUserStats = queryUsers $ \users ->
   let userList = toList users in
-  UserStats 
+  UserStats
          { usercount = length userList
          , viralinvitecount = length $ filterByInvite (isInviteType Viral) userList
          , admininvitecount = length $ filterByInvite (isInviteType Admin) userList
@@ -1103,7 +1102,7 @@ getUserStatsByUser user = queryUsers $ \users ->
       isInvitedByUser :: InviteInfo -> Bool
       isInvitedByUser InviteInfo{userinviter} | (unInviter userinviter) == (unUserID . userid $ user) = True
       isInvitedByUser _ = False in
-  UserStats 
+  UserStats
          { usercount = 1 --sort of silly, but true
          , viralinvitecount = length $ filterByInvite (isInviteType Viral) invitedusers
          , admininvitecount = length $ filterByInvite (isInviteType Admin) invitedusers
@@ -1136,16 +1135,16 @@ setInviteInfo minviter invitetime' invitetype' uid = do
                             }
     _ <- modifyUser uid $ \user -> Right $ user {userinviteinfo = fmap mkInviteInfo minviter}
     return ()
-        
+
 
 setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
 setUserInfo userid userinfo =
-    modifyUser userid $ \user -> 
-            Right $ user { userinfo = userinfo }                            
+    modifyUser userid $ \user ->
+            Right $ user { userinfo = userinfo }
 
 setUserSettings :: UserID -> UserSettings -> Update Users (Either String User)
 setUserSettings userid usersettings =
-    modifyUser userid $ \user -> 
+    modifyUser userid $ \user ->
             Right $ user { usersettings = usersettings }
 
 setPreferredDesignMode :: UserID -> Maybe DesignMode -> Update Users (Either String User)
@@ -1156,19 +1155,19 @@ setPreferredDesignMode userid designmode =
 
 setUserPaymentAccount :: UserID -> Payments.UserPaymentAccount -> Update Users (Either String User)
 setUserPaymentAccount userid userpaymentaccount =
-    modifyUser userid $ \user -> 
-            Right $ user {userpaymentaccount = userpaymentaccount}   
+    modifyUser userid $ \user ->
+            Right $ user {userpaymentaccount = userpaymentaccount}
 
 
 setUserPaymentPolicyChange :: UserID -> Payments.UserPaymentPolicy -> Update Users (Either String User)
 setUserPaymentPolicyChange userid userpaymentpolicy =
-    modifyUser userid $ \user -> 
-            Right $ user {userpaymentpolicy = userpaymentpolicy}   
-            
+    modifyUser userid $ \user ->
+            Right $ user {userpaymentpolicy = userpaymentpolicy}
+
 _freeUserFromPayments :: UserID -> MinutesTime -> Update Users ()
 _freeUserFromPayments uid freetill =  do
-                                    _ <- modifyUser uid $ \user -> 
-                                      Right $ user {userpaymentpolicy = Payments.freeTill freetill (userpaymentpolicy user) }   
+                                    _ <- modifyUser uid $ \user ->
+                                      Right $ user {userpaymentpolicy = Payments.freeTill freetill (userpaymentpolicy user) }
                                     return ()
 
 {- |
@@ -1182,7 +1181,7 @@ recordFailedLogin userid time = do
             logininfo
             { lastfailtime = Just time
             , consecutivefails = (consecutivefails logininfo) + 1
-            }   
+            }
 
 {- |
     Records the details of a successful login.
@@ -1195,7 +1194,7 @@ recordSuccessfulLogin userid time = do
             logininfo
             { lastsuccesstime = Just time
             , consecutivefails = 0
-            }   
+            }
 
 {- |
    Add a new viewer (friend) given the email address
@@ -1210,60 +1209,60 @@ addViewerByEmail uid vieweremail = do
     Nothing -> return $ Left $ "Användaren existerar ej: " ++ (BS.toString $ unEmail vieweremail)
 
 acceptTermsOfService :: UserID -> MinutesTime -> Update Users (Either String User)
-acceptTermsOfService userid minutestime = 
-    modifyUser userid $ \user -> 
+acceptTermsOfService userid minutestime =
+    modifyUser userid $ \user ->
         Right $ user {
               userhasacceptedtermsofservice = Just minutestime
             , userfreetrialexpirationdate  = Just $ (60*24*30) `minutesAfter` minutestime
         }
 
 setFreeTrialExpirationDate :: UserID -> Maybe MinutesTime -> Update Users (Either String User)
-setFreeTrialExpirationDate userid date = 
-    modifyUser userid $ \user -> 
+setFreeTrialExpirationDate userid date =
+    modifyUser userid $ \user ->
         Right $ user { userfreetrialexpirationdate = date }
 
 setSignupMethod :: UserID -> SignupMethod -> Update Users (Either String User)
-setSignupMethod userid signupmethod = 
-    modifyUser userid $ \user -> 
+setSignupMethod userid signupmethod =
+    modifyUser userid $ \user ->
         Right $ user { usersignupmethod = signupmethod }
 
 _addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
 _addFreePaymentsForInviter now u = do
                            case (fmap userinviter $ userinviteinfo u) of
-                            Nothing -> return ()   
+                            Nothing -> return ()
                             Just (Inviter iid) -> do
                               users <- askLive
-                              let minviter = getOne (users @= (UserID iid))    
+                              let minviter = getOne (users @= (UserID iid))
                               case minviter of
-                                Nothing -> return ()   
-                                Just inviter ->  do 
-                                                 _<- modifyUser (userid inviter) $ \user -> 
+                                Nothing -> return ()
+                                Just inviter ->  do
+                                                 _<- modifyUser (userid inviter) $ \user ->
                                                   Right $ user {userpaymentpolicy = Payments.extendFreeTmpChange now 7 (userpaymentpolicy user)}
                                                  return ()
-                           
+
 exportUsersDetailsToCSV :: Query Users BS.ByteString
 exportUsersDetailsToCSV = queryUsers $ \users ->
   let fields user = [userfullname user, unEmail $ useremail $ userinfo user]
       content = BS.intercalate (BS.fromString ",") <$> fields in
   BS.unlines $ content <$> (toList users)
 
-  
+
 getUserPaymentSchema::User -> IO (Payments.PaymentScheme)
 getUserPaymentSchema User{userpaymentpolicy } = do
                                now <- getMinutesTime
-                               model <- query $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy ) 
-                               let paymentChange = case Payments.temppaymentchange userpaymentpolicy  of 
-                                                     Nothing -> Payments.custompaymentchange  userpaymentpolicy 
-                                                     Just (expires,tchange) -> 
-                                                        if (now < expires)    
-                                                        then Payments.custompaymentchange userpaymentpolicy 
+                               model <- query $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy )
+                               let paymentChange = case Payments.temppaymentchange userpaymentpolicy  of
+                                                     Nothing -> Payments.custompaymentchange  userpaymentpolicy
+                                                     Just (expires,tchange) ->
+                                                        if (now < expires)
+                                                        then Payments.custompaymentchange userpaymentpolicy
                                                         else Payments.mergeChanges tchange (Payments.custompaymentchange userpaymentpolicy)
-                               return $ (paymentChange,model)                                                                  
+                               return $ (paymentChange,model)
 
 takeImmediatelyPayment::User -> Bool
 takeImmediatelyPayment user = Payments.requiresImmediatelyPayment $ userpaymentpolicy user
 
-{- 
+{-
 
 Template Haskell derivations should be kept at the end of the file
 

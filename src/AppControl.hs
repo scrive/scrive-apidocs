@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
 {- |
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
@@ -14,7 +12,10 @@ module AppControl
 
 import API.IntegrationAPI
 import API.Service.ServiceState
-import API.WebshopAPI
+import API.Service.ServiceControl
+import API.UserAPI
+import API.MailAPI
+
 import ActionSchedulerState
 import AppView as V
 import Crypto
@@ -60,30 +61,20 @@ import ListUtil
 import Network.Socket
 import System.Directory
 import System.Time
-import Text.JSON
-import Text.JSON.String
-import API.Service.ServiceControl
-import CoopAPI
 
-import Text.JSON.Types
-import qualified Codec.MIME.Parse as MIME
-import qualified Codec.MIME.Type as MIME
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import InspectXML
---import Templates.Langs
+import User.Lang
 
-{- | 
+{- |
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
   as well as a handy boolean indicating whether this is a production or
@@ -99,20 +90,20 @@ data AppConf
               , static          :: FilePath                     -- ^ static files directory
               , amazonConfig    :: Maybe (String,String,String) -- ^ bucket, access key, secret key
               , gsCmd           :: String
-              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development 
+              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development
               , trustWeaverSign :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
               , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
               , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
               , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
               , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
               , admins          :: [String]                    -- ^ email addresses of people regarded as admins
-              }              
+              }
       deriving (Show,Read,Eq,Ord)
 
-{- | 
+{- |
   Global application data
 -}
-data AppGlobals 
+data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaMultilangTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
@@ -136,187 +127,190 @@ data AppGlobals
 -}
 handleRoutes :: Kontra Response
 handleRoutes = msum [
-       hGetAllowHttp $ handleHomepage
-     , hPost $ handleMainReaload
+       hGetAllowHttp0 $ handleHomepage
+     , hPost0 $ handleMainReaload
 
      -- static pages
-     , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage             
-     , dir "priser"          $ hGetAllowHttp $ handlePriceplanPage              
-     , dir "sakerhet"        $ hGetAllowHttp $ handleSecurityPage             
-     , dir "juridik"         $ hGetAllowHttp $ handleLegalPage                 
-     , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage 
-     , dir "allmana-villkor" $ hGetAllowHttp $ handleTermsPage         
-     , dir "om-skrivapa"     $ hGetAllowHttp $ handleAboutPage             
-     , dir "partners"        $ hGetAllowHttp $ handlePartnersPage             
-     , dir "kunder"          $ hGetAllowHttp $ handleClientsPage                
-       
-     -- this is SMTP to HTTP gateway  
-     , dir "mailapi" $ handleMailAPI
+     , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
+     , dir "priser"          $ hGetAllowHttp0 $ handlePriceplanPage
+     , dir "sakerhet"        $ hGetAllowHttp0 $ handleSecurityPage
+     , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage
+     , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
+     , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage
+     , dir "om-skrivapa"     $ hGetAllowHttp0 $ handleAboutPage
+     , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage
+     , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
+
+     -- this is SMTP to HTTP gateway
+     , dir "mailapi" $ mailAPI
 
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
-     , dir "s" $ hGet                         $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken $ BankID.handleSignPostBankID
-     , dir "d" $ hGet                         $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost         $ BankID.handleIssuePostBankID
+     , dir "s" $ hGet4                        $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPostNoXToken3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2                        $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1        $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hGet  $ DocControl.handleSTable
-     , dir "s" $ hGet  $ DocControl.handleSignShow
-     , dir "s" $ hGet  $ DocControl.handleAttachmentDownloadForViewer
-     , dir "s" $ param "sign" $ hPostNoXToken $ DocControl.signDocument
-     , dir "s" $ param "cancel" $ hPostNoXToken $ DocControl.rejectDocument
-     , dir "s" $ param "acceptaccount" $ hPostNoXToken $ DocControl.handleAcceptAccountFromSign
-     , dir "s" $ param "declineaccount" $ hPostNoXToken $ DocControl.handleDeclineAccountFromSign
-     , dir "s" $ param "sigattachment" $ hPostNoXToken $ DocControl.handleSigAttach
-       
-     , dir "sv" $ hGet $ DocControl.handleAttachmentViewForViewer
-     
+     , dir "s" $ hGet0 $ DocControl.handleSTable
+     , dir "s" $ hGet3 $ DocControl.handleSignShow
+     , dir "s" $ hGet4 $ DocControl.handleAttachmentDownloadForViewer
+     , dir "s" $ param "sign"           $ hPostNoXToken3 $ DocControl.signDocument
+     , dir "s" $ param "cancel"         $ hPostNoXToken3 $ DocControl.rejectDocument
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ DocControl.handleAcceptAccountFromSign
+     , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ DocControl.handleDeclineAccountFromSign
+     , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ DocControl.handleSigAttach
+
+     , dir "sv" $ hGet3 $ DocControl.handleAttachmentViewForViewer
+
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "a"                     $ hGet  $ DocControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost $ DocControl.handleAttachmentArchive
-     , dir "a" $ param "share"     $ hPost $ DocControl.handleAttachmentShare
-     , dir "a" $ dir "rename"      $ hPost $ DocControl.handleAttachmentRename
-     , dir "a"                     $ hPost $ DocControl.handleCreateNewAttachment
+     , dir "a"                     $ hGet0  $ DocControl.showAttachmentList
+     , dir "a" $ param "archive"   $ hPost0 $ DocControl.handleAttachmentArchive
+     , dir "a" $ param "share"     $ hPost0 $ DocControl.handleAttachmentShare
+     , dir "a" $ dir "rename"      $ hPost1 $ DocControl.handleAttachmentRename
+     , dir "a"                     $ hPost0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet  $ DocControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost $ DocControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hPost $ DocControl.handleTemplateShare
-     , dir "t" $ param "template" $ hPost  $ DocControl.handleCreateFromTemplate
-     , dir "t" $ hPost  $ DocControl.handleCreateNewTemplate
-     
-     , dir "o" $ hGet  $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hPost  $ DocControl.handleOffersArchive
-     , dir "o" $ param "remind" $ hPost $ DocControl.handleBulkOfferRemind
-     , dir "o" $ hPost $ DocControl.handleOffersReload
-     
-     , dir "or" $ hGet  $ DocControl.showOrdersList
-     , dir "or" $ param "archive" $ hPost  $ DocControl.handleOrdersArchive
-     , dir "or" $ param "remind" $ hPost $ DocControl.handleBulkOrderRemind
-     , dir "or" $ hPost $ DocControl.handleOrdersReload
-     
-     , dir "d"                     $ hGet  $ DocControl.handleAttachmentDownloadForAuthor     
-     , dir "d"                     $ hGet  $ DocControl.showContractsList
-     , dir "d"                     $ hGet  $ DocControl.handleIssueShowGet
-     , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGet
-     , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGetForSignatory
-     , dir "d" $ {- param "doc" $ -} hPost $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost $ DocControl.handleContractArchive
-     , dir "d" $ param "remind"    $ hPost $ DocControl.handleBulkContractRemind
-     , dir "d"                     $ hPost $ DocControl.handleContractsReload
-     , dir "d"                     $ hPost $ DocControl.handleIssueShowPost
+     , dir "t" $ hGet0  $ DocControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost0 $ DocControl.handleTemplateArchive
+     , dir "t" $ param "share" $ hPost0 $ DocControl.handleTemplateShare
+     , dir "t" $ param "template" $ hPost0  $ DocControl.handleCreateFromTemplate
+     , dir "t" $ hPost0  $ DocControl.handleCreateNewTemplate
 
-     
-     , dir "df"                    $ hGet  $ DocControl.handleFileGet
-     , dir "dv"                    $ hGet  $ DocControl.handleAttachmentViewForAuthor
+     , dir "o" $ hGet0  $ DocControl.showOfferList
+     , dir "o" $ param "archive" $ hPost0  $ DocControl.handleOffersArchive
+     , dir "o" $ param "remind" $ hPost0 $ DocControl.handleBulkOfferRemind
+     , dir "o" $ hPost0 $ DocControl.handleOffersReload
+
+     , dir "or" $ hGet0  $ DocControl.showOrdersList
+     , dir "or" $ param "archive" $ hPost0  $ DocControl.handleOrdersArchive
+     , dir "or" $ param "remind" $ hPost0 $ DocControl.handleBulkOrderRemind
+     , dir "or" $ hPost0 $ DocControl.handleOrdersReload
+
+     , dir "d"                     $ hGet2  $ DocControl.handleAttachmentDownloadForAuthor
+     , dir "d"                     $ hGet0  $ DocControl.showContractsList
+     , dir "d"                     $ hGet1  $ DocControl.handleIssueShowGet
+     , dir "d"                     $ hGet2  $ DocControl.handleIssueShowTitleGet
+     , dir "d"                     $ hGet4  $ DocControl.handleIssueShowTitleGetForSignatory
+     , dir "d" $ {- param "doc" $ -} hPost0 $ DocControl.handleIssueNewDocument
+     , dir "d" $ param "archive"   $ hPost0 $ DocControl.handleContractArchive
+     , dir "d" $ param "remind"    $ hPost0 $ DocControl.handleBulkContractRemind
+     , dir "d"                     $ hPost0 $ DocControl.handleContractsReload
+     , dir "d"                     $ hPost1 $ DocControl.handleIssueShowPost
+
+
+     , dir "df"                    $ hGet2  $ DocControl.handleFileGet
+     , dir "dv"                    $ hGet1  $ DocControl.handleAttachmentViewForAuthor
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
-     , dir "resend"  $ hPost $ DocControl.handleResend
-     , dir "changeemail" $ hPost $ DocControl.handleChangeSignatoryEmail
-     -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
-     , dir "restart" $ hPost $ DocControl.handleRestart
-     , dir "cancel"  $ hPost $ DocControl.handleCancel
-     
-     , dir "pages"  $ hGetAjax $ DocControl.showPage
-     , dir "pages"  $ hGetAjax $ DocControl.showPageForSignatory 
-     , dir "templates" $ hGetAjax $ DocControl.getTemplatesForAjax
-     , dir "template"  $ hPost $ DocControl.handleCreateFromTemplate
-           
-     , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocument
-     , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocumentForSignatory
+     , dir "resend"  $ hPost2 $ DocControl.handleResend
+     , dir "changeemail" $ hPost2 $ DocControl.handleChangeSignatoryEmail
+     -- , dir "withdrawn" $ hPost0 $ DocControl.handleWithdrawn
+     , dir "restart" $ hPost1 $ DocControl.handleRestart
+     , dir "cancel"  $ hPost1 $ DocControl.handleCancel
+
+     , dir "pages"  $ hGetAjax3 $ DocControl.showPage
+     , dir "pages"  $ hGetAjax5 $ DocControl.showPageForSignatory
+     , dir "templates" $ hGetAjax0 $ DocControl.getTemplatesForAjax
+     , dir "template"  $ hPost0 $ DocControl.handleCreateFromTemplate
+
+     , dir "pagesofdoc" $ hGetAjax1 $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hGetAjax3 $ DocControl.handlePageOfDocumentForSignatory
 
      -- UserControl
-     , dir "account"                    $ hGet  $ UserControl.handleUserGet
-     , dir "account"                    $ hPost $ UserControl.handleUserPost
-     , dir "account" $ dir "subaccount" $ hGet  $ UserControl.handleGetSubaccount
-     , dir "account" $ dir "subaccount" $ hPost $ UserControl.handlePostSubaccount
-     , dir "account" $ dir "sharing" $ hGet $ UserControl.handleGetSharing
-     , dir "account" $ dir "sharing" $ hPost $ UserControl.handlePostSharing
-     , dir "account" $ dir "security" $ hGet $ UserControl.handleGetUserSecurity
-     , dir "account" $ dir "security" $ hPost $ UserControl.handlePostUserSecurity
-     , dir "account" $ dir "bsa" $ hGet $ UserControl.handleGetBecomeSubaccountOf
-     , dir "account" $ dir "bsa" $ hPost $ UserControl.handlePostBecomeSubaccountOf
-     , dir "contacts"  $ hGet  $ Contacts.showContacts
-     , dir "contacts"  $ hPost $ Contacts.handleContactsChange
-     , dir "accepttos" $ hGet  $ UserControl.handleAcceptTOSGet
-     , dir "accepttos" $ hPost $ UserControl.handleAcceptTOSPost
+     , dir "account"                    $ hGet0  $ UserControl.handleUserGet
+     , dir "account"                    $ hPost0 $ UserControl.handleUserPost
+     , dir "account" $ dir "subaccount" $ hGet0  $ UserControl.handleGetSubaccount
+     , dir "account" $ dir "subaccount" $ hPost0 $ UserControl.handlePostSubaccount
+     , dir "account" $ dir "sharing" $ hGet0 $ UserControl.handleGetSharing
+     , dir "account" $ dir "sharing" $ hPost0 $ UserControl.handlePostSharing
+     , dir "account" $ dir "security" $ hGet0 $ UserControl.handleGetUserSecurity
+     , dir "account" $ dir "security" $ hPost0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "bsa" $ hGet1 $ UserControl.handleGetBecomeSubaccountOf
+     , dir "account" $ dir "bsa" $ hPost1 $ UserControl.handlePostBecomeSubaccountOf
+     , dir "contacts"  $ hGet0  $ Contacts.showContacts
+     , dir "contacts"  $ hPost0 $ Contacts.handleContactsChange
+     , dir "accepttos" $ hGet0  $ UserControl.handleAcceptTOSGet
+     , dir "accepttos" $ hPost0 $ UserControl.handleAcceptTOSPost
 
      -- super user only
-     , dir "stats"      $ hGet  $ Administration.showStats
-     , dir "createuser" $ hPost $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ hPostNoXToken handleSendgridEvent
-     , dir "adminonly" $ hGet $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ hGet Administration.showAdminUserAdvanced
-     , dir "adminonly" $ dir "useradminforsales" $ hGet $ Administration.showAdminUsersForSales
-     , dir "adminonly" $ dir "useradminforpayments" $ hGet $ Administration.showAdminUsersForPayments
-     , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers . Just 
-     , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers Nothing
-     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ Administration.showAdminUserUsageStats
-     , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserEnableTrustWeaverStorage
-     , dir "adminonly" $ dir "db" $ hGet $ Administration.indexDB
+     , dir "stats"      $ hGet0  $ Administration.showStats
+     , dir "createuser" $ hPost0 $ Administration.handleCreateUser
+     , dir "sendgrid" $ dir "events" $ hPostNoXToken0 handleSendgridEvent
+     , dir "adminonly" $ hGet0 $ Administration.showAdminMainPage
+     , dir "adminonly" $ dir "advuseradmin" $ hGet0 Administration.showAdminUserAdvanced
+     , dir "adminonly" $ dir "useradminforsales" $ hGet0 $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ Administration.showAdminUsersForPayments
+     , dir "adminonly" $ dir "useradmin" $ hGet1 $ Administration.showAdminUsers . Just
+     , dir "adminonly" $ dir "useradmin" $ hGet0 $ Administration.showAdminUsers Nothing
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ Administration.showAdminUserUsageStats
+     , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserEnableTrustWeaverStorage
+     , dir "adminonly" $ dir "db" $ hGet0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-     , dir "adminonly" $ dir "quarantine" $ hGet  $ Administration.handleShowQuarantine
-     , dir "adminonly" $ dir "quarantine" $ hPost $ Administration.handleQuarantinePost
+     , dir "adminonly" $ dir "quarantine" $ hGet0  $ Administration.handleShowQuarantine
+     , dir "adminonly" $ dir "quarantine" $ hPost0 $ Administration.handleQuarantinePost
 
-     , dir "adminonly" $ dir "cleanup"           $ hPost $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "statistics"        $ hGet  $ Administration.handleStatistics
-     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet  $ Administration.getUsersDetailsToCSV
-     , dir "adminonly" $ dir "payments"          $ hGet  $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hGet  $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hPost $ Payments.handleAccountModelsChange
+     , dir "adminonly" $ dir "cleanup"           $ hPost0 $ Administration.handleDatabaseCleanup
+     , dir "adminonly" $ dir "statistics"        $ hGet0  $ Administration.handleStatistics
+     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet0  $ Administration.getUsersDetailsToCSV
+     , dir "adminonly" $ dir "payments"          $ hGet0  $ Payments.handlePaymentsModelForViewView
+     , dir "adminonly" $ dir "advpayments"       $ hGet0  $ Payments.handlePaymentsModelForEditView
+     , dir "adminonly" $ dir "advpayments"       $ hPost0 $ Payments.handleAccountModelsChange
 
-     , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
-     , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
-     , dir "adminonly" $ dir "translations" $ hGet $ Administration.showAdminTranslations
+     , dir "adminonly" $ dir "services" $ hGet0 $ Administration.showServicesPage
+     , dir "adminonly" $ dir "services" $ param "create" $ hPost0 $ Administration.handleCreateService
+     , dir "adminonly" $ dir "translations" $ hGet0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
 
-     , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0
-     , dir "adminonly" $ dir "deletemigrate" $ hGet $ Administration.handleMigrateForDeletion
-     , dir "adminonly" $ dir "migrateattachments" $ hGet $ DocControl.handleMigrateDocumentAuthorAttachments
-     , dir "adminonly" $ dir "makesigauthor" $ hGet $ Administration.migrateDocsNoAuthor
-       
---     , dir "adminonly" $ dir "migrateauthor" $ hGet $ DocControl.migrateDocSigLinks
-     , dir "adminonly" $ dir "unquarantineall" $ hGet $ Administration.handleUnquarantineAll
-     
-     , dir "services" $ hGet $ handleShowServiceList
-     , dir "services" $ hGet $ handleShowService
-     , dir "services" $ hPost $ handleChangeService
-     
-     , dir "dave" $ dir "document" $ hGet $ daveDocument
-     , dir "dave" $ dir "user"     $ hGet $ daveUser
-           
+     , dir "adminonly" $ dir "migrate0" $ hGet0 $ Administration.handleMigrate0
+     , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ Administration.handleMigrateForDeletion
+     , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ DocControl.handleMigrateDocumentAuthorAttachments
+     , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ Administration.migrateDocsNoAuthor
+
+--     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
+     , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ Administration.handleUnquarantineAll
+
+     , dir "services" $ hGet0 $ handleShowServiceList
+     , dir "services" $ hGet1 $ handleShowService
+     , dir "services" $ dir "ui" $ hPost1 $ handleChangeServiceUI
+     , dir "services" $ dir "password" $ hPost1 $ handleChangeServicePassword
+     , dir "services" $ dir "settings" $ hPost1 $ handleChangeServiceSettings
+     , dir "services" $ dir "logo" $ hGet1 handleServiceLogo
+     , dir "services" $ dir "buttons_body" $ hGet1 handleServiceButtonsBody
+     , dir "services" $ dir "buttons_rest" $ hGet1 handleServiceButtonsRest
+     , dir "dave" $ dir "document" $ hGet1 $ daveDocument
+     , dir "dave" $ dir "user"     $ hGet1 $ daveUser
+
      -- account stuff
-     , dir "logout"      $ hGet  $ handleLogout
-     , dir "login"       $ hGet  $ handleLoginGet
-     , dir "login"       $ hPostNoXToken $ handleLoginPost
-     --, dir "signup"      $ hGet  $ signupPageGet
-     , dir "signup"      $ hPostAllowHttp $ signupPagePost
-     --, dir "vip"         $ hGet  $ signupVipPageGet
+     , dir "logout"      $ hGet0  $ handleLogout
+     , dir "login"       $ hGet0  $ handleLoginGet
+     , dir "login"       $ hPostNoXToken0 $ handleLoginPost
+     --, dir "signup"      $ hGet0  $ signupPageGet
+     , dir "signup"      $ hPostAllowHttp0 $ signupPagePost
+     --, dir "vip"         $ hGet0  $ signupVipPageGet
      --, dir "vip"         $ hPostNoXToken $ signupVipPagePost
-     , dir "amnesia"     $ hPostNoXToken $ forgotPasswordPagePost
-     , dir "amnesia"     $ hGet  $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hPostNoXToken $ UserControl.handlePasswordReminderPost
-     , dir "accountsetup"  $ hGet  $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hPostNoXToken  $ UserControl.handleAccountSetupPost
-     , dir "accountremoval" $ hGet  $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hPostNoXToken  $ UserControl.handleAccountRemovalPost
+     , dir "amnesia"     $ hPostNoXToken0 $ forgotPasswordPagePost
+     , dir "amnesia"     $ hGet2  $ UserControl.handlePasswordReminderGet
+     , dir "amnesia"     $ hPostNoXToken2 $ UserControl.handlePasswordReminderPost
+     , dir "accountsetup"  $ hGet2  $ UserControl.handleAccountSetupGet
+     , dir "accountsetup"  $ hPostNoXToken2  $ UserControl.handleAccountSetupPost
+     , dir "accountremoval" $ hGet2  $ UserControl.handleAccountRemovalGet
+     , dir "accountremoval" $ hPostNoXToken2  $ UserControl.handleAccountRemovalPost
 
      -- viral invite
-     , dir "invite"      $ hPostNoXToken $ UserControl.handleViralInvite
-     , dir "question"    $ hPostAllowHttp $ UserControl.handleQuestion
+     , dir "invite"      $ hPostNoXToken0 $ UserControl.handleViralInvite
+     , dir "question"    $ hPostAllowHttp0 $ UserControl.handleQuestion
      -- e-legitimation stuff
-     , dir "s" $ hGet  $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPost $ BankID.handleSignPostBankID
-     , dir "d" $ hGet  $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
-     , coopAPI
-     , webshopAPI
+     , dir "s" $ hGet4  $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPost3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2  $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1 $ BankID.handleIssuePostBankID
+     , userAPI
      , integrationAPI
      -- static files
      , allowHttp $ serveHTMLFiles
@@ -342,7 +336,7 @@ handleHomepage = do
     _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
-handleSitemapPage = handleWholePage sitemapPage       
+handleSitemapPage = handleWholePage sitemapPage
 
 handlePriceplanPage :: Kontra Response
 handlePriceplanPage = handleWholePage priceplanPage
@@ -381,7 +375,7 @@ handleWholePage f = do
 handleError :: Kontra Response
 handleError = do
     ctx <- get
-    case (ctxservice ctx) of 
+    case (ctxservice ctx) of
          Nothing -> do
             addModal $ V.modalError (ctxtemplates ctx)
             sendRedirect LinkMain
@@ -396,16 +390,16 @@ handleMainReaload = do
    given AppConf
 -}
 defaultAWSAction :: AppConf -> AWS.S3Action
-defaultAWSAction appConf = 
+defaultAWSAction appConf =
     let (bucket,accessKey,secretKey) = maybe ("","","") id (amazonConfig appConf)
-    in 
-    AWS.S3Action 
+    in
+    AWS.S3Action
            { AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
            , AWS.s3bucket = bucket
            , AWS.s3object = ""
            , AWS.s3query = ""
            , AWS.s3metadata = []
-           , AWS.s3body = L.empty
+           , AWS.s3body = BSL.empty
            , AWS.s3operation = HTTP.GET
            }
 
@@ -415,28 +409,28 @@ maybeReadTemplates :: MVar (ClockTime, KontrakcjaMultilangTemplates)
 maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
-            then do 
+            then do
                 Log.debug $ "Reloading templates"
                 templates' <- readAllLangsTemplates
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
- 
+
 showNamedHeader :: forall t . (t, HeaderPair) -> [Char]
-showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++ 
-                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]" 
+showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++
+                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]"
 
 showNamedCookie :: ([Char], Cookie) -> [Char]
-showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie 
+showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie
 
 showNamedInput :: ([Char], Input) -> [Char]
 showNamedInput (name,input) = name ++ ": " ++ case inputFilename input of
                                                   Just filename -> filename
                                                   _ -> case inputValue input of
                                                            Left _tmpfilename -> "<<content in /tmp>>"
-                                                           Right value -> show (BSL.toString value) 
-                              
+                                                           Right value -> show (BSL.toString value)
+
 showRequest :: Request -> Maybe [([Char], Input)] -> [Char]
-showRequest rq maybeInputsBody = 
+showRequest rq maybeInputsBody =
     show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
     "post variables:\n" ++
     maybe "" (unlines . map showNamedInput) maybeInputsBody ++
@@ -444,14 +438,14 @@ showRequest rq maybeInputsBody =
     (unlines $ map showNamedHeader (Map.toList $ rqHeaders rq)) ++
     "http cookies:\n" ++
     (unlines $ map showNamedCookie (rqCookies rq))
-    
+
 {- |
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler appConf appGlobals = do
   let quota :: GHC.Int.Int64 = 10000000
-      
+
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
@@ -462,7 +456,7 @@ appHandler appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx')<- toIO ctx $  
+      (res,ctx')<- toIO ctx $
          do
           res <- (handleRoutes) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
@@ -470,16 +464,15 @@ appHandler appConf appGlobals = do
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
              Log.error $ showRequest rq rqcontent
              response <- handleError
-             setRsCode 404 response     
-          ctx' <- get 
-          return (res,ctx')   
-      
-      let newsessionuser = fmap userid $ ctxmaybeuser ctx'  
+             setRsCode 404 response
+          ctx' <- get
+          return (res,ctx')
+
+      let newsessionuser = fmap userid $ ctxmaybeuser ctx'
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
-      let newservice =  fmap (\srv -> (serviceid srv,ctxlocation ctx'))  $ ctxservice ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      updateSessionWithContextData session newsessionuser newservice newelegtrans
+      updateSessionWithContextData session newsessionuser newelegtrans
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -495,17 +488,18 @@ appHandler appConf appGlobals = do
       -- getAddrInfo is strange that it can throw exceptions
       -- if exception is thrown, whole page load fails with
       -- error notification
-      let hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] } 
-      addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing 
-      let addr = head addrs 
+      let hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
+      addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
+      let addr = head addrs
       let peerip = case addrAddress addr of
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
-
+      let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
       mcompany <- getCompanyFromSession session
-      mservice <- getServiceFromSession session
+      location <- getLocationFromSession session
+      mservice <- query . GetServiceByLocation . toServiceLocation =<< currentLink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -529,9 +523,9 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = langVersion (fromMaybe defaultValue $ lang <$> usersettings <$> muser ) templates2 
+                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2
                 , ctxesenforcer = esenforcer appGlobals
-                , ctxtwconf = TW.TrustWeaverConf 
+                , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
                               , TW.adminConf = trustWeaverAdmin appConf
                               , TW.storageConf = trustWeaverStorage appConf
@@ -542,24 +536,24 @@ appHandler appConf appGlobals = do
                 , ctxfilecache = filecache appGlobals
                 , ctxxtoken = getSessionXToken session
                 , ctxcompany = mcompany
-                , ctxservice = fst <$> mservice
-                , ctxlocation = fromMaybe "" $ snd <$> mservice
+                , ctxservice = mservice
+                , ctxlocation = location
                 , ctxadminaccounts = map (Email . BS.fromString) (admins appConf)
                 }
       return ctx
 
 {- |
    Handles submission of the password reset form
--}    
+-}
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
   ctx <- get
   memail <- getOptionalField asValidEmail "email"
-  case memail of 
+  case memail of
     Nothing -> return LoopBack
     Just email -> do
       muser <- query $ GetUserByEmail Nothing $ Email email
-      case muser of 
+      case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
           return LoopBack
@@ -567,13 +561,13 @@ forgotPasswordPagePost = do
           now <- liftIO getMinutesTime
           minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
           case minv of
-            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } -> 
+            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
               case prRemainedEmails of
                 0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
                 n -> do
                   -- I had to make it PasswordReminder because it was complaining about not giving cases
                   -- for the constructors of ActionType
-                  _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken 
+                  _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken
                                                                             , prRemainedEmails = n - 1
                                                                             , prUserID         = prUserID})
                   sendResetPasswordMail ctx (LinkPasswordReminder actionID prToken) user
@@ -596,21 +590,21 @@ _signupPageGet :: Kontra Response
 _signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja  content 
+    V.renderFromBody V.TopNone V.kontrakcja  content
 
-    
+
 _signupVipPageGet :: Kontra Response
 _signupVipPageGet = do
     ctx <- lift get
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja content 
+    V.renderFromBody V.TopNone V.kontrakcja content
 {- |
    Handles submission of the signup form.
    Normally this would create the user, (in the process mailing them an activation link),
    but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
    then we send them a new activation link because probably the old one expired or was lost.
    If they have then we stop the signup.
--}  
+-}
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
     Context { ctxtime = MinutesTime time seconds } <- get
@@ -619,9 +613,9 @@ signupPagePost = do
 _signupVipPagePost :: Kontra KontraLink
 _signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
 
-{- 
+{-
     A comment next to LoopBack says never to use it. Is this function broken?
--}                   
+-}
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip _freetill =  do
   ctx@Context{ctxtemplates,ctxhostpart} <- lift get
@@ -678,7 +672,7 @@ handleLoginGet = do
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
--}  
+-}
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
     memail  <- getOptionalField asDirtyEmail    "email"
@@ -689,7 +683,7 @@ handleLoginPost = do
             -- check the user things here
             maybeuser <- query $ GetUserByEmail Nothing (Email email)
             case maybeuser of
-                Just User{ userid, userpassword } 
+                Just User{ userid, userpassword }
                     | verifyPassword userpassword passwd -> do
                         logUserToContext maybeuser
                         time <- liftIO getMinutesTime
@@ -701,27 +695,27 @@ handleLoginPost = do
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
- 
+
 {- |
    Handles the logout, and sends user back to main page.
--}  
+-}
 handleLogout :: Kontra Response
 handleLogout = do
     logUserToContext Nothing
     sendRedirect LinkMain
-  
+
 {- |
    Serves out the static html files.
 -}
-serveHTMLFiles:: Kontra Response  
+serveHTMLFiles:: Kontra Response
 serveHTMLFiles =  do
     rq <- askRq
     let fileName = last (rqPaths rq)
     if ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
         then do
-            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
+            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName))
                             (const $ return Nothing)
-            case ms of 
+            case ms of
                 (Just s) -> renderFromBody V.TopNone V.kontrakcja $ BS.toString s
                 _      -> mzero
         else mzero
@@ -729,10 +723,10 @@ serveHTMLFiles =  do
 {- |
    Ensures logged in as a super user
 -}
-onlySuperUserGet :: Kontra Response -> Kontra Response  
+onlySuperUserGet :: Kontra Response -> Kontra Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser } <- get 
-    if isSuperUser ctxadminaccounts ctxmaybeuser 
+    Context{ ctxadminaccounts, ctxmaybeuser } <- get
+    if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
         else sendRedirect $ LinkLogin NotLoggedAsSuperUser
 
@@ -748,175 +742,7 @@ daveDocument documentid = onlySuperUserGet $ do
    Used by super users to inspect a particular user.
 -}
 daveUser :: UserID -> Kontra Response
-daveUser userid = onlySuperUserGet $ do 
+daveUser userid = onlySuperUserGet $ do
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 
-
-
-{- 
-
-{ "title": "Title of the document",
-  "persons": [ 
-           { "firstName": "Gracjan",
-             "lastName": "Polak",
-             "personNumber": "1412341234"
-             "email": "gracjan@skrivapa.se"
-           }]
-}
-
--}
-
-parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
-parseEmailMessageToParts content = (mime, parts mime)
-  where
-    mime = MIME.parseMIMEMessage (BSC.unpack content)
-    parts mimevalue = case MIME.mime_val_content mimevalue of 
-        MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
-        MIME.Multi more -> concatMap parts more
-  
-parseEmailMessage :: (Monad m, MonadIO m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
-parseEmailMessage content = runErrorT $ do
-  let (mime, allParts) = parseEmailMessageToParts content 
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
-      isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
-      typesOfParts = map fst allParts
-  let pdfs = filter isPDF allParts
-  let plains = filter isPlain allParts
-  pdf <- case pdfs of
-    [pdf] -> return pdf
-    _ -> fail $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
-  plain <- case plains of
-    [plain] -> return plain
-    _ -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
-  let pdfBinary = snd pdf
-  let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
-  let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
-  
-  let charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
-  let recode mimetype content' = 
-        case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
-          Left result' -> return $ BS.concat (BSL.toChunks (result'))
-          Right errmsg -> fail (show $ IConv.reportConversionError errmsg) 
-  recodedPlain <- recode (fst plain) (snd plain)   
-    
-  json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
-  return (json,pdfBinary,from,to)
-  
-maybeFail :: (Monad m) => String -> Maybe a -> m a
-maybeFail msg = maybe (fail msg) return 
-
-handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
-handleMailCommand (JSObject json) content from to = runErrorT $ do
-  let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
-  -- 'extension' is a piece of data that is after + sign in email
-  -- addres. example: api+1234@api.skrivapa.se here '1234' is
-  -- extension and can be used as for example password
-  let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
-    
-  Context { ctxtime, ctxipnumber } <- lift get
-  maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-  (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
-  
-  let title = case get_field json "title" of
-        Just (JSString x) -> BS.fromString (fromJSString x)
-        _ -> BS.fromString "Untitled document received by email"
-  let apikey = case get_field json "apikey" of
-        Just (JSString x) -> fromJSString x
-        _ -> extension
-      extractPerson :: (Monad m) => JSValue -> m SignatoryDetails
-      extractPerson (JSObject x) = do
-        (JSString email :: JSValue) <- maybeFail "'email' is required string field" $ get_field x "email" 
-        JSString firstName <- maybeFail "'firstName' is required string field" $ get_field x "firstName" 
-        JSString lastName <- maybeFail "'lastName' is required string field" $ get_field x "lastName" 
-        company <- case get_field x "company" of
-          Just (JSString v) -> return $ fromJSString v
-          _ -> return ""
-        personalNumber <- case get_field x "personalNumber" of
-          Just (JSString v) -> return $ fromJSString v
-          _ -> return ""
-        companyNumber <- case get_field x "companyNumber" of
-          Just (JSString v) -> return $ fromJSString v
-          _ -> return ""
-        return $ SignatoryDetails 
-                               { signatoryfstname = BS.fromString (fromJSString firstName)
-                               , signatorysndname = BS.fromString (fromJSString lastName)
-                               , signatorycompany = BS.fromString company
-                               , signatorypersonalnumber = BS.fromString personalNumber
-                               , signatorycompanynumber = BS.fromString companyNumber
-                               , signatoryemail = BS.fromString (fromJSString email)
-                               , signatoryfstnameplacements = []
-                               , signatorysndnameplacements = []
-                               , signatorycompanyplacements = []
-                               , signatoryemailplacements = []
-                               , signatorypersonalnumberplacements = []
-                               , signatorycompanynumberplacements = []
-                               , signatoryotherfields = []
-                               , signatorysignorder = SignOrder 1
-                               }
-      extractPerson _ = fail "'persons' is not a JavaScript object"
-      
-  case apikey of
-    "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
-    "998877665544332211" -> return ()
-    z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
-
-  let toStr = BS.toString to
-  doctype <- case get_field json "doctype" of
-        Just (JSString x) -> case fromJSString x of
-          "contract" -> return $ Signable Contract
-          "offer" -> return $ Signable Offer
-          z -> fail $ "Unsupported document type '" ++ z ++ "', should be one of 'contract' or 'offer'"
-        _ -> if "contract" `isInfixOf` toStr
-             then return $ Signable Contract
-             else if "offer" `isInfixOf` toStr
-                  then return $ Signable Offer
-                  else return $ Signable Contract
-      
-  JSArray personsField <- maybeFail "need to specify 'persons'" $ get_field json "persons"
-  
-  (persons :: [SignatoryDetails]) <- mapM extractPerson personsField
-  let
-      signatories = map (\p -> (p,[SignatoryPartner])) persons
-      userDetails = signatoryDetailsFromUser user
-        
-  doc <- lift $ update $ NewDocument user title doctype ctxtime
-  lift $ DocControl.handleDocumentUpload (documentid doc) content title
-  _ <- ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
-    signatories Nothing BS.empty (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user) [EmailIdentification] Nothing AdvancedFunctionality
-  
-  newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
-  lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
-  lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
-  return (documentid doc)
-handleMailCommand _ _ _ _ = return (Left ("needs JSON object as top level value"))
-  
-handleMailAPI :: Kontra Response
-handleMailAPI = do
-    Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
-    content <- case contentspec of
-        Left filepath -> liftIO $ BSL.readFile filepath
-        Right content -> return content
-            
-    -- content at this point is basically full MIME email as it was received by SMTP server
-    -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
-    eresult <- parseEmailMessage (concatChunks content)
-    case eresult of
-      Left msg -> do
-        Log.debug $ "handleMailAPI: " ++ msg
-        return $ toResponse msg
-      Right (json, pdf, from, to) -> do
-        result' <- handleMailCommand json pdf from to
-        case result' of
-          Right docid -> do
-            let rjson = makeObj [ ("status", JSString (toJSString "success"))
-                                , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))
-                                , ("documentid", JSString (toJSString (show docid)))
-                                ]
-            return $ toResponse $ showJSValue rjson []
-          Left msg -> do
-            Log.debug $ msg
-            let rjson = makeObj [ ("status", JSString (toJSString "error"))
-                                , ("message", JSString (toJSString msg))
-                                ]
-            return $ toResponse $ showJSValue rjson []

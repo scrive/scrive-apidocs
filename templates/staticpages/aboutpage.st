@@ -10,18 +10,7 @@ aboutPage=
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
         $endif$
       </head>
-      <body>
-         $bodystart()$
-         <div class="left-column">
-           $queryColumn()$
-         </div>
-         <div class="right-column">
-           <div class="mainContainer">
-             $aboutPageContents()$
-           </div>
-         </div>
-         $bodyend()$ 
-      </body>
+      $standardBodyWithQueryCol(unwrappedbody=aboutPageContents())$
     </html>
 ###
 aboutPageContents=

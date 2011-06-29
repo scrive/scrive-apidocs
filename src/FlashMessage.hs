@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Werror #-}
 module FlashMessage (
       FlashType(..)
     , FlashMessage(..)

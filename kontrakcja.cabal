@@ -35,8 +35,16 @@ Flag action-scheduler-test
   Default: True
   
 Flag html-test
-  Description: Build html-test
+  Description: Build kontrakcja-html-test
   Default: True
+
+Flag docstate-test
+  Description: Build kontrakcja-docstate-test
+  Default: True
+
+Flag allow-warnings
+  Description: Disable -Werror flag
+  Default: False
 
 Executable kontrakcja-server
   if flag(server)
@@ -46,12 +54,16 @@ Executable kontrakcja-server
 
   Hs-source-dirs: src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
+  GHC-Options: -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
   Build-depends: filepath
   Build-depends: base64-bytestring
   Build-depends: tagsoup
@@ -92,6 +104,8 @@ Executable kontrakcja-server
   Build-depends: HPDF
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck
+  Build-depends: text
+  Build-depends: transformers
 
   Main-Is: Main.hs
 
@@ -117,6 +131,8 @@ Executable pdfseal
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
   Hs-source-dirs: pdfseal/src pdfseal/inc
@@ -143,6 +159,9 @@ Executable kontrakcja-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -176,6 +195,9 @@ Executable kontrakcja-input-validation-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -211,6 +233,9 @@ Executable kontrakcja-trust-weaver-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -246,6 +271,9 @@ Executable kontrakcja-action-scheduler-test
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -276,11 +304,14 @@ Executable kontrakcja-action-scheduler-test
               TypeSynonymInstances,
               UndecidableInstances
               
-Executable html-test
+Executable kontrakcja-html-test
   if flag(html-test)
     Buildable: True
   else
     Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
@@ -293,6 +324,44 @@ Executable html-test
   cpp-options: -DHtmlTest=Main
 
   Main-is: HtmlTest.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable kontrakcja-docstate-test
+  if flag(docstate-test)
+    Buildable: True
+  else
+    Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  Hs-source-dirs: test/src src pdfseal/inc
+
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  cpp-options: -DDocStateTest=Main
+
+  Main-is: DocStateTest.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

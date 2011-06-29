@@ -1,55 +1,48 @@
 ####
-contractrejectbuttontext=Avvisa dokument
+contractrejectbuttontext=$_contractrejectbuttontext()$
 ####
-offerrejectbuttontext=Avvisa offert
+offerrejectbuttontext=$_offerrejectbuttontext()$
 ####
-orderrejectbuttontext=Avvisa order
+orderrejectbuttontext=$_orderrejectbuttontext()$
 ####
-contractsignatorysignmodaltitle=Är du säker att du vill underteckna?
+contractsignatorysignmodaltitle=$_contractsignatorysignmodaltitle()$
 ####
-offersignatorysignmodaltitle=Är du säker att du vill acceptera offerten?
+offersignatorysignmodaltitle=$_offersignatorysignmodaltitle()$
 ####
-ordersignatorysignmodaltitle=Är du säker att du vill bekräfta ordern?
+ordersignatorysignmodaltitle=$_ordersignatorysignmodaltitle()$
 ####
 contractsignatorysignmodalcontent=
-          <p>När $partyUnsigned:noescape()$ undertecknat blir 
-            avtalet <strong>juridiskt bindande</strong> och
-            det färdigställda avtalet skickas till din
-            e-post.</p>
+          <p>$_contractsignatorysignmodalcontent1()$$partyUnsigned:noescape()$ $_contractsignatorysignmodalcontent2()$</p>
 ####
 offersignatorysignmodalcontent=
-          <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
+          <p>$_offersignatorysignmodalcontent1()$<strong>$documenttitle$</strong>$_offersignatorysignmodalcontent2()$</p>
 ####
 ordersignatorysignmodalcontent=
-          <p>Genom att klicka ”bekräfta order” kommer du att bekräfta ordern <strong>$documenttitle$</strong>. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.</p>
+          <p>$_ordersignatorysignmodalcontent1()$<strong>$documenttitle$</strong>$_ordersignatorysignmodalcontent2()$</p>
 ####
-contractsignbuttontext=SkrivaPå
+contractsignbuttontext=$_contractsignbuttontext()$
 ####
-offersignbuttontext=Acceptera offert
+offersignbuttontext=$_offersignbuttontext()$
 ####
-ordersignbuttontext=Bekräfta order
+ordersignbuttontext=$_ordersignbuttontext()$
 ####
 contractsignatorycancelmodaltitle=
-          <h2>Avvisa</h2>   
-          <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
+          <h2>$_contractsignatorycancelmodaltitleHead()$</h2>
+          <p>$_contractsignatorycancelmodaltitleBody()$<strong>$authorfstname$ $authorsndname$</strong>.</p>
 ####
 offersignatorycancelmodaltitle=
-          <h2>Är du säker på att du vill avvisa?</h2>   
-          <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
-            Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
-          </p>
+          <h2>$_offersignatorycancelmodaltitleHead()$</h2>
+          <p>$_offersignatorycancelmodaltitleBody()$<strong>$authorfstname$ $authorsndname$</strong>$_offersignatorycancelmodaltitleBody2()$</p>
 ####
 ordersignatorycancelmodaltitle=
-          <h2>Är du säker på att du vill avvisa?</h2>   
-          <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
-            Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
-          </p>
+          <h2>$_ordersignatorycancelmodaltitleHead()$</h2>
+          <p>$_ordersignatorycancelmodaltitleBody()$<strong>$authorfstname$ $authorsndname$</strong>$_ordersignatorycancelmodaltitleBody2()$</p>
 ####
-contractsignguardwarntext=För att underteckna måste du först klicka i kryssrutan
+contractsignguardwarntext=$_contractsignguardwarntext()$
 ####
-offersignguardwarntext=För att acceptera måste du först klicka i kryssrutan
+offersignguardwarntext=$_offersignguardwarntext()$
 ######
-ordersignguardwarntext=För att bekräfta måste du först klicka i kryssrutan
+ordersignguardwarntext=$_ordersignguardwarntext()$
 ######
 pageDocumentForSignContent=
 <script type="text/javascript" src="/js/bankid.js"></script>
@@ -77,18 +70,16 @@ pageDocumentForSignContent=
           $process.signatorysignmodalcontent:noescape()$
           $if(requireseleg)$
           <span>
-            <h3>Välj typ av e-legitimation</h3>
-            <p>Har du ingen e-legitimation? Du kan ladda ned en
-              e-legitimation från din internetbank eller från
-              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                        target="_new">Klicka här</a> för att läsa mer.</p>
+            <h3>$_pageDocumentForSignContentElegSubhead()$</h3>
+            <p>$_pageDocumentForSignContentElegBody1()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                        target="_new">$_pageDocumentForSignContentElegBody2ClickHere()$</a>$_pageDocumentForSignContentElegBody3()$</p>
           </span>
           $endif$
         </div>
       </div>
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a  class="close cancel float-left">Avbryt</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
         $if(requireseleg)$
         <span id="elegbuttons">
           <input type="hidden" name="changetoeleg" id="elegprovider" value=""
@@ -141,13 +132,13 @@ pageDocumentForSignContent=
       <div class="modal-footer">
         <input type="hidden" name="cancel" value="automatic" />
         <div class="float-left">
-          <a  class="close cancel">Avbryt</a>
-          <a  class="editer message">Skriv eget meddelande</a>
+          <a  class="close cancel">$_cancel()$</a>
+          <a  class="editer message">$_pageDocumentForSignContentRejectFooterOwnMessage()$</a>
         </div>
         <a href="#" class="btn-small red float-right submiter">
           <div class="left"></div>
           <div class="label">
-            <p>Avvisa</p>
+            <p>$_pageDocumentForSignContentRejectFooterReject()$</p>
             <div class="btn-symbol red arrow-left"></div></div>
           <div class="right"></div>
         </a>
@@ -168,15 +159,15 @@ pageDocumentForSignContent=
       </span>
       <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
-          Ladda ned PDF
+          $_signStepsTitleRowTextContainerDownloadPDF()$
         </a>
       </span>
     </div>
     $if(signedbyme)$
     $if(hasanyattachments)$
     <ul class="tabs">
-      <li id="doctab" class="active"><a href="#" id="doctablink">Dokument</a></li>
-      <li id="atttab" ><a href="#" id="attachtablink">Bilagor</a></li>
+      <li id="doctab" class="active"><a href="#" id="doctablink">$_signStepsContainerSignedbymeHasattachmentDoc()$</a></li>
+      <li id="atttab" ><a href="#" id="attachtablink">$_signStepsContainerSignedbymeHasattachmentAttachments()$</a></li>
     </ul>
     $endif$
     $endif$
@@ -189,13 +180,13 @@ pageDocumentForSignContent=
         <span id="signViewBodyLeftTextContainer"> 
           <div class="attachmentListContainer">  
             $if(isattachments)$
-            <div class="subheader">Bifogade bilagor:</div>
+            <div class="subheader">$_signStepsBodyAttachmentsSubhead()$</div>
             $attachments:{attachment |
             <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
             }$
             $endif$
             $if(hassigattachments)$
-            <div class="subheader">Bägarda bilagor:</div>
+            <div class="subheader">$_signStepsBodyRequestedAttachmentsSubhead()$</div>
             <table id="signatorysignatoryattachments">
               <tbody>
                 $sigattachments:{attachment |
@@ -209,6 +200,7 @@ pageDocumentForSignContent=
         </span>
       </div>
     </div>
+    <div id="attachmentbox waiting4page"></div>
   </span>
   $endif$
   <span id="documenttabview">
@@ -230,7 +222,7 @@ pageDocumentForSignContent=
 
     $if(isattachments)$
     <div id="signViewAttachmentBox">  
-      <h2>Bilaga</h2>
+      <h2>$_signViewNotsignedbymeAttachmentBoxHead()$</h2>
       <div id="signViewAttachmentBoxList">
         $attachments:{attachment |
         <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
@@ -245,7 +237,7 @@ pageDocumentForSignContent=
     $if(hasmysigattachments)$
     
     <div id="signViewSigAttachmentBox">  
-      <h2>Begärda bilagor</h2>
+      <h2>$_signViewSigAttachmentBoxHead()$</h2>
       <table id="signViewSigAttachmentBoxList">
         <tbody>
           $mysigattachments:{attachment |
@@ -263,7 +255,7 @@ pageDocumentForSignContent=
                        value="$attachment.name$" />
                   <a class="btn-small green">  
                     <div class="left"> </div>
-                    <div class="label" style="width:80px">Välj fil</div> 
+                    <div class="label" style="width:80px">$_signViewSigAttachmentBoxChooseFile()$</div>
                     <div class="right"> </div>                 
                     <input class="multiFileInput submitOnUpload" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
                   </a>
@@ -298,10 +290,7 @@ pageDocumentForSignContent=
             class="signGuard" autocomplete="off"/>
           </div>
           <div class="float-left" id="signGuardLabel">
-            <label for="signGuardCBox">Jag intygar att:
-              <br/>1. Samtliga undertecknande parter är korrekta.
-              <br/>2. Att jag granskat och förstått dokumentet.
-              <br/>3. Att jag har befogenhet att skriva på dokumentet.
+            <label for="signGuardCBox">$_signGuardCBox()$
             </label>
           </div>
         </div>
@@ -311,7 +300,7 @@ pageDocumentForSignContent=
         <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
       </div>
       $endif$
-      <div id="signViewBottomBoxContainerRight"> 
+      <div id="signViewBottomBoxContainerRight">
         <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
           <div class="left"></div>
           <div class="label" style="$if(process.requiressignguard)$width:120px$else$padding-left:20px;padding-right:20px;$endif$">
