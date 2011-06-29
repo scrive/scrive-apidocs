@@ -1277,7 +1277,7 @@ input[type=submit].hidden
 /* step 1 */
 .signStepsBodyUploadBox
 {
-    width: 185px;
+    width: 250px;
     height: 92px;
     margin: 15px;
     border-top: 1px solid #E0E0E0;
@@ -1343,7 +1343,7 @@ input[type=submit].hidden
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
-    margin-left: 35px;
+    margin-left: 55px;
 }
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
 input.multiFileInput { 
@@ -2689,7 +2689,7 @@ input#cancel {
 }
 
 .searchBox{
-    width: 232px;
+    width: 250px;
 }
 .centered {
     margin: 10%;
