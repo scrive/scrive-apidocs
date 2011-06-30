@@ -657,6 +657,7 @@ handleIssueShowPost docid = withUserPost $ do
 
 handleIssueSign :: Document -> Kontra KontraLink
 handleIssueSign document = do
+    Log.debug "handleIssueSign"
     ctx@Context { ctxtime, ctxipnumber} <- get
     -- unless (document `allowsIdentification` EmailIdentification) mzero | This need to be refactored | Breaks templates
     mudoc <- updateDocument ctx document
@@ -672,7 +673,12 @@ handleIssueSign document = do
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> do
                     addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
-                    return $ LinkContracts emptyListParams
+                    Log.debug (show $ map documenttype ds)
+                    case documenttype (head ds) of
+                      Signable Contract -> return $ LinkContracts emptyListParams
+                      Signable Offer    -> return $ LinkOffers emptyListParams                      
+                      Signable Order    -> return $ LinkOrders emptyListParams
+                      _ -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
@@ -689,6 +695,7 @@ handleIssueSign document = do
 
 handleIssueSend :: Document -> Kontra KontraLink
 handleIssueSend document = do
+    Log.debug "handleIssueSend"
     ctx@Context { ctxtime, ctxipnumber} <- get
     mudoc <- updateDocument ctx document
     case mudoc of
@@ -703,7 +710,12 @@ handleIssueSend document = do
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> do
                     addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
-                    return $ LinkContracts emptyListParams
+                    Log.debug (show $ map documenttype ds)
+                    case documenttype (head ds) of
+                      Signable Contract -> return $ LinkContracts emptyListParams
+                      Signable Offer    -> return $ LinkOffers emptyListParams                      
+                      Signable Order    -> return $ LinkOrders emptyListParams
+                      _ -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
