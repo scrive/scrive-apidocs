@@ -338,25 +338,6 @@ sendRejectEmails customMessage ctx document signalink = do
 -- END EMAILS
 
 {- |
-   Render a page of Contracts for a user
-   URL: /s
-   Method: Get
-   ??: Is this what it does?
- -}
-handleSTable :: Kontra (Either KontraLink Response)
-handleSTable = checkUserTOSGet $ do
-  Context { ctxmaybeuser = Just user, ctxtime, ctxtemplates } <- get
-  edocs <- getDocsByLoggedInUser
-  case edocs of
-    Left _ -> mzero
-    Right documents -> do
-      let contracts  = [doc | doc <- documents
-                            , (Signable Contract) == documenttype doc]
-      params <- getListParams
-      content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-      renderFromBody TopNone kontrakcja content
-
-{- |
     Handles an account setup from within the sign view.
 -}
 handleAcceptAccountFromSign :: DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> Kontra KontraLink
