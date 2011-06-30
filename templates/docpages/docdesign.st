@@ -669,7 +669,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-attachments-dialog" rel=".stepForm">
     <input type="hidden" name="updateattachments" value="true" />
-    <div class="modal-container">
+    <div class="modal-container" style="width: 780px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -695,7 +695,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               <div class="signStepsButtonContainer">
                 <a class="btn-small green">  
                   <div class="left"> </div>
-                  <div class="label" style="width:80px">$_updateAttachmentsDialogUpLoadChooseFile()$</div> 
+                  <div class="label" style="min-width:100px">$_updateAttachmentsDialogUpLoadChooseFile()$</div>
                   <div class="right"> </div>
                   <input class="multiFileInput" maxlength="20" type="file" name="attachment" accept="application/pdf" rel="#tobeattached" />
                 </a>
@@ -711,7 +711,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               <div class="signStepsButtonContainer">
                 <a id="showexistingattachments" class="btn-small green">  
                   <div class="left"> </div>
-                  <div class="label" style="width:80px">$_updateAttachmentsDialogUpLoadChooseExistingAttachment()$</div>
+                  <div class="label" style="min-width:100px">$_updateAttachmentsDialogUpLoadChooseExistingAttachment()$</div>
                   <div class="right"> </div>
                 </a>
               </div>
@@ -765,7 +765,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container">
+    <div class="modal-container" style="width: 780px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -786,7 +786,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <div class="signStepsButtonContainer">
               <a class="btn-small green">  
                 <div class="left"> </div>
-                <div class="label" style="width:80px">$_dialogCsvupload1ChooseFile()$</div>
+                <div class="label" style="min-width:100px">$_dialogCsvupload1ChooseFile()$</div>
                 <div class="right"> </div>
                 <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
               </a>

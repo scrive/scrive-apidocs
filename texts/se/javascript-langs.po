@@ -84,7 +84,7 @@ msgstr "Du har inte BankID installerat. Du kan ladda ned BankID från din intern
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_niceEmail"
-msgstr "Personens e-mail"
+msgstr "E-post"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_mustFillFieldsBeforeSigning"
@@ -152,24 +152,31 @@ msgstr "Var vänlig bifoga begärda bilagor."
 
 #~ msgid "_sndname"
 #~ msgstr "Efternamn"
+
 #~ msgid "_personamNumber"
 #~ msgstr "Pers. nr"
+
 #~ msgid "_fstname"
 #~ msgstr "Förnamn"
+
 #~ msgid "_companyNumber"
 #~ msgstr "Org. nr"
+
 #~ msgid "_cantRemoveActiveOffers"
 #~ msgstr ""
 #~ "Det går inte att radera orderbekräftelser som är skickade eller öppna, "
 #~ "var vänlig och återkalla dokumentet först."
+
 #~ msgid "_cantRemoveActiveDocuments"
 #~ msgstr ""
 #~ "Det går inte att radera dokument som är skickade eller öppna, var vänlig "
 #~ "och återkalla dokumentet först."
+
 #~ msgid "_phone"
 #~ msgstr "Telefonnummer"
+
 #~ msgid "_email"
 #~ msgstr "Email"
+
 #~ msgid "_companyposition"
 #~ msgstr "Befattning"
-

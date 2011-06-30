@@ -150,34 +150,6 @@ queryColumn=
 
                                         </div>
 ####
-bodyend=
-                                        <div class="clearfix"></div>
-                                        <div class="spacer40"></div>
-                                        $if(showCreateAccount)$    
-                                        <div class="try-skrivapa">
-                                          <div class="left">
-                                            <h3>Skapa konto nu!</h3>
-                                            <p>14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
-                                          </div>
-                                          <div class="right">
-                                            <form method="post" action="$linksignup$" class="requestAccount">
-                                              <input class="shiny float-left"
-                                                     name="email" type="email"
-                                                     infotext="Fyll i din e-postadress"
-                                                     /> <a href="#" class="submit
-                                                                           new-btn-small green2 center
-                                                                           float-right"><p>Skapa konto!</p></a>
-                                              <input type="submit" class="hidden" />
-                                            </form>
-                                          </div>
-                                        </div>
-                                        $endif$ 
-        </div>
-        </div>
-        
-        $pageFooter()$
-
-####
 pageFooter=
 <div id="footer-container" class="newdesign">
   <div class="top-border"></div>

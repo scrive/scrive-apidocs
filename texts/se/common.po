@@ -135,7 +135,7 @@ msgstr "Telefonnummer"
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 #: javascript-langs.st:javascriptLocalisation
 msgid "_personnumber"
-msgstr "Personnummer"
+msgstr "Pers. nr"
 
 #: modals.st:accountFromSignInputs
 #: modals.st:loginModal
@@ -151,7 +151,7 @@ msgstr "Lösenord"
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 #: javascript-langs.st:javascriptLocalisation
 msgid "_orgnumber"
-msgstr "Organusationsnummer"
+msgstr "Org. nr"
 
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
@@ -422,4 +422,3 @@ msgstr "Mail API"
 
 #~ msgid "_Delete"
 #~ msgstr "Radera"
-
