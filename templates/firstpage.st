@@ -288,16 +288,16 @@ och anpassning</p>
                                                         <td>Offert</td>
                                                 </tr>
                                                 <tr>
-                                                        <td>250 signaturer/år</td>
-                                                        <td>750 signaturer/år</td>
-                                                        <td>1500 signaturer/år</td>
-                                                        <td>Från 3000 signaturer/år</td>
+                                                        <td>550 signaturer/år</td>
+                                                        <td>1 000 signaturer/år</td>
+                                                        <td>2 000 signaturer/år</td>
+                                                        <td>Från 4000 signaturer/år</td>
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td>500 dok laging</td>
                                                         <td>Obegränsad lagring</td>
                                                         <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>
+                                                        <td>Obegränsad lagring</td>
                                                 </tr>
                                                 <tr>
                                                         <td>Basfunktioner</td>
@@ -307,15 +307,15 @@ och anpassning</p>
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
-                                                                <h4>4 995kr/år</h4>
+                                                                <h4>35 kr/signatur</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
-                                                                <h4>14 995kr/år</h4>
+                                                                <h4>32.5 kr/signatur</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
-                                                                <h4>29 995kr/år</h4>
+                                                                <h4>30 kr/signatur</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>                                                   
                                                         </td>
                                                         <td>
@@ -349,7 +349,9 @@ och anpassning</p>
                                 </div>
                                 <div class="price-plan-annotation">
                                 * Alla priser är exkl moms.<br/>
-                                * Vi erbjuder också ett frikonto för 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.
+                                </div>
+                                <div class="price-plan-details">
+                                  Vi erbjuder också ett frikonto för 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.
                                 </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">

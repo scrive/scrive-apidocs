@@ -972,7 +972,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	box-shadow: 0 0 5px #999;
 	border: 2px solid #35A4D6;
-	left: 460px;
+	left: 467px;
 	position: absolute;
 	top: -13px;
 	width: 245px;
@@ -984,7 +984,7 @@ a.new-btn-small.black p {
 }
 
 .highlight-container.ppfix {
-    height: 960px;
+    height: 910px;
 }
 
 #body-container .highlight-container .highlight-rows {
@@ -1067,6 +1067,13 @@ a.new-btn-small.black p {
         font: italic 12px "Georgia";
         padding: 10px;
         width: 430px;
+}
+
+.price-plan-details {
+       color: #666;
+       font: 16px/26px "Copse";
+       padding-left: 15px;
+       padding-top: 20px;
 }
 
 /* Highlight Ribbon */
