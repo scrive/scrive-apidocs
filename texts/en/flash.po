@@ -64,7 +64,7 @@ msgstr "Unable to remove account(s) as there are some remaining documents that n
 
 #: flash.st:flashMessageUserHasBecomeSubaccount
 msgid "_flashMessageUserHasBecomeSubaccount"
-msgstr "Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$ and the rights to your documents has been transferred to the main account."
+msgstr "Your account is now a sub-account to the main account $supervisor.fullnamePlusEmail$ and the rights to your documents has been transferred to the main account."
 
 #: flash.st:flashMessageUserDetailsSaved
 msgid "_flashMessageUserDetailsSaved"
@@ -84,7 +84,7 @@ msgstr "Your message has been sent! We will get back to you within 24 hours."
 
 #: flash.st:flashMessageTemplateArchiveDone
 msgid "_flashMessageTemplateArchiveDone"
-msgstr "Selected templates has been deleted."
+msgstr "Selected templates have been deleted."
 
 #: flash.st:flashMessageSingleTemplateShareDone
 msgid "_flashMessageSingleTemplateShareDone"
@@ -100,7 +100,7 @@ msgstr "Last name required."
 
 #: flash.st:flashMessageRowLessThanMinColCount
 msgid "_flashMessageRowLessThanMinColCount"
-msgstr "THe row must at least have $mincols$ columns."
+msgstr "The row must at least have $mincols$ columns."
 
 #: flash.st:flashMessageRowGreaterThanMaxColCount
 msgid "_flashMessageRowGreaterThanMaxColCount"

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
-"Last-Translator: \n"
+"Last-Translator: Mariusz Rak <mariusz@skrivapa.se>\n"
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -274,7 +274,7 @@ msgstr "Cancel"
 #: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
 msgid "_Subaccounts"
-msgstr "Subaccounts"
+msgstr "Sub-accounts"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/doctemplatelist.st:pageTemplatesList

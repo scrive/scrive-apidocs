@@ -48,7 +48,7 @@ msgstr "E-mail:"
 
 #: pages.st:activatePageViewNotValidLink
 msgid "_activatePageViewNotValidLinkBody"
-msgstr "We are sorry, your activation link is older than 12 hours. Please enter your e-mail address and we will send you a new activation link immediatly."
+msgstr "We are sorry, your activation link is older than 12 hours. Please enter your e-mail address and we will send you a new activation link immediately."
 
 #~ msgid "_activatePageViewNotValidLinkSend"
 #~ msgstr "Skicka"

@@ -12,11 +12,11 @@ msgstr ""
 
 #: mails.st:sigattachlist
 msgid "_sigattachlistRequestedAttachment"
-msgstr "Begärda bilagor:"
+msgstr "Requested attachments:"
 
 #: mails.st:appendixList
 msgid "_appendixListAttachment"
-msgstr "Bilagor:"
+msgstr "Attachments:"
 
 #: mails.st:mailSubaccountAcceptedContent
 msgid "_mailSubaccountAcceptedContentBody"
@@ -120,63 +120,63 @@ msgstr "Detta e-postmeddelande innehåller konfidentiell information och får in
 
 #: mails.st:whohadsignedinfoforpreview
 msgid "_whohadsignedinfoforpreview"
-msgstr "Har undertecknat:"
+msgstr "Has signed:"
 
 #: mails.st:whohadsignedofferinfoformail
 msgid "_whohadsignedofferinfoformailIfNotConfirmed"
-msgstr "Har undertecknat:"
+msgstr "Has signed:"
 
 #: mails.st:whohadsignedofferinfoformail
 msgid "_whohadsignedofferinfoformailIfConfirmed"
-msgstr "Har bekräftat: "
+msgstr "Has confirmed: "
 
 #: mails.st:whohadsignedorderinfoformail
 msgid "_whohadsignedorderinfoformailIfNotAccepted"
-msgstr "Har accepterat: "
+msgstr "Has acceptedt: "
 
 #: mails.st:whohadsignedorderinfoformail
 msgid "_whohadsignedorderinfoformailIfAccepted"
-msgstr "Har accepterat: "
+msgstr "Has accepted: "
 
 #: mails.st:whohadsignedcontractinfoformail
 msgid "_whohadsignedcontractinfoformailIfNotSigned"
-msgstr "    Har undertecknat: "
+msgstr "Has signed: "
 
 #: mails.st:whohadsignedcontractinfoformail
 msgid "_whohadsignedcontractinfoformailIfSigned"
-msgstr "    Har undertecknat: "
+msgstr "Has signed: "
 
 #: mails.st:orderhassignedformailtext
 msgid "_orderhassignedformailtext"
-msgstr "Har bekräftat"
+msgstr "Has confirmed"
 
 #: mails.st:offerhassignedformailtext
 msgid "_offerhassignedformailtext"
-msgstr "Har accepterat"
+msgstr "Has accepted"
 
 #: mails.st:contracthassignedformailtext
 msgid "_contracthassignedformailtext"
-msgstr "Har undertecknat"
+msgstr "Has signed"
 
 #: mails.st:noonehadsignedtext
 msgid "_noonehadsignedtext"
-msgstr "    Ingen har undertecknat dokumentet ännu"
+msgstr "No one has signed the document yet"
 
 #: mails.st:timetosigninfo
 msgid "_timetosigninfo"
-msgstr "Undertecknas senast:"
+msgstr "Sign before:"
 
 #: mails.st:passwordChangeLinkMailContent
 msgid "_passwordChangeLinkMailContentBody"
-msgstr "Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>    "
+msgstr "You have requested to change your password at Scrive. Please click the following linc to procees. The linc is valid for 12 hours.<br/>    "
 
 #: mails.st:passwordChangeLinkMailContent
 msgid "_passwordChangeLinkMailContentHi"
-msgstr "Hej $personname$,"
+msgstr "Hello $personname$,"
 
 #: mails.st:passwordChangeLinkMailTitle
 msgid "_passwordChangeLinkMailTitle"
-msgstr "Nytt lösenord"
+msgstr "New password"
 
 #: mails.st:mailDocumentErrorContent
 msgid "_mailDocumentErrorContentBodyFourth"
@@ -204,51 +204,51 @@ msgstr "SkrivaPå could not handle $documenttitle$"
 
 #: mails.st:invitationMailUndeliveredContent
 msgid "_invitationMailUndeliveredContentInstruction"
-msgstr "Kontrollera vilken som är mottagarens korrekta adress<br/>  2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>       <a href=\"$ctxhostpart$$unsigneddoclink$\">$ctxhostpart$$unsigneddoclink$</a><br/>       <br/>       3. Klicka \"Starta om\"<br/>       4. Skriv in rätt e-postadress och skicka igen      "
+msgstr "Review wich adress is correct for the recipient<br/>  2. Click the document in your archive or the following linc.<br/>       <a href=\"$ctxhostpart$$unsigneddoclink$\">$ctxhostpart$$unsigneddoclink$</a><br/>       <br/>       3. Click \"Restart\"<br/>       4. Fill in the right e-mail and send again"
 
 #: mails.st:invitationMailUndeliveredContent
 msgid "_invitationMailUndeliveredContentBody"
-msgstr "Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle$</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.       Processen har därmed avbrutits. Gör så här om du vill börja om:"
+msgstr "We have not been able to deliver you invitation for signing the document <strong>$documenttitle$</strong>.  It probably has to do with the recievers email server but most prabably the e-mail $email$ does not exist. .       The process has therefore been cancelled. Do the following to start over again:"
 
 #: mails.st:invitationMailUndeliveredContent
 msgid "_invitationMailUndeliveredContentHi"
-msgstr "Hej $authorname$,"
+msgstr "Hello $authorname$,"
 
 #: mails.st:invitationMailUndeliveredTitle
 msgid "_invitationMailUndeliveredTitle"
-msgstr "Felaktig e-post"
+msgstr "Incorrect e-mail"
 
 #: mails.st:invitationMailDeliveredAfterDeferredContent
 msgid "_invitationMailDeliveredAfterDeferredContentBody"
-msgstr "Vi meddelade dig tidigare om att vi hade problem att nå mottagarens server. Efter upprepade försök har vår server lyckats leverera inbjudan till dokumentet <strong>$documenttitle$</strong> till $email$."
+msgstr "We notified you earlier that we had difficulties reaching the recipients server. After serveral attempts our server has succeded to deliver the invitation to the document<strong>$documenttitle$</strong> to $email$."
 
 #: mails.st:invitationMailDeliveredAfterDeferredContent
 msgid "_invitationMailDeliveredAfterDeferredContentHi"
-msgstr "Hej $authorname$,"
+msgstr "Hello $authorname$,"
 
 #: mails.st:invitationMailDeliveredAfterDeferredTitle
 msgid "_invitationMailDeliveredAfterDeferredTitle"
-msgstr "Lyckosam leverans"
+msgstr "Lyckosam leverans = Successfully delivered"
 
 #: mails.st:invitationMailDeferredContent
 msgid "_invitationMailDeferredContentBodySecond"
-msgstr "Vi fortsätter försöka att nå mottagarens server och meddelar inom kort hur det gått. Klicka på länken nedan om du vill stoppa våra försök eller om du vill ändra e-post adressen.<br />      "
+msgstr "We will continue to try reaching the recipients server and will notify you shortly about how the process. Click the linc below if you wish to cancel the procedure or change the e-mail adress.<br />      "
 
 #: mails.st:invitationMailDeferredContent
 msgid "_invitationMailDeferredContentBodyFirst"
-msgstr "Vi skickar detta meddelande för att meddela att vårt system har identifierat ett problem med mottagarens e-postserver. Antingen finns inte e-postadressen eller så ligger mottagarens e-postserver nere för tillfället. Vänligen kontrollera att mottagarens e-post är korrekt."
+msgstr "We are sending this message to notify you that our system has identified a problem with the recipients e-mail server. Probably the e-mail does not exist or the recipients e-mail server is down for the moment. Please check that the recipients e-mail is correct."
 
 #: mails.st:invitationMailDeferredContent
 msgid "_invitationMailDeferredContentHi"
-msgstr "Hej $authorname$,"
+msgstr "Hello $authorname$,"
 
 #: mails.st:invitationMailDeferredTitle
 msgid "_invitationMailDeferredTitle"
-msgstr "Problem med leverans"
+msgstr "Probelms with the delivery"
 
 #: mails.st:mailNewAccountCreatedByAdminContent
 msgid "_mailNewAccountCreatedByAdminContentBody"
-msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    "
+msgstr "Please click the linc to activate the account:<br/>    "
 
 #: mails.st:mailNewAccountCreatedByAdminContent
 msgid "_mailNewAccountCreatedByAdminContentUserName"
@@ -324,11 +324,11 @@ msgstr "You have not saved your original"
 
 #: mails.st:inviteSubaccountMailContent
 msgid "_inviteSubaccountMailContentClickLink"
-msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    "
+msgstr "Please click the linc to activate the account:<br/>    "
 
 #: mails.st:inviteSubaccountMailContent
 msgid "_inviteSubaccountMailContentBodyUserName"
-msgstr "  Användarnamn:<br/>  "
+msgstr "Username:<br/>  "
 
 #: mails.st:inviteSubaccountMailContent
 msgid "_inviteSubaccountMailContentBodyFirst"
@@ -336,135 +336,135 @@ msgstr "<strong>$supervisorname$</strong> har bjudit in dig till ett    underkon
 
 #: mails.st:inviteSubaccountMailContent
 msgid "_inviteSubaccountMailContentHi"
-msgstr "Hej <strong>$personname$</strong>,"
+msgstr "Hello <strong>$personname$</strong>,"
 
 #: mails.st:inviteSubaccountMailTitle
 msgid "_inviteSubaccountMailTitle"
-msgstr "Inbjudan från $supervisorname$ till underkonto"
+msgstr "Invitation from $supervisorname$ to a sub-account"
 
 #: mails.st:newUserMailContent
 msgid "_newUserMailContentBodyThird"
-msgstr "  Du aktiverar ditt konto genom att klicka på länken nedan. Länken är  giltig i 12 timmar.<br/>    "
+msgstr "Activate your account by clicking the linc below. The linc is active for 12 hours.<br/>    "
 
 #: mails.st:newUserMailContent
 msgid "_newUserMailContentBodyUserName"
-msgstr "  Användarnamn:<br/>  "
+msgstr "Username:<br/>  "
 
 #: mails.st:newUserMailContent
 msgid "_newUserMailContentBodySecond"
-msgstr "  Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte  att höra av dig med feedback eller bara en enkel hälsning. Din åsikt  är värdefull."
+msgstr "We hope you will be happy with our services. Please dont hestitate to give us feedback or just a hello. Your opinion is valuble to us."
 
 #: mails.st:newUserMailContent
 msgid "_newUserMailContentBodyFirst"
-msgstr "  Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har  skapat ett konto hos oss. När du aktiverat ditt konto kommer du  kunna använda tjänsten med full funktionalitet med kontoplanen  Business i 1 månad utan kostnad. Väljer du att inte fortsätta med en  betald kontoplan efter testperioden behåller du givetvis tillgång  till samtliga dina dokument på SkrivaPå och kan fortsätta använda  tjänsten genom vår fria kontoplan Free."
+msgstr "My name is Lukas Duczko and I am the CEO of Scrive. Thank you for signing an account with us. When you have acivated your account you will be able to use the service with full functionality with the Business version for one month without any charges. If you choose not to continue with a payed subscription after the free trial you will still have access to all your documents at Scrive and can keep using Scrive  with our Free plan."
 
 #: mails.st:newUserMailContent
 msgid "_newUserMailContentHi"
-msgstr "Hej,"
+msgstr "Hello,"
 
 #: mails.st:newUserMailTitle
 msgid "_newUserMailTitle"
-msgstr "Nytt konto"
+msgstr "New account"
 
 #: mails.st:signupLinkEmailPart
 msgid "_signupLinkEmailPartClickLink"
-msgstr "Vänligen klicka på länken för att aktivera kontot:<br/>    <br/>    "
+msgstr "Please click the linc to activate the account:<br/>    <br/>    "
 
 #: mails.st:signupLinkEmailPart
 msgid "_signupLinkEmailPartUserName"
-msgstr "Användarnamn:<br/>    "
+msgstr "Username:<br/>    "
 
 #: mails.st:remindMailNotSignedOrderContent
 msgid "_remindMailNotSignedOrderContentInstruction"
-msgstr "        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3. Bekräfta ordern (eller avvisa)<br/>         4. Färdig      "
+msgstr "        1. Clic the linc<br/>        <a href=\"$link$\">$link$</a><br/>        2. Review online<br/>        3. Confirm the order (or reject)<br/>         4. Done   "
 
 #: mails.st:remindMailNotSignedOrderContent
 msgid "_remindMailNotSignedOrderContentPartys"
-msgstr "Parter:"
+msgstr "Parties:"
 
 #: mails.st:remindMailNotSignedOrderContent
 msgid "_remindMailNotSignedOrderContentInfo"
-msgstr "Översiktlig information"
+msgstr "General information"
 
 #: mails.st:remindMailNotSignedOfferContent
 msgid "_remindMailNotSignedOfferContentInstruction"
-msgstr "        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3.  Acceptera offert (eller avvisa)<br/>        4. Färdig      "
+msgstr "        1. Clic the linc<br/>        <a href=\"$link$\">$link$</a><br/>        2. Review online<br/>        3.  Accept the offer (or reject)<br/>        4. Done"
 
 #: mails.st:remindMailNotSignedOfferContent
 msgid "_remindMailNotSignedOfferContentSender"
-msgstr "Avsändare:"
+msgstr "Sender:"
 
 #: mails.st:remindMailNotSignedOfferContent
 msgid "_remindMailNotSignedOfferContentPartys"
-msgstr "Parter:"
+msgstr "Parties:"
 
 #: mails.st:remindMailNotSignedOfferContent
 msgid "_remindMailNotSignedOfferContentInfo"
-msgstr "Översiktlig information"
+msgstr "General information"
 
 #: mails.st:remindMailNotSignedContractContent
 msgid "_remindMailNotSignedContractContentInstruction"
-msgstr "        <i>Så här går du vidare</i><br/>        1. Klicka på länken<br/>        <a href=\"$link$\">$link$</a><br/>        2. Granska online<br/>        3. Underteckna (eller avvisa)<br/>         4. Färdig      "
+msgstr "        <i>How to continue</i><br/>        1. Clic the linc<br/>        <a href=\"$link$\">$link$</a><br/>        2. Review online<br/>        3. Sign (or reject)<br/>         4. Done"
 
 #: mails.st:remindMailNotSignedContractContent
 msgid "_remindMailNotSignedContractContentPartys"
-msgstr "Parter:"
+msgstr "Parties:"
 
 #: mails.st:remindMailNotSignedContractContent
 msgid "_remindMailNotSignedContractContentInfo"
-msgstr "Översiktlig information"
+msgstr "General information"
 
 #: mails.st:remindMailNotSignedOrderStandardHeader
 msgid "_remindMailNotSignedOrderStandardHeaderRemind"
-msgstr "<strong>$author$</strong> vill påminna dig om att du inte bekräftat ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern genom att följa instruktionerna nedan.      "
+msgstr "<strong>$author$</strong> wants to remind you that you havent confirmed the order <strong>$documenttitle$</strong> yet. Confirm the order by following the intructions below."
 
 #: mails.st:remindMailNotSignedOrderStandardHeader
 msgid "_remindMailNotSignedOrderStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
+msgstr "Hello <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedOfferStandardHeader
 msgid "_remindMailNotSignedOfferStandardHeaderRemind"
-msgstr "<strong>$author$</strong> vill påminna dig om att du inte accepterat offerten <strong>$documenttitle$</strong> ännu.        Acceptera offerten genom att följa instruktionerna nedan.      "
+msgstr "<strong>$author$</strong>  wants to remind you that you havent confirmed the order  <strong>$documenttitle$</strong> yet. Confirm the order by following the intructions below."
 
 #: mails.st:remindMailNotSignedOfferStandardHeader
 msgid "_remindMailNotSignedOfferStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
+msgstr "Hello <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedContractStandardHeader
 msgid "_remindMailNotSignedContractStandardHeaderRemind"
-msgstr "<strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu."
+msgstr "<strong>$author$</strong> wants to remind you that you havent confirmed the order  <strong>$documenttitle$</strong> yet."
 
 #: mails.st:remindMailNotSignedContractStandardHeader
 msgid "_remindMailNotSignedContractStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
+msgstr "Hello <strong>$personname$</strong>"
 
 #: mails.st:remindMailNotSignedTitle
 msgid "_remindMailNotSignedTitle"
-msgstr "Påminnelse att underteckna  $documenttitle$"
+msgstr "Reminder to sign  $documenttitle$"
 
 #: mails.st:remindMailSignedOrderStandardHeader
 msgid "_remindMailSignedOrderStandardHeaderSendRequest"
-msgstr "<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen <strong>$documenttitle$</strong>        till dig som du har bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med detta mail."
+msgstr "<strong>$author$</strong>has requested that we send the orderconfrmation<strong>$documenttitle$</strong>        to you who has confirmed via the service Scrive. The orderconfirmation is attached in this mail."
 
 #: mails.st:remindMailSignedOrderStandardHeader
 msgid "_remindMailSignedOrderStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
+msgstr "Hello <strong>$personname$</strong>"
 
 #: mails.st:remindMailSignedOfferStandardHeader
 msgid "_remindMailSignedOfferStandardHeaderSendRequest"
-msgstr "<strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>        till dig. Offerten har accepterats av dig via tjänsten SkrivaPå. Den accepterade offerten bifogas med detta mail."
+msgstr "<strong>$author$</strong> has requested that we send the orderconfrmation <strong>$documenttitle$</strong>      to you. The offer has been accepted by you via the service Scrive.  The accepted offer is attached in this mail<strong>$author$</strong><strong>$documenttitle$</strong>       "
 
 #: mails.st:remindMailSignedOfferStandardHeader
 msgid "_remindMailSignedOfferStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
+msgstr "Hello <strong>$personname$</strong>"
 
 #: mails.st:remindMailSignedContractStandardHeader
 msgid "_remindMailSignedContractStandardHeaderSendRequest"
-msgstr "<strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>        till dig. Dokumentet har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas med detta mail."
+msgstr "<strong>$author$</strong> has requested we send this document <strong>$documenttitle$</strong>        to you. The document has been signed by you via the thervice Scrive. The document is attatched in this mail."
 
 #: mails.st:remindMailSignedContractStandardHeader
 msgid "_remindMailSignedContractStandardHeaderHi"
-msgstr "Hej <strong>$personname$</strong>"
+msgstr "Hello <strong>$personname$</strong>"
 
 #: mails.st:mailInvitationToViewDefaultHeader
 msgid "_mailInvitationToViewDefaultHeader"
@@ -556,19 +556,19 @@ msgstr "Hello,"
 
 #: mails.st:mailRejectOrderMailContent
 msgid "_mailRejectOrderMailContentHasRejected"
-msgstr "        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.      "
+msgstr "        <strong>$rejectorName$</strong> has rejected the order <strong>$documenttitle$</strong>.      "
 
 #: mails.st:mailRejectOfferMailContent
 msgid "_mailRejectOfferMailContentOfferRejected"
-msgstr "        <strong>$rejectorName$</strong> has rejected the offer <strong>$documenttitle$</strong>.      has rejected the offer"
+msgstr "        <strong>$rejectorName$</strong> has rejected the offer <strong>$documenttitle$</strong>.    "
 
 #: mails.st:mailRejectContractMailContent
 msgid "_mailRejectContractMailContentContractRejected"
-msgstr "        <strong>$rejectorName$</strong> has declined to sign the document <strong>$documenttitle$</strong>. The agreement process is there for cancelled."
+msgstr "        <strong>$rejectorName$</strong> has  rejecter to sign the document <strong>$documenttitle$</strong>. The agreement process is there for cancelled."
 
 #: mails.st:mailRejectMailTitle
 msgid "_mailRejectMailTitle"
-msgstr "Declines: $documenttitle$"
+msgstr "Rejected: $documenttitle$"
 
 #: mails.st:mailOrderClosedContent
 msgid "_mailOrderClosedContentAttached"

@@ -44,7 +44,7 @@ msgstr "Welcome!"
 
 #: modals.st:modalWelcomeToSkrivaPa
 msgid "_modalWelcomeToSkrivaPaBodyMain"
-msgstr "With Scrive, you can sign and store documents electronically. The service is suitable for contracts and offers, but also other types of documents. Of course this will not cost you anything if you choose not to continue using Scrive when the free trial period is over. It is super easy to get strated:"
+msgstr "With Scrive, you can sign and store documents electronically. The service is suitable for contracts and offers, but also other types of documents. Of course this will not cost you anything if you choose not to continue using Scrive when the free trial period is over. It is super easy to get started:"
 
 #: modals.st:modalWelcomeToSkrivaPa
 msgid "_modalWelcomeToSkrivaPaBodyInstructions"
@@ -312,7 +312,7 @@ msgstr "Accept"
 
 #: modals.st:modalDoYouWantToBeSubaccount
 msgid "_modalDoYouWantToBeSubaccountBody"
-msgstr "If you accept to become subaccoountto the main account\t           $supervisor.fullnamePlusEmail$, the ownership of all your\t           documents will be transferred to the main account. Are\t          you sure you want to accept?\t        "
+msgstr "If you accept to become sub-accoount to the main account\t           $supervisor.fullnamePlusEmail$, the ownership of all your\t           documents will be transferred to the main account. Are\t          you sure you want to accept?\t        "
 
 #: modals.st:modalAccountSetup
 msgid "_modalAccountSetupRepeatPassword"

@@ -20,7 +20,7 @@ msgstr "You must enter an e-mail address to your counterparty."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_youCanNotInviteSameEmail"
-msgstr "You cannot invite subaccounts that does not have the same URL as you have in your e-mail address."
+msgstr "You cannot invite subaccounts that do not have the same URL as you have in your e-mail address."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_verifyingSignature"
