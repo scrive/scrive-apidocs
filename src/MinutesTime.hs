@@ -1,4 +1,23 @@
-module MinutesTime where
+module MinutesTime
+       ( MinutesTime(..)
+       , addMonths
+       , asInt
+       , dateDiffInDays
+       , fromClockTime
+       , getMinutesTime
+       , getMinuteTimeDB
+       , minutesAfter
+       , parseMinutesTimeMDY
+       , showDateAbbrev
+       , showDateMDY
+       , showDateOnly
+       , showDateYMD
+       , showMinutesTimeForAPI
+       , startOfMonth
+       , swedishTimeLocale
+       , toClockTime
+       , toUTCTime
+       ) where
 
 import Data.Data
 import Data.Time
@@ -12,9 +31,10 @@ import qualified System.Time as System.Time (toUTCTime)
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
        deriving (Eq, Ord, Typeable)
-data MinutesTime = MinutesTime {
-     minutes::Int,
-     secs::Int
+
+data MinutesTime = MinutesTime
+    { minutes :: Int
+    , secs :: Int
     }
     deriving (Eq, Ord, Typeable, Data, Read)
 
@@ -26,8 +46,7 @@ instance Version (MinutesTime) where
    mode = extension 1 (Proxy :: Proxy MinutesTime0)
 
 instance Migrate MinutesTime0 MinutesTime where
-      migrate (MinutesTime0 m) = MinutesTime  {minutes = m, secs = 0 }
-
+      migrate (MinutesTime0 m) = MinutesTime {minutes = m, secs = 0 }
 
 instance Show MinutesTime where
     showsPrec _prec (MinutesTime mins secs) =
@@ -43,8 +62,6 @@ showMinutesTimeForAPI (MinutesTime mins secs) =
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in formatCalendarTime defaultTimeLocale
                "%Y-%m-%d %H:%M" calendartime
-
-
 
 showDateOnly :: MinutesTime -> String
 showDateOnly (MinutesTime 0 _) = ""
@@ -70,6 +87,7 @@ swedishTimeLocale = defaultTimeLocale { months =
                                             , ("nov", "nov")
                                             , ("dec", "dec")
                                             ] }
+
 showDateAbbrev :: MinutesTime -> MinutesTime -> String
 showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
@@ -97,7 +115,7 @@ toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)
 toUTCTime :: MinutesTime -> CalendarTime
 toUTCTime = System.Time.toUTCTime . toClockTime
 
-parseMinutesTimeMDY::String -> Maybe MinutesTime
+parseMinutesTimeMDY :: String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
                       t <- parseTime defaultTimeLocale "%d-%m-%Y" s
                       startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
@@ -114,19 +132,19 @@ showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
                                     in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime
 
-minutesAfter::Int -> MinutesTime -> MinutesTime
+minutesAfter :: Int -> MinutesTime -> MinutesTime
 minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
 
-startOfMonth::MinutesTime->MinutesTime
+startOfMonth :: MinutesTime -> MinutesTime
 startOfMonth t = let
                    CalendarTime {ctDay,ctHour,ctMin,ctSec,ctPicosec} = toUTCTime t
                    diff = (noTimeDiff {tdDay= (-1)*ctDay+1,tdHour=(-1)*ctHour,tdMin=(-1)*ctMin,tdSec=(-1)*ctSec,tdPicosec=(-1)*ctPicosec})
                  in fromClockTime $ addToClockTime diff  (toClockTime t)
 
-addMonths::Int ->MinutesTime -> MinutesTime
+addMonths :: Int -> MinutesTime -> MinutesTime
 addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
 
-dateDiffInDays::MinutesTime->MinutesTime -> Int
+dateDiffInDays :: MinutesTime -> MinutesTime -> Int
 dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
