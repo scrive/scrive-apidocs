@@ -121,7 +121,7 @@ emptyPayment = Payment {  paymentId=PaymentId 0,
                           userId=UserID 0,
                           positions=[],
                           avaiblePaymentMethods=[],
-                          paymentDate = MinutesTime 0 0,
+                          paymentDate = fromSeconds 0,
                           triedAutopay = False,
                           completeAttempts = []
                        }

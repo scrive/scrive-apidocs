@@ -239,8 +239,8 @@ blankDocument =
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
           , documentfunctionality        = BasicFunctionality
-          , documentctime                = MinutesTime 0 0
-          , documentmtime                = MinutesTime 0 0
+          , documentctime                = fromSeconds 0 
+          , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
           , documentlog                  = []
@@ -701,7 +701,7 @@ getDocumentStats = queryDocs $ \documents ->
 
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = queryDocs $ \documents ->
-  maximum $ (MinutesTime 0 0) : (map documentmtime $ toList (documents @= fileid))
+  maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
 
 saveDocumentForSignedUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID

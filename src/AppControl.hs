@@ -609,8 +609,8 @@ _signupVipPageGet = do
 -}
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
-    Context { ctxtime = MinutesTime time seconds } <- get
-    signup False $ Just (MinutesTime (time + 60 * 24 * 31) seconds)
+    Context { ctxtime } <- get
+    signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
 
 _signupVipPagePost :: Kontra KontraLink
 _signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"

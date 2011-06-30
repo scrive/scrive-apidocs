@@ -1,5 +1,5 @@
 module MinutesTime
-       ( MinutesTime(..)
+       ( MinutesTime
        , addMonths
        , asInt
        , dateDiffInDays
