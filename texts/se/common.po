@@ -1,8 +1,11 @@
+#
+#  <>, 2011.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: \n"
+"PO-Revision-Date: 2011-06-30 09:14-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: \n"
@@ -88,8 +91,7 @@ msgstr "Levererat"
 msgid "_tablestatusesCancelled"
 msgstr "Avbrutet"
 
-#: mails.st:mailMismatchSignatoryContent
-#: mails.st:mailMismatchAuthorContent
+#: mails.st:mailMismatchSignatoryContent mails.st:mailMismatchAuthorContent
 #: docpages/docviewforauthor.st:pageDocumentForAuthor
 #: docpages/docdesign.st:pageDocumentDesign
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
@@ -123,21 +125,18 @@ msgstr "Personnummer"
 #: userpages/accountpage.st:showUser
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_orgnumber"
-msgstr "Organusationsnummer"
+msgstr "Org. nr"
 
 #: userpages/subaccountslist.st:viewSubaccounts
-#: userpages/friendpage.st:viewFriends
-#: docpages/doclist.st:pageContractsList
+#: userpages/friendpage.st:viewFriends docpages/doclist.st:pageContractsList
 #: docpages/doctemplatelist.st:pageTemplatesList
 #: docpages/docattachmentlist.st:pageAttachmentList
 #: docpages/docorderslist.st:pageOrdersList
 msgid "_options"
 msgstr "Alternativ"
 
-#: modals.st:modalError
-#: modals.st:signCanceledDataMismatchModal
-#: modals.st:signAwaitingAuthorLast
-#: userpages/friendpage.st:viewFriends
+#: modals.st:modalError modals.st:signCanceledDataMismatchModal
+#: modals.st:signAwaitingAuthorLast userpages/friendpage.st:viewFriends
 #: docpages/doclist.st:pageContractsList
 #: docpages/docofferslist.st:pageOffersList
 #: docpages/doclistutils.st:listShareDialog
@@ -168,8 +167,7 @@ msgid "_email"
 msgstr "E-post"
 
 #: userpages/subaccountslist.st:viewSubaccounts
-#: userpages/friendpage.st:viewFriends
-#: docpages/doclist.st:pageContractsList
+#: userpages/friendpage.st:viewFriends docpages/doclist.st:pageContractsList
 #: docpages/doctemplatelist.st:pageTemplatesList
 #: docpages/docofferslist.st:pageOffersList
 #: docpages/docattachmentlist.st:pageAttachmentList
@@ -188,8 +186,7 @@ msgstr "Befattning"
 msgid "_company"
 msgstr "Företag"
 
-#: modals.st:loginModal
-#: modals.st:modalNewPasswordView
+#: modals.st:loginModal modals.st:modalNewPasswordView
 #: modals.st:modalInviteUserAsSubaccount
 #: modals.st:modalDoYouWantToBeSubaccount
 #: docpages/doclist.st:pageContractsList
@@ -274,4 +271,3 @@ msgstr "Kontoinställningar"
 
 #~ msgid "_Delete"
 #~ msgstr "Radera"
-
