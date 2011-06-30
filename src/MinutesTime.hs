@@ -4,8 +4,11 @@ module MinutesTime
        , asInt
        , dateDiffInDays
        , fromClockTime
-       , getMinutesTime
+       , fromMinutes
+       , fromSeconds
+       , fromUTCTime
        , getMinuteTimeDB
+       , getMinutesTime
        , minutesAfter
        , parseMinutesTimeMDY
        , showDateAbbrev
@@ -16,6 +19,8 @@ module MinutesTime
        , startOfMonth
        , swedishTimeLocale
        , toClockTime
+       , toMinutes
+       , toSeconds
        , toUTCTime
        ) where
 
@@ -25,10 +30,10 @@ import Happstack.Data
 import Happstack.State
 import System.IO.Unsafe
 import System.Locale
-import System.Time hiding (toClockTime,toUTCTime)
-import qualified System.Time as System.Time (toUTCTime)
+import System.Time hiding (toClockTime, toUTCTime)
+import qualified System.Time as System.Time (toUTCTime, toClockTime)
 
--- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
+-- | Time in minutes from 1970-01-01 00:0 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
        deriving (Eq, Ord, Typeable)
 
@@ -112,8 +117,25 @@ fromClockTime (TOD secs _picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) 
 toClockTime :: MinutesTime -> ClockTime
 toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)
 
+fromUTCTime :: CalendarTime -> MinutesTime
+fromUTCTime = fromClockTime . System.Time.toClockTime
+
 toUTCTime :: MinutesTime -> CalendarTime
 toUTCTime = System.Time.toUTCTime . toClockTime
+
+fromMinutes :: Int -> MinutesTime
+fromMinutes m = MinutesTime m 0
+
+toMinutes :: MinutesTime -> Int
+toMinutes (MinutesTime m _) = m
+
+fromSeconds :: Int -> MinutesTime
+fromSeconds s = MinutesTime (s `mod` 60) (s `rem` 60)
+
+toSeconds :: MinutesTime -> Int
+toSeconds (MinutesTime m s) = m*60 + s
+
+
 
 parseMinutesTimeMDY :: String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
