@@ -227,7 +227,7 @@ handleUserChange a = onlySuperUser $
                              Nothing -> mzero
                              Just user -> do
                                            --Reading changes from params using dedicated functions for each user part
-                                           freetrialexpirationdate <- join . (fmap parseMinutesTimeMDY) <$> getField "freetrialexpirationdate"
+                                           freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"
                                            infoChange <- getUserInfoChange
                                            settingsChange <- getUserSettingsChange
                                            paymentAccountChange <- getUserPaymentAccountChange
@@ -309,7 +309,7 @@ handleCreateUser = onlySuperUser $ do
     fstname <- getAsStrictBS "fstname"
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
-    freetill <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "freetill"
+    freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
     muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
     when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
 
@@ -441,7 +441,7 @@ handleMigrate0 = onlySuperUser $ do
 {- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!! -}
 getUserPaymentPolicyChange :: Kontra (UserPaymentPolicy -> UserPaymentPolicy)
 getUserPaymentPolicyChange =  do
-                          mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "tmppaymentchangeenddate"
+                          mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "tmppaymentchangeenddate"
                           mpaymentaccounttype        <- readField "paymentaccounttype"
                           customPaymentChange        <- getPaymentChangeChange "custom"
                           tempPaymentChange          <- getPaymentChangeChange "temp"

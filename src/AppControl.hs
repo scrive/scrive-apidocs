@@ -612,9 +612,6 @@ signupPagePost = do
     Context { ctxtime } <- get
     signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
 
-_signupVipPagePost :: Kontra KontraLink
-_signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
-
 {-
     A comment next to LoopBack says never to use it. Is this function broken?
 -}

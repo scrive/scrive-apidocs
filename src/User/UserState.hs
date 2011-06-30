@@ -587,7 +587,7 @@ instance Migrate User12 User13 where
                 where
                     freetrialexpirationdate =
                         fromMaybe firstjuly (max firstjuly . fst <$> temppaymentchange)
-                    firstjuly = fromJust $ parseMinutesTimeMDY "01-06-2011"
+                    firstjuly = fromJust $ parseMinutesTimeDMY "01-06-2011"
 
 instance Migrate User13 User14 where
     migrate (User13

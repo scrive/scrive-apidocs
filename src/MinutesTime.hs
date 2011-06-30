@@ -2,6 +2,7 @@ module MinutesTime
        ( MinutesTime
        , asInt
        , dateDiffInDays
+       , formatSwedishMinutesTime
        , fromClockTime
        , fromMinutes
        , fromSeconds
@@ -10,9 +11,9 @@ module MinutesTime
        , getMinutesTime
        , minutesAfter
        , monthsAfter
-       , parseMinutesTimeMDY
+       , parseMinutesTimeDMY
        , showDateAbbrev
-       , showDateMDY
+       , showDateDMY
        , showDateOnly
        , showDateYMD
        , showMinutesTimeForAPI
@@ -66,30 +67,16 @@ instance Migrate MinutesTime1 MinutesTime where
       migrate (MinutesTime1 m s) = fromSeconds (m*60 + s)
 
 instance Show MinutesTime where
-    showsPrec _prec mt =
-        let clocktime = toClockTime mt
-            -- FIXME: use TimeZone of user
-            calendartime = unsafePerformIO $ toCalendarTime clocktime
-        in (++) $ formatCalendarTime defaultTimeLocale
-               "%Y-%m-%d, %H:%M:%S" calendartime
+    showsPrec _prec mt = (++) $ formatSwedishMinutesTime "%Y-%m-%d, %H:%M:%S" mt
 
 -- | Show time in %Y-%m-%d %H:%M format. Warning: system needs to run in UTC time!
 showMinutesTimeForAPI :: MinutesTime -> String
-showMinutesTimeForAPI mt =
-        let clocktime = toClockTime mt
-            calendartime = unsafePerformIO $ toCalendarTime clocktime
-        in formatCalendarTime defaultTimeLocale
-               "%Y-%m-%d %H:%M" calendartime
+showMinutesTimeForAPI mt = formatSwedishMinutesTime "%Y-%m-%d %H:%M" mt
 
 -- | Show time in "%Y-%m-%d" format.  Warning: system needs to run in UTC time!
 showDateOnly :: MinutesTime -> String
 showDateOnly mt | toSeconds mt == 0 = ""
-                | otherwise =
-        let clocktime = toClockTime mt
-            -- FIXME: use TimeZone of user
-            calendartime = unsafePerformIO $ toCalendarTime clocktime
-        in formatCalendarTime defaultTimeLocale
-               "%Y-%m-%d" calendartime
+                | otherwise = formatSwedishMinutesTime "%Y-%m-%d" mt
 
 -- | Swedish time locale is like normal, but has Swedish month abbreviations.
 swedishTimeLocale :: TimeLocale
@@ -122,11 +109,11 @@ swedishTimeLocale = defaultTimeLocale { months = [ ("januari","jan")
 showDateAbbrev :: MinutesTime -> MinutesTime -> String
 showDateAbbrev current time
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
-                   formatCalendarTime swedishTimeLocale "%H:%M" ct
+                   formatSwedishMinutesTime "%H:%M" current
                | ctYear ct1 == ctYear ct =
-                   formatCalendarTime swedishTimeLocale "%d %b" ct
+                   formatSwedishMinutesTime "%d %b" current
                | otherwise =
-                   formatCalendarTime swedishTimeLocale "%Y-%m-%d" ct
+                   formatSwedishMinutesTime "%Y-%m-%d" current
                where
                  ct1 = unsafePerformIO $ toCalendarTime $ toClockTime current
                  ct = unsafePerformIO $ toCalendarTime $ toClockTime time
@@ -179,21 +166,25 @@ toSeconds (MinutesTime s) = s
 
 
 -- | Format time according to Swedish rules of time formating.
+--
+-- This is probably as wrong as it gets. We use current time zone (of the server!) to show correct time.
+--
+-- FIXME: Fix all of this. We need proper user timezone handling, not such hacks as these.
 formatSwedishMinutesTime :: String -> MinutesTime -> String
-formatSwedishMinutesTime fmt mt = formatCalendarTime swedishTimeLocale fmt (toUTCTime mt)
+formatSwedishMinutesTime fmt mt = formatCalendarTime swedishTimeLocale fmt (unsafePerformIO $ toCalendarTime $ toClockTime mt)
 
 
 -- | Parse format %d-%m-%Y.
-parseMinutesTimeMDY :: String -> Maybe MinutesTime
-parseMinutesTimeMDY s = do
+parseMinutesTimeDMY :: String -> Maybe MinutesTime
+parseMinutesTimeDMY s = do
     t <- parseTime defaultTimeLocale "%d-%m-%Y" s
     startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
     let val = diffDays t startOfTime
     return $ fromMinutes (fromIntegral $ val *24*60)
 
 -- | Show date as %d-%m-%y. As you see name lies.
-showDateMDY :: MinutesTime -> String
-showDateMDY = formatSwedishMinutesTime "%d-%m-%y"
+showDateDMY :: MinutesTime -> String
+showDateDMY = formatSwedishMinutesTime "%d-%m-%y"
 
 
 -- | Show date as %Y-%m-%d.
