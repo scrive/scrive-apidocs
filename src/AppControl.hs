@@ -152,7 +152,7 @@ handleRoutes = msum [
      , dir "d" $ hGet2                        $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost1        $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hGet0 $ DocControl.handleSTable
+     , dir "s" $ hGet0 $ sendRedirect $ LinkContracts emptyListParams
      , dir "s" $ hGet3 $ DocControl.handleSignShow
      , dir "s" $ hGet4 $ DocControl.handleAttachmentDownloadForViewer
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ DocControl.signDocument
