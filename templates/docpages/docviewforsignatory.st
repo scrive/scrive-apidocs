@@ -249,7 +249,7 @@ pageDocumentForSignContent=
               <a href="$attachment.viewerlink$"
                  target="_blank">$attachment.filename$</a>
               $else$
-              <form method="post" enctype="multipart/form-data" class="predirectsubmitform">
+              <form method="post" enctype="multipart/form-data">
                 <input type="hidden" name="sigattachment" value="yes" />
                 <input type="hidden" name="attachname"
                        value="$attachment.name$" />
