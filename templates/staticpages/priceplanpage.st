@@ -28,15 +28,15 @@ priceplanPageContents=
                                 </th>
                                 <th>
                                     <h3>Small</h3>
-                                    <p>4 995 kr/år</p>
+                                    <p>35 kr/signatur</p>
                                 </th>
                                 <th>
                                     <h3>Team</h3>
-                                    <p>14 995 kr/år</p>
+                                    <p>32.5 kr/signatur</p>
                                 </th>
                                 <th>
                                     <h3>Business</h3>
-                                    <p>29 995 kr/år</p>
+                                    <p>30 kr/signatur</p>
                                 </th>
                                 <th>
                                     <h3>Enterprise</h3>
@@ -53,59 +53,45 @@ priceplanPageContents=
                               <td></td>
                             </tr>
                             <tr>
-                                <td>Uppstartskostnad</td>
-                                <td>5 000 kr</td>
-                                <td>5 000 kr</td>
-                                <td>10 000 kr</td>
-                                <td>Offert</td>
-                            </tr>
-                            <tr class="odd-row">
-                                <td>Uppstartsutbildning</td>
-                                <td>30 min</td>
-                                <td>60 min</td>
-                                <td>2 x 60 min</td>
-                                <td>Offert</td>
-                            </tr>
-                            <tr>
-                                <td>Hjälp med konfiguration</td>
-                                <td>1 h</td>
-                                <td>2 h</td>
-                                <td>4 h</td>
-                                <td>Offert</td>
-                            </tr>
-                            <tr class="odd-row">
                                 <td>Antal användare</td>
-                                <td>5 användare</td>
-                                <td>15 användare</td>
-                                <td>50 användare</td>
+                                <td>5</td>
+                                <td>15</td>
+                                <td>50</td>
                                 <td>Offert</td>
-                            </tr>
-                            <tr>
-                                <td>Fria signaturer</td>
-                                <td>250 sign/år</td>
-                                <td>750 sign/år</td>
-                                <td>1 500 sign/år</td>
-                                <td>Från 3 000 sign/år</td>
                             </tr>
                             <tr class="odd-row">
-                                <td>Extra signaturer per styck</td>
-                                <td>40 kr</td>
-                                <td>35 kr</td>
-                                <td>35 kr</td>
-                                <td>Offert</td>
+                                <td>Minimum antal signaturer per år</td>
+                                <td>500</td>
+                                <td>1 000</td>
+                                <td>2 000</td>
+                                <td>4 000</td>
                             </tr>
                             <tr>
                                 <td>Standardlagring</td>
                                 <td>500 dok</td>
                                 <td>Obegränsad</td>
                                 <td>Obegränsad</td>
-                                <td>Offert</td>
+                                <td>Obegränsad</td>
                             </tr>
                             <tr class="odd-row">
                                 <td>Trustweaver premiumlagring</td>
                                 <td>Uppgradera</td>
+                                <td>Uppgradera</td>
                                 <td>Offert</td>
                                 <td>Offert</td>
+                            </tr>
+                            <tr>
+                                <td>Uppstartsutbildning</td>
+                                <td>0.5 h</td>
+                                <td>1 h</td>
+                                <td>2 x 1 h</td>
+                                <td>Offert</td>
+                            </tr>
+                            <tr class="odd-row">
+                                <td>Hjälp med konfiguration</td>
+                                <td>1 h</td>
+                                <td>2 h</td>
+                                <td>4 h</td>
                                 <td>Offert</td>
                             </tr>
                             <tr>
@@ -283,16 +269,14 @@ priceplanPageContents=
                         <ul class="highlight-rows">
                             <li class="top">
                                 <h3>Business</h3>
-                                <p>29 995 kr/år</p>
+                                <p>30 kr/signatur</p>
                             </li>
-                            <li>10 000 kr</li>
-                            <li class="odd">2 x 60 min</li>
-                            <li>4 h</li>
-                            <li class="odd">50 användare</li>
-                            <li>1 500  sign/år</li>
-                            <li class="odd">35 kr</li>
+                            <li>50</li>
+                            <li class="odd">2 000</li>
                             <li>Obegränsad</li>
                             <li class="odd">Offert</li>
+                            <li>2 x 1h</li>
+                            <li class="odd">4h</li>
                             <li>Telefon</li>
                             <li class="odd">✓</li>
                             <li>✓</li>
@@ -326,8 +310,17 @@ priceplanPageContents=
                 </div>
                 <br />
                 <br />
+                <div>* Alla priser är exkl moms.</div>
                 <div class="big-price-plan">
-                    <h2>Fri användning</h2>
-                    <p>Vi erbjuder också ett frikonto för 1 användare, 5 fira signaturer per månad och 50 dokument i lagring.</p>
+                    <h2>Vi tar bara betalt när du tjänar pengar</h2>
+                    <p>Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.</p>
+                </div>
+                <div class="big-price-plan">
+                    <h2>Gratis för privatpersoner och enmansföretagare</h2>
+                    <p>Det finns tusen skäl varför alla bör signera sina dokument elektroniskt. Vår ambition är att alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt konto för alla mindre användare. 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</p>
+                </div>
+                <div class="big-price-plan">
+                    <h2>Rabatter till ej vinstdrivande organisationer</h2>
+                    <p>Vi gillar engagemang och eldsjälar som vill förändra. Därför stödjer vi ej vinstdrivande organisationer genom att erbjuda bra rabatter på våra listpriser.</p>
                 </div>
 ###
