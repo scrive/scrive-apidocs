@@ -1069,11 +1069,20 @@ a.new-btn-small.black p {
         width: 430px;
 }
 
-.price-plan-details {
+div.price-plan-details {
+    padding-left: 15px;
+    padding-right: 35px;
+    padding-top: 20px;
+}
+
+.price-plan-details h3 {
        color: #666;
-       font: 16px/26px "Copse";
-       padding-left: 15px;
-       padding-top: 20px;
+       font: 22px "Georgia";
+}
+
+.price-plan-details p {
+       color: #999;
+       font: 14px "Copse";
 }
 
 /* Highlight Ribbon */

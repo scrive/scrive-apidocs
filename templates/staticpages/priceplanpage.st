@@ -60,9 +60,9 @@ priceplanPageContents=
                             </tr>
                             <tr>
                                 <td>Antal användare</td>
-                                <td>5 användare</td>
-                                <td>15 användare</td>
-                                <td>50 användare</td>
+                                <td>5</td>
+                                <td>15</td>
+                                <td>50</td>
                                 <td>Offert</td>
                             </tr>
                             <tr class="odd-row">
@@ -322,6 +322,11 @@ priceplanPageContents=
                     <p>Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.</p>
                 </div>
                 <div class="big-price-plan">
-                    <h2>Gratis för privatpersoner och egenföretagare</h2>
+                    <h2>Gratis för privatpersoner och enmansföretagare</h2>
+                    <p>Det finns tusen skäl varför alla bör signera sina dokument elektroniskt. Vår ambition är att alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt konto för alla mindre användare. 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</p>
+                </div>
+                <div class="big-price-plan">
+                    <h2>Rabatter till ej vinstdrivande organisationer</h2>
+                    <p>Vi gillar engagemang och eldsjälar som vill förändra. Därför stödjer vi ej vinstdrivande organisationer genom att erbjuda bra rabatter på våra listpriser.</p>
                 </div>
 ###
