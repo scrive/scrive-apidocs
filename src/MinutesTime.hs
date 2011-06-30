@@ -2,6 +2,7 @@ module MinutesTime
        ( MinutesTime
        , asInt
        , dateDiffInDays
+       , formatSwedishMinutesTime
        , fromClockTime
        , fromMinutes
        , fromSeconds
@@ -10,9 +11,9 @@ module MinutesTime
        , getMinutesTime
        , minutesAfter
        , monthsAfter
-       , parseMinutesTimeMDY
+       , parseMinutesTimeDMY
        , showDateAbbrev
-       , showDateMDY
+       , showDateDMY
        , showDateOnly
        , showDateYMD
        , showMinutesTimeForAPI
@@ -22,7 +23,6 @@ module MinutesTime
        , toMinutes
        , toSeconds
        , toUTCTime
-       , formatSwedishMinutesTime
        ) where
 
 import Data.Data
@@ -175,16 +175,16 @@ formatSwedishMinutesTime fmt mt = formatCalendarTime swedishTimeLocale fmt (unsa
 
 
 -- | Parse format %d-%m-%Y.
-parseMinutesTimeMDY :: String -> Maybe MinutesTime
-parseMinutesTimeMDY s = do
+parseMinutesTimeDMY :: String -> Maybe MinutesTime
+parseMinutesTimeDMY s = do
     t <- parseTime defaultTimeLocale "%d-%m-%Y" s
     startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
     let val = diffDays t startOfTime
     return $ fromMinutes (fromIntegral $ val *24*60)
 
 -- | Show date as %d-%m-%y. As you see name lies.
-showDateMDY :: MinutesTime -> String
-showDateMDY = formatSwedishMinutesTime "%d-%m-%y"
+showDateDMY :: MinutesTime -> String
+showDateDMY = formatSwedishMinutesTime "%d-%m-%y"
 
 
 -- | Show date as %Y-%m-%d.
