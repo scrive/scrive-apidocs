@@ -1,6 +1,5 @@
 module MinutesTime
        ( MinutesTime
-       , addMonths
        , asInt
        , dateDiffInDays
        , fromClockTime
@@ -10,6 +9,7 @@ module MinutesTime
        , getMinuteTimeDB
        , getMinutesTime
        , minutesAfter
+       , monthsAfter
        , parseMinutesTimeMDY
        , showDateAbbrev
        , showDateMDY
@@ -185,6 +185,11 @@ showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
 minutesAfter :: Int -> MinutesTime -> MinutesTime
 minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
 
+-- | Add a month. This adds full month, independed how many days there
+-- are in current month. So of 2nd today we end up on 2nd next month.
+monthsAfter :: Int -> MinutesTime -> MinutesTime
+monthsAfter i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
+
 -- | Calculate start of month.
 startOfMonth :: MinutesTime -> MinutesTime
 startOfMonth t = let
@@ -192,11 +197,6 @@ startOfMonth t = let
                    diff = (noTimeDiff {tdDay= (-1)*ctDay+1,tdHour=(-1)*ctHour,tdMin=(-1)*ctMin,tdSec=(-1)*ctSec,tdPicosec=(-1)*ctPicosec})
                  in fromClockTime $ addToClockTime diff  (toClockTime t)
 
--- | Add a month.
---
--- FIXME: rename to 'monthsAfter'
-addMonths :: Int -> MinutesTime -> MinutesTime
-addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
 
 -- | Calcualte day difference between two dates. Rounds the difference
 -- down. A day is 24h. First date must be earile then second,

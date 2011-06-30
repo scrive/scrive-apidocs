@@ -871,7 +871,7 @@ deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignator
       doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
     _ -> doc
   where
-    quarantineExpiry = addMonths 3 now
+    quarantineExpiry = 3 `monthsAfter` now
     isInPreparation = documentstatus==Preparation
     isLive = documentrecordstatus == LiveDocument
     isQuarantined = documentrecordstatus == QuarantinedDocument
@@ -899,7 +899,7 @@ endQuarantineForDocument documentid = do
 extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
 extendDocumentQuarantine docid = do
   modifySignableOrTemplate docid $ \doc ->
-    return $ doc { documentquarantineexpiry = fmap (addMonths 1) (documentquarantineexpiry doc) }
+    return $ doc { documentquarantineexpiry = fmap (monthsAfter 1) (documentquarantineexpiry doc) }
 
 reviveQuarantinedDocument :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
 reviveQuarantinedDocument docid siglinkid = do
