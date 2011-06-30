@@ -37,6 +37,7 @@ import qualified System.Time as System.Time (toUTCTime, toClockTime)
 newtype MinutesTime0 = MinutesTime0 Int
        deriving (Eq, Ord, Typeable)
 
+-- | Time in minutes from 1970-01-01 00:0 in UTC coordinates
 data MinutesTime = MinutesTime
     { minutes :: Int
     , secs :: Int
@@ -61,6 +62,7 @@ instance Show MinutesTime where
         in (++) $ formatCalendarTime defaultTimeLocale
                "%Y-%m-%d, %H:%M:%S" calendartime
 
+-- | Show time in %Y-%m-%d %H:%M format. Warning: system needs to run in UTC time!
 showMinutesTimeForAPI :: MinutesTime -> String
 showMinutesTimeForAPI (MinutesTime mins secs) =
         let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
@@ -68,6 +70,7 @@ showMinutesTimeForAPI (MinutesTime mins secs) =
         in formatCalendarTime defaultTimeLocale
                "%Y-%m-%d %H:%M" calendartime
 
+-- | Show time in "%Y-%m-%d" format.  Warning: system needs to run in UTC time!
 showDateOnly :: MinutesTime -> String
 showDateOnly (MinutesTime 0 _) = ""
 showDateOnly (MinutesTime mins _) =
@@ -77,6 +80,7 @@ showDateOnly (MinutesTime mins _) =
         in formatCalendarTime defaultTimeLocale
                "%Y-%m-%d" calendartime
 
+-- | Swedish time locale is like normal, but has Swedish month abbreviations.
 swedishTimeLocale :: TimeLocale
 swedishTimeLocale = defaultTimeLocale { months =
                                             [ ("jan","jan")
@@ -93,6 +97,9 @@ swedishTimeLocale = defaultTimeLocale { months =
                                             , ("dec", "dec")
                                             ] }
 
+-- | Show date abbreviated according to how far past that date we
+-- are. Options are: %H:%M, %d %b and %Y-%m-%d.  See
+-- 'formatCalendarTime' to understand the meaning.
 showDateAbbrev :: MinutesTime -> MinutesTime -> String
 showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
@@ -105,38 +112,54 @@ showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                  ct1 = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral current*60) 0
                  ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
 
+-- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
 getMinutesTime :: IO MinutesTime
 getMinutesTime = (return . fromClockTime) =<< getClockTime
 
+-- | Get event time as 'MinutesTime'. Warning: server should work in UTC time.
+--
+-- Avoid this function. Soon we will need virtual time, not time taken
+-- globally. Simulation and unit testing requires time to be specified
+-- explicitely.
+-- 
+-- FIXME: rename to 'getMinutesTimeDB'
 getMinuteTimeDB :: AnyEv MinutesTime
 getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
 
+-- | Convert 'ClockTime' to 'MinutesTime'. Uses just seconds, picoseconds are ignored.
 fromClockTime :: ClockTime -> MinutesTime
-fromClockTime (TOD secs _picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) (fromIntegral $ (secs `mod` 60))
+fromClockTime (TOD secs _picos) =  fromSeconds (fromIntegral secs)
 
+-- | Convert 'MinutesTime' to 'ClockTime'.
 toClockTime :: MinutesTime -> ClockTime
-toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)
+toClockTime mt = (TOD (fromIntegral $ toSeconds mt) 0)
 
+-- | Convert 'CalendarTime' to 'MinutesTime' through 'System.Time.toClockTime'.
 fromUTCTime :: CalendarTime -> MinutesTime
 fromUTCTime = fromClockTime . System.Time.toClockTime
 
+-- | Convert 'MinutesTime' to 'CalendarTime' through 'System.Time.toUTCTime'.
 toUTCTime :: MinutesTime -> CalendarTime
 toUTCTime = System.Time.toUTCTime . toClockTime
 
+-- | Convert minutes to proper 'MinutesTime'.
 fromMinutes :: Int -> MinutesTime
 fromMinutes m = MinutesTime m 0
 
+-- | Extract the minutes component from 'MinutesTime'. Seconds are ignored.
 toMinutes :: MinutesTime -> Int
 toMinutes (MinutesTime m _) = m
 
+-- | Convert seconds to proper 'MinutesTime'.
 fromSeconds :: Int -> MinutesTime
-fromSeconds s = MinutesTime (s `mod` 60) (s `rem` 60)
+fromSeconds s = MinutesTime (s `div` 60) (s `mod` 60)
 
+-- | Get number of seconds from 'MinutesTime' since 1970.
 toSeconds :: MinutesTime -> Int
 toSeconds (MinutesTime m s) = m*60 + s
 
 
-
+-- | Parse format %d-%m-%Y.
 parseMinutesTimeMDY :: String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
                       t <- parseTime defaultTimeLocale "%d-%m-%Y" s
@@ -144,33 +167,48 @@ parseMinutesTimeMDY s = do
                       let val = diffDays t startOfTime
                       return (MinutesTime (fromIntegral $ (val *24*60)) 0)
 
+-- | Show date as %d-%m-%y. As you see name lies.
 showDateMDY :: MinutesTime -> String
 showDateMDY (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
                                     in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime
 
+-- | Show date as %Y-%m-%d.
 showDateYMD :: MinutesTime -> String
 showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
                                     in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime
 
+-- | Use as:
+--
+-- > 5 `minutesAfter` midnight
 minutesAfter :: Int -> MinutesTime -> MinutesTime
 minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
 
+-- | Calculate start of month.
 startOfMonth :: MinutesTime -> MinutesTime
 startOfMonth t = let
                    CalendarTime {ctDay,ctHour,ctMin,ctSec,ctPicosec} = toUTCTime t
                    diff = (noTimeDiff {tdDay= (-1)*ctDay+1,tdHour=(-1)*ctHour,tdMin=(-1)*ctMin,tdSec=(-1)*ctSec,tdPicosec=(-1)*ctPicosec})
                  in fromClockTime $ addToClockTime diff  (toClockTime t)
 
+-- | Add a month.
+--
+-- FIXME: rename to 'monthsAfter'
 addMonths :: Int -> MinutesTime -> MinutesTime
 addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
 
+-- | Calcualte day difference between two dates. Rounds the difference
+-- down. A day is 24h. First date must be earile then second,
+-- otherwise 0 is returned.
 dateDiffInDays :: MinutesTime -> MinutesTime -> Int
 dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
 
+-- | Convert a date representation to integer. For date like
+-- "2010-06-12" result will bee 20100612. Useful in IntMap for
+-- example.
 asInt :: MinutesTime -> Int
 asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay
   where
