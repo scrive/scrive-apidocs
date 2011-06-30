@@ -33,30 +33,41 @@ import System.Locale
 import System.Time hiding (toClockTime, toUTCTime)
 import qualified System.Time as System.Time (toUTCTime, toClockTime)
 
--- | Time in minutes from 1970-01-01 00:0 in UTC coordinates
+-- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
        deriving (Eq, Ord, Typeable)
 
--- | Time in minutes from 1970-01-01 00:0 in UTC coordinates
-data MinutesTime = MinutesTime
+-- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
+data MinutesTime1 = MinutesTime1
     { minutes :: Int
     , secs :: Int
     }
-    deriving (Eq, Ord, Typeable, Data, Read)
+    deriving (Eq, Ord, Typeable)
+
+-- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
+newtype MinutesTime = MinutesTime { _unMinutesTime :: Int }
+    deriving (Eq, Ord, Typeable, Data)
 
 instance Version MinutesTime0
 $(deriveSerialize ''MinutesTime0)
 
-$(deriveSerialize ''MinutesTime)
-instance Version (MinutesTime) where
+$(deriveSerialize ''MinutesTime1)
+instance Version MinutesTime1 where
    mode = extension 1 (Proxy :: Proxy MinutesTime0)
 
-instance Migrate MinutesTime0 MinutesTime where
-      migrate (MinutesTime0 m) = MinutesTime {minutes = m, secs = 0 }
+$(deriveSerialize ''MinutesTime)
+instance Version MinutesTime where
+   mode = extension 2 (Proxy :: Proxy MinutesTime1)
+
+instance Migrate MinutesTime0 MinutesTime1 where
+      migrate (MinutesTime0 m) = MinutesTime1 {minutes = m, secs = 0 }
+
+instance Migrate MinutesTime1 MinutesTime where
+      migrate (MinutesTime1 m s) = fromSeconds (m*60 + s)
 
 instance Show MinutesTime where
-    showsPrec _prec (MinutesTime mins secs) =
-        let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
+    showsPrec _prec mt =
+        let clocktime = toClockTime mt
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in (++) $ formatCalendarTime defaultTimeLocale
@@ -64,17 +75,17 @@ instance Show MinutesTime where
 
 -- | Show time in %Y-%m-%d %H:%M format. Warning: system needs to run in UTC time!
 showMinutesTimeForAPI :: MinutesTime -> String
-showMinutesTimeForAPI (MinutesTime mins secs) =
-        let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
+showMinutesTimeForAPI mt =
+        let clocktime = toClockTime mt
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in formatCalendarTime defaultTimeLocale
                "%Y-%m-%d %H:%M" calendartime
 
 -- | Show time in "%Y-%m-%d" format.  Warning: system needs to run in UTC time!
 showDateOnly :: MinutesTime -> String
-showDateOnly (MinutesTime 0 _) = ""
-showDateOnly (MinutesTime mins _) =
-        let clocktime = TOD (fromIntegral mins*60) 0
+showDateOnly mt | toSeconds mt == 0 = ""
+                | otherwise =
+        let clocktime = toClockTime mt
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in formatCalendarTime defaultTimeLocale
@@ -101,7 +112,7 @@ swedishTimeLocale = defaultTimeLocale { months =
 -- are. Options are: %H:%M, %d %b and %Y-%m-%d.  See
 -- 'formatCalendarTime' to understand the meaning.
 showDateAbbrev :: MinutesTime -> MinutesTime -> String
-showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
+showDateAbbrev current time
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
                    formatCalendarTime swedishTimeLocale "%H:%M" ct
                | ctYear ct1 == ctYear ct =
@@ -109,8 +120,8 @@ showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                | otherwise =
                    formatCalendarTime swedishTimeLocale "%Y-%m-%d" ct
                where
-                 ct1 = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral current*60) 0
-                 ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
+                 ct1 = unsafePerformIO $ toCalendarTime $ toClockTime current
+                 ct = unsafePerformIO $ toCalendarTime $ toClockTime time
 
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
 getMinutesTime :: IO MinutesTime
@@ -144,46 +155,48 @@ toUTCTime = System.Time.toUTCTime . toClockTime
 
 -- | Convert minutes to proper 'MinutesTime'.
 fromMinutes :: Int -> MinutesTime
-fromMinutes m = MinutesTime m 0
+fromMinutes m = MinutesTime (m*60)
 
 -- | Extract the minutes component from 'MinutesTime'. Seconds are ignored.
 toMinutes :: MinutesTime -> Int
-toMinutes (MinutesTime m _) = m
+toMinutes (MinutesTime s) = s `div` 60
 
 -- | Convert seconds to proper 'MinutesTime'.
 fromSeconds :: Int -> MinutesTime
-fromSeconds s = MinutesTime (s `div` 60) (s `mod` 60)
+fromSeconds s = MinutesTime s
 
 -- | Get number of seconds from 'MinutesTime' since 1970.
 toSeconds :: MinutesTime -> Int
-toSeconds (MinutesTime m s) = m*60 + s
+toSeconds (MinutesTime s) = s
+
+
+-- | Format time according to Swedish rules of time formating.
+formatSwedishMinutesTime :: String -> MinutesTime -> String
+formatSwedishMinutesTime fmt mt = formatCalendarTime swedishTimeLocale fmt (toUTCTime mt)
 
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeMDY :: String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
-                      t <- parseTime defaultTimeLocale "%d-%m-%Y" s
-                      startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
-                      let val = diffDays t startOfTime
-                      return (MinutesTime (fromIntegral $ (val *24*60)) 0)
+    t <- parseTime defaultTimeLocale "%d-%m-%Y" s
+    startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
+    let val = diffDays t startOfTime
+    return $ fromMinutes (fromIntegral $ val *24*60)
 
 -- | Show date as %d-%m-%y. As you see name lies.
 showDateMDY :: MinutesTime -> String
-showDateMDY (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
-                                        calendartime = unsafePerformIO $ toCalendarTime clocktime
-                                    in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime
+showDateMDY = formatSwedishMinutesTime "%d-%m-%y"
+
 
 -- | Show date as %Y-%m-%d.
 showDateYMD :: MinutesTime -> String
-showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
-                                        calendartime = unsafePerformIO $ toCalendarTime clocktime
-                                    in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime
+showDateYMD = formatSwedishMinutesTime "%Y-%m-%d"
 
 -- | Use as:
 --
 -- > 5 `minutesAfter` midnight
 minutesAfter :: Int -> MinutesTime -> MinutesTime
-minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
+minutesAfter i (MinutesTime s) = MinutesTime (s + i*60)
 
 -- | Add a month. This adds full month, independed how many days there
 -- are in current month. So of 2nd today we end up on 2nd next month.
@@ -191,6 +204,8 @@ monthsAfter :: Int -> MinutesTime -> MinutesTime
 monthsAfter i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
 
 -- | Calculate start of month.
+--
+-- FIXME: This is wrong as is calculates date in UTC that may be about 2h off and get start of the month wrong.
 startOfMonth :: MinutesTime -> MinutesTime
 startOfMonth t = let
                    CalendarTime {ctDay,ctHour,ctMin,ctSec,ctPicosec} = toUTCTime t
@@ -199,12 +214,12 @@ startOfMonth t = let
 
 
 -- | Calcualte day difference between two dates. Rounds the difference
--- down. A day is 24h. First date must be earile then second,
+-- down. A day is 24h. First date must be earlier then second,
 -- otherwise 0 is returned.
 dateDiffInDays :: MinutesTime -> MinutesTime -> Int
-dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
-                       | ctime>mtime = 0
-                       | otherwise = (mtime - ctime) `div` (60*24)
+dateDiffInDays ctime mtime
+    | ctime > mtime = 0
+    | otherwise = (toMinutes mtime - toMinutes ctime) `div` (60*24)
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will bee 20100612. Useful in IntMap for
