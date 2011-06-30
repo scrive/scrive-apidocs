@@ -3,8 +3,8 @@ legalPage=
     $doctype()$
     <html>
       <head>
-        <title>$pagetitle()$ | Juridik</title>
-        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Välj mellan olika verifikationsmetoder – behåll högsta möjliga juridiska säkerhet och användarvänlighet." />
+        <title>$pagetitle()$ $_legalPageTitle()$</title>
+        <meta name="description" content="$_legalPageMetaDescription()$" />
         $standardHeaderContents()$
         $if(production)$
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
@@ -15,223 +15,147 @@ legalPage=
 ###
 legalPageContents=
 					<div class="nicetext">
-<h1>JURIDIK</h1>
+<h1>$_legalPageH1()$</h1>
 <br />
-<h2>Inledning</h2>
+<h2>$_legalPageH2Intro()$</h2>
 <br />
-<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka omsättningen och spara frustration. Nedanstående material ska endast ses som en beskrivning av SkrivaPå som företag och som tjänst. Materialet är under inga omständigheter avsett som juridisk rådgivning.</p>
+<p>$_legalPageH2IntroBody()$</p>
 <br />
-<h3>Juridiskt syfte</h3>
+<h3>$_legalPageH2IntroH31()$</h3>
 <br />
-<p>SkrivaPå´s juridiska syfte är att tillhandahålla bästa möjliga juridiska ramverk för att maximera den juridiska säkerheten, minimera riskexponeringen samt minimera antalet obehagliga överraskningar för våra användare.</p>
+<p>$_legalPageH2IntroH31Body1()$</p>
 <br />
-<p>När det uppstår en tvist kring huruvida ett dokument har skrivits på eller inte är det viktigt att kunna påvisa oberoende bevismaterial som styrker att dokumentet undertecknats av parterna. Detta kan vara knepigt eftersom avtal ofta ingås i ett ”bevisvakuum” där det enda sparade bevismaterialet är det signerade dokumentet. I värsta fall har man kanske inte ens det signerade dokumentet utan endast en e-post- eller sms-konversation att utgå ifrån. Om då ena parten hävdar att den inte har tillgång till något bevismaterial kan det vara svårt för andra parten att påvisa att det bevismaterial som den visar upp är äkta historisk dokumentation och inte har fabricerats i efterhand. Denna situation kan lätt leda till brustna affärsrelationer och i värsta fall kan det krävas att en domstolsprocess inleds för att avgöra konflikten. När konflikten tas upp i domstol ligger bevisbördan i första hand hos parten som hävdar att dokumentet skrivits på av samtliga parter. När denna part uppfyllt sin bevisbörda åligger det bestridande part att bevisa motsatsen och så vidare fram och tillbaks tills domstolen baserat på framlagt bevismaterial slutligen fäller ett avgörande huruvida dokumentet är giltigt eller inte.</p>
+<p>$_legalPageH2IntroH31Body2()$</p>
 <br />
-<p>SkrivaPå´s syfte är att vara ett användbart redskap för båda parter i alla steg av processen. Genom att SkrivaPå som oberoende tredje part bevittnat och lagrar bevismaterialet kan parterna använda SkrivaPå som ett effektivt och trovärdigt redskap för att kunna påvisa vad som egentligen gäller och komma överens utan att konflikten ska behöva utvecklas allt för långt. På så sätt hjälper SkrivaPå att i tidiga stadier av osämja minimera friktionen.  I de sällsynta fall en tvist går hela vägen till domstol har SkrivaPå som syfte att kunna tillhandahålla hävdande part (den part som hävdar att dokumentet undertecknats av parterna) bästa möjliga bevismaterial för att denna framgångsrikt ska kunna påvisa sin ståndpunkt i domstol.</p>
+<p>$_legalPageH2IntroH31Body3()$</p>
 <br />
-<h3>Oberoende ställning</h3>
+<h3>$_legalPageH2IntroH32()$</h3>
 <br />
-<p>För att upprätthålla trovärdigheten i tjänsten är SkrivaPå alltid oberoende. SkrivaPå tar och kommer aldrig att ta ställning för någondera undertecknande part oavsett vem som är betalande kund till SkrivaPå. Vårt syfte är uteslutande att generera bästa möjliga bevismaterial som kan vara användbart för att styrka att ett dokument undertecknats av parterna. Vi gör allt för att skydda integriteten och kvaliteten i det bevismaterial som genereras genom SkrivaPå och för att göra det så användbart som möjligt för våra slutanvändare.</p>
+<p>$_legalPageH2IntroH32Body()$</p>
 <br />
-<h3>Användarfilosofi</h3>
+<h3>$_legalPageH2IntroH33()$</h3>
 <br />
-<p>Dokument undertecknas i många olika former i många olika situationer. Därför kan våra användares behov se väldigt olika ut, framförallt inom spektrat användarvänlighet-säkerhet. Vi tror inte på att begränsa användarens möjligheter utan är övertygade om att användaren vill ha en bred lösning som fungerar i de flesta situationer där det behövs dokumentsignering. Därför väljer vi att inte ta ställning för en enda metod vad gäller signering och lagring, utan vi väljer istället att tillhandahålla användaren ett väl genomtänkt urval som passar hela spektrat användarvänlighet-säkerhet.</p>
+<p>$_legalPageH2IntroH33Body1()$</p>
 <br />
-<p>Vi medger att denna flexibilitet i viss utsträckning kan anses öka användarens risk i situationer då användaren har möjlighet att välja ett signeringsverktyg som ur ett riskperspektiv möjligen inte är optimalt för situationen. Vi tror dock att vi genom tjänstens enkelhet över lag sänker den individuella risken då vi:</p>
-<br />
-<ol class="letters">
-	<li>Gör det enklare över lag att skriva på dokument vilket gör att andelen osäkra överenskommelser minskar (som till exempel rent muntliga överenskommelser).</li>
-	<li>Genererar och säkrar högkvalitativt bevismaterial på förhand istället för som generellt är fallet idag: att man letar efter historiska bevis då konflikten 	
-	    redan är ett faktum och mycket material kan ha försvunnit eller blivit oanvändbart.</li>
-	<li>Försöker göra vårt bästa för att informera användaren om vad som gäller och därmed främja välinformerat beslutsfattande.</li>
-</ol>
-<br />
-<br />
-<h2>Centrala Juridiska överväganden</h2>
-<br />
-<p>I svensk rätt råder fri bevisprövning. Det betyder att tvistande parter i domstol kan presentera valfritt bevismaterial för att styrka sin talan och att de framlagda bevismaterial som stödjer olika ståndpunkter sedan vägs mot varandra. Detta gäller även vid tvister gällande undertecknade dokument, exempelvis i avtalstvister. I SkrivaPå´s fall betyder det att inte endast de undertecknande parternas handlingar genom tjänsten SkrivaPå kan inräknas som bevismaterial, utan även parternas handlingar utanför tjänsten som exempelvis telefonsamtal, sms och e-mailkonversationer. SkrivaPå kan givetvis endast utöva sitt juridiska uppdrag inom ramarna för tjänsten och tar aldrig, varken explicit eller implicit, något ansvar för vad användarna gör utanför ramarna för tjänsten. Följande är de viktigaste faktorerna inom SkrivaPå´s kontrollområde som påverkar styrkan hos bevismaterial genererade vid användning av tjänsten SkrivaPå:</p>
+<p>$_legalPageH2IntroH33Body2()$</p>
 <br />
 <ol class="letters">
-	<li>Verifikation av identitet</li>
-	<li>Dokumentsigneringsprocess</li>
-	<li>Generering av data</li>
-	<li>Dokumentförvaring</li>
+	$_legalPageH2IntroH33Body3()$</ol>
+<br />
+<br />
+<h2>$_legalPageH2KeyLegal()$</h2>
+<br />
+<p>$_legalPageH2KeyLegalBody1()$</p>
+<br />
+<ol class="letters">
+	$_legalPageH2KeyLegalBody2()$
 </ol>
 <br />
-<h3>Verifikation av identitet</h3>
+<h3>$_legalPageH2KeyLegalH31()$</h3>
 <br />
-<p>Svensk lagstiftning reglerar mycket sällan formen för signering (sk. formkrav). Huvudregeln är att en överenskommelse är juridiskt bindande, oberoende av hur den bekräftas (genom handslag, uttalande, skrift, e-post, etc.). Den stora skillnaden mellan olika sätt att bekräfta en överenskommelse ligger inte i själva juridiken, dvs om den är giltig eller inte, utan i skillnaden i möjlighet att bevisa överenskommelsens existens, innehåll och identitet på deltagande parter. Orsaken är att olika metoder för att ingå avtal genererar olika mängd och kvalitet på bevismaterial. SkrivaPå erbjuder idag endast e-signering (e-post) och e-legitimation som metoder för identifiering av avtalsparter vid signering. SkrivaPå planerar att inom kort expandera antalet metoder för att göra tjänsten än mer användarvänlig för användaren. Nedan följer en detaljerad beskrivning av de två metoder som SkrivaPå tillhandahåller idag.</p>
+<p>$_legalPageH2KeyLegalH31Body()$</p>
 <br />
-<h3>E-post</h3>
+<h3>$_legalPageH2KeyLegalH32()$</h3>
 <br />
-<p><h4>Användningsområde:</h4> Vid transaktioner med låg risk och låg insats, där företag som har egna registrerade domäner och domänspecifika e-postadreser (ex. personnamn@företagsurl.se) kan det passa väl att använda vår e-signering på grund av e-postens smidighet, dess starka inarbetning i andra företagsprocesser och eftersom e-post är en teknik som nästan alla har tillgång till och använder dagligen.</p>
+<p>$_legalPageH2KeyLegalH32Body1()$</p>
 <br />
-<p><h4>Verifieringsmetod:</h4> Det finns tre delar av verifieringen. En aktiv del, en passiv del och IP-adressen. I ett första steg skickar vi en unik länk till e-postadressen som användaren måste klicka på för att kunna underteckna ett dokument på SkrivaPå med e-postadressen. I det andra steget, när dokumentet skrivits på av samtliga parter, skickar vi en bekräftelse till samtliga parter via e-post. Underlåtelse att reagera om en bekräftelse av någon anledning skickats felaktigt kan vid senare konflikt användas som argument för att bekräftelsen var giltig vid tillfället och att bestridandet är en efterkonstruktion. Vi registrerar dessutom användares IP-adress. IP-adresser genereras dynamiskt och anger bland annat var användaren befinner sig rent geografiskt. Detta kan användas för att styrka rimligheten att en person har eller inte har befunnit sig på platsen där dokumentet undertecknats ifrån.</p>
+<p>$_legalPageH2KeyLegalH32Body2()$</p>
 <br />
-<p><h4>Juridisk reflektion:</h4> E-postidentifiering kan anses stark som verifieringsmetod då den tillämpas på domänspecifika e-postadresser så som adress@företagsdomän.se. Det finns två anledningar till detta:</p>
+<p>$_legalPageH2KeyLegalH32Body3()$</p>
+<br />
+<ol class="numbers">$_legalPageH2KeyLegalH32Body31()$
+	</ol>
+<br />
+<p>$_legalPageH2KeyLegalH32Body4()$</p>
+<br />
+<h3>$_legalPageH2KeyLegalH33()$</h3>
+<br />
+<p>$_legalPageH2KeyLegalH33Body1()$</p>
 <br />
 <ol class="numbers">
-	<li>Det går inte att vara anonym domänägare. Därmed är domänägaren alltid känd.</li>
-	<li>De domänspecifika adresserna är inte fria utan i standardfallet delas de ut genom personliga relationer inom organisationen och därmed är den interna verifieringen stark.</li>
-</ol>
+	$_legalPageH2KeyLegalH33Body2()$</ol>
 <br />
-<p>Därmed är kopplingen mellan identitet och en domänspecifik e-postadress relativt stark. Styrkan i domänspecifika e-postadresser ska inte förväxlas med e-postadresser från öppna e-postleverantörer som GMail och Hotmail där vem som helst kan skapa ett konto i valfritt namn och med valfri identitet. Eftersom identifieringen är obefintlig vid registrering av konto hos sådana e-postleverantörer har konton hos dessa betydligt svagare styrka vid verifiering än domänspecifika konton. I fall då e-posten inte bidrar till identifiering av användaren krävs annan bevisning som knyter ett undertecknat dokument till en specifik identitet, exempelvis annan mailkommunikation från e-postkontot, telefonsamtal eller sms. Eftersom SkrivaPå i dagsläget helt saknar metoder för registrering av sådan övrig kommunikation räknar vi den som att den ligger utanför SkrivaPå´s kontrolldomän. Vi rekommenderar därmed våra användare att inte använda e-postkonton som hör till öppna domäner för identifiering vid signering av dokument. Det stora flertalet privata användare använder e-postkonton tillhörande just öppna domäner, därför avråder vi företag och privatpersoner att använda tjänstens e-postverifiering om inte båda parter har tillgång till domänspecifika e-postadresser som jobbmail, skolmail eller annat.</p>
-<br />
-<h3>E-legitimation</h3>
-<br />
-<p><h4>Användningsområde:</h4> Denna metod passar bra alla typer av dokument som kräver extra hög säkerhet i verifieringen och för signering mellan parter (ofta privatpersoner) som inte har domänspecifika e-postadresser. Exempel på bra användningsområden är för privatpersoner och för företag som skriver på dokument med privatpersoner, för företag som ska skriva under extra viktiga dokument eller dokument som ska lämnas in till statlig myndighet som har formkrav.</p>
-<br />
-<p>Verifiering med e-legitimation sker som en extra verifiering utöver epostverifiering. E-legitimationsverifieringen sker i tre steg.</p>
-<br />
-<ol class="numbers">
-	<li>Första steget är då parten införskaffar sin e-legitimation genom att logga in på sin internetbank. För att kunna logga in på internetbanken måste du först ha skaffat ett konto på banken genom att identifiera dig med ID-kort eller målsmans godkännande.</li>
-	<li>I processen när parten genom internetbanken installerar sin e-legitimation på datorn ombeds den definiera en stark kod som den sedan ska använda för att verifiera sig vid användning av legitimationen. Vid tillfället då parterna ska skriva på dokumentet öppnas partens e-legitimationsklient (exempelvis Nexus Personal) på datorn och parten identifierar sig genom att skriva in sin e-legitimationskod. För att verifiera partens identitet kommunicerar e-legitimationsklienten med certifikatsutfärdarens server som kontrollerar partens personuppgifter och om allting stämmer så accepteras partens identitet.</li>
-	<li>I sista steget kontrollerar SkrivaPå partens e-legitimation mot personuppgifter på avsedd undertecknande part enligt definition från dokumentutfärdaren. Om uppgifterna från e-legitimationen matchar med dokumentutfärdarens godkänns underskriften av SkrivaPå.</li>
-</ol>
-<br />
-<p><h4>Juridisk reflektion:</h4> Svensk lagstiftning likställer kvalificerade signaturer med vanliga handskrivna signaturer (det finns dock några få dokument som är undantagna från denna regel, exempelvis testamente, köp av fastighet och giftermål). E-legitimation är baserat på PKI teknologi som klassas till kategorin kvalificerade signaturer. E-legitimation är därmed enligt lag likställt med en handskriven signatur. Faktum är dock att metoden att signera med e-legitimation är betydligt mer komplex och mer svårförfalskad än en handskriven signatur och därmed bör e-legitimation utgöra en starkare signatur än den som utfärdas för hand. Till bevistyngden skall även tilläggas att dokumentet även undertecknas med e-postverifiering. Därmed drar vi slutsatsen att denna verifieringsmetod är exceptionellt stark.</p>
+<p>$_legalPageH2KeyLegalH33Body3()$</p>
 <br />
 <br />
-<h3>Identifiering av bedrägeri</h3>
+<h3>$_legalPageH2KeyLegalH34()$</h3>
 <br />
-<p>En omstridd del i diskussionen kring elektroniska identifikationsmetoder behandlar huruvida integriteten hos verifikationsverktyget kan garanteras: hur kan vi förhindra att till exempel avtal signeras av en bedragare i en situation då ett e-postkonto kapats eller verifikationskoden till en e-legitimation stulits? Svaret måste tyvärr bli att SkrivaPå inte kan förhindra detta eftersom människors e-postkonton och koder ligger utanför SkrivaPå´s kontrolldomän. Innan man drar några slutsatser av detta bör man dock fråga sig: vad är egentligen skillnaden mellan dagens standard med handskriven signatur och de elektroniska signeringsmetoder som SkrivaPå tillhandahåller? Hur klarar handskrivna signaturer motsvarande frågeställning? Oss veterligen krävs inga stulna inloggningar eller teknisk kunskap för att förfalska en handskriven signatur, det räcker med papper och penna och hur säkert är egentligen det? Vår bedömning är att elektroniska signaturer per definition är steget säkrare eftersom tekniken utgör en barriär att utföra bedrägeriet i första hand (koder och privat hårdvara) och dessutom möjliggör direkt övervakning vid själva signeringstillfället till exempel med hjälp av IP-adresser och avancerade övervakningssystem för förebyggande av bedrägeri. SkrivaPå tillämpar IP-registrering och ser även över möjligheten att införa ovan nämnda övervakningssystem.</p>
+<p>$_legalPageH2KeyLegalH34Body()$</p>
 <br />
 <br />
-<h2>Dokumentsigneringsprocess</h2>
+<h2>$_legalPageH2SignProcess()$</h2>
 <br />
-<h3>Användargränssnitt</h3>
+<h3>$_legalPageH2SignProcessH31()$</h3>
 <br />
-<p>En förutsättning, enligt svensk lagstiftning, för att en signatur ska anses giltig är att undertecknande part förstår vad den undertecknar och att den undertecknar. Är detta inte fallet kan avtalet betraktas som ogiltigt i en domstolsprövning. Vi har utvecklat vår process i följande steg för att säkerställa att samtliga parter ska vara införstådda med att de signerar och vad de signerar:</p>
+<p>$_legalPageH2SignProcessH31Body1()$</p>
 <br />
 <table>
-	<tr>
-		<th>Steg</th>
-		<th>Användare</th>
-		<th>Juridisk orsak</th>
-	</tr>
-	<tr class="odd">
-		<td>1</td>
-		<td>Avsändare</td>
-		<td>Avsändaren skapar ett konto online på tjänsten SkrivaPå, kommunicerar med en person som bjuder in till ett konto eller skapar ett konto i slutsteget då den har varit mottagande part i ett dokument skickat genom SkrivaPå. Avsändaren antas här ha blivit införstådd i tjänsten.</td>
-	</tr>
-	<tr>
-		<td>2</td>
-		<td>Avsändare</td>
-		<td>Avsändaren får ett mail med ett välkomstmeddelande innehållandes information om tjänsten och en verifieringslänk.</td>
-	</tr>
-	<tr class="odd">
-		<td>3</td>
-		<td>Avsändare</td>
-		<td>Efter att avsändaren klickat på länken fyller den i sina uppgifter på SkrivaPå, läser och accepterar användarvillkoren.</td>
-	</tr>
-	<tr>
-		<td>4</td>
-		<td>Avsändare</td>
-		<td>När avsändaren ska bjuda in en motpart följer den en trestegsprocess. Först laddar den upp ett dokument, sedan fyller den i inbjudna parters uppgifter och definierar fält i dokumentet som eventuellt ska fyllas i av mottagaren. I sista steget kan avsändaren underteckna dokumentet genom att klicka på knappen ”Underteckna”.</td>
-	</tr>
-	<tr class="odd">
-		<td>5</td>
-		<td>Avsändare</td>
-		<td>Då avsändaren trycker på knappen ”Underteckna” visas ett pop-up-fönster där avsändaren frågas om den verkligen är säker på att den vill underteckna dokumentet. När den klickat ”Underteckna” skickas en inbjudan via e-post till definierade parter och avsändaren informeras att det undertecknade dokumentet nu undertecknats och skickats. </td>
-	</tr>
-	<tr class="odd">
-		<td>6</td>
-		<td>Mottagare</td>
-		<td>Mottagaren tar emot meddelandet i vilket denne informeras om att den är inbjuden att skriva på dokumentet med parterna xyz och den informeras även hur den ska gå vidare.</td>
-	</tr>
-	<tr>
-		<td>7</td>
-		<td>Mottagare</td>
-		<td>Då mottagaren klickar på länken som bifogas med e-postmeddelandet hamnar den i en vy på SkrivaPå där vi informerar mottagaren om att den noggrant bör läsa all tillgänglig information i dokumentet samt de tillhörande kontaktuppgifterna.</td>
-	</tr>
-	<tr class="odd">
-		<td>8</td>
-		<td>Mottagare</td>
-		<td>För att försäkra oss om att mottagaren har tagit del av innehållet i dokumentet måste mottagaren bläddra igenom hela dokumentet ned till slutet för att komma vidare och kunna underteckna.</td>
-	</tr>
-	<tr class="odd">
-		<td>9</td>
-		<td>Mottagare</td>
-		<td>När mottagaren bläddrat ned genom hela dokumentet till slutet och med största sannolikt noterat att den bläddrar genom ett dokument kan mottagaren slutligen klicka i en knapp med texten ”Underteckna”.</td>
-	</tr>
-	<tr>
-		<td>10</td>
-		<td>Mottagare</td>
-		<td>Då mottagaren tryckt på knappen ”Underteckna” visas ett pop-up- fönster där sändaren frågas om den verkligen är säker på att den vill underteckna dokumentet.</td>
-	</tr>
-	<tr class="odd">
-		<td>11</td>
-		<td>Mottagare</td>
-		<td>Slutligen, då dokumentet är undertecknat visas en informationstext som konstaterar att mottagaren har undertecknat dokumentet.</td>
-	</tr>
-	<tr>
-		<td>12</td>
-		<td>Mottagare &amp; Avsändare</td>
-		<td>När samtliga parter undertecknat dokumentet stämplar SkrivaPå det med dokumentuppgifter och med en kvalificerad signatur. Sedan skickas ett e-postmeddelande innehållandes det färdiga dokumentet och information om att dokumentet slutligen undertecknats av samtliga parter och är juridiskt bindande till alla avtalsparter.</td>
-	</tr>
+	<tr>$_legalPageH2SignProcessH31Body2TableHead()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table1()$</tr>
+	<tr>$_legalPageH2SignProcessH31Body2Table2()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table3()$</tr>
+	<tr>$_legalPageH2SignProcessH31Body2Table4()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table5()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table6()$</tr>
+	<tr>$_legalPageH2SignProcessH31Body2Table7()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table8()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table9()$</tr>
+	<tr>$_legalPageH2SignProcessH31Body2Table10()$</tr>
+	<tr class="odd">$_legalPageH2SignProcessH31Body2Table11()$</tr>
+	<tr>$_legalPageH2SignProcessH31Body2Table12()$</tr>
 </table>
 <br />
-<p>Efter de sex steg med vilka avsändaren (steg 1-5 och 12) och mottagaren (6-12) vardera informeras om att de använder en tjänst för att skriva på ett dokument bör med all rimlighet parterna ska vara införstådda i:</p>
+<p>$_legalPageH2SignProcessH31Body3()$</p>
 <br />
 <ol class="letters">
-	<li>Att det rör sig om en tjänst för att skriva på ett juridiskt bindande dokument.</li>
-	<li>Innehållet i dokumentet som de skriver på.</li>
-	<li>Att de endast får skriva på dokumentet under förutsättning att de är rätt person.</li>
+	$_legalPageH2SignProcessH31Body4()$
 </ol>
 <br />
 <br />
-<h2>Bevismaterial</h2>
+<h2>$_legalPageH2Proof()$</h2>
 <br />
-<h3>Stabil mjukvara</h3>
-<p>För att kunna generera starkt bevismaterial är det viktigt att systemet är stabilt och inte genererar felaktig information eller har luckor som tillåter att systemet kan manipuleras på oönskade sätt. Med grundliga rutiner och stabil teknologi säkerställer vi att tjänsten SkrivaPå drivs av stabil och säker mjukvara.</p>
+<h3>$_legalPageH2ProofH31()$</h3>
+<p>$_legalPageH2ProofH31Body1()$</p>
 <br />
-<p><h4>Haskell:</h4> Tjänsten SkrivaPå är byggd på teknologin Haskell, som räknas som en av de mest stabila och pålitliga mjukvaruteknologier som någonsin utvecklats. En av anledningarna till detta är att Haskell är utvecklat för att minimera mänskliga felsteg i mjukvaruutvecklingen genom att tillämpa något som kallas ” strong type checking”. Strong type checking innebär att ingen ny programmeringskod kan implementeras i existerande system utan att den först har accepterats som logiskt kompatibel med resterande system genom stränga automatiska tester. I och med detta kan vissa problem omöjligen uppstå vid mjukvaruutveckling med Haskell och sannolikheten att vissa andra typer av problem uppstår blir betydligt mindre än vid användning av andra teknologier.</p>
+<p>$_legalPageH2ProofH31Body2()$</p>
 <br />
-<p><h4>Rigorösa tester:</h4> För att ytterligare säkra kvalitén på vår mjukvara har vi en rigorös flerstegsprocedur för programvaruuppdateringar som säkrar att mjukvaran är grundligt testad innan den lanseras publikt. För att nå ett slutgiltigt godkännande testas mjukvaran i minst 10 steg utifrån ett grundligt protokoll som garanterar att samtliga delar av tjänsten sluttestats minst 3 gånger.</p>
+<p>$_legalPageH2ProofH31Body3()$</p>
 <br />
-<p><h4>Krypterad kommunikation:</h4> All vår kommunikation med användare och med våra samarbetspartners krypteras enligt högsta säkerhetsstandarder för att skydda data från förvanskning. För mer information läs under rubriken Säkerhet.</p>
+<p>$_legalPageH2ProofH31Body4()$</p>
 <br />
-<p><h4>Personal och säkerhet:</h4> För att kunna garantera högsta möjliga kvalitet på bevismaterialet är det även viktigt att systemet är säkrat mot interna attacker.</p>
+<p>$_legalPageH2ProofH31Body5()$</p>
 <br />
 <ol class="numbers">
-	<li>Vi begränsar antalet individer med tillgång till systemets kärna. Endast vår tekniska chef och ytterligare två utvalda tekniker har tillgång till att göra ändringar i våra servrar. Därmed kan endast ändringar genomföras av en begränsad och väl definierad grupp individer.</li>
-	<li>Samtliga anställda får underteckna strikta avtal som reglerar vad som är tillåtet inom ramarna för arbetsplatsen och samtliga anställda synas grundligt innan de kan få anställning på SkrivaPå.</li>
-	<li>Systemet loggar all aktivitet på våra servrar. Vi registrerar samtliga ändringar, när de utförts och av vem. Därmed finns alltid full spårbarhet av ändringar genomförda i systemet.</li>
-</ol>
+	$_legalPageH2ProofH31Body6()$</ol>
 <br />
-<h3>Bevissäkring</h3>
+<h3>$_legalPageH2ProofH32()$</h3>
 <br />
-<p>Bevis måste inte bara genereras på rätt sätt utan även lagras på rätt sätt för att förhindra förvanskning och för att bibehålla trovärdigheten hos bevismaterialet vid eventuell domstolsprövning. För att säkra vårt genererade bevismaterial skapar vi en så kallad ”hasch” av det (en kod som är unik för varje existerande datastruktur) och stämplar haschen med en kvalificerad signatur. Detta garanterar att bevismaterialet är kvalitetssäkrat och inte kan ändras. Dessutom tar vi säkerheten i bevissäkringen ytterligare ett steg. Efter att ha stämplat materialet lagrar vi det i säkerhetsklassade datahallar som inte tillåter att material tas ut, förvanskas och stoppas in igen. Följande material lagras på detta sätt:</p>
+<p>$_legalPageH2ProofH32Body1()$</p>
 <br />
 <ol class="numbers">
-	<li>Valda delar av våra loggar (dagligen)</li>
-	<li>Vår tjänst, själva mjukvarumaskinen som genererar de undertecknade dokumenten (efter varje systemuppdatering)</li>
-	<li>Vår tjänst, hur den ser ut för användaren när den undertecknar dokumenten (efter varje systemuppdatering)</li>
-	<li>Samtligavåratestdokument (efter varje systemuppdatering)</li>
-</ol>
+	$_legalPageH2ProofH32Body2()$</ol>
 <br />
 <br />
-<h2>Hantering av signerade dokument</h2>
+<h2>$_legalPageH2DocHandeling()$</h2>
 <br />
-<h3>Stämpling</h3>
+<h3>$_legalPageH2DocHandelingH31()$</h3>
 <br />
-<p>Då alla parter skrivit på ett dokument skickar vi dokumentet (kraftigt krypterat) till TrustWeaver där det förses med en kvalificerad signatur. Den kvalificerade signaturen går inte att förvanska och därmed säkerställer den att dokumentet inte förvanskats efter stämpling. Den kvalificerade signaturen går att kontrollera i bland annat Adobe Reader.</p>
+<p>$_legalPageH2DocHandelingH31Body1()$</p>
 <br />
-<h3>Lagring</h3>
+<h3>$_legalPageH2DocHandelingH32()$</h3>
 <br />
-<p>Utan tillgång till originaldokumentet är det svårt att bevisa dokumentets innehåll. Av erfarenhet från våra kunder och kundprospekt vet vi att det finns många olika situationer som kan göra att dokument kommer bort. Man skulle kunna tro att detta inte är fallet för viktigare dokument som till exempel rör gjorda investeringar på många miljoner. Så är dock inte fallet, det slarvas med dokument av såväl mindre som större värde. Därmed rekommenderar vi våra kunder starkt att använda en lämplig lagringsplats för sina dokument. Vi erbjuder två noggrant valda typer av lagring med olika säkerhetsnivå:</p>
+<p>$_legalPageH2DocHandelingH32Body1()$</p>
 <br />
 <ol class="numbers">
 	<li>
-		<p><h4>TrustWeaver:</h4> Som beskrivet i säkerhetsdelen av detta dokument är TrustWeaver vår högsäkerhetslösning för lagring. Bortsett från det tekniska som är beskrivet under rubriken säkerhet skiljer sig TrustWeaver från andra lagringslösningar framförallt vad gäller hur dokumenten lagras:</p>
+		<p>$_legalPageH2DocHandelingH32Body2()$</p>
 		<ol class="letters">
-			<li>För att få lagra material på TrustWeaver måste man genomgå rigorösa kontroller för att hindra användare från att äventyra andra användares datasäkerhet.</li>
-			<li>Tjänsten är utformad på sådant sätt att dokument inte kan tas ut och stoppas in igen. Därmed garanteras dokumentens integritet i ytterligare ett steg efter stämplingen med den kvalificerade signaturen.</li>
+			$_legalPageH2DocHandelingH32Body21()$
 		</ol>
 	</li>
 	<br />
 	<li>
-		<p><h4>Amazon:</h4> Denna typ av lagring sker hos den världsledande molnbaserade lagringslösningen Amazon S3. Precis som TrustWeaver är Amazon S3 säkerhetscertifierad enligt SAS 70 II och följer en strikt policy kring datasäkerhet. Trots detta saknar den TrustWeavers rigorösa användarkontroller och garantier av dataintegritet.</p>
+		<p>$_legalPageH2DocHandelingH32Body3()$</p>
 	</li>
 </ol>
 </div>

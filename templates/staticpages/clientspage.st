@@ -3,7 +3,7 @@ clientsPage=
     $doctype()$
     <html>
       <head>
-        <title>$pagetitle()$ | Kunder</title>
+        <title>$pagetitle()$ $_clientsPageTitle()$</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Våra kunder och våra kunders kunder älskar enkelheten." />
         $standardHeaderContents()$
         $if(production)$
@@ -15,61 +15,78 @@ clientsPage=
 ###
 clientsPageContents=
 					<div class="opaque wide box smaller">
-						<h1>Kundutlåtanden om SkrivaPå</h1>
-						<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration. </p>
-						<br />
-						<p>Vi är övertygade om att våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade problem på sätt som verkar enkla och tilltalande för slutkund.</p>
+						<h1>$_clientsPageH1()$</h1>
+						<p>$_clientsPageTopBody()$</p>
 						<br />
 						<ul class="partner-list">
 							<li>
 								<div class="partner-image">
 									<img src="/img/goenterprise-logo.png" />
 								</div>
-								<h2>Go Enterprise</h2>
-								<blockquote>”Processerna blir betydligt smidigare. Man sparar tid helt enkelt.”</blockquote>
-								<em>- Lisa Renander och Julia Hamrin, VD och Säljchef</em>
-								<p>Go Enterprise är ett ungt managementbolag där vi brinner för tillväxt, entreprenörskap och samhällsutveckling. Genom våra RIKA-koncept inspirerar vi till handlingskraft och problemlösning.
-RIKA står för research, idé, koncept och action – de fyra stegen i en problemlösningsprocess.</p>
-								<a href="http://www.goenterprise.se">www.goenterprise.se</a>
+								<h2>$_clientsPageCusomerVid()$</h2>
+								<blockquote>$_QuoteOnVid()$</blockquote>
+								<em>$_QuoteOnVidBy()$</em>
+								<p>$_clientsPageCusomerVidAbout()$</p>
+								<a href="http://www.goenterprise.se">$_clientsPageCusomerVidWeb()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
 									<img src="/img/accountfactory-logo.png" style="left:3px;top:3px;"/>
 								</div>
-								<h2>Account Factory</h2>
-								<blockquote>”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”</blockquote>
-								<em>- Mikael Green, VD</em>
-								<p>Account Factory sköter bokföringen för småföretag. Bara fasta priser och allt på webben.</p>
-								<a href="http://www.accountfactory.se">www.accountfactory.se</a>
+								<h2>$_clientsPageCusomer1()$</h2>
+								<blockquote>$_Quote1()$</blockquote>
+								<em>$_Quote1By()$</em>
+								<p>$_clientsPageCusomer1About()$</p>
+								<a href="http://www.accountfactory.se">$_clientsPageCusomer1Web()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
 									<img src="/img/greenhatpeople-logo.png" />
 								</div>
-								<h2>Green Hat People</h2>
-								<blockquote>”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”</blockquote>
-								<em>- Alexis Barnekow, Försäljningschef</em>
-								<p>Green hat People genomför oslagbara teambuildingaktiviteter i form av mobilstyrda spel där omgivningen utgör spelplanen. De finns representerade i hela Sverige och genomför teambuilding över hela Europa.</p>
-								<a href="http://www.greenhatpeople.se">www.greenhatpeople.se</a>
+								<h2>$_clientsPageCusomer2()$</h2>
+								<blockquote>$_Quote2()$</blockquote>
+								<em>$_Quote2By()$</em>
+								<p>$_clientsPageCusomer2About()$</p>
+								<a href="http://www.greenhatpeople.se">$_clientsPageCusomer2Web()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
 									<img src="/img/eventbook-logo.png" />
 								</div>
-								<h2>EventBook</h2>
-								<blockquote>"Smart lösning."</blockquote>
-								<em>- Christoffer Lindquist, VD</em>
-								<p>Din partner för konferens, kick-off och företagsresor.</p>
-								<a href="http://www.eventbook.se">www.eventbook.se</a>
+								<h2>$_clientsPageCusomer3()$</h2>
+								<blockquote>$_Quote3()$</blockquote>
+								<em>$_Quote3By()$</em>
+								<p>$_clientsPageCusomer3About()$</p>
+								<a href="http://www.eventbook.se">$_clientsPageCusomer3Web()$</a>
 							</li>
                                                         <li>
 								<div class="partner-image">
 									<img src="/img/accenture-logo.png" />
 								</div>
-								<h2>Accenture Management Consulting</h2>
-								<h3>"Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen."</h3>
-								<em>- Ola Brundin, Accenture Management Consulting</em>
-								<a href="http://www.accenture.com/se-en/Pages/index.aspx">www.accenture.com</a>
+								<h2>$_clientsPageCusomer4()$</h2>
+								<blockquote>$_Quote4()$</blockquote>
+								<em>$_Quote4By()$</em>
+								<p>$_clientsPageCusomer4About()$</p>
+								<a href="http://www.accenture.com/se-en/Pages/index.aspx">$_clientsPageCusomer4Web()$</a>
+							</li>
+                                                        <li>
+								<div class="partner-image">
+									<img src="" />
+								</div>
+								<h2>$_clientsPageCusomer5()$</h2>
+								<blockquote>$_Quote5()$</blockquote>
+								<em>$_Quote5By()$</em>
+								<p>$_clientsPageCusomer5About()$</p>
+								<a href="http://www.coop.se/konsumnord">$_clientsPageCusomer5Web()$</a>
+							</li>                                                        <li>
+								<div class="partner-image">
+									<img src="" />
+								</div>
+								<h2>$_clientsPageCusomer6()$</h2>
+								<blockquote>$_Quote6()$</blockquote>
+								<em>$_Quote6By()$</em>
+								<p>$_clientsPageCusomer6About()$</p>
+								<a href="">$_clientsPageCusomer6Web()$</a>
 							</li>
 						</ul>
 					</div>

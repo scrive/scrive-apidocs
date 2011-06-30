@@ -3,8 +3,8 @@ aboutPage=
     $doctype()$
     <html>
       <head>
-        <title>$pagetitle()$ | Om SkrivaPå</title>
-        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. SkrivaPå är skapat av ett ambitiöst, internationellt team med bas i Stockholm." />
+        <title>$pagetitle()$ $_aboutPageTitle()$</title>
+        <meta name="description" content="$_aboutPagaMetaDescription()$" />
         $standardHeaderContents()$
         $if(production)$
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
@@ -22,99 +22,92 @@ aboutPageContents=
 					<br />
 					<div class="opaque wide box smaller">
 						<div class="about-container">
-							<h1>Om SkrivaPå och gänget bakom</h1>
+							<h1>$_aboutPageH1()$</h1>
 							<br />
-							<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration.</p>
-							<br />
-							<p>Elektronisk dokumentsignering är en relativt ung bransch som är på stark framfart både i Sverige och internationellt. Vi är ett ungt företag som växer i en rasande fart och vi har idag 10 medarbetare. Vi är övertygade om att våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade problem på sätt som verkar enkla och tilltalande för slutkund.</p> 
-							<br />
-							<p>SkrivaPå grundades av Lukas Duczko och Gracjan Polak som lärde känna varandra under sin tid på kreditbolaget Klarna.</p>
+							<p>$_aboutPageTopBody()$</p>
 							<ul class="partner-list">
 								<li>
 									<div class="portrait-image">
 								          <a class="lukas"></a>
 									</div>
-									<h2>Lukas Duczko</h2>
-									<em>CEO</em>
-									<p>Lukas har en bakgrund från Handelshögskolan i Stockholm och från finanssektorn från sin tid som affärsutvecklare på Klarna. Han lämnade Klarna för att satsa uteslutande på SkrivaPå. SkrivaPå är hans andra företagsengagemang efter bokningsbolaget SpokenWord AB.</p>
-									lukas@skrivapa.se<br />
-									+46 704 56 04 04
+									<h2>$_aboutPagePerson1()$</h2>
+									<em>$_aboutPagePerson1Position()$</em>
+									<p>$_aboutPagePerson1Body()$</p>
+									$_aboutPagePerson1Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="gracjan"></a>
 									</div>
-									<h2>Gracjan Polak</h2>
-									<em>CTO</em>
-									<p>Gracjan har en bakgrund från Klarna som programmerare och från Krakow Technical University där han studerade som PhD och undervisade i programmeringsspråk. Han lämnade Klarna för att satsa uteslutande på SkrivaPå. SkrivaPå är hans andra företagsengagemang efter PDF-optimeringsföretaget ACCHSH. </p>
-									gracjan@skrivapa.se
+									<h2>$_aboutPagePerson2()$</h2>
+									<em>$_aboutPagePerson2Position()$</em>
+									<p>$_aboutPagePerson2Body()$</p>
+									$_aboutPagePerson2Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
                                                                           <a class="viktor"></a>
 									</div>
-									<h2>Viktor Wrede</h2>
-									<em>Business Development</em>
-									<p>Viktor har en bakgrund från Handelshögskolan i Stockholm där han studerat redovisning och finansiering. Han har tidigare arbetat som affärsutvecklare åt familjeföretaget Kundia AB där han bland annat hjälpte till att utveckla kontrollsystem och affärsprocesser. SkrivaPå är Viktors andra företagsengagemang efter Mobile Mall.</p>
-									viktor@skrivapa.se<br />
-									+46 708 88 47 49
+									<h2>$_aboutPagePerson3()$</h2>
+									<em>$_aboutPagePerson3Position()$</em>
+									<p>$_aboutPagePerson3Body()$</p>
+									$_aboutPagePerson3Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="mariusz"></a>
 									</div>
-									<h2>Mariusz Rak</h2>
-									<em>Development</em>
-									<p>Mariusz har en bakgrund från Warszaw Technical University där han tagit examen i funktionella programmeringsspråk. Han har tidigare arbetat åt ett av Polens största IT-konsultföretag. Fritiden spenderar Mariusz helst med att fördjupa sig inom avancerad logik och nya teorier inom funktionell programmering. </p>
-									mariusz@skrivapa.se
+									<h2>$_aboutPagePerson4()$</h2>
+									<em>$_aboutPagePerson4Position()$</em>
+									<p>$_aboutPagePerson4Body()$</p>
+									$_aboutPagePerson4Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="eric"></a>
 									</div>
-									<h2>Eric Normand</h2>
-									<em>Development</em>
-									<p>Eric har en bakgrund från University of New Orleans och har tidigare arbetat som team leader för säkerhetsprojekt inom amerikanska militären. Han har även på egen hand utvecklat ett flertal applikationer för iPhone och Android. Idag backpackar Eric jorden runt och arbetar 100% med SkrivaPå på distans.</p>
-									eric@skrivapa.se
+									<h2>$_aboutPagePerson5()$</h2>
+									<em>$_aboutPagePerson5Position()$</em>
+									<p>$_aboutPagePerson5Body()$</p>
+									$_aboutPagePerson5Contact()$
 									
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="emily"></a>
 									</div>
-									<h2>Emily May Green</h2>
-									<em>Development and Testing</em>
-									<p>Emily har en bakgrund från University of Bristol och har tidigare arbetat som utvecklare på ett flertal finansbanker i London. Hon lämnade sin post som systemutvecklare på HSBC för att arbeta heltid med SkrivaPå på distans.</p>
-									emily@skrivapa.se
+									<h2>$_aboutPagePerson6()$</h2>
+									<em>$_aboutPagePerson6Position()$</em>
+									<p>$_aboutPagePerson6Body()$</p>
+									$_aboutPagePerson6Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="oskar"></a>
 									</div>
-									<h2>Oskar Wallin Berglin</h2>
-									<em>Business Development</em>
-									<p>Oskar är student på Handelshögskolan i Stockholm och arbetar 100 % med SkrivaPå parallellt med sina studier. Entreprenörskap är ett stort intresse och han har tidigare bland annat drivit entreprenörsprojektet Snäll Skuldhjälp.</p>
-									oskar@skrivapa.se<br />
-									+46 709 85 08 67
+									<h2>$_aboutPagePerson7()$</h2>
+									<em>$_aboutPagePerson7Position()$</em>
+									<p>$_aboutPagePerson7Body()$</p>
+									$_aboutPagePerson7Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="nazli"></a>
 									</div>
-									<h2>Nazli Sahin</h2>
-									<em>IT Security</em>
-									<p>Nazli har en bakgrund från Eastern Mediterranean University, TRNC och Kungliga Tekniska Högskolan där hon studerat IT-säkerhet. Hon har bland annat varit engagerad i OWASP AppSec som IT-säkerhetsutvecklare.</p>
+									<h2>$_aboutPagePerson8()$</h2>
+									<em>$_aboutPagePerson8Position()$</em>
+									<p>$_aboutPagePerson8Body()$</p>
 
-									nazli@skrivapa.se
+									$_aboutPagePerson8Contact()$
 								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="belle"></a>
 									</div>
-									<h2>Phanupong Pakapongpan</h2>
-									<em>IT Security</em>
-									<p>Phanupong har en bakgrund på Assumption University i Bankok och Kungliga Tekniska Högskolan i Stockholm. Han är specialist på IT-säkerhet och har bland annat erfarenhet från arbete som IT-säkerhetskonsult i Thailand.</p>
-									phanupong@skrivapa.se
+									<h2>$_aboutPagePerson9()$</h2>
+									<em>$_aboutPagePerson9Position()$</em>
+									<p>$_aboutPagePerson9Body()$</p>
+									$_aboutPagePerson9Contact()$
 								</li>
 							</ul>
 						</div>
