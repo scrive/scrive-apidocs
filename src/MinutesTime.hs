@@ -93,20 +93,28 @@ showDateOnly mt | toSeconds mt == 0 = ""
 
 -- | Swedish time locale is like normal, but has Swedish month abbreviations.
 swedishTimeLocale :: TimeLocale
-swedishTimeLocale = defaultTimeLocale { months =
-                                            [ ("jan","jan")
-                                            , ("feb", "feb")
-                                            , ("mar", "mar")
-                                            , ("apr", "apr")
-                                            , ("maj", "maj")
-                                            , ("jun", "jun")
-                                            , ("jul", "jul")
-                                            , ("aug", "aug")
-                                            , ("sep", "sep")
-                                            , ("okt", "okt")
-                                            , ("nov", "nov")
-                                            , ("dec", "dec")
-                                            ] }
+swedishTimeLocale = defaultTimeLocale { months = [ ("januari","jan")
+                                                 , ("februari", "feb")
+                                                 , ("mars", "mar")
+                                                 , ("april", "apr")
+                                                 , ("maj", "maj")
+                                                 , ("juni", "jun")
+                                                 , ("juli", "jul")
+                                                 , ("augusti", "aug")
+                                                 , ("september", "sep")
+                                                 , ("oktober", "okt")
+                                                 , ("november", "nov")
+                                                 , ("december", "dec")
+                                                 ]
+                                      , wDays = [ ("måndag", "mån")
+                                                , ("tisdag", "tis")
+                                                , ("onsdag", "ons")
+                                                , ("torsdag", "tor")
+                                                , ("fredag", "fre")
+                                                , ("lördag", "lör")
+                                                , ("söndag", "sön")
+                                                ]
+                                      }
 
 -- | Show date abbreviated according to how far past that date we
 -- are. Options are: %H:%M, %d %b and %Y-%m-%d.  See
