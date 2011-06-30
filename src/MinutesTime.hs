@@ -22,6 +22,7 @@ module MinutesTime
        , toMinutes
        , toSeconds
        , toUTCTime
+       , formatSwedishMinutesTime
        ) where
 
 import Data.Data
