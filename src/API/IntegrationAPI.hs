@@ -153,11 +153,19 @@ createDocument = do
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
    doc <- case mtemplate of
             Just _template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
-            Nothing -> createAPIDocument company doctype title files involved tags
+            Nothing -> do
+                        d <- createAPIDocument company doctype title files involved tags
+                        updateDocumentWithDocumentUI d
    liftIO $ putStrLn $ show $ doc
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 
+updateDocumentWithDocumentUI :: Document -> IntegrationAPIFunction Document
+updateDocumentWithDocumentUI doc = do
+    mailfooter <- apiAskBS "mailfooter"
+    ndoc <- update $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
+    return $ either (const doc) id ndoc
+    
 createAPIDocument:: Company ->
                     DocumentType ->
                     BS.ByteString ->

@@ -457,7 +457,7 @@ replaceOnEdit templates this with =
 mailFooter :: Context -> Document -> IO String
 mailFooter ctx doc = do
     mservice <- liftMM (query . GetService) (return $ documentservice doc)
-    case join $ servicemailfooter <$> serviceui <$> mservice of
+    case (documentmailfooter $ documentui doc) `mplus` (join $ servicemailfooter <$> serviceui <$> mservice) of
          Just footer -> return $ BS.toString footer
          Nothing -> renderTemplate (ctxtemplates ctx) "poweredBySkrivaPaPara" $ field "ctxhostpart" $ ctxhostpart ctx
 

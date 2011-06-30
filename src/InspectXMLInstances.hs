@@ -77,6 +77,7 @@ instance InspectXML UserRecordStatus where
 instance InspectXML DocumentFunctionality where
 instance InspectXML ChargeMode where
 instance InspectXML DocumentTag where
+instance InspectXML DocumentUI where
 instance InspectXML TimeoutTime where
 instance InspectXML SignInfo where
 instance InspectXML DocumentHistoryEntry where

@@ -246,6 +246,7 @@ blankDocument =
           , documentsharing              = Doc.DocState.Private
           , documentrejectioninfo        = Nothing
           , documenttags                 = []
+          , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing

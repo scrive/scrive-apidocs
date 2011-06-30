@@ -39,6 +39,7 @@ module Doc.DocState
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTags(..)
+    , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
     , SetDocumentTrustWeaverReference(..)
     , ShareDocuments(..)
@@ -254,6 +255,7 @@ blankDocument =
           , documentsharing              = Private
           , documentrejectioninfo        = Nothing
           , documenttags                 = []
+          , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing
@@ -759,6 +761,14 @@ setDocumentTags docid doctags =
     doc {
       documenttags = doctags
     }
+
+setDocumentUI :: DocumentID -> DocumentUI  -> Update Documents (Either String Document)
+setDocumentUI  docid docui =
+  modifySignableOrTemplate docid $ \doc -> Right $
+    doc {
+      documentui = docui
+    }
+
 
 getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag] -> Query Documents ([Document])
 getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents ->
@@ -1347,6 +1357,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'setDocumentTags
+                        , 'setDocumentUI
                         , 'getDocumentsByCompanyAndTags
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
