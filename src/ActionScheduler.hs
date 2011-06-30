@@ -97,8 +97,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                 let mailfunc = case documenttype <$> mdoc of
                       (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
                       (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
-                      -- | TODO - so other option for order | THIS WILL GIVE A WARNING TILL IT IS FIXED
-                      _ -> error "Case for order not implemented yet"
+                      _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
                 mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
