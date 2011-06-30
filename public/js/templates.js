@@ -573,7 +573,7 @@ function authorToHTML(sig) {
         makeNonSignatory(authorsignorder);
     }
 
-    $("#peopleList ol").append($("<li>").append($("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " (AvsГ¤ndare)").append(newSignOrderListElement(sig.signatory ? sig.signorder: "-"))));
+    $("#peopleList ol").append($("<li>").append($("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " ("+localization.author+")").append(newSignOrderListElement(sig.signatory ? sig.signorder: "-"))));
 }
 
 // BEGIN signing order related functions

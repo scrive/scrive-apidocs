@@ -20,6 +20,7 @@ javascriptLocalisation =
              , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
+             , author : "Avsändare"
              , youMustSetParnerEmail : "$_youMustSetParnerEmail()$"
              , emptyOrNotValidEmail :  "$_emptyOrNotValidEmail()$"
              , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
@@ -33,7 +34,7 @@ javascriptLocalisation =
              , noTeliaInstalled  : "$_noTeliaInstalled()$"
              , noBankIdInstalled  : "$_noBankIdInstalled()$"
              , verifyingSignature : "$_verifyingSignature()$"
-            , tbsGenerationMessage : function(doctitle, docid){
+             , tbsGenerationMessage : function(doctitle, docid){
                     return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
                      }
              , differentSignatories :  "$_differentSignatories()$"
