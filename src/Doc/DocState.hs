@@ -794,7 +794,7 @@ deleteDocumentSignatoryLinks docid users p = do
   modifySignableOrTemplate docid $ \doc ->
     if isDeletableDocument doc
       then Right $ deleteDocumentIfRequired now users $ deleteSigLinks doc
-      else Left "Unable to delete siglinks for this doc"
+      else Left "Document is pending so it can't be removed"
   where
     deleteSigLinks doc@Document{documentsignatorylinks} =
       let deleteSigLink sl = sl { signatorylinkdeleted = True }
