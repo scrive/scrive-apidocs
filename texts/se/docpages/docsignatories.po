@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
-"Last-Translator: \n"
+"Last-Translator: Mariusz Rak <mariusz@skrivapa.se>\n"
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -64,7 +64,7 @@ msgstr "Har ej levererats"
 
 #: docpages/docsignatories.st:reminderForm
 msgid "_sendReminder"
-msgstr "SKICKA PÅMINNELSE"
+msgstr "Skicka påminnelse"
 
 #: docpages/docsignatories.st:reminderForm
 msgid "_reminderFormSendReminder"

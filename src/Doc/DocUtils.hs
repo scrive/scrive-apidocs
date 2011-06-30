@@ -53,8 +53,10 @@ copySignatoryAccount acc siglink =
     Checks whether the document is deletable, this is not the case for live documents.
 -}
 isDeletableDocument :: Document -> Bool
-isDeletableDocument doc = not $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]
-
+isDeletableDocument doc =
+    (not  $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]) -- We dont allow to delete pending documents
+    || (isAttachment doc || isTemplate doc)  -- But attachments and templates never can be pending (it they are this is a bug somewere else)
+    
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
    See also: partyListButAuthor to exclude the author.

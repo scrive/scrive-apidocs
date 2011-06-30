@@ -10,7 +10,7 @@
 -- company number, company name, and personal number.
 -----------------------------------------------------------------------------
 module Util.HasSomeUserInfo (
-  emailFromSignLink,
+  emailFromSigLink,
   getCompanyName,
   getCompanyNumber,
   getEmail,
@@ -28,27 +28,10 @@ import User.UserState
 import Data.Char
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
-
 import qualified Data.ByteString as BS
 
--- | Get the full name (first last)
-getFullName :: (HasSomeUserInfo a) => a -> BS.ByteString
-getFullName a =
-  let fn = T.strip $ E.decodeUtf8 $ getFirstName a
-      ln = T.strip $ E.decodeUtf8 $ getLastName  a
-  in E.encodeUtf8 $ T.strip $ T.intercalate " " [fn, ln]
-
--- | If the full name is empty, return the email
--- (no check if email is empty)
-getSmartName :: (HasSomeUserInfo a) => a -> BS.ByteString
-getSmartName a =
-  let fn = T.strip $ E.decodeUtf8 $ getFullName a
-      em = T.strip $ E.decodeUtf8 $ getEmail    a
-  in if T.all isSpace fn
-     then E.encodeUtf8 em
-     else E.encodeUtf8 fn
-
--- | Anything that might have a first name and last name.
+-- | Anything that might have a first name and last name, company name, company number,
+-- or personalnumber
 class HasSomeUserInfo a where
   getCompanyName    :: a -> BS.ByteString
   getCompanyNumber  :: a -> BS.ByteString
@@ -95,5 +78,22 @@ instance HasSomeUserInfo SignatoryLink where
    Useful for sending emails.
    Refactor note: change this to getNameEmailPair, move to Util.HasSomeUserInfo
  -}
-emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
-emailFromSignLink sl = (getFullName sl, getEmail sl)
+emailFromSigLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
+emailFromSigLink sl = (getFullName sl, getEmail sl)
+
+-- | Get the full name (first last)
+getFullName :: (HasSomeUserInfo a) => a -> BS.ByteString
+getFullName a =
+  let fn = T.strip $ E.decodeUtf8 $ getFirstName a
+      ln = T.strip $ E.decodeUtf8 $ getLastName  a
+  in E.encodeUtf8 $ T.strip $ T.intercalate " " [fn, ln]
+
+-- | If the full name is empty, return the email
+-- (no check if email is empty)
+getSmartName :: (HasSomeUserInfo a) => a -> BS.ByteString
+getSmartName a =
+  let fn = T.strip $ E.decodeUtf8 $ getFullName a
+      em = T.strip $ E.decodeUtf8 $ getEmail    a
+  in if T.all isSpace fn
+     then E.encodeUtf8 em
+     else E.encodeUtf8 fn
