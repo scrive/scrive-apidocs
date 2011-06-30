@@ -24,14 +24,18 @@ module Util.SignatoryLinkUtils (
        ) where
 
 import Doc.DocStateData
+import Mails.MailsUtil
 import User.UserState
 import Util.HasSomeUserInfo
+
 import Data.List
-import Mails.MailsUtil
 import Data.Maybe
 
 import qualified Data.ByteString as BS
 
+{- |
+   Anything that could identify a SignatoryLink
+ -}
 class SignatoryLinkIdentity a where
   isSigLinkFor :: a -> SignatoryLink -> Bool
 
@@ -47,12 +51,18 @@ instance SignatoryLinkIdentity UserID where
 instance SignatoryLinkIdentity Signatory where
   isSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
 
+{- |
+   Identify a SignatoryLink based on a; if that does not match, identify based on b.
+ -}
 instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
   isSigLinkFor (a, b) sl = isSigLinkFor a sl || isSigLinkFor b sl
 
 instance SignatoryLinkIdentity SignatoryLinkID where
   isSigLinkFor slid sl = slid == signatorylinkid sl
 
+{- |
+   Identify a User based on UserID or Email (if UserID fails).
+ -}
 instance SignatoryLinkIdentity User where
   isSigLinkFor u sl = isSigLinkFor (userid u, getEmail u) sl
 
@@ -66,15 +76,18 @@ instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isSigLinkFor (Just a) sl = isSigLinkFor a sl
   isSigLinkFor Nothing  _  = False
 
-getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
-getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
-
+{- |
+   Anything that could resolve to a SignatoryLink.
+ -}
 class MaybeSignatoryLink a where
   getMaybeSignatoryLink :: a -> Maybe SignatoryLink
 
 instance MaybeSignatoryLink SignatoryLink where
   getMaybeSignatoryLink = Just
 
+{- |
+   Nothing always resolves to Nothing.
+ -}
 instance (MaybeSignatoryLink msl) => MaybeSignatoryLink (Maybe msl) where
   getMaybeSignatoryLink (Just sl) = getMaybeSignatoryLink sl
   getMaybeSignatoryLink Nothing   = Nothing
@@ -148,3 +161,10 @@ isViewer msl = isJust (getMaybeSignatoryLink msl)
  -}
 isDeletedFor :: (MaybeSignatoryLink a) => a -> Bool
 isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
+
+{- |
+  Get the SignatoryLink from a document given a matching value.
+ -}
+getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
+getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
+
