@@ -118,12 +118,12 @@ msgstr "Telefonnummer"
 #: userpages/accountpage.st:showUser
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_personnumber"
-msgstr "Personnummer"
+msgstr "Pers. nr"
 
 #: userpages/accountpage.st:showUser
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_orgnumber"
-msgstr "Organusationsnummer"
+msgstr "Org. nr"
 
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
@@ -274,4 +274,3 @@ msgstr "Kontoinställningar"
 
 #~ msgid "_Delete"
 #~ msgstr "Radera"
-
