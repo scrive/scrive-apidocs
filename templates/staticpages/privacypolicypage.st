@@ -17,7 +17,7 @@ privacyPolicyPageContents=
 <div class="nicetext">
 <h1>$_privacyPolicyPageH1()$</h1>
 <br />
-<p>$_privacyPolicyPageH1Body()$</p>
+$_privacyPolicyPageH1Body()$
 <br />
 <h2>$_privacyPolicyPageH21()$</h2>
 <br />

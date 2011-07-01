@@ -70,7 +70,7 @@ legalPageContents=
 <br />
 <h3>$_legalPageH2KeyLegalH33()$</h3>
 <br />
-<p>$_legalPageH2KeyLegalH33Body1()$</p>
+$_legalPageH2KeyLegalH33Body1()$
 <br />
 <ol class="numbers">
 	$_legalPageH2KeyLegalH33Body2()$</ol>

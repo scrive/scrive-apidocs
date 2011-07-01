@@ -152,7 +152,7 @@ msgstr "<li>Första steget är då parten införskaffar sin e-legitimation genom
 
 #: staticpages/legalpage.st:legalPageContents
 msgid "_legalPageH2KeyLegalH33Body1"
-msgstr "<h4>Användningsområde:</h4> Denna metod passar bra alla typer av dokument som kräver extra hög säkerhet i verifieringen och för signering mellan parter (ofta privatpersoner) som inte har domänspecifika e-postadresser. Exempel på bra användningsområden är för privatpersoner och för företag som skriver på dokument med privatpersoner, för företag som ska skriva under extra viktiga dokument eller dokument som ska lämnas in till statlig myndighet som har formkrav.</p><br /><p>Verifiering med e-legitimation sker som en extra verifiering utöver epostverifiering. E-legitimationsverifieringen sker i tre steg."
+msgstr "<h4>Användningsområde:</h4> <p>Denna metod passar bra alla typer av dokument som kräver extra hög säkerhet i verifieringen och för signering mellan parter (ofta privatpersoner) som inte har domänspecifika e-postadresser. Exempel på bra användningsområden är för privatpersoner och för företag som skriver på dokument med privatpersoner, för företag som ska skriva under extra viktiga dokument eller dokument som ska lämnas in till statlig myndighet som har formkrav.</p><br /><p>Verifiering med e-legitimation sker som en extra verifiering utöver epostverifiering. E-legitimationsverifieringen sker i tre steg.</p>"
 
 #: staticpages/legalpage.st:legalPageContents
 msgid "_legalPageH2KeyLegalH33"

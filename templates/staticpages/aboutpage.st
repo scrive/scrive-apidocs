@@ -24,7 +24,7 @@ aboutPageContents=
 						<div class="about-container">
 							<h1>$_aboutPageH1()$</h1>
 							<br />
-							<p>$_aboutPageTopBody()$</p>
+							$_aboutPageTopBody()$
 							<ul class="partner-list">
 								<li>
 									<div class="portrait-image">
