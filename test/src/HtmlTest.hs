@@ -82,7 +82,7 @@ assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
     t <- emptyRender templates n
-    case parseTemplateAsXML (n, t) of
+    case parseStringAsXML (n, t) of
       Left msg -> assertFailure msg
       Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
   assertSuccess
@@ -135,9 +135,9 @@ checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
         isDivElem _ = False
 checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 
-parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
-parseTemplateAsXML (name, rawtxt) =
-  let preparedtxt = "<template>\n" ++ (clearTemplating rawtxt) ++ "\n</template>"
+parseStringAsXML :: (String, String) -> Either String (Document Posn)
+parseStringAsXML (name, rawtxt) = 
+  let preparedtxt = "<template>\n" ++ rawtxt ++ "\n</template>"
       prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
       mklinewithno no line --okay, i did indenting in a horrible way, it's just a test!
         | no<10  = (show no) ++ ".    |" ++ line
@@ -147,6 +147,11 @@ parseTemplateAsXML (name, rawtxt) =
   in case xmlParse' name preparedtxt of
     Left msg -> Left $ msg ++ "\n" ++ prettyprinttxt
     r@(Right _) -> r
+  
+
+parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
+parseTemplateAsXML (name, rawtxt) =
+  parseStringAsXML (name, clearTemplating rawtxt)
 
 clearTemplating :: String -> String
 clearTemplating = clearTemplating' NotTag NotTemplateCode . removeDocTypeDeclaration
