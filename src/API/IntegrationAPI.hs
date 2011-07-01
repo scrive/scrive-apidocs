@@ -129,7 +129,9 @@ embeddDocumentFrame = do
                 then do
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
-                else returnLink $ LinkSignDoc doc siglink
+                else -> do
+                     ssid <- createServiceSession (Left $ companyid $ company) location
+                     returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
          _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
 
 
