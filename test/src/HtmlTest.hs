@@ -69,11 +69,13 @@ testNoUnecessaryDoubleDivs = do
 testNoNestedP :: Assertion
 testNoNestedP = do
   langtemplates <- readAllLangsTemplates
+  ts <- mapM getTemplates templatesFilesPath
+  texts <- mapM getTextTemplates allValues
+  let alltemplatenames = map fst (concat ts ++ concat texts)
   _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
     let templates = langVersion lang langtemplates
-    ts <- getTextTemplates lang
-    let names = map fst ts
-    assertNoNestedP names templates
+    --ts <- getTextTemplates lang
+    assertNoNestedP alltemplatenames templates
   assertSuccess
   
 assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
@@ -94,14 +96,14 @@ checkXMLForNestedP templatename e =
 
 isPOrHasP :: Content Posn -> Bool
 isPOrHasP (CElem (Elem tag _ children) _) =
-  if map toLower tag == "div"
+  if map toLower tag == "p"
   then True
   else any isPOrHasP children
 isPOrHasP _ = False
 
 isPAndHasP :: Content Posn -> Bool
 isPAndHasP (CElem (Elem tag _ children) _) =
-  if map toLower tag == "div"
+  if map toLower tag == "p"
   then any isPOrHasP children
   else any isPAndHasP children
 isPAndHasP _ = False
