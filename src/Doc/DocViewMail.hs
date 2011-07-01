@@ -78,7 +78,7 @@ remindMailSigned :: KontrakcjaTemplates
                  -> IO Mail
 remindMailSigned templates customMessage ctx document@Document{documenttitle}  signlink = do
     title <- renderTemplate templates "remindMailSignedTitle" $ do
-        field "documenttitle" $ BS.toString $ documenttitle
+        field "documenttitle" documenttitle
     content <- wrapHTML templates =<< remindMailSignedContent templates customMessage ctx  document signlink
     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 

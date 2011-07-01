@@ -14,10 +14,13 @@ import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
 import System.IO
+import Control.Monad
 
 import Misc
 import Templates.Langs
 import Templates.TemplatesFiles
+import Templates.Templates (renderTemplate)
+import Templates.TemplatesLoader (KontrakcjaTemplates, readAllLangsTemplates, langVersion)
 
 main :: IO ()
 main = do
@@ -34,7 +37,8 @@ htmlTests :: [Test]
 htmlTests = 
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
-          testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ]
+          testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,
+          testCase "no nested p tags when templates are rendered" testNoNestedP ]
     ]
 
 excludedTemplates :: [String]
@@ -61,6 +65,50 @@ testNoUnecessaryDoubleDivs = do
   templates <- mapM getTemplates templatesFilesPath
   _ <- mapM assertNoUnecessaryDoubleDivs . filter isIncluded $ concat templates
   assertSuccess
+
+testNoNestedP :: Assertion
+testNoNestedP = do
+  langtemplates <- readAllLangsTemplates
+  _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
+    let templates = langVersion lang langtemplates
+    ts <- getTextTemplates lang
+    let names = map fst ts
+    assertNoNestedP names templates
+  assertSuccess
+  
+assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
+assertNoNestedP tnames templates = do
+  _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
+    t <- emptyRender templates n
+    case parseTemplateAsXML (n, t) of
+      Left msg -> assertFailure msg
+      Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
+  assertSuccess
+    
+checkXMLForNestedP :: String -> Content Posn -> Assertion
+checkXMLForNestedP templatename e =
+  if isPAndHasP e 
+  then assertFailure $ "nested <p> tags in template " ++ templatename ++ ":\n" ++ 
+                         (show $ content e)
+  else assertSuccess
+
+isPOrHasP :: Content Posn -> Bool
+isPOrHasP (CElem (Elem tag _ children) _) =
+  if map toLower tag == "div"
+  then True
+  else any isPOrHasP children
+isPOrHasP _ = False
+
+isPAndHasP :: Content Posn -> Bool
+isPAndHasP (CElem (Elem tag _ children) _) =
+  if map toLower tag == "div"
+  then any isPOrHasP children
+  else any isPAndHasP children
+isPAndHasP _ = False
+
+emptyRender :: KontrakcjaTemplates -> String -> IO String
+emptyRender templates name =
+  renderTemplate templates name ()
 
 assertNoUnecessaryDoubleDivs :: (String, String) -> Assertion
 assertNoUnecessaryDoubleDivs t@(name,_) =
