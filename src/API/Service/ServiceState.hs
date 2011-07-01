@@ -189,11 +189,9 @@ instance Typeable Service where typeOf _ = mkTypeOf "Service"
 instance Version ServiceLocation
 instance Version ServiceSettings
 
-instance Version ServiceUI1 where
-    mode = extension 1 (Proxy :: Proxy ())
-
+instance Version ServiceUI1 
 instance Version ServiceUI where
-    mode = extension 2 (Proxy :: Proxy ServiceUI1)
+    mode = extension 1 (Proxy :: Proxy ServiceUI1)
 
 instance Version Service1  where
     mode = extension 1 (Proxy :: Proxy ())
