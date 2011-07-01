@@ -289,10 +289,10 @@ flashMessagePleaseSign document templates =
 singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
 singlnkFields document dateformatter sl = do
   field "id" $ show $ signatorylinkid sl
-  field "name" $ BS.toString $ getSmartName sl
+  field "name" $ getSmartName sl
   field "email" $  ""
-  field "company" $ BS.toString . signatorycompany $ signatorydetails sl
-  field "author" $ SignatoryAuthor `elem` (signatoryroles sl)
+  field "company" $ getCompanyName sl
+  field "author" $ isAuthor sl
   signatoryStatusFields document sl dateformatter
 
 {- |
@@ -388,7 +388,7 @@ docSortFunc "authorRev" = viewComparingRev getAuthorName
 docSortFunc _ = const $ const EQ
 
 partnerComps :: Document -> BS.ByteString
-partnerComps doc = BS.concat . map (signatorycompany . signatorydetails) . documentsignatorylinks $ doc
+partnerComps doc = BS.concat $ map getCompanyName $ documentsignatorylinks doc
 
 revCompareStatus :: Document -> Document -> Ordering
 revCompareStatus doc1 doc2 = compareStatus doc2 doc1
@@ -1097,12 +1097,12 @@ documentAuthorInfo document =
   case getAuthorSigLink document of
     Nothing -> return ()
     Just siglink -> do
-      field "authorfstname"       $ nothingIfEmpty $ getFirstName siglink
-      field "authorsndname"       $ nothingIfEmpty $ getLastName  siglink
-      field "authorcompany"       $ nothingIfEmpty $ signatorycompany        $ signatorydetails siglink
-      field "authoremail"         $ nothingIfEmpty $ getEmail siglink
-      field "authorpersonnumber"  $ nothingIfEmpty $ signatorypersonalnumber $ signatorydetails siglink
-      field "authorcompanynumber" $ nothingIfEmpty $ signatorycompanynumber  $ signatorydetails siglink
+      field "authorfstname"       $ nothingIfEmpty $ getFirstName      siglink
+      field "authorsndname"       $ nothingIfEmpty $ getLastName       siglink
+      field "authorcompany"       $ nothingIfEmpty $ getCompanyName    siglink
+      field "authoremail"         $ nothingIfEmpty $ getEmail          siglink
+      field "authorpersonnumber"  $ nothingIfEmpty $ getPersonalNumber siglink
+      field "authorcompanynumber" $ nothingIfEmpty $ getCompanyNumber  siglink
 
 -- | Fields indication what is a document status
 documentStatusFields :: Document -> Fields

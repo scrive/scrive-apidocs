@@ -57,6 +57,7 @@ import qualified MemCache
 import API.Service.ServiceState
 import FlashMessage
 import Company.CompanyState
+import Util.HasSomeUserInfo
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User
@@ -187,7 +188,7 @@ newAccountCreatedLink user = do
     action <- liftIO $ newAccountCreated user
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
-                                (BS.toString . unEmail . useremail $ userinfo user)
+                                (BS.toString $ getEmail user)
 
 newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID) -> m (ActionID, MagicHash)
 newAccountCreatedBySigningLink user doclinkdata = do

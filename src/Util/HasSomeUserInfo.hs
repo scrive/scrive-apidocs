@@ -18,12 +18,14 @@ module Util.HasSomeUserInfo (
   getFullName,
   getLastName,
   getPersonalNumber,
-  getSmartName
+  getSmartName,
+  getMailAddress
 
   ) where
 
 import Doc.DocStateData
 import User.UserState
+import Mails.MailsData
 
 import Data.Char
 import qualified Data.Text as T
@@ -97,3 +99,10 @@ getSmartName a =
   in if T.all isSpace fn
      then E.encodeUtf8 em
      else E.encodeUtf8 fn
+
+-- | Get a MailAddress
+getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress
+getMailAddress a =
+  MailAddress { fullname = getFullName a
+              , email    = getEmail a
+              }

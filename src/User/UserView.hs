@@ -92,19 +92,19 @@ userFields user = do
                             then              "<" ++ (BS.toString $ getEmail user) ++ ">"
                             else fullname ++ " <" ++ (BS.toString $ getEmail user) ++ ">"
     field "id" $ show $ userid user
-    field "fstname" $ BS.toString $ getFirstName user
-    field "sndname" $ BS.toString $ getLastName user
-    field "email" $ BS.toString $ getEmail user
-    field "personalnumber" $ BS.toString $ userpersonalnumber $ userinfo user
-    field "address" $ BS.toString $ useraddress $ userinfo user
-    field "city" $ BS.toString $ usercity $ userinfo user
-    field "country" $ BS.toString $ usercountry $ userinfo user
-    field "zip" $ BS.toString $ userzip $ userinfo user
-    field "phone" $ BS.toString $ userphone $ userinfo user
-    field "mobile" $ BS.toString $ usermobile $ userinfo user
-    field "companyname" $ BS.toString $ usercompanyname $ userinfo user
-    field "companyposition" $ BS.toString $ usercompanyposition $ userinfo user
-    field "companynumber" $ BS.toString $ usercompanynumber $ userinfo user
+    field "fstname" $ getFirstName user
+    field "sndname" $ getLastName user
+    field "email" $ getEmail user
+    field "personalnumber" $ getPersonalNumber user
+    field "address" $ useraddress $ userinfo user
+    field "city" $ usercity $ userinfo user
+    field "country" $ usercountry $ userinfo user
+    field "zip" $ userzip $ userinfo user
+    field "phone" $ userphone $ userinfo user
+    field "mobile" $ usermobile $ userinfo user
+    field "companyname" $ getCompanyName user
+    field "companyposition" $ usercompanyposition $ userinfo user
+    field "companynumber" $ getCompanyNumber user
     field "userimagelink" False
     field "companyimagelink" False
     field "fullname" $ fullname
@@ -118,8 +118,8 @@ userFields user = do
 showUserSecurity :: KontrakcjaTemplates -> User -> IO String
 showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
     field "linksecurity" $ show LinkSecurity
-    field "fstname" $ BS.toString $ getFirstName user
-    field "sndname" $ BS.toString $ getLastName user
+    field "fstname" $ getFirstName user
+    field "sndname" $ getLastName user
     field "userimagelink" False
     field "lang" $ do
         field "en" $ LANG_EN == (lang $ usersettings user)
@@ -164,7 +164,7 @@ resetPasswordMail :: KontrakcjaTemplates -> String -> User -> KontraLink -> IO M
 resetPasswordMail templates hostname user setpasslink = do
   title   <- renderTemplate templates "passwordChangeLinkMailTitle" ()
   content <- (renderTemplate templates "passwordChangeLinkMailContent" $ do
-    field "personname"   $ userfullname user
+    field "personname"   $ getFullName user
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
     ) >>= wrapHTML templates
@@ -300,7 +300,7 @@ modalAccountSetup muser signuplink = do
         supervisorfields Nothing = []
         supervisorfields (Just svis) = [
               ("hassupervisor", "true")
-            , ("supervisorcompany", BS.toString . usercompanyname . userinfo $ svis)
+            , ("supervisorcompany", BS.toString $ getCompanyName svis)
             , ("supervisoraccounttype", supervisoraccounttype)
             , (supervisoraccounttype, "true")
             ]
@@ -454,8 +454,8 @@ modalDoYouWantToBeSubaccount = do
 userBasicFields :: User -> Fields
 userBasicFields u = do
     field "id" $ show $ userid u
-    field "fullname" $ BS.toString $ getFullName u
-    field "email" $ BS.toString $ getEmail u
-    field "company" $ BS.toString . usercompanyname $ userinfo u
-    field "phone" $ BS.toString . userphone $ userinfo u
+    field "fullname" $ getFullName u
+    field "email" $ getEmail u
+    field "company" $ getCompanyName u
+    field "phone" $ userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)

@@ -39,6 +39,8 @@ import Company.CompanyState
 import Data.Foldable (fold)
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
+import Util.HasSomeUserInfo
+
 import qualified AppLogger as Log (debug)
 
 {- |
@@ -202,13 +204,13 @@ userFromTMP uTMP = do
                 u' <- update $ AcceptTermsOfService (userid $ fromJust u) (fromSeconds 0)
                 when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
                 return $ fromRight u'
-    user' <- update $ SetUserInfo (userid user) $ (userinfo user)
+    user' <- update $ SetUserInfo (userid user) (userinfo user)
             {
-              userfstname = fromMaybe (userfstname $ userinfo user) $ fstname uTMP
-            , usersndname = fromMaybe (usersndname $ userinfo user) $ sndname uTMP
-            , userpersonalnumber = fromMaybe (userpersonalnumber $ userinfo user) $ personalnumber uTMP
-            , usercompanyname  = fromMaybe (usercompanyname $ userinfo user) $ company  uTMP
-            , usercompanynumber  = fromMaybe (usercompanynumber $ userinfo user) $ companynumber uTMP
+              userfstname = fromMaybe (getFirstName user) $ fstname uTMP
+            , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
+            , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
+            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP
+            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP
             }
     when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
     return $ fromRight user'

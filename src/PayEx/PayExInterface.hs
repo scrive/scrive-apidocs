@@ -30,6 +30,7 @@ import MinutesTime
 import Redirect
 import Happstack.Util.Common
 import Util.SignatoryLinkUtils
+import Util.HasSomeUserInfo
 
 payexTest::Maybe String -> Kontra Response
 payexTest Nothing = do
@@ -183,8 +184,8 @@ startPaymentForDocument ctx user document =
 sendPaymentMail::Context -> User -> Payment -> IO ()
 sendPaymentMail ctx user payment = do
     mail <- mailNewPayment ctx user payment
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname user
-                                                                        , email = unEmail $ useremail $ userinfo user}
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName user
+                                                                        , email = getEmail user}
                                                            ]
                                                     }
 

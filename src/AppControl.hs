@@ -44,6 +44,7 @@ import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
 import qualified TrustWeaver as TW
 import qualified User.UserControl as UserControl
+import Util.HasSomeUserInfo
 
 import Control.Concurrent
 import Control.Monad.Error
@@ -582,8 +583,8 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
 sendResetPasswordMail ctx link user = do
   mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname user
-                                                                      , email = unEmail $ useremail $ userinfo user }]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName user
+                                                                      , email = getEmail user }]}
 
 {- |
    Handles viewing of the signup page
@@ -650,7 +651,7 @@ signup vip _freetill =  do
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
 _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user = do
-    let email = unEmail $ useremail $ userinfo user
+    let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
     scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }

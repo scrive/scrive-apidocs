@@ -352,7 +352,7 @@ canUserInfoViewDirectly userid email doc =
    Can a user view this document?
  -}
 canUserViewDirectly :: User -> Document -> Bool
-canUserViewDirectly user = canUserInfoViewDirectly (userid user) (unEmail $ useremail $ userinfo user)
+canUserViewDirectly user = canUserInfoViewDirectly (userid user) (getEmail user)
 
 {- |
    Has the signatory's sign order come up?

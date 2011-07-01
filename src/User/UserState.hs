@@ -23,7 +23,6 @@ module User.UserState
     , Users
     , UserStats(..)
     , composeFullName
-    , userfullname
     , isAbleToHaveSubaccounts
     , AcceptTermsOfService(..)
     , SetFreeTrialExpirationDate(..)

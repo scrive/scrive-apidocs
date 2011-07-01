@@ -423,7 +423,7 @@ handleAfterSigning :: Document -> SignatoryLinkID -> Kontra KontraLink
 handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
   ctx <- get
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ signatoryemail (signatorydetails signatorylink))
+  maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
   case maybeuser of
     Nothing -> do
       let details = signatorydetails signatorylink
@@ -1647,7 +1647,7 @@ handleIssueArchive = do
     let ids = map DocumentID idnumbers
     idsAndUsers <- mapM lookupUsersRelevantToDoc ids
     let uid = userid user
-        uemail = unEmail $ useremail $ userinfo user
+        uemail = getEmail user
     res <- update $ ArchiveDocuments uid uemail idsAndUsers
     case res of
       Left msg -> do
@@ -2092,7 +2092,7 @@ handleSigAttach docid siglinkid mh = do
         mzero
       Just siglink -> do
         attachname <- getCriticalField asValidFieldValue "attachname"
-        let email = signatoryemail (signatorydetails siglink)
+        let email = getEmail siglink
         case find (\sa -> signatoryattachmentemail sa == email
                           && signatoryattachmentname sa == attachname) (documentsignatoryattachments doc) of
           Nothing -> do

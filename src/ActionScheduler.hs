@@ -28,7 +28,7 @@ import User.UserView
 import qualified AppLogger as Log
 import System.Time
 import Misc
-
+import Util.HasSomeUserInfo
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
 
@@ -92,7 +92,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
                 let uinfo = userinfo user
                     email = useremail uinfo
-                    fullname = userfullname user
+                    fullname = getFullName user
                 (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
                 let mailfunc = case documenttype <$> mdoc of
                       (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder

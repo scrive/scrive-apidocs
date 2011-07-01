@@ -45,7 +45,7 @@ import Data.Maybe
 import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
-
+import Util.HasSomeUserInfo
 
 {- -}
 
@@ -155,12 +155,12 @@ api_document_relation sl
 
 api_signatory::SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $  [
-      ("email", showJSON  $ BS.toString $ signatoryemail $ signatorydetails sl)
-    , ("fstname", showJSON  $ BS.toString $ signatoryfstname $ signatorydetails sl)
-    , ("sndname", showJSON  $ BS.toString $ signatorysndname $ signatorydetails sl)
-    , ("personalnr", showJSON $ BS.toString $ signatorypersonalnumber $ signatorydetails sl)
-    , ("company", showJSON $ BS.toString $ signatorycompany $ signatorydetails sl)
-    , ("companynr", showJSON  $ BS.toString $ signatorycompanynumber $ signatorydetails sl)
+      ("email", showJSON  $ BS.toString $ getEmail sl)
+    , ("fstname", showJSON  $ BS.toString $ getFirstName sl)
+    , ("sndname", showJSON  $ BS.toString $ getLastName sl)
+    , ("personalnr", showJSON $ BS.toString $ getPersonalNumber sl)
+    , ("company", showJSON $ BS.toString $ getCompanyName sl)
+    , ("companynr", showJSON  $ BS.toString $ getCompanyNumber sl)
     ]
     ++
     case (maybeseeninfo sl) of

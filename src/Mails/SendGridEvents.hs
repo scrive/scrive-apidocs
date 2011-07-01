@@ -196,8 +196,8 @@ handleUndeliveredInvitation docid signlinkid = do
              _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
              content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredContent" $ do
                  field "authorname" $ getFullName documentauthordetails
-                 field "documenttitle" $ BS.toString $ documenttitle doc
-                 field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
+                 field "documenttitle" $ documenttitle doc
+                 field "email" $ getEmail signlink
                  field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                  field "ctxhostpart" $ ctxhostpart ctx)
              scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title

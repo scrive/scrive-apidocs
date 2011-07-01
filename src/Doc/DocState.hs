@@ -104,6 +104,7 @@ import User.UserState
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
+import Util.HasSomeUserInfo
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = queryDocs $ \documents ->
@@ -1144,12 +1145,12 @@ replaceSignatoryUser :: SignatoryLink
 replaceSignatoryUser siglink user =
   let newsl = replaceSignatoryData
                        siglink
-                       (userfstname         $ userinfo user)
-                       (usersndname         $ userinfo user)
-                       (unEmail $ useremail $ userinfo user)
-                       (usercompanyname     $ userinfo user)
-                       (userpersonalnumber  $ userinfo user)
-                       (usercompanynumber   $ userinfo user)
+                       (getFirstName      user)
+                       (getLastName       user)
+                       (getEmail          user)
+                       (getCompanyName    user)
+                       (getPersonalNumber user)
+                       (getCompanyNumber  user)
                        [] in
   copySignatoryAccount user newsl
 
@@ -1209,9 +1210,7 @@ migrateForDeletion users = do
                                         case find (isSignatoryForUser sl) users of
                                             Just user -> copySignatoryAccount user sl
                                             Nothing -> sl }
-    isSignatoryForUser sl u = isSavedforUser sl u || isSignedByUser sl u
-    isSavedforUser sl u = maybesignatory sl == Just (userid u)
-    isSignedByUser sl u = signatoryemail (signatorydetails sl) == (unEmail $ useremail $ userinfo u ) && isJust (maybesigninfo sl)
+    isSignatoryForUser sl u = isSigLinkFor (userid u) sl || (isSigLinkFor (getEmail u) sl && hasSigned sl)
 
 unquarantineAll :: Update Documents ([Either String Document])
 unquarantineAll = do

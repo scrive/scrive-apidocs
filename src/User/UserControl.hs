@@ -96,8 +96,8 @@ getUserInfoUpdate  = do
 copyCompanyInfo :: User -> UserInfo -> UserInfo
 copyCompanyInfo fromuser info =
   info
-  { usercompanyname = usercompanyname $ userinfo fromuser
-  , usercompanynumber = usercompanynumber $ userinfo fromuser
+  { usercompanyname = getCompanyName fromuser
+  , usercompanynumber = getCompanyNumber fromuser
   , useraddress = useraddress $ userinfo fromuser
   , userzip = userzip $ userinfo fromuser
   , usercity = usercity $ userinfo fromuser
@@ -185,22 +185,22 @@ subaccountsSearchFunc s user = userMatch user s -- split s so we support spaces
     where
         match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
         userMatch u s' = match s' (usercompanyposition $ userinfo u)
-                      || match s' (userfstname $ userinfo u)
-                      || match s' (usersndname $ userinfo u)
-                      || match s' (userpersonalnumber $ userinfo u)
-                      || match s' (unEmail $ useremail $ userinfo u)
+                      || match s' (getFirstName u)
+                      || match s' (getLastName  u)
+                      || match s' (getPersonalNumber u)
+                      || match s' (getEmail u)
 
 subaccountsSortFunc :: SortingFunction User
-subaccountsSortFunc "fstname" = viewComparing $ userfstname . userinfo
-subaccountsSortFunc "fstnameREV" = viewComparingRev $ userfstname . userinfo
-subaccountsSortFunc "sndname" = viewComparing $ usersndname . userinfo
-subaccountsSortFunc "sndnameREV" = viewComparingRev $ usersndname . userinfo
+subaccountsSortFunc "fstname" = viewComparing getFirstName
+subaccountsSortFunc "fstnameREV" = viewComparingRev getFirstName
+subaccountsSortFunc "sndname" = viewComparing getLastName
+subaccountsSortFunc "sndnameREV" = viewComparingRev getLastName
 subaccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
 subaccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
 subaccountsSortFunc "phone" = viewComparing $  userphone . userinfo
 subaccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
-subaccountsSortFunc "email" = viewComparing $ useremail . userinfo
-subaccountsSortFunc "emailREV" = viewComparingRev $ useremail . userinfo
+subaccountsSortFunc "email" = viewComparing getEmail
+subaccountsSortFunc "emailREV" = viewComparingRev getEmail
 subaccountsSortFunc _ = const $ const EQ
 
 subaccountsPageSize :: Int
@@ -330,7 +330,7 @@ handleTakeOverSubaccount email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- get
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname invited, email = email }]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName invited, email = email }]}
   addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
 
 
@@ -412,7 +412,7 @@ createUser ctx hostpart names email maybesupervisor vip = do
                               newUserMail (ctxtemplates ctx) hostpart email fullname al vip
                           Just supervisor -> do
                               al <- newAccountCreatedLink user
-                              inviteSubaccountMail (ctxtemplates ctx) hostpart (getSmartName  supervisor) (usercompanyname $ userinfo supervisor) email fullname al
+                              inviteSubaccountMail (ctxtemplates ctx) hostpart (getSmartName supervisor) (getCompanyName supervisor) email fullname al
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
@@ -560,8 +560,8 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
               Just supervisor <- query $ GetUserByUserID supervisorid
               addFlashMsg =<< (liftIO $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor)
               mail <- mailSubaccountAccepted ctx user supervisor
-              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname supervisor
-                                                                                  , email = unEmail $ useremail $ userinfo supervisor }]}
+              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName supervisor
+                                                                                  , email = getEmail supervisor }]}
           return LinkAccount
      else do
           return LinkAccount
@@ -605,7 +605,7 @@ handleAccountSetupGet aid hash = do
                     if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
                      then do
                         ctx <- get
-                        let email = unEmail $ useremail $ userinfo $ user
+                        let email = getEmail user
                         content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email
                         renderFromBody TopNone kontrakcja content
                     else mzero
@@ -613,7 +613,7 @@ handleAccountSetupGet aid hash = do
     where
         activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
-            addModalT =<< (modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . unEmail . useremail . userinfo) muser)
+            addModalT =<< (modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser)
             sendRedirect LinkMain
 
 handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
@@ -698,7 +698,7 @@ handleAccountSetupPost aid hash = do
                  )
     where
         returnToAccountSetup user = do
-            addModalT =<< (modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString . unEmail . useremail $ userinfo user)
+            addModalT =<< (modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString $ getEmail user)
             return LinkMain
 
         handleActivate signupmethod user = do
@@ -724,8 +724,8 @@ handleAccountSetupPost aid hash = do
                                        , usersndname = lname
                                        , usercompanyposition = companytitle
                                        , userphone = phone
-                                       , usercompanyname = usercompanyname $ userinfo sv
-                                       , usercompanynumber = usercompanynumber $ userinfo sv
+                                       , usercompanyname = getCompanyName sv
+                                       , usercompanynumber = getCompanyNumber sv
                                        , useraddress = useraddress $ userinfo sv
                                        , userzip = userzip $ userinfo sv
                                        , usercity = usercity $ userinfo sv
