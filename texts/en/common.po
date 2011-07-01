@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
-"Last-Translator: Mariusz Rak <mariusz@skrivapa.se>\n"
+"Last-Translator: \n"
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -135,7 +135,7 @@ msgstr "Phone"
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 #: javascript-langs.st:javascriptLocalisation
 msgid "_personnumber"
-msgstr "Social security number"
+msgstr "SSN"
 
 #: modals.st:accountFromSignInputs
 #: modals.st:loginModal
@@ -151,7 +151,7 @@ msgstr "Password"
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 #: javascript-langs.st:javascriptLocalisation
 msgid "_orgnumber"
-msgstr "Corporate identification number"
+msgstr "Corporate ID"
 
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
@@ -274,7 +274,7 @@ msgstr "Cancel"
 #: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
 msgid "_Subaccounts"
-msgstr "Sub-accounts"
+msgstr "Subaccounts"
 
 #: docpages/doclist.st:pageContractsList
 #: docpages/doctemplatelist.st:pageTemplatesList

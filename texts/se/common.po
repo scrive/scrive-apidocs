@@ -109,8 +109,8 @@ msgstr "SkrivaPå"
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
+#: userpages/securitypage.st:showUserSecurity
 msgid "_sharing"
 msgstr "Delning"
 
@@ -272,8 +272,8 @@ msgstr "Avbryt"
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
+#: userpages/securitypage.st:showUserSecurity
 msgid "_Subaccounts"
 msgstr "Underkonton"
 
@@ -321,10 +321,10 @@ msgstr "Skicka påminnelse"
 msgid "_SearchDoc"
 msgstr "Sök dokument"
 
-#: docpages/doclist.st:pageContractsList
-#: docpages/docorderslist.st:pageOrdersList
-msgid "_ReminderHead"
-msgstr "Skicka påminnelse"
+#: userpages/accountpage.st:showUser
+#: userpages/mailapipage.st:showUserMailAPI
+msgid "_SaveChanges"
+msgstr "Spara ändringar"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
@@ -399,26 +399,28 @@ msgstr "”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
+#: userpages/securitypage.st:showUserSecurity
 msgid "_HeadUserInfo"
 msgstr "Användaruppgifter"
 
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
-msgid "_HeadAccountSettings"
-msgstr "Kontoinställningar"
+#: userpages/securitypage.st:showUserSecurity
+msgid "_HeadMailApi"
+msgstr "Mail API"
 
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
-msgid "_HeadMailApi"
-msgstr "Mail API"
+#: userpages/securitypage.st:showUserSecurity
+msgid "_HeadAccountSettings"
+msgstr "Kontoinställningar"
 
+#~ msgid "_ReminderHead"
+#~ msgstr "Skicka påminnelse"
 #~ msgid "_Delete"
 #~ msgstr "Radera"

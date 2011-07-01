@@ -183,7 +183,7 @@ msgstr "Färdigställt"
 
 #: docpages/doctexts.st:ordercancelledinfotext
 msgid "_ordercancelledinfotext"
-msgstr "har återkallat ordern. Den går således in att acceptera."
+msgstr "har återkallat ordern. Den går således in att bekräfta."
 
 #: docpages/doctexts.st:offercancelledinfotext
 msgid "_offercancelledinfotext"

@@ -31,6 +31,10 @@ msgid "_h1"
 msgstr "Varför krångla? - Signera med SkrivaPå!"
 
 #: firstpage.st:firstPage
+msgid "_firstPageMetaDescription"
+msgstr ""
+
+#: firstpage.st:firstPage
 msgid "_StepsH3StoreBody"
 msgstr "Vi sparar dina dokument<br />tryggt och säkert."
 
@@ -57,146 +61,6 @@ msgstr "Skicka"
 #: firstpage.st:firstPage
 msgid "_QuotesHead"
 msgstr "Kunder berättar"
-
-#: firstpage.st:firstPage
-msgid "_PricePlanVAT"
-msgstr "* Alla priser är exkl moms"
-
-#: firstpage.st:firstPage
-msgid "_PricePlanLink"
-msgstr "Detaljerad prisplan"
-
-#: firstpage.st:firstPage
-msgid "_PricePlanCampain"
-msgstr "Vi erbjuder också ett frikonto med 3 signaturer per månad och 10 dokument i lagring"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4Users"
-msgstr "Obegränsat antal användare"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4Storage"
-msgstr "Obegränsad lagring"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4Price"
-msgstr "Offert"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4H3Body"
-msgstr "Stora volymer och/eller <BR/>komplexa behov"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4H3"
-msgstr "Enterprise"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4Functionality"
-msgstr "Advancerade funktioner +"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4FreeSigns"
-msgstr "Min 2.000 signaturer/år"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan4Archive"
-msgstr "Dela arkiv"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3Users"
-msgstr "15 användare"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3Storage"
-msgstr "Obegränsad lagring"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3Price"
-msgstr "999kr/mån"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3H3Body"
-msgstr "Medel volym och många användningsområden"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3H3"
-msgstr "Business"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3Functionality"
-msgstr "Advancerade funktioner"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3FreeSigns"
-msgstr "50 fria signaturer/mån"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan3Archive"
-msgstr "Dela arkiv"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2Users"
-msgstr "5 användare"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2Storage"
-msgstr "500 dok lagring"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2Price"
-msgstr "499kr/mån"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2H3Body"
-msgstr "Låg volym och enkla behov"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2H3"
-msgstr "Medium"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2Functionality"
-msgstr "Advancerade funktioner"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2FreeSigns"
-msgstr "20 fria signaturer/mån"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan2Archive"
-msgstr "Dela arkiv"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1Users"
-msgstr "1 användare"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1Storage"
-msgstr "50 dok lagring"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1Price"
-msgstr "249kr/mån"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1H3Body"
-msgstr "För sällananvändare"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1H3"
-msgstr "Small"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1Functionality"
-msgstr "Basfunktioner"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1FreeSigns"
-msgstr "10 fria signaturer/mån"
-
-#: firstpage.st:firstPage
-msgid "_PricePlan1Archive"
-msgstr "Individuellt arkiv"
 
 #: firstpage.st:firstPage
 msgid "_PartnersHead"
@@ -278,6 +142,78 @@ msgstr "Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är ett s
 msgid "_Bemefit1"
 msgstr "Minska kostnaderna"
 
+#~ msgid "_PricePlanVAT"
+#~ msgstr "* Alla priser är exkl moms"
+#~ msgid "_PricePlanLink"
+#~ msgstr "Detaljerad prisplan"
+#~ msgid "_PricePlanCampain"
+#~ msgstr ""
+#~ "Vi erbjuder också ett frikonto med 3 signaturer per månad och 10 dokument "
+#~ "i lagring"
+#~ msgid "_PricePlan4Users"
+#~ msgstr "Obegränsat antal användare"
+#~ msgid "_PricePlan4Storage"
+#~ msgstr "Obegränsad lagring"
+#~ msgid "_PricePlan4Price"
+#~ msgstr "Offert"
+#~ msgid "_PricePlan4H3Body"
+#~ msgstr "Stora volymer och/eller <BR/>komplexa behov"
+#~ msgid "_PricePlan4H3"
+#~ msgstr "Enterprise"
+#~ msgid "_PricePlan4Functionality"
+#~ msgstr "Advancerade funktioner +"
+#~ msgid "_PricePlan4FreeSigns"
+#~ msgstr "Min 2.000 signaturer/år"
+#~ msgid "_PricePlan4Archive"
+#~ msgstr "Dela arkiv"
+#~ msgid "_PricePlan3Users"
+#~ msgstr "15 användare"
+#~ msgid "_PricePlan3Storage"
+#~ msgstr "Obegränsad lagring"
+#~ msgid "_PricePlan3Price"
+#~ msgstr "999kr/mån"
+#~ msgid "_PricePlan3H3Body"
+#~ msgstr "Medel volym och många användningsområden"
+#~ msgid "_PricePlan3H3"
+#~ msgstr "Business"
+#~ msgid "_PricePlan3Functionality"
+#~ msgstr "Advancerade funktioner"
+#~ msgid "_PricePlan3FreeSigns"
+#~ msgstr "50 fria signaturer/mån"
+#~ msgid "_PricePlan3Archive"
+#~ msgstr "Dela arkiv"
+#~ msgid "_PricePlan2Users"
+#~ msgstr "5 användare"
+#~ msgid "_PricePlan2Storage"
+#~ msgstr "500 dok lagring"
+#~ msgid "_PricePlan2Price"
+#~ msgstr "499kr/mån"
+#~ msgid "_PricePlan2H3Body"
+#~ msgstr "Låg volym och enkla behov"
+#~ msgid "_PricePlan2H3"
+#~ msgstr "Medium"
+#~ msgid "_PricePlan2Functionality"
+#~ msgstr "Advancerade funktioner"
+#~ msgid "_PricePlan2FreeSigns"
+#~ msgstr "20 fria signaturer/mån"
+#~ msgid "_PricePlan2Archive"
+#~ msgstr "Dela arkiv"
+#~ msgid "_PricePlan1Users"
+#~ msgstr "1 användare"
+#~ msgid "_PricePlan1Storage"
+#~ msgstr "50 dok lagring"
+#~ msgid "_PricePlan1Price"
+#~ msgstr "249kr/mån"
+#~ msgid "_PricePlan1H3Body"
+#~ msgstr "För sällananvändare"
+#~ msgid "_PricePlan1H3"
+#~ msgstr "Small"
+#~ msgid "_PricePlan1Functionality"
+#~ msgstr "Basfunktioner"
+#~ msgid "_PricePlan1FreeSigns"
+#~ msgstr "10 fria signaturer/mån"
+#~ msgid "_PricePlan1Archive"
+#~ msgstr "Individuellt arkiv"
 #~ msgid "_QuoteOnVidBy"
 #~ msgstr "- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise"
 

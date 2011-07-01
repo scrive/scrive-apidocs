@@ -112,7 +112,7 @@ standardBodyWrapper=
 ####
 queryColumn=
 <div class="white thin box">
-                                                <h4>$_queryColumnHead()$Avtala redan idag!</h4>
+                                                <h4>$_queryColumnHead()$</h4>
 <br />
 <p>$_queryColumnBody1()$</p>
 <br />
@@ -144,7 +144,7 @@ queryColumn=
                                                         <input type="email" name="email" infotext="E-post" /><br />
                                                         <input type="tel" name="phone" infotext="Telefonnummer" /><br />
                                                         <textarea name="message" infotext="Meddelande" style="height:42px;"></textarea>
-                                                        <a class="submit new-btn-small green2 center"><p>$_send()$!Skicka!</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>$_send()$!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
 
@@ -288,7 +288,7 @@ header=
      <a href="$linkmain$" class="document-button">$_headerSend()$</a>
 
                                 $else$
-                                <a href="#" class="login-button"><p>$_login()$Logga in</p></a>
+                                <a href="#" class="login-button"><p>$_login()$</p></a>
                                 $endif$
                             </div>
                            
