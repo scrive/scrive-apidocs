@@ -82,6 +82,7 @@ a.btn-small.black .label, a.btn-big.black .label, a.btn-tiny.black .label      {
 
 a.btn-small p, a.btn-big p, a.btn-tiny p  {
     color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
 }
 
 $endif$
