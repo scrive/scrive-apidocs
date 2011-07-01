@@ -46,6 +46,7 @@ handleChangeServiceUI sid = do
            mailfooter <- getFieldUTF "mailfooter"
            buttonBody <-  getFileField "button-body"
            buttonRest <-  getFileField "button-rest"
+           buttonstextcolor <- getFieldUTF "buttonstextcolor"
            background <-  getFieldUTF "background"
            overlaybackground <-   getFieldUTF "overlaybackground"
            barsbackground <- getFieldUTF "barsbackground"
@@ -55,6 +56,7 @@ handleChangeServiceUI sid = do
               servicemailfooter = joinEmpty $ mailfooter `mplus` (servicemailfooter ui)
             , servicebuttons = (pairMaybe buttonBody buttonRest) `mplus`
                                (mapFst (`fromMaybe` buttonBody) $ mapSnd (`fromMaybe` buttonRest) $ (servicebuttons  ui))
+            , servicebuttonstextcolor = joinEmpty $ buttonstextcolor `mplus` (servicebuttonstextcolor ui)                               
             , servicebackground = joinEmpty $ background `mplus` (servicebackground ui)
             , serviceoverlaybackground = joinEmpty $ overlaybackground `mplus` (serviceoverlaybackground ui)
             , servicebarsbackground =  joinEmpty $ barsbackground  `mplus` (servicebarsbackground  ui)
@@ -66,6 +68,7 @@ handleChangeServiceUI sid = do
            update $ UpdateServiceUI sid $ (serviceui service) {
               servicemailfooter = Nothing
             , servicebuttons = Nothing
+            , servicebuttonstextcolor = Nothing
             , servicebackground = Nothing
             , serviceoverlaybackground = Nothing
             , servicebarsbackground =  Nothing

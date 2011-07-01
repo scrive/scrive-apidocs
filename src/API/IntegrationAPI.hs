@@ -228,8 +228,10 @@ getDocuments = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     documents <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    let not_deleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
-    api_docs <- sequence $  map (api_document False) $ filter not_deleted documents
+    let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
+    -- We support only offers and contracts by API calls    
+    let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
+    api_docs <- sequence $  map (api_document False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
 

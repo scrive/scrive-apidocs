@@ -123,6 +123,7 @@ serviceFields (Just service) location = do
     field "buttons" $ isJust $ servicebuttons $ serviceui service
     field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
     field "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
+    field "buttonstextcolor"  $ servicebuttonstextcolor $ serviceui service
     field "background"  $ servicebackground $ serviceui service
     field "overlaybackground"  $ serviceoverlaybackground $ serviceui service
     field "barsbackground"  $ servicebarsbackground $ serviceui service

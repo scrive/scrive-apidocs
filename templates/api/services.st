@@ -49,6 +49,10 @@ serviceAdminPage=
                                 <input type="file" name="button-rest" style="width:200px"/></td>
                        </tr>
                        <tr>
+                           <td>Buttons text color:</td>
+                           <td><input type="text" name="buttonstextcolor" value="$buttonstextcolor$"/></td>
+                       </tr>
+                       <tr>
                            <td>Background color:</td>
                            <td><input type="text" name="background" value="$background$"/></td>
                        </tr>
