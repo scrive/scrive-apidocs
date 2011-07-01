@@ -90,16 +90,13 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             mdoc <- query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
-                let uinfo = userinfo user
-                    email = useremail uinfo
-                    fullname = getFullName user
                 (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
                 let mailfunc = case documenttype <$> mdoc of
                       (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
                       (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
                       _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
-                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
+                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
                 , acbsUserID = uid

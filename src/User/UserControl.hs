@@ -381,7 +381,7 @@ handleTakeOverSubaccount email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- get
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName invited, email = email }]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
   addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
 
 
@@ -611,8 +611,7 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
               Just supervisor <- query $ GetUserByUserID supervisorid
               addFlashMsg =<< (liftIO $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor)
               mail <- mailSubaccountAccepted ctx user supervisor
-              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName supervisor
-                                                                                  , email = getEmail supervisor }]}
+              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress supervisor] }
           return LinkAccount
      else do
           return LinkAccount
