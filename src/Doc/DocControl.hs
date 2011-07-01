@@ -595,14 +595,14 @@ handleIssueShowPost docid = withUserPost $ do
     Right document -> do
       Context { ctxmaybeuser = muser } <- get
       guard (isAuthor (document, muser)) -- still need this because friend can read document
-      sign <- isFieldSet "sign"
-      send <- isFieldSet "final"
-      template <- isFieldSet "template"
-      contract <- isFieldSet "contract"
-      csvupload <- isFieldSet "csvupload"
+      sign              <- isFieldSet "sign"
+      send              <- isFieldSet "final"
+      template          <- isFieldSet "template"
+      contract          <- isFieldSet "contract"
+      csvupload         <- isFieldSet "csvupload"
       updateattachments <- isFieldSet "updateattachments"
-      switchtoadvanced <- isFieldSet "changefunctionality"
-      sigattachments <- isFieldSet "sigattachments"
+      switchtoadvanced  <- isFieldSet "changefunctionality"
+      sigattachments    <- isFieldSet "sigattachments"
       
       case documentstatus document of
         Preparation | sign              -> handleIssueSign                 document
