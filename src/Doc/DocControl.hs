@@ -441,21 +441,22 @@ rejectDocument :: DocumentID
 rejectDocument documentid
                signatorylinkid1
                magichash = do
-  Context{ ctxtime, ctxipnumber } <- get
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash
-  case edoc of
+  customtext <- getCustomTextField "customtext"
+  
+  edocs <- rejectDocumentWithChecks documentid signatorylinkid1 magichash customtext
+  
+  case edocs of
+    Left (DBActionNotAvailable message) -> do
+      addFlashMsg $ toFlashMsg OperationFailed message
+      return $ LinkMain
+    Left (DBDatabaseNotAvailable message) -> do
+      addFlashMsg $ toFlashMsg OperationFailed message
+      return $ LinkMain
     Left _ -> mzero
-    Right olddocument -> do
-      customtext <- getCustomTextField "customtext"
-      mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber customtext
-      case (mdocument) of
-        Left message -> do
-          addFlashMsg $ toFlashMsg OperationFailed message
-          return $ LinkMain
-        Right document -> do
-          postDocumentChangeAction document olddocument (Just signatorylinkid1)
-          addModal $ modalRejectedView document
-          return $ LoopBack
+    Right (document, olddocument) -> do
+      postDocumentChangeAction document olddocument (Just signatorylinkid1)
+      addModal $ modalRejectedView document
+      return $ LoopBack
 
 {- |
    Get the SignatoryLink associated with a SignatoryLinkID or mzero if not found

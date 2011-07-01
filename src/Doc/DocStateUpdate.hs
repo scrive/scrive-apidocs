@@ -2,6 +2,7 @@ module Doc.DocStateUpdate
     ( restartDocument
     , markDocumentSeen
     , signDocumentWithEmail
+    , rejectDocumentWithChecks
     ) where
 
 import DBError
@@ -65,3 +66,18 @@ signDocumentWithEmail did slid mh fields = do
           Left message -> return $ Left (DBActionNotAvailable message)
           Right doc -> return $ Right (doc, olddoc)
             
+{- |
+   Reject a document with security checks.
+ -}
+rejectDocumentWithChecks :: DocumentID -> SignatoryLinkID -> MagicHash -> Maybe BS.ByteString -> Kontra (Either DBError (Document, Document))
+rejectDocumentWithChecks did slid mh customtext = do
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
+  case edoc of
+    Left err -> return $ Left err
+    Right olddocument -> do
+      Context{ ctxtime, ctxipnumber } <- get
+      mdocument <- update $ RejectDocument did slid ctxtime ctxipnumber customtext
+      case mdocument of
+        Left msg -> return $ Left (DBActionNotAvailable msg)
+        Right document -> return $ Right (document, olddocument)
+
