@@ -182,5 +182,6 @@ changeEmailForm =
 </div>
 ####
 fieldvalue=
-<input class="fieldvalue" type="text" value="$value$" readonly="" autocomplete="off">
+<input class="fieldvalue" type="text" value="$value$" readonly=""
+       autocomplete="off"> </input>
 ###
