@@ -32,7 +32,7 @@ priceplanPageContents=
                                 </th>
                                 <th>
                                     <h3>Team</h3>
-                                    <p>32.5 kr/signatur</p>
+                                    <p>32.50 kr/signatur</p>
                                 </th>
                                 <th>
                                     <h3>Business</h3>
@@ -313,7 +313,7 @@ priceplanPageContents=
                 <div>* Alla priser är exkl moms.</div>
                 <div class="big-price-plan">
                     <h2>Vi tar bara betalt när du tjänar pengar</h2>
-                    <p>Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.</p>
+                    <p>Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.</p>
                 </div>
                 <div class="big-price-plan">
                     <h2>Gratis för privatpersoner och enmansföretagare</h2>
