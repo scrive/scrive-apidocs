@@ -217,7 +217,7 @@ blankUser = User {
                                 }
               , userservice = Nothing
               , usercompany = Nothing
-              , userapikey = Nothing
+              , usermailapi = Nothing
               , userrecordstatus = LiveUser
               }
 
