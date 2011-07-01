@@ -71,7 +71,7 @@ testNoNestedP = do
   langtemplates <- readAllLangsTemplates
   ts <- mapM getTemplates templatesFilesPath
   texts <- mapM getTextTemplates allValues
-  let alltemplatenames = map fst (concat ts ++ concat texts)
+  let alltemplatenames = map fst (concat texts ++ concat ts)
   _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
     let templates = langVersion lang langtemplates
     --ts <- getTextTemplates lang
