@@ -593,8 +593,8 @@ handleIssueShowPost docid = withUserPost $ do
   case edocument of
     Left _ -> mzero
     Right document -> do
-      Context { ctxmaybeuser = Just user } <- get
-      guard (isAuthor (document, user)) -- still need this because friend can read document
+      Context { ctxmaybeuser = muser } <- get
+      guard (isAuthor (document, muser)) -- still need this because friend can read document
       sign <- isFieldSet "sign"
       send <- isFieldSet "final"
       template <- isFieldSet "template"
@@ -603,11 +603,20 @@ handleIssueShowPost docid = withUserPost $ do
       updateattachments <- isFieldSet "updateattachments"
       switchtoadvanced <- isFieldSet "changefunctionality"
       sigattachments <- isFieldSet "sigattachments"
-      -- is this routing logic or business logic? I say business, but
-      -- here it looks mixed.
-      -- I'm especially asking about AwaitingAuthor case, because I though
-      -- it was covered by SignDocument
-      --   Eric
+      
+      case documentstatus document of
+        Preparation | sign              -> handleIssueSign                 document
+        Preparation | send              -> handleIssueSend                 document
+        Preparation | template          -> handleIssueSaveAsTemplate       document
+        Preparation | contract          -> handleIssueChangeToContract     document
+        Preparation | csvupload         -> handleIssueCSVUpload            document
+        Preparation | updateattachments -> handleIssueUpdateAttachments    document
+        Preparation | switchtoadvanced  -> handleIssueChangeFunctionality  document
+        Preparation | sigattachments    -> handleIssueUpdateSigAttachments document
+        Preparation                     -> handleIssueSave                 document
+        AwaitingAuthor                  -> handleIssueSignByAuthor         document
+        _ -> return $ LinkContracts emptyListParams
+      {-
       case (documentstatus document,sign,send,template,contract,csvupload,updateattachments,switchtoadvanced,sigattachments) of
         (Preparation, True, _,_, _, _ , _, _, _) -> handleIssueSign document
         (Preparation, _ ,  True,_, _, _, _, _, _) -> handleIssueSend document
@@ -620,6 +629,7 @@ handleIssueShowPost docid = withUserPost $ do
         (Preparation, _ , _ ,_, _, _, _, _, _) -> handleIssueSave document
         (AwaitingAuthor, True , _ ,_, _, _, _, _, _) -> handleIssueSignByAuthor document
         _  -> return $ LinkContracts emptyListParams
+      -}
 
 handleIssueSign :: Document -> Kontra KontraLink
 handleIssueSign document = do
