@@ -127,9 +127,14 @@ showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ 
     menuFields user
 
 showUserMailAPI :: KontrakcjaTemplates -> User -> IO String
-showUserMailAPI templates user = renderTemplate templates "showUserMailAPI" $ do
-    field "linkmailapi" $ show LinkUserMailAPI
-    menuFields user
+showUserMailAPI templates user@User{usermailapi} =
+    renderTemplate templates "showUserMailAPI" $ do
+        field "linkmailapi" $ show LinkUserMailAPI
+        field "mailapienabled" $ maybe False (const True) usermailapi
+        field "mailapikey" $ show . umapiKey <$> usermailapi
+        field "mapidailylimit" $ umapiDailyLimit <$> usermailapi
+        field "mapisenttoday" $ umapiSentToday <$> usermailapi
+        menuFields user
 
 pageAcceptTOS :: KontrakcjaTemplates -> IO String
 pageAcceptTOS templates =

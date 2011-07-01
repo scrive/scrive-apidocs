@@ -640,8 +640,33 @@
    font: 14px/24px "Helvetica Neue";
 }
 
+#tab-viewer .mailapi {
+   color: #666;
+   font-size: 12px;
+}
+
+#tab-viewer .mailapi .mailapibox {
+    margin: 10px;
+}
+
+#mailapiemailslist {
+    margin-bottom: 5px;
+}
+
+#mailapiemailslist li {
+    margin: 5px 0 0 5px;
+}
+
+#tab-viewer .mailapitable td:first-child {
+   width: 250px !important;
+}
+
+#tab-viewer .mailapitable input {
+    width: 70px !important;
+}
+
 #tab-viewer .account-body table {
-   color: #999;
+   color: #666;
    margin-top: 10px;
    margin-bottom: 10px;
    text-transform: uppercase;

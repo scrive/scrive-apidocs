@@ -26,6 +26,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
+import MinutesTime
 import API.API
 import API.APICommons
 
@@ -138,7 +139,11 @@ handleMailCommand = do
 
     Context { ctxtime, ctxipnumber } <- askKontraContext
     (maybeUser :: Maybe User) <- liftIO $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-    (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
+    (user :: User) <- maybeFail ("User '" ++ username ++ "' not found") maybeUser
+
+    when (isNothing $ usermailapi user) $
+        fail $ "User '" ++ username ++ "' hasn't enabled mail api"
+    let Just mailapi = usermailapi user
 
     title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
 
@@ -146,8 +151,8 @@ handleMailCommand = do
 
     case apikey of
         "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
-        "998877665544332211" -> return ()
-        z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
+        k | (show $ umapiKey mailapi) == k -> return ()
+        k -> fail $ "Apikey '" ++ k ++ "' invalid for account '" ++ username ++ "'"
 
     let toStr = BS.toString to
     mdoctype <- apiAskString "doctype"
@@ -163,6 +168,23 @@ handleMailCommand = do
              , ("order" `isInfixOf` toStr,    Signable Order)
              , (True,                         Signable Contract)
              ]
+
+    today <- asInt <$> liftIO getMinutesTime
+    if today == umapiLastSentDate mailapi
+       then do
+           when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
+               fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
+           let senttoday = umapiSentToday mailapi + 1
+           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
+               umapiSentToday = senttoday
+           }
+           return ()
+       else do
+           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
+                 umapiLastSentDate = today
+               , umapiSentToday = 1
+           }
+           return ()
 
     (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP

@@ -16,6 +16,7 @@ module User.UserState
     , SupervisorID(..)
     , User(..)
     , UserInfo(..)
+    , UserMailAPI(..)
     , UserSettings(..)
     , DesignMode(..)
     , UserRecordStatus(..)
@@ -39,6 +40,7 @@ module User.UserState
     , GetUserRelatedAccounts(..)
     , GetUserFriends(..)
     , SetUserInfo(..)
+    , SetUserMailAPI(..)
     , SetInviteInfo(..)
     , SetUserSettings(..)
     , SetPreferredDesignMode(..)
@@ -200,6 +202,16 @@ data DesignMode = BasicMode | AdvancedMode
 data UserRecordStatus = LiveUser | DeletedUser
     deriving (Eq, Ord, Typeable)
 
+data UserMailAPI = UserMailAPI {
+      umapiKey          :: MagicHash
+    , umapiDailyLimit   :: Int
+    , umapiSentToday    :: Int
+    , umapiLastSentDate :: Int
+    } deriving (Eq, Ord, Show)
+
+instance Typeable UserMailAPI where
+    typeOf _ = mkTypeOf "UserMailAPI"
+
 data User = User
           { userid                        :: !UserID
           , userpassword                  :: !Password
@@ -217,13 +229,34 @@ data User = User
           , userlogininfo                 :: !LoginInfo
           , userservice                   :: !(Maybe ServiceID)
           , usercompany                   :: !(Maybe CompanyID)
-          , userapikey                    :: !(Maybe MagicHash)
+          , usermailapi                   :: !(Maybe UserMailAPI)
           , userrecordstatus              :: !UserRecordStatus
           }
             deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
 
+data User16 = User16
+          { userid16                        :: !UserID
+          , userpassword16                  :: !Password
+          , usersupervisor16                :: !(Maybe SupervisorID)
+          , useraccountsuspended16          :: !Bool
+          , userhasacceptedtermsofservice16 :: !(Maybe MinutesTime)
+          , userfreetrialexpirationdate16   :: !(Maybe MinutesTime)
+          , usersignupmethod16              :: !SignupMethod
+          , userinfo16                      :: !UserInfo
+          , usersettings16                  :: !UserSettings
+          , userpaymentpolicy16             :: !Payments.UserPaymentPolicy
+          , userpaymentaccount16            :: !Payments.UserPaymentAccount
+          , userfriends16                   :: ![Friend]
+          , userinviteinfo16                :: !(Maybe InviteInfo)
+          , userlogininfo16                 :: !LoginInfo
+          , userservice16                   :: !(Maybe ServiceID)
+          , usercompany16                   :: !(Maybe CompanyID)
+          , userapikey16                    :: !(Maybe MagicHash)
+          , userrecordstatus16              :: !UserRecordStatus
+          }
+            deriving (Eq, Ord, Typeable)
 
 data User15 = User15
           { userid15                        :: !UserID
@@ -662,7 +695,7 @@ instance Migrate User14 User15 where
                 , userapikey15                     = Nothing
                 }
 
-instance Migrate User15 User where
+instance Migrate User15 User16 where
   migrate (User15
                 { userid15
                 , userpassword15
@@ -681,24 +714,63 @@ instance Migrate User15 User where
                 , userservice15
                 , usercompany15
                 , userapikey15
+                }) = User16
+                { userid16                         = userid15
+                , userpassword16                   = userpassword15
+                , usersupervisor16                 = usersupervisor15
+                , useraccountsuspended16           = useraccountsuspended15
+                , userhasacceptedtermsofservice16  = userhasacceptedtermsofservice15
+                , userfreetrialexpirationdate16    = userfreetrialexpirationdate15
+                , usersignupmethod16               = usersignupmethod15
+                , userinfo16                       = userinfo15
+                , usersettings16                   = usersettings15
+                , userpaymentpolicy16              = userpaymentpolicy15
+                , userpaymentaccount16             = userpaymentaccount15
+                , userfriends16                    = userfriends15
+                , userinviteinfo16                 = userinviteinfo15
+                , userlogininfo16                  = userlogininfo15
+                , userservice16                    = userservice15
+                , usercompany16                    = usercompany15
+                , userapikey16                     = userapikey15
+                , userrecordstatus16               = LiveUser
+                }
+
+instance Migrate User16 User where
+  migrate (User16
+                { userid16
+                , userpassword16
+                , usersupervisor16
+                , useraccountsuspended16
+                , userhasacceptedtermsofservice16
+                , userfreetrialexpirationdate16
+                , usersignupmethod16
+                , userinfo16
+                , usersettings16
+                , userpaymentpolicy16
+                , userpaymentaccount16
+                , userfriends16
+                , userinviteinfo16
+                , userlogininfo16
+                , userservice16
+                , usercompany16
                 }) = User
-                { userid                         = userid15
-                , userpassword                   = userpassword15
-                , usersupervisor                 = usersupervisor15
-                , useraccountsuspended           = useraccountsuspended15
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice15
-                , userfreetrialexpirationdate    = userfreetrialexpirationdate15
-                , usersignupmethod               = usersignupmethod15
-                , userinfo                       = userinfo15
-                , usersettings                   = usersettings15
-                , userpaymentpolicy              = userpaymentpolicy15
-                , userpaymentaccount             = userpaymentaccount15
-                , userfriends                    = userfriends15
-                , userinviteinfo                 = userinviteinfo15
-                , userlogininfo                  = userlogininfo15
-                , userservice                    = userservice15
-                , usercompany                    = usercompany15
-                , userapikey                     = userapikey15
+                { userid                         = userid16
+                , userpassword                   = userpassword16
+                , usersupervisor                 = usersupervisor16
+                , useraccountsuspended           = useraccountsuspended16
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice16
+                , userfreetrialexpirationdate    = userfreetrialexpirationdate16
+                , usersignupmethod               = usersignupmethod16
+                , userinfo                       = userinfo16
+                , usersettings                   = usersettings16
+                , userpaymentpolicy              = userpaymentpolicy16
+                , userpaymentaccount             = userpaymentaccount16
+                , userfriends                    = userfriends16
+                , userinviteinfo                 = userinviteinfo16
+                , userlogininfo                  = userlogininfo16
+                , userservice                    = userservice16
+                , usercompany                    = usercompany16
+                , usermailapi                    = Nothing
                 , userrecordstatus               = LiveUser
                 }
 
@@ -811,8 +883,11 @@ instance Version User14 where
 instance Version User15 where
     mode = extension 15 (Proxy :: Proxy User14)
 
-instance Version User where
+instance Version User16 where
     mode = extension 16 (Proxy :: Proxy User15)
+
+instance Version User where
+    mode = extension 17 (Proxy :: Proxy User16)
 
 instance Version SignupMethod
 
@@ -831,6 +906,8 @@ instance Version UserInfo0
 
 instance Version UserInfo where
     mode = extension 1 (Proxy :: Proxy UserInfo0)
+
+instance Version UserMailAPI
 
 instance Version UserSettings0
 
@@ -1061,7 +1138,7 @@ blankUser = User {
                                 }
               , userservice = Nothing
               , usercompany = Nothing
-              , userapikey = Nothing
+              , usermailapi = Nothing
               , userrecordstatus = LiveUser
               }
 
@@ -1135,6 +1212,10 @@ setInviteInfo minviter invitetime' invitetype' uid = do
     _ <- modifyUser uid $ \user -> Right $ user {userinviteinfo = fmap mkInviteInfo minviter}
     return ()
 
+setUserMailAPI :: UserID -> Maybe UserMailAPI -> Update Users (Either String User)
+setUserMailAPI userid musermailapi =
+    modifyUser userid $ \user ->
+            Right $ user { usermailapi = musermailapi }
 
 setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
 setUserInfo userid userinfo =
@@ -1279,6 +1360,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserPassword
                     , 'setInviteInfo
                     , 'setUserInfo
+                    , 'setUserMailAPI
                     , 'setUserSettings
                     , 'setPreferredDesignMode
                     , 'setUserPaymentAccount
@@ -1301,6 +1383,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     ])
 
 $(deriveSerializeFor [ ''User
+                     , '' User16
                      , ''User15
                      , ''User14
                      , ''User13
@@ -1322,6 +1405,7 @@ $(deriveSerializeFor [ ''User
                      , ''LoginInfo
                      , ''InviteInfo
                      , ''Friend
+                     , ''UserMailAPI
                      , ''UserSettings
                      , ''UserSettings1
                      , ''UserSettings0

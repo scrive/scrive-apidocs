@@ -9,6 +9,7 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
 import Happstack.Util.Common (readM)
+import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 
@@ -27,9 +28,9 @@ import Payments.PaymentsState
 import Redirect
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
-import qualified AppLogger as Log
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified AppLogger as Log
 
 checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -106,13 +107,63 @@ copyCompanyInfo fromuser info =
 
 handleGetUserMailAPI :: Kontra (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
-    Context { ctxmaybeuser = Just user, ctxtemplates } <- get
+    Context { ctxmaybeuser = Just olduser@User{userid, usermailapi}, ctxtemplates } <- get
+    user <- case usermailapi of
+         Nothing -> return olduser
+         Just mailapi -> do
+             today <- asInt <$> liftIO getMinutesTime
+             if today /= umapiLastSentDate mailapi
+                then do
+                    Right user <- liftIO $ update $ SetUserMailAPI userid $ Just mailapi {
+                          umapiLastSentDate = today
+                        , umapiSentToday = 0
+                    }
+                    return user
+                else return olduser
     content <- liftIO $ showUserMailAPI ctxtemplates user
     renderFromBody TopAccount kontrakcja content
 
 handlePostUserMailAPI :: Kontra KontraLink
-handlePostUserMailAPI = do
-    return LinkUserMailAPI
+handlePostUserMailAPI = withUserPost $ do
+    User{userid, usermailapi} <- fromJust . ctxmaybeuser <$> get
+    getDefaultedField False asValidCheckBox "api_enabled"
+      >>= maybe (return LinkUserMailAPI) (\enabledapi -> do
+        case usermailapi of
+             Nothing -> do
+                 when enabledapi $ do
+                     apikey <- liftIO randomIO
+                     today <- asInt <$> liftIO getMinutesTime
+                     _ <- liftIO $ update $ SetUserMailAPI userid $ Just UserMailAPI {
+                           umapiKey = apikey
+                         , umapiDailyLimit = 50
+                         , umapiSentToday = 0
+                         , umapiLastSentDate = today
+                     }
+                     return ()
+             Just mailapi -> do
+                 if not enabledapi
+                    then do
+                        _ <- liftIO $ update $ SetUserMailAPI userid Nothing
+                        return ()
+                    else do
+                        mresetkey <- getDefaultedField False asValidCheckBox "reset_key"
+                        mresetsenttoday <- getDefaultedField False asValidCheckBox "reset_senttoday"
+                        mdailylimit <- getRequiredField asValidNumber "daily_limit"
+                        case (mresetkey, mresetsenttoday, mdailylimit) of
+                             (Just resetkey, Just resetsenttoday, Just dailylimit) -> do
+                                 newkey <- if resetkey
+                                   then liftIO randomIO
+                                   else return $ umapiKey mailapi
+                                 _ <- liftIO $ update $ SetUserMailAPI userid $ Just mailapi {
+                                       umapiKey = newkey
+                                     , umapiDailyLimit = max 1 dailylimit
+                                     , umapiSentToday = if resetsenttoday
+                                                           then 0
+                                                           else umapiSentToday mailapi
+                                 }
+                                 return ()
+                             _ -> return ()
+        return LinkUserMailAPI)
 
 handleGetUserSecurity :: Kontra Response
 handleGetUserSecurity = do

@@ -91,6 +91,7 @@ instance InspectXML Email where
 instance InspectXML SignupMethod where
 instance InspectXML MailsDeliveryStatus where
 instance InspectXML UserInfo where
+instance InspectXML UserMailAPI where
 instance InspectXML UserSettings where
 instance InspectXML UserPaymentPolicy where
 instance InspectXML UserPaymentAccount where
