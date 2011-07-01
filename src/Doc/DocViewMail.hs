@@ -391,9 +391,9 @@ mailCancelDocumentByAuthor :: KontrakcjaTemplates
                            -> IO Mail
 mailCancelDocumentByAuthor templates customMessage ctx document@Document{documenttitle} signlink = do
     title <- renderTemplate templates "mailCancelDocumentByAuthorTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
+        field "documenttitle" documenttitle
     content <- wrapHTML templates =<< mailCancelDocumentByAuthorContent templates True customMessage ctx document
-    return $ emptyMail { title = BS.fromString title, to = [MailAddress { fullname = getFullName signlink, email = getEmail signlink }], content = BS.fromString content }
+    return $ emptyMail { title = BS.fromString title, to = [getMailAddress signlink], content = BS.fromString content }
 
 mailMismatchSignatory :: Context
                         -> Document

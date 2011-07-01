@@ -177,7 +177,7 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                 badname
                 msg
                 isbad
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = getFullName sigdets, email = getEmail sigdets }]}
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress sigdets]}
 
 sendDataMismatchEmailAuthor :: Context -> Document -> String -> String -> IO ()
 sendDataMismatchEmailAuthor ctx document badname bademail = do
@@ -198,13 +198,12 @@ sendDocumentErrorEmail ctx document = do
 
 sendDocumentErrorEmailToAuthor :: Context -> Document -> IO ()
 sendDocumentErrorEmailToAuthor ctx document = do
-  let authordetails = signatorydetails $ fromJust $ getAuthorSigLink document
+  let authorlink = fromJust $ getAuthorSigLink document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress { fullname = getFullName authordetails
-                          , email = getEmail authordetails}]
-        , from = documentservice document
-  }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail 
+    { to = [getMailAddress authorlink]
+    , from = documentservice document
+    }
 
 {- |
    Helper function to send emails to invited parties
@@ -217,8 +216,7 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
       Document { documentid } = document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress { fullname = getFullName signatorydetails
-                          , email = getEmail signatorydetails}]
+        to = [getMailAddress signatorydetails]
       , mailInfo = Invitation documentid  signatorylinkid
       , from = documentservice document
   }
@@ -254,8 +252,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   -- ?? Do we need to read in the contents? -EN
   _attachmentcontent <- getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [MailAddress {fullname = getFullName signatorydetails
-                          , email = getEmail signatorydetails}]
+        to = [getMailAddress signatorydetails]
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
@@ -268,8 +265,7 @@ sendReminderEmail custommessage ctx doc siglink = do
   mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) custommessage ctx doc siglink
   mailattachments <- liftIO $ makeMailAttachments ctx doc
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-      to = [MailAddress { fullname = getFullName siglink
-    , email = getEmail siglink }]
+      to = [getMailAddress siglink]
     , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
     , attachments = if isJust $ maybesigninfo siglink
                       then mailattachments
@@ -284,18 +280,13 @@ sendReminderEmail custommessage ctx doc siglink = do
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
     let signatorylinks = documentsignatorylinks document
-    let mailAddressFromSignatoryLink signatorylink =
-            MailAddress { fullname = getFullName signatorylink
-                        , email = getEmail signatorylink
-                        }
-
     mail <- mailDocumentClosed (ctxtemplates ctx) ctx document
     mailattachments <- makeMailAttachments ctx document
     scheduleEmailSendout (ctxesenforcer ctx) $
-                         mail { to = map mailAddressFromSignatoryLink signatorylinks
-                              , attachments = mailattachments
-                              , from = documentservice document
-                              }
+      mail { to = map getMailAddress signatorylinks
+           , attachments = mailattachments
+           , from = documentservice document
+           }
 
 
 {- |
@@ -304,11 +295,9 @@ sendClosedEmails ctx document = do
 sendAwaitingEmail :: Context -> Document -> IO ()
 sendAwaitingEmail ctx document = do
   let Just authorsiglink = getAuthorSigLink document
-      authoremail = getEmail authorsiglink
-      authorname  = getFullName authorsiglink
-  mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx authorname document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [MailAddress {fullname = authorname, email = authoremail}]
-                                                    , from = documentservice document  }
+  mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx (getFullName authorsiglink) document
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsiglink]
+                                                  , from = documentservice document  }
 
 makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
 makeMailAttachments ctx document = do
@@ -329,10 +318,8 @@ sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
-    let semail = getEmail sl
-        sname = getFullName sl
-    mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document signalink
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [MailAddress { fullname = sname, email = semail}]
+    mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx (getFullName sl) document signalink
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
 
 -- END EMAILS

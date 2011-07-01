@@ -583,8 +583,7 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
 sendResetPasswordMail ctx link user = do
   mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName user
-                                                                      , email = getEmail user }]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 {- |
    Handles viewing of the signup page

@@ -153,8 +153,7 @@ handleDeliveredInvitation docid signlinkid = do
                      field "documenttitle" $ BS.toString $ documenttitle doc)
                  scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
                                                                       , content = BS.fromString content
-                                                                      , to = [MailAddress { fullname = getFullName documentauthordetails
-                                                                                          , email = getEmail documentauthordetails }]
+                                                                      , to = [getMailAddress documentauthordetails]
                                                                       }
          Nothing -> return ()
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
@@ -180,8 +179,7 @@ handleDeferredInvitation docid signlinkid = do
                 field "ctxhostpart" $ ctxhostpart ctx)
              scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
                                                                   , content = BS.fromString content
-                                                                  , to = [MailAddress {fullname = getFullName documentauthordetails
-                                                                                      , email = getEmail documentauthordetails }]
+                                                                  , to = [getMailAddress documentauthordetails]
                                                                   }
          Left _ -> return ()
 
@@ -202,8 +200,7 @@ handleUndeliveredInvitation docid signlinkid = do
                  field "ctxhostpart" $ ctxhostpart ctx)
              scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
                                                                   , content = BS.fromString content
-                                                                  , to = [MailAddress {fullname = getFullName documentauthordetails
-                                                                                      , email = getEmail documentauthordetails }]
+                                                                  , to = [getMailAddress documentauthordetails]
                                                                   }
          Nothing -> return ()
 
