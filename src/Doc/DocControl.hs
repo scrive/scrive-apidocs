@@ -51,6 +51,8 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 
+import ForkAction
+
 {-
   Document state transitions are described in DocState.
 
@@ -66,6 +68,7 @@ postDocumentChangeAction :: Document -> Document -> Maybe SignatoryLinkID -> Kon
 postDocumentChangeAction document@Document  { documentstatus
                                             , documentid
                                             , documentcancelationreason
+                                            , documenttitle
                                             }
                       olddocument@Document  { documentstatus = oldstatus }
                             msignalinkid
@@ -74,21 +77,20 @@ postDocumentChangeAction document@Document  { documentstatus
         -- if sign order has changed, we need to send another invitations
         when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
             ctx <- get
-            Log.forkIOLogWhenError ("error in sending invitation emails for document " ++ show documentid) $
-              sendInvitationEmails ctx document
+            forkAction ("Resending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+                sendInvitationEmails ctx document
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
-        liftIO $ print document
-        Log.forkIOLogWhenError ("error in sending invitation emails for document " ++ show documentid) $ do
-          sendInvitationEmails ctx document
+        forkAction ("Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+            sendInvitationEmails ctx document
         return ()
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
         ctx <- get
-        Log.forkIOLogWhenError ("error sealing document " ++ show documentid)$ do
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- sealDocument ctx document
           case enewdoc of
             Right newdoc -> sendClosedEmails ctx newdoc
@@ -98,21 +100,21 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendAwaitingEmail
     | oldstatus == Pending && documentstatus == AwaitingAuthor = do
         ctx <- get
-        Log.forkIOLogWhenError ("error in sending awaiting emails for document " ++ show documentid) $ do
-          sendAwaitingEmail ctx document
+        forkAction ("Sending awaiting email for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $
+            sendAwaitingEmail ctx document
         return ()
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         ctx <- get
-        Log.forkIOLogWhenError ("error sealing document " ++ show documentid) $ do
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- sealDocument ctx document
           case enewdoc of
             Right newdoc -> sendClosedEmails ctx newdoc
             Left errmsg -> do
               _ <- update $ ErrorDocument documentid errmsg
-              Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
-                sendDocumentErrorEmail ctx document
+              forkAction ("Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+                  sendDocumentErrorEmail ctx document
               return ()
         return ()
     -- Pending -> Rejected
@@ -120,7 +122,7 @@ postDocumentChangeAction document@Document  { documentstatus
     | oldstatus == Pending && documentstatus == Rejected = do
         ctx <- get
         customMessage <- getCustomTextField "customtext"
-        Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
+        forkAction ("Sending rejection emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           sendRejectEmails (fmap BS.toString customMessage) ctx document (fromJust msignalink)
         return ()
     -- Pending -> Canceled
@@ -130,14 +132,14 @@ postDocumentChangeAction document@Document  { documentstatus
         isJust documentcancelationreason &&
         isELegDataMismatch (fromJust documentcancelationreason) = do
             ctx <- get
-            Log.forkIOLogWhenError ("error sending cancelation emails for document " ++ show documentid) $ do
+            forkAction ("Sending cancelation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
                 sendElegDataMismatchEmails ctx document
             return ()
     --  -> DocumentError
     | DocumentError _msg <- documentstatus = do
         ctx <- get
-        Log.forkIOLogWhenError ("error in sending error emails for document " ++ show documentid) $ do
-          sendDocumentErrorEmail ctx document
+        forkAction ("Sending error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+            sendDocumentErrorEmail ctx document
         return ()
 
     -- transition with no necessary action; do nothing
