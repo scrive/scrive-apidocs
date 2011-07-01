@@ -1,6 +1,7 @@
 module Doc.DocStateUpdate
     ( restartDocument
     , markDocumentSeen
+    , signDocumentWithEmail
     ) where
 
 import DBError
@@ -12,6 +13,9 @@ import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
 import Util.SignatoryLinkUtils
+import Doc.DocStateQuery
+import qualified Data.ByteString as BS
+import Doc.DocUtils
 
 {- |
    Mark document seen securely.
@@ -43,3 +47,21 @@ restartDocument doc= do
           Right newdoc -> return $ Right newdoc
           _            -> return $ Left DBResourceNotAvailable
       _ -> return $ Left DBResourceNotAvailable
+
+{- |
+   Sign a document with email identification (typical, non-eleg).
+ -}
+signDocumentWithEmail :: DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> Kontra (Either DBError (Document, Document))
+signDocumentWithEmail did slid mh fields = do
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
+  case edoc of
+    Left err -> return $ Left err
+    Right olddoc -> case olddoc `allowsIdentification` EmailIdentification of
+      False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
+      True  -> do
+        Context{ ctxtime, ctxipnumber } <- get
+        newdocument <- update $ SignDocument did slid ctxtime ctxipnumber Nothing fields
+        case newdocument of
+          Left message -> return $ Left (DBActionNotAvailable message)
+          Right doc -> return $ Right (doc, olddoc)
+            

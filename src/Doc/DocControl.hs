@@ -5,6 +5,7 @@ module Doc.DocControl where
 
 import ActionSchedulerState
 import AppView
+import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
 import Doc.DocState
@@ -379,27 +380,23 @@ signDocument :: DocumentID      -- ^ The DocumentID of the document to sign
 signDocument documentid
              signatorylinkid1
              magichash1 = do
-  Context { ctxtime, ctxipnumber } <- get
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash1
+  fieldnames <- getAndConcat "fieldname"
+  fieldvalues <- getAndConcat "fieldvalue"
+  let fields = zip fieldnames fieldvalues
+      
+  edoc <- signDocumentWithEmail documentid signatorylinkid1 magichash1 fields
+  
   case edoc of
+    Left (DBActionNotAvailable message) -> do
+      addFlashMsg $ toFlashMsg OperationFailed message
+      return $ LinkMain
+    Left (DBDatabaseNotAvailable message) -> do
+      addFlashMsg $ toFlashMsg OperationFailed message
+      return $ LinkMain
     Left _ -> mzero
-    Right olddocument -> do
-      fieldnames <- getAndConcat "fieldname"
-      fieldvalues <- getAndConcat "fieldvalue"
-      let fields = zip fieldnames fieldvalues
-      let allowedidtypes = documentallowedidtypes olddocument
-          allowsEmail = EmailIdentification `elem` allowedidtypes
-
-      guard allowsEmail
-
-      newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
-      case newdocument of
-        Left message -> do
-          addFlashMsg $ toFlashMsg OperationFailed message
-          return $ LinkMain
-        Right document -> do
-          postDocumentChangeAction document olddocument (Just signatorylinkid1)
-          handleAfterSigning document signatorylinkid1
+    Right (doc, olddoc) -> do
+      postDocumentChangeAction doc olddoc (Just signatorylinkid1)
+      handleAfterSigning doc signatorylinkid1
 
 {- |
     Call after signing in order to save the document for any new user,
