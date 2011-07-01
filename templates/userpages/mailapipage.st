@@ -33,7 +33,7 @@ showUserMailAPI =
                      order+$mailapikey$@api.skrivapa.se
                    </a></li>
                  </ul>
-                 <input type="checkbox" id="resetapikeycbox" name="reset_key">
+                 <input type="checkbox" id="resetapikeycbox" name="reset_key" />
                  <label for="resetapikeycbox" style="margin-left: 5px">Reset API key</label>
                </div>
              $endif$
@@ -46,8 +46,8 @@ showUserMailAPI =
            <table class="mailapitable">
             <tr>
                <td>Daily limit of processed e-mails</td>
-               <td><input type="text" name="daily_limit" $if(mailapienabled)$ value="$mapidailylimit$" $else$ value="N/A" disabled="disabled" $endif$ />
-             </tr>
+               <td><input type="text" name="daily_limit" $if(mailapienabled)$ value="$mapidailylimit$" $else$ value="N/A" disabled="disabled" $endif$ /></td>
+            </tr>
             <tr>
               <td>E-mails processed today:</td>
               <td><input type="text" value="$if(mailapienabled)$$mapisenttoday$$else$N/A$endif$" disabled="disabled" /></td>
@@ -55,7 +55,7 @@ showUserMailAPI =
           </table>
           $if(mailapienabled)$
             <div class="mailapi">
-              <input type="checkbox" id="resetsenttodaycbox" name="reset_senttoday">
+              <input type="checkbox" id="resetsenttodaycbox" name="reset_senttoday" />
               <label for="resetsenttodaycbox" style="margin-left: 5px">Reset counter of e-mails processed today</label>
             </div>
           $endif$
