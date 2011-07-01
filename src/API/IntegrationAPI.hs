@@ -124,7 +124,7 @@ embeddDocumentFrame = do
          (Just company,Nothing) -> do
              ssid <- createServiceSession (Left $ companyid $ company) location
              returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         (Just _company, Just siglink) -> do
+         (Just company, Just siglink) -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
