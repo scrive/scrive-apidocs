@@ -1076,13 +1076,13 @@ div.price-plan-details {
 }
 
 .price-plan-details h3 {
-       color: #666;
-       font: 22px "Georgia";
+       color: black;
+       font: normal 18px "Copse";
 }
 
 .price-plan-details p {
-       color: #999;
-       font: 14px "Copse";
+       color: #666;
+       font: normal 12px "Lucida Grande";
 }
 
 /* Highlight Ribbon */

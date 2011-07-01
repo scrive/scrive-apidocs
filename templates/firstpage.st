@@ -297,7 +297,7 @@ och anpassning</p>
                                                 <tr class="odd-row">
                                                         <td>500 dok laging</td>
                                                         <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>
+                                                        <td>Obegränsad lagring</td>
                                                         <td>Offert</td>
                                                 </tr>
                                                 <tr>
@@ -312,7 +312,7 @@ och anpassning</p>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
-                                                                <h4>32.5 kr/signatur</h4>
+                                                                <h4>32.50 kr/signatur</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
@@ -336,7 +336,7 @@ och anpassning</p>
                                                         <li>
                                                                 <p>2000 signaturer/år</p>
                                                         </li>
-                                                        <li class="odd">Offert</li>
+                                                        <li class="odd">Obegränsad lagring</li>
                                                         <li>Avancerade funktioner</li>
                                                         <li class="bottom">
                                                                 <h4>30 kr/signatur</h4>
