@@ -12,7 +12,7 @@ msgstr ""
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageTopBody"
-msgstr "SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration. </p>\t\t\t\t\t\t<br />\t\t\t\t\t\t<p>Vi är övertygade om att våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade problem på sätt som verkar enkla och tilltalande för slutkund."
+msgstr "<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration. </p>\t\t\t\t\t\t<br />\t\t\t\t\t\t<p>Vi är övertygade om att våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade problem på sätt som verkar enkla och tilltalande för slutkund.</p>"
 
 #: staticpages/clientspage.st:clientsPage
 msgid "_clientsPageTitle"

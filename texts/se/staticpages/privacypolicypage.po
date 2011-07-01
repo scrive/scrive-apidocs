@@ -44,7 +44,7 @@ msgstr "Återförsäljning eller delgivning av information"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH1Body"
-msgstr "All information Ni delger SkrivaPå eller dess Tjänster hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för SkrivaPå. Er integritet är viktig för oss.</p><br /><p>Nedan följer en mer detaljerad beskrivning av hur SkrivaPå hanterar Er information. Vid vidare frågor, vänligen kontakta oss på info@skrivapa.se."
+msgstr "<p>All information Ni delger SkrivaPå eller dess Tjänster hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för SkrivaPå. Er integritet är viktig för oss.</p><br /><p>Nedan följer en mer detaljerad beskrivning av hur SkrivaPå hanterar Er information. Vid vidare frågor, vänligen kontakta oss på info@skrivapa.se.</p>"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH1"

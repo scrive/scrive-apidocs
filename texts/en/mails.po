@@ -100,7 +100,7 @@ msgstr "<strong>Bug raport:</strong>"
 
 #: mails.st:mailMismatchSignatoryContent
 msgid "_mailMismatchSignatoryContentBodySecond"
-msgstr "\"The agreement process for <a href=\"\"$doclink$\"\">$documenttitle$</a> has therefor been interrupted. Please wait for a new invitation or contact <a href=\"\"mailto:$authoremail$\"\">$authorname$</a>.\""
+msgstr "\"The agreement process for <a href=\"$doclink$\">$documenttitle$</a> has therefor been interrupted. Please wait for a new invitation or contact <a href=\"mailto:$authoremail$\">$authorname$</a>.\""
 
 #: mails.st:mailMismatchSignatoryContent
 msgid "_mailMismatchSignatoryContentBodyFirst"
@@ -292,7 +292,7 @@ msgstr "This is an invite from $invitername$"
 
 #: mails.st:mailAccountBySigningOfferReminderContent
 msgid "_mailAccountBySigningOfferReminderContentInstruction"
-msgstr "It works like this:<br/>1. Clic the linc<br/><a href=\"$ctxhostpart$$activationlink$\">$ctxhostpart$$activationlink$</a><br/>2. Define passwords and accept the terms of agreement <br/>3. Done"
+msgstr "It works like this:<br/>1. Click the link<br/><a href=\"$ctxhostpart$$activationlink$\">$ctxhostpart$$activationlink$</a><br/>2. Define passwords and accept the terms of agreement <br/>3. Done"
 
 #: mails.st:mailAccountBySigningOfferReminderContent
 msgid "_mailAccountBySigningOfferReminderContentBody"
@@ -308,7 +308,7 @@ msgstr "You have not saved your original"
 
 #: mails.st:mailAccountBySigningContractReminderContent
 msgid "_mailAccountBySigningContractReminderContentInstruction"
-msgstr "It works like this:<br/>1. Clic the linc<br/><a href=\"\"$ctxhostpart$$activationlink$\"\">$ctxhostpart$$activationlink$</a><br/>2. Define password and accept the terms of agreement <br/>3. Done"
+msgstr "It works like this:<br/>1. Click the link<br/><a href=\"$ctxhostpart$$activationlink$\">$ctxhostpart$$activationlink$</a><br/>2. Define password and accept the terms of agreement <br/>3. Done"
 
 #: mails.st:mailAccountBySigningContractReminderContent
 msgid "_mailAccountBySigningContractReminderContentBody"
@@ -484,7 +484,7 @@ msgstr "Hello $personname$,      <br/><br/>      <strong>$creatorname$</strong> 
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentIfNotSignatoryInstruction"
-msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
+msgstr "You only have permission to view this document    Click the link below to view the document:"
 
 #: mails.st:mailInvitationToSignOrderContent
 msgid "_mailInvitationToSignOrderContentIfSignatoryInstruction"
@@ -504,11 +504,11 @@ msgstr "General information"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentIfNotSignatoryInstruction"
-msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
+msgstr "You only have permission to view this document    Click the link below to view the document:"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentIfSignatoryInstruction"
-msgstr "1. Clic the linc <br/>      <a href=\"\"$link$\"\">$link$</a><br/>      2. Review online<br/>      3. Accept offer (or decline)<br/>       4. Done"
+msgstr "1. Click the link <br/>      <a href=\"$link$\">$link$</a><br/>      2. Review online<br/>      3. Accept offer (or decline)<br/>       4. Done"
 
 #: mails.st:mailInvitationToSignOfferContent
 msgid "_mailInvitationToSignOfferContentSender"
@@ -524,11 +524,11 @@ msgstr "General information"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentIfNotSignatoryInstruction"
-msgstr "You only have permission to view this document    Clic the on the linc below to view the document:"
+msgstr "You only have permission to view this document    Click the on the link below to view the document:"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentIfSignatoryInstruction"
-msgstr "<i>This is how to continue</i><br/>      1. Clic the linc <br/>      <a href=\"\"$link$\"\">$link$</a><br/>      2. Review online<br/>      3. Sign  (or decline)<br/>       4. Done"
+msgstr "<i>This is how to continue</i><br/>      1. Click the link <br/>      <a href=\"$link$\">$link$</a><br/>      2. Review online<br/>      3. Sign  (or decline)<br/>       4. Done"
 
 #: mails.st:mailInvitationToSignContractContent
 msgid "_mailInvitationToSignContractContentSender"
@@ -612,7 +612,7 @@ msgstr "Confirmation: $documenttitle$"
 
 #: mails.st:mailDocumentAwaitingForAuthorContent
 msgid "_mailDocumentAwaitingForAuthorContentInstruction"
-msgstr "To complete the document, do the following:<br/>      1. Clic the linc<br/>      <a href=\"$documentlink$\">$documenttitle$</a><br/>      <br/>      2. Review the details<br/>      3. Sign the agreement for the document to be completed."
+msgstr "To complete the document, do the following:<br/>      1. Click the link<br/>      <a href=\"$documentlink$\">$documenttitle$</a><br/>      <br/>      2. Review the details<br/>      3. Sign the agreement for the document to be completed."
 
 #: mails.st:mailDocumentAwaitingForAuthorContent
 msgid "_mailDocumentAwaitingForAuthorContentSignedBy"

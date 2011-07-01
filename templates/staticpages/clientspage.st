@@ -16,7 +16,7 @@ clientsPage=
 clientsPageContents=
 					<div class="opaque wide box smaller">
 						<h1>$_clientsPageH1()$</h1>
-						<p>$_clientsPageTopBody()$</p>
+						$_clientsPageTopBody()$
 						<br />
 						<ul class="partner-list">
 							<li>
