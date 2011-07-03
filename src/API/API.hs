@@ -59,7 +59,7 @@ type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
 {- | API functions are build over Kontra with a ability to exit, and with some context -}
-type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra') a
+type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra) a
 
 {- |  Used to convert json object to HTTP response-}
 apiResponse ::  Kontra APIResponse ->  Kontra Response

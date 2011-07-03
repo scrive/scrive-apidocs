@@ -73,8 +73,7 @@ import Text.Printf
 import Util.SignatoryLinkUtils
 import Data.List
 
-eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
-            -> ServerPartT (StateT Context IO) b
+eitherFlash :: Kontra (Either String b) -> Kontra b
 eitherFlash action = do
   x <- action
   case x of
@@ -87,14 +86,14 @@ eitherFlash action = do
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontra Response
 showAdminMainPage = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   content <- liftIO $ adminMainPage ctxtemplates
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for advanced user administration -}
 showAdminUserAdvanced :: Kontra Response
 showAdminUserAdvanced = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   users <- query $ GetAllUsers
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
@@ -104,14 +103,14 @@ showAdminUserAdvanced = onlySuperUser $ do
 it allows to edit user details -}
 showAdminUsers :: Maybe UserID -> Kontra Response
 showAdminUsers Nothing = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPage ctxtemplates users params
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsers (Just userId) = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   muser <- query $ GetUserByUserID userId
   case muser of
     Nothing -> mzero
@@ -122,7 +121,7 @@ showAdminUsers (Just userId) = onlySuperUser $ do
 
 showAdminUsersForSales :: Kontra Response
 showAdminUsersForSales = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForSales ctxtemplates users params
@@ -130,7 +129,7 @@ showAdminUsersForSales = onlySuperUser $ do
 
 showAdminUsersForPayments :: Kontra Response
 showAdminUsersForPayments = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForPayments ctxtemplates users params
@@ -160,7 +159,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 {- Shows table of all users-}
 showAllUsersTable :: Kontra Response
 showAllUsersTable = onlySuperUser $ do
-    Context {ctxtemplates} <- lift get
+    Context {ctxtemplates} <-get
     users <- getUsersAndStats
     content <- liftIO $ allUsersTable ctxtemplates users
     renderFromBody TopEmpty kontrakcja content
@@ -188,7 +187,7 @@ showStats = onlySuperUser $ do
 #else
     let df = empty
 #endif
-    Context {ctxtemplates} <- lift get
+    Context {ctxtemplates} <- get
     let stats = StatsView { svDoccount = doccount docstats,
                             svSignaturecount = signaturecount docstats,
                             svUsercount = usercount userstats,
@@ -199,7 +198,7 @@ showStats = onlySuperUser $ do
 
 indexDB :: Kontra Response
 indexDB = onlySuperUser $ do
-    Context {ctxtemplates} <- lift get
+    Context {ctxtemplates} <- get
     files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
     content <- liftIO $ databaseContent ctxtemplates (sort files)
     renderFromBody TopEmpty kontrakcja content
@@ -493,7 +492,7 @@ handleCreateService = onlySuperUser $ do
 {- Services page-}
 showServicesPage :: Kontra Response
 showServicesPage = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- get
   services <- query GetServices
   content <- liftIO $ servicesAdminPage ctxtemplates services
   renderFromBody TopEmpty kontrakcja content

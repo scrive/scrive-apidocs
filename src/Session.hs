@@ -622,7 +622,7 @@ createServiceSession userorcompany loc= do
     return $ sessionId  session
 
 -- This is used to connect user or company to session when it was created by same service
-loadServiceSession::(MonadIO m,Functor m) => Either CompanyID UserID -> SessionId -> ServerPartT m Bool
+loadServiceSession :: (MonadIO m, Functor m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
 loadServiceSession userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of

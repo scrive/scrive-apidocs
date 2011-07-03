@@ -3,8 +3,7 @@ module Kontra
     , module User.Password
     , Context(..)
     , isSuperUser
-    , Kontra
-    , Kontra'
+    , Kontra(runKontra)
     , KontraModal
     , initialUsers
     , clearFlashMsgs
@@ -30,11 +29,11 @@ module Kontra
     )
     where
 
+import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Concurrent.MVar
 import Data.Word
-import Data.Functor
 import Doc.DocState
 import Happstack.Server
 import MinutesTime
@@ -82,11 +81,12 @@ data Context = Context
     , ctxadminaccounts       :: [Email]
     }
 
-type Kontra a = ServerPartT (StateT Context IO) a
-type Kontra' = ServerPartT (StateT Context IO)  -- Type synonym to be ussed with transformers
+newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
+    deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, MonadState Context, ServerMonad, WebMonad Response)
+
 type KontraModal = ReaderT KontrakcjaTemplates IO String
 
-instance TemplatesMonad (ServerPartT (StateT Context IO)) where
+instance TemplatesMonad Kontra where
         getTemplates = do
             ctx <- get
             return (ctxtemplates ctx)

@@ -464,7 +464,7 @@ appHandler appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx')<- toIO ctx $
+      (res,ctx') <- toIO ctx . runKontra $
          do
           res <- (handleRoutes) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
@@ -595,14 +595,14 @@ sendResetPasswordMail ctx link user = do
 -}
 _signupPageGet :: Kontra Response
 _signupPageGet = do
-    ctx <- lift get
+    ctx <- get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja  content
 
 
 _signupVipPageGet :: Kontra Response
 _signupVipPageGet = do
-    ctx <- lift get
+    ctx <- get
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja content
 {- |
@@ -622,7 +622,7 @@ signupPagePost = do
 -}
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip _freetill =  do
-  ctx@Context{ctxtemplates,ctxhostpart} <- lift get
+  ctx@Context{ctxtemplates,ctxhostpart} <- get
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -665,7 +665,7 @@ _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user 
 -}
 handleLoginGet :: Kontra Response
 handleLoginGet = do
-  ctx <- lift get
+  ctx <- get
   case ctxmaybeuser ctx of
        Just _  -> sendRedirect LinkMain
        Nothing -> do
