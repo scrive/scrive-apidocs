@@ -603,7 +603,7 @@ handleIssueShowPost docid = withUserPost $ do
       updateattachments <- isFieldSet "updateattachments"
       switchtoadvanced  <- isFieldSet "changefunctionality"
       sigattachments    <- isFieldSet "sigattachments"
-      
+      -- Behold!
       case documentstatus document of
         Preparation | sign              -> handleIssueSign                 document
         Preparation | send              -> handleIssueSend                 document
@@ -616,20 +616,6 @@ handleIssueShowPost docid = withUserPost $ do
         Preparation                     -> handleIssueSave                 document
         AwaitingAuthor                  -> handleIssueSignByAuthor         document
         _ -> return $ LinkContracts emptyListParams
-      {-
-      case (documentstatus document,sign,send,template,contract,csvupload,updateattachments,switchtoadvanced,sigattachments) of
-        (Preparation, True, _,_, _, _ , _, _, _) -> handleIssueSign document
-        (Preparation, _ ,  True,_, _, _, _, _, _) -> handleIssueSend document
-        (Preparation, _ , _ ,True, _, _, _, _, _) -> handleIssueSaveAsTemplate document
-        (Preparation, _ , _ ,_ , True, _, _, _, _) -> handleIssueChangeToContract document
-        (Preparation, _ , _ ,_ , _, True, _, _, _) -> handleIssueCSVUpload document
-        (Preparation, _ , _ ,_ , _, _, True, _, _) -> handleIssueUpdateAttachments document
-        (Preparation, _ , _ ,_ , _, _, _, True, _) -> handleIssueChangeFunctionality document
-        (Preparation, _ , _ ,_ , _, _, _, _, True) -> handleIssueUpdateSigAttachments document
-        (Preparation, _ , _ ,_, _, _, _, _, _) -> handleIssueSave document
-        (AwaitingAuthor, True , _ ,_, _, _, _, _, _) -> handleIssueSignByAuthor document
-        _  -> return $ LinkContracts emptyListParams
-      -}
 
 handleIssueSign :: Document -> Kontra KontraLink
 handleIssueSign document = do
