@@ -490,25 +490,24 @@ handleSignShow documentid
         liftIO $ print document
         let isFlashNeeded = Data.List.null ctxflashmessages
                             && (not (isJust $ maybesigninfo invitedlink))
-            -- heavens this is a confusing case statement, there must be a better way!
-            flashMsg =
-              case (isFlashNeeded,
-                    isSignatory invitedlink,
-                    document `allowsIdentification` ELegitimationIdentification) of
-                (False, _, _) -> Nothing
-                (_, False, _) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, _, True) -> Just flashMessagePleaseSignWithEleg
-                _ -> Just $ flashMessagePleaseSign document
 
         ctx@Context{ctxtemplates} <- get
+        
+        -- add a flash if needed
+        case document of
+          _ | not isFlashNeeded -> return ()
+          _ | not (isSignatory invitedlink) -> 
+            addFlashMsg =<< (liftIO $ flashMessageOnlyHaveRightsToViewDoc ctxtemplates)
+          _ | document `allowsIdentification` ELegitimationIdentification -> 
+            addFlashMsg =<< (liftIO $ flashMessagePleaseSignWithEleg ctxtemplates)
+          _ -> addFlashMsg =<< (liftIO $ flashMessagePleaseSign document ctxtemplates)
 
-        when (isJust flashMsg) $
-          addFlashMsg =<< (liftIO $ (fromJust flashMsg) ctxtemplates)
-
-        case (isAttachment document, isSignatory invitedlink) of
-            (True, _) -> liftIO $ pageAttachmentForSignatory ctx document invitedlink
-            (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
-            _ -> liftIO $ pageDocumentForViewer ctx document (Just invitedlink)
+        case document of
+          _ | isAttachment document -> 
+            liftIO $ pageAttachmentForSignatory ctx document invitedlink
+          _ | isSignatory invitedlink ->
+            liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
+          _ -> liftIO $ pageDocumentForViewer ctx document (Just invitedlink)
 
 --end
 
