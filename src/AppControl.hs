@@ -100,7 +100,7 @@ data AppConf
               , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
               , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
               , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
-              , admins          :: [String]                    -- ^ email addresses of people regarded as admins
+              , admins          :: [Email]                    -- ^ email addresses of people regarded as admins
               }
       deriving (Show,Read,Eq,Ord)
 
@@ -546,7 +546,7 @@ appHandler appConf appGlobals = do
                 , ctxcompany = mcompany
                 , ctxservice = mservice
                 , ctxlocation = location
-                , ctxadminaccounts = map (Email . BS.fromString) (admins appConf)
+                , ctxadminaccounts = admins appConf
                 }
       return ctx
 
