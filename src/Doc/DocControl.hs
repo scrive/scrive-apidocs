@@ -567,13 +567,12 @@ getDesignStep docid = do
     
     mperson <- getOptionalField asValidNumber "person"
     aftercsvupload <- isFieldSet "aftercsvupload"
-    case (step2,step3) of
-       (True,_) -> return $ Just $ DesignStep2 docid mperson (if aftercsvupload
+    case 1 of
+      _ | step2 -> return $ Just $ DesignStep2 docid mperson (if aftercsvupload
                                                                 then (Just AfterCSVUpload)
                                                                 else Nothing) signlast
-                   
-       (_,True) -> return $ Just $ DesignStep3 docid signlast
-       _ -> return Nothing
+      _ | step3 -> return $ Just $ DesignStep3 docid signlast
+      _ -> return Nothing
 
 {- |
    Modify a document. Typically called with the "Underteckna" or "Save" button
