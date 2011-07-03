@@ -630,10 +630,10 @@ handleIssueSign document = do
             Right docs -> do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
-                ([],d:[]) -> do
+                ([], [d]) -> do
                     addModal $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
-                ([],ds) -> do
+                ([], ds) -> do
                     addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
@@ -667,10 +667,10 @@ handleIssueSend document = do
             Right docs -> do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
-                ([],d:[]) -> do
+                ([], [d]) -> do
                     addModal $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
-                ([],ds) -> do
+                ([], ds) -> do
                     addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
