@@ -342,10 +342,11 @@ handleAcceptAccountFromSign documentid
     Right document -> case getSigLinkFor document signatorylinkid of
       Nothing -> mzero
       Just signatorylink -> do
-        case (muser, Closed == documentstatus document) of
-          (Nothing, True)  -> addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
-          (Nothing, False) -> addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
-          (Just _, _)      -> addFlashMsg =<< (liftIO $ flashMessageAccountActivatedFromSign ctxtemplates)
+        case muser of
+          Nothing | Closed == documentstatus document -> 
+            addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
+          Nothing -> addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
+          Just _ -> addFlashMsg =<< (liftIO $ flashMessageAccountActivatedFromSign ctxtemplates)
         return $ LinkSignDoc document signatorylink
 
 {- |
