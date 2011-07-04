@@ -35,7 +35,6 @@ import Doc.DocUtils
 import Company.CompanyState
 import Kontra
 import Misc
-import Control.Monad.State (get)
 import Happstack.State     (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
@@ -48,7 +47,7 @@ import qualified AppLogger as Log
  -}
 getDocByDocID :: DocumentID -> Kontra (Either DBError Document)
 getDocByDocID docid = do
-  Context { ctxmaybeuser, ctxcompany } <- get
+  Context { ctxmaybeuser, ctxcompany } <- getContext
   case (ctxmaybeuser, ctxcompany) of
     (Nothing, Nothing) -> return $ Left DBNotLoggedIn
     (Just user, _) -> do
@@ -88,7 +87,7 @@ getDocByDocID docid = do
  -}
 getDocsByLoggedInUser :: Kontra (Either DBError [Document])
 getDocsByLoggedInUser = do
-  ctx <- get
+  ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do

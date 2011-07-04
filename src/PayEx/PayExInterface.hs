@@ -34,7 +34,7 @@ import Util.HasSomeUserInfo
 
 payexTest::Maybe String -> Kontra Response
 payexTest Nothing = do
-             ctx <- get
+             ctx <- getContext
              payments <- case (ctxmaybeuser ctx) of
                           Just user -> do
                                          invoice <- getField "invoice"
@@ -48,7 +48,7 @@ payexTest Nothing = do
 
 payexTest (Just pid) =
                    do
-                    ctx <- get
+                    ctx <- getContext
                     mpayment <- sequenceMM $ fmap (liftIO . query . GetPayment . PaymentId) $ readM pid
                     case mpayment of
                      Just payment1 -> do
@@ -80,7 +80,7 @@ payexTest (Just pid) =
 {-| Ajax info about how much we will chage a user for this document |-}
 paymentInfo::DocumentID -> Kontra Response
 paymentInfo documentid = do
-                  ctx <- get
+                  ctx <- getContext
                   signatoriesCount <- fmap (fromMaybe 0) $ readField "signatoriesCount"
                   allowedidtypes <- fmap (fromMaybe "") $  getField  "allowedidtypes"
                   let allowedIdentification  =  (if "Email" `isInfixOf` allowedidtypes  then [EmailIdentification]  else []) ++  (if "ELeg" `isInfixOf` allowedidtypes   then [ELegitimationIdentification]   else [])
@@ -106,7 +106,7 @@ makePayExSoapCall rq = do
 sendInitRequest::Payment -> (Maybe String)-> Kontra (PX InitResponse)
 sendInitRequest payment agreement =  do
                  request <- askRq
-                 ctx <- get
+                 ctx <- getContext
                  rq <- liftIO $ toPC $ PayExInit request (ctxtemplates ctx) agreement payment
                  liftIO $ makePayExSoapCall rq
 

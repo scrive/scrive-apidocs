@@ -23,7 +23,7 @@ import FlashMessage
 
 showContacts ::Kontra Response
 showContacts =  do
-  ctx <- get
+  ctx <- getContext
   content <- liftIO $ contactsView (ctxtemplates ctx)
   renderFromBody TopEmpty kontrakcja content
 

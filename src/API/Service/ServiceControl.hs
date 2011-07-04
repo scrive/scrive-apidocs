@@ -37,7 +37,7 @@ import Happstack.Server.SimpleHTTP
 
 handleChangeServiceUI :: ServiceID -> Kontra KontraLink
 handleChangeServiceUI sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     clear <- isFieldSet "clear"
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
@@ -82,7 +82,7 @@ handleChangeServiceUI sid = do
 
 handleChangeServicePassword :: ServiceID -> Kontra KontraLink
 handleChangeServicePassword sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
@@ -107,7 +107,7 @@ handleChangeServicePassword sid = do
 
 handleChangeServiceSettings :: ServiceID -> Kontra KontraLink
 handleChangeServiceSettings sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     case (mservice, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
@@ -129,7 +129,7 @@ handleChangeServiceSettings sid = do
 
 handleShowService :: ServiceID -> Kontra (Either KontraLink String)
 handleShowService sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
@@ -139,7 +139,7 @@ handleShowService sid = do
 
 handleShowServiceList  :: Kontra String
 handleShowServiceList = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
          (Just user, False) -> do
              srvs <- query $ GetServicesForAdmin $ ServiceAdmin $ unUserID $ userid user

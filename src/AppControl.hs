@@ -48,7 +48,6 @@ import Util.HasSomeUserInfo
 
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.State
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -331,7 +330,7 @@ handleRoutes = msum [
 -}
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser,ctxservice } <- get
+  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
@@ -382,7 +381,7 @@ handleWholePage f = do
 -}
 handleError :: Kontra Response
 handleError = do
-    ctx <- get
+    ctx <- getContext
     case (ctxservice ctx) of
          Nothing -> do
             addModal $ V.modalError (ctxtemplates ctx)
@@ -473,7 +472,7 @@ appHandler appConf appGlobals = do
              Log.error $ showRequest rq rqcontent
              response <- handleError
              setRsCode 404 response
-          ctx' <- get
+          ctx' <- getContext
           return (res,ctx')
 
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'
@@ -555,7 +554,7 @@ appHandler appConf appGlobals = do
 -}
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
-  ctx <- get
+  ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -595,14 +594,14 @@ sendResetPasswordMail ctx link user = do
 -}
 _signupPageGet :: Kontra Response
 _signupPageGet = do
-    ctx <- get
+    ctx <- getContext
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja  content
 
 
 _signupVipPageGet :: Kontra Response
 _signupVipPageGet = do
-    ctx <- get
+    ctx <- getContext
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja content
 {- |
@@ -614,7 +613,7 @@ _signupVipPageGet = do
 -}
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
-    Context { ctxtime } <- get
+    Context { ctxtime } <- getContext
     signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
 
 {-
@@ -622,7 +621,7 @@ signupPagePost = do
 -}
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip _freetill =  do
-  ctx@Context{ctxtemplates,ctxhostpart} <- get
+  ctx@Context{ctxtemplates,ctxhostpart} <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -665,7 +664,7 @@ _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user 
 -}
 handleLoginGet :: Kontra Response
 handleLoginGet = do
-  ctx <- get
+  ctx <- getContext
   case ctxmaybeuser ctx of
        Just _  -> sendRedirect LinkMain
        Nothing -> do
@@ -729,7 +728,7 @@ serveHTMLFiles =  do
 -}
 onlySuperUserGet :: Kontra Response -> Kontra Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser } <- get
+    Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
         else sendRedirect $ LinkLogin NotLoggedAsSuperUser

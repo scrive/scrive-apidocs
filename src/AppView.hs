@@ -30,7 +30,6 @@ import KontraLink
 import ListUtil
 import Misc
 
-import Control.Monad.State (get)
 import Control.Monad.Trans
 import Data.Functor
 import Data.List
@@ -67,7 +66,7 @@ renderFromBody _topmenu title content = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
-    ctx <- get
+    ctx <- getContext
     let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
     res <-  simpleResponse =<< (liftIO $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content)
     clearFlashMsgs
@@ -101,7 +100,7 @@ pageFromBody ctx@Context{ ctxtemplates }
 
 embeddedPage :: String -> Kontra Response
 embeddedPage pb = do
-    ctx <- get
+    ctx <- getContext
     bdy <- renderTemplateM "embeddedPage" $ do
             field "content" pb
             serviceFields (ctxservice ctx) (ctxlocation ctx)
@@ -112,7 +111,7 @@ embeddedPage pb = do
 
 embeddedErrorPage :: Kontra Response
 embeddedErrorPage = do
-    ctx <- get
+    ctx <- getContext
     content <- renderTemplateM "embeddedErrorPage" $ do
         serviceFields (ctxservice ctx) (ctxlocation ctx)
     simpleResponse content
@@ -136,35 +135,35 @@ serviceFields Nothing location =
 
 sitemapPage :: Kontra String
 sitemapPage = do
-    ctx <- get
+    ctx <- getContext
     liftIO $ renderTemplate (ctxtemplates ctx) "sitemapPage" $ do
         field "hostpart" $ case ctxhostpart ctx of
                                 ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                                 xs -> xs
 
 priceplanPage :: Kontra String
-priceplanPage = get >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True True
+priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True True
 
 securityPage :: Kontra String
-securityPage = get >>= \ctx -> renderTemplateAsPage ctx "securityPage" True True
+securityPage = getContext >>= \ctx -> renderTemplateAsPage ctx "securityPage" True True
 
 legalPage :: Kontra String
-legalPage = get >>= \ctx -> renderTemplateAsPage ctx "legalPage" True True
+legalPage = getContext >>= \ctx -> renderTemplateAsPage ctx "legalPage" True True
 
 privacyPolicyPage :: Kontra String
-privacyPolicyPage = get >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True True
+privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True True
 
 termsPage :: Kontra String
-termsPage = get >>= \ctx -> renderTemplateAsPage ctx "termsPage" True True
+termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" True True
 
 aboutPage :: Kontra String
-aboutPage = get >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True True
+aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True True
 
 partnersPage :: Kontra String
-partnersPage = get >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True True
+partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True True
 
 clientsPage :: Kontra String
-clientsPage = get >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True True
+clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True True
 
 {- |
     Render a template as an entire page.

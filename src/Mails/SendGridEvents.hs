@@ -144,7 +144,7 @@ handleDeliveredInvitation docid signlinkid = do
          Just signlink -> do
              -- send it only if email was reported deferred earlier
              when (invitationdeliverystatus signlink == Mail.Deferred) $ do
-                 ctx <- get
+                 ctx <- getContext
                  title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredTitle" ()
                  let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
                  content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredContent" $ do
@@ -170,7 +170,7 @@ handleDeferredInvitation docid signlinkid = do
     mdoc <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
     case mdoc of
          Right doc -> do
-             ctx <- get
+             ctx <- getContext
              title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeferredTitle" ()
              let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
              content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeferredContent" $ do
@@ -186,7 +186,7 @@ handleDeferredInvitation docid signlinkid = do
 handleUndeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
 handleUndeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
-    ctx <- get
+    ctx <- getContext
     title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
     let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
     case getSignatoryLinkFromDocumentByID doc signlinkid of

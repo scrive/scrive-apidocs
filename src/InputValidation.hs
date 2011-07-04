@@ -228,7 +228,7 @@ getFields fieldname = do
 -}
 flashValidationMessage :: (Input, Result a) -> Kontra (Input, Result a)
 flashValidationMessage x@(_, Bad flashmsg) = do
-  Context{ctxtemplates,ctxflashmessages} <- get
+  Context{ctxtemplates,ctxflashmessages} <- getContext
   msg <- liftIO $ flashmsg ctxtemplates
   when (msg `notElem` ctxflashmessages) $ addFlashMsg msg
   return x
@@ -241,7 +241,7 @@ flashValidationMessage x = return x
 -}
 logIfBad :: (Input, Result a) -> Kontra (Input, Result a)
 logIfBad x@(input, Bad flashmsg) = do
-  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- get
+  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- getContext
   flash <- liftIO $ flashmsg ctxtemplates
   let username :: String
       username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser

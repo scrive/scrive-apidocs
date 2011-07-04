@@ -92,18 +92,16 @@ class KontraMonad m where
     modifyContext :: (Context -> Context) -> m ()
 
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
-    deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, MonadState Context, ServerMonad, WebMonad Response)
+    deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
 
 instance Kontrakcja Kontra
 
 instance KontraMonad Kontra where
-    getContext    = get
-    modifyContext = modify
+    getContext    = Kontra get
+    modifyContext = Kontra . modify
 
 instance TemplatesMonad Kontra where
-        getTemplates = do
-            ctx <- get
-            return (ctxtemplates ctx)
+    getTemplates = ctxtemplates <$> getContext
 
 type KontraModal = ReaderT KontrakcjaTemplates IO String
 
@@ -136,7 +134,7 @@ isSuperUser _ _ = False
 -}
 onlySuperUser :: Kontra a -> Kontra a
 onlySuperUser a = do
-    ctx <- get
+    ctx <- getContext
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
@@ -146,22 +144,21 @@ onlySuperUser a = do
 -}
 addELegTransaction :: ELegTransaction -> Kontra ()
 addELegTransaction tr = do
-    ctx@Context { ctxelegtransactions = currenttrans } <- get
-    put $ ctx { ctxelegtransactions = (tr : currenttrans) }
+    modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
 {- |
    Adds a flash message to the context.
 -}
 addFlashMsg :: FlashMessage -> Kontra ()
 addFlashMsg flash =
-    modify (\ctx@Context{ ctxflashmessages = flashmessages } ->
-        ctx { ctxflashmessages = flash : flashmessages })
+    modifyContext $ \ctx@Context{ ctxflashmessages = flashmessages } ->
+        ctx { ctxflashmessages = flash : flashmessages }
 
 {- |
    Clears all the flash messages from the context.
 -}
 clearFlashMsgs:: Kontra ()
-clearFlashMsgs = modify (\ctx -> ctx { ctxflashmessages = [] })
+clearFlashMsgs = modifyContext (\ctx -> ctx { ctxflashmessages = [] })
 
 
 {- |
@@ -169,9 +166,9 @@ clearFlashMsgs = modify (\ctx -> ctx { ctxflashmessages = [] })
 -}
 addModal :: KontraModal ->  Kontra ()
 addModal flash = do
-  ctx <- get
-  fm <- liftIO $ runReaderT flash (ctxtemplates ctx)
-  put $  ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
+  templates <- ctxtemplates <$> getContext
+  fm <- liftIO $ runReaderT flash templates
+  modifyContext $ \ctx -> ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
 
 {- |
    Adds modal as flash template, used for semantics sake
@@ -183,9 +180,8 @@ addModalT = addFlashMsg
    Sticks the logged in user onto the context
 -}
 logUserToContext :: Maybe User -> Kontra ()
-logUserToContext user =  do
-  ctx <- get
-  put $ ctx { ctxmaybeuser = user}
+logUserToContext user =
+    modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do

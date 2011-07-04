@@ -9,7 +9,6 @@ import DBError
 import Doc.DocState
 import Kontra
 import Misc
-import Control.Monad.State (get)
 import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
@@ -38,7 +37,7 @@ restartDocument doc= do
   Context { ctxtime
           , ctxipnumber
           , ctxmaybeuser
-          } <- get
+          } <- getContext
   case ctxmaybeuser of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> case getAuthorSigLink doc of
@@ -60,7 +59,7 @@ signDocumentWithEmail did slid mh fields = do
     Right olddoc -> case olddoc `allowsIdentification` EmailIdentification of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
-        Context{ ctxtime, ctxipnumber } <- get
+        Context{ ctxtime, ctxipnumber } <- getContext
         newdocument <- update $ SignDocument did slid ctxtime ctxipnumber Nothing fields
         case newdocument of
           Left message -> return $ Left (DBActionNotAvailable message)
@@ -75,7 +74,7 @@ rejectDocumentWithChecks did slid mh customtext = do
   case edoc of
     Left err -> return $ Left err
     Right olddocument -> do
-      Context{ ctxtime, ctxipnumber } <- get
+      Context{ ctxtime, ctxipnumber } <- getContext
       mdocument <- update $ RejectDocument did slid ctxtime ctxipnumber customtext
       case mdocument of
         Left msg -> return $ Left (DBActionNotAvailable msg)
