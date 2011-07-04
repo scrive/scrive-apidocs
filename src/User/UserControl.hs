@@ -67,7 +67,6 @@ handleUserPost = do
 getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
-    let getValidField = getDefaultedField BS.empty
     mfstname          <- getValidField asValidName "fstname"
     msndname          <- getValidField asValidName "sndname"
     mpersonalnumber   <- getFieldUTF "personalnumber"
@@ -93,6 +92,9 @@ getUserInfoUpdate  = do
           , usercountry  = fromMaybe (usercountry  ui) mcountry
           , userphone  = fromMaybe (userphone ui) mphone
         }
+    where
+        getValidField :: Kontrakcja m => (String -> Result BS.ByteString) -> String -> m (Maybe BS.ByteString)
+        getValidField = getDefaultedField BS.empty
 
 copyCompanyInfo :: User -> UserInfo -> UserInfo
 copyCompanyInfo fromuser info =
