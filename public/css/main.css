@@ -14,7 +14,8 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
 
 @font-face {
     font-family: 'Helvetica Neue';
-    src: url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
+    src: local('Helvetica Neue'),
+         url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
          url('../fonts/helveticaneueltcom-bd.woff') format('woff'),
          url('../fonts/helveticaneueltcom-bd.ttf') format('truetype');
     font-weight: normal;
@@ -23,7 +24,8 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
 
 @font-face {
     font-family: 'Lucida Grande';
-    src: url('../fonts/lucida_grande.eot?') format('eot'),
+    src: local('Lucida Grande'),
+         url('../fonts/lucida_grande.eot?') format('eot'),
          url('../fonts/lucida_grande.woff') format('woff'),
          url('../fonts/lucida_grande.ttf') format('truetype');
     font-weight: normal;
