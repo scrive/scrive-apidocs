@@ -19,7 +19,7 @@ seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.f
 {-|
    Redirects to the url relevant to the KontraLink.
 -}
-sendRedirect :: KontraLink -> Kontra Response
+sendRedirect :: Kontrakcja m => KontraLink -> m Response
 sendRedirect LoopBack = do
   referer <- fmap BS.toString <$> getHeaderM "referer"
   let link = fromMaybe (show LinkMain) referer
@@ -42,7 +42,7 @@ sendRedirect link@(LinkLogin reason) = do
 sendRedirect link = do
  seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
 
-sendSecureLoopBack :: Kontra Response
+sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
     link <- getSecureLink
     seeOther link =<< setRsCode 303 (seeOtherXML link)

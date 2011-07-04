@@ -38,7 +38,7 @@ checkPasswordsMatch p1 p2 =
        then Right ()
        else Left  flashMessagePasswordsDontMatch
 
-handleUserGet :: Kontra Response
+handleUserGet :: Kontrakcja m => m Response
 handleUserGet = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
@@ -107,7 +107,7 @@ copyCompanyInfo fromuser info =
   , usercountry = usercountry $ userinfo fromuser
   }
 
-handleGetUserMailAPI :: Kontra (Either KontraLink Response)
+handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context { ctxmaybeuser = Just olduser@User{userid, usermailapi}, ctxtemplates } <- getContext
     user <- case usermailapi of
@@ -167,7 +167,7 @@ handlePostUserMailAPI = withUserPost $ do
                              _ -> return ()
         return LinkUserMailAPI)
 
-handleGetUserSecurity :: Kontra Response
+handleGetUserSecurity :: Kontrakcja m => m Response
 handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
@@ -206,7 +206,7 @@ handlePostUserSecurity = do
       return LinkSecurity
     Nothing -> return $ LinkLogin NotLogged
 
-handleGetSharing :: Kontra (Either KontraLink Response)
+handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
     ctx@Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     friends <- query $ GetUserFriends userid
@@ -220,7 +220,7 @@ friendsSortSearchPage  =
     listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
 
 
-handleGetSubaccount :: Kontra (Either KontraLink Response)
+handleGetSubaccount :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSubaccount = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     subaccounts <- query $ GetUserSubaccounts userid
@@ -513,7 +513,7 @@ withUserPost action = do
    Guard against a GET with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserGet ::  Kontra a -> Kontra (Either KontraLink a)
+withUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
 withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
@@ -524,7 +524,7 @@ withUserGet action = do
      Takes a document and a action
      Runs an action only if current user (from context) is author of document
 | -}
-withDocumentAuthor :: Document -> Kontra a -> Kontra a
+withDocumentAuthor :: Kontrakcja m => Document -> m a -> m a
 withDocumentAuthor document action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
@@ -537,7 +537,7 @@ withDocumentAuthor document action = do
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
-checkUserTOSGet :: Kontra a -> Kontra (Either KontraLink a)
+checkUserTOSGet :: Kontrakcja m => m a -> m (Either KontraLink a)
 checkUserTOSGet action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
@@ -549,7 +549,7 @@ checkUserTOSGet action = do
 
 
 
-handleAcceptTOSGet :: Kontra (Either KontraLink Response)
+handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
     Context{ ctxtemplates } <- getContext
     content <- liftIO $ pageAcceptTOS ctxtemplates
@@ -591,7 +591,7 @@ handleQuestion = do
              addFlash $ flashMessageThanksForTheQuestion $ ctxtemplates ctx
              return LoopBack
 
-handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
+handleGetBecomeSubaccountOf :: Kontrakcja m => UserID -> m (Either KontraLink Response)
 handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
   addModal $ modalDoYouWantToBeSubaccount
   ctx@Context{ctxmaybeuser = Just user} <- getContext
@@ -618,7 +618,7 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
      else do
           return LinkAccount
 
-handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
+handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
     now <- liftIO $ getMinutesTime
     maction <- do
@@ -668,7 +668,7 @@ handleAccountSetupGet aid hash = do
             addFlash $ modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
             sendRedirect LinkMain
 
-handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
+handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
   muserid <- getUserIDFromAction
   case muserid of
@@ -684,7 +684,7 @@ handleAccountSetupFromSign aid hash = do
                return Nothing
     Nothing -> return Nothing
   where
-    getUserIDFromAction :: Kontra (Maybe UserID)
+    getUserIDFromAction :: Kontrakcja m => m (Maybe UserID)
     getUserIDFromAction = do
       now <- liftIO $ getMinutesTime
       maction <- checkValidity now <$> (query $ GetAction aid)
@@ -887,7 +887,7 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
     email.  This'll show them the usual landing page, but with a modal dialog
     for changing their password.
 -}
-handlePasswordReminderGet :: ActionID -> MagicHash -> Kontra Response
+handlePasswordReminderGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handlePasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
@@ -932,7 +932,7 @@ handlePasswordReminderPost aid hash = do
                    addModal $ modalNewPasswordView aid hash
                    return LinkMain
 
-handleAccountRemovalGet :: ActionID -> MagicHash -> Kontra Response
+handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountRemovalGet aid hash = do
     getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
         let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
