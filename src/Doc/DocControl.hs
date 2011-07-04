@@ -570,7 +570,7 @@ getDesignStep docid = do
     
     mperson <- getOptionalField asValidNumber "person"
     aftercsvupload <- isFieldSet "aftercsvupload"
-    case 1 of
+    case docid of
       _ | step2 -> return $ Just $ DesignStep2 docid mperson (if aftercsvupload
                                                                 then (Just AfterCSVUpload)
                                                                 else Nothing) signlast
