@@ -28,7 +28,7 @@ msgstr "www.goenterprise.se"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomerVidAbout"
-msgstr "Go Enterprise är ett ungt managementbolag där vi brinner för tillväxt, entreprenörskap och samhällsutveckling. Genom våra RIKA-koncept inspirerar vi till handlingskraft och problemlösning.RIKA står för research, idé, koncept och action – de fyra stegen i en problemlösningsprocess."
+msgstr "Go Enterprise is a young management constultant company that is passionate about growth, entrepreneurship and social development. Through our RIKA concept, we inspire to take action and solve problems. RIKA stands for rescearch, idea, concept and action (in Swedish) - the four steps in a problem solving process."
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomerVid"
@@ -76,7 +76,7 @@ msgstr "www.eventbook.se"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer3About"
-msgstr "Din partner för konferens, kick-off och företagsresor."
+msgstr "Your partner in conferences, kick-offs and company travels."
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer3"
@@ -88,7 +88,7 @@ msgstr "www.greenhatpeople.se"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer2About"
-msgstr "Green hat People genomför oslagbara teambuildingaktiviteter i form av mobilstyrda spel där omgivningen utgör spelplanen. De finns representerade i hela Sverige och genomför teambuilding över hela Europa."
+msgstr "Green hat People Green hat People genomför oslagbara teambuildingaktiviteter i form av mobilstyrda spel där omgivningen utgör spelplanen. De finns representerade i hela Sverige och genomför teambuilding över hela Europa."
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer2"

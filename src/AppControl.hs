@@ -75,6 +75,9 @@ import InspectXMLInstances ()
 import InspectXML
 import User.Lang
 
+
+import ForkAction
+
 {- |
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -277,6 +280,8 @@ handleRoutes = msum [
 
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
      , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ Administration.handleUnquarantineAll
+
+     , dir "adminonly" $ dir "sysdump" $ hGet0 sysdump
 
      , dir "services" $ hGet0 $ handleShowServiceList
      , dir "services" $ hGet1 $ handleShowService
@@ -745,3 +750,7 @@ daveUser userid = onlySuperUserGet $ do
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 
+sysdump :: Kontra Response
+sysdump = onlySuperUserGet $ do
+    dump <- liftIO getAllActionAsString
+    ok $ addHeader "refresh" "5" $ toResponse dump

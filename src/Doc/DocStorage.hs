@@ -35,7 +35,7 @@ import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
 import qualified MemCache
-
+import ForkAction
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)
@@ -168,7 +168,7 @@ maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
-           Log.forkIOLogWhenError ("error rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
+           forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
                 jpegpages <- convertPdfToJpgPages ctx file docid
                 case jpegpages of
                      JpegPagesError errmsg -> do

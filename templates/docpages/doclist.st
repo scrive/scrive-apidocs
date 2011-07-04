@@ -182,7 +182,7 @@ $loadingdialog()$
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>$_ReminderHead()$</h2>
+          <h2>$_SendReminder()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
