@@ -31,8 +31,17 @@ instance (FlashMaybeString a) => FlashMaybeString (Maybe a) where
   flashMaybeString (Just ms) = flashMaybeString ms
   
 flashOperationFailed :: (FlashMaybeString a) => a -> Kontra ()
-flashOperationFailed messageMonad = do
+flashOperationFailed messageMonad = flash OperationFailed messageMonad
+
+flashOperationDone :: (FlashMaybeString a) => a -> Kontra ()
+flashOperationDone messageMonad = flash OperationDone messageMonad
+
+flashSigningRelated :: (FlashMaybeString a) => a -> Kontra ()
+flashSigningRelated messageMonad = flash SigningRelated messageMonad
+    
+flash :: (FlashMaybeString a) => FlashType -> a -> Kontra ()
+flash flashType messageMonad = do
   mmessage <- flashMaybeString messageMonad
   case mmessage of
     Nothing -> return ()
-    Just message -> addFlashMsg $ toFlashMsg OperationFailed message
+    Just message -> addFlashMsg $ toFlashMsg flashType message
