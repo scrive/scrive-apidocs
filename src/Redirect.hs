@@ -1,13 +1,13 @@
 module Redirect (sendRedirect,sendSecureLoopBack) where
 
 import Control.Applicative ((<$>))
-import Control.Monad.Trans (liftIO)
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Kontra
 import KontraLink
 import Misc
 import User.UserView
+import Util.FlashUtil
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
@@ -35,7 +35,7 @@ sendRedirect link@(LinkLogin reason) = do
   curr <- rqUri <$> askRq
   referer <- getField "referer"
   templates <- ctxtemplates <$> getContext
-  liftIO (flashMessageLoginRedirectReason templates reason) >>= maybe (return ()) addFlashMsg
+  addFlash $ flashMessageLoginRedirectReason templates reason
   let link' = show link ++ "&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 

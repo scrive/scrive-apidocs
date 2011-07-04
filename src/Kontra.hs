@@ -10,9 +10,7 @@ module Kontra
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
-    , addFlashMsg
     , addModal
-    , addModalT
     , logUserToContext
     , onlySuperUser
     , newPasswordReminderLink
@@ -110,19 +108,10 @@ addELegTransaction tr = do
     modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
 {- |
-   Adds a flash message to the context.
--}
-addFlashMsg :: KontraMonad m => FlashMessage -> m ()
-addFlashMsg flash =
-    modifyContext $ \ctx@Context{ ctxflashmessages = flashmessages } ->
-        ctx { ctxflashmessages = flash : flashmessages }
-
-{- |
    Clears all the flash messages from the context.
 -}
-clearFlashMsgs:: Kontra ()
-clearFlashMsgs = modifyContext (\ctx -> ctx { ctxflashmessages = [] })
-
+clearFlashMsgs:: KontraMonad m => m ()
+clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
 
 {- |
    Adds a modal from string
@@ -132,12 +121,6 @@ addModal flash = do
   templates <- ctxtemplates <$> getContext
   fm <- liftIO $ runReaderT flash templates
   modifyContext $ \ctx -> ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
-
-{- |
-   Adds modal as flash template, used for semantics sake
--}
-addModalT :: FlashMessage -> Kontra ()
-addModalT = addFlashMsg
 
 {- |
    Sticks the logged in user onto the context

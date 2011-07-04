@@ -19,7 +19,6 @@ import Doc.DocState
 import Doc.DocUtils
 import Doc.DocView
 import ELegitimation.ELeg
-import FlashMessage
 import Happstack.Server
 import Happstack.State
 import Kontra
@@ -36,6 +35,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
 import GHC.Unicode (toLower)
 import Data.Either (lefts, rights)
+import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
@@ -168,7 +168,7 @@ handleSignPostBankID docid signid magic = do
         Left (ImplStatus _a _b code msg) -> do
             liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
-            addFlashMsg $ toFlashMsg OperationFailed $ "E-legitimationstjänsten misslyckades att verifiera din signatur"
+            addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
@@ -201,7 +201,7 @@ handleSignPostBankID docid signid magic = do
                         field "authoremail" authoremail
                         field "message"     $ concat $ map para $ lines msg
                     -- send to canceled with reason msg
-                    addFlashMsg $ toFlashMsg Modal txt
+                    addFlash (Modal, txt)
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc document (Just signid)
 
@@ -227,7 +227,7 @@ handleSignPostBankID docid signid magic = do
                         -- signature failed
                         Left message -> do
                             Log.debug $ "SignDocument failed: " ++ message
-                            addFlashMsg $ toFlashMsg OperationFailed message
+                            addFlash (OperationFailed, message)
                             return LinkMain -- where should we go?
                         Right document2 -> do
                             postDocumentChangeAction document2 document (Just signid)
@@ -344,7 +344,7 @@ handleIssuePostBankID docid = withUserPost $ do
         Left msg -> do
             Log.debug $ "updateDocument failed: " ++ msg
             liftIO $ print $ "updateDocument failed: " ++ msg
-            addFlashMsg $ toFlashMsg OperationFailed "Could not save document."
+            addFlash (OperationFailed, "Could not save document.")
             return LinkMain
         Right udoc -> do
             unless (udoc `allowsIdentification` ELegitimationIdentification) mzero
@@ -361,7 +361,7 @@ handleIssuePostBankID docid = withUserPost $ do
                 Left (ImplStatus _a _b code msg) -> do
                     liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    addFlashMsg $ toFlashMsg OperationFailed "E-legitimationstjänsten misslyckades att verifiera din signatur"
+                    addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
                     -- change me! I should return back to the same page
                     return $ LinkDesignDoc $ DesignStep3 docid signlast
                 Right (cert, attrs) -> do
@@ -385,7 +385,7 @@ handleIssuePostBankID docid = withUserPost $ do
                         Left (msg, _, _, _) -> do
                             liftIO $ print $ "merge failed: " ++ msg
                             Log.debug $ "merge failed: " ++ msg
-                            addFlashMsg $ toFlashMsg OperationFailed $ "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg
+                            addFlash (OperationFailed, "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg)
                             return $ LinkDesignDoc $ DesignStep3 docid signlast
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do

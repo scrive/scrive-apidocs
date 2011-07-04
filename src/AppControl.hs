@@ -44,6 +44,7 @@ import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
 import qualified TrustWeaver as TW
 import qualified User.UserControl as UserControl
+import Util.FlashUtil
 import Util.HasSomeUserInfo
 
 import Control.Concurrent
@@ -570,7 +571,7 @@ forgotPasswordPagePost = do
           case minv of
             Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
               case prRemainedEmails of
-                0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
+                0 -> addFlash $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx
                 n -> do
                   -- I had to make it PasswordReminder because it was complaining about not giving cases
                   -- for the constructors of ActionType
@@ -581,7 +582,7 @@ forgotPasswordPagePost = do
             _ -> do -- Nothing or other ActionTypes (which should not happen)
               link <- newPasswordReminderLink user
               sendResetPasswordMail ctx link user
-          addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
+          addFlash $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx
           return LinkMain
 
 sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
@@ -634,19 +635,19 @@ signup vip _freetill =  do
             al <- newAccountCreatedLink user
             mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
-            addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates))
+            addFlash $ flashMessageNewActivationLinkSend $ ctxtemplates
             return LoopBack
           else do
-            addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+            addFlash $ flashMessageUserWithSameEmailExists ctxtemplates
             return LoopBack
         Nothing -> do
           maccount <- liftIO $ UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
           case maccount of
             Just _account ->  do
-              addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+              addFlash $ flashMessageUserSignupDone ctxtemplates
               return LoopBack
             Nothing -> do
-              addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+              addFlash $ flashMessageUserWithSameEmailExists ctxtemplates
               return LoopBack
 
 {- |

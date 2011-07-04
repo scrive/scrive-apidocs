@@ -32,8 +32,8 @@ import API.Service.ServiceView
 import Doc.DocUtils
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
-import FlashMessage
 import Happstack.Server.SimpleHTTP
+import Util.FlashUtil
 
 handleChangeServiceUI :: ServiceID -> Kontra KontraLink
 handleChangeServiceUI sid = do
@@ -62,7 +62,7 @@ handleChangeServiceUI sid = do
             , servicebarsbackground =  joinEmpty $ barsbackground  `mplus` (servicebarsbackground  ui)
             , servicelogo = logo `mplus` (servicelogo ui)
             }
-           addFlashMsg $ toFlashMsg OperationDone "UI setting changes"
+           addFlash $ (OperationDone, "UI setting changes")
            return LoopBack
         (Just service,True,True) -> do
            update $ UpdateServiceUI sid $ (serviceui service) {
@@ -74,10 +74,10 @@ handleChangeServiceUI sid = do
             , servicebarsbackground =  Nothing
             , servicelogo = Nothing
             }
-           addFlashMsg $ toFlashMsg OperationDone "UI setting cleared"
+           addFlash (OperationDone, "UI setting cleared")
            return LoopBack
         _ -> do
-           addFlashMsg $ toFlashMsg OperationFailed "UI setting not saved"
+           addFlash (OperationFailed, "UI setting not saved")
            return LoopBack
 
 handleChangeServicePassword :: ServiceID -> Kontra KontraLink
@@ -94,13 +94,13 @@ handleChangeServicePassword sid = do
                 then do
                     pwd <- liftIO $ createPassword password
                     update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
-                    addFlashMsg $ toFlashMsg OperationDone "Password changed"
+                    addFlash (OperationDone, "Password changed")
                     return LoopBack
                 else do
-                    addFlashMsg $ toFlashMsg OperationFailed "Not changed"
+                    addFlash (OperationFailed, "Not changed")
                     return LoopBack
      _ -> do
-         addFlashMsg $ toFlashMsg OperationFailed "Not changed"
+         addFlash (OperationFailed, "Not changed")
          return LoopBack
 
 
@@ -119,11 +119,11 @@ handleChangeServiceSettings sid = do
                           , servicemailfromaddress  = mailfromaddress `mplus` (servicemailfromaddress $ servicesettings  service)
                           , serviceadmin =  fromMaybe (serviceadmin $ servicesettings service) (ServiceAdmin <$> unUserID <$> userid <$> admin)
                         }
-            addFlashMsg $ toFlashMsg OperationDone "Settings changed"
+            addFlash (OperationDone, "Settings changed")
             return LoopBack
 
      _ -> do
-         addFlashMsg $ toFlashMsg OperationFailed "Not changed"
+         addFlash (OperationFailed, "Not changed")
          return LoopBack
 
 

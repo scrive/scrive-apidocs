@@ -63,7 +63,7 @@ import Kontra
 import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
-import FlashMessage
+import Util.FlashUtil
 import Data.Monoid
 
 {- |
@@ -229,7 +229,7 @@ flashValidationMessage :: Kontrakcja m => (Input, Result a) -> m (Input, Result 
 flashValidationMessage x@(_, Bad flashmsg) = do
   Context{ctxtemplates,ctxflashmessages} <- getContext
   msg <- liftIO $ flashmsg ctxtemplates
-  when (msg `notElem` ctxflashmessages) $ addFlashMsg msg
+  when (msg `notElem` ctxflashmessages) $ addFlash msg
   return x
 flashValidationMessage x = return x
 

@@ -52,7 +52,6 @@ import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(getPaymentChangeChange)
 import MinutesTime
-import FlashMessage
 import System.Directory
 import User.UserControl
 import User.UserView
@@ -70,6 +69,7 @@ import Templates.Templates
 import InputValidation
 import Templates.Langs
 import Text.Printf
+import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Data.List
 
@@ -78,7 +78,7 @@ eitherFlash action = do
   x <- action
   case x of
     Left errmsg -> do
-           addFlashMsg $ toFlashMsg OperationFailed errmsg
+           addFlash (OperationFailed, errmsg)
            mzero
     Right value -> return value
 
@@ -310,7 +310,8 @@ handleCreateUser = onlySuperUser $ do
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
     muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
-    when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+    when (isNothing muser) $
+        addFlash $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx
 
     -- FIXME: where to redirect?
     return LinkStats
