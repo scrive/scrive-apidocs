@@ -31,6 +31,7 @@ import User.UserView
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
+import Util.FlashUtil
 
 checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -60,7 +61,7 @@ handleUserPost = do
                  forM_ subs $ \sub -> do
                      update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
                  )
-             addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
+             flash $ flashMessageUserDetailsSaved $ ctxtemplates ctx
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
 
@@ -189,13 +190,13 @@ handlePostUserSecurity = do
           case (verifyPassword (userpassword user) oldpassword,
                   checkPasswordsMatch password password2) of
             (False,_) ->
-              addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
+              flash $ flashMessageBadOldPassword (ctxtemplates ctx)
             (_, Left f) ->
-              addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
+              flash $ f (ctxtemplates ctx)
             _ ->  do
               passwordhash <- liftIO $ createPassword password
               _ <- update $ SetUserPassword (userid user) passwordhash
-              addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+              flash $ flashMessageUserDetailsSaved (ctxtemplates ctx)
         _ -> return ()
       mlang <- readField "lang"
       case (mlang) of
@@ -280,7 +281,7 @@ handleAddFriend :: User -> BS.ByteString -> Kontra ()
 handleAddFriend User{userid} email = do
     avereturn <- update $ AddViewerByEmail userid $ Email email
     case avereturn of
-      Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
+      Left msg -> flashOperationFailed msg
       Right _  -> return ()
 
 handlePostSubaccount :: Kontra KontraLink
@@ -331,11 +332,11 @@ handleUserDelete deleter deleteeids = do
   case lefts msubaccounts of
     (NoDeletionRights:_) -> mzero
     (UserHasLiveDocs:_) -> do
-      addFlashMsg =<< (liftIO $ flashMessageUserHasLiveDocs ctxtemplates)
+      flash $ flashMessageUserHasLiveDocs ctxtemplates
       return ()
     [] -> do
       mapM_ performUserDeletion (rights msubaccounts)
-      addFlashMsg =<< (liftIO $ flashMessageAccountsDeleted ctxtemplates)
+      flash $ flashMessageAccountsDeleted ctxtemplates
       return ()
 
 type UserDeletionDetails = (User, [Document])
@@ -384,7 +385,7 @@ handleTakeOverSubaccount email = do
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
-  addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
+  flash $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx)
 
 
 handleCreateSubaccount :: User -> Kontra ()
@@ -416,7 +417,7 @@ handleViralInvite = withUserPost $ do
         if isJust muser
            -- we leak user information here! SECURITY!!!!
            -- you can find out if a given email is already a user
-          then addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+          then flash $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx
           else do
             now <- liftIO getMinutesTime
             minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
@@ -428,7 +429,7 @@ handleViralInvite = withUserPost $ do
                                                                      , visToken } } -> do
                 if visInviterID == userid user
                   then case visRemainedEmails of
-                    0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx)
+                    0 -> flash $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx
                     n -> do
                       _ <- update $ UpdateActionType actionID $ ViralInvitationSent { visEmail = visEmail
                                                                                     , visTime = visTime
@@ -436,7 +437,7 @@ handleViralInvite = withUserPost $ do
                                                                                     , visRemainedEmails = n -1
                                                                                     , visToken = visToken }
                       sendInvitation ctx (LinkViralInvitationSent actionID $ visToken) invitedemail
-                  else addFlashMsg =<< (liftIO $ flashMessageOtherUserSentInvitation $ ctxtemplates ctx)
+                  else flash $ flashMessageOtherUserSentInvitation $ ctxtemplates ctx
               _ -> do
                 link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
                 sendInvitation ctx link invitedemail
@@ -444,7 +445,7 @@ handleViralInvite = withUserPost $ do
   return LoopBack
     where
       sendInvitation ctx link invitedemail = do
-        addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
+        flash $ flashMessageViralInviteSent $ ctxtemplates ctx
         mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
         scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
@@ -562,10 +563,10 @@ handleAcceptTOSPost = withUserPost $ do
   case tos of
     Just True -> do
       _ <- update $ AcceptTermsOfService userid ctxtime
-      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+      flash $ flashMessageUserDetailsSaved (ctxtemplates ctx)
       return LinkMain
     Just False -> do
-      addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
+      flash $ flashMessageMustAcceptTOS (ctxtemplates ctx)
       return LinkAcceptTOS
     Nothing -> return LinkAcceptTOS
 
@@ -588,7 +589,7 @@ handleQuestion = do
                  , title = BS.fromString $ "Question"
                  , content = BS.fromString $ content
              }
-             addFlashMsg =<< (liftIO $ flashMessageThanksForTheQuestion $ ctxtemplates ctx)
+             flash $ flashMessageThanksForTheQuestion $ ctxtemplates ctx
              return LoopBack
 
 handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
@@ -608,10 +609,10 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
             Left errmsg -> do
               let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ errmsg
               Log.debug $ msg
-              addFlashMsg $ toFlashMsg OperationFailed msg
+              flashOperationFailed msg
             Right _ -> do
               Just supervisor <- query $ GetUserByUserID supervisorid
-              addFlashMsg =<< (liftIO $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor)
+              flash $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor
               mail <- mailSubaccountAccepted ctx user supervisor
               scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress supervisor] }
           return LinkAccount
@@ -646,7 +647,7 @@ handleAccountSetupGet aid hash = do
                                 then activationPage $ Just user
                                 else do
                                     templates <- ctxtemplates <$> getContext
-                                    addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
+                                    flash $ flashMessageUserAlreadyActivated templates
                                     sendRedirect LinkMain)
                          else mzero
                   _  -> mzero
@@ -680,7 +681,7 @@ handleAccountSetupFromSign aid hash = do
            Just CompanyAccount -> handleActivate' BySigning user CompanyAccount aid id
            _              -> do
                templates <- ctxtemplates <$> getContext
-               addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
+               flash $ flashMessageNoAccountType templates
                return Nothing
     Nothing -> return Nothing
   where
@@ -730,7 +731,7 @@ handleAccountSetupPost aid hash = do
                                 then handleActivate AccountRequest user
                                 else do
                                     templates <- ctxtemplates <$> getContext
-                                    addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
+                                    flash $ flashMessageUserAlreadyActivated templates
                                     return LinkMain)
                          else mzero
                   _ -> mzero
@@ -743,7 +744,7 @@ handleAccountSetupPost aid hash = do
                             al <- newAccountCreatedLink user
                             mail <- liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
                             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
-                            addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx))
+                            flash $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)
                             return LinkMain
                         else mzero
                      )
@@ -795,7 +796,7 @@ handleAccountSetupPost aid hash = do
                           _ -> returnToAccountSetup user
                  _ -> do
                      templates <- ctxtemplates <$> getContext
-                     addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
+                     flash $ flashMessageNoAccountType templates
                      returnToAccountSetup user
             where
                 -- we protect from choosing account type that doesn't match
@@ -808,7 +809,7 @@ handleAccountSetupPost aid hash = do
                                 then action
                                 else do
                                     templates <- ctxtemplates <$> getContext
-                                    addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
+                                    flash $ flashMessageNoAccountType templates
                                     returnToAccountSetup user
                          Nothing -> action
 
@@ -817,7 +818,7 @@ handleAccountSetupPost aid hash = do
             case muser of
                  Just _ -> do
                      templates <- ctxtemplates <$> getContext
-                     addFlashMsg =<< (liftIO $ flashMessageUserActivated templates)
+                     flash $ flashMessageUserActivated templates
                      return LinkMain
                  Nothing -> do
                      -- handleActivate' might have updated user info, so we
@@ -874,10 +875,10 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
               logUserToContext $ Just user
               return $ Just user
              else do
-               addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS $ ctxtemplates ctx)
+               flash $ flashMessageMustAcceptTOS $ ctxtemplates ctx
                return Nothing
-        Left flash -> do
-          addFlashMsg =<< (liftIO $ flash (ctxtemplates ctx))
+        Left flashmsg -> do
+          flash $ flashmsg (ctxtemplates ctx)
           return Nothing
     _ -> return Nothing
 
@@ -897,7 +898,7 @@ handlePasswordReminderGet aid hash = do
              sendRedirect LinkMain
          Nothing -> do
              templates <- ctxtemplates <$> getContext
-             addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
+             flash $ flashMessagePasswordChangeLinkNotValid templates
              sendRedirect LinkMain
 
 handlePasswordReminderPost :: ActionID -> MagicHash -> Kontra KontraLink
@@ -907,7 +908,7 @@ handlePasswordReminderPost aid hash = do
          Just user -> handleChangePassword user
          Nothing   -> do
              templates <- ctxtemplates <$> getContext
-             addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
+             flash $ flashMessagePasswordChangeLinkNotValid templates
              return LinkMain
     where
         handleChangePassword user = do
@@ -921,11 +922,11 @@ handlePasswordReminderPost aid hash = do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
                               _ <- update $ SetUserPassword (userid user) passwordhash
-                              addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged templates)
+                              flash $ flashMessageUserPasswordChanged templates
                               logUserToContext $ Just user
                               return LinkMain
-                          Left flash -> do
-                              addFlashMsg =<< (liftIO $ flash templates)
+                          Left flashmsg -> do
+                              flash $ flashmsg templates
                               addModal $ modalNewPasswordView aid hash
                               return LinkMain
                  _ -> do
