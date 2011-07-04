@@ -14,7 +14,7 @@ module Routing ( hGet0,           hGet1,           hGet2,           hGet3,      
                  hGetAllowHttp0,  hGetAllowHttp1,  hGetAllowHttp2,  hGetAllowHttp3,  hGetAllowHttp4,  hGetAllowHttp5,
                  hGetAjax0,       hGetAjax1,       hGetAjax2,       hGetAjax3,       hGetAjax4,       hGetAjax5,
                  RedirectOrContent, allowHttp,
-                 toK0, toK1, toK2
+                 toK0, toK1, toK2, toK3, toK4, toK5
                  )where
 
 import Control.Monad.State
@@ -242,3 +242,12 @@ toK1 = id
 
 toK2 :: (a -> b -> Kontra c) -> (a -> b -> Kontra c)
 toK2 = id
+
+toK3 :: (a -> b -> c -> Kontra d) -> (a -> b -> c -> Kontra d)
+toK3 = id
+
+toK4 :: (a -> b -> c -> d -> Kontra e) -> (a -> b -> c -> d -> Kontra e)
+toK4 = id
+
+toK5 :: (a -> b -> c -> d -> e -> Kontra f) -> (a -> b -> c -> d -> e -> Kontra f)
+toK5 = id

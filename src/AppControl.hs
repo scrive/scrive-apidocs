@@ -157,72 +157,72 @@ handleRoutes = msum [
      , dir "d" $ param "eleg" $ hPost1        $ BankID.handleIssuePostBankID
 
      , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts emptyListParams
-     , dir "s" $ hGet3 $ DocControl.handleSignShow
-     , dir "s" $ hGet4 $ DocControl.handleAttachmentDownloadForViewer
-     , dir "s" $ param "sign"           $ hPostNoXToken3 $ DocControl.signDocument
-     , dir "s" $ param "cancel"         $ hPostNoXToken3 $ DocControl.rejectDocument
-     , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ DocControl.handleAcceptAccountFromSign
-     , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ DocControl.handleDeclineAccountFromSign
-     , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ DocControl.handleSigAttach
+     , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
+     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer
+     , dir "s" $ param "sign"           $ hPostNoXToken3 $ toK3 $ DocControl.signDocument
+     , dir "s" $ param "cancel"         $ hPostNoXToken3 $ toK3 $ DocControl.rejectDocument
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
+     , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ toK5 $ DocControl.handleDeclineAccountFromSign
+     , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ toK3 $ DocControl.handleSigAttach
 
-     , dir "sv" $ hGet3 $ DocControl.handleAttachmentViewForViewer
+     , dir "sv" $ hGet3 $ toK3 $ DocControl.handleAttachmentViewForViewer
 
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "a"                     $ hGet0  $ DocControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost0 $ DocControl.handleAttachmentArchive
-     , dir "a" $ param "share"     $ hPost0 $ DocControl.handleAttachmentShare
-     , dir "a" $ dir "rename"      $ hPost1 $ DocControl.handleAttachmentRename
-     , dir "a"                     $ hPost0 $ DocControl.handleCreateNewAttachment
+     , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
+     , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
+     , dir "a" $ param "share"     $ hPost0 $ toK0 $ DocControl.handleAttachmentShare
+     , dir "a" $ dir "rename"      $ hPost1 $ toK1 $ DocControl.handleAttachmentRename
+     , dir "a"                     $ hPost0 $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet0  $ DocControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost0 $ DocControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hPost0 $ DocControl.handleTemplateShare
-     , dir "t" $ param "template" $ hPost0  $ DocControl.handleCreateFromTemplate
-     , dir "t" $ hPost0  $ DocControl.handleCreateNewTemplate
+     , dir "t" $ hGet0  $ toK0 $ DocControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleTemplateArchive
+     , dir "t" $ param "share" $ hPost0 $ toK0 $ DocControl.handleTemplateShare
+     , dir "t" $ param "template" $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
+     , dir "t" $ hPost0 $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "o" $ hGet0  $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hPost0  $ DocControl.handleOffersArchive
-     , dir "o" $ param "remind" $ hPost0 $ DocControl.handleBulkOfferRemind
-     , dir "o" $ hPost0 $ DocControl.handleOffersReload
+     , dir "o" $ hGet0 $ toK0 $ DocControl.showOfferList
+     , dir "o" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOffersArchive
+     , dir "o" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOfferRemind
+     , dir "o" $ hPost0 $ toK0 $ DocControl.handleOffersReload
 
-     , dir "or" $ hGet0  $ DocControl.showOrdersList
-     , dir "or" $ param "archive" $ hPost0  $ DocControl.handleOrdersArchive
-     , dir "or" $ param "remind" $ hPost0 $ DocControl.handleBulkOrderRemind
-     , dir "or" $ hPost0 $ DocControl.handleOrdersReload
+     , dir "or" $ hGet0  $ toK0 $ DocControl.showOrdersList
+     , dir "or" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOrdersArchive
+     , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
+     , dir "or" $ hPost0 $ toK0 $ DocControl.handleOrdersReload
 
-     , dir "d"                     $ hGet2  $ DocControl.handleAttachmentDownloadForAuthor
-     , dir "d"                     $ hGet0  $ DocControl.showContractsList
-     , dir "d"                     $ hGet1  $ DocControl.handleIssueShowGet
-     , dir "d"                     $ hGet2  $ DocControl.handleIssueShowTitleGet
-     , dir "d"                     $ hGet4  $ DocControl.handleIssueShowTitleGetForSignatory
-     , dir "d" $ {- param "doc" $ -} hPost0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost0 $ DocControl.handleContractArchive
-     , dir "d" $ param "remind"    $ hPost0 $ DocControl.handleBulkContractRemind
-     , dir "d"                     $ hPost0 $ DocControl.handleContractsReload
-     , dir "d"                     $ hPost1 $ DocControl.handleIssueShowPost
+     , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor
+     , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
+     , dir "d"                     $ hGet1  $ toK1 $ DocControl.handleIssueShowGet
+     , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleIssueShowTitleGet
+     , dir "d"                     $ hGet4  $ toK4 $ DocControl.handleIssueShowTitleGetForSignatory
+     , dir "d" $ {- param "doc" $ -} hPost0 $ toK0 $ DocControl.handleIssueNewDocument
+     , dir "d" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleContractArchive
+     , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
+     , dir "d"                     $ hPost0 $ toK0 $ DocControl.handleContractsReload
+     , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
 
 
-     , dir "df"                    $ hGet2  $ DocControl.handleFileGet
-     , dir "dv"                    $ hGet1  $ DocControl.handleAttachmentViewForAuthor
+     , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet
+     , dir "dv"                    $ hGet1  $ toK1 $ DocControl.handleAttachmentViewForAuthor
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
-     , dir "resend"  $ hPost2 $ DocControl.handleResend
-     , dir "changeemail" $ hPost2 $ DocControl.handleChangeSignatoryEmail
+     , dir "resend"  $ hPost2 $ toK2 $ DocControl.handleResend
+     , dir "changeemail" $ hPost2 $ toK2 $ DocControl.handleChangeSignatoryEmail
      -- , dir "withdrawn" $ hPost0 $ DocControl.handleWithdrawn
-     , dir "restart" $ hPost1 $ DocControl.handleRestart
-     , dir "cancel"  $ hPost1 $ DocControl.handleCancel
+     , dir "restart" $ hPost1 $ toK1 $ DocControl.handleRestart
+     , dir "cancel"  $ hPost1 $ toK1 $ DocControl.handleCancel
 
-     , dir "pages"  $ hGetAjax3 $ DocControl.showPage
-     , dir "pages"  $ hGetAjax5 $ DocControl.showPageForSignatory
-     , dir "templates" $ hGetAjax0 $ DocControl.getTemplatesForAjax
-     , dir "template"  $ hPost0 $ DocControl.handleCreateFromTemplate
+     , dir "pages"  $ hGetAjax3 $ toK3 $ DocControl.showPage
+     , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
+     , dir "templates" $ hGetAjax0 $ toK0 $ DocControl.getTemplatesForAjax
+     , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
-     , dir "pagesofdoc" $ hGetAjax1 $ DocControl.handlePageOfDocument
-     , dir "pagesofdoc" $ hGetAjax3 $ DocControl.handlePageOfDocumentForSignatory
+     , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hGetAjax3 $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 
      -- UserControl
      , dir "account"                    $ hGet0  $ toK0 $ UserControl.handleUserGet
@@ -275,7 +275,7 @@ handleRoutes = msum [
 
      , dir "adminonly" $ dir "migrate0" $ hGet0 $ Administration.handleMigrate0
      , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ Administration.handleMigrateForDeletion
-     , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ DocControl.handleMigrateDocumentAuthorAttachments
+     , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ toK0 $ DocControl.handleMigrateDocumentAuthorAttachments
      , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ Administration.migrateDocsNoAuthor
 
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks

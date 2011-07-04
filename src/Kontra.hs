@@ -93,7 +93,7 @@ isSuperUser _ _ = False
 {- |
    Will mzero if not logged in as a super user.
 -}
-onlySuperUser :: Kontra a -> Kontra a
+onlySuperUser :: Kontrakcja m => m a -> m a
 onlySuperUser a = do
     ctx <- getContext
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
@@ -103,7 +103,7 @@ onlySuperUser a = do
 {- |
    Adds an Eleg Transaction to the context.
 -}
-addELegTransaction :: ELegTransaction -> Kontra ()
+addELegTransaction :: Kontrakcja m => ELegTransaction -> m ()
 addELegTransaction tr = do
     modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
