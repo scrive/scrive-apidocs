@@ -40,6 +40,7 @@ import API.API
 import Doc.DocStorage
 import Doc.DocControl
 import Control.Monad.Trans
+import Kontra
 import Misc
 import Data.Maybe
 import Data.Foldable (fold)
@@ -185,7 +186,7 @@ api_document_tag tag = JSObject $ toJSObject $ [
 
 api_document_file::(APIContext c) => File -> APIFunction c JSValue
 api_document_file file = do
-    ctx <- askKontraContext
+    ctx <- getContext
     content <- liftIO $ getFileContents ctx file
     let base64data = BASE64.encode (BS.unpack content)
     return $ JSObject $ toJSObject $ [

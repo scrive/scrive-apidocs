@@ -73,8 +73,7 @@ import Text.Printf
 import Util.SignatoryLinkUtils
 import Data.List
 
-eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
-            -> ServerPartT (StateT Context IO) b
+eitherFlash :: Kontra (Either String b) -> Kontra b
 eitherFlash action = do
   x <- action
   case x of
@@ -87,14 +86,14 @@ eitherFlash action = do
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontra Response
 showAdminMainPage = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   content <- liftIO $ adminMainPage ctxtemplates
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for advanced user administration -}
 showAdminUserAdvanced :: Kontra Response
 showAdminUserAdvanced = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   users <- query $ GetAllUsers
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
@@ -104,14 +103,14 @@ showAdminUserAdvanced = onlySuperUser $ do
 it allows to edit user details -}
 showAdminUsers :: Maybe UserID -> Kontra Response
 showAdminUsers Nothing = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPage ctxtemplates users params
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsers (Just userId) = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   muser <- query $ GetUserByUserID userId
   case muser of
     Nothing -> mzero
@@ -122,7 +121,7 @@ showAdminUsers (Just userId) = onlySuperUser $ do
 
 showAdminUsersForSales :: Kontra Response
 showAdminUsersForSales = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForSales ctxtemplates users params
@@ -130,7 +129,7 @@ showAdminUsersForSales = onlySuperUser $ do
 
 showAdminUsersForPayments :: Kontra Response
 showAdminUsersForPayments = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForPayments ctxtemplates users params
@@ -138,7 +137,7 @@ showAdminUsersForPayments = onlySuperUser $ do
 
 getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
 getUsersAndStats = do
-    Context{ctxtime} <- get
+    Context{ctxtime} <- getContext
     users <- query $ GetAllUsers
     let queryStats user = do
           docstats <- query $ GetDocumentStatsByUser user ctxtime
@@ -149,7 +148,7 @@ getUsersAndStats = do
 
 showAdminUserUsageStats :: UserID -> Kontra Response
 showAdminUserUsageStats userid = onlySuperUser $ do
-  Context {ctxtemplates} <- get
+  Context {ctxtemplates} <- getContext
   documents <- query $ GetDocumentsByAuthor userid
   Just user <- query $ GetUserByUserID userid
   content <- liftIO $ adminUserUsageStatsPage ctxtemplates user $ do
@@ -160,7 +159,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 {- Shows table of all users-}
 showAllUsersTable :: Kontra Response
 showAllUsersTable = onlySuperUser $ do
-    Context {ctxtemplates} <- lift get
+    Context {ctxtemplates} <- getContext
     users <- getUsersAndStats
     content <- liftIO $ allUsersTable ctxtemplates users
     renderFromBody TopEmpty kontrakcja content
@@ -188,7 +187,7 @@ showStats = onlySuperUser $ do
 #else
     let df = empty
 #endif
-    Context {ctxtemplates} <- lift get
+    Context {ctxtemplates} <- getContext
     let stats = StatsView { svDoccount = doccount docstats,
                             svSignaturecount = signaturecount docstats,
                             svUsercount = usercount userstats,
@@ -199,7 +198,7 @@ showStats = onlySuperUser $ do
 
 indexDB :: Kontra Response
 indexDB = onlySuperUser $ do
-    Context {ctxtemplates} <- lift get
+    Context {ctxtemplates} <- getContext
     files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
     content <- liftIO $ databaseContent ctxtemplates (sort files)
     renderFromBody TopEmpty kontrakcja content
@@ -260,7 +259,7 @@ handleUserEnableTrustWeaverStorage a =
                                          return $ LinkUserAdmin $ Just userId
                                        Nothing -> (do
                                          let name = show userId
-                                         Context{ctxtwconf} <- get
+                                         Context{ctxtwconf} <- getContext
                                          -- FIXME: error handling here
                                          (superAdminUsername, superAdminPwd, sectionPath) <-
                                              eitherFlash $ liftIO $ TW.registerAndEnableSection ctxtwconf name
@@ -303,7 +302,7 @@ databaseCleanupWorker = do
 
 handleCreateUser :: Kontra KontraLink
 handleCreateUser = onlySuperUser $ do
-    ctx <- get
+    ctx <- getContext
     email' <- getAsStrictBS "email"
     let email = BSC.map toLower email'
     fstname <- getAsStrictBS "fstname"
@@ -428,7 +427,7 @@ migrate0SignatoryLinks links = do
  -}
 handleMigrate0 :: Kontra Response
 handleMigrate0 = onlySuperUser $ do
- ctx <- get
+ ctx <- getContext
  documents <- query $ GetDocuments $ currentServiceID ctx
  d2 <- sequence $ map (\d -> do
                                links <- migrate0SignatoryLinks $ documentsignatorylinks d
@@ -493,7 +492,7 @@ handleCreateService = onlySuperUser $ do
 {- Services page-}
 showServicesPage :: Kontra Response
 showServicesPage = onlySuperUser $ do
-  Context {ctxtemplates} <- lift get
+  Context {ctxtemplates} <- getContext
   services <- query GetServices
   content <- liftIO $ servicesAdminPage ctxtemplates services
   renderFromBody TopEmpty kontrakcja content
@@ -665,7 +664,7 @@ fieldsForQuarantine documents = do
 handleShowQuarantine :: Kontra Response
 handleShowQuarantine =
   onlySuperUser $ do
-    ctx <- get
+    ctx <- getContext
     documents <- query $ GetQuarantinedDocuments $ currentServiceID ctx
     content <- renderTemplateM "quarantinePage" $ do
       fieldsForQuarantine documents
@@ -748,7 +747,7 @@ fieldsFromStats users documents = do
 handleStatistics :: Kontra Response
 handleStatistics =
   onlySuperUser $ do
-    ctx <- get
+    ctx <- getContext
     documents <- query $ GetDocuments $ currentServiceID ctx
     users <- query $ GetAllUsers
     content <- renderTemplateM "statisticsPage" $ do
@@ -758,13 +757,13 @@ handleStatistics =
 
 showAdminTranslations :: Kontra String
 showAdminTranslations = do
-     ctx <- get
+     ctx <- getContext
      tstats <- liftIO $ getTranslationStats
      liftIO $ adminTranslationsPage (ctxtemplates ctx) tstats
 
 migrateDocsNoAuthor :: Kontra Response
 migrateDocsNoAuthor = do
-  ctx <- get
+  ctx <- getContext
   guard (isJust (ctxmaybeuser ctx))
   let Just user = ctxmaybeuser ctx
   guard (useremail (userinfo user) == Email (fromString "ericwnormand@gmail.com"))

@@ -46,7 +46,7 @@ import Util.SignatoryLinkUtils
  -}
 handleSignBankID :: String -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignBankID provider docid signid magic = do
-    Context { ctxtime, ctxtemplates } <- get
+    Context { ctxtime, ctxtemplates } <- getContext
     let seconds = toSeconds ctxtime 
 
     -- sanity check
@@ -120,7 +120,7 @@ handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
             , ctxipnumber
-            , ctxtemplates } <- get
+            , ctxtemplates } <- getContext
     liftIO $ print "eleg sign post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
@@ -247,7 +247,7 @@ handleIssueBankID provider docid = withUserGet $ do
     Context { ctxtime
             , ctxmaybeuser = Just author
             , ctxtemplates
-            } <- get
+            } <- getContext
     let seconds = toSeconds ctxtime
 
     document <- queryOrFail $ GetDocumentByDocumentID docid
@@ -315,7 +315,7 @@ handleIssuePostBankID docid = withUserPost $ do
     ctx@Context { ctxmaybeuser = Just author
                 , ctxelegtransactions
                 , ctxtime
-                , ctxipnumber } <- get
+                , ctxipnumber } <- getContext
 
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
@@ -433,7 +433,7 @@ handleIssuePostBankID docid = withUserPost $ do
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
-    ctx <- get
+    ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
     let mcancelationreason = documentcancelationreason document

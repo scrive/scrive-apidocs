@@ -40,7 +40,7 @@ checkPasswordsMatch p1 p2 =
 
 handleUserGet :: Kontra Response
 handleUserGet = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
              content <- liftIO $ showUser (ctxtemplates ctx) user
@@ -49,7 +49,7 @@ handleUserGet = do
 
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
              infoUpdate <- getUserInfoUpdate
@@ -107,7 +107,7 @@ copyCompanyInfo fromuser info =
 
 handleGetUserMailAPI :: Kontra (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
-    Context { ctxmaybeuser = Just olduser@User{userid, usermailapi}, ctxtemplates } <- get
+    Context { ctxmaybeuser = Just olduser@User{userid, usermailapi}, ctxtemplates } <- getContext
     user <- case usermailapi of
          Nothing -> return olduser
          Just mailapi -> do
@@ -125,7 +125,7 @@ handleGetUserMailAPI = withUserGet $ do
 
 handlePostUserMailAPI :: Kontra KontraLink
 handlePostUserMailAPI = withUserPost $ do
-    User{userid, usermailapi} <- fromJust . ctxmaybeuser <$> get
+    User{userid, usermailapi} <- fromJust . ctxmaybeuser <$> getContext
     getDefaultedField False asValidCheckBox "api_enabled"
       >>= maybe (return LinkUserMailAPI) (\enabledapi -> do
         case usermailapi of
@@ -167,7 +167,7 @@ handlePostUserMailAPI = withUserPost $ do
 
 handleGetUserSecurity :: Kontra Response
 handleGetUserSecurity = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
              content <- liftIO $ showUserSecurity (ctxtemplates ctx) user
@@ -176,7 +176,7 @@ handleGetUserSecurity = do
 
 handlePostUserSecurity :: Kontra KontraLink
 handlePostUserSecurity = do
-  ctx <- get
+  ctx <- getContext
   case (ctxmaybeuser ctx) of
     Just user -> do
       moldpassword <- getRequiredField asDirtyPassword "oldpassword"
@@ -206,7 +206,7 @@ handlePostUserSecurity = do
 
 handleGetSharing :: Kontra (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
-    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
+    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     friends <- query $ GetUserFriends userid
     params <- getListParams
     content <- liftIO $ viewFriends (ctxtemplates ctx) (friendsSortSearchPage params friends) user
@@ -220,7 +220,7 @@ friendsSortSearchPage  =
 
 handleGetSubaccount :: Kontra (Either KontraLink Response)
 handleGetSubaccount = withUserGet $ do
-    Context{ctxmaybeuser = Just user@User{userid}} <- get
+    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
     content <- viewSubaccounts user (subaccountsSortSearchPage params $ subaccounts)
@@ -261,7 +261,7 @@ subaccountsPageSize = 20
 
 handlePostSharing :: Kontra KontraLink
 handlePostSharing = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
              memail <- getOptionalField asValidEmail "email"
@@ -283,7 +283,7 @@ handleAddFriend User{userid} email = do
 
 handlePostSubaccount :: Kontra KontraLink
 handlePostSubaccount = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
              add <- isFieldSet "add"
@@ -324,7 +324,7 @@ handleSelfDelete user = do
 -}
 handleUserDelete :: User -> [UserID] -> Kontra ()
 handleUserDelete deleter deleteeids = do
-  Context{ctxtemplates} <- get
+  Context{ctxtemplates} <- getContext
   msubaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
   case lefts msubaccounts of
     (NoDeletionRights:_) -> mzero
@@ -378,7 +378,7 @@ lookupUsersRelevantToDoc docid = do
 
 handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
 handleTakeOverSubaccount email = do
-  ctx@Context{ctxmaybeuser = Just supervisor} <- get
+  ctx@Context{ctxmaybeuser = Just supervisor} <- getContext
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
@@ -387,7 +387,7 @@ handleTakeOverSubaccount email = do
 
 handleCreateSubaccount :: User -> Kontra ()
 handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
-    ctx <- get
+    ctx <- getContext
     memail <- getOptionalField asValidEmail "email"
     fstname <- maybe "" id <$> getField "fstname"
     sndname <- maybe "" id <$> getField "sndname"
@@ -409,7 +409,7 @@ handleViralInvite :: Kontra KontraLink
 handleViralInvite = withUserPost $ do
   getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
     (\invitedemail -> do
-        ctx@Context{ctxmaybeuser = Just user} <- get
+        ctx@Context{ctxmaybeuser = Just user} <- getContext
         muser <- query $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
            -- we leak user information here! SECURITY!!!!
@@ -502,7 +502,7 @@ createInvitedUser names email = do
 -}
 withUserPost :: Kontra KontraLink -> Kontra KontraLink
 withUserPost action = do
-    ctx <- get
+    ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
          Nothing -> return $ LinkLogin NotLogged
@@ -513,7 +513,7 @@ withUserPost action = do
 -}
 withUserGet ::  Kontra a -> Kontra (Either KontraLink a)
 withUserGet action = do
-  ctx <- get
+  ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
     Nothing -> return $ Left $ LinkLogin NotLogged
@@ -524,7 +524,7 @@ withUserGet action = do
 | -}
 withDocumentAuthor :: Document -> Kontra a -> Kontra a
 withDocumentAuthor document action = do
-    ctx <- get
+    ctx <- getContext
     case ctxmaybeuser ctx of
       Nothing -> mzero
       Just user -> case getAuthorSigLink document of
@@ -537,7 +537,7 @@ withDocumentAuthor document action = do
 -}
 checkUserTOSGet :: Kontra a -> Kontra (Either KontraLink a)
 checkUserTOSGet action = do
-    ctx <- get
+    ctx <- getContext
     case ctxmaybeuser ctx of
         Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
         Just _ -> return $ Left $ LinkAcceptTOS
@@ -549,13 +549,13 @@ checkUserTOSGet action = do
 
 handleAcceptTOSGet :: Kontra (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
-    Context{ ctxtemplates } <- get
+    Context{ ctxtemplates } <- getContext
     content <- liftIO $ pageAcceptTOS ctxtemplates
     renderFromBody TopNone kontrakcja content
 
 handleAcceptTOSPost :: Kontra KontraLink
 handleAcceptTOSPost = withUserPost $ do
-  ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- get
+  ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
@@ -569,7 +569,7 @@ handleAcceptTOSPost = withUserPost $ do
 
 handleQuestion :: Kontra KontraLink
 handleQuestion = do
-    ctx <- get
+    ctx <- getContext
     name <- getField "name"
     memail <- getDefaultedField BS.empty asValidEmail "email"
     phone <- getField "phone"
@@ -592,13 +592,13 @@ handleQuestion = do
 handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
 handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
   addModal $ modalDoYouWantToBeSubaccount
-  ctx@Context{ctxmaybeuser = Just user} <- get
+  ctx@Context{ctxmaybeuser = Just user} <- getContext
   content <- liftIO $ showUser (ctxtemplates ctx) user
   renderFromBody TopAccount kontrakcja content
 
 handlePostBecomeSubaccountOf :: UserID -> Kontra KontraLink
 handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
-  ctx@Context{ctxmaybeuser = Just user} <- get
+  ctx@Context{ctxmaybeuser = Just user} <- getContext
   if userid user /= supervisorid
      then do
           setsupervisorresult <- update $ SetUserSupervisor (userid user) supervisorid
@@ -643,7 +643,7 @@ handleAccountSetupGet aid hash = do
                              if isNothing $ userhasacceptedtermsofservice user
                                 then activationPage $ Just user
                                 else do
-                                    templates <- ctxtemplates <$> get
+                                    templates <- ctxtemplates <$> getContext
                                     addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
                                     sendRedirect LinkMain)
                          else mzero
@@ -654,7 +654,7 @@ handleAccountSetupGet aid hash = do
                   Just user ->
                     if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
                      then do
-                        ctx <- get
+                        ctx <- getContext
                         let email = getEmail user
                         content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email
                         renderFromBody TopNone kontrakcja content
@@ -677,7 +677,7 @@ handleAccountSetupFromSign aid hash = do
            Just PrivateAccount -> handleActivate' BySigning user PrivateAccount aid id
            Just CompanyAccount -> handleActivate' BySigning user CompanyAccount aid id
            _              -> do
-               templates <- ctxtemplates <$> get
+               templates <- ctxtemplates <$> getContext
                addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
                return Nothing
     Nothing -> return Nothing
@@ -716,7 +716,7 @@ handleAccountSetupPost aid hash = do
                                      >>= maybe mzero (handleActivate BySigning)
                              case link of
                                   LinkMain -> do
-                                      templates <- ctxtemplates <$> get
+                                      templates <- ctxtemplates <$> getContext
                                       addModal $ modalWelcomeToSkrivaPa templates
                                   _ -> return ()
                              return link
@@ -727,7 +727,7 @@ handleAccountSetupPost aid hash = do
                              if isNothing $ userhasacceptedtermsofservice user
                                 then handleActivate AccountRequest user
                                 else do
-                                    templates <- ctxtemplates <$> get
+                                    templates <- ctxtemplates <$> getContext
                                     addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
                                     return LinkMain)
                          else mzero
@@ -737,7 +737,7 @@ handleAccountSetupPost aid hash = do
                  (query $ GetUserByEmail Nothing $ Email email) >>= maybe mzero (\user ->
                      if isNothing $ userhasacceptedtermsofservice user
                         then do
-                            ctx <- get
+                            ctx <- getContext
                             al <- newAccountCreatedLink user
                             mail <- liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
                             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
@@ -792,7 +792,7 @@ handleAccountSetupPost aid hash = do
                                 finalizeActivation signupmethod user CompanyAccount infoupdatef
                           _ -> returnToAccountSetup user
                  _ -> do
-                     templates <- ctxtemplates <$> get
+                     templates <- ctxtemplates <$> getContext
                      addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
                      returnToAccountSetup user
             where
@@ -805,7 +805,7 @@ handleAccountSetupPost aid hash = do
                              if (accounttype $ usersettings sv) == acctype
                                 then action
                                 else do
-                                    templates <- ctxtemplates <$> get
+                                    templates <- ctxtemplates <$> getContext
                                     addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
                                     returnToAccountSetup user
                          Nothing -> action
@@ -814,7 +814,7 @@ handleAccountSetupPost aid hash = do
             muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
             case muser of
                  Just _ -> do
-                     templates <- ctxtemplates <$> get
+                     templates <- ctxtemplates <$> getContext
                      addFlashMsg =<< (liftIO $ flashMessageUserActivated templates)
                      return LinkMain
                  Nothing -> do
@@ -840,7 +840,7 @@ handleAccountSetupPost aid hash = do
 -}
 handleActivate' :: SignupMethod -> User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
 handleActivate' signupmethod user acctype actionid infoupdatefunc = do
-  ctx <- get
+  ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
@@ -894,7 +894,7 @@ handlePasswordReminderGet aid hash = do
              addModal $ modalNewPasswordView aid hash
              sendRedirect LinkMain
          Nothing -> do
-             templates <- ctxtemplates <$> get
+             templates <- ctxtemplates <$> getContext
              addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
              sendRedirect LinkMain
 
@@ -904,12 +904,12 @@ handlePasswordReminderPost aid hash = do
     case muser of
          Just user -> handleChangePassword user
          Nothing   -> do
-             templates <- ctxtemplates <$> get
+             templates <- ctxtemplates <$> getContext
              addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
              return LinkMain
     where
         handleChangePassword user = do
-            templates <- ctxtemplates <$> get
+            templates <- ctxtemplates <$> getContext
             mpassword <- getRequiredField asValidPassword "password"
             mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
@@ -940,7 +940,7 @@ handleAccountRemovalGet aid hash = do
                case sigs of
                     [sig] -> do
                         extendActionEvalTimeToOneDayMinimum aid
-                        templates <- ctxtemplates <$> get
+                        templates <- ctxtemplates <$> getContext
                         addModal $ modalAccountRemoval templates (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
                         sendRedirect $ LinkSignDoc doc sig
                     _ -> mzero
@@ -956,7 +956,7 @@ handleAccountRemovalFromSign aid hash = do
 handleAccountRemovalPost :: ActionID -> MagicHash -> Kontra KontraLink
 handleAccountRemovalPost aid hash = do
   doc <- handleAccountRemoval' aid hash
-  templates <- ctxtemplates <$> get
+  templates <- ctxtemplates <$> getContext
   addModal $ modalAccountRemoved templates (documenttitle doc)
   return LinkMain
 
@@ -1030,7 +1030,7 @@ dropExistingAction aid = do
 
 guardXToken :: Kontra ()
 guardXToken = do
-    Context { ctxxtoken } <- get
+    Context { ctxxtoken } <- getContext
     (readM <$> getDataFnM (look "xtoken")) >>= maybe mzero (\xtokenstr -> do
         maybe (readError xtokenstr) (\xtoken -> do
             unless (xtoken == ctxxtoken) (do

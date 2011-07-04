@@ -73,7 +73,7 @@ instance (Get r,FromReqURI a) => Get (a -> r) where
 page:: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
-    ctx <- get
+    ctx <- getContext
     if (isNothing $ ctxservice ctx)
      then renderFromBody TopDocument kontrakcja pb
      else embeddedPage pb
@@ -223,7 +223,7 @@ allowHttp:: Kontra Response -> Kontra Response
 allowHttp action = do
     secure <- isSecure
     loging <- isFieldSet "logging"
-    logged <- isJust <$> ctxmaybeuser <$> get
+    logged <- isJust <$> ctxmaybeuser <$> getContext
     if (secure || (not $ loging || logged))
        then action
        else sendSecureLoopBack

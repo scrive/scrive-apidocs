@@ -59,6 +59,7 @@ module User.UserState
 ) where
 import API.Service.ServiceState
 import Company.CompanyState
+import Control.Arrow (first)
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Reader (ask)
@@ -110,8 +111,12 @@ data LoginInfo = LoginInfo
     deriving (Eq, Ord, Typeable)
 newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
     deriving (Eq, Ord, Typeable)
+
 newtype Email = Email { unEmail :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
+instance Read Email where
+    readsPrec p s = first (Email . BS.fromString) <$> readsPrec p s
+
 newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
     deriving (Eq, Ord, Typeable)
 data TrustWeaverStorage = TrustWeaverStorage
