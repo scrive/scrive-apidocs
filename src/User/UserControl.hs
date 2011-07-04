@@ -47,7 +47,7 @@ handleUserGet = do
              renderFromBody TopAccount kontrakcja content
          Nothing -> sendRedirect $ LinkLogin NotLogged
 
-handleUserPost :: Kontra KontraLink
+handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
@@ -64,7 +64,7 @@ handleUserPost = do
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
 
-getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
+getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
     mfstname          <- getValidField asValidName "fstname"
@@ -125,7 +125,7 @@ handleGetUserMailAPI = withUserGet $ do
     content <- liftIO $ showUserMailAPI ctxtemplates user
     renderFromBody TopAccount kontrakcja content
 
-handlePostUserMailAPI :: Kontra KontraLink
+handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
     User{userid, usermailapi} <- fromJust . ctxmaybeuser <$> getContext
     getDefaultedField False asValidCheckBox "api_enabled"
@@ -176,7 +176,7 @@ handleGetUserSecurity = do
              renderFromBody TopAccount kontrakcja content
          Nothing -> sendRedirect $ LinkLogin NotLogged
 
-handlePostUserSecurity :: Kontra KontraLink
+handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
@@ -261,10 +261,10 @@ subaccountsPageSize = 20
 
 ----
 
-handlePostSharing :: Kontra KontraLink
+handlePostSharing :: Kontrakcja m => m KontraLink
 handlePostSharing = do
     ctx <- getContext
-    case (ctxmaybeuser ctx) of
+    case ctxmaybeuser ctx of
          Just user -> do
              memail <- getOptionalField asValidEmail "email"
              remove <- isFieldSet "remove"
@@ -276,14 +276,14 @@ handlePostSharing = do
                   _ -> LinkSharing <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
-handleAddFriend :: User -> BS.ByteString -> Kontra ()
+handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
     avereturn <- update $ AddViewerByEmail userid $ Email email
     case avereturn of
       Left msg -> addFlash (OperationFailed, msg)
       Right _  -> return ()
 
-handlePostSubaccount :: Kontra KontraLink
+handlePostSubaccount :: Kontrakcja m => m KontraLink
 handlePostSubaccount = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
@@ -303,7 +303,7 @@ handlePostSubaccount = do
                   _ -> LinkSubaccount <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
-handleDeleteSubaccounts :: User -> Kontra KontraLink
+handleDeleteSubaccounts :: Kontrakcja m => User -> m KontraLink
 handleDeleteSubaccounts user = do
   subaccountids <- getCriticalFieldList asValidNumber "subcheck"
   handleUserDelete user (map UserID subaccountids)
@@ -311,7 +311,7 @@ handleDeleteSubaccounts user = do
 
 {- | I've commented this out for now, because I haven't got anywhere
      that'll call this.  Em
-handleSelfDelete :: User -> Kontra KontraLink
+handleSelfDelete :: Kontrakcja m => User -> m KontraLink
 handleSelfDelete user = do
   subaccounts <- query $ GetUserSubaccounts (userid user)
   handleUserDelete user (map userid $ (toList subaccounts) ++ [user])
@@ -324,7 +324,7 @@ handleSelfDelete user = do
     for all users, and if it's okay for all it deletes them all.  Otherwise
     it deletes no-one.
 -}
-handleUserDelete :: User -> [UserID] -> Kontra ()
+handleUserDelete :: Kontrakcja m => User -> [UserID] -> m ()
 handleUserDelete deleter deleteeids = do
   Context{ctxtemplates} <- getContext
   msubaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
@@ -342,7 +342,7 @@ type UserDeletionDetails = (User, [Document])
 
 data UserDeletionProblem = NoDeletionRights | UserHasLiveDocs
 
-getUserDeletionDetails :: UserID -> UserID -> Kontra (Either UserDeletionProblem UserDeletionDetails)
+getUserDeletionDetails :: Kontrakcja m => UserID -> UserID -> m (Either UserDeletionProblem UserDeletionDetails)
 getUserDeletionDetails deleterid deleteeid = do
   deletee <- queryOrFail $ GetUserByUserID deleteeid
   let isSelfDelete = deleterid == deleteeid
@@ -355,7 +355,7 @@ getUserDeletionDetails deleterid deleteeid = do
     (_, False) -> return $ Left UserHasLiveDocs
     _ -> return $ Right (deletee, userdocs)
 
-performUserDeletion :: UserDeletionDetails -> Kontra ()
+performUserDeletion :: Kontrakcja m => UserDeletionDetails -> m ()
 performUserDeletion (user, docs) = do
   _ <- update $ DeleteUser (userid user)
   idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
@@ -366,7 +366,7 @@ performUserDeletion (user, docs) = do
     This is the dodgy link between documents and users and is required
     when deleting a user or deleting a doc.  Bleurgh.
 -}
-lookupUsersRelevantToDoc :: DocumentID -> Kontra (DocumentID, [User])
+lookupUsersRelevantToDoc :: Kontrakcja m => DocumentID -> m (DocumentID, [User])
 lookupUsersRelevantToDoc docid = do
   doc <- queryOrFail $ GetDocumentByDocumentID docid
   musers <- mapM (query . GetUserByUserID) (linkedUserIDs doc)
@@ -378,7 +378,7 @@ lookupUsersRelevantToDoc docid = do
   mkList Nothing = []
   mkList (Just x) = [x]
 
-handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
+handleTakeOverSubaccount :: Kontrakcja m => BS.ByteString -> m ()
 handleTakeOverSubaccount email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- getContext
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
@@ -387,7 +387,7 @@ handleTakeOverSubaccount email = do
   addFlash $ flashMessageUserInvitedAsSubaccount $ ctxtemplates ctx
 
 
-handleCreateSubaccount :: User -> Kontra ()
+handleCreateSubaccount :: Kontrakcja m => User -> m ()
 handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
     ctx <- getContext
     memail <- getOptionalField asValidEmail "email"
@@ -407,7 +407,7 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
             return ()
       _ -> return ()
 
-handleViralInvite :: Kontra KontraLink
+handleViralInvite :: Kontrakcja m => m KontraLink
 handleViralInvite = withUserPost $ do
   getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
     (\invitedemail -> do
@@ -502,7 +502,7 @@ createInvitedUser names email = do
    Guard against a POST with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserPost :: Kontra KontraLink -> Kontra KontraLink
+withUserPost :: Kontrakcja m => m KontraLink -> m KontraLink
 withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
@@ -555,7 +555,7 @@ handleAcceptTOSGet = withUserGet $ do
     content <- liftIO $ pageAcceptTOS ctxtemplates
     renderFromBody TopNone kontrakcja content
 
-handleAcceptTOSPost :: Kontra KontraLink
+handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
   ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
   tos <- getDefaultedField False asValidCheckBox "tos"
@@ -569,7 +569,7 @@ handleAcceptTOSPost = withUserPost $ do
       return LinkAcceptTOS
     Nothing -> return LinkAcceptTOS
 
-handleQuestion :: Kontra KontraLink
+handleQuestion :: Kontrakcja m => m KontraLink
 handleQuestion = do
     ctx <- getContext
     name <- getField "name"
@@ -598,7 +598,7 @@ handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
   content <- liftIO $ showUser (ctxtemplates ctx) user
   renderFromBody TopAccount kontrakcja content
 
-handlePostBecomeSubaccountOf :: UserID -> Kontra KontraLink
+handlePostBecomeSubaccountOf :: Kontrakcja m => UserID -> m KontraLink
 handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
   ctx@Context{ctxmaybeuser = Just user} <- getContext
   if userid user /= supervisorid
@@ -699,7 +699,7 @@ handleAccountSetupFromSign aid hash = do
             _ -> return Nothing
         _-> return Nothing
 
-handleAccountSetupPost :: ActionID -> MagicHash -> Kontra KontraLink
+handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
     now <- liftIO $ getMinutesTime
     maction <- checkValidity now <$> (query $ GetAction aid)
@@ -840,7 +840,7 @@ handleAccountSetupPost aid hash = do
     the tos, and the passwords and add error flash messages as you'd
     expect.
 -}
-handleActivate' :: SignupMethod -> User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
+handleActivate' :: Kontrakcja m => SignupMethod -> User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> m (Maybe User)
 handleActivate' signupmethod user acctype actionid infoupdatefunc = do
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
@@ -900,7 +900,7 @@ handlePasswordReminderGet aid hash = do
              addFlash $ flashMessagePasswordChangeLinkNotValid templates
              sendRedirect LinkMain
 
-handlePasswordReminderPost :: ActionID -> MagicHash -> Kontra KontraLink
+handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePasswordReminderPost aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
@@ -950,12 +950,12 @@ handleAccountRemovalGet aid hash = do
            else mzero
         )
 
-handleAccountRemovalFromSign :: ActionID -> MagicHash -> Kontra ()
+handleAccountRemovalFromSign :: Kontrakcja m => ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign aid hash = do
   _doc <- handleAccountRemoval' aid hash
   return ()
 
-handleAccountRemovalPost :: ActionID -> MagicHash -> Kontra KontraLink
+handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountRemovalPost aid hash = do
   doc <- handleAccountRemoval' aid hash
   templates <- ctxtemplates <$> getContext
@@ -966,7 +966,7 @@ handleAccountRemovalPost aid hash = do
     Helper function for performing account removal (these are accounts setup
     by signing), this'll return the document that was removed.
 -}
-handleAccountRemoval' :: ActionID -> MagicHash -> Kontra Document
+handleAccountRemoval' :: Kontrakcja m => ActionID -> MagicHash -> m Document
 handleAccountRemoval' aid hash = do
     getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
         let AccountCreatedBySigning _ _ (docid, _) token = actionType action
@@ -981,7 +981,7 @@ handleAccountRemoval' aid hash = do
            else mzero
         )
 
-getAccountCreatedBySigningIDAction :: ActionID -> Kontra (Maybe Action)
+getAccountCreatedBySigningIDAction :: Kontrakcja m => ActionID -> m (Maybe Action)
 getAccountCreatedBySigningIDAction aid =
     (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
         -- allow for account created by signing links only
@@ -993,7 +993,7 @@ getAccountCreatedBySigningIDAction aid =
                        now <- liftIO $ getMinutesTime
                        return $ checkValidity now $ Just action)
 
-getUserFromActionOfType :: ActionTypeID -> ActionID -> MagicHash -> Kontra (Maybe User)
+getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do
     now <- liftIO $ getMinutesTime
     maction <- checkValidity now <$> query (GetAction aid)
@@ -1018,19 +1018,19 @@ getUserFromActionOfType atypeid aid hash = do
 
 -- | Postpone link removal. Needed to make sure that between
 -- GET and POST requests action won't be removed from the system.
-extendActionEvalTimeToOneDayMinimum :: ActionID -> Kontra ()
+extendActionEvalTimeToOneDayMinimum :: Kontrakcja m => ActionID -> m ()
 extendActionEvalTimeToOneDayMinimum aid = do
     dayAfterNow <- minutesAfter (60*24) <$> liftIO getMinutesTime
     maction <- checkValidity dayAfterNow <$> query (GetAction aid)
     when_ (isNothing maction) $
         update $ UpdateActionEvalTime aid dayAfterNow
 
-dropExistingAction :: ActionID -> Kontra ()
+dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
 
-guardXToken :: Kontra ()
+guardXToken :: Kontrakcja m => m ()
 guardXToken = do
     Context { ctxxtoken } <- getContext
     (readM <$> getDataFnM (look "xtoken")) >>= maybe mzero (\xtokenstr -> do

@@ -116,7 +116,7 @@ clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
 {- |
    Adds a modal from string
 -}
-addModal :: KontraModal ->  Kontra ()
+addModal :: (MonadIO m, KontraMonad m) => KontraModal -> m ()
 addModal flash = do
   templates <- ctxtemplates <$> getContext
   fm <- liftIO $ runReaderT flash templates
@@ -125,7 +125,7 @@ addModal flash = do
 {- |
    Sticks the logged in user onto the context
 -}
-logUserToContext :: Maybe User -> Kontra ()
+logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 

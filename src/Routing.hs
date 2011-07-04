@@ -13,7 +13,8 @@ module Routing ( hGet0,           hGet1,           hGet2,           hGet3,      
                  hPostAllowHttp0, hPostAllowHttp1, hPostAllowHttp2, hPostAllowHttp3, hPostAllowHttp4, hPostAllowHttp5,
                  hGetAllowHttp0,  hGetAllowHttp1,  hGetAllowHttp2,  hGetAllowHttp3,  hGetAllowHttp4,  hGetAllowHttp5,
                  hGetAjax0,       hGetAjax1,       hGetAjax2,       hGetAjax3,       hGetAjax4,       hGetAjax5,
-                 RedirectOrContent, allowHttp
+                 RedirectOrContent, allowHttp,
+                 toK0, toK1, toK2
                  )where
 
 import Control.Monad.State
@@ -230,3 +231,14 @@ allowHttp action = do
 
 guardXToken:: Kontra Response -> Kontra Response
 guardXToken = (>>) UserControl.guardXToken
+
+-- | Enforce functions in Kontrakcja typeclass to Kontra monad since
+-- routing demands it and I'm not sure yet how to fix it properly
+toK0 :: Kontra a -> Kontra a
+toK0 = id
+
+toK1 :: (a -> Kontra b) -> (a -> Kontra b)
+toK1 = id
+
+toK2 :: (a -> b -> Kontra c) -> (a -> b -> Kontra c)
+toK2 = id

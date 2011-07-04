@@ -226,21 +226,21 @@ handleRoutes = msum [
 
      -- UserControl
      , dir "account"                    $ hGet0  $ UserControl.handleUserGet
-     , dir "account"                    $ hPost0 $ UserControl.handleUserPost
+     , dir "account"                    $ hPost0 $ toK0 $ UserControl.handleUserPost
      , dir "account" $ dir "subaccount" $ hGet0  $ UserControl.handleGetSubaccount
-     , dir "account" $ dir "subaccount" $ hPost0 $ UserControl.handlePostSubaccount
+     , dir "account" $ dir "subaccount" $ hPost0 $ toK0 $ UserControl.handlePostSubaccount
      , dir "account" $ dir "sharing" $ hGet0 $ UserControl.handleGetSharing
-     , dir "account" $ dir "sharing" $ hPost0 $ UserControl.handlePostSharing
+     , dir "account" $ dir "sharing" $ hPost0 $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet0 $ UserControl.handleGetUserSecurity
-     , dir "account" $ dir "security" $ hPost0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "security" $ hPost0 $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet0 $ UserControl.handleGetUserMailAPI
-     , dir "account" $ dir "mailapi" $ hPost0 $ UserControl.handlePostUserMailAPI
+     , dir "account" $ dir "mailapi" $ hPost0 $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "bsa" $ hGet1 $ UserControl.handleGetBecomeSubaccountOf
-     , dir "account" $ dir "bsa" $ hPost1 $ UserControl.handlePostBecomeSubaccountOf
+     , dir "account" $ dir "bsa" $ hPost1 $ toK1 $ UserControl.handlePostBecomeSubaccountOf
      , dir "contacts"  $ hGet0  $ Contacts.showContacts
      , dir "contacts"  $ hPost0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet0  $ UserControl.handleAcceptTOSGet
-     , dir "accepttos" $ hPost0 $ UserControl.handleAcceptTOSPost
+     , dir "accepttos" $ hPost0 $ toK0 $ UserControl.handleAcceptTOSPost
 
      -- super user only
      , dir "stats"      $ hGet0  $ Administration.showStats
@@ -304,15 +304,15 @@ handleRoutes = msum [
      --, dir "vip"         $ hPostNoXToken $ signupVipPagePost
      , dir "amnesia"     $ hPostNoXToken0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hGet2  $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hPostNoXToken2 $ UserControl.handlePasswordReminderPost
+     , dir "amnesia"     $ hPostNoXToken2 $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet2  $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hPostNoXToken2  $ UserControl.handleAccountSetupPost
+     , dir "accountsetup"  $ hPostNoXToken2  $ toK2 $ UserControl.handleAccountSetupPost
      , dir "accountremoval" $ hGet2  $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hPostNoXToken2  $ UserControl.handleAccountRemovalPost
+     , dir "accountremoval" $ hPostNoXToken2 $ toK2 $ UserControl.handleAccountRemovalPost
 
      -- viral invite
-     , dir "invite"      $ hPostNoXToken0 $ UserControl.handleViralInvite
-     , dir "question"    $ hPostAllowHttp0 $ UserControl.handleQuestion
+     , dir "invite"      $ hPostNoXToken0 $ toK0 $ UserControl.handleViralInvite
+     , dir "question"    $ hPostAllowHttp0 $ toK0 $ UserControl.handleQuestion
      -- e-legitimation stuff
      , dir "s" $ hGet4  $ BankID.handleSignBankID
      , dir "s" $ param "eleg" $ hPost3 $ BankID.handleSignPostBankID
