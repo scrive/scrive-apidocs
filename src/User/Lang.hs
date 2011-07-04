@@ -23,7 +23,7 @@ instance Version Lang
 
 
 langDir :: Lang -> String
-langDir LANG_EN = "texts/se"
+langDir LANG_EN = "texts/en"
 langDir LANG_SE = "texts/se"
 
 langHTTPValue :: Lang -> String

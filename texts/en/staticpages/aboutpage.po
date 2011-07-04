@@ -11,11 +11,11 @@ msgstr ""
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPageTopBody"
-msgstr "<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration.</p>							<br />							<p>Elektronisk dokumentsignering är en relativt ung bransch som är på stark framfart både i Sverige och internationellt. Vi är ett ungt företag som växer i en rasande fart och vi har idag 10 medarbetare. Vi är övertygade om att våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade problem på sätt som verkar enkla och tilltalande för slutkund.</p> 							<br />							<p>SkrivaPå grundades av Lukas Duczko och Gracjan Polak som lärde känna varandra under sin tid på kreditbolaget Klarna.</p>"
+msgstr "<p>Scrive is a service for signing and storing contracts electronically. We help our customers to reduce their costs, increase their turnover and save frustration.</p>							<br />							<p>Electronic document signing is a relatively young industry that grows fast both in Sweden and internationally. We are a young company in rapid growth with about 10 eployees today. We are confident that our greatest strengths are our ability to detect customer needs, our customer-oriented approach, and our ability to solve complex legal and securityrelated issues in a way that seems simple and appealing to the end customer.</p> 							<br />							<p>Scrive was founded by Lukas Duczko and Gracjan Polak who got to know eachother at the Swedish credit company Klarna.</p>"
 
 #: staticpages/aboutpage.st:aboutPage
 msgid "_aboutPageTitle"
-msgstr "| Om SkrivaPå"
+msgstr "| About Scrive"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson9Position"
@@ -27,7 +27,7 @@ msgstr "phanupong@skrivapa.se"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson9Body"
-msgstr "Phanupong har en bakgrund på Assumption University i Bankok och Kungliga Tekniska Högskolan i Stockholm. Han är specialist på IT-säkerhet och har bland annat erfarenhet från arbete som IT-säkerhetskonsult i Thailand."
+msgstr "Phanupong has his background at Assumption University in Bankok and the Royal Institute of Technology in Stockholm. He is a specialist in IT security with experience from working as an IT security consultant in Thailand."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson9"
@@ -43,7 +43,7 @@ msgstr "nazli@skrivapa.se"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson8Body"
-msgstr "Nazli har en bakgrund från Eastern Mediterranean University, TRNC och Kungliga Tekniska Högskolan där hon studerat IT-säkerhet. Hon har bland annat varit engagerad i OWASP AppSec som IT-säkerhetsutvecklare."
+msgstr "Nazli has her background at Eastern Mediterranean University, TRNC and the Royal Institute of Technology in Stockholm where she has studied IT security. She has been engaged in OWASP AppSec as IT security developer."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson8"
@@ -59,7 +59,7 @@ msgstr "oskar@skrivapa.se<br />									+46 709 85 08 67"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson7Body"
-msgstr "Oskar är student på Handelshögskolan i Stockholm och arbetar 100 % med SkrivaPå parallellt med sina studier. Entreprenörskap är ett stort intresse och han har tidigare bland annat drivit entreprenörsprojektet Snäll Skuldhjälp."
+msgstr "Oskar is a student at Stocholm School of Economics, and works 50 % at Scrive paralell to his studies. Enrepreneurship is a major interest if his, and he has  previously run an entrepreneurship project called Snäll Skuldhjälp."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson7"
@@ -75,7 +75,7 @@ msgstr "emily@skrivapa.se"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson6Body"
-msgstr "Emily har en bakgrund från University of Bristol och har tidigare arbetat som utvecklare på ett flertal finansbanker i London. Hon lämnade sin post som systemutvecklare på HSBC för att arbeta heltid med SkrivaPå på distans."
+msgstr "Emily has her background at University of Bristol and has previously been working as a devloper at several different finance banks in London. Se left her position as system developer at HSBC to work full time at Scrive at distance."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson6"
@@ -91,7 +91,7 @@ msgstr "eric@skrivapa.se"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson5Body"
-msgstr "Eric har en bakgrund från University of New Orleans och har tidigare arbetat som team leader för säkerhetsprojekt inom amerikanska militären. Han har även på egen hand utvecklat ett flertal applikationer för iPhone och Android. Idag backpackar Eric jorden runt och arbetar 100% med SkrivaPå på distans."
+msgstr "Eric has his background at University of New Orleans and has previously been working as a team leader for security projects in the US military. He has also single-handedly developed several applications for iPhone and Android. Eric is at the moment back-packing around the world and working full time at Scrive at distance."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson5"
@@ -107,7 +107,7 @@ msgstr "mariusz@skrivapa.se"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson4Body"
-msgstr "Mariusz har en bakgrund från Warszaw Technical University där han tagit examen i funktionella programmeringsspråk. Han har tidigare arbetat åt ett av Polens största IT-konsultföretag. Fritiden spenderar Mariusz helst med att fördjupa sig inom avancerad logik och nya teorier inom funktionell programmering. "
+msgstr "Mariusz has his background at Warszaw Technical University where he has graduated in functional programming languages. He has previously been working at one os Poland's largest IT consultant firms. Mariusz prefers spending his free time immersing in advanced logic and new theories about functional programming."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson4"
@@ -123,7 +123,7 @@ msgstr "viktor@skrivapa.se<br />									+46 708 88 47 49"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson3Body"
-msgstr "Viktor har en bakgrund från Handelshögskolan i Stockholm där han studerat redovisning och finansiering. Han har tidigare arbetat som affärsutvecklare åt familjeföretaget Kundia AB där han bland annat hjälpte till att utveckla kontrollsystem och affärsprocesser. SkrivaPå är Viktors andra företagsengagemang efter Mobile Mall."
+msgstr "Viktor has his background at Stockholm School of Economics where he studied Accounting and Financial Management. He has previously been working as a business developer at the family company Kundia AB where he, among other things, helped developingcontrol systems and business processes. Scrive is Viktor's second start-up involvment after Mobile Mall."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson3"
@@ -139,7 +139,7 @@ msgstr "gracjan@skrivapa.se"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson2Body"
-msgstr "Gracjan har en bakgrund från Klarna som programmerare och från Krakow Technical University där han studerade som PhD och undervisade i programmeringsspråk. Han lämnade Klarna för att satsa uteslutande på SkrivaPå. SkrivaPå är hans andra företagsengagemang efter PDF-optimeringsföretaget ACCHSH. "
+msgstr "Gracjan has his background at the Swedish credit company Klarna as a programmer, and Krakow Technical University where he studied as a PhD student and taught programming languages. He left Klarna to focus on Scrive. Scrive is his second start-up involvment after PDF-optimizing company ACCHSH. "
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson2"
@@ -155,7 +155,7 @@ msgstr "lukas@skrivapa.se<br />									+46 704 56 04 04"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson1Body"
-msgstr "Lukas har en bakgrund från Handelshögskolan i Stockholm och från finanssektorn från sin tid som affärsutvecklare på Klarna. Han lämnade Klarna för att satsa uteslutande på SkrivaPå. SkrivaPå är hans andra företagsengagemang efter bokningsbolaget SpokenWord AB."
+msgstr "Lukas has his background at Stockholm School of Economics and from the finance sector from his time working as a business developer at Klarna. He left Klarna to focus at his work at Scrive. Scrive is his second start-up after the event company SpokenWord AB."
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPagePerson1"
@@ -163,9 +163,9 @@ msgstr "Lukas Duczko"
 
 #: staticpages/aboutpage.st:aboutPageContents
 msgid "_aboutPageH1"
-msgstr "Om SkrivaPå och gänget bakom"
+msgstr "About Scrive and the team behind"
 
 #: staticpages/aboutpage.st:aboutPage
 msgid "_aboutPagaMetaDescription"
-msgstr "Signera och arkivera dina avtal elektroniskt. SkrivaPå är skapat av ett ambitiöst, internationellt team med bas i Stockholm."
+msgstr "Sign and store your contracts electronically. Scrive is made by an ambitious, international team based in Stockholm."
 

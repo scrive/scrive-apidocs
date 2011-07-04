@@ -12,15 +12,15 @@ msgstr ""
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageTopBody"
-msgstr "<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration. </p>\t\t\t\t\t\t<br />\t\t\t\t\t\t<p>Vi är övertygade om att våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade problem på sätt som verkar enkla och tilltalande för slutkund.</p>"
+msgstr "<p>Scrive is a service for signing and storing contracts electronically. We help our customers to reduce their costs, increase their turnover and save frustration.</p>\t\t\t\t\t\t<br />\t\t\t\t\t\t<p>We are confident that our greatest strengths are our ability to detect customer needs, our customer-oriented approach, and our ability to solve complex legal and securityrelated issues in a way that seems simple and appealing to the end customer.</p>"
 
 #: staticpages/clientspage.st:clientsPage
 msgid "_clientsPageTitle"
-msgstr "| Kunder"
+msgstr "| Customers"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageH1"
-msgstr "Kundutlåtanden om SkrivaPå"
+msgstr "Customer quotes about Scrive"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomerVidWeb"
@@ -88,7 +88,7 @@ msgstr "www.greenhatpeople.se"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer2About"
-msgstr "Green hat People Green hat People genomför oslagbara teambuildingaktiviteter i form av mobilstyrda spel där omgivningen utgör spelplanen. De finns representerade i hela Sverige och genomför teambuilding över hela Europa."
+msgstr "Green hat People does unbeatable teambuilding activities through mobile phone controlled games where the game board consists of the surroundings. Green Hat People are represented all over Sweden and preforms team building activities all over Europe."
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer2"
@@ -100,7 +100,7 @@ msgstr "www.accountfactory.se"
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer1About"
-msgstr "Account Factory sköter bokföringen för småföretag. Bara fasta priser och allt på webben."
+msgstr "Account Factory manage accounting for small companies. Only fixed prices and everything is online."
 
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_clientsPageCusomer1"
