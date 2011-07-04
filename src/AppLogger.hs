@@ -153,10 +153,10 @@ server :: (MonadIO m) => String -> m ()
 server msg = liftIO $ noticeM "Happstack.Server" msg
 
 
+-- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
   liftIO $ do
     _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
     return ()
-
 
