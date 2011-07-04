@@ -2,6 +2,8 @@ module Kontra
     ( module User.UserState
     , module User.Password
     , Context(..)
+    , Kontrakcja
+    , KontraMonad(..)
     , isSuperUser
     , Kontra(runKontra)
     , KontraModal
@@ -81,15 +83,29 @@ data Context = Context
     , ctxadminaccounts       :: [Email]
     }
 
+-- | This is for grouping things together so we won't need to
+-- write all that each time we write function type signature
+class (Functor m, HasRqData m, KontraMonad m, Monad m, MonadIO m, ServerMonad m) => Kontrakcja m
+
+class KontraMonad m where
+    getContext    :: m Context
+    modifyContext :: (Context -> Context) -> m ()
+
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, MonadState Context, ServerMonad, WebMonad Response)
 
-type KontraModal = ReaderT KontrakcjaTemplates IO String
+instance Kontrakcja Kontra
+
+instance KontraMonad Kontra where
+    getContext    = get
+    modifyContext = modify
 
 instance TemplatesMonad Kontra where
         getTemplates = do
             ctx <- get
             return (ctxtemplates ctx)
+
+type KontraModal = ReaderT KontrakcjaTemplates IO String
 
 {- |
    A list of default user emails.  These should start out as the users

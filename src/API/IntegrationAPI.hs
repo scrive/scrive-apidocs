@@ -109,7 +109,7 @@ getRequestUser = do
 
 embeddDocumentFrame :: IntegrationAPIFunction APIResponse
 embeddDocumentFrame = do
-    ctx <- lift $ get
+    ctx <- getContext
     srvs <-  service <$> ask
     let sid = serviceid srvs
     let slocation = fromMaybe (ctxhostpart ctx) $ show <$> (servicelocation $ servicesettings srvs)
