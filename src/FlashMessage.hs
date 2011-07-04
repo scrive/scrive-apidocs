@@ -114,3 +114,4 @@ removeFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor 
 removeFlashCookie = do
     ishttps <- isHTTPS
     addHttpOnlyCookie ishttps Expired $ mkCookie "flashes" ""
+
