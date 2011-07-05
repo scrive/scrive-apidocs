@@ -6,8 +6,6 @@ module AppControl
     , AppConf(..)
     , AppGlobals(..)
     , defaultAWSAction
-    , parseEmailMessage
-    , parseEmailMessageToParts
     ) where
 
 import API.IntegrationAPI
@@ -129,6 +127,7 @@ data AppGlobals
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
+
 handleRoutes :: Kontra Response
 handleRoutes = msum [
        hGetAllowHttp0 $ handleHomepage
@@ -146,7 +145,7 @@ handleRoutes = msum [
      , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ mailAPI
+     , mailAPI
 
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
@@ -283,14 +282,14 @@ handleRoutes = msum [
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 sysdump
 
-     , dir "services" $ hGet0 $ handleShowServiceList
-     , dir "services" $ hGet1 $ handleShowService
-     , dir "services" $ dir "ui" $ hPost1 $ handleChangeServiceUI
-     , dir "services" $ dir "password" $ hPost1 $ handleChangeServicePassword
-     , dir "services" $ dir "settings" $ hPost1 $ handleChangeServiceSettings
-     , dir "services" $ dir "logo" $ hGet1 handleServiceLogo
-     , dir "services" $ dir "buttons_body" $ hGet1 handleServiceButtonsBody
-     , dir "services" $ dir "buttons_rest" $ hGet1 handleServiceButtonsRest
+     , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
+     , dir "services" $ hGet1 $ toK1 $ handleShowService
+     , dir "services" $ dir "ui" $ hPost1 $ toK1 $ handleChangeServiceUI
+     , dir "services" $ dir "password" $ hPost1 $ toK1 $ handleChangeServicePassword
+     , dir "services" $ dir "settings" $ hPost1 $ toK1 $ handleChangeServiceSettings
+     , dir "services" $ dir "logo" $ hGet1 $ toK1 $ handleServiceLogo
+     , dir "services" $ dir "buttons_body" $ hGet1 $ toK1 $ handleServiceButtonsBody
+     , dir "services" $ dir "buttons_rest" $ hGet1 $ toK1 $ handleServiceButtonsRest
      , dir "dave" $ dir "document" $ hGet1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ daveUser
 

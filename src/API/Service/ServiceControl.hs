@@ -35,7 +35,7 @@ import qualified Data.Map as Map
 import Happstack.Server.SimpleHTTP
 import Util.FlashUtil
 
-handleChangeServiceUI :: ServiceID -> Kontra KontraLink
+handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceUI sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -80,7 +80,7 @@ handleChangeServiceUI sid = do
            addFlash (OperationFailed, "UI setting not saved")
            return LoopBack
 
-handleChangeServicePassword :: ServiceID -> Kontra KontraLink
+handleChangeServicePassword :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServicePassword sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -105,7 +105,7 @@ handleChangeServicePassword sid = do
 
 
 
-handleChangeServiceSettings :: ServiceID -> Kontra KontraLink
+handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -127,7 +127,7 @@ handleChangeServiceSettings sid = do
          return LoopBack
 
 
-handleShowService :: ServiceID -> Kontra (Either KontraLink String)
+handleShowService :: Kontrakcja m => ServiceID -> m (Either KontraLink String)
 handleShowService sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -137,7 +137,7 @@ handleShowService sid = do
        then liftIO $  Right <$> serviceAdminPage (ctxtemplates ctx)  (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
        else return $ Left LinkMain
 
-handleShowServiceList  :: Kontra String
+handleShowServiceList :: Kontrakcja m => m String
 handleShowServiceList = do
     ctx <- getContext
     case (ctxmaybeuser ctx, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
@@ -149,20 +149,20 @@ handleShowServiceList = do
              liftIO $ servicesListPage (ctxtemplates ctx) srvs
          _ -> mzero
 
-handleServiceLogo :: ServiceID -> Kontra Response
+handleServiceLogo :: Kontrakcja m => ServiceID -> m Response
 handleServiceLogo sid = do
     mlogo <- join <$> fmap (servicelogo . serviceui) <$> (query $ GetService sid)
     return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mlogo) Nothing
 
 
-handleServiceButtonsBody:: ServiceID -> Kontra Response
+handleServiceButtonsBody :: Kontrakcja m =>ServiceID -> m Response
 handleServiceButtonsBody sid = do
     mimg <- join <$> fmap (fmap fst . servicebuttons . serviceui) <$> (query $ GetService sid)
     return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mimg) Nothing
 
-handleServiceButtonsRest:: ServiceID -> Kontra Response
+handleServiceButtonsRest :: Kontrakcja m => ServiceID -> m Response
 handleServiceButtonsRest sid = do
     mimg <- join <$> fmap (fmap snd . servicebuttons . serviceui) <$> (query $ GetService sid)
     return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $

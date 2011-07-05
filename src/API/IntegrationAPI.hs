@@ -8,9 +8,7 @@
 -- Integration API is advanced way to integrate with our service using mix of
 -- request and iframes
 -----------------------------------------------------------------------------
-module API.IntegrationAPI
-    ( integrationAPI)
-    where
+module API.IntegrationAPI (integrationAPI) where
 
 import Control.Monad.State
 import Data.Functor
@@ -48,9 +46,9 @@ import qualified AppLogger as Log (debug)
 -}
 
 data IntegrationAPIContext = IntegrationAPIContext {ibody :: APIRequestBody , service :: Service}
-type IntegrationAPIFunction a = APIFunction IntegrationAPIContext a
+type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
 
-instance APIContext IntegrationAPIContext where
+instance Kontrakcja m => APIContext m IntegrationAPIContext where
     body= ibody
     newBody b ctx = ctx {ibody = b}
     apiContext  = do
@@ -66,7 +64,7 @@ instance APIContext IntegrationAPIContext where
 
 
 
-integrationService ::  Kontra (Maybe Service)
+integrationService :: Kontrakcja m => m (Maybe Service)
 integrationService = do
     sid <- getFieldUTFWithDefault BS.empty "service"
     mservice <- query $ GetService (ServiceID sid)
@@ -78,19 +76,18 @@ integrationService = do
                 else return Nothing
          Nothing -> return Nothing
 
-
 integrationAPI :: Kontra Response
-integrationAPI =  dir "integration" $ msum [
-                      apiCall "embed_document_frame" embeddDocumentFrame
-                    , apiCall "new_document" createDocument
-                    , apiCall "documents" $  getDocuments
-                    , apiCall "document"  getDocument
-                    , apiCall "set_document_tag"  setDocumentTag
-                    , apiCall "remove_document" removeDocument
-                    , apiUnknownCall
-                    , dir "connectuser" $ hGet3 $ connectUserToSession
-                    , dir "connectcompany" $ hGet3 $ connectCompanyToSession
-                  ]
+integrationAPI = dir "integration" $ msum [
+      apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
+    , apiCall "new_document" createDocument :: Kontrakcja m => m Response
+    , apiCall "documents" getDocuments :: Kontrakcja m => m Response
+    , apiCall "document" getDocument :: Kontrakcja m => m Response
+    , apiCall "set_document_tag" setDocumentTag :: Kontrakcja m => m Response
+    , apiCall "remove_document" removeDocument :: Kontrakcja m => m Response
+    , apiUnknownCall
+    , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSession
+    , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
+    ]
 
 --- Real api requests
 -- unused function, commenting for now
@@ -107,7 +104,7 @@ getRequestUser = do
     return user-}
 
 
-embeddDocumentFrame :: IntegrationAPIFunction APIResponse
+embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
@@ -135,7 +132,7 @@ embeddDocumentFrame = do
          _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
 
 
-createDocument  :: IntegrationAPIFunction APIResponse
+createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
    mcompany_id <- maybeReadM $ apiAskString "company_id"
@@ -164,19 +161,20 @@ createDocument = do
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 
-updateDocumentWithDocumentUI :: Document -> IntegrationAPIFunction Document
+updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
     mailfooter <- apiAskBS "mailfooter"
     ndoc <- update $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
     return $ either (const doc) id ndoc
-    
-createAPIDocument:: Company ->
-                    DocumentType ->
-                    BS.ByteString ->
-                    [(BS.ByteString,BS.ByteString)] ->
-                    [SignatoryTMP] ->
-                    [DocumentTag] ->
-                    IntegrationAPIFunction Document
+
+createAPIDocument :: Kontrakcja m
+                  => Company
+                  -> DocumentType
+                  -> BS.ByteString
+                  -> [(BS.ByteString,BS.ByteString)]
+                  -> [SignatoryTMP]
+                  -> [DocumentTag]
+                  -> IntegrationAPIFunction m Document
 createAPIDocument _ _ _ _ [] _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
@@ -190,8 +188,7 @@ createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
     return $ fromRight doc'
 
 
-
-userFromTMP::SignatoryTMP ->  IntegrationAPIFunction User
+userFromTMP :: Kontrakcja m => SignatoryTMP -> IntegrationAPIFunction m User
 userFromTMP uTMP = do
     sid <- serviceid <$> service <$> ask
     let remail = fold $ asValidEmail . BS.toString <$> email uTMP
@@ -218,7 +215,7 @@ userFromTMP uTMP = do
     return $ fromRight user'
 
 
-getDocuments :: IntegrationAPIFunction APIResponse
+getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
     sid <- serviceid <$> service <$> ask
     mcompany_id <- maybeReadM $ apiAskString "company_id"
@@ -237,14 +234,14 @@ getDocuments = do
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
 
-getDocument  :: IntegrationAPIFunction APIResponse
+getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
     api_doc <- api_document True (fromJust mdocument)
     return $ toJSObject [("document",api_doc)]
 
-setDocumentTag  :: IntegrationAPIFunction APIResponse
+setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
@@ -259,7 +256,7 @@ setDocumentTag =  do
 
 
 --TODO this will not work since we don't have real document removal
-removeDocument  :: IntegrationAPIFunction APIResponse
+removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document to remove can be found"
@@ -271,14 +268,14 @@ removeDocument = do
 {- | Call connect user to session (all passed as URL params)
      and redirect user to referer
 -}
-connectUserToSession :: ServiceID -> UserID -> SessionId -> Kontra KontraLink
+connectUserToSession :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
 connectUserToSession _ uid ssid = do
     loaded <- loadServiceSession (Right uid) ssid
     if (loaded)
      then return $ BackToReferer
      else mzero
 
-connectCompanyToSession :: ServiceID -> CompanyID -> SessionId -> Kontra KontraLink
+connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession _ cid ssid = do
     loaded <- loadServiceSession (Left cid) ssid
     if (loaded)
