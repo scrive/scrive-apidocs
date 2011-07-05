@@ -4,8 +4,6 @@ module Util.FlashUtil (
     , FlashableMonad(..)
     ) where
 
-import Control.Monad.IO.Class
-
 import KontraMonad
 import FlashMessage
 import Context
@@ -18,9 +16,6 @@ instance KontraMonad m => Flashable FlashMessage m where
 
 instance KontraMonad m => Flashable (FlashType, String) m where
     addFlash = addFlashMsg . uncurry toFlashMsg
-
-instance (MonadIO m, KontraMonad m) => Flashable (IO FlashMessage) m where
-    addFlash fm = liftIO fm >>= addFlashMsg
 
 ------------------------------------------------------------------
 
