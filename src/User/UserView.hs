@@ -285,7 +285,7 @@ modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: Maybe User -> KontraLink -> IO FlashMessage
+modalAccountSetup :: MonadIO m => Maybe User -> KontraLink -> m FlashMessage
 modalAccountSetup muser signuplink = do
     msupervisor <- case msupervisorid of
         Just sid -> query $ GetUserByUserID $ UserID $ unSupervisorID sid
@@ -324,12 +324,12 @@ modalAccountRemoved doctitle = do
     toModal <$> (renderTemplateM "modalAccountRemoved" $ do
         field "documenttitle"  $ BS.toString doctitle)
 
-flashMessageThanksForTheQuestion :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageThanksForTheQuestion templates =
-    toFlashMsg OperationDone <$> renderTemplate templates "flashMessageThanksForTheQuestion" ()
+flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
+flashMessageThanksForTheQuestion =
+    toFlashMsg OperationDone <$> renderTemplateM "flashMessageThanksForTheQuestion" ()
 
-flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
-flashMessageLoginRedirectReason templates reason =
+flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
+flashMessageLoginRedirectReason reason =
   case reason of
        LoginTry             -> return Nothing
        NotLogged            -> render "notlogged"
@@ -337,110 +337,110 @@ flashMessageLoginRedirectReason templates reason =
        InvalidLoginInfo _   -> render "invloginfo"
   where
     render msg = Just . toFlashMsg OperationFailed <$>
-      (renderTemplate templates "flashMessageLoginPageRedirectReason" $ field msg True)
+      (renderTemplateM "flashMessageLoginPageRedirectReason" $ field msg True)
 
 
-flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserDetailsSaved templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserDetailsSaved" ()
+flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
+flashMessageUserDetailsSaved =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserDetailsSaved" ()
 
 
-flashMessageNoAccountType :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoAccountType templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoAccountType" ()
+flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
+flashMessageNoAccountType =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoAccountType" ()
 
-flashMessageInvalidAccountType :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageInvalidAccountType templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidAccountType" ()
+flashMessageInvalidAccountType :: TemplatesMonad m => m FlashMessage
+flashMessageInvalidAccountType =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageInvalidAccountType" ()
 
-flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageMustAcceptTOS templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageMustAcceptTOS" ()
-
-
-flashMessageBadOldPassword :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageBadOldPassword templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageBadOldPassword" ()
+flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
+flashMessageMustAcceptTOS =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageMustAcceptTOS" ()
 
 
-flashMessagePasswordsDontMatch :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePasswordsDontMatch templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates"flashMessagePasswordsDontMatch" ()
+flashMessageBadOldPassword :: TemplatesMonad m => m FlashMessage
+flashMessageBadOldPassword =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageBadOldPassword" ()
 
 
-flashMessageUserPasswordChanged :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserPasswordChanged templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserPasswordChanged" ()
+flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
+flashMessagePasswordsDontMatch =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordsDontMatch" ()
 
-flashMessageUserHasBecomeSubaccount :: KontrakcjaTemplates -> User -> IO FlashMessage
-flashMessageUserHasBecomeSubaccount templates supervisor =
-  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageUserHasBecomeSubaccount" $ do
+
+flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
+flashMessageUserPasswordChanged =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserPasswordChanged" ()
+
+flashMessageUserHasBecomeSubaccount :: TemplatesMonad m => User -> m FlashMessage
+flashMessageUserHasBecomeSubaccount supervisor =
+  toFlashMsg OperationDone <$> (renderTemplateM "flashMessageUserHasBecomeSubaccount" $ do
     field "supervisor" $ userFields supervisor)
 
-flashMessageUserHasLiveDocs :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserHasLiveDocs templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserHasLiveDocs" ()
+flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
+flashMessageUserHasLiveDocs =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserHasLiveDocs" ()
 
-flashMessageAccountsDeleted :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageAccountsDeleted templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountsDeleted" ()
+flashMessageAccountsDeleted :: TemplatesMonad m => m FlashMessage
+flashMessageAccountsDeleted =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountsDeleted" ()
 
-flashMessagePasswordChangeLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePasswordChangeLinkNotValid templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessagePasswordChangeLinkNotValid" ()
-
-
-flashMessageUserWithSameEmailExists :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserWithSameEmailExists templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserWithSameEmailExists" ()
+flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
+flashMessagePasswordChangeLinkNotValid =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordChangeLinkNotValid" ()
 
 
-flashMessageViralInviteSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageViralInviteSent templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageViralInviteSent" ()
-
-flashMessageOtherUserSentInvitation :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageOtherUserSentInvitation templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageOtherUserSentInvitation" ()
-
-flashMessageNoRemainedInvitationEmails :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoRemainedInvitationEmails templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoRemainedInvitationEmails" ()
-
-flashMessageActivationLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageActivationLinkNotValid templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageActivationLinkNotValid" ()
+flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage
+flashMessageUserWithSameEmailExists =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserWithSameEmailExists" ()
 
 
-flashMessageUserActivated :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserActivated templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageUserActivated" ()
+flashMessageViralInviteSent :: TemplatesMonad m => m FlashMessage
+flashMessageViralInviteSent =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageViralInviteSent" ()
+
+flashMessageOtherUserSentInvitation :: TemplatesMonad m => m FlashMessage
+flashMessageOtherUserSentInvitation =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageOtherUserSentInvitation" ()
+
+flashMessageNoRemainedInvitationEmails :: TemplatesMonad m => m FlashMessage
+flashMessageNoRemainedInvitationEmails =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoRemainedInvitationEmails" ()
+
+flashMessageActivationLinkNotValid :: TemplatesMonad m => m FlashMessage
+flashMessageActivationLinkNotValid =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageActivationLinkNotValid" ()
 
 
-flashMessageUserAlreadyActivated :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserAlreadyActivated templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserAlreadyActivated" ()
-
-flashMessageChangePasswordEmailSend :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageChangePasswordEmailSend templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageChangePasswordEmailSend" ()
-
-flashMessageNoRemainedPasswordReminderEmails :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoRemainedPasswordReminderEmails templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoRemainedPasswordReminderEmails" ()
-
-flashMessageNewActivationLinkSend :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNewActivationLinkSend templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageNewActivationLinkSend" ()
+flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
+flashMessageUserActivated =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageUserActivated" ()
 
 
-flashMessageUserSignupDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserSignupDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserSignupDone" ()
+flashMessageUserAlreadyActivated :: TemplatesMonad m => m FlashMessage
+flashMessageUserAlreadyActivated =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserAlreadyActivated" ()
 
-flashMessageUserInvitedAsSubaccount :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserInvitedAsSubaccount templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserInvitedAsSubaccount" ()
+flashMessageChangePasswordEmailSend :: TemplatesMonad m => m FlashMessage
+flashMessageChangePasswordEmailSend =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageChangePasswordEmailSend" ()
+
+flashMessageNoRemainedPasswordReminderEmails :: TemplatesMonad m => m FlashMessage
+flashMessageNoRemainedPasswordReminderEmails =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoRemainedPasswordReminderEmails" ()
+
+flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
+flashMessageNewActivationLinkSend =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageNewActivationLinkSend" ()
+
+
+flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
+flashMessageUserSignupDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
+
+flashMessageUserInvitedAsSubaccount :: TemplatesMonad m => m FlashMessage
+flashMessageUserInvitedAsSubaccount =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserInvitedAsSubaccount" ()
 
 modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do

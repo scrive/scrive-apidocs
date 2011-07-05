@@ -570,7 +570,7 @@ forgotPasswordPagePost = do
           case minv of
             Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
               case prRemainedEmails of
-                0 -> addFlash $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx
+                0 -> addFlashM flashMessageNoRemainedPasswordReminderEmails
                 n -> do
                   -- I had to make it PasswordReminder because it was complaining about not giving cases
                   -- for the constructors of ActionType
@@ -581,7 +581,7 @@ forgotPasswordPagePost = do
             _ -> do -- Nothing or other ActionTypes (which should not happen)
               link <- newPasswordReminderLink user
               sendResetPasswordMail ctx link user
-          addFlash $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx
+          addFlashM flashMessageChangePasswordEmailSend
           return LinkMain
 
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
@@ -634,19 +634,19 @@ signup vip _freetill =  do
             al <- newAccountCreatedLink user
             mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
-            addFlash $ flashMessageNewActivationLinkSend $ ctxtemplates
+            addFlashM flashMessageNewActivationLinkSend
             return LoopBack
           else do
-            addFlash $ flashMessageUserWithSameEmailExists ctxtemplates
+            addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
         Nothing -> do
           maccount <- liftIO $ UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
           case maccount of
             Just _account ->  do
-              addFlash $ flashMessageUserSignupDone ctxtemplates
+              addFlashM flashMessageUserSignupDone
               return LoopBack
             Nothing -> do
-              addFlash $ flashMessageUserWithSameEmailExists ctxtemplates
+              addFlashM flashMessageUserWithSameEmailExists
               return LoopBack
 
 {- |

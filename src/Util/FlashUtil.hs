@@ -22,9 +22,6 @@ instance KontraMonad m => Flashable (FlashType, String) m where
 instance (MonadIO m, KontraMonad m) => Flashable (IO FlashMessage) m where
     addFlash fm = liftIO fm >>= addFlashMsg
 
-instance (MonadIO m, KontraMonad m) => Flashable (IO (Maybe FlashMessage)) m where
-    addFlash fm = liftIO fm >>= maybe (return ()) addFlashMsg
-
 ------------------------------------------------------------------
 
 class FlashableMonad a where
@@ -32,6 +29,9 @@ class FlashableMonad a where
 
 instance FlashableMonad FlashMessage where
     addFlashM fm = fm >>= addFlashMsg
+
+instance FlashableMonad (Maybe FlashMessage) where
+    addFlashM fm = fm >>= maybe (return ()) addFlashMsg
 
 ------------------------------------------------------------------
 

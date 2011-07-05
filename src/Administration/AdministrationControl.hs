@@ -311,7 +311,7 @@ handleCreateUser = onlySuperUser $ do
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
     muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
     when (isNothing muser) $
-        addFlash $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx
+        addFlashM flashMessageUserWithSameEmailExists
 
     -- FIXME: where to redirect?
     return LinkStats

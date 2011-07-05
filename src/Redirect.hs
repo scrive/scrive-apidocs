@@ -34,8 +34,7 @@ sendRedirect BackToReferer = do
 sendRedirect link@(LinkLogin reason) = do
   curr <- rqUri <$> askRq
   referer <- getField "referer"
-  templates <- ctxtemplates <$> getContext
-  addFlash $ flashMessageLoginRedirectReason templates reason
+  addFlashM $ flashMessageLoginRedirectReason reason
   let link' = show link ++ "&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 

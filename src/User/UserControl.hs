@@ -25,18 +25,18 @@ import MinutesTime
 import Misc
 import Payments.PaymentsState
 import Redirect
-import Templates.Templates (KontrakcjaTemplates)
+import Templates.Templates
 import User.UserView
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 
-checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
+checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
     if p1 == p2
        then Right ()
-       else Left  flashMessagePasswordsDontMatch
+       else Left flashMessagePasswordsDontMatch
 
 handleUserGet :: Kontrakcja m => m Response
 handleUserGet = do
@@ -60,7 +60,7 @@ handleUserPost = do
                  forM_ subs $ \sub -> do
                      update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
                  )
-             addFlash $ flashMessageUserDetailsSaved $ ctxtemplates ctx
+             addFlashM flashMessageUserDetailsSaved
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
 
@@ -189,13 +189,13 @@ handlePostUserSecurity = do
           case (verifyPassword (userpassword user) oldpassword,
                   checkPasswordsMatch password password2) of
             (False,_) ->
-              addFlash $ flashMessageBadOldPassword $ ctxtemplates ctx
+              addFlashM flashMessageBadOldPassword
             (_, Left f) ->
-              addFlash $ f $ ctxtemplates ctx
+              addFlashM f
             _ ->  do
               passwordhash <- liftIO $ createPassword password
               _ <- update $ SetUserPassword (userid user) passwordhash
-              addFlash $ flashMessageUserDetailsSaved $ ctxtemplates ctx
+              addFlashM flashMessageUserDetailsSaved
         _ -> return ()
       mlang <- readField "lang"
       case (mlang) of
@@ -326,16 +326,15 @@ handleSelfDelete user = do
 -}
 handleUserDelete :: Kontrakcja m => User -> [UserID] -> m ()
 handleUserDelete deleter deleteeids = do
-  Context{ctxtemplates} <- getContext
   msubaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
   case lefts msubaccounts of
     (NoDeletionRights:_) -> mzero
     (UserHasLiveDocs:_) -> do
-      addFlash $ flashMessageUserHasLiveDocs ctxtemplates
+      addFlashM flashMessageUserHasLiveDocs
       return ()
     [] -> do
       mapM_ performUserDeletion (rights msubaccounts)
-      addFlash $ flashMessageAccountsDeleted ctxtemplates
+      addFlashM flashMessageAccountsDeleted
       return ()
 
 type UserDeletionDetails = (User, [Document])
@@ -384,7 +383,7 @@ handleTakeOverSubaccount email = do
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
-  addFlash $ flashMessageUserInvitedAsSubaccount $ ctxtemplates ctx
+  addFlashM flashMessageUserInvitedAsSubaccount
 
 
 handleCreateSubaccount :: Kontrakcja m => User -> m ()
@@ -416,7 +415,7 @@ handleViralInvite = withUserPost $ do
         if isJust muser
            -- we leak user information here! SECURITY!!!!
            -- you can find out if a given email is already a user
-          then addFlash $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx
+          then addFlashM flashMessageUserWithSameEmailExists
           else do
             now <- liftIO getMinutesTime
             minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
@@ -428,7 +427,7 @@ handleViralInvite = withUserPost $ do
                                                                      , visToken } } -> do
                 if visInviterID == userid user
                   then case visRemainedEmails of
-                    0 -> addFlash $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx
+                    0 -> addFlashM flashMessageNoRemainedInvitationEmails
                     n -> do
                       _ <- update $ UpdateActionType actionID $ ViralInvitationSent { visEmail = visEmail
                                                                                     , visTime = visTime
@@ -436,7 +435,7 @@ handleViralInvite = withUserPost $ do
                                                                                     , visRemainedEmails = n -1
                                                                                     , visToken = visToken }
                       sendInvitation ctx (LinkViralInvitationSent actionID $ visToken) invitedemail
-                  else addFlash$ flashMessageOtherUserSentInvitation $ ctxtemplates ctx
+                  else addFlashM flashMessageOtherUserSentInvitation
               _ -> do
                 link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
                 sendInvitation ctx link invitedemail
@@ -444,7 +443,7 @@ handleViralInvite = withUserPost $ do
   return LoopBack
     where
       sendInvitation ctx link invitedemail = do
-        addFlash $ flashMessageViralInviteSent $ ctxtemplates ctx
+        addFlashM flashMessageViralInviteSent
         mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
         scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
@@ -557,15 +556,15 @@ handleAcceptTOSGet = withUserGet $ do
 
 handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
-  ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
+  Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
       _ <- update $ AcceptTermsOfService userid ctxtime
-      addFlash $ flashMessageUserDetailsSaved $ ctxtemplates ctx
+      addFlashM flashMessageUserDetailsSaved
       return LinkMain
     Just False -> do
-      addFlash $ flashMessageMustAcceptTOS $ ctxtemplates ctx
+      addFlashM flashMessageMustAcceptTOS
       return LinkAcceptTOS
     Nothing -> return LinkAcceptTOS
 
@@ -588,7 +587,7 @@ handleQuestion = do
                  , title = BS.fromString $ "Question"
                  , content = BS.fromString $ content
              }
-             addFlash $ flashMessageThanksForTheQuestion $ ctxtemplates ctx
+             addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
 handleGetBecomeSubaccountOf :: Kontrakcja m => UserID -> m (Either KontraLink Response)
@@ -611,7 +610,7 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
               addFlash (OperationFailed, msg)
             Right _ -> do
               Just supervisor <- query $ GetUserByUserID supervisorid
-              addFlash $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor
+              addFlashM $ flashMessageUserHasBecomeSubaccount supervisor
               mail <- mailSubaccountAccepted ctx user supervisor
               scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress supervisor] }
           return LinkAccount
@@ -645,8 +644,7 @@ handleAccountSetupGet aid hash = do
                              if isNothing $ userhasacceptedtermsofservice user
                                 then activationPage $ Just user
                                 else do
-                                    templates <- ctxtemplates <$> getContext
-                                    addFlash $ flashMessageUserAlreadyActivated templates
+                                    addFlashM flashMessageUserAlreadyActivated
                                     sendRedirect LinkMain)
                          else mzero
                   _  -> mzero
@@ -665,7 +663,7 @@ handleAccountSetupGet aid hash = do
     where
         activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
-            addFlash $ modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+            addFlashM $ modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
             sendRedirect LinkMain
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
@@ -679,8 +677,7 @@ handleAccountSetupFromSign aid hash = do
            Just PrivateAccount -> handleActivate' BySigning user PrivateAccount aid id
            Just CompanyAccount -> handleActivate' BySigning user CompanyAccount aid id
            _              -> do
-               templates <- ctxtemplates <$> getContext
-               addFlash $ flashMessageNoAccountType templates
+               addFlashM flashMessageNoAccountType
                return Nothing
     Nothing -> return Nothing
   where
@@ -727,8 +724,7 @@ handleAccountSetupPost aid hash = do
                              if isNothing $ userhasacceptedtermsofservice user
                                 then handleActivate AccountRequest user
                                 else do
-                                    templates <- ctxtemplates <$> getContext
-                                    addFlash $ flashMessageUserAlreadyActivated templates
+                                    addFlashM flashMessageUserAlreadyActivated
                                     return LinkMain)
                          else mzero
                   _ -> mzero
@@ -741,14 +737,14 @@ handleAccountSetupPost aid hash = do
                             al <- newAccountCreatedLink user
                             mail <- liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
                             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
-                            addFlash $ flashMessageNewActivationLinkSend $ ctxtemplates ctx
+                            addFlashM flashMessageNewActivationLinkSend
                             return LinkMain
                         else mzero
                      )
                  )
     where
         returnToAccountSetup user = do
-            addFlash $ modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString $ getEmail user
+            addFlashM $ modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString $ getEmail user
             return LinkMain
 
         handleActivate signupmethod user = do
@@ -792,8 +788,7 @@ handleAccountSetupPost aid hash = do
                                 finalizeActivation signupmethod user CompanyAccount infoupdatef
                           _ -> returnToAccountSetup user
                  _ -> do
-                     templates <- ctxtemplates <$> getContext
-                     addFlash $ flashMessageNoAccountType templates
+                     addFlashM flashMessageNoAccountType
                      returnToAccountSetup user
             where
                 -- we protect from choosing account type that doesn't match
@@ -805,8 +800,7 @@ handleAccountSetupPost aid hash = do
                              if (accounttype $ usersettings sv) == acctype
                                 then action
                                 else do
-                                    templates <- ctxtemplates <$> getContext
-                                    addFlash $ flashMessageNoAccountType templates
+                                    addFlashM flashMessageNoAccountType
                                     returnToAccountSetup user
                          Nothing -> action
 
@@ -814,8 +808,7 @@ handleAccountSetupPost aid hash = do
             muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
             case muser of
                  Just _ -> do
-                     templates <- ctxtemplates <$> getContext
-                     addFlash $ flashMessageUserActivated templates
+                     addFlashM flashMessageUserActivated
                      return LinkMain
                  Nothing -> do
                      -- handleActivate' might have updated user info, so we
@@ -872,10 +865,10 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
               logUserToContext $ Just user
               return $ Just user
              else do
-               addFlash $ flashMessageMustAcceptTOS $ ctxtemplates ctx
+               addFlashM flashMessageMustAcceptTOS
                return Nothing
         Left flash -> do
-          addFlash $ flash $ ctxtemplates ctx
+          addFlashM flash
           return Nothing
     _ -> return Nothing
 
@@ -894,8 +887,7 @@ handlePasswordReminderGet aid hash = do
              addFlashM $ modalNewPasswordView aid hash
              sendRedirect LinkMain
          Nothing -> do
-             templates <- ctxtemplates <$> getContext
-             addFlash $ flashMessagePasswordChangeLinkNotValid templates
+             addFlashM flashMessagePasswordChangeLinkNotValid
              sendRedirect LinkMain
 
 handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
@@ -904,12 +896,10 @@ handlePasswordReminderPost aid hash = do
     case muser of
          Just user -> handleChangePassword user
          Nothing   -> do
-             templates <- ctxtemplates <$> getContext
-             addFlash $ flashMessagePasswordChangeLinkNotValid templates
+             addFlashM flashMessagePasswordChangeLinkNotValid
              return LinkMain
     where
         handleChangePassword user = do
-            templates <- ctxtemplates <$> getContext
             mpassword <- getRequiredField asValidPassword "password"
             mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
@@ -919,11 +909,11 @@ handlePasswordReminderPost aid hash = do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
                               _ <- update $ SetUserPassword (userid user) passwordhash
-                              addFlash $ flashMessageUserPasswordChanged templates
+                              addFlashM flashMessageUserPasswordChanged
                               logUserToContext $ Just user
                               return LinkMain
                           Left flash -> do
-                              addFlash $ flash templates
+                              addFlashM flash
                               addFlashM $ modalNewPasswordView aid hash
                               return LinkMain
                  _ -> do
