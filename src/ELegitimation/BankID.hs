@@ -44,7 +44,7 @@ import Util.SignatoryLinkUtils
    URL: /s/{provider}/{docid}/{signid}/{magic}
    Method: GET
  -}
-handleSignBankID :: String -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignBankID :: Kontrakcja m => String -> DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleSignBankID provider docid signid magic = do
     Context { ctxtime, ctxtemplates } <- getContext
     let seconds = toSeconds ctxtime 
@@ -115,7 +115,7 @@ handleSignBankID provider docid signid magic = do
      fieldname -- zero or more names of fields filled out by author
      fieldvalues -- zero or more (same as # of fieldnames) of values filled out by author
  -}
-handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSignPostBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
@@ -242,7 +242,7 @@ handleSignPostBankID docid signid magic = do
     the document absolutely must exist. If the docid is not found, 404
     the tbs text must exist
 -}
-handleIssueBankID :: String -> DocumentID -> Kontra (Either KontraLink Response)
+handleIssueBankID :: Kontrakcja m => String -> DocumentID -> m (Either KontraLink Response)
 handleIssueBankID provider docid = withUserGet $ do
     Context { ctxtime
             , ctxmaybeuser = Just author
@@ -310,7 +310,7 @@ handleIssueBankID provider docid = withUserGet $ do
         the transaction must use the same docid
 
  -}
-handleIssuePostBankID :: DocumentID -> Kontra KontraLink
+handleIssuePostBankID :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssuePostBankID docid = withUserPost $ do
     ctx@Context { ctxmaybeuser = Just author
                 , ctxelegtransactions
@@ -431,7 +431,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                         _ -> mzero
                                 Left link -> return link
 
-handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
+handleSignCanceledDataMismatch :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
@@ -658,7 +658,7 @@ instance XmlContent (VerifySignatureResponse) where
 certfile :: String
 certfile = "certs/steria3.pem"
 
-generateChallenge :: Int -> Kontra (Either ImplStatus (String, String))
+generateChallenge :: Kontrakcja m => Int -> m (Either ImplStatus (String, String))
 generateChallenge pid = do
     eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest pid serviceid
     case eresponse of
@@ -670,7 +670,7 @@ generateChallenge pid = do
             then return $ Right (challenge, transactionid)
             else return $ Left (ImplStatus a b status msg)
 
-encodeTBS :: Int -> String -> String -> Kontra (Either ImplStatus String)
+encodeTBS :: Kontrakcja m => Int -> String -> String -> m (Either ImplStatus String)
 encodeTBS provider tbs transactionID = do
     eresponse <- liftIO $ makeSoapCallCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider serviceid tbs transactionID
     case eresponse of
@@ -682,12 +682,13 @@ encodeTBS provider tbs transactionID = do
             then return $ Right txt
             else return $ Left (ImplStatus a b status msg)
 
-verifySignature :: Int
-                    -> String
-                    -> String
-                    -> Maybe String
-                    -> String
-                    -> Kontra (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
+verifySignature :: Kontrakcja m
+                => Int
+                -> String
+                -> String
+                -> Maybe String
+                -> String
+                -> m (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
 verifySignature provider tbs signature mnonce transactionID = do
     eresponse <- liftIO $
         makeSoapCallCA endpoint certfile
@@ -729,7 +730,7 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
         then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
         else Right (matches !! 0, matches !! 1, matches !! 2)
 
-findTransactionByIDOrFail :: [ELegTransaction] -> String -> Kontra ELegTransaction
+findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m ELegTransaction
 findTransactionByIDOrFail transactions transactionsid =
     returnJustOrMZero $ find ((== transactionsid) . transactiontransactionid) transactions
 
@@ -760,14 +761,14 @@ fieldvaluebyid fid ((k, v):xs)
     | k == fid  = v
     | otherwise = fieldvaluebyid fid xs
 
-providerStringToNumber :: String -> Kontra Int
+providerStringToNumber :: Kontrakcja m => String -> m Int
 providerStringToNumber provider
     | provider == "bankid" = return 6
     | provider == "nordea" = return 4
     | provider == "telia"  = return 5
     | otherwise            = mzero
 
-providerStringToType :: String -> Kontra SignatureProvider
+providerStringToType :: Kontrakcja m => String -> m SignatureProvider
 providerStringToType provider
     | provider == "bankid" = return BankIDProvider
     | provider == "nordea" = return NordeaProvider

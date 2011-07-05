@@ -32,7 +32,7 @@ import Happstack.Util.Common
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 
-payexTest::Maybe String -> Kontra Response
+payexTest :: Kontrakcja m => Maybe String -> m Response
 payexTest Nothing = do
              ctx <- getContext
              payments <- case (ctxmaybeuser ctx) of
@@ -78,7 +78,7 @@ payexTest (Just pid) =
                      Nothing -> sendRedirect $ LinkPayExView Nothing
 
 {-| Ajax info about how much we will chage a user for this document |-}
-paymentInfo::DocumentID -> Kontra Response
+paymentInfo :: Kontrakcja m => DocumentID -> m Response
 paymentInfo documentid = do
                   ctx <- getContext
                   signatoriesCount <- fmap (fromMaybe 0) $ readField "signatoriesCount"
@@ -95,15 +95,15 @@ paymentInfo documentid = do
                     _-> simpleResponse ""
 
 
-getCostOfSigning::User -> Document -> Integer -> [IdentificationType] -> Kontra Money
+getCostOfSigning :: Kontrakcja m => User -> Document -> Integer -> [IdentificationType] -> m Money
 getCostOfSigning _u _d sc _its = return $ Money sc
 
-makePayExSoapCall::(PayExRequest a,XmlContent (PC a),XmlContent (PX b)) => PC a ->  IO (PX b)
+makePayExSoapCall :: (PayExRequest a,XmlContent (PC a),XmlContent (PX b)) => PC a ->  IO (PX b)
 makePayExSoapCall rq = do
                         res <- makeSoapCallINSECURE (actionURL rq) (soapActionName rq) rq
                         return $ joinPayExError res
 
-sendInitRequest::Payment -> (Maybe String)-> Kontra (PX InitResponse)
+sendInitRequest :: Kontrakcja m => Payment -> Maybe String -> m (PX InitResponse)
 sendInitRequest payment agreement =  do
                  request <- askRq
                  ctx <- getContext
@@ -111,7 +111,7 @@ sendInitRequest payment agreement =  do
                  liftIO $ makePayExSoapCall rq
 
 
-sendCompleteRequest::Payment -> IO (PX CompleteResponse)
+sendCompleteRequest :: Payment -> IO (PX CompleteResponse)
 sendCompleteRequest payment =  do
                  rq <- toPC $ PayExComplete payment
                  makePayExSoapCall rq
@@ -130,19 +130,19 @@ sendCancelRequest payment = do
                            makePayExSoapCall rq
 -}
 
-sendAutopayRequest::String -> Payment -> IO (PX AutopayResponse)
+sendAutopayRequest :: String -> Payment -> IO (PX AutopayResponse)
 sendAutopayRequest agreement payment = do
                            rq <- toPC $ PayExAutopay agreement payment
                            makePayExSoapCall rq
 
-sendCreateAgreementRequest::String->Money->IO (PX AgreementResponse)
+sendCreateAgreementRequest :: String -> Money -> IO (PX AgreementResponse)
 sendCreateAgreementRequest s m =  do
                                   rq <- toPC $ PayExAgreement {
                                           agreementDescription = s,
                                           agreementMax = m }
                                   makePayExSoapCall rq
 
-tryCreateAgreement::User -> IO (Maybe String)
+tryCreateAgreement :: User -> IO (Maybe String)
 tryCreateAgreement user = do
                            response <- sendCreateAgreementRequest "Creating agreement" (Money 10000)
                            case response of
@@ -151,7 +151,7 @@ tryCreateAgreement user = do
                               _ <- update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {paymentAgreementRef= Just $ agreementRef res}
                               return $ Just $ agreementRef res
 
-processAutopay::Payment -> String -> IO Payment
+processAutopay :: Payment -> String -> IO Payment
 processAutopay payment agreement = runWhenState payment Waiting $
                                    do
                                     result <- liftIO $ sendAutopayRequest agreement payment
@@ -159,7 +159,7 @@ processAutopay payment agreement = runWhenState payment Waiting $
                                     liftIO $ update $ UpdatePayment npayment
                                     return $ npayment
 
-initPayment::Payment -> (Maybe String)-> Kontra Payment
+initPayment :: Kontrakcja m => Payment -> Maybe String -> m Payment
 initPayment payment agreement = runWhenState payment Waiting $
                            do
                             result <- sendInitRequest payment agreement
@@ -167,7 +167,7 @@ initPayment payment agreement = runWhenState payment Waiting $
                             liftIO $ update $ UpdatePayment npayment
                             return $ npayment
 
-startPaymentForDocument::Context -> User -> Document -> IO ()
+startPaymentForDocument :: Context -> User -> Document -> IO ()
 startPaymentForDocument ctx user document =
                                           do
                                            payment <- createPaymentForDocument user document
@@ -181,12 +181,12 @@ startPaymentForDocument ctx user document =
                                               Nothing -> sendPaymentMail ctx user payment
                                              else return ()
 
-sendPaymentMail::Context -> User -> Payment -> IO ()
+sendPaymentMail :: Context -> User -> Payment -> IO ()
 sendPaymentMail ctx user payment = do
     mail <- mailNewPayment ctx user payment
     scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
-processPayment::Payment -> User -> Bool -> Kontra Payment
+processPayment :: Kontrakcja m => Payment -> User -> Bool -> m Payment
 processPayment payment user tryToCreateAgreement= runWhenState payment Waiting $
                            do
                             if (tryToCreateAgreement)
@@ -201,7 +201,7 @@ processPayment payment user tryToCreateAgreement= runWhenState payment Waiting $
 
 
 
-checkIfPaymentIsComplete::Payment -> IO Payment
+checkIfPaymentIsComplete :: Payment -> IO Payment
 checkIfPaymentIsComplete payment = runWhenState payment Send $
                                     do
                                     result <- sendCompleteRequest payment
@@ -211,7 +211,7 @@ checkIfPaymentIsComplete payment = runWhenState payment Send $
                                     update $ UpdatePayment npayment {completeAttempts = now:(completeAttempts npayment)}
                                     return $ npayment
 
-createPaymentForDocument:: User -> Document -> IO Payment
+createPaymentForDocument :: User -> Document -> IO Payment
 createPaymentForDocument user doc = do
                                        paymentscheme <- getUserPaymentSchema user
                                        let val =  getDocumentPaymentValue paymentscheme doc
@@ -225,26 +225,26 @@ createPaymentForDocument user doc = do
                                        return $ payment
 
 
-getDocumentPaymentValue::PaymentScheme -> Document -> Money
+getDocumentPaymentValue :: PaymentScheme -> Document -> Money
 getDocumentPaymentValue paymentschema doc  =  let persig = forEmailSignature  $$ (paymentForSignature paymentschema)
                                                   (sigcount :: Money) = fromIntegral $ length $ documentsignatorylinks doc
                                               in  sigcount * persig
 
 
-checkSendPayments::MinutesTime -> IO ()
+checkSendPayments :: MinutesTime -> IO ()
 checkSendPayments now = do
                          payments <- query $ GetPaymentsThatNeedCheck now
                          sequence_ $ map checkIfPaymentIsComplete payments
                          return ()
 
-generateInvoice::User -> Kontra ()
+generateInvoice :: Kontrakcja m => User -> m ()
 generateInvoice user = do
                         payment <- liftIO $ update $ MergeForUser (userid user)
                         result <- sendInitRequest payment Nothing
                         liftIO $ update $ UpdatePayment $ updatePayment result payment
                         return ()
 --Short utils
-runWhenState :: (Monad m) => Payment -> PaymentState -> m Payment -> m Payment
+runWhenState :: Monad m => Payment -> PaymentState -> m Payment -> m Payment
 runWhenState payment state a = if (state == (paymentState payment))
                             then a
                             else return payment

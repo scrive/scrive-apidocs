@@ -21,7 +21,7 @@ import Payments.PaymentsView
 import Payments.PaymentsUtils
 
 {- | View of payment models (not editable) -}
-handlePaymentsModelForViewView::Kontra Response
+handlePaymentsModelForViewView :: Kontrakcja m => m Response
 handlePaymentsModelForViewView = onlySuperUser $
                                  do
                                   ctx<- getContext
@@ -30,7 +30,7 @@ handlePaymentsModelForViewView = onlySuperUser $
                                   renderFromBody TopEmpty kontrakcja content
 
 {- | View of payment models (editable) -}
-handlePaymentsModelForEditView ::Kontra Response
+handlePaymentsModelForEditView :: Kontrakcja m => m Response
 handlePaymentsModelForEditView =  onlySuperUser $
                                   do
                                    ctx<- getContext
@@ -41,7 +41,7 @@ handlePaymentsModelForEditView =  onlySuperUser $
      Supports full and partial upgrade.
      Fields names like in PaymentModelView (see PaymentsView) with PaymentAccountType suffix.
  -}
-handleAccountModelsChange::Kontra KontraLink
+handleAccountModelsChange :: Kontrakcja m => m KontraLink
 handleAccountModelsChange= do
                             ctx<- getContext
                             if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
@@ -51,14 +51,14 @@ handleAccountModelsChange= do
                              else do
                                   return $ LinkPaymentsAdmin
 
-getAndApplyAccountModelChange :: PaymentAccountType -> Kontra ()
+getAndApplyAccountModelChange :: Kontrakcja m => PaymentAccountType -> m ()
 getAndApplyAccountModelChange accountType = do
                                     f <- getAccountModelChange  accountType
                                     model <- query $ GetPaymentModel accountType
                                     update $ UpdateAccountModel accountType (f model)
 
 -- | For selected account type we read request params and retur a function for updating a structure
-getAccountModelChange::PaymentAccountType->Kontra (PaymentAccountModel -> PaymentAccountModel)
+getAccountModelChange :: Kontrakcja m => PaymentAccountType -> m (PaymentAccountModel -> PaymentAccountModel)
 getAccountModelChange accountType =
                            do
                             mforaccount <- readMoneyField $ withAccountType "foraccount"
@@ -119,7 +119,7 @@ getAccountModelChange accountType =
 
 
 {- | We read paymentchange from Kontra Params. It takes field suffix so we can use it for both, custom and temporary changes -}
-getPaymentChangeChange::String -> Kontra (PaymentChange -> PaymentChange)
+getPaymentChangeChange :: Kontrakcja m => String -> m (PaymentChange -> PaymentChange)
 getPaymentChangeChange fieldSuffix =
                            do
                             mforaccount <- readMoneyField $ withSuffix "foraccount"
@@ -159,5 +159,5 @@ getPaymentChangeChange fieldSuffix =
                              withSuffix s = s ++  fieldSuffix
 
 {-| Utils for reading money fields -}
-readMoneyField::String -> Kontra (Maybe Money)
+readMoneyField :: Kontrakcja m => String -> m (Maybe Money)
 readMoneyField name =  fmap (join . (fmap readMoney)) $ getDataFn' (look name)

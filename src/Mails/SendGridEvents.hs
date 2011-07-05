@@ -43,7 +43,7 @@ data SendgridEvent =
         } deriving Show
 
 -- | Handler for receving delivery info from sendgrid
-handleSendgridEvent :: Kontra KontraLink
+handleSendgridEvent :: Kontrakcja m => m KontraLink
 handleSendgridEvent = do
     mid <- readNum "id"
     -- email can be either 'email' or '<email>', so we want to get rid of brackets
@@ -86,7 +86,7 @@ handleSendgridEvent = do
     routeToHandler ev
     return $ LinkMain
 
-readEventType :: String -> Kontra SendGridEventType
+readEventType :: Kontrakcja m => String -> m SendGridEventType
 readEventType "processed" = return Processed
 readEventType "open" = return Opened
 readEventType "dropped" = do
@@ -106,14 +106,14 @@ readEventType "bounce" = do
     return $ Bounce status reason type_
 readEventType name = return $ Other name
 
-readNum :: (Num a, Read a) => String -> Kontra a
+readNum :: (Num a, Read a, Kontrakcja m) => String -> m a
 readNum name = fromMaybe (-1) <$> readField name
 
-readString :: String -> Kontra String
+readString :: Kontrakcja m => String -> m String
 readString name = fromMaybe "" <$> getField name
 
 -- | Main routing table after getting sendgrid event.
-routeToHandler :: SendgridEvent -> Kontra ()
+routeToHandler :: Kontrakcja m => SendgridEvent -> m ()
 routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, event}) = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     let signemail = fromMaybe "" (BS.toString . signatoryemail . signatorydetails <$> getSignatoryLinkFromDocumentByID doc signlinkid)
@@ -137,7 +137,7 @@ routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, 
 routeToHandler _ = return ()
 
 -- | Actions perform that are performed then
-handleDeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleDeliveredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleDeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     case getSignatoryLinkFromDocumentByID doc signlinkid of
@@ -159,13 +159,13 @@ handleDeliveredInvitation docid signlinkid = do
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
 
-handleOpenedInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleOpenedInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleOpenedInvitation docid signlinkid = do
     now <- liftIO $ getMinutesTime
     _ <- update $ MarkInvitationRead docid signlinkid now
     return ()
 
-handleDeferredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleDeferredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleDeferredInvitation docid signlinkid = do
     mdoc <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
     case mdoc of
@@ -183,7 +183,7 @@ handleDeferredInvitation docid signlinkid = do
                                                                   }
          Left _ -> return ()
 
-handleUndeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleUndeliveredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     ctx <- getContext

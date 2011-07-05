@@ -20,14 +20,14 @@ import Contacts.ContactsView
 import KontraLink
 import Util.FlashUtil
 
-showContacts ::Kontra Response
+showContacts :: Kontrakcja m => m Response
 showContacts =  do
   ctx <- getContext
   content <- liftIO $ contactsView (ctxtemplates ctx)
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for advanced user administration -}
-handleContactsChange :: Kontra KontraLink
+handleContactsChange :: Kontrakcja m => m KontraLink
 handleContactsChange =  do
   addFlash (OperationDone, "POST")
   return LoopBack

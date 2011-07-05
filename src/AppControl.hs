@@ -150,10 +150,10 @@ handleRoutes = msum [
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
-     , dir "s" $ hGet4                        $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken3 $ BankID.handleSignPostBankID
-     , dir "d" $ hGet2                        $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost1        $ BankID.handleIssuePostBankID
+     , dir "s" $ hGet4                        $ toK4 $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPostNoXToken3 $ toK3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2                        $ toK2 $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1        $ toK1 $ BankID.handleIssuePostBankID
 
      , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts emptyListParams
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
@@ -236,51 +236,51 @@ handleRoutes = msum [
      , dir "account" $ dir "mailapi" $ hPost0 $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "bsa" $ hGet1 $ toK1 $ UserControl.handleGetBecomeSubaccountOf
      , dir "account" $ dir "bsa" $ hPost1 $ toK1 $ UserControl.handlePostBecomeSubaccountOf
-     , dir "contacts"  $ hGet0  $ Contacts.showContacts
-     , dir "contacts"  $ hPost0 $ Contacts.handleContactsChange
+     , dir "contacts"  $ hGet0  $ toK0 $ Contacts.showContacts
+     , dir "contacts"  $ hPost0 $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet0  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost0 $ toK0 $ UserControl.handleAcceptTOSPost
 
      -- super user only
-     , dir "stats"      $ hGet0  $ Administration.showStats
-     , dir "createuser" $ hPost0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ hPostNoXToken0 handleSendgridEvent
-     , dir "adminonly" $ hGet0 $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ hGet0 Administration.showAdminUserAdvanced
-     , dir "adminonly" $ dir "useradminforsales" $ hGet0 $ Administration.showAdminUsersForSales
-     , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ Administration.showAdminUsersForPayments
-     , dir "adminonly" $ dir "useradmin" $ hGet1 $ Administration.showAdminUsers . Just
-     , dir "adminonly" $ dir "useradmin" $ hGet0 $ Administration.showAdminUsers Nothing
-     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ Administration.showAdminUserUsageStats
-     , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ hPost1 Administration.handleUserEnableTrustWeaverStorage
-     , dir "adminonly" $ dir "db" $ hGet0 $ Administration.indexDB
+     , dir "stats"      $ hGet0  $ toK0 $ Administration.showStats
+     , dir "createuser" $ hPost0 $ toK0 $ Administration.handleCreateUser
+     , dir "sendgrid" $ dir "events" $ hPostNoXToken0 $ toK0 $ handleSendgridEvent
+     , dir "adminonly" $ hGet0 $ toK0 $ Administration.showAdminMainPage
+     , dir "adminonly" $ dir "advuseradmin" $ hGet0 $ toK0 $ Administration.showAdminUserAdvanced
+     , dir "adminonly" $ dir "useradminforsales" $ hGet0 $ toK0 $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ toK0 $ Administration.showAdminUsersForPayments
+     , dir "adminonly" $ dir "useradmin" $ hGet1 $ toK1 $ Administration.showAdminUsers . Just
+     , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
+     , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
+     , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-     , dir "adminonly" $ dir "quarantine" $ hGet0  $ Administration.handleShowQuarantine
-     , dir "adminonly" $ dir "quarantine" $ hPost0 $ Administration.handleQuarantinePost
+     , dir "adminonly" $ dir "quarantine" $ hGet0  $ toK0 $ Administration.handleShowQuarantine
+     , dir "adminonly" $ dir "quarantine" $ hPost0 $ toK0 $ Administration.handleQuarantinePost
 
-     , dir "adminonly" $ dir "cleanup"           $ hPost0 $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "statistics"        $ hGet0  $ Administration.handleStatistics
-     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet0  $ Administration.getUsersDetailsToCSV
-     , dir "adminonly" $ dir "payments"          $ hGet0  $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hGet0  $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hPost0 $ Payments.handleAccountModelsChange
+     , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
+     , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Administration.handleStatistics
+     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet0  $ toK0 $ Administration.getUsersDetailsToCSV
+     , dir "adminonly" $ dir "payments"          $ hGet0  $ toK0 $ Payments.handlePaymentsModelForViewView
+     , dir "adminonly" $ dir "advpayments"       $ hGet0  $ toK0 $ Payments.handlePaymentsModelForEditView
+     , dir "adminonly" $ dir "advpayments"       $ hPost0 $ toK0 $ Payments.handleAccountModelsChange
 
-     , dir "adminonly" $ dir "services" $ hGet0 $ Administration.showServicesPage
-     , dir "adminonly" $ dir "services" $ param "create" $ hPost0 $ Administration.handleCreateService
-     , dir "adminonly" $ dir "translations" $ hGet0 $ Administration.showAdminTranslations
+     , dir "adminonly" $ dir "services" $ hGet0 $ toK0 $ Administration.showServicesPage
+     , dir "adminonly" $ dir "services" $ param "create" $ hPost0 $ toK0 $ Administration.handleCreateService
+     , dir "adminonly" $ dir "translations" $ hGet0 $ toK0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
 
-     , dir "adminonly" $ dir "migrate0" $ hGet0 $ Administration.handleMigrate0
-     , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ Administration.handleMigrateForDeletion
+     , dir "adminonly" $ dir "migrate0" $ hGet0 $ toK0 $ Administration.handleMigrate0
+     , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ toK0 $ Administration.handleMigrateForDeletion
      , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ toK0 $ DocControl.handleMigrateDocumentAuthorAttachments
-     , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ Administration.migrateDocsNoAuthor
+     , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ toK0 $ Administration.migrateDocsNoAuthor
 
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
-     , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ Administration.handleUnquarantineAll
+     , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ toK0 $ Administration.handleUnquarantineAll
 
-     , dir "adminonly" $ dir "sysdump" $ hGet0 sysdump
+     , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
@@ -290,18 +290,18 @@ handleRoutes = msum [
      , dir "services" $ dir "logo" $ hGet1 $ toK1 $ handleServiceLogo
      , dir "services" $ dir "buttons_body" $ hGet1 $ toK1 $ handleServiceButtonsBody
      , dir "services" $ dir "buttons_rest" $ hGet1 $ toK1 $ handleServiceButtonsRest
-     , dir "dave" $ dir "document" $ hGet1 $ daveDocument
-     , dir "dave" $ dir "user"     $ hGet1 $ daveUser
+     , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
+     , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
 
      -- account stuff
-     , dir "logout"      $ hGet0  $ handleLogout
-     , dir "login"       $ hGet0  $ handleLoginGet
-     , dir "login"       $ hPostNoXToken0 $ handleLoginPost
+     , dir "logout"      $ hGet0  $ toK0 $ handleLogout
+     , dir "login"       $ hGet0  $ toK0 $ handleLoginGet
+     , dir "login"       $ hPostNoXToken0 $ toK0 $ handleLoginPost
      --, dir "signup"      $ hGet0  $ signupPageGet
-     , dir "signup"      $ hPostAllowHttp0 $ signupPagePost
+     , dir "signup"      $ hPostAllowHttp0 $ toK0 $ signupPagePost
      --, dir "vip"         $ hGet0  $ signupVipPageGet
      --, dir "vip"         $ hPostNoXToken $ signupVipPagePost
-     , dir "amnesia"     $ hPostNoXToken0 $ forgotPasswordPagePost
+     , dir "amnesia"     $ hPostNoXToken0 $ toK0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hGet2 $ toK2 $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hPostNoXToken2 $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet2 $ toK2 $ UserControl.handleAccountSetupGet
@@ -313,16 +313,16 @@ handleRoutes = msum [
      , dir "invite"      $ hPostNoXToken0 $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp0 $ toK0 $ UserControl.handleQuestion
      -- e-legitimation stuff
-     , dir "s" $ hGet4  $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPost3 $ BankID.handleSignPostBankID
-     , dir "d" $ hGet2  $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost1 $ BankID.handleIssuePostBankID
+     , dir "s" $ hGet4  $ toK4 $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPost3 $ toK3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2  $ toK2 $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1 $ toK1 $ BankID.handleIssuePostBankID
      , userAPI
      , integrationAPI
      -- static files
      , allowHttp $ serveHTMLFiles
      , allowHttp $ serveDirectory DisableBrowsing [] "public"
-               ]
+     ]
 
 {- |
    Goes to the front page, or to the main document upload page,
@@ -552,7 +552,7 @@ appHandler appConf appGlobals = do
 {- |
    Handles submission of the password reset form
 -}
-forgotPasswordPagePost :: Kontra KontraLink
+forgotPasswordPagePost :: Kontrakcja m => m KontraLink
 forgotPasswordPagePost = do
   ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
@@ -584,7 +584,7 @@ forgotPasswordPagePost = do
           addFlash $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx
           return LinkMain
 
-sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
+sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
   mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
@@ -611,7 +611,7 @@ _signupVipPageGet = do
    then we send them a new activation link because probably the old one expired or was lost.
    If they have then we stop the signup.
 -}
-signupPagePost :: Kontra KontraLink
+signupPagePost :: Kontrakcja m => m KontraLink
 signupPagePost = do
     Context { ctxtime } <- getContext
     signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
@@ -619,7 +619,7 @@ signupPagePost = do
 {-
     A comment next to LoopBack says never to use it. Is this function broken?
 -}
-signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
+signup :: Kontrakcja m => Bool -> Maybe MinutesTime -> m KontraLink
 signup vip _freetill =  do
   ctx@Context{ctxtemplates,ctxhostpart} <- getContext
   memail <- getOptionalField asValidEmail "email"
@@ -662,7 +662,7 @@ _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user 
 {- |
    Handles viewing of the login page
 -}
-handleLoginGet :: Kontra Response
+handleLoginGet :: Kontrakcja m => m Response
 handleLoginGet = do
   ctx <- getContext
   case ctxmaybeuser ctx of
@@ -676,7 +676,7 @@ handleLoginGet = do
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
 -}
-handleLoginPost :: Kontra KontraLink
+handleLoginPost :: Kontrakcja m => m KontraLink
 handleLoginPost = do
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
@@ -702,7 +702,7 @@ handleLoginPost = do
 {- |
    Handles the logout, and sends user back to main page.
 -}
-handleLogout :: Kontra Response
+handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     logUserToContext Nothing
     sendRedirect LinkMain
@@ -710,7 +710,7 @@ handleLogout = do
 {- |
    Serves out the static html files.
 -}
-serveHTMLFiles:: Kontra Response
+serveHTMLFiles :: Kontra Response
 serveHTMLFiles =  do
     rq <- askRq
     let fileName = last (rqPaths rq)
@@ -726,7 +726,7 @@ serveHTMLFiles =  do
 {- |
    Ensures logged in as a super user
 -}
-onlySuperUserGet :: Kontra Response -> Kontra Response
+onlySuperUserGet :: Kontrakcja m => m Response -> m Response
 onlySuperUserGet action = do
     Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
@@ -736,7 +736,7 @@ onlySuperUserGet action = do
 {- |
    Used by super users to inspect a particular document.
 -}
-daveDocument :: DocumentID -> Kontra Response
+daveDocument :: Kontrakcja m => DocumentID -> m Response
 daveDocument documentid = onlySuperUserGet $ do
     document <- queryOrFail $ GetDocumentByDocumentIDAllEvenQuarantinedDocuments documentid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
@@ -744,12 +744,12 @@ daveDocument documentid = onlySuperUserGet $ do
 {- |
    Used by super users to inspect a particular user.
 -}
-daveUser :: UserID -> Kontra Response
+daveUser :: Kontrakcja m => UserID -> m Response
 daveUser userid = onlySuperUserGet $ do
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 
-sysdump :: Kontra Response
+sysdump :: Kontrakcja m => m Response
 sysdump = onlySuperUserGet $ do
     dump <- liftIO getAllActionAsString
     ok $ addHeader "refresh" "5" $ toResponse dump
