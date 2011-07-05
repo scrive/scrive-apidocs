@@ -103,100 +103,88 @@ import qualified Data.Map as Map
 import qualified Text.StringTemplate.Classes as HST
 
 class (Functor a, MonadIO a) => TemplatesMonad a where
-        getTemplates :: a KontrakcjaTemplates
+    getTemplates :: a KontrakcjaTemplates
 
 -- | Filling template with a given name using given attributes.  It
 -- never fail, just returns empty message and writes something in the
 -- logs.  Params - Templates (loaded from local files), Name of
 -- template, something that sets params value.
 class RenderTemplate a where
-  renderTemplate :: KontrakcjaTemplates -> String -> a -> IO String
-  renderTemplateM :: (TemplatesMonad m) => String -> a -> m String
-  renderTemplateM name value = do
+    renderTemplate :: KontrakcjaTemplates -> String -> a -> IO String
+    renderTemplateM :: (TemplatesMonad m) => String -> a -> m String
+    renderTemplateM name value = do
         templates <- getTemplates
         liftIO $ renderTemplate templates name value
-
 
 -- | Basic rendering interface It allows to pass some string
 -- attributes to templates. Usefull when working with simple templates.
 instance RenderTemplate () where
-   renderTemplate ts name () = renderTemplateMain ts name ([] :: [(String,String)]) id
+    renderTemplate ts name () = renderTemplateMain ts name ([] :: [(String,String)]) id
 
 instance RenderTemplate [(String, String)] where
-   renderTemplate ts name attrs = renderTemplateMain ts name attrs id
-
-type Fields = State ([(String,IO (SElem String))]) ()
-
-class Field a where
-  field :: String -> a -> Fields
-
-instance (ToSElem a) => Field (IO a) where
-  field a b = do
-        s <- get
-        put ((a,fmap toSElem b):s)
-
-instance (ToSElem a) => Field a where
-  field a b = do
-        s <- get
-        put ((a,return $ toSElem b):s)
-
-instance Field (Fields) where
-  field a b = do
-    s <- get
-    put ((a, val):s)
-    where
-      val :: Stringable a => IO (SElem a)
-      val = toSElem . Map.fromList <$> (sequence $ map packIO $ execState b [])
-
-instance Field [Fields] where
-  field a fs =  do
-        s <- get
-        let vals f = fmap Map.fromList $ sequence $ map packIO $ execState f []
-        put ((a,fmap toSElem $ mapM vals fs):s)
-
+    renderTemplate ts name attrs = renderTemplateMain ts name attrs id
 
 instance RenderTemplate Fields where
-   renderTemplate ts name fields =
-       do
-           attrs <- sequence $ map packIO $ execState fields []
-           renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
+    renderTemplate ts name fields = do
+        attrs <- sequence $ map packIO $ execState fields []
+        renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
 
+type Fields = State ([(String, IO (SElem String))]) ()
 
-packIO :: (a, IO b) -> IO (a,b)
+class Field a where
+    field :: String -> a -> Fields
+
+instance (ToSElem a) => Field (IO a) where
+    field n v = modify $ \s -> (n, toSElem <$> v) : s
+
+instance (ToSElem a) => Field a where
+    field n v = modify $ \s -> (n, return $ toSElem v) : s
+
+instance Field Fields where
+    field n v = modify $ \s -> (n, val) : s
+      where
+        val :: Stringable a => IO (SElem a)
+        val = toSElem . Map.fromList <$> (sequence $ map packIO $ execState v [])
+
+instance Field [Fields] where
+    field n fs = modify $ \s -> (n, toSElem <$> mapM vals fs) : s
+      where
+        vals f = Map.fromList <$> (sequence $ map packIO $ execState f [])
+
+packIO :: (a, IO b) -> IO (a, b)
 packIO (name,comp)= do
     res <- comp
     return (name,res)
 
 
 --IO type forcer, to deal with universal monads
-fieldIO::(Field (IO a)) => String -> IO a -> Fields
+fieldIO :: Field (IO a) => String -> IO a -> Fields
 fieldIO = field
-
 
 -- | Importan Util. We overide default serialisation to support serialisation of bytestrings .
 -- | We use ByteString with UTF all the time but default is Latin-1 and we get strange chars
 -- | after rendering. !This will not always work with advanced structures.! So always convert to String.
 
 class ToSElem a where
-  toSElem :: (Stringable b) => a -> SElem b
+    toSElem :: (Stringable b) => a -> SElem b
 
 instance (HST.ToSElem a) => ToSElem a where
-  toSElem = HST.toSElem
+    toSElem = HST.toSElem
 
 instance ToSElem BS.ByteString where
-  toSElem = HST.toSElem . BS.toString
+    toSElem = HST.toSElem . BS.toString
 
 instance ToSElem (Maybe BS.ByteString) where
-  toSElem = HST.toSElem . fmap BS.toString
+    toSElem = HST.toSElem . fmap BS.toString
 
 instance ToSElem [BS.ByteString] where
-  toSElem = toSElem . fmap BS.toString
+    toSElem = toSElem . fmap BS.toString
 
 instance ToSElem String where
-  toSElem l = HST.toSElem l
+    toSElem l = HST.toSElem l
 
 instance (HST.ToSElem a) => ToSElem [a] where
-  toSElem l  = LI $ map HST.toSElem l
+    toSElem l  = LI $ map HST.toSElem l
 
 instance (HST.ToSElem a) => ToSElem (Map.Map String a) where
-  toSElem m =  SM $ Map.map HST.toSElem m
+    toSElem m =  SM $ Map.map HST.toSElem m
