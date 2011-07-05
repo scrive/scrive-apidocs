@@ -586,7 +586,7 @@ forgotPasswordPagePost = do
 
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
-  mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
+  mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 {- |
@@ -621,7 +621,7 @@ signupPagePost = do
 -}
 signup :: Kontrakcja m => Bool -> Maybe MinutesTime -> m KontraLink
 signup vip _freetill =  do
-  ctx@Context{ctxtemplates,ctxhostpart} <- getContext
+  ctx@Context{ctxhostpart} <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -632,7 +632,7 @@ signup vip _freetill =  do
           if isNothing $ userhasacceptedtermsofservice user
           then do
             al <- newAccountCreatedLink user
-            mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
+            mail <- newUserMail ctxhostpart email email al vip
             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
             addFlashM flashMessageNewActivationLinkSend
             return LoopBack
@@ -640,7 +640,7 @@ signup vip _freetill =  do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
         Nothing -> do
-          maccount <- liftIO $ UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
+          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone
@@ -653,10 +653,10 @@ signup vip _freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user = do
+_sendNewActivationLinkMail Context{ctxhostpart, ctxesenforcer} user = do
     let email = getEmail user
     al <- newAccountCreatedLink user
-    mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
+    mail <- newUserMail ctxhostpart email email al False
     scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |

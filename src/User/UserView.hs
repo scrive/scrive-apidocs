@@ -79,8 +79,8 @@ import ListUtil
 import FlashMessage
 import Util.HasSomeUserInfo
 
-showUser :: KontrakcjaTemplates -> User -> IO String
-showUser templates user = renderTemplate templates "showUser" $ do
+showUser :: TemplatesMonad m => User -> m String
+showUser user = renderTemplateM "showUser" $ do
     userFields user
     field "linkaccount" $ show LinkAccount
 
@@ -115,8 +115,8 @@ userFields user = do
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
 
-showUserSecurity :: KontrakcjaTemplates -> User -> IO String
-showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
+showUserSecurity :: TemplatesMonad m => User -> m String
+showUserSecurity user = renderTemplateM "showUserSecurity" $ do
     field "linksecurity" $ show LinkSecurity
     field "fstname" $ getFirstName user
     field "sndname" $ getLastName user
@@ -126,9 +126,9 @@ showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ 
         field "se" $ LANG_SE == (lang $ usersettings user)
     menuFields user
 
-showUserMailAPI :: KontrakcjaTemplates -> User -> IO String
-showUserMailAPI templates user@User{usermailapi} =
-    renderTemplate templates "showUserMailAPI" $ do
+showUserMailAPI :: TemplatesMonad m => User -> m String
+showUserMailAPI user@User{usermailapi} =
+    renderTemplateM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI
         field "mailapienabled" $ maybe False (const True) usermailapi
         field "mailapikey" $ show . umapiKey <$> usermailapi
@@ -136,13 +136,12 @@ showUserMailAPI templates user@User{usermailapi} =
         field "mapisenttoday" $ umapiSentToday <$> usermailapi
         menuFields user
 
-pageAcceptTOS :: KontrakcjaTemplates -> IO String
-pageAcceptTOS templates =
-  renderTemplate templates "pageAcceptTOS" ()
+pageAcceptTOS :: TemplatesMonad m => m String
+pageAcceptTOS = renderTemplateM "pageAcceptTOS" ()
 
-viewFriends :: KontrakcjaTemplates -> PagedList User -> User -> IO String
-viewFriends templates friends user =
-  renderTemplate templates "viewFriends" $ do
+viewFriends :: TemplatesMonad m => PagedList User -> User -> m String
+viewFriends friends user =
+  renderTemplateM "viewFriends" $ do
     field "friends" $ markParity $ map userFields $ list friends
     field "currentlink" $ show $ LinkSharing $ params friends
     menuFields user
@@ -152,7 +151,7 @@ menuFields :: User -> Fields
 menuFields user = do
     field "issubaccounts" $ isAbleToHaveSubaccounts user
 
-viewSubaccounts :: (TemplatesMonad m) => User -> PagedList User -> m String
+viewSubaccounts :: TemplatesMonad m => User -> PagedList User -> m String
 viewSubaccounts user subusers =
   renderTemplateM "viewSubaccounts" $ do
     field "subaccounts" $ markParity $ map userFields $ list subusers
@@ -160,116 +159,113 @@ viewSubaccounts user subusers =
     field "user" $ userFields user
     pagedListFields subusers
 
-activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
-activatePageViewNotValidLink templates email =
-  renderTemplate templates "activatePageViewNotValidLink" $ field "email" email
+activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
+activatePageViewNotValidLink email =
+  renderTemplateM "activatePageViewNotValidLink" $ field "email" email
 
-
-resetPasswordMail :: KontrakcjaTemplates -> String -> User -> KontraLink -> IO Mail
-resetPasswordMail templates hostname user setpasslink = do
-  title   <- renderTemplate templates "passwordChangeLinkMailTitle" ()
-  content <- (renderTemplate templates "passwordChangeLinkMailContent" $ do
+resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
+resetPasswordMail hostname user setpasslink = do
+  title   <- renderTemplateM "passwordChangeLinkMailTitle" ()
+  content <- (renderTemplateM "passwordChangeLinkMailContent" $ do
     field "personname"   $ getFullName user
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> IO Mail
-newUserMail templates hostpart emailaddress personname activatelink vip = do
-  title   <- renderTemplate templates "newUserMailTitle" ()
-  content <- (renderTemplate templates "newUserMailContent" $ do
+newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> m Mail
+newUserMail hostpart emailaddress personname activatelink vip = do
+  title   <- renderTemplateM "newUserMailTitle" ()
+  content <- (renderTemplateM "newUserMailContent" $ do
     field "personname"   $ BS.toString personname
     field "email"        $ BS.toString emailaddress
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
     field "vip"            vip
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-inviteSubaccountMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> IO Mail
-inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress personname setpasslink = do
-  title   <- renderTemplate templates "inviteSubaccountMailTitle" ()
-  content <- (renderTemplate templates "inviteSubaccountMailContent" $ do
+inviteSubaccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
+inviteSubaccountMail hostpart supervisorname companyname emailaddress personname setpasslink = do
+  title   <- renderTemplateM "inviteSubaccountMailTitle" ()
+  content <- (renderTemplateM "inviteSubaccountMailContent" $ do
     field "personname"     $ BS.toString personname
     field "email"          $ BS.toString emailaddress
     field "passwordlink"   $ show setpasslink
     field "supervisorname" $ BS.toString supervisorname
     field "companyname"    $ BS.toString companyname
     field "ctxhostpart"    $ hostpart
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-viralInviteMail :: KontrakcjaTemplates -> Context -> BS.ByteString -> KontraLink -> IO Mail
-viralInviteMail templates ctx invitedemail setpasslink = do
+viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
+viralInviteMail ctx invitedemail setpasslink = do
   let invitername = BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
-  title   <- renderTemplate templates "mailViralInviteTitle" $ field "invitername" invitername
-  content <- (renderTemplate templates "mailViralInviteContent" $ do
+  title   <- renderTemplateM "mailViralInviteTitle" $ field "invitername" invitername
+  content <- (renderTemplateM "mailViralInviteContent" $ do
     field "email"        $ BS.toString invitedemail
     field "invitername"  $ invitername
     field "ctxhostpart"  $ ctxhostpart ctx
     field "passwordlink" $ show setpasslink
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-mailNewAccountCreatedByAdmin :: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> IO Mail
-mailNewAccountCreatedByAdmin templates ctx personname email setpasslink custommessage = do
-  title   <- renderTemplate templates "mailNewAccountCreatedByAdminTitle" ()
-  content <- (renderTemplate templates "mailNewAccountCreatedByAdminContent" $ do
+mailNewAccountCreatedByAdmin :: TemplatesMonad m => Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
+mailNewAccountCreatedByAdmin ctx personname email setpasslink custommessage = do
+  title   <- renderTemplateM "mailNewAccountCreatedByAdminTitle" ()
+  content <- (renderTemplateM "mailNewAccountCreatedByAdminContent" $ do
     field "personname"    $ BS.toString personname
     field "email"         $ BS.toString email
     field "passwordlink"  $ show setpasslink
     field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailAccountCreatedBySigningContractReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigningContractReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningContractReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningContractReminderTitle"
                                  "mailAccountBySigningContractReminderContent"
 
-mailAccountCreatedBySigningOfferReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigningOfferReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningOfferReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningOfferReminderTitle"
                                  "mailAccountBySigningOfferReminderContent"
 
-mailAccountCreatedBySigning' :: String -> String -> KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
-mailAccountCreatedBySigning' title_template content_template templates hostpart doctitle personname activationlink = do
-    title <- renderTemplate templates title_template ()
-    content <- (renderTemplate templates content_template $ do
+mailAccountCreatedBySigning' :: TemplatesMonad m => String -> String -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+mailAccountCreatedBySigning' title_template content_template hostpart doctitle personname activationlink = do
+    title <- renderTemplateM title_template ()
+    content <- (renderTemplateM content_template $ do
         field "personname"     $ BS.toString personname
         field "ctxhostpart"    $ hostpart
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-        ) >>= wrapHTML templates
+        ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailInviteUserAsSubaccount :: (TemplatesMonad m) => Context -> User -> User -> m Mail
+mailInviteUserAsSubaccount :: TemplatesMonad m => Context -> User -> User -> m Mail
 mailInviteUserAsSubaccount ctx invited supervisor = do
-    templates <- getTemplates
     title <- renderTemplateM "mailInviteUserAsSubaccountTitle" ()
-    content <- (liftIO $ renderTemplate templates "mailInviteUserAsSubaccountContent" $ do
+    content <- (renderTemplateM "mailInviteUserAsSubaccountContent" $ do
                    field "hostpart" (ctxhostpart ctx)
                    field "supervisor" $ userFields supervisor
                    field "invited" $ userFields invited
-        ) >>= (liftIO . wrapHTML templates)
+        ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailSubaccountAccepted :: (TemplatesMonad m) => Context -> User -> User -> m Mail
+mailSubaccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
 mailSubaccountAccepted ctx invited supervisor = do
-    templates <- getTemplates
     title <- renderTemplateM "mailSubaccountAcceptedTitle" ()
-    content <- (liftIO $ renderTemplate templates "mailSubaccountAcceptedContent" $ do
+    content <- (renderTemplateM "mailSubaccountAcceptedContent" $ do
                    field "hostpart" (ctxhostpart ctx)
                    field "user" $ userFields supervisor
                    field "invited" $ userFields invited
-        ) >>= (liftIO . wrapHTML templates)
+        ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 -------------------------------------------------------------------------------

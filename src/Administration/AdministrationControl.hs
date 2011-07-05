@@ -309,7 +309,7 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
     when (isNothing muser) $
         addFlashM flashMessageUserWithSameEmailExists
 

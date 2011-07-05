@@ -10,7 +10,7 @@
 -- standard data wrappers.
 -----------------------------------------------------------------------------
 module Templates.TemplatesUtils
-    (wrapHTML,option,soption,Option(..),markParity) where
+    (wrapHTML,wrapHTML',option,soption,Option(..),markParity) where
 
 import Data.Data
 import Templates.Templates
@@ -23,6 +23,8 @@ import Templates.Templates
 wrapHTML :: KontrakcjaTemplates -> String -> IO String
 wrapHTML templates body =  renderTemplate templates "wrapHTML" [("body",body)]
 
+wrapHTML' :: TemplatesMonad m => String -> m String
+wrapHTML' body = renderTemplateM "wrapHTML" $ field "body" body
 
 {- |
    Option one of standard wrappers. It holds two strings and bool.

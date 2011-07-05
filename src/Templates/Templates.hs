@@ -105,9 +105,6 @@ import qualified Text.StringTemplate.Classes as HST
 class (Functor a, MonadIO a) => TemplatesMonad a where
         getTemplates :: a KontrakcjaTemplates
 
-instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
-        getTemplates = ask
-
 -- | Filling template with a given name using given attributes.  It
 -- never fail, just returns empty message and writes something in the
 -- logs.  Params - Templates (loaded from local files), Name of
