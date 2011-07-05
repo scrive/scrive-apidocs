@@ -94,67 +94,64 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
 
-modalSignAwaitingAuthorLast :: KontraModal
-modalSignAwaitingAuthorLast = do
-    renderTemplateM "signAwaitingAuthorLast" ()
+modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
+modalSignAwaitingAuthorLast = toModal <$> renderTemplateM "signAwaitingAuthorLast" ()
 
-modalSendConfirmationView :: Document -> KontraModal
+modalSendConfirmationView :: TemplatesMonad m => Document -> m FlashMessage
 modalSendConfirmationView document = do
-  templates <- ask
-  partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
-  lift $ renderTemplateForProcess templates document processmodalsendconfirmation $ do
+  templates <- getTemplates
+  partylist <- liftIO $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
+  toModal <$> (liftIO $ renderTemplateForProcess templates document processmodalsendconfirmation $ do
     field "partyListButAuthor" partylist
     field "signatory" . listToMaybe $ map (BS.toString . getSmartName) $ partyList document
-    documentInfoFields document
+    documentInfoFields document)
 
-modalSendInviteView ::  Document -> KontraModal
+modalSendInviteView :: TemplatesMonad m => Document -> m FlashMessage
 modalSendInviteView document = do
-  templates <- ask
-  partylist <- lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
-  lift $ renderTemplate templates  "modalSendInviteView" $ do
+  templates <- getTemplates
+  partylist <- liftIO $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyListButAuthor document
+  toModal <$> (renderTemplateM "modalSendInviteView" $ do
     field "partyListButAuthor" partylist
-    field "documenttitle" . BS.toString $ documenttitle document
+    field "documenttitle" . BS.toString $ documenttitle document)
 
-modalRejectedView :: Document -> KontraModal
+modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
-  templates <- ask
-  partylist <-lift $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyList document
-  lift $ renderTemplate templates "modalRejectedView" $ do
+  templates <- getTemplates
+  partylist <- liftIO $ renderListTemplate templates . map (BS.toString . getSmartName) $ partyList document
+  toModal <$> (renderTemplateM "modalRejectedView" $ do
     field "partyList" partylist
-    field "documenttitle" . BS.toString $ documenttitle document
+    field "documenttitle" . BS.toString $ documenttitle document)
 
-modalLoginForSaveView :: KontraModal
-modalLoginForSaveView = do
-  templates <- ask
-  lift $ renderTemplate templates "modalLoginForSaveView" ()
+modalLoginForSaveView :: TemplatesMonad m => m FlashMessage
+modalLoginForSaveView = toModal <$> renderTemplateM "modalLoginForSaveView" ()
 
-modalSignedClosedHasAccount :: Document -> SignatoryLink -> Bool -> KontraModal
+modalSignedClosedHasAccount :: TemplatesMonad m => Document -> SignatoryLink -> Bool -> m FlashMessage
 modalSignedClosedHasAccount document signatorylink isloggedin = do
-  templates <- ask
-  lift $ renderTemplateForProcess templates document processmodalsignedviewclosedhasaccount $ do
+  templates <- getTemplates
+  toModal <$> (liftIO $ renderTemplateForProcess templates document processmodalsignedviewclosedhasaccount $ do
     modalSignedFields templates document
-    (loginFields document signatorylink isloggedin)
+    loginFields document signatorylink isloggedin)
 
-modalSignedNotClosedHasAccount :: Document -> SignatoryLink -> Bool -> KontraModal
+modalSignedNotClosedHasAccount :: TemplatesMonad m => Document -> SignatoryLink -> Bool -> m FlashMessage
 modalSignedNotClosedHasAccount document signatorylink isloggedin = do
-  templates <- ask
-  lift $ renderTemplateForProcess templates document processmodalsignedviewnotclosedhasaccount $ do
+  templates <- getTemplates
+  toModal <$> (liftIO $ renderTemplateForProcess templates document processmodalsignedviewnotclosedhasaccount $ do
     modalSignedFields templates document
-    (loginFields document signatorylink isloggedin)
+    loginFields document signatorylink isloggedin)
 
-modalSignedClosedNoAccount :: Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
+modalSignedClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> ActionID -> MagicHash -> m FlashMessage
 modalSignedClosedNoAccount document signatorylink actionid magichash = do
-  templates <- ask
-  lift $ renderTemplateForProcess templates document processmodalsignedviewclosednoaccount $ do
+  templates <- getTemplates
+  toModal <$> (liftIO $ renderTemplateForProcess templates document processmodalsignedviewclosednoaccount $ do
     modalSignedFields templates document
-    (accountFromSignFields document signatorylink actionid magichash)
+    accountFromSignFields document signatorylink actionid magichash)
 
-modalSignedNotClosedNoAccount :: Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
+modalSignedNotClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> ActionID -> MagicHash -> m FlashMessage
 modalSignedNotClosedNoAccount document signatorylink actionid magichash = do
-  templates <- ask
-  lift $ renderTemplateForProcess templates document processmodalsignedviewnotclosednoaccount $ do
+  templates <- getTemplates
+  toModal <$> (liftIO $ renderTemplateForProcess templates document processmodalsignedviewnotclosednoaccount $ do
     modalSignedFields templates document
-    (accountFromSignFields document signatorylink actionid magichash)
+    accountFromSignFields document signatorylink actionid magichash)
 
 modalSignedFields :: KontrakcjaTemplates -> Document -> Fields
 modalSignedFields templates document@Document{ documenttitle } = do

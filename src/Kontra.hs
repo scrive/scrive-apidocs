@@ -6,11 +6,9 @@ module Kontra
     , KontraMonad(..)
     , isSuperUser
     , Kontra(runKontra)
-    , KontraModal
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
-    , addModal
     , logUserToContext
     , onlySuperUser
     , newPasswordReminderLink
@@ -36,12 +34,11 @@ import Control.Concurrent.MVar
 import Doc.DocState
 import Happstack.Server
 import Misc
-import Happstack.State (query,QueryEvent)
+import Happstack.State (query, QueryEvent)
 import User.UserState
 import User.Password hiding (Password, NoPassword)
 import qualified Data.ByteString.UTF8 as BS
-import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
-import Mails.MailsConfig ()
+import Templates.Templates
 import Context
 import KontraLink
 import KontraMonad
@@ -49,7 +46,6 @@ import ActionSchedulerState
 import ELegitimation.ELeg
 import Mails.SendMail
 import API.Service.ServiceState
-import FlashMessage
 import Util.HasSomeUserInfo
 
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
@@ -63,8 +59,6 @@ instance KontraMonad Kontra where
 
 instance TemplatesMonad Kontra where
     getTemplates = ctxtemplates <$> getContext
-
-type KontraModal = ReaderT KontrakcjaTemplates IO String
 
 {- |
    A list of default user emails.  These should start out as the users
@@ -112,15 +106,6 @@ addELegTransaction tr = do
 -}
 clearFlashMsgs:: KontraMonad m => m ()
 clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
-
-{- |
-   Adds a modal from string
--}
-addModal :: (MonadIO m, KontraMonad m) => KontraModal -> m ()
-addModal flash = do
-  templates <- ctxtemplates <$> getContext
-  fm <- liftIO $ runReaderT flash templates
-  modifyContext $ \ctx -> ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
 
 {- |
    Sticks the logged in user onto the context

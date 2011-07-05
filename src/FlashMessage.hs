@@ -3,6 +3,7 @@ module FlashMessage (
     , FlashMessage(..)
     , unFlashMessage
     , toFlashMsg
+    , toModal
     , toFlashTemplate
     , instantiate
     , updateFlashCookie
@@ -67,6 +68,9 @@ data FlashMessage
 
 toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg = FlashMessage
+
+toModal :: String -> FlashMessage
+toModal = FlashMessage Modal
 
 toFlashTemplate :: FlashType -> String -> [(String, String)] -> FlashMessage
 toFlashTemplate = FlashTemplate

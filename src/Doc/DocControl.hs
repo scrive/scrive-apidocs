@@ -344,9 +344,8 @@ handleAcceptAccountFromSign documentid
       Nothing -> mzero
       Just signatorylink -> do
         case muser of
-          Nothing | Closed == documentstatus document -> 
-            addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
-          Nothing -> addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
+          Nothing | Closed == documentstatus document -> addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
+          Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           Just _ -> addFlash $ flashMessageAccountActivatedFromSign ctxtemplates
         return $ LinkSignDoc document signatorylink
 
@@ -422,15 +421,15 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
         (Just (user, actionid, magichash)) -> do
           _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
           if (Closed == documentstatus document)
-            then addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
-            else addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
+            then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
+            else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
     Just user -> do
      _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
      if Closed == documentstatus document
-       then addModal $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
-       else addModal $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
+       then addFlashM $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
+       else addFlashM $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -459,7 +458,7 @@ rejectDocument documentid
     Left _ -> mzero
     Right (document, olddocument) -> do
       postDocumentChangeAction document olddocument (Just signatorylinkid1)
-      addModal $ modalRejectedView document
+      addFlashM $ modalRejectedView document
       return $ LoopBack
 
 {- |
@@ -633,7 +632,7 @@ handleIssueSign document = do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
                 ([], [d]) -> do
-                    addModal $ modalSendConfirmationView d
+                    addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     addFlash $ flashMessageCSVSent (length ds) $ ctxtemplates ctx
@@ -670,7 +669,7 @@ handleIssueSend document = do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
                 ([], [d]) -> do
-                    addModal $ modalSendConfirmationView d
+                    addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     addFlash $ flashMessageCSVSent (length ds) $ ctxtemplates ctx

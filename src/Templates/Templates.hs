@@ -102,7 +102,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Text.StringTemplate.Classes as HST
 
-class (MonadIO a) => TemplatesMonad a where
+class (Functor a, MonadIO a) => TemplatesMonad a where
         getTemplates :: a KontrakcjaTemplates
 
 instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where

@@ -124,11 +124,11 @@ joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 -- where does this go? -EN
-renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
+renderListTemplate :: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list =
   if length list > 1
-  then  renderTemplate templates "morethenonelist" [("list", init list), ("last", [last list])]
-  else  renderTemplate templates "nomorethanonelist" [("list", list)]
+     then renderTemplate templates "morethenonelist" [("list", init list), ("last", [last list])]
+     else renderTemplate templates "nomorethanonelist" [("list", list)]
 
 -- CHECKERS
 

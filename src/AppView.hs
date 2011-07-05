@@ -297,6 +297,5 @@ loginModal on referer email = do
     field "referer" $ referer
     field "email"   $ email
 
-modalError :: KontrakcjaTemplates -> KontraModal
-modalError templates =
-    lift $ renderTemplate templates "modalError" ()
+modalError :: TemplatesMonad m => m FlashMessage
+modalError = toModal <$> renderTemplateM "modalError" ()

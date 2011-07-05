@@ -384,7 +384,7 @@ handleError = do
     ctx <- getContext
     case (ctxservice ctx) of
          Nothing -> do
-            addModal $ V.modalError (ctxtemplates ctx)
+            addFlashM V.modalError
             sendRedirect LinkMain
          Just _ -> embeddedErrorPage
 

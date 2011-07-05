@@ -403,7 +403,7 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
             _ <- update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
-            addModal $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
+            addFlashM $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
             return ()
       _ -> return ()
 
@@ -593,7 +593,7 @@ handleQuestion = do
 
 handleGetBecomeSubaccountOf :: Kontrakcja m => UserID -> m (Either KontraLink Response)
 handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
-  addModal $ modalDoYouWantToBeSubaccount
+  addFlashM modalDoYouWantToBeSubaccount
   ctx@Context{ctxmaybeuser = Just user} <- getContext
   content <- liftIO $ showUser (ctxtemplates ctx) user
   renderFromBody TopAccount kontrakcja content
@@ -717,9 +717,7 @@ handleAccountSetupPost aid hash = do
                              link <- (query $ GetUserByUserID uid)
                                      >>= maybe mzero (handleActivate BySigning)
                              case link of
-                                  LinkMain -> do
-                                      templates <- ctxtemplates <$> getContext
-                                      addModal $ modalWelcomeToSkrivaPa templates
+                                  LinkMain -> addFlashM modalWelcomeToSkrivaPa
                                   _ -> return ()
                              return link
                          else mzero
@@ -893,7 +891,7 @@ handlePasswordReminderGet aid hash = do
     case muser of
          Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
-             addModal $ modalNewPasswordView aid hash
+             addFlashM $ modalNewPasswordView aid hash
              sendRedirect LinkMain
          Nothing -> do
              templates <- ctxtemplates <$> getContext
@@ -926,10 +924,10 @@ handlePasswordReminderPost aid hash = do
                               return LinkMain
                           Left flash -> do
                               addFlash $ flash templates
-                              addModal $ modalNewPasswordView aid hash
+                              addFlashM $ modalNewPasswordView aid hash
                               return LinkMain
                  _ -> do
-                   addModal $ modalNewPasswordView aid hash
+                   addFlashM $ modalNewPasswordView aid hash
                    return LinkMain
 
 handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
@@ -942,8 +940,7 @@ handleAccountRemovalGet aid hash = do
                case sigs of
                     [sig] -> do
                         extendActionEvalTimeToOneDayMinimum aid
-                        templates <- ctxtemplates <$> getContext
-                        addModal $ modalAccountRemoval templates (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
+                        addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
                         sendRedirect $ LinkSignDoc doc sig
                     _ -> mzero
                )
@@ -958,8 +955,7 @@ handleAccountRemovalFromSign aid hash = do
 handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountRemovalPost aid hash = do
   doc <- handleAccountRemoval' aid hash
-  templates <- ctxtemplates <$> getContext
-  addModal $ modalAccountRemoved templates (documenttitle doc)
+  addFlashM $ modalAccountRemoved $ documenttitle doc
   return LinkMain
 
 {- |

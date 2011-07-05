@@ -274,16 +274,16 @@ mailSubaccountAccepted ctx invited supervisor = do
 
 -------------------------------------------------------------------------------
 
-modalInviteUserAsSubaccount :: String -> String -> String -> KontraModal
+modalInviteUserAsSubaccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage
 modalInviteUserAsSubaccount fstname sndname email =
-    renderTemplateM "modalInviteUserAsSubaccount" $ do
+    toModal <$> (renderTemplateM "modalInviteUserAsSubaccount" $ do
       field "email" email
       field "fstname" fstname
-      field "sndname" sndname
+      field "sndname" sndname)
 
-modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
-modalWelcomeToSkrivaPa templates =
-    lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
+modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
+modalWelcomeToSkrivaPa =
+    toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
 modalAccountSetup :: Maybe User -> KontraLink -> IO FlashMessage
 modalAccountSetup muser signuplink = do
@@ -312,17 +312,17 @@ modalAccountSetup muser signuplink = do
             where
                 supervisoraccounttype = show $ accounttype $ usersettings svis
 
-modalAccountRemoval :: KontrakcjaTemplates -> BS.ByteString -> KontraLink -> KontraLink -> KontraModal
-modalAccountRemoval templates doctitle activationlink removallink = do
-    lift $ renderTemplate templates "modalAccountRemoval" $ do
+modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
+modalAccountRemoval doctitle activationlink removallink = do
+    toModal <$> (renderTemplateM "modalAccountRemoval" $ do
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-        field "removallink"    $ show removallink
+        field "removallink"    $ show removallink)
 
-modalAccountRemoved :: KontrakcjaTemplates -> BS.ByteString -> KontraModal
-modalAccountRemoved templates doctitle = do
-    lift $ renderTemplate templates "modalAccountRemoved" $ do
-        field "documenttitle"  $ BS.toString doctitle
+modalAccountRemoved :: TemplatesMonad m => BS.ByteString -> m FlashMessage
+modalAccountRemoved doctitle = do
+    toModal <$> (renderTemplateM "modalAccountRemoved" $ do
+        field "documenttitle"  $ BS.toString doctitle)
 
 flashMessageThanksForTheQuestion :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageThanksForTheQuestion templates =
@@ -442,15 +442,14 @@ flashMessageUserInvitedAsSubaccount :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserInvitedAsSubaccount templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserInvitedAsSubaccount" ()
 
-modalNewPasswordView :: ActionID -> MagicHash -> KontraModal
+modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do
-  templates <- ask
-  lift $ renderTemplate templates "modalNewPasswordView" $ do
-            field "linkchangepassword" $ (show $ LinkPasswordReminder aid hash)
+  toModal <$> (renderTemplateM "modalNewPasswordView" $ do
+            field "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
 
-modalDoYouWantToBeSubaccount :: KontraModal
-modalDoYouWantToBeSubaccount = do
-  renderTemplateM "modalDoYouWantToBeSubaccount" $ ()
+modalDoYouWantToBeSubaccount :: TemplatesMonad m => m FlashMessage
+modalDoYouWantToBeSubaccount =
+  toModal <$> renderTemplateM "modalDoYouWantToBeSubaccount" ()
 
 
 -------------------------------------------------------------------------------

@@ -423,8 +423,8 @@ handleIssuePostBankID docid = withUserPost $ do
                                     case (lefts mndocs, rights mndocs) of
                                         ([], [d]) -> do
                                             case documentstatus d of
-                                                Pending -> addModal $ modalSendConfirmationView d
-                                                Closed  -> addModal modalSignAwaitingAuthorLast
+                                                Pending -> addFlashM $ modalSendConfirmationView d
+                                                Closed  -> addFlashM modalSignAwaitingAuthorLast
                                                 _ -> mzero -- should not be possible but necessary for compiling
                                             return $ LinkIssueDoc (documentid d)
                                         ([], _) -> return $ LinkContracts emptyListParams
