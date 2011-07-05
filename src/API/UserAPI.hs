@@ -61,10 +61,10 @@ apiUser = do
 
 userAPI :: Kontra Response
 userAPI =  dir "userapi" $ msum [
-      apiCall "sendnewdocument" sendNewDocument :: Kontrakcja m => m Response
+      apiCall "sendnewdocument" sendNewDocument   :: Kontrakcja m => m Response
     , apiCall "sendFromTemplate" sendFromTemplate :: Kontrakcja m => m Response
-    , apiCall "document" getDocument :: Kontrakcja m => m Response
-    , apiCall "sendReminder" sendReminder :: Kontrakcja m => m Response
+    , apiCall "document" getDocument              :: Kontrakcja m => m Response
+    , apiCall "sendReminder" sendReminder         :: Kontrakcja m => m Response
     , apiUnknownCall
     ]
 
