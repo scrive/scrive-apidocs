@@ -1,13 +1,13 @@
 module Redirect (sendRedirect,sendSecureLoopBack) where
 
 import Control.Applicative ((<$>))
-import Control.Monad.Trans (liftIO)
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Kontra
 import KontraLink
 import Misc
 import User.UserView
+import Util.FlashUtil
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
@@ -19,7 +19,7 @@ seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.f
 {-|
    Redirects to the url relevant to the KontraLink.
 -}
-sendRedirect :: KontraLink -> Kontra Response
+sendRedirect :: Kontrakcja m => KontraLink -> m Response
 sendRedirect LoopBack = do
   referer <- fmap BS.toString <$> getHeaderM "referer"
   let link = fromMaybe (show LinkMain) referer
@@ -35,14 +35,14 @@ sendRedirect link@(LinkLogin reason) = do
   curr <- rqUri <$> askRq
   referer <- getField "referer"
   templates <- ctxtemplates <$> getContext
-  liftIO (flashMessageLoginRedirectReason templates reason) >>= maybe (return ()) addFlashMsg
+  addFlash $ flashMessageLoginRedirectReason templates reason
   let link' = show link ++ "&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 sendRedirect link = do
  seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
 
-sendSecureLoopBack :: Kontra Response
+sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
     link <- getSecureLink
     seeOther link =<< setRsCode 303 (seeOtherXML link)

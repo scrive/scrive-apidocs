@@ -45,7 +45,7 @@ import qualified AppLogger as Log
    Document must exist (otherwise Left DBNotAvailable).
    Logged in user is author OR logged in user is friend of author (otherwise LeftDBNotAvailable).
  -}
-getDocByDocID :: DocumentID -> Kontra (Either DBError Document)
+getDocByDocID :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocID docid = do
   Context { ctxmaybeuser, ctxcompany } <- getContext
   case (ctxmaybeuser, ctxcompany) of
@@ -85,7 +85,7 @@ getDocByDocID docid = do
    User must be logged in.
    Logged in user is in the documentsignatorylinks or a friend of someone with the documentsignatorylinks
  -}
-getDocsByLoggedInUser :: Kontra (Either DBError [Document])
+getDocsByLoggedInUser :: Kontrakcja m => m (Either DBError [Document])
 getDocsByLoggedInUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
@@ -103,10 +103,11 @@ getDocsByLoggedInUser = do
    SignatoryLinkID must correspond to a siglink in document.
    MagicHash must match.
  -}
-getDocByDocIDSigLinkIDAndMagicHash :: DocumentID
+getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
+                                   => DocumentID
                                    -> SignatoryLinkID
                                    -> MagicHash
-                                   -> Kontra (Either DBError Document)
+                                   -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of

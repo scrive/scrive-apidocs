@@ -10,9 +10,7 @@ module Kontra
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
-    , addFlashMsg
     , addModal
-    , addModalT
     , logUserToContext
     , onlySuperUser
     , newPasswordReminderLink
@@ -35,61 +33,24 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Concurrent.MVar
-import Data.Word
 import Doc.DocState
 import Happstack.Server
-import MinutesTime
 import Misc
 import Happstack.State (query,QueryEvent)
 import User.UserState
 import User.Password hiding (Password, NoPassword)
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map as Map
-import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
-import Mails.MailsConfig()
+import Mails.MailsConfig ()
+import Context
 import KontraLink
+import KontraMonad
 import ActionSchedulerState
-import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import Mails.SendMail
-import qualified MemCache
 import API.Service.ServiceState
 import FlashMessage
-import Company.CompanyState
 import Util.HasSomeUserInfo
-
-data Context = Context
-    { ctxmaybeuser           :: Maybe User
-    , ctxhostpart            :: String
-    , ctxflashmessages       :: [FlashMessage]
-    , ctxtime                :: MinutesTime
-    , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages)
-    , ctxipnumber            :: Word32
-    , ctxdocstore            :: FilePath
-    , ctxs3action            :: AWS.S3Action
-    , ctxgscmd               :: String
-    , ctxproduction          :: Bool
-    , ctxtemplates           :: KontrakcjaTemplates
-    , ctxesenforcer          :: MVar ()
-    , ctxtwconf              :: TW.TrustWeaverConf
-    , ctxelegtransactions    :: [ELegTransaction]
-    , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
-    , ctxxtoken              :: MagicHash
-    , ctxcompany             :: Maybe Company
-    , ctxservice             :: Maybe Service
-    , ctxlocation            :: String
-    , ctxadminaccounts       :: [Email]
-    }
-
--- | This is for grouping things together so we won't need to
--- write all that each time we write function type signature
-class (HasRqData m, KontraMonad m, MonadIO m, MonadPlus m, ServerMonad m) => Kontrakcja m
-
-class (Functor m, Monad m) => KontraMonad m where
-    getContext    :: m Context
-    modifyContext :: (Context -> Context) -> m ()
 
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
@@ -132,7 +93,7 @@ isSuperUser _ _ = False
 {- |
    Will mzero if not logged in as a super user.
 -}
-onlySuperUser :: Kontra a -> Kontra a
+onlySuperUser :: Kontrakcja m => m a -> m a
 onlySuperUser a = do
     ctx <- getContext
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
@@ -142,44 +103,29 @@ onlySuperUser a = do
 {- |
    Adds an Eleg Transaction to the context.
 -}
-addELegTransaction :: ELegTransaction -> Kontra ()
+addELegTransaction :: Kontrakcja m => ELegTransaction -> m ()
 addELegTransaction tr = do
     modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
 {- |
-   Adds a flash message to the context.
--}
-addFlashMsg :: KontraMonad m => FlashMessage -> m ()
-addFlashMsg flash =
-    modifyContext $ \ctx@Context{ ctxflashmessages = flashmessages } ->
-        ctx { ctxflashmessages = flash : flashmessages }
-
-{- |
    Clears all the flash messages from the context.
 -}
-clearFlashMsgs:: Kontra ()
-clearFlashMsgs = modifyContext (\ctx -> ctx { ctxflashmessages = [] })
-
+clearFlashMsgs:: KontraMonad m => m ()
+clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
 
 {- |
    Adds a modal from string
 -}
-addModal :: KontraModal ->  Kontra ()
+addModal :: (MonadIO m, KontraMonad m) => KontraModal -> m ()
 addModal flash = do
   templates <- ctxtemplates <$> getContext
   fm <- liftIO $ runReaderT flash templates
   modifyContext $ \ctx -> ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
 
 {- |
-   Adds modal as flash template, used for semantics sake
--}
-addModalT :: FlashMessage -> Kontra ()
-addModalT = addFlashMsg
-
-{- |
    Sticks the logged in user onto the context
 -}
-logUserToContext :: Maybe User -> Kontra ()
+logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 

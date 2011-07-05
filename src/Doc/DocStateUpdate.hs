@@ -20,19 +20,20 @@ import Doc.DocUtils
 {- |
    Mark document seen securely.
  -}
-markDocumentSeen :: DocumentID
+markDocumentSeen :: Kontrakcja m
+                 => DocumentID
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime.MinutesTime
                  -> GHC.Word.Word32
-                 -> Kontra (Either String Document)
+                 -> m (Either String Document)
 markDocumentSeen docid sigid mh time ipnum =
   update $ MarkDocumentSeen docid sigid mh time ipnum
 
 {- |
    Securely
  -}
-restartDocument :: Document -> Kontra (Either DBError Document)
+restartDocument :: Kontrakcja m => Document -> m (Either DBError Document)
 restartDocument doc= do
   Context { ctxtime
           , ctxipnumber
@@ -51,7 +52,7 @@ restartDocument doc= do
 {- |
    Sign a document with email identification (typical, non-eleg).
  -}
-signDocumentWithEmail :: DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> Kontra (Either DBError (Document, Document))
+signDocumentWithEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> m (Either DBError (Document, Document))
 signDocumentWithEmail did slid mh fields = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -68,7 +69,7 @@ signDocumentWithEmail did slid mh fields = do
 {- |
    Reject a document with security checks.
  -}
-rejectDocumentWithChecks :: DocumentID -> SignatoryLinkID -> MagicHash -> Maybe BS.ByteString -> Kontra (Either DBError (Document, Document))
+rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe BS.ByteString -> m (Either DBError (Document, Document))
 rejectDocumentWithChecks did slid mh customtext = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of

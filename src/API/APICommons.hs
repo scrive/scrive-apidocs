@@ -112,7 +112,7 @@ instance SafeEnum DOCUMENT_TYPE where
     toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
     toSafeEnum _ = Nothing
 
-toDocumentType::DOCUMENT_TYPE -> DocumentType
+toDocumentType :: DOCUMENT_TYPE -> DocumentType
 toDocumentType DOCUMENT_TYPE_CONTRACT = Signable Contract
 toDocumentType DOCUMENT_TYPE_OFFER = Signable Offer
 toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
@@ -121,7 +121,7 @@ toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = Template Offer
 {- Building JSON structure representing object in any API response
    TODO: Something is WRONG FOR ATTACHMENTS HERE
 -}
-api_document_type::Document ->  DOCUMENT_TYPE
+api_document_type :: Document ->  DOCUMENT_TYPE
 api_document_type doc
     | Template Contract == documenttype doc  = DOCUMENT_TYPE_CONTRACT_TEMPLATE
     | Template Offer == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
@@ -130,7 +130,7 @@ api_document_type doc
     | otherwise = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
 
 
-api_document_status::Document -> DOCUMENT_STATUS
+api_document_status :: Document -> DOCUMENT_STATUS
 api_document_status doc =
     case (documentstatus doc) of
          Preparation        -> DOCUMENT_STATUS_PREPARATION
@@ -142,19 +142,19 @@ api_document_status doc =
          Canceled           -> DOCUMENT_STATUS_STOPED
          DocumentError _    -> DOCUMENT_STATUS_ERROR
 
-api_document_authorisation::Document -> DOCUMENT_AUTHORISATION
+api_document_authorisation :: Document -> DOCUMENT_AUTHORISATION
 api_document_authorisation doc
     | (ELegitimationIdentification `elem` documentallowedidtypes doc) = DOCUMENT_AUTHORISATION_BASIC_ELEG
     | otherwise = DOCUMENT_AUTHORISATION_BASIC_EMAIL
 
-api_document_relation::SignatoryLink -> DOCUMENT_RELATION
+api_document_relation :: SignatoryLink -> DOCUMENT_RELATION
 api_document_relation sl
     | (SignatoryAuthor `elem` signatoryroles sl && SignatoryPartner `elem` signatoryroles sl) =  DOCUMENT_RELATION_AUTHOR_SIGNATORY
     | (SignatoryAuthor `elem` signatoryroles sl) = DOCUMENT_RELATION_AUTHOR_SECRETARY
     | (SignatoryPartner `elem` signatoryroles sl) = DOCUMENT_RELATION_SIGNATORY
     | otherwise =  DOCUMENT_RELATION_VIEWER
 
-api_signatory::SignatoryLink -> JSValue
+api_signatory :: SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $  [
       ("email", showJSON  $ BS.toString $ getEmail sl)
     , ("fstname", showJSON  $ BS.toString $ getFirstName sl)
@@ -179,12 +179,12 @@ api_signatory sl = JSObject $ toJSObject $  [
                                             , ("value", JSString $ toJSString $ BS.toString $ fieldvalue fd)]
     )]
 
-api_document_tag::DocumentTag -> JSValue
+api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject $ [
       ("name", showJSON $ BS.toString $ tagname tag)
     , ("value", showJSON $ BS.toString $ tagvalue tag)]
 
-api_document_file::(APIContext c) => File -> APIFunction c JSValue
+api_document_file :: (APIContext m c, Kontrakcja m) => File -> APIFunction m c JSValue
 api_document_file file = do
     ctx <- getContext
     content <- liftIO $ getFileContents ctx file
@@ -194,7 +194,7 @@ api_document_file file = do
         , ("content", showJSON $ base64data)]
 
 
-api_document::(APIContext c) => Bool -> Document -> APIFunction c JSValue
+api_document :: (APIContext m c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
 api_document addFiles doc = do
     files <- if addFiles
               then do
@@ -231,7 +231,7 @@ data SignatoryTMP = SignatoryTMP {
                 fields :: [(BS.ByteString,Maybe BS.ByteString)]
             } deriving Show
 
-getSignatoryTMP::(APIContext c) => APIFunction c (Maybe SignatoryTMP)
+getSignatoryTMP :: (APIContext m c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
     fstname <- apiAskBS "fstname"
     sndname <- apiAskBS "sndname"
@@ -253,7 +253,7 @@ getSignatoryTMP = do
                 , fields = concat $ maybeToList fields
                 }
 
-toSignatoryDetails::SignatoryTMP -> SignatoryDetails
+toSignatoryDetails :: SignatoryTMP -> SignatoryDetails
 toSignatoryDetails sTMP =
     let sig = makeSignatoryNoPlacements
                  (fold $ fstname sTMP)
@@ -271,7 +271,7 @@ toSignatoryDetails sTMP =
                                                         }
             }
 
-mergeSignatoryWithTMP::(APIContext c) => SignatoryTMP  -> SignatoryLink-> APIFunction c SignatoryLink
+mergeSignatoryWithTMP :: (APIContext m c, Kontrakcja m) => SignatoryTMP -> SignatoryLink-> APIFunction m c SignatoryLink
 mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do
   return $ sl { signatorydetails =  sd {
       signatoryfstname = fromMaybe (signatoryfstname sd) (fstname sTMP)
@@ -283,14 +283,14 @@ mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do
     , signatoryotherfields = fillFields (signatoryotherfields sd) (fields sTMP)
   }}
 
-fillFields:: [FieldDefinition] -> [(BS.ByteString,Maybe BS.ByteString)] ->  [FieldDefinition]
+fillFields :: [FieldDefinition] -> [(BS.ByteString,Maybe BS.ByteString)] ->  [FieldDefinition]
 fillFields (f:fs) nv = (f {fieldvalue = fromMaybe (fieldvalue f) $ join $ lookup (fieldlabel f) nv}) : fillFields fs nv
 fillFields [] _ = []
 
 
 
 -- High level commons. Used buy some simmilar API's, but not all of them
-getFiles :: (APIContext c) => APIFunction c [(BS.ByteString, BS.ByteString)]
+getFiles :: (APIContext m c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]
 getFiles = fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
     name    <- apiAskBS     "name"
     content <- apiAskBase64 "content"

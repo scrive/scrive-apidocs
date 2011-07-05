@@ -30,8 +30,8 @@ import KontraLink
 import ListUtil
 import Misc
 
+import Control.Applicative
 import Control.Monad.Trans
-import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
@@ -58,17 +58,18 @@ kontrakcja = "SkrivaPå"
 {- |
    Renders some page body xml into a complete reponse
 -}
-renderFromBody :: TopMenu
+renderFromBody :: Kontrakcja m
+               => TopMenu
                -> String
                -> String
-               -> Kontra Response
+               -> m Response
 renderFromBody _topmenu title content = do
-    htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
+    htmlPage <- (isSuffixOf ".html") . concat . rqPaths <$> askRq
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     ctx <- getContext
     let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-    res <-  simpleResponse =<< (liftIO $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content)
+    res <- simpleResponse =<< (liftIO $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content)
     clearFlashMsgs
     return res
 
@@ -177,12 +178,12 @@ renderTemplateAsPage ctx@Context{ctxtemplates} templateName publicpage showCreat
         standardPageFields ctx kontrakcja publicpage showCreateAccount2 loginOn loginreferer Nothing
     return wholePage
 
-getLoginOn :: Kontra Bool
+getLoginOn :: Kontrakcja m => m Bool
 getLoginOn = do
     loginOn <- isFieldSet "logging"
     return loginOn
 
-getLoginReferer :: Kontra (Maybe String)
+getLoginReferer :: Kontrakcja m => m (Maybe String)
 getLoginReferer = do
     curr <- rqUri <$> askRq
     referer <- getField "referer"
@@ -220,12 +221,12 @@ pageLogin ctx referer email =
 {- |
    Changing our pages into reponses, and clearing flash messages.
 -}
-simpleResponse::String -> Kontra Response
-simpleResponse s = ok $ toResponseBS   (BS.fromString "text/html;charset=utf-8") (BSL.fromString s)
+simpleResponse :: Kontrakcja m => String -> m Response
+simpleResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString s)
     -- change this to HtmlString from helpers package
     -- (didn't want to connect it one day before prelaunch)
 
-ajaxError::Kontra Response
+ajaxError :: Kontra Response
 ajaxError = simpleResponse "<script>window.location='/'</script>"
 {- |
    The landing page contents.  Read from template.
@@ -241,7 +242,7 @@ firstPage ctx loginOn referer email =
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields::Fields
+mainLinksFields :: Fields
 mainLinksFields = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
@@ -257,7 +258,7 @@ mainLinksFields = do
    Defines some standard context information as fields handy for substitution
    into templates.
 -}
-contextInfoFields::Context -> Fields
+contextInfoFields :: Context -> Fields
 contextInfoFields ctx = do
     field "logged" $ isJust (ctxmaybeuser ctx)
     field "flashmessages" $ map (flashMessageFields $ ctxtemplates ctx) (ctxflashmessages ctx)
@@ -290,7 +291,7 @@ flashMessageFields templates flash = do
         ftype = fst <$> fm
         msg = snd <$> fm
 
-loginModal::Bool -> Maybe String -> Maybe String -> Fields
+loginModal :: Bool -> Maybe String -> Maybe String -> Fields
 loginModal on referer email = do
     field "loginModal" $ on
     field "referer" $ referer

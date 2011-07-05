@@ -285,7 +285,7 @@ modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
 modalWelcomeToSkrivaPa templates =
     lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => Maybe User -> KontraLink -> m FlashMessage
+modalAccountSetup :: Maybe User -> KontraLink -> IO FlashMessage
 modalAccountSetup muser signuplink = do
     msupervisor <- case msupervisorid of
         Just sid -> query $ GetUserByUserID $ UserID $ unSupervisorID sid

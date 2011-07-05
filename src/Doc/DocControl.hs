@@ -28,9 +28,8 @@ import Util.HasSomeUserInfo
 import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
-import Util.SignatoryLinkUtils
 import Util.FlashUtil
-import ForkAction
+import Util.SignatoryLinkUtils
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -52,6 +51,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 
+import ForkAction
 
 {-
   Document state transitions are described in DocState.
@@ -64,7 +64,7 @@ import qualified Data.Map as Map
    Perform the appropriate action when transitioning between documentstatuses.
    This function should always be called after changing the document.
  -}
-postDocumentChangeAction :: Document -> Document -> Maybe SignatoryLinkID -> Kontra ()
+postDocumentChangeAction :: Kontrakcja m => Document -> Document -> Maybe SignatoryLinkID -> m ()
 postDocumentChangeAction document@Document  { documentstatus
                                             , documentid
                                             , documentcancelationreason
@@ -262,7 +262,7 @@ sendInvitationEmail1 ctx document signatorylink = do
 {- |
     Send a reminder email
 -}
-sendReminderEmail :: Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> Kontra SignatoryLink
+sendReminderEmail :: Kontrakcja m => Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx doc siglink = do
   mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) custommessage ctx doc siglink
   mailattachments <- liftIO $ makeMailAttachments ctx doc
@@ -329,7 +329,7 @@ sendRejectEmails customMessage ctx document signalink = do
 {- |
     Handles an account setup from within the sign view.
 -}
-handleAcceptAccountFromSign :: DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> Kontra KontraLink
+handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> m KontraLink
 handleAcceptAccountFromSign documentid
                             signatorylinkid
                             signmagichash
@@ -347,13 +347,13 @@ handleAcceptAccountFromSign documentid
           Nothing | Closed == documentstatus document -> 
             addModal $ modalSignedClosedNoAccount document signatorylink actionid magichash
           Nothing -> addModal $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
-          Just _ -> flash $ flashMessageAccountActivatedFromSign ctxtemplates
+          Just _ -> addFlash $ flashMessageAccountActivatedFromSign ctxtemplates
         return $ LinkSignDoc document signatorylink
 
 {- |
     Handles an account removal from within the sign view.
 -}
-handleDeclineAccountFromSign :: DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> Kontra KontraLink
+handleDeclineAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> m KontraLink
 handleDeclineAccountFromSign documentid
                              signatorylinkid
                              signmagichash
@@ -367,7 +367,7 @@ handleDeclineAccountFromSign documentid
       Nothing -> mzero
       Just signatorylink -> do
         handleAccountRemovalFromSign actionid magichash
-        flash $ flashMessageAccountRemovedFromSign ctxtemplates
+        addFlash $ flashMessageAccountRemovedFromSign ctxtemplates
         return $ LinkSignDoc document signatorylink
 
 {- |
@@ -375,10 +375,11 @@ handleDeclineAccountFromSign documentid
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
    Method: POST
  -}
-signDocument :: DocumentID      -- ^ The DocumentID of the document to sign
+signDocument :: Kontrakcja m
+             => DocumentID      -- ^ The DocumentID of the document to sign
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
              -> MagicHash       -- ^ The MagicHash that is in the URL
-             -> Kontra KontraLink
+             -> m KontraLink
 signDocument documentid
              signatorylinkid1
              magichash1 = do
@@ -390,10 +391,10 @@ signDocument documentid
   
   case edoc of
     Left (DBActionNotAvailable message) -> do
-      flashOperationFailed message
+      addFlash (OperationFailed, message)
       return $ LinkMain
     Left (DBDatabaseNotAvailable message) -> do
-      flashOperationFailed message
+      addFlash (OperationFailed, message)
       return $ LinkMain
     Left _ -> mzero
     Right (doc, olddoc) -> do
@@ -405,7 +406,7 @@ signDocument documentid
     put up the appropriate modal, and register the necessary nagging email actions.
     This is factored into it's own function because that way it can be used by eleg too.
 -}
-handleAfterSigning :: Document -> SignatoryLinkID -> Kontra KontraLink
+handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m KontraLink
 handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
   ctx <- getContext
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
@@ -436,10 +437,11 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
    Control rejecting the document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
  -}
-rejectDocument :: DocumentID
+rejectDocument :: Kontrakcja m
+               => DocumentID
                -> SignatoryLinkID
                -> MagicHash
-               -> Kontra KontraLink
+               -> m KontraLink
 rejectDocument documentid
                signatorylinkid1
                magichash = do
@@ -449,10 +451,10 @@ rejectDocument documentid
   
   case edocs of
     Left (DBActionNotAvailable message) -> do
-      flashOperationFailed message
+      addFlash (OperationFailed, message)
       return $ LinkMain
     Left (DBDatabaseNotAvailable message) -> do
-      flashOperationFailed message
+      addFlash (OperationFailed, message)
       return $ LinkMain
     Left _ -> mzero
     Right (document, olddocument) -> do
@@ -463,7 +465,7 @@ rejectDocument documentid
 {- |
    Get the SignatoryLink associated with a SignatoryLinkID or mzero if not found
  -}
-signatoryLinkFromDocumentByID :: Document -> SignatoryLinkID -> Kontra SignatoryLink
+signatoryLinkFromDocumentByID :: Kontrakcja m => Document -> SignatoryLinkID -> m SignatoryLink
 signatoryLinkFromDocumentByID Document{ documentsignatorylinks } linkid = do
     let invitedlinks = filter (\x -> signatorylinkid x == linkid
                                {- && signatorymagichash x == magichash1 -})
@@ -475,7 +477,7 @@ signatoryLinkFromDocumentByID Document{ documentsignatorylinks } linkid = do
 {- |
    Show the document to be signed
  -}
-handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra String
+handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m String
 handleSignShow documentid
                signatorylinkid1
                magichash1 = do
@@ -499,10 +501,10 @@ handleSignShow documentid
         case document of
           _ | not isFlashNeeded -> return ()
           _ | not (isSignatory invitedlink) -> 
-            flash $ flashMessageOnlyHaveRightsToViewDoc ctxtemplates
+            addFlash $ flashMessageOnlyHaveRightsToViewDoc ctxtemplates
           _ | document `allowsIdentification` ELegitimationIdentification -> 
-            flash $ flashMessagePleaseSignWithEleg ctxtemplates
-          _ -> flash $ flashMessagePleaseSign document ctxtemplates
+            addFlash $ flashMessagePleaseSignWithEleg ctxtemplates
+          _ -> addFlash $ flashMessagePleaseSign document ctxtemplates
 
         case document of
           _ | isAttachment document -> 
@@ -513,11 +515,11 @@ handleSignShow documentid
 
 --end
 
-maybeAddDocumentCancelationMessage :: Document -> Kontra ()
+maybeAddDocumentCancelationMessage :: Kontrakcja m => Document -> m ()
 maybeAddDocumentCancelationMessage document = do
   let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-  when (documentstatus document == Canceled) 
-    (flashOperationFailed mMismatchMessage)
+  when (documentstatus document == Canceled && isJust mMismatchMessage) $
+    addFlash (OperationFailed, fromJust mMismatchMessage)
   return ()
 
 {- |
@@ -528,7 +530,7 @@ maybeAddDocumentCancelationMessage document = do
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: DocumentID -> Kontra (Either KontraLink (Either KontraLink String))
+handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either KontraLink String))
 handleIssueShowGet docid = do
  checkUserTOSGet $ do
   edoc <- getDocByDocID docid
@@ -547,9 +549,8 @@ handleIssueShowGet docid = do
               (_, True, _) -> liftIO $ Right <$> pageAttachmentView ctx document
               (True, _, _) -> do
                 let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-                Log.debug ("mismatch message: " ++ show mMismatchMessage)
-                when (documentstatus document == Canceled)
-                  (flashOperationFailed mMismatchMessage)
+                when (documentstatus document == Canceled && isJust mMismatchMessage) $
+                  addFlash (OperationFailed, fromJust mMismatchMessage)
                 ctx2 <- getContext -- need to get new context because we may have added flash msg
                 step <- getDesignStep (documentid document)
                 case (documentstatus document) of
@@ -562,7 +563,7 @@ handleIssueShowGet docid = do
               -- friends can just look (but not touch)
               (False, _, _) -> liftIO $ Right <$> pageDocumentForViewer ctx document Nothing
 
-getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
+getDesignStep :: Kontrakcja m => DocumentID -> m (Maybe DesignStep)
 getDesignStep docid = do
     step3 <- isFieldSet "step3"
     step2 <- isFieldSet "step2"
@@ -588,7 +589,7 @@ getDesignStep docid = do
    URL: /d/{documentid}
    Method: POST
  -}
-handleIssueShowPost :: DocumentID -> Kontra KontraLink
+handleIssueShowPost :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueShowPost docid = withUserPost $ do
   edocument <- getDocByDocID docid
   case edocument of
@@ -618,7 +619,7 @@ handleIssueShowPost docid = withUserPost $ do
         AwaitingAuthor                  -> handleIssueSignByAuthor         document
         _ -> return $ LinkContracts emptyListParams
 
-handleIssueSign :: Document -> Kontra KontraLink
+handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
     Log.debug "handleIssueSign"
     ctx@Context { ctxtime, ctxipnumber} <- getContext
@@ -635,7 +636,7 @@ handleIssueSign document = do
                     addModal $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    flash $ flashMessageCSVSent (length ds) (ctxtemplates ctx)
+                    addFlash $ flashMessageCSVSent (length ds) $ ctxtemplates ctx
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
                       Signable Contract -> return $ LinkContracts emptyListParams
@@ -656,7 +657,7 @@ handleIssueSign document = do
           Left _ -> return ()
         return mndoc
 
-handleIssueSend :: Document -> Kontra KontraLink
+handleIssueSend :: Kontrakcja m => Document -> m KontraLink
 handleIssueSend document = do
     Log.debug "handleIssueSend"
     ctx@Context { ctxtime, ctxipnumber} <- getContext
@@ -672,7 +673,7 @@ handleIssueSend document = do
                     addModal $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    flash $ flashMessageCSVSent (length ds) (ctxtemplates ctx)
+                    addFlash $ flashMessageCSVSent (length ds) $ ctxtemplates ctx
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
                       Signable Contract -> return $ LinkContracts emptyListParams
@@ -693,7 +694,7 @@ handleIssueSend document = do
           Left _ -> return ()
         return mndoc
 
-markDocumentAuthorReadAndSeen :: Document -> MinutesTime -> Word32 -> Kontra ()
+markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
 markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
   mapM_ mark $ filter isAuthor documentsignatorylinks
   where
@@ -701,7 +702,7 @@ markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time 
       update $ MarkInvitationRead documentid signatorylinkid time
       update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
 
-handleIssueSaveAsTemplate :: Document -> Kontra KontraLink
+handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
   ctx <- getContext
   eudoc <- updateDocument ctx document
@@ -712,13 +713,13 @@ handleIssueSaveAsTemplate document = do
       case mndoc of
         Left _ -> mzero
         Right _newdocument -> do
-          flash $ flashDocumentTemplateSaved $ ctxtemplates ctx
+          addFlash $ flashDocumentTemplateSaved $ ctxtemplates ctx
           return $ LinkTemplates emptyListParams
 
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
-handleIssueChangeToContract :: Document -> Kontra KontraLink
+handleIssueChangeToContract :: Kontrakcja m => Document -> m KontraLink
 handleIssueChangeToContract document = do
   ctx <- getContext
   signlast <- isFieldSet "signlast"
@@ -739,7 +740,7 @@ handleIssueChangeToContract document = do
 
     I feel like this is quite dangerous to do all at once, maybe need a transaction?!
 -}
-splitUpDocument :: Document -> Kontra (Either KontraLink [Document])
+splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
 splitUpDocument doc =
   case (documentcsvupload doc, getCSVCustomFields doc) of
     (Just _, Left _) -> mzero
@@ -749,7 +750,7 @@ splitUpDocument doc =
         (_prob:_, _) -> do
           Context{ctxtemplates} <- getContext
           signlast <- isFieldSet "signlast"
-          flash $ flashMessageInvalidCSV ctxtemplates
+          addFlash$ flashMessageInvalidCSV ctxtemplates
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- if (isTemplate doc)
@@ -762,7 +763,7 @@ splitUpDocument doc =
               if Data.List.null (lefts mdocs)
                 then return $ Right (rights mdocs)
                 else mzero
-  where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
+  where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc sigindex xs =
           update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
@@ -771,7 +772,7 @@ splitUpDocument doc =
    Handles a csv file upload.  This'll parse the file, and save the info
    on the document and relevant signatory.
 -}
-handleIssueCSVUpload :: Document -> Kontra KontraLink
+handleIssueCSVUpload :: Kontrakcja m => Document -> m KontraLink
 handleIssueCSVUpload document = do
   ctx <- getContext
   mudoc <- updateDocument ctx document
@@ -823,7 +824,7 @@ zipSigAttachments name desc emailsstring =
                        , not $ Data.List.null $ trim e]
   in map (makeSigAttachment name desc . BS.fromString) emails
 
-handleIssueUpdateSigAttachments :: Document -> Kontra KontraLink
+handleIssueUpdateSigAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateSigAttachments doc = do
   ctx <- getContext
   mudoc <- updateDocument ctx doc
@@ -841,7 +842,7 @@ handleIssueUpdateSigAttachments doc = do
     Left _ -> mzero
     Right ndoc -> return (LinkDesignDoc (DesignStep3 (documentid ndoc) signlast))
 
-handleIssueUpdateAttachments :: Document -> Kontra KontraLink
+handleIssueUpdateAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do
     ctx <- getContext
     mudoc <- updateDocument ctx doc
@@ -885,7 +886,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     This'll also update the user preferences that they would like
     to continue with this functionality by default in the future.
 -}
-handleIssueChangeFunctionality :: Document -> Kontra KontraLink
+handleIssueChangeFunctionality :: Kontrakcja m => Document -> m KontraLink
 handleIssueChangeFunctionality document = do
   ctx <- getContext
   mudoc <- updateDocument ctx document
@@ -900,7 +901,7 @@ handleIssueChangeFunctionality document = do
           Right _ -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
       _ -> mzero
   where
-    handlePreferenceChange :: UserID -> Kontra (Either String User)
+    handlePreferenceChange :: Kontrakcja m => UserID -> m (Either String User)
     handlePreferenceChange userid = do
       toBasic <- isFieldSet "tobasic"
       toAdvanced <- isFieldSet "toadvanced"
@@ -909,7 +910,7 @@ handleIssueChangeFunctionality document = do
         (_, True) -> setPreferredMode $ Just AdvancedMode
         _ -> setPreferredMode Nothing
       where
-        setPreferredMode :: Maybe DesignMode -> Kontra (Either String User)
+        setPreferredMode :: Kontrakcja m => Maybe DesignMode -> m (Either String User)
         setPreferredMode designmode = do
           muser <- update $ SetPreferredDesignMode userid designmode
           return muser
@@ -919,7 +920,7 @@ handleIssueChangeFunctionality document = do
     also deals with any flash messages.  It returns a pair
     of (title, contents).
 -}
-getCSVFile :: String -> Kontra (Maybe (BS.ByteString, [[BS.ByteString]]))
+getCSVFile :: Kontrakcja m => String -> m (Maybe (BS.ByteString, [[BS.ByteString]]))
 getCSVFile fieldname = do
   input <- getDataFn' (lookInput fieldname)
   csvresult <- liftIO $ asCSVFile input
@@ -977,19 +978,19 @@ getCSVFile fieldname = do
     nordicCharCountOrdering a b = compare (nordicCharCount a) (nordicCharCount b)
     nordicCharCount = length . filter (\c -> c `elem` "äÄöÖåÅ")
 
-handleIssueSave :: Document -> Kontra KontraLink
+handleIssueSave :: Kontrakcja m => Document -> m KontraLink
 handleIssueSave document = do
     ctx <- getContext
     _ <- updateDocument ctx document
-    if isTemplate document
+    if (isTemplate document)
      then do
-          flash $ flashDocumentTemplateSaved $ ctxtemplates ctx
+          addFlash $ flashDocumentTemplateSaved $ ctxtemplates ctx
           return $ LinkTemplates emptyListParams
      else do
-          flash $ flashDocumentDraftSaved $ ctxtemplates ctx
+          addFlash $ flashDocumentDraftSaved $ ctxtemplates ctx
           return $ LinkContracts emptyListParams
 
-handleIssueSignByAuthor :: Document -> Kontra KontraLink
+handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor document = do
     ctx@Context { ctxtime, ctxipnumber} <- getContext
     unless (document `allowsIdentification` EmailIdentification) mzero
@@ -998,7 +999,7 @@ handleIssueSignByAuthor document = do
         Nothing -> return $ LinkIssueDoc (documentid document)
         Just d -> do
             postDocumentChangeAction d document Nothing
-            flash $ flashAuthorSigned $ ctxtemplates ctx
+            addFlash $ flashAuthorSigned $ ctxtemplates ctx
             return $ LinkIssueDoc (documentid document)
 
 {- |
@@ -1006,17 +1007,17 @@ handleIssueSignByAuthor document = do
    URL: /d/{documentid}/{title}
    Method: GET
  -}
-handleIssueShowTitleGet :: DocumentID -> String -> Kontra (Either KontraLink Response)
+handleIssueShowTitleGet :: Kontrakcja m => DocumentID -> String -> m (Either KontraLink Response)
 handleIssueShowTitleGet docid = withAuthorOrFriend docid
     . checkUserTOSGet . handleIssueShowTitleGet' docid
 
-handleIssueShowTitleGetForSignatory :: DocumentID -> SignatoryLinkID -> MagicHash -> String -> Kontra Response
+handleIssueShowTitleGetForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
 handleIssueShowTitleGetForSignatory docid siglinkid sigmagichash title = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
     handleIssueShowTitleGet' docid title
 
-handleIssueShowTitleGet' :: DocumentID -> String -> Kontra Response
+handleIssueShowTitleGet' :: Kontrakcja m => DocumentID -> String -> m Response
 handleIssueShowTitleGet' docid _title = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
@@ -1029,7 +1030,7 @@ handleIssueShowTitleGet' docid _title = do
     return res2
 
 -- | Check if current user is author or friend so he can view the document
-withAuthorOrFriend :: DocumentID -> Kontra (Either KontraLink a) -> Kontra (Either KontraLink a)
+withAuthorOrFriend :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
 withAuthorOrFriend docid action = do
   edoc <- getDocByDocID docid
   case edoc of
@@ -1041,7 +1042,7 @@ withAuthorOrFriend docid action = do
    URL: /d/{documentid}/{title}
    Method: GET
  -}
-handleFileGet :: FileID -> String -> Kontra (Either KontraLink Response)
+handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Response)
 handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
@@ -1067,19 +1068,20 @@ handleFileGet fileid' _title = do
 {- |
    Get multiple post/get params and return them in an array
  -}
-getAndConcat :: String -> Kontra [BS.ByteString]
+getAndConcat :: Kontrakcja m => String -> m [BS.ByteString]
 getAndConcat fname = do
   values <- getDataFnM $ lookInputList fname
   return $ map concatChunks values
 
-makePlacements :: [BS.ByteString]
+makePlacements :: Kontrakcja m
+               => [BS.ByteString]
                -> [BS.ByteString]
                -> [Int]
                -> [Int]
                -> [Int]
                -> [Int]
                -> [Int]
-               -> Kontra [(BS.ByteString, BS.ByteString, FieldPlacement)]
+               -> m [(BS.ByteString, BS.ByteString, FieldPlacement)]
 makePlacements placedsigids
                placedfieldids
                placedxs
@@ -1258,7 +1260,7 @@ asValidDocumentFunctionality user oldfunc input =
    Save a document from data in the post params.
 
  -}
-updateDocument :: Context -> Document -> Kontra (Either String Document)
+updateDocument :: Kontrakcja m => Context -> Document -> m (Either String Document)
 updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfunctionality } = do
   -- each signatory has these predefined fields
   signatoriesfstnames        <- getAndConcat "signatoryfstname"
@@ -1378,7 +1380,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
     until a sign happens (which is never in the case of viewers!) is to lookup by email.  We need to change
     so we lookup not by email, but by userid only.  This means linking up and saving the docs far earlier for users.
 -}
-getDocumentsForUserByType :: DocumentType -> User -> Kontra [Document]
+getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
   mydocuments <- query $ GetDocumentsByUser user --docs saved for user, so not included if yet to sign or viewer
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
@@ -1395,26 +1397,26 @@ getDocumentsForUserByType doctype user = do
    is a friend of the author.
    Duplicates are removed.
  -}
-showContractsList :: Kontra (Either KontraLink String)
+showContractsList :: Kontrakcja m => m (Either KontraLink String)
 showContractsList =
   showItemList' pageContractsList $ getDocumentsForUserByType (Signable Contract)
 
-showOfferList :: Kontra (Either KontraLink String)
+showOfferList :: Kontrakcja m => m (Either KontraLink String)
 showOfferList =
   showItemList' pageOffersList $ getDocumentsForUserByType (Signable Offer)
 
-showOrdersList :: Kontra (Either KontraLink String)
+showOrdersList :: Kontrakcja m => m (Either KontraLink String)
 showOrdersList =
   showItemList' pageOrdersList $ getDocumentsForUserByType (Signable Order)
 
-showTemplatesList :: Kontra (Either KontraLink String)
+showTemplatesList :: Kontrakcja m => m (Either KontraLink String)
 showTemplatesList =
   let userTemplates user = do
         mydocuments <- query $ GetDocumentsByUser user
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
 
-showAttachmentList :: Kontra (Either KontraLink String)
+showAttachmentList :: Kontrakcja m => m (Either KontraLink String)
 showAttachmentList =
   let getAttachments user = do
         mydocuments <- query $ GetDocumentsByAuthor (userid user)
@@ -1424,16 +1426,17 @@ showAttachmentList =
 {- |
     Helper function for showing lists of documents.
 -}
-showItemList' :: (KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String)
-                 -> (User -> Kontra [Document])
-                 -> Kontra (Either KontraLink String)
+showItemList' :: Kontrakcja m
+    => (KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String)
+    -> (User -> m [Document])
+    -> m (Either KontraLink String)
 showItemList' viewPage getDocs = checkUserTOSGet $ do
   Context {ctxmaybeuser = Just user, ctxtime, ctxtemplates} <- getContext
   docs <- getDocs user
   params <- getListParams
   liftIO $ viewPage ctxtemplates ctxtime user (docSortSearchPage params $ prepareDocsForList docs)
 
-handleAttachmentViewForViewer :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   case edoc of
@@ -1453,7 +1456,7 @@ handleAttachmentViewForViewer docid siglinkid mh = do
             pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (documentid doc) Nothing $ zip f b
             simpleResponse pages
 
-handleAttachmentViewForAuthor :: DocumentID -> Kontra Response
+handleAttachmentViewForAuthor :: Kontrakcja m => DocumentID -> m Response
 handleAttachmentViewForAuthor docid = do
   edoc <- getDocByDocID docid
   case edoc of
@@ -1479,16 +1482,16 @@ prepareDocsForList :: [Document] -> [Document]
 prepareDocsForList =
   sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) . nub
 
-handlePageOfDocument :: DocumentID -> Kontra (Either KontraLink Response)
+handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
 
-handlePageOfDocumentForSignatory :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handlePageOfDocumentForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handlePageOfDocumentForSignatory docid siglinkid sigmagichash = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
     handlePageOfDocument' docid $ Just (siglinkid, sigmagichash)
 
-handlePageOfDocument' :: DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> Kontra Response
+handlePageOfDocument' :: Kontrakcja m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> m Response
 handlePageOfDocument' documentid mtokens = do
   liftIO $ print "Request for docs"
   edoc <- case mtokens of
@@ -1518,7 +1521,7 @@ handlePageOfDocument' documentid mtokens = do
                     pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) documentid mtokens $ zip f b
                     simpleResponse pages
 
-handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
+handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   liftIO $ print "Uploading doc"
   ctx@Context{ctxdocstore, ctxs3action} <- getContext
@@ -1542,7 +1545,7 @@ basename filename =
       (_,(_:rest)) -> basename rest
       _ -> takeWhile ((/=) '.') filename
 
-handleIssueNewDocument :: Kontra KontraLink
+handleIssueNewDocument :: Kontrakcja m => m KontraLink
 handleIssueNewDocument = withUserPost $ do
     input <- getDataFnM (lookInput "doc")
     mdocprocess <- getDocProcess
@@ -1553,7 +1556,7 @@ handleIssueNewDocument = withUserPost $ do
       Nothing -> return LinkMain
       (Just doc) -> return $ LinkIssueDoc $ documentid doc
 
-handleCreateNewTemplate:: Kontra KontraLink
+handleCreateNewTemplate:: Kontrakcja m => m KontraLink
 handleCreateNewTemplate = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
   mdoc <- makeDocumentFromFile (Template Contract) input
@@ -1561,13 +1564,13 @@ handleCreateNewTemplate = withUserPost $ do
     Nothing -> handleTemplateReload
     (Just doc) -> return $ LinkIssueDoc $ documentid doc
 
-handleCreateNewAttachment:: Kontra KontraLink
+handleCreateNewAttachment:: Kontrakcja m => m KontraLink
 handleCreateNewAttachment = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
   _ <- makeDocumentFromFile Attachment input
   handleAttachmentReload
 
-makeDocumentFromFile :: DocumentType -> Input -> Kontra (Maybe Document)
+makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = do
     Context { ctxmaybeuser = Just user, ctxtime } <- getContext
     content <- case contentspec of
@@ -1585,43 +1588,43 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = 
           return $ Just doc
 makeDocumentFromFile _ _ = mzero -- to complete the patterns
 
-handleContractArchive :: Kontra KontraLink
+handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
     _ <- handleSignableArchive (Signable Contract)
     return $ LinkContracts emptyListParams
 
-handleOffersArchive :: Kontra KontraLink
+handleOffersArchive :: Kontrakcja m => m KontraLink
 handleOffersArchive =  do
     _ <- handleSignableArchive (Signable Offer)
     return $ LinkOffers emptyListParams
 
-handleOrdersArchive :: Kontra KontraLink
+handleOrdersArchive :: Kontrakcja m => m KontraLink
 handleOrdersArchive =  do
     _ <- handleSignableArchive (Signable Order)
     return $ LinkOrders emptyListParams
 
-handleSignableArchive :: DocumentType -> Kontra ()
+handleSignableArchive :: Kontrakcja m => DocumentType -> m ()
 handleSignableArchive doctype =  do
     Context { ctxtemplates } <- getContext
     handleIssueArchive
-    flash $ flashMessageSignableArchiveDone ctxtemplates doctype
+    addFlash $ flashMessageSignableArchiveDone ctxtemplates doctype
     return ()
 
-handleTemplateArchive :: Kontra KontraLink
+handleTemplateArchive :: Kontrakcja m => m KontraLink
 handleTemplateArchive = do
     Context { ctxtemplates } <- getContext
     handleIssueArchive
-    flash $ flashMessageTemplateArchiveDone ctxtemplates
+    addFlash $ flashMessageTemplateArchiveDone ctxtemplates
     return $ LinkTemplates emptyListParams
 
-handleAttachmentArchive :: Kontra KontraLink
+handleAttachmentArchive :: Kontrakcja m => m KontraLink
 handleAttachmentArchive = do
     Context { ctxtemplates } <- getContext
     handleIssueArchive
-    flash $ flashMessageAttachmentArchiveDone ctxtemplates
+    addFlash $ flashMessageAttachmentArchiveDone ctxtemplates
     return $ LinkAttachments emptyListParams
 
-handleIssueArchive :: Kontra ()
+handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
     Log.debug "handleIssueArchive"
     Context { ctxmaybeuser = Just user } <- getContext
@@ -1637,25 +1640,25 @@ handleIssueArchive = do
         mzero
       Right _ -> return ()
 
-handleTemplateShare :: Kontra KontraLink
+handleTemplateShare :: Kontrakcja m => m KontraLink
 handleTemplateShare = withUserPost $ do
     Context { ctxtemplates } <- getContext
     docs <- handleIssueShare
     case docs of
-      (d:[]) -> flash $ flashMessageSingleTemplateShareDone (documenttitle d) ctxtemplates
-      _ -> flash $ flashMessageMultipleTemplateShareDone ctxtemplates
+      (d:[]) -> addFlash $ flashMessageSingleTemplateShareDone (documenttitle d) ctxtemplates
+      _ -> addFlash$ flashMessageMultipleTemplateShareDone ctxtemplates
     return $ LinkTemplates emptyListParams
 
-handleAttachmentShare :: Kontra KontraLink
+handleAttachmentShare :: Kontrakcja m => m KontraLink
 handleAttachmentShare = withUserPost $ do
     Context { ctxtemplates } <- getContext
     docs <- handleIssueShare
     case docs of
-      (d:[]) -> flash $ flashMessageSingleAttachmentShareDone (documenttitle d) ctxtemplates
-      _ -> flash $ flashMessageMultipleAttachmentShareDone ctxtemplates
+      (d:[]) -> addFlash $ flashMessageSingleAttachmentShareDone (documenttitle d) ctxtemplates
+      _ -> addFlash $ flashMessageMultipleAttachmentShareDone ctxtemplates
     return $ LinkAttachments emptyListParams
 
-handleIssueShare :: Kontra [Document]
+handleIssueShare :: Kontrakcja m => m [Document]
 handleIssueShare = do
     Context { ctxmaybeuser = Just user } <- getContext
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
@@ -1665,7 +1668,7 @@ handleIssueShare = do
       Left _msg  -> mzero
       Right docs -> return docs
 
-handleAttachmentRename :: DocumentID -> Kontra KontraLink
+handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
   newname <- getCriticalField (return . BS.fromString) "docname"
   mdoc <- update $ SetDocumentTitle docid newname
@@ -1673,17 +1676,17 @@ handleAttachmentRename docid = withUserPost $ do
     Left _msg -> mzero
     Right doc -> return $ LinkIssueDoc $ documentid doc
 
-handleBulkContractRemind :: Kontra KontraLink
+handleBulkContractRemind :: Kontrakcja m => m KontraLink
 handleBulkContractRemind = withUserPost $ do
     _ <- handleIssueBulkRemind (Signable Contract)
     return $ LinkContracts emptyListParams
 
-handleBulkOfferRemind :: Kontra KontraLink
+handleBulkOfferRemind :: Kontrakcja m => m KontraLink
 handleBulkOfferRemind = withUserPost $ do
     _ <- handleIssueBulkRemind (Signable Offer)
     return $ LinkOffers emptyListParams
 
-handleBulkOrderRemind :: Kontra KontraLink
+handleBulkOrderRemind :: Kontrakcja m => m KontraLink
 handleBulkOrderRemind = withUserPost $ do
     _ <- handleIssueBulkRemind (Signable Order)
     return $ LinkOrders emptyListParams
@@ -1694,18 +1697,18 @@ handleBulkOrderRemind = withUserPost $ do
     and send out reminders only to signatories who haven't accepted or signed on those that are
     pending.  This returns all the signatory links that were reminded.
 -}
-handleIssueBulkRemind :: DocumentType -> Kontra [SignatoryLink]
+handleIssueBulkRemind :: Kontrakcja m => DocumentType -> m [SignatoryLink]
 handleIssueBulkRemind doctype = do
     ctx@(Context { ctxtemplates, ctxmaybeuser = Just user }) <- getContext
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
-    case length remindedsiglinks of
-      0 -> flash $ flashMessageNoBulkRemindsSent ctxtemplates doctype
-      _ -> flash $ flashMessageBulkRemindsSent ctxtemplates doctype
+    case (length remindedsiglinks) of
+      0 -> addFlash $ flashMessageNoBulkRemindsSent ctxtemplates doctype
+      _ -> addFlash $ flashMessageBulkRemindsSent ctxtemplates doctype
     return remindedsiglinks
     where
-      docRemind :: Context -> User -> DocumentID -> Kontra [SignatoryLink]
+      docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
       docRemind ctx user docid = do
         doc <- queryOrFail $ GetDocumentByDocumentID docid
         failIfNotAuthor doc user
@@ -1716,19 +1719,19 @@ handleIssueBulkRemind doctype = do
             sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
           _ -> return []
 
-handleContractsReload :: Kontra KontraLink
+handleContractsReload :: Kontrakcja m => m KontraLink
 handleContractsReload  = fmap LinkContracts getListParamsForSearch
 
-handleTemplateReload :: Kontra KontraLink
+handleTemplateReload :: Kontrakcja m => m KontraLink
 handleTemplateReload = fmap LinkTemplates getListParamsForSearch
 
-handleAttachmentReload :: Kontra KontraLink
+handleAttachmentReload :: Kontrakcja m => m KontraLink
 handleAttachmentReload = fmap LinkAttachments getListParamsForSearch
 
-handleOffersReload :: Kontra KontraLink
+handleOffersReload :: Kontrakcja m => m KontraLink
 handleOffersReload = fmap LinkOffers getListParamsForSearch
 
-handleOrdersReload :: Kontra KontraLink
+handleOrdersReload :: Kontrakcja m => m KontraLink
 handleOrdersReload = fmap LinkOrders getListParamsForSearch
 
 {- |
@@ -1737,17 +1740,17 @@ handleOrdersReload = fmap LinkOrders getListParamsForSearch
    Method: GET
    FIXME: Should probably check for permissions to view
  -}
-showPage :: DocumentID -> FileID -> Int -> Kontra (Either KontraLink Response)
+showPage :: Kontrakcja m => DocumentID -> FileID -> Int -> m (Either KontraLink Response)
 showPage docid fileid = withAuthorOrFriend docid
     . checkUserTOSGet . showPage' fileid
 
-showPageForSignatory :: DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> Int -> Kontra Response
+showPageForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> Int -> m Response
 showPageForSignatory docid siglinkid sigmagichash fileid pageno = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
     showPage' fileid pageno
 
-showPage' :: FileID -> Int -> Kontra Response
+showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
   modminutes <- query $ FileModTime fileid
@@ -1762,7 +1765,7 @@ showPage' fileid pageno = do
       return $ ifModifiedSince modtime rq res2
     _ -> mzero
 
-handleCancel:: DocumentID -> Kontra KontraLink
+handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
   ctx@Context { ctxtime, ctxipnumber } <- getContext
   edoc <- getDocByDocID docid
@@ -1770,15 +1773,15 @@ handleCancel docid = withUserPost $ do
     Left _ -> mzero
     Right doc -> do
       case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-        False -> flash $ flashMessageCannotCancel (ctxtemplates ctx)
+        False -> addFlash $ flashMessageCannotCancel $ ctxtemplates ctx
         True -> do
           customMessage <- getCustomTextField "customtext"
           mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
           case mdoc' of
             Right doc' -> do
               sendCancelMailsForDocument customMessage ctx doc
-              flash $ flashMessageCanceled (ctxtemplates ctx) doc'
-            Left errmsg -> flashOperationFailed errmsg
+              addFlash $ flashMessageCanceled (ctxtemplates ctx) doc'
+            Left errmsg -> addFlash (OperationFailed, errmsg)
       return (LinkIssueDoc $ documentid doc)
 
 {-
@@ -1792,7 +1795,7 @@ handleWithdrawn docid = do
     Nothing -> return LinkMain
 -}
 
-handleRestart:: DocumentID -> Kontra KontraLink
+handleRestart :: Kontrakcja m => DocumentID -> m KontraLink
 handleRestart docid = withUserPost $ do
   Context { ctxtemplates } <- getContext
   edoc  <- getDocByDocID docid
@@ -1803,10 +1806,10 @@ handleRestart docid = withUserPost $ do
       case edoc2 of
         Left _ -> mzero
         Right doc2 -> do
-          flash $ flashDocumentRestarted ctxtemplates doc2
+          addFlash $ flashDocumentRestarted ctxtemplates doc2
           return $ LinkIssueDoc (documentid doc2)
 
-handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
   ctx@Context { ctxmaybeuser = Just user } <- getContext
   edoc <- getDocByDocID docid
@@ -1819,23 +1822,24 @@ handleResend docid signlinkid  = withUserPost $ do
         Just signlink -> do
           customMessage <- getCustomTextField "customtext"
           _ <- sendReminderEmail customMessage ctx doc signlink
-          flash $ flashRemindMailSent (ctxtemplates ctx) signlink
+          addFlash $ flashRemindMailSent (ctxtemplates ctx) signlink
           return (LinkIssueDoc docid)
 
 {- |
     If the custom text field is empty then that's okay, but if it's invalid
     then we want to fail.
 -}
-getCustomTextField :: String -> Kontra (Maybe BS.ByteString)
+getCustomTextField :: Kontrakcja m => String -> m (Maybe BS.ByteString)
 getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
-  where customTextHandler :: (Maybe String, Result BS.ByteString) -> Kontra (Maybe BS.ByteString)
-        customTextHandler textresult =
-                logIfBad textresult
-                >>= flashValidationMessage
-                >>= withFailureIfBad
+    where
+    customTextHandler :: Kontrakcja m => (Maybe String, Result BS.ByteString) -> m (Maybe BS.ByteString)
+    customTextHandler textresult =
+        logIfBad textresult
+            >>= flashValidationMessage
+            >>= withFailureIfBad
 
 --This only works for undelivered mails. We shoulkd check if current user is author
-handleChangeSignatoryEmail :: DocumentID -> SignatoryLinkID -> Kontra KontraLink
+handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleChangeSignatoryEmail docid slid = withUserPost $ do
   memail <- getOptionalField asValidEmail "email"
   case memail of
@@ -1856,15 +1860,15 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
             _ -> return LinkMain
     _ -> return LinkMain
 
-sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
+sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
   liftIO $ forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))
 
-failIfNotAuthor :: Document -> User -> Kontra ()
+failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))
 
-checkLinkIDAndMagicHash :: Document -> SignatoryLinkID -> MagicHash -> Kontra ()
+checkLinkIDAndMagicHash :: Kontrakcja m => Document -> SignatoryLinkID -> MagicHash -> m ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
     case getSigLinkFor document linkid of
       Just SignatoryLink { signatorymagichash } -> if signatorymagichash == magichash1
@@ -1872,7 +1876,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
                                                     else mzero
       Nothing -> mzero
 
-mainPage:: Kontra String
+mainPage :: Kontrakcja m => m String
 mainPage =  do
                       ctx <- getContext
                       params <- getListParams
@@ -1880,7 +1884,7 @@ mainPage =  do
                       mdocprocess <- getDocProcess
                       liftIO $ uploadPage ctx params mdocprocess showTemplates
 
-getDocProcess :: Kontra (Maybe DocumentProcess)
+getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)
 getDocProcess = getOptionalField asDocType "doctype"
   where
     asDocType :: String -> Result DocumentProcess
@@ -1896,7 +1900,7 @@ idmethodFromString idmethod
   | idmethod == "eleg"  = Just ELegitimationIdentification
   | otherwise           = Nothing
 
-getTemplatesForAjax::Kontra Response
+getTemplatesForAjax :: Kontrakcja m => m Response
 getTemplatesForAjax = do
     ctx <- getContext
     params <- getListParams
@@ -1913,7 +1917,7 @@ getTemplatesForAjax = do
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
             _ -> mzero
 
-handleCreateFromTemplate::Kontra KontraLink
+handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
   Context { ctxmaybeuser } <- getContext
   docid <- readField "template"
@@ -1930,7 +1934,7 @@ handleCreateFromTemplate = withUserPost $ do
         Left _ -> mzero
     Nothing -> mzero
   where
-    isShared :: User -> Document -> Kontra Bool
+    isShared :: Kontrakcja m => User -> Document -> m Bool
     isShared user document = do
       let Just authorsiglink = getAuthorSigLink document
           Just authorid = maybesignatory authorsiglink
@@ -1955,7 +1959,7 @@ sigAttachmentHasFileID fid attachment =
 {- |
    Download the attachment with the given fileid
  -}
-handleAttachmentDownloadForAuthor :: DocumentID -> FileID -> Kontra Response
+handleAttachmentDownloadForAuthor :: Kontrakcja m => DocumentID -> FileID -> m Response
 handleAttachmentDownloadForAuthor did fid = do
   edoc <- getDocByDocID did
   case edoc of
@@ -1980,7 +1984,7 @@ handleAttachmentDownloadForAuthor did fid = do
 {- |
    Stream the pdf document for the given FileID.
  -}
-handleAttachmentDownloadForViewer :: DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> Kontra Response
+handleAttachmentDownloadForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m Response
 handleAttachmentDownloadForViewer did sid mh fid = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did sid mh
   case edoc of
@@ -2017,7 +2021,7 @@ migrateDocSigLinks = onlySuperUser $ do
 
 -}
 
-handleMigrateDocumentAuthorAttachments :: Kontra Response
+handleMigrateDocumentAuthorAttachments :: Kontrakcja m => m Response
 handleMigrateDocumentAuthorAttachments = onlySuperUser $ do
   docs <- query $ GetDocuments Nothing
   forM_ docs (\doc -> do
@@ -2034,14 +2038,14 @@ handleMigrateDocumentAuthorAttachments = onlySuperUser $ do
                                  liftIO $ print msg2
                                  return ()
                                Right _udoc -> return ())
-  flashOperationDone "All documents migrated!"
+  addFlash (OperationDone, "All documents migrated!")
   sendRedirect LinkMain
 
 -- Fix for broken production | To be removed after fixing is done
-isBroken::Document -> Bool
+isBroken :: Document -> Bool
 isBroken doc = documentstatus doc == Closed && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
 
-handleFixDocument::DocumentID -> Kontra KontraLink
+handleFixDocument :: Kontrakcja m => DocumentID -> m KontraLink
 handleFixDocument docid = onlySuperUser $ do
     ctx <- getContext
     mdoc <- query $ GetDocumentByDocumentID docid
@@ -2054,13 +2058,13 @@ handleFixDocument docid = onlySuperUser $ do
                     else return LoopBack
 
 
-showDocumentsToFix::Kontra  String
+showDocumentsToFix :: Kontrakcja m => m String
 showDocumentsToFix = onlySuperUser $ do
     ctx <- getContext
     docs <- query $ GetDocuments Nothing
     liftIO $ documentsToFixView (ctxtemplates ctx) $ filter isBroken docs
 
-handleSigAttach :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSigAttach docid siglinkid mh = do
   liftIO $ print "handleSigAttach"
   edoc <- getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
