@@ -94,7 +94,7 @@ module Templates.Templates
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State.Strict
-import Templates.TemplatesLoader (langVersion,readAllLangsTemplates,renderTemplateMain,templateList,KontrakcjaMultilangTemplates,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime,Lang(..))
+import Templates.TemplatesLoader hiding (getTemplates)
 import Text.StringTemplate.Base hiding (ToSElem,toSElem)
 import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
 import qualified Data.ByteString as BS
@@ -124,18 +124,6 @@ instance RenderTemplate () where
 
 instance RenderTemplate [(String, String)] where
    renderTemplate ts name attrs = renderTemplateMain ts name attrs id
-
-instance RenderTemplate [(String, [String])] where
-   renderTemplate ts name attrs = renderTemplateMain ts name attrs id
-
-
-{-| More advanced schema allows to pass to template params for complex types.
-   This can be done by passing as last param composition of setAttributeFunction
--}
-
-instance RenderTemplate (KontrakcjaTemplate -> KontrakcjaTemplate) where
-   renderTemplate ts name f = renderTemplateMain ts name ([] :: [(String, String)]) f
-
 
 type Fields = State ([(String,IO (SElem String))]) ()
 

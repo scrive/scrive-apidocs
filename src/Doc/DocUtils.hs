@@ -127,8 +127,10 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
 renderListTemplate :: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list =
   if length list > 1
-     then renderTemplate templates "morethenonelist" [("list", init list), ("last", [last list])]
-     else renderTemplate templates "nomorethanonelist" [("list", list)]
+     then renderTemplate templates "morethenonelist" $ do
+         field "list" $ init list
+         field "last" $ last list
+     else renderTemplate templates "nomorethanonelist" $ field "list" list
 
 -- CHECKERS
 
