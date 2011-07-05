@@ -171,116 +171,119 @@ accountFromSignFields :: Document -> SignatoryLink -> ActionID -> MagicHash -> F
 accountFromSignFields document signatorylink actionid magichash = do
     field "linkaccountfromsign" $ show (LinkAccountFromSign document signatorylink actionid magichash)
 
-flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
-flashDocumentDraftSaved templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashDocumentDraftSaved" ()
+flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
+flashDocumentDraftSaved =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashDocumentDraftSaved" ()
 
 
-flashDocumentTemplateSaved :: KontrakcjaTemplates -> IO FlashMessage
-flashDocumentTemplateSaved templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashDocumentTemplateSaved" ()
+flashDocumentTemplateSaved :: TemplatesMonad m => m FlashMessage
+flashDocumentTemplateSaved =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashDocumentTemplateSaved" ()
 
-flashDocumentRestarted :: KontrakcjaTemplates -> Document -> IO FlashMessage
-flashDocumentRestarted templates document =
-  fmap (toFlashMsg OperationDone) $
-      renderTemplateForProcess templates document processflashmessagerestarted $ do
-      documentInfoFields document
+flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
+flashDocumentRestarted document = do
+  templates <- getTemplates
+  toFlashMsg OperationDone <$> (liftIO $ renderTemplateForProcess templates document processflashmessagerestarted $ do
+      documentInfoFields document)
 
-flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
-flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
-  toFlashMsg OperationDone <$> (renderTemplate templates (template_name maybesigninfo) $ do
+flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
+flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
+  toFlashMsg OperationDone <$> (renderTemplateM (template_name maybesigninfo) $ do
     field "personname" . BS.toString $ getSmartName signlink)
   where
     template_name =
       maybe "flashRemindMailSentNotSigned"
       (const "flashRemindMailSentSigned")
 
-flashMessageCannotCancel :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageCannotCancel templates =
-  fmap (toFlashMsg OperationFailed) $
-    renderTemplate templates "flashMessageCannotCancel" ()
+flashMessageCannotCancel :: TemplatesMonad m => m FlashMessage
+flashMessageCannotCancel =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageCannotCancel" ()
 
-flashMessageCanceled :: KontrakcjaTemplates -> Document -> IO FlashMessage
-flashMessageCanceled templates document =
-  fmap (toFlashMsg SigningRelated) $
-    renderTemplateForProcess templates document processflashmessagecanceled $ do
-      documentInfoFields document
+flashMessageCanceled :: TemplatesMonad m => Document -> m FlashMessage
+flashMessageCanceled document = do
+  templates <- getTemplates
+  toFlashMsg SigningRelated <$> (liftIO $ renderTemplateForProcess templates document processflashmessagecanceled $ do
+      documentInfoFields document)
 
-flashAuthorSigned :: KontrakcjaTemplates -> IO FlashMessage
-flashAuthorSigned templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashAuthorSigned" ()
+flashAuthorSigned :: TemplatesMonad m => m FlashMessage
+flashAuthorSigned =
+  toFlashMsg OperationDone <$> renderTemplateM "flashAuthorSigned" ()
 
-flashMessageFailedToParseCSV :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageFailedToParseCSV templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageFailedToParseCSV" ()
+flashMessageFailedToParseCSV :: TemplatesMonad m => m FlashMessage
+flashMessageFailedToParseCSV =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageFailedToParseCSV" ()
 
-flashMessageCSVHasTooManyRows :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageCSVHasTooManyRows maxrows templates =
-  toFlashMsg OperationFailed <$> (renderTemplate templates "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
+flashMessageCSVHasTooManyRows :: TemplatesMonad m => Int -> m FlashMessage
+flashMessageCSVHasTooManyRows maxrows =
+  toFlashMsg OperationFailed <$> (renderTemplateM "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
 
-flashMessageBulkRemindsSent :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
-flashMessageBulkRemindsSent templates doctype =
-  toFlashMsg OperationDone <$> renderTextForProcess templates doctype processflashmessagebulkremindssent
+flashMessageBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
+flashMessageBulkRemindsSent doctype = do
+  templates <- getTemplates
+  toFlashMsg OperationDone <$> (liftIO $ renderTextForProcess templates doctype processflashmessagebulkremindssent)
 
-flashMessageNoBulkRemindsSent :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
-flashMessageNoBulkRemindsSent templates doctype =
-  toFlashMsg OperationFailed <$> renderTextForProcess templates doctype processflashmessagenobulkremindssent
+flashMessageNoBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
+flashMessageNoBulkRemindsSent doctype = do
+  templates <- getTemplates
+  toFlashMsg OperationFailed <$> (liftIO $ renderTextForProcess templates doctype processflashmessagenobulkremindssent)
 
-flashMessageSignableArchiveDone :: KontrakcjaTemplates -> DocumentType -> IO FlashMessage
-flashMessageSignableArchiveDone templates doctype =
-  toFlashMsg OperationDone <$> renderTextForProcess templates doctype processflashmessagearchivedone
+flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
+flashMessageSignableArchiveDone doctype = do
+  templates <- getTemplates
+  toFlashMsg OperationDone <$> (liftIO $ renderTextForProcess templates doctype processflashmessagearchivedone)
 
-flashMessageTemplateArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageTemplateArchiveDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageTemplateArchiveDone" ()
+flashMessageTemplateArchiveDone :: TemplatesMonad m => m FlashMessage
+flashMessageTemplateArchiveDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageTemplateArchiveDone" ()
 
-flashMessageAttachmentArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageAttachmentArchiveDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAttachmentArchiveDone" ()
+flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
+flashMessageAttachmentArchiveDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
 
-flashMessageInvalidCSV :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageInvalidCSV templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidCSV" ()
+flashMessageInvalidCSV :: TemplatesMonad m => m FlashMessage
+flashMessageInvalidCSV =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageInvalidCSV" ()
 
-flashMessageCSVSent :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageCSVSent doccount templates =
-  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageCSVSent" $ field "doccount" doccount)
+flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
+flashMessageCSVSent doccount =
+  toFlashMsg OperationDone <$> (renderTemplateM "flashMessageCSVSent" $ field "doccount" doccount)
 
-flashMessageSingleTemplateShareDone :: BS.ByteString -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageSingleTemplateShareDone docname templates =
-  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageSingleTemplateShareDone" $ field "docname" docname)
+flashMessageSingleTemplateShareDone :: TemplatesMonad m => BS.ByteString -> m FlashMessage
+flashMessageSingleTemplateShareDone docname =
+  toFlashMsg OperationDone <$> (renderTemplateM "flashMessageSingleTemplateShareDone" $ field "docname" docname)
 
-flashMessageMultipleTemplateShareDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageMultipleTemplateShareDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageMultipleTemplateShareDone" ()
+flashMessageMultipleTemplateShareDone :: TemplatesMonad m => m FlashMessage
+flashMessageMultipleTemplateShareDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleTemplateShareDone" ()
 
-flashMessageSingleAttachmentShareDone :: BS.ByteString -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageSingleAttachmentShareDone docname templates =
-  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageSingleAttachmentShareDone" $ field "docname" docname)
+flashMessageSingleAttachmentShareDone :: TemplatesMonad m => BS.ByteString -> m FlashMessage
+flashMessageSingleAttachmentShareDone docname =
+  toFlashMsg OperationDone <$> (renderTemplateM "flashMessageSingleAttachmentShareDone" $ field "docname" docname)
 
-flashMessageMultipleAttachmentShareDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageMultipleAttachmentShareDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageMultipleAttachmentShareDone" ()
+flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
+flashMessageMultipleAttachmentShareDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleAttachmentShareDone" ()
 
-flashMessageAccountActivatedFromSign :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageAccountActivatedFromSign templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountActivatedFromSign" ()
+flashMessageAccountActivatedFromSign :: TemplatesMonad m => m FlashMessage
+flashMessageAccountActivatedFromSign =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountActivatedFromSign" ()
 
-flashMessageAccountRemovedFromSign :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageAccountRemovedFromSign templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountRemovedFromSign" ()
+flashMessageAccountRemovedFromSign :: TemplatesMonad m => m FlashMessage
+flashMessageAccountRemovedFromSign =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountRemovedFromSign" ()
 
-flashMessageOnlyHaveRightsToViewDoc :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageOnlyHaveRightsToViewDoc templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageOnlyHaveRightsToViewDoc" ()
+flashMessageOnlyHaveRightsToViewDoc :: TemplatesMonad m => m FlashMessage
+flashMessageOnlyHaveRightsToViewDoc =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageOnlyHaveRightsToViewDoc" ()
 
-flashMessagePleaseSignWithEleg :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePleaseSignWithEleg templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignWithEleg" ()
+flashMessagePleaseSignWithEleg :: TemplatesMonad m => m FlashMessage
+flashMessagePleaseSignWithEleg =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessagePleaseSignWithEleg" ()
 
-flashMessagePleaseSign :: Document -> KontrakcjaTemplates -> IO FlashMessage
-flashMessagePleaseSign document templates =
-  toFlashMsg OperationDone <$> renderTextForProcess templates document processflashmessagepleasesign
+flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
+flashMessagePleaseSign document = do
+  templates <- getTemplates
+  toFlashMsg OperationDone <$> (liftIO $ renderTextForProcess templates document processflashmessagepleasesign)
 
 -- All doc view
 singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
@@ -586,11 +589,12 @@ pageAttachment'
       field "sigmagichash" $ fmap (show . signatorymagichash) msiglink
       field "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
 
-pageDocumentDesign :: Context
+pageDocumentDesign :: TemplatesMonad m
+             => Context
              -> Document
              -> (Maybe DesignStep)
              -> [Document]
-             -> IO String
+             -> m String
 pageDocumentDesign ctx
   document@Document {
       documentsignatorylinks
@@ -613,9 +617,9 @@ pageDocumentDesign ctx
              $ zip fields ([1..]::[Int])
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
-     csvstring <- renderTemplate (ctxtemplates ctx) "csvsendoutsignatoryattachmentstring" ()     
-     csvfields <- documentCsvFields templates document
-     renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
+     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
+     csvfields <- documentCsvFields document
+     renderTemplateM "pageDocumentDesign" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
@@ -668,15 +672,15 @@ documentFunctionalityFields Document{documenttype, documentfunctionality} = do
   field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
   field "isorder" $ documenttype == Signable Order
 
-documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
-documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do
+documentCsvFields :: TemplatesMonad m => Document -> m Fields
+documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =  do
   let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
       mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload
       csvproblems = maybe [] fst mcleancsv
       csvdata = maybe [] (csvbody . snd) mcleancsv
       csvPageSize :: Int = 10
       csvpages = splitCSVDataIntoPages csvPageSize csvdata
-  csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
+  csvproblemfields <- sequence $ zipWith (csvProblemFields (length csvproblems)) [1..] csvproblems
   return $ do
     field "csvproblems" $ csvproblemfields
     field "csvproblemcount" $ length csvproblems
@@ -721,9 +725,9 @@ csvFieldFields problems rowindex colindex val = do
         (Just r, Just c) | rowindex==r && colindex==c -> True
         _ -> False
 
-csvProblemFields :: KontrakcjaTemplates -> Int -> Int -> CSVProblem -> IO Fields
-csvProblemFields templates probcount number csvproblem = do
-    flashMsg <- (problemdescription csvproblem) templates
+csvProblemFields :: TemplatesMonad m => Int -> Int -> CSVProblem -> m Fields
+csvProblemFields probcount number csvproblem = do
+    flashMsg <- problemdescription csvproblem
     let desc = snd $ fromJust $ unFlashMessage flashMsg
     return $ do
       field "problemnumber" $ number

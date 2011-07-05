@@ -69,7 +69,7 @@ import Data.Monoid
 {- |
     If there's a problem this will create the appropriate FlashMessage.
 -}
-type ValidationMessage = KontrakcjaTemplates -> IO FlashMessage
+type ValidationMessage = TemplatesMonad m => m FlashMessage
 
 {- |
     The input data.
@@ -227,9 +227,9 @@ getFields fieldname = do
 -}
 flashValidationMessage :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 flashValidationMessage x@(_, Bad flashmsg) = do
-  Context{ctxtemplates,ctxflashmessages} <- getContext
-  msg <- liftIO $ flashmsg ctxtemplates
-  when (msg `notElem` ctxflashmessages) $ addFlash msg
+  flashmsgs <- ctxflashmessages <$> getContext
+  msg <- flashmsg
+  when (msg `notElem` flashmsgs) $ addFlash msg
   return x
 flashValidationMessage x = return x
 
@@ -240,8 +240,8 @@ flashValidationMessage x = return x
 -}
 logIfBad :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 logIfBad x@(input, Bad flashmsg) = do
-  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- getContext
-  flash <- liftIO $ flashmsg ctxtemplates
+  Context{ctxmaybeuser, ctxipnumber} <- getContext
+  flash <- flashmsg
   let username :: String
       username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser
       logtext = "ip " ++ (show ctxipnumber) ++
@@ -753,19 +753,18 @@ flashMessageInvalidFormat fieldtemplate =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidFormat" Nothing
 
 flashMessageWithFieldName :: String -> String -> Maybe Fields -> ValidationMessage
-flashMessageWithFieldName fieldtemplate templatename mfields templates = do
-   fieldname <- renderTemplate templates fieldtemplate ()
+flashMessageWithFieldName fieldtemplate templatename mfields = do
+   fieldname <- renderTemplateM fieldtemplate ()
    let fields = do
        when (isJust mfields) (fromJust mfields)
        field "fieldnametitlecase" (titleCase fieldname)
        field "fieldnamelowercase" (lowerCase fieldname)
-   flashMessage templatename (Just fields) templates
+   flashMessage templatename (Just fields)
    where titleCase (x:xs) = toUpper x : lowerCase xs
          titleCase [] = []
          lowerCase = map toLower
 
 flashMessage :: String -> Maybe Fields -> ValidationMessage
-flashMessage templatename mfields templates =
-    toFlashMsg OperationFailed <$>
-      renderTemplate templates templatename
+flashMessage templatename mfields =
+    toFlashMsg OperationFailed <$> renderTemplateM templatename
         (when (isJust mfields) (fromJust mfields))

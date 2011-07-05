@@ -335,7 +335,6 @@ handleAcceptAccountFromSign documentid
                             signmagichash
                             actionid
                             magichash = do
-  Context { ctxtemplates } <- getContext
   muser <- handleAccountSetupFromSign actionid magichash
   edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
   case edoc of
@@ -346,7 +345,7 @@ handleAcceptAccountFromSign documentid
         case muser of
           Nothing | Closed == documentstatus document -> addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
           Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
-          Just _ -> addFlash $ flashMessageAccountActivatedFromSign ctxtemplates
+          Just _ -> addFlashM $ flashMessageAccountActivatedFromSign
         return $ LinkSignDoc document signatorylink
 
 {- |
@@ -358,7 +357,6 @@ handleDeclineAccountFromSign documentid
                              signmagichash
                              actionid
                              magichash = do
-  Context{ ctxtemplates } <- getContext
   edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
   case edoc of
     Left _ -> mzero
@@ -366,7 +364,7 @@ handleDeclineAccountFromSign documentid
       Nothing -> mzero
       Just signatorylink -> do
         handleAccountRemovalFromSign actionid magichash
-        addFlash $ flashMessageAccountRemovedFromSign ctxtemplates
+        addFlashM flashMessageAccountRemovedFromSign
         return $ LinkSignDoc document signatorylink
 
 {- |
@@ -494,17 +492,16 @@ handleSignShow documentid
         let isFlashNeeded = Data.List.null ctxflashmessages
                             && (not (isJust $ maybesigninfo invitedlink))
 
-        ctx@Context{ctxtemplates} <- getContext
-        
         -- add a flash if needed
         case document of
           _ | not isFlashNeeded -> return ()
           _ | not (isSignatory invitedlink) -> 
-            addFlash $ flashMessageOnlyHaveRightsToViewDoc ctxtemplates
+            addFlashM flashMessageOnlyHaveRightsToViewDoc
           _ | document `allowsIdentification` ELegitimationIdentification -> 
-            addFlash $ flashMessagePleaseSignWithEleg ctxtemplates
-          _ -> addFlash $ flashMessagePleaseSign document ctxtemplates
+            addFlashM flashMessagePleaseSignWithEleg
+          _ -> addFlashM $ flashMessagePleaseSign document
 
+        ctx <- getContext
         case document of
           _ | isAttachment document -> 
             liftIO $ pageAttachmentForSignatory ctx document invitedlink
@@ -556,8 +553,8 @@ handleIssueShowGet docid = do
                   Preparation -> do
                     mattachments <- getDocsByLoggedInUser
                     case mattachments of
-                      Left _ -> liftIO $ Right <$> pageDocumentDesign ctx2 document step []
-                      Right attachments -> liftIO $ Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments)
+                      Left _ -> Right <$> pageDocumentDesign ctx2 document step []
+                      Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments)
                   _ ->  liftIO $ Right <$> pageDocumentForAuthor ctx2 document
               -- friends can just look (but not touch)
               (False, _, _) -> liftIO $ Right <$> pageDocumentForViewer ctx document Nothing
@@ -635,7 +632,7 @@ handleIssueSign document = do
                     addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    addFlash $ flashMessageCSVSent (length ds) $ ctxtemplates ctx
+                    addFlashM $ flashMessageCSVSent $ length ds
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
                       Signable Contract -> return $ LinkContracts emptyListParams
@@ -672,7 +669,7 @@ handleIssueSend document = do
                     addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    addFlash $ flashMessageCSVSent (length ds) $ ctxtemplates ctx
+                    addFlashM $ flashMessageCSVSent $ length ds
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
                       Signable Contract -> return $ LinkContracts emptyListParams
@@ -712,7 +709,7 @@ handleIssueSaveAsTemplate document = do
       case mndoc of
         Left _ -> mzero
         Right _newdocument -> do
-          addFlash $ flashDocumentTemplateSaved $ ctxtemplates ctx
+          addFlashM flashDocumentTemplateSaved
           return $ LinkTemplates emptyListParams
 
 
@@ -747,9 +744,8 @@ splitUpDocument doc =
     (Just csvupload, Right csvcustomfields) ->
       case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
         (_prob:_, _) -> do
-          Context{ctxtemplates} <- getContext
           signlast <- isFieldSet "signlast"
-          addFlash$ flashMessageInvalidCSV ctxtemplates
+          addFlashM flashMessageInvalidCSV
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- if (isTemplate doc)
@@ -983,22 +979,22 @@ handleIssueSave document = do
     _ <- updateDocument ctx document
     if (isTemplate document)
      then do
-          addFlash $ flashDocumentTemplateSaved $ ctxtemplates ctx
+          addFlashM flashDocumentTemplateSaved
           return $ LinkTemplates emptyListParams
      else do
-          addFlash $ flashDocumentDraftSaved $ ctxtemplates ctx
+          addFlashM flashDocumentDraftSaved
           return $ LinkContracts emptyListParams
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor document = do
-    ctx@Context { ctxtime, ctxipnumber} <- getContext
+    Context{ctxtime, ctxipnumber} <- getContext
     unless (document `allowsIdentification` EmailIdentification) mzero
     doc2 <- update $ CloseDocument (documentid document) ctxtime ctxipnumber  Nothing
     case doc2 of
         Nothing -> return $ LinkIssueDoc (documentid document)
         Just d -> do
             postDocumentChangeAction d document Nothing
-            addFlash $ flashAuthorSigned $ ctxtemplates ctx
+            addFlashM flashAuthorSigned
             return $ LinkIssueDoc (documentid document)
 
 {- |
@@ -1604,23 +1600,20 @@ handleOrdersArchive =  do
 
 handleSignableArchive :: Kontrakcja m => DocumentType -> m ()
 handleSignableArchive doctype =  do
-    Context { ctxtemplates } <- getContext
     handleIssueArchive
-    addFlash $ flashMessageSignableArchiveDone ctxtemplates doctype
+    addFlashM $ flashMessageSignableArchiveDone doctype
     return ()
 
 handleTemplateArchive :: Kontrakcja m => m KontraLink
 handleTemplateArchive = do
-    Context { ctxtemplates } <- getContext
     handleIssueArchive
-    addFlash $ flashMessageTemplateArchiveDone ctxtemplates
+    addFlashM flashMessageTemplateArchiveDone
     return $ LinkTemplates emptyListParams
 
 handleAttachmentArchive :: Kontrakcja m => m KontraLink
 handleAttachmentArchive = do
-    Context { ctxtemplates } <- getContext
     handleIssueArchive
-    addFlash $ flashMessageAttachmentArchiveDone ctxtemplates
+    addFlashM flashMessageAttachmentArchiveDone
     return $ LinkAttachments emptyListParams
 
 handleIssueArchive :: Kontrakcja m => m ()
@@ -1641,20 +1634,18 @@ handleIssueArchive = do
 
 handleTemplateShare :: Kontrakcja m => m KontraLink
 handleTemplateShare = withUserPost $ do
-    Context { ctxtemplates } <- getContext
     docs <- handleIssueShare
     case docs of
-      (d:[]) -> addFlash $ flashMessageSingleTemplateShareDone (documenttitle d) ctxtemplates
-      _ -> addFlash$ flashMessageMultipleTemplateShareDone ctxtemplates
+      (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
+      _ -> addFlashM flashMessageMultipleTemplateShareDone
     return $ LinkTemplates emptyListParams
 
 handleAttachmentShare :: Kontrakcja m => m KontraLink
 handleAttachmentShare = withUserPost $ do
-    Context { ctxtemplates } <- getContext
     docs <- handleIssueShare
     case docs of
-      (d:[]) -> addFlash $ flashMessageSingleAttachmentShareDone (documenttitle d) ctxtemplates
-      _ -> addFlash $ flashMessageMultipleAttachmentShareDone ctxtemplates
+      (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
+      _ -> addFlashM  flashMessageMultipleAttachmentShareDone
     return $ LinkAttachments emptyListParams
 
 handleIssueShare :: Kontrakcja m => m [Document]
@@ -1698,13 +1689,13 @@ handleBulkOrderRemind = withUserPost $ do
 -}
 handleIssueBulkRemind :: Kontrakcja m => DocumentType -> m [SignatoryLink]
 handleIssueBulkRemind doctype = do
-    ctx@(Context { ctxtemplates, ctxmaybeuser = Just user }) <- getContext
+    ctx@Context{ctxmaybeuser = Just user } <- getContext
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
     case (length remindedsiglinks) of
-      0 -> addFlash $ flashMessageNoBulkRemindsSent ctxtemplates doctype
-      _ -> addFlash $ flashMessageBulkRemindsSent ctxtemplates doctype
+      0 -> addFlashM $ flashMessageNoBulkRemindsSent doctype
+      _ -> addFlashM $ flashMessageBulkRemindsSent doctype
     return remindedsiglinks
     where
       docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
@@ -1772,14 +1763,14 @@ handleCancel docid = withUserPost $ do
     Left _ -> mzero
     Right doc -> do
       case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-        False -> addFlash $ flashMessageCannotCancel $ ctxtemplates ctx
+        False -> addFlashM flashMessageCannotCancel
         True -> do
           customMessage <- getCustomTextField "customtext"
           mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
           case mdoc' of
             Right doc' -> do
               sendCancelMailsForDocument customMessage ctx doc
-              addFlash $ flashMessageCanceled (ctxtemplates ctx) doc'
+              addFlashM $ flashMessageCanceled doc'
             Left errmsg -> addFlash (OperationFailed, errmsg)
       return (LinkIssueDoc $ documentid doc)
 
@@ -1796,7 +1787,6 @@ handleWithdrawn docid = do
 
 handleRestart :: Kontrakcja m => DocumentID -> m KontraLink
 handleRestart docid = withUserPost $ do
-  Context { ctxtemplates } <- getContext
   edoc  <- getDocByDocID docid
   case edoc of
     Left _ -> mzero
@@ -1805,7 +1795,7 @@ handleRestart docid = withUserPost $ do
       case edoc2 of
         Left _ -> mzero
         Right doc2 -> do
-          addFlash $ flashDocumentRestarted ctxtemplates doc2
+          addFlashM $ flashDocumentRestarted doc2
           return $ LinkIssueDoc (documentid doc2)
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -1821,7 +1811,7 @@ handleResend docid signlinkid  = withUserPost $ do
         Just signlink -> do
           customMessage <- getCustomTextField "customtext"
           _ <- sendReminderEmail customMessage ctx doc signlink
-          addFlash $ flashRemindMailSent (ctxtemplates ctx) signlink
+          addFlashM $ flashRemindMailSent signlink
           return (LinkIssueDoc docid)
 
 {- |
