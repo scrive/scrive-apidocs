@@ -1263,7 +1263,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   signatoriescompanies       <- getAndConcat "signatorycompany"
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
-  signatoriesemails          <- map (BSC.map toLower) <$> getAndConcat "signatoryemail"
+  signatoriesemails          <- map (fromMaybe BS.empty) <$> getOptionalFieldList asValidEmail "signatoryemail"
   signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> getAndConcat "signatorysignorder" -- a little filtering here, but we want signatories to have sign order > 0
   signatoriesroles           <- getAndConcat "signatoryrole"
   liftIO $ print signatoriesroles
