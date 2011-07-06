@@ -76,7 +76,7 @@ sendReminder = do
                              , isSignatory sl
                              , not $ hasSigned sl]
   _ <- forM siglinkstoremind $ (\signlink -> do
-                              mail <- liftKontra $ mailDocumentRemind Nothing ctx doc signlink
+                              mail <- mailDocumentRemind Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
                                 to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)

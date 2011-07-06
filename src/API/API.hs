@@ -53,6 +53,7 @@ import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
 import Data.Ratio
+import Templates.Templates
 import qualified Data.ByteString.Base64 as BASE64
 import qualified AppLogger as Log (debug)
 
@@ -63,8 +64,11 @@ type APIRequestBody = JSValue
 {- | API functions are build over Kontra with a ability to exit, and with some context -}
 --type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra) a
 
-newtype Kontrakcja m => APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
+newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+
+instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
+    getTemplates = liftKontra getTemplates
 
 instance Kontrakcja m => KontraMonad (APIFunction m c) where
     getContext    = liftKontra getContext
