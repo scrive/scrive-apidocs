@@ -1,4 +1,5 @@
-var _gaq = _gaq || [];
+/*
+ * var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-23625489-1']);
 _gaq.push(['_addOrganic','maps.google','q']);
   
@@ -54,3 +55,5 @@ ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
 (document.getElementsByTagName('head')[0] ||
 document.getElementsByTagName('body')[0]).appendChild(ga);
 })();
+
+*/
