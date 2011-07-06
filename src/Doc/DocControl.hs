@@ -940,7 +940,7 @@ getCSVFile fieldname = do
               case mcontents of
                  Left _ -> return $ Bad flashMessageFailedToParseCSV
                  Right contents
-                   | length contents > rowlimit -> return . Bad $ flashMessageCSVHasTooManyRows rowlimit
+                   | length contents > rowlimit -> return $ Bad $ flashMessageCSVHasTooManyRows rowlimit
                    | otherwise -> return $ Good (title, map (map BS.fromString) contents)
         _ -> return Empty
     rowlimit :: Int = 500
