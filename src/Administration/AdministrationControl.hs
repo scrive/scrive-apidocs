@@ -86,53 +86,47 @@ eitherFlash action = do
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
 showAdminMainPage = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
-  content <- liftIO $ adminMainPage ctxtemplates
+  content <- adminMainPage
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for advanced user administration -}
 showAdminUserAdvanced :: Kontrakcja m => m Response
 showAdminUserAdvanced = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- query $ GetAllUsers
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
+  content <- adminUsersAdvancedPage users params
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param
 it allows to edit user details -}
 showAdminUsers :: Kontrakcja m => Maybe UserID -> m Response
 showAdminUsers Nothing = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersPage ctxtemplates users params
+  content <- adminUsersPage users params
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsers (Just userId) = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   muser <- query $ GetUserByUserID userId
   case muser of
     Nothing -> mzero
     Just user -> do
       paymentmodel <- query $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
-      content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
+      content <- adminUserPage user paymentmodel
       renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForSales :: Kontrakcja m => m Response
 showAdminUsersForSales = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersPageForSales ctxtemplates users params
+  content <- adminUsersPageForSales users params
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForPayments :: Kontrakcja m => m Response
 showAdminUsersForPayments = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersPageForPayments ctxtemplates users params
+  content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
 getUsersAndStats :: Kontrakcja m => m [(User,DocStats,UserStats)]
@@ -148,10 +142,9 @@ getUsersAndStats = do
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   documents <- query $ GetDocumentsByAuthor userid
   Just user <- query $ GetUserByUserID userid
-  content <- liftIO $ adminUserUsageStatsPage ctxtemplates user $ do
+  content <- adminUserUsageStatsPage user $ do
     fieldsFromStats [user] documents
   renderFromBody TopEmpty kontrakcja content
 
@@ -159,11 +152,9 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 {- Shows table of all users-}
 showAllUsersTable :: Kontrakcja m => m Response
 showAllUsersTable = onlySuperUser $ do
-    Context {ctxtemplates} <- getContext
     users <- getUsersAndStats
-    content <- liftIO $ allUsersTable ctxtemplates users
+    content <- allUsersTable users
     renderFromBody TopEmpty kontrakcja content
-
 
 
 #ifndef WINDOWS
@@ -187,20 +178,18 @@ showStats = onlySuperUser $ do
 #else
     let df = empty
 #endif
-    Context {ctxtemplates} <- getContext
     let stats = StatsView { svDoccount = doccount docstats,
                             svSignaturecount = signaturecount docstats,
                             svUsercount = usercount userstats,
                             svViralinvitecount = viralinvitecount userstats,
                             svAdmininvitecount = admininvitecount userstats }
-    content <- liftIO $ statsPage ctxtemplates stats (toString df)
+    content <- statsPage stats $ toString df
     renderFromBody TopEmpty kontrakcja content
 
 indexDB :: Kontrakcja m => m Response
 indexDB = onlySuperUser $ do
-    Context {ctxtemplates} <- getContext
     files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-    content <- liftIO $ databaseContent ctxtemplates (sort files)
+    content <- databaseContent $ sort files
     renderFromBody TopEmpty kontrakcja content
 
 getUsersDetailsToCSV :: Kontrakcja m => m Response
@@ -309,7 +298,7 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
     when (isNothing muser) $
         addFlashM flashMessageUserWithSameEmailExists
 
@@ -493,9 +482,8 @@ handleCreateService = onlySuperUser $ do
 {- Services page-}
 showServicesPage :: Kontrakcja m => m Response
 showServicesPage = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   services <- query GetServices
-  content <- liftIO $ servicesAdminPage ctxtemplates services
+  content <- servicesAdminPage services
   renderFromBody TopEmpty kontrakcja content
 
 
@@ -647,16 +635,16 @@ calculateStatsFromUsers users =
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
 
-fieldsForQuarantine :: [Document] -> Fields
+fieldsForQuarantine :: (Functor m, MonadIO m) => [Document] -> Fields m
 fieldsForQuarantine documents = do
   field "linkquarantine" $ show LinkAdminQuarantine
-  field "documents" $ map fieldsForDoc documents
+  fieldFL "documents" $ map fieldsForDoc documents
   where
     fieldsForDoc Document{documentid, documenttitle, documentquarantineexpiry, documentsignatorylinks} = do
       field "docid" $ show documentid
       field "name" $ documenttitle
       field "expiry" $ fmap showDateYMD documentquarantineexpiry
-      field "signatories" $ map fieldsForSignatory documentsignatorylinks
+      fieldFL "signatories" $ map fieldsForSignatory documentsignatorylinks
     fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails, signatorylinkdeleted} = do
       field "siglinkid" $ show signatorylinkid
       field "email" $ signatoryemail signatorydetails
@@ -667,7 +655,7 @@ handleShowQuarantine =
   onlySuperUser $ do
     ctx <- getContext
     documents <- query $ GetQuarantinedDocuments $ currentServiceID ctx
-    content <- renderTemplateM "quarantinePage" $ do
+    content <- renderTemplateFM "quarantinePage" $ do
       fieldsForQuarantine documents
     renderFromBody TopEmpty kontrakcja content
 
@@ -712,7 +700,7 @@ handleUnquarantineAll = onlySuperUser $ do
             Right _msg -> return ()) res
   return LinkMain
 
-fieldsFromStats :: [User] -> [Document] -> Fields
+fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
@@ -725,7 +713,7 @@ fieldsFromStats users documents = do
         allMonthsStats = reverse $ IntMap.toList $ IntMap.fromListWith addStats (map ( \(k,v) -> (k `div` 100 * 100, v)) stats')
     let fieldify showDate (date,stat) = do
           field "date" $ showDate date
-          field "documents" $ do
+          fieldF "documents" $ do
             field "all" $ dsAllDocuments stat
             field "preparation" $ dsPreparationDocuments stat
             field "pending" $ dsPendingDocuments stat
@@ -737,13 +725,13 @@ fieldsFromStats users documents = do
             field "canceled" $ dsCanceledDocuments stat
             field "signatures" $ dsAllSignatures stat
             field "signaturesInClosed" $ dsSignaturesInClosed stat
-          field "users" $ do
+          fieldF "users" $ do
             field "all" $ dsAllUsers stat
             field "viralInvites" $ dsViralInvites stat
             field "adminInvites" $ dsAdminInvites stat
 
-    field "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
-    field "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
+    fieldFL "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
+    fieldFL "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
 
 handleStatistics :: Kontrakcja m => m Response
 handleStatistics =
@@ -751,16 +739,15 @@ handleStatistics =
     ctx <- getContext
     documents <- query $ GetDocuments $ currentServiceID ctx
     users <- query $ GetAllUsers
-    content <- renderTemplateM "statisticsPage" $ do
+    content <- renderTemplateFM "statisticsPage" $ do
       fieldsFromStats users documents
     renderFromBody TopEmpty kontrakcja content
 
 
 showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do
-     ctx <- getContext
-     tstats <- liftIO $ getTranslationStats
-     liftIO $ adminTranslationsPage (ctxtemplates ctx) tstats
+     tstats <- liftIO getTranslationStats
+     adminTranslationsPage tstats
 
 migrateDocsNoAuthor :: Kontrakcja m => m Response
 migrateDocsNoAuthor = do

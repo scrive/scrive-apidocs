@@ -168,12 +168,12 @@ flashMessageNoDataInCSVApartFromHeader =
 flashMessageRowLessThanMinColCount :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageRowLessThanMinColCount mincols =
   toFlashMsg OperationFailed <$>
-    renderTemplateM "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
+    renderTemplateFM "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
 
 flashMessageRowGreaterThanMaxColCount :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageRowGreaterThanMaxColCount maxcols =
   toFlashMsg OperationFailed <$>
-    renderTemplateM "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
+    renderTemplateFM "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
 
 flashMessageFirstNameIsRequired :: TemplatesMonad m => m FlashMessage
 flashMessageFirstNameIsRequired =

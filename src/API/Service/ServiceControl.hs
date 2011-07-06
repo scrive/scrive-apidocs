@@ -134,7 +134,7 @@ handleShowService sid = do
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
             || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)))
-       then liftIO $  Right <$> serviceAdminPage (ctxtemplates ctx)  (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
+       then Right <$> serviceAdminPage (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
        else return $ Left LinkMain
 
 handleShowServiceList :: Kontrakcja m => m String
@@ -143,10 +143,10 @@ handleShowServiceList = do
     case (ctxmaybeuser ctx, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
          (Just user, False) -> do
              srvs <- query $ GetServicesForAdmin $ ServiceAdmin $ unUserID $ userid user
-             liftIO $ servicesListPage (ctxtemplates ctx) srvs
+             servicesListPage srvs
          (_, True) -> do
              srvs <- query $ GetServices
-             liftIO $ servicesListPage (ctxtemplates ctx) srvs
+             servicesListPage srvs
          _ -> mzero
 
 handleServiceLogo :: Kontrakcja m => ServiceID -> m Response

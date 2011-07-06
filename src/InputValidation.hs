@@ -82,10 +82,10 @@ type Input = Maybe String
     Alternatively the user could've entered nothing.
 -}
 data Result a = Good a
-                | Bad ValidationMessage
-                | Empty
+              | Bad ValidationMessage
+              | Empty
 
-instance (Monoid a) => Monoid (Result a) where
+instance Monoid a => Monoid (Result a) where
     mappend (Good a1) (Good a2) = Good $ mappend a1 a2
     mappend Empty a = a
     mappend a Empty = a
@@ -752,7 +752,7 @@ flashMessageInvalidFormat :: String -> ValidationMessage
 flashMessageInvalidFormat fieldtemplate =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidFormat" Nothing
 
-flashMessageWithFieldName :: String -> String -> Maybe Fields -> ValidationMessage
+flashMessageWithFieldName :: TemplatesMonad m => String -> String -> Maybe (Fields m) -> m FlashMessage
 flashMessageWithFieldName fieldtemplate templatename mfields = do
    fieldname <- renderTemplateM fieldtemplate ()
    let fields = do
@@ -764,7 +764,7 @@ flashMessageWithFieldName fieldtemplate templatename mfields = do
          titleCase [] = []
          lowerCase = map toLower
 
-flashMessage :: String -> Maybe Fields -> ValidationMessage
+flashMessage :: TemplatesMonad m => String -> Maybe (Fields m) -> m FlashMessage
 flashMessage templatename mfields =
-    toFlashMsg OperationFailed <$> renderTemplateM templatename
+    toFlashMsg OperationFailed <$> renderTemplateFM templatename
         (when (isJust mfields) (fromJust mfields))

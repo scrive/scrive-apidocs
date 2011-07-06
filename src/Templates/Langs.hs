@@ -24,7 +24,7 @@ import Templates.TextTemplates
 import User.Lang
 
 
-translationDirs::[String]
+translationDirs ::[String]
 translationDirs = map langDir allValues
 
 getTextTemplates:: Lang -> IO [(String,String)]

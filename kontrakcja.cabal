@@ -54,7 +54,7 @@ Executable kontrakcja-server
 
   Hs-source-dirs: src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if !os(windows)

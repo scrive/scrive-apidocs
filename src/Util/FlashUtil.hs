@@ -1,10 +1,8 @@
 module Util.FlashUtil (
       module FlashMessage
     , Flashable(..)
-    , FlashableMonad(..)
+    , addFlashM
     ) where
-
-import Control.Monad.IO.Class
 
 import KontraMonad
 import FlashMessage
@@ -16,22 +14,16 @@ class Flashable a m where
 instance KontraMonad m => Flashable FlashMessage m where
     addFlash = addFlashMsg
 
+instance KontraMonad m => Flashable (Maybe FlashMessage) m where
+    addFlash = maybe (return ()) addFlashMsg
+
 instance KontraMonad m => Flashable (FlashType, String) m where
     addFlash = addFlashMsg . uncurry toFlashMsg
 
-instance (MonadIO m, KontraMonad m) => Flashable (IO FlashMessage) m where
-    addFlash fm = liftIO fm >>= addFlashMsg
-
 ------------------------------------------------------------------
 
-class FlashableMonad a where
-    addFlashM :: KontraMonad m => m a -> m ()
-
-instance FlashableMonad FlashMessage where
-    addFlashM fm = fm >>= addFlashMsg
-
-instance FlashableMonad (Maybe FlashMessage) where
-    addFlashM fm = fm >>= maybe (return ()) addFlashMsg
+addFlashM :: (Flashable a m, KontraMonad m) => m a -> m ()
+addFlashM fm = fm >>= addFlash
 
 ------------------------------------------------------------------
 

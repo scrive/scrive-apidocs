@@ -29,6 +29,7 @@ import Mails.SendMail
 import MinutesTime
 import Redirect
 import Happstack.Util.Common
+import Templates.Templates
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 
@@ -41,19 +42,18 @@ payexTest Nothing = do
                                          if (isJust invoice)
                                            then generateInvoice user
                                            else return ()
-                                         liftIO $ query $ GetUserPayments $ userid user
+                                         query $ GetUserPayments $ userid user
                           Nothing -> return []
-             content <- liftIO $ viewPayments  (ctxtemplates ctx)  payments
-             renderFromBody TopNone kontrakcja $ content
+             content <- viewPayments payments
+             renderFromBody TopNone kontrakcja content
 
 payexTest (Just pid) =
                    do
-                    ctx <- getContext
                     mpayment <- sequenceMM $ fmap (liftIO . query . GetPayment . PaymentId) $ readM pid
                     case mpayment of
                      Just payment1 -> do
                                       payment2 <- if (Send == paymentState payment1)
-                                       then liftIO $ checkIfPaymentIsComplete payment1
+                                       then checkIfPaymentIsComplete payment1
                                        else return payment1
                                       agreement <- getField "agreement"
                                       initial <- getField "initial"
@@ -69,12 +69,12 @@ payexTest (Just pid) =
                                        then case (paymentState payment3) of
                                              (Failed _ state) -> do
                                                                  let npayment = payment3 {paymentState = state}
-                                                                 liftIO $ update $ UpdatePayment $ npayment
+                                                                 update $ UpdatePayment $ npayment
                                                                  return $ npayment
                                              _ ->  return payment3
                                        else return payment3
-                                      content <- liftIO $ viewPayment (ctxtemplates ctx) payment4
-                                      renderFromBody TopNone kontrakcja $ content
+                                      content <- viewPayment payment4
+                                      renderFromBody TopNone kontrakcja content
                      Nothing -> sendRedirect $ LinkPayExView Nothing
 
 {-| Ajax info about how much we will chage a user for this document |-}
@@ -84,7 +84,7 @@ paymentInfo documentid = do
                   signatoriesCount <- fmap (fromMaybe 0) $ readField "signatoriesCount"
                   allowedidtypes <- fmap (fromMaybe "") $  getField  "allowedidtypes"
                   let allowedIdentification  =  (if "Email" `isInfixOf` allowedidtypes  then [EmailIdentification]  else []) ++  (if "ELeg" `isInfixOf` allowedidtypes   then [ELegitimationIdentification]   else [])
-                  mdocument <- liftIO $ query $ GetDocumentByDocumentID $ documentid
+                  mdocument <- query $ GetDocumentByDocumentID $ documentid
                   case (mdocument,ctxmaybeuser ctx) of
                     (Just document,Just user) -> if isAuthor (document, user)
                                                   then do
@@ -98,20 +98,20 @@ paymentInfo documentid = do
 getCostOfSigning :: Kontrakcja m => User -> Document -> Integer -> [IdentificationType] -> m Money
 getCostOfSigning _u _d sc _its = return $ Money sc
 
-makePayExSoapCall :: (PayExRequest a,XmlContent (PC a),XmlContent (PX b)) => PC a ->  IO (PX b)
+makePayExSoapCall :: MonadIO m => (PayExRequest a,XmlContent (PC a),XmlContent (PX b)) => PC a ->  m (PX b)
 makePayExSoapCall rq = do
-                        res <- makeSoapCallINSECURE (actionURL rq) (soapActionName rq) rq
-                        return $ joinPayExError res
+    res <- liftIO $ makeSoapCallINSECURE (actionURL rq) (soapActionName rq) rq
+    return $ joinPayExError res
 
 sendInitRequest :: Kontrakcja m => Payment -> Maybe String -> m (PX InitResponse)
 sendInitRequest payment agreement =  do
                  request <- askRq
                  ctx <- getContext
                  rq <- liftIO $ toPC $ PayExInit request (ctxtemplates ctx) agreement payment
-                 liftIO $ makePayExSoapCall rq
+                 makePayExSoapCall rq
 
 
-sendCompleteRequest :: Payment -> IO (PX CompleteResponse)
+sendCompleteRequest :: MonadIO m => Payment -> m (PX CompleteResponse)
 sendCompleteRequest payment =  do
                  rq <- toPC $ PayExComplete payment
                  makePayExSoapCall rq
@@ -130,19 +130,19 @@ sendCancelRequest payment = do
                            makePayExSoapCall rq
 -}
 
-sendAutopayRequest :: String -> Payment -> IO (PX AutopayResponse)
+sendAutopayRequest :: MonadIO m => String -> Payment -> m (PX AutopayResponse)
 sendAutopayRequest agreement payment = do
                            rq <- toPC $ PayExAutopay agreement payment
                            makePayExSoapCall rq
 
-sendCreateAgreementRequest :: String -> Money -> IO (PX AgreementResponse)
+sendCreateAgreementRequest :: MonadIO m => String -> Money -> m (PX AgreementResponse)
 sendCreateAgreementRequest s m =  do
                                   rq <- toPC $ PayExAgreement {
                                           agreementDescription = s,
                                           agreementMax = m }
                                   makePayExSoapCall rq
 
-tryCreateAgreement :: User -> IO (Maybe String)
+tryCreateAgreement ::MonadIO m => User -> m (Maybe String)
 tryCreateAgreement user = do
                            response <- sendCreateAgreementRequest "Creating agreement" (Money 10000)
                            case response of
@@ -151,12 +151,12 @@ tryCreateAgreement user = do
                               _ <- update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {paymentAgreementRef= Just $ agreementRef res}
                               return $ Just $ agreementRef res
 
-processAutopay :: Payment -> String -> IO Payment
+processAutopay :: MonadIO m => Payment -> String -> m Payment
 processAutopay payment agreement = runWhenState payment Waiting $
                                    do
-                                    result <- liftIO $ sendAutopayRequest agreement payment
+                                    result <- sendAutopayRequest agreement payment
                                     let npayment = updatePayment result payment
-                                    liftIO $ update $ UpdatePayment npayment
+                                    update $ UpdatePayment npayment
                                     return $ npayment
 
 initPayment :: Kontrakcja m => Payment -> Maybe String -> m Payment
@@ -164,24 +164,22 @@ initPayment payment agreement = runWhenState payment Waiting $
                            do
                             result <- sendInitRequest payment agreement
                             let npayment = updatePayment result payment
-                            liftIO $ update $ UpdatePayment npayment
+                            update $ UpdatePayment npayment
                             return $ npayment
 
-startPaymentForDocument :: Context -> User -> Document -> IO ()
-startPaymentForDocument ctx user document =
-                                          do
-                                           payment <- createPaymentForDocument user document
-                                           when (paymentState payment == Waiting) $
-                                            if (takeImmediatelyPayment user)
-                                             then
-                                             case (paymentAgreementRef $ userpaymentaccount user) of
-                                              Just agreement -> do
-                                                                 _ <- processAutopay payment agreement
-                                                                 return ()
-                                              Nothing -> sendPaymentMail ctx user payment
-                                             else return ()
+startPaymentForDocument :: TemplatesMonad m => Context -> User -> Document -> m ()
+startPaymentForDocument ctx user document = do
+    payment <- createPaymentForDocument user document
+    when (paymentState payment == Waiting) $
+        if (takeImmediatelyPayment user)
+           then case (paymentAgreementRef $ userpaymentaccount user) of
+                     Just agreement -> do
+                         _ <- processAutopay payment agreement
+                         return ()
+                     Nothing -> sendPaymentMail ctx user payment
+           else return ()
 
-sendPaymentMail :: Context -> User -> Payment -> IO ()
+sendPaymentMail :: TemplatesMonad m => Context -> User -> Payment -> m ()
 sendPaymentMail ctx user payment = do
     mail <- mailNewPayment ctx user payment
     scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
@@ -192,28 +190,28 @@ processPayment payment user tryToCreateAgreement= runWhenState payment Waiting $
                             if (tryToCreateAgreement)
                              then
                               do
-                                v <- liftIO $ tryCreateAgreement user
+                                v <- tryCreateAgreement user
                                 initPayment payment v
                              else
                                case (paymentAgreementRef $ userpaymentaccount user) of
-                                 Just agreement -> liftIO $ processAutopay payment agreement
+                                 Just agreement -> processAutopay payment agreement
                                  Nothing ->  initPayment payment Nothing
 
 
 
-checkIfPaymentIsComplete :: Payment -> IO Payment
+checkIfPaymentIsComplete :: MonadIO m => Payment -> m Payment
 checkIfPaymentIsComplete payment = runWhenState payment Send $
                                     do
                                     result <- sendCompleteRequest payment
-                                    putStrLn $ show result
+                                    liftIO $ putStrLn $ show result
                                     let npayment = updatePayment result payment
-                                    now <- getMinutesTime
+                                    now <- liftIO getMinutesTime
                                     update $ UpdatePayment npayment {completeAttempts = now:(completeAttempts npayment)}
                                     return $ npayment
 
-createPaymentForDocument :: User -> Document -> IO Payment
+createPaymentForDocument :: MonadIO m => User -> Document -> m Payment
 createPaymentForDocument user doc = do
-                                       paymentscheme <- getUserPaymentSchema user
+                                       paymentscheme <- liftIO $ getUserPaymentSchema user
                                        let val =  getDocumentPaymentValue paymentscheme doc
                                        payment <- update $ NewPayment emptyPayment {
                                             userId = userid user,

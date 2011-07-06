@@ -145,9 +145,9 @@ handleDeliveredInvitation docid signlinkid = do
              -- send it only if email was reported deferred earlier
              when (invitationdeliverystatus signlink == Mail.Deferred) $ do
                  ctx <- getContext
-                 title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredTitle" ()
+                 title <- renderTemplateM "invitationMailDeliveredAfterDeferredTitle" ()
                  let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-                 content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredContent" $ do
+                 content <- wrapHTML' =<< (renderTemplateFM "invitationMailDeliveredAfterDeferredContent" $ do
                      field "authorname" $ getFullName documentauthordetails
                      field "email" $ getEmail signlink
                      field "documenttitle" $ BS.toString $ documenttitle doc)
@@ -171,9 +171,9 @@ handleDeferredInvitation docid signlinkid = do
     case mdoc of
          Right doc -> do
              ctx <- getContext
-             title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeferredTitle" ()
+             title <- renderTemplateM "invitationMailDeferredTitle" ()
              let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-             content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeferredContent" $ do
+             content <- wrapHTML' =<< (renderTemplateFM "invitationMailDeferredContent" $ do
                 field "authorname" $ getFullName documentauthordetails
                 field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                 field "ctxhostpart" $ ctxhostpart ctx)
@@ -187,12 +187,12 @@ handleUndeliveredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> 
 handleUndeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     ctx <- getContext
-    title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
+    title <- renderTemplateM "invitationMailUndeliveredTitle" ()
     let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
     case getSignatoryLinkFromDocumentByID doc signlinkid of
          Just signlink -> do
              _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
-             content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredContent" $ do
+             content <- wrapHTML' =<< (renderTemplateFM "invitationMailUndeliveredContent" $ do
                  field "authorname" $ getFullName documentauthordetails
                  field "documenttitle" $ documenttitle doc
                  field "email" $ getEmail signlink
