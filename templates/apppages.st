@@ -283,9 +283,9 @@ header=
                                 </span>
                                  
      <a href="$linklogout$" class="document-button">$_headerLogOut()$</a>
-     <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
-     <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
-     <a href="$linkmain$" class="document-button">$_headerSend()$</a>
+     <a href="$linkaccount$" class="document-button" ajaxrel="#body-container">$_headerAccount()$</a>
+     <a href="$linkissue$" class="document-button" ajaxrel="#body-container">$_headerArchive()$</a>
+     <a href="$linkmain$" class="document-button" ajaxrel="#body-container">$_headerSend()$</a>
 
                                 $else$
                                 <a href="#" class="login-button"><p>$_login()$</p></a>

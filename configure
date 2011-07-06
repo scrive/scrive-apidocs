@@ -1,0 +1,22 @@
+#!/bin/sh
+
+if [ "$TEST" != "1" ]; then
+  cabal configure \
+    -f-input-validation-test \
+    -f-trust-weaver-test \
+    -f-action-scheduler-test \
+    -f-html-test \
+    -f-docstate-test \
+    "$@"
+else
+  tests="input-validation trust-weaver action-scheduler docstate"
+
+  mkdir -p ./dist/build/kontrakcja-server/kontrakcja-server-tmp
+  for t in $tests; do
+    mkdir -p ./dist/build/kontrakcja-${t}-test
+    ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
+           ./dist/build/kontrakcja-${t}-test/kontrakcja-${t}-test-tmp
+  done
+
+  cabal configure "$@"
+fi
