@@ -386,7 +386,7 @@ och anpassning</p>
                                             </div>
                                             <div class="modal-body" style="padding:0px">
                                             <div class="modal-content">
-<iframe src="http://player.vimeo.com/video/22397410?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="653" height="400" frameborder="0"></iframe>
+<iframe src="$protocol$//player.vimeo.com/video/22397410?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="653" height="400" frameborder="0"></iframe>
 
                                             </div>
                                             </div>
