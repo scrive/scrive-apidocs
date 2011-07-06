@@ -112,6 +112,8 @@ embeddDocumentFrame = do
     let slocation = fromMaybe (ctxhostpart ctx) $ show <$> (servicelocation $ servicesettings srvs)
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> apiAskString "location"
+    -- there is no check that the documentid is part of this service!
+    -- -EN
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No such document"
     let doc = fromJust mdocument
@@ -124,9 +126,13 @@ embeddDocumentFrame = do
          (Just company, Just siglink) -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
+                     -- must check that user is part of service
+                     -- -EN
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
                 else do
+                     -- must check that company is part of service
+                     -- -EN
                      ssid <- createServiceSession (Left $ companyid $ company) location
                      returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
          _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
@@ -145,6 +151,8 @@ createDocument = do
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
+   -- Again, we don't check that the document is from the service
+   -- -EN
    mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
    involved  <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
    tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
@@ -236,6 +244,8 @@ getDocuments = do
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
+    -- This does not check if document is part of service
+    -- -EN
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
     api_doc <- api_document True (fromJust mdocument)
@@ -243,6 +253,8 @@ getDocument = do
 
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
+    -- This does not check if document is part of service
+    -- -EN
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
     let doc = fromJust mdocument
@@ -258,6 +270,8 @@ setDocumentTag =  do
 --TODO this will not work since we don't have real document removal
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
+    -- This does not check if document is part of service
+    -- -EN
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document to remove can be found"
     let doc = fromJust mdocument
@@ -270,6 +284,7 @@ removeDocument = do
 -}
 connectUserToSession :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
 connectUserToSession _ uid ssid = do
+    -- really need to check that the uid belongs to service
     loaded <- loadServiceSession (Right uid) ssid
     if (loaded)
      then return $ BackToReferer
@@ -277,6 +292,7 @@ connectUserToSession _ uid ssid = do
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession _ cid ssid = do
+    -- really need to check that the cid belongs to service  
     loaded <- loadServiceSession (Left cid) ssid
     if (loaded)
      then return $ BackToReferer
