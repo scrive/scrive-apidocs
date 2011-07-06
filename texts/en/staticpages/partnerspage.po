@@ -19,11 +19,11 @@ msgstr "www.chalmers.se"
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner3Area"
-msgstr "Datasäkerhet"
+msgstr "Data security"
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner3About"
-msgstr "Chalmers är ett av världens mest prestigefyllda tekniska universitet. SkrivaPå har ett nära samarbete med Chalmers Datasäkerhetsgrupp och samverkar i framtagningen av morgondagens säkerhetslösningar för så kallade cloud tjänster. "
+msgstr "Chalmers Technical University is one of the most prestigious technical universities in the world. Scrive cooperates closely with the data security group at Chalmers and participate in the development of the cloud sourced security solutions of the future."
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner3"
@@ -35,11 +35,11 @@ msgstr "www.trustweaver.com"
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner2Area"
-msgstr "Dokumentsäkerhet och signering"
+msgstr "Document security and signing"
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner2About"
-msgstr "TrustWeaver är ett specialiserat IT-säkerhetsföretag som tillhandahåller e-signerings-, tidsstämplings-, arkivering- och fakturainnehållslösningar som gör det möjligt för företag att vara 100% säkra att deras e-fakturor och andra företagskritiska elektroniska dokument godkänns av kontrollinstitut och domstolar som fullständiga och oändrade över väldigt långa tidsperioder."
+msgstr "TrustWeaver is a specialist IT-security company providing e-signature, time stamping, archiving and invoice solutions. TrustWaever makes it possible for companies to be 100 % confident that e-invoices and other critical documents will be approved by control institutes and courts as complete, and unchanged over very long periods of time."
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner2"
@@ -51,11 +51,11 @@ msgstr "www.logica.se"
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner1Area"
-msgstr "Identifieringsteknik"
+msgstr "Identification technology"
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner1About"
-msgstr "Logica är ett ledande internationellt IT-tjänstföretag som skapar värde genom att integrera människor, affärer och IT. Logica erbjuder verksamhetsinriktade konsulttjänster, systemintegration och outsourcing till kunder runt om i världen som inkluderar många av Europas största företag och organisationer."
+msgstr "Logica is a leading international IT-service company creating value by integrating people, business and IT. Logica provides business oriented consultant services, system integrations and outsourcing to customers around the world, including many of the largest companies and organisations in Europe."
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPagePartner1"
@@ -63,13 +63,13 @@ msgstr "Logica"
 
 #: staticpages/partnerspage.st:partnersPage
 msgid "_partnersPageMetaDescription"
-msgstr "Signera och arkivera dina avtal elektroniskt. Vi har nära samarbete med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik."
+msgstr "Sign and store your contracts online. We cooperate closely with several leading players in data security and signing technology."
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPageH1Body"
-msgstr "SkrivaPå är en tjänst för att underteckna och arkivera dokument elektroniskt. Vi har ett nära samarbete med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik."
+msgstr "Scrive is a service for signing and storing documents online. We cooperate closely with several leading players in data security and signing technology."
 
 #: staticpages/partnerspage.st:partnersPageContents
 msgid "_partnersPageH1"
-msgstr "SkrivaPå´s Partners"
+msgstr "Scrive's partners"
 
