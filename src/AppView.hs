@@ -69,7 +69,7 @@ renderFromBody _topmenu title content = do
     loginreferer <- getLoginReferer
     ctx <- getContext
     let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-    res <- simpleResponse =<< (liftIO $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content)
+    res <- simpleResponse =<< pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content
     clearFlashMsgs
     return res
 
@@ -77,35 +77,33 @@ renderFromBody _topmenu title content = do
 {- |
    Renders some page body xml into a complete page of xml
 -}
-pageFromBody :: Context
+pageFromBody :: TemplatesMonad m
+             => Context
              -> Bool
              -> Maybe String
              -> Maybe String
              -> Bool
              -> String
              -> String
-             -> IO String
-
-pageFromBody ctx@Context{ ctxtemplates }
+             -> m String
+pageFromBody ctx
              loginOn
              referer
              email
              showCreateAccount
              title
              bodytext = do
-    renderTemplate ctxtemplates "wholePage" $ do
+    renderTemplateFM "wholePage" $ do
         field "content" bodytext
         standardPageFields ctx title False showCreateAccount loginOn referer email
-
-
 
 embeddedPage :: String -> Kontra Response
 embeddedPage pb = do
     ctx <- getContext
-    bdy <- renderTemplateM "embeddedPage" $ do
-            field "content" pb
-            serviceFields (ctxservice ctx) (ctxlocation ctx)
-            standardPageFields ctx "" False False False Nothing Nothing
+    bdy <- renderTemplateFM "embeddedPage" $ do
+        field "content" pb
+        serviceFields (ctxservice ctx) (ctxlocation ctx)
+        standardPageFields ctx "" False False False Nothing Nothing
     res <- simpleResponse bdy
     clearFlashMsgs
     return res
@@ -113,11 +111,11 @@ embeddedPage pb = do
 embeddedErrorPage :: Kontra Response
 embeddedErrorPage = do
     ctx <- getContext
-    content <- renderTemplateM "embeddedErrorPage" $ do
+    content <- renderTemplateFM "embeddedErrorPage" $ do
         serviceFields (ctxservice ctx) (ctxlocation ctx)
     simpleResponse content
 
-serviceFields:: Maybe Service -> String -> Fields
+serviceFields :: MonadIO m => Maybe Service -> String -> Fields m
 serviceFields (Just service) location = do
     field "location" location
     field "buttons" $ isJust $ servicebuttons $ serviceui service
@@ -129,16 +127,14 @@ serviceFields (Just service) location = do
     field "barsbackground"  $ servicebarsbackground $ serviceui service
     field "logo" $ isJust $ servicelogo $ serviceui service
     field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-
-
 serviceFields Nothing location =
     field "location" location
 
-sitemapPage :: Kontra String
+sitemapPage :: Kontrakcja m => m String
 sitemapPage = do
-    ctx <- getContext
-    liftIO $ renderTemplate (ctxtemplates ctx) "sitemapPage" $ do
-        field "hostpart" $ case ctxhostpart ctx of
+    hostpart <- ctxhostpart <$> getContext
+    renderTemplateFM "sitemapPage" $ do
+        field "hostpart" $ case hostpart of
                                 ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                                 xs -> xs
 
@@ -169,12 +165,12 @@ clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Context -> String -> Bool -> Bool -> Kontra String
-renderTemplateAsPage ctx@Context{ctxtemplates} templateName publicpage showCreateAccount = do
+renderTemplateAsPage :: Kontrakcja m => Context -> String -> Bool -> Bool -> m String
+renderTemplateAsPage ctx templateName publicpage showCreateAccount = do
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
-    wholePage <- liftIO $ renderTemplate ctxtemplates templateName $ do
+    wholePage <- renderTemplateFM templateName $ do
         standardPageFields ctx kontrakcja publicpage showCreateAccount2 loginOn loginreferer Nothing
     return wholePage
 
@@ -191,7 +187,7 @@ getLoginReferer = do
     let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
     return loginreferer
 
-standardPageFields :: Context -> String -> Bool -> Bool -> Bool -> Maybe String -> Maybe String -> Fields
+standardPageFields :: TemplatesMonad m => Context -> String -> Bool -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m
 standardPageFields ctx title publicpage showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
@@ -212,9 +208,9 @@ signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
 {- |
    The contents of the login page.  This is read from a template.
 -}
-pageLogin :: Context -> Maybe String -> Maybe String -> IO String
-pageLogin ctx referer email =
-  renderTemplate (ctxtemplates ctx) "pageLogin" $ do
+pageLogin :: TemplatesMonad m => Maybe String -> Maybe String -> m String
+pageLogin referer email =
+  renderTemplateFM "pageLogin" $ do
       field "referer" referer
       field "email" email
 
@@ -231,9 +227,9 @@ ajaxError = simpleResponse "<script>window.location='/'</script>"
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage :: Context -> Bool -> Maybe String -> Maybe String ->  IO String
+firstPage :: TemplatesMonad m => Context -> Bool -> Maybe String -> Maybe String -> m String
 firstPage ctx loginOn referer email =
-    renderTemplate (ctxtemplates ctx) "firstPage"  $ do
+    renderTemplateFM "firstPage" $ do
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
         mainLinksFields
@@ -242,7 +238,7 @@ firstPage ctx loginOn referer email =
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields :: Fields
+mainLinksFields :: MonadIO m =>  Fields m
 mainLinksFields = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
@@ -258,10 +254,10 @@ mainLinksFields = do
    Defines some standard context information as fields handy for substitution
    into templates.
 -}
-contextInfoFields :: Context -> Fields
+contextInfoFields :: TemplatesMonad m => Context -> Fields m
 contextInfoFields ctx = do
     field "logged" $ isJust (ctxmaybeuser ctx)
-    field "flashmessages" $ map (flashMessageFields $ ctxtemplates ctx) (ctxflashmessages ctx)
+    fieldFL "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
@@ -270,32 +266,35 @@ contextInfoFields ctx = do
     and nobody is trying to login, and a user isn't logged in.
     The flag means that things like snoobi won't be contacted.
 -}
-publicSafeFlagField :: Context -> Bool -> Bool -> Fields
+publicSafeFlagField :: MonadIO m => Context -> Bool -> Bool -> Fields m
 publicSafeFlagField ctx loginOn publicpage = do
     field "publicsafe" $ publicpage
                            && (not loginOn)
                            && (isNothing $ ctxmaybeuser ctx)
 
-flashMessageFields :: KontrakcjaTemplates -> FlashMessage -> Fields
-flashMessageFields templates flash = do
-    field "type" $ (\t ->
+flashMessageFields :: TemplatesMonad m => FlashMessage -> Fields m
+flashMessageFields flash = do
+    fieldM "type" $ (\t ->
         case t of
              SigningRelated  -> "blue"
              OperationDone   -> "green"
              OperationFailed -> "red"
              _               -> "") <$> ftype
-    field "message" msg
-    field "isModal" $ (== Modal) <$> ftype
+    fieldM "message" msg
+    fieldM "isModal" $ (== Modal) <$> ftype
     where
-        fm = fromJust . unFlashMessage <$> instantiate templates flash
+        fm :: TemplatesMonad m => m (FlashType, String)
+        fm = fromJust . unFlashMessage <$> instantiate flash
+        ftype :: TemplatesMonad m => m FlashType
         ftype = fst <$> fm
+        msg :: TemplatesMonad m => m String
         msg = snd <$> fm
 
-loginModal :: Bool -> Maybe String -> Maybe String -> Fields
+loginModal :: MonadIO m => Bool -> Maybe String -> Maybe String -> Fields m
 loginModal on referer email = do
     field "loginModal" $ on
-    field "referer" $ referer
-    field "email"   $ email
+    field "referer"    $ referer
+    field "email"      $ email
 
 modalError :: TemplatesMonad m => m FlashMessage
 modalError = toModal <$> renderTemplateM "modalError" ()

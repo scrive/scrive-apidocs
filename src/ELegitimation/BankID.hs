@@ -46,7 +46,7 @@ import Util.SignatoryLinkUtils
  -}
 handleSignBankID :: Kontrakcja m => String -> DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleSignBankID provider docid signid magic = do
-    Context { ctxtime, ctxtemplates } <- getContext
+    Context{ctxtime} <- getContext
     let seconds = toSeconds ctxtime 
 
     -- sanity check
@@ -69,7 +69,7 @@ handleSignBankID provider docid signid magic = do
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
             liftIO $ print "before"
-            tbs <- liftIO $ getTBS ctxtemplates document
+            tbs <- getTBS document
             liftIO $ print tbs
             liftIO $ print "after"
             encodetbsresponse <- encodeTBS providerCode tbs transactionid
@@ -119,8 +119,7 @@ handleSignPostBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHa
 handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
-            , ctxipnumber
-            , ctxtemplates } <- getContext
+            , ctxipnumber } <- getContext
     liftIO $ print "eleg sign post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
@@ -196,7 +195,7 @@ handleSignPostBankID docid signid magic = do
                         authoremail = getEmail authorsiglink
                     liftIO $ print msg
                     Log.debug msg
-                    txt <- liftIO $ renderTemplate ctxtemplates "signCanceledDataMismatchModal" $ do
+                    txt <- renderTemplateFM "signCanceledDataMismatchModal" $ do
                         field "authorname"  authorname
                         field "authoremail" authoremail
                         field "message"     $ concat $ map para $ lines msg
@@ -244,17 +243,14 @@ handleSignPostBankID docid signid magic = do
 -}
 handleIssueBankID :: Kontrakcja m => String -> DocumentID -> m (Either KontraLink Response)
 handleIssueBankID provider docid = withUserGet $ do
-    Context { ctxtime
-            , ctxmaybeuser = Just author
-            , ctxtemplates
-            } <- getContext
+    Context { ctxtime, ctxmaybeuser = Just author } <- getContext
     let seconds = toSeconds ctxtime
 
     document <- queryOrFail $ GetDocumentByDocumentID docid
 
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs"
-        AwaitingAuthor -> liftIO $ getTBS ctxtemplates document
+        AwaitingAuthor -> getTBS document
         _              -> mzero
 
     failIfNotAuthor document author
@@ -441,18 +437,18 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
         Just (ELegDataMismatch msg sid _ _ _)
             | sid == signatorylinkid -> do
                 maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
-                content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
+                content1 <- signCanceledDataMismatch document signatorylink (isJust maybeuser) msg
                 renderFromBody TopEmpty kontrakcja content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
 
-signCanceledDataMismatch :: KontrakcjaTemplates
-                            -> Doc.DocState.Document
-                            -> SignatoryLink
-                            -> Bool
-                            -> String
-                            -> IO String
-signCanceledDataMismatch  templates _document _signatorylink _hasaccount msg =
-    renderTemplate templates "signCanceledDataMismatch" $
+signCanceledDataMismatch :: TemplatesMonad m
+                         => Doc.DocState.Document
+                         -> SignatoryLink
+                         -> Bool
+                         -> String
+                         -> m String
+signCanceledDataMismatch _document _signatorylink _hasaccount msg =
+    renderTemplateFM "signCanceledDataMismatch" $
         field "cancelationMessage" msg
 
 -- JSON - just enough to get things working
@@ -734,22 +730,22 @@ findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m EL
 findTransactionByIDOrFail transactions transactionsid =
     returnJustOrMZero $ find ((== transactionsid) . transactiontransactionid) transactions
 
-getTBS :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
-getTBS templates doc = do
-    entries <- getSigEntries templates doc
-    renderTemplate templates "tbs" $ do
+getTBS :: TemplatesMonad m => Doc.DocState.Document -> m String
+getTBS doc = do
+    entries <- getSigEntries doc
+    renderTemplateFM "tbs" $ do
         field "documentname"   $ documenttitle doc
         field "documentnumber" $ show $ documentid doc
         field "tbssigentries"  entries
 
-getSigEntries :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
-getSigEntries templates doc = do
-    s <- mapM (getSigEntry templates . signatorydetails) $ documentsignatorylinks doc
+getSigEntries :: TemplatesMonad m => Doc.DocState.Document -> m String
+getSigEntries doc = do
+    s <- mapM (getSigEntry . signatorydetails) $ documentsignatorylinks doc
     return $ intercalate "\n" s
 
-getSigEntry :: KontrakcjaTemplates -> SignatoryDetails -> IO String
-getSigEntry templates signatorydetails =
-    renderTemplate templates "tbssig" $ do
+getSigEntry :: TemplatesMonad m => SignatoryDetails -> m String
+getSigEntry signatorydetails =
+    renderTemplateFM "tbssig" $ do
         field "firstname" $ getFirstName signatorydetails
         field "lastname"  $ getLastName signatorydetails
         field "company"   $ getCompanyName signatorydetails

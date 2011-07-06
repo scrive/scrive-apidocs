@@ -77,6 +77,8 @@
 -----------------------------------------------------------------------------
 module Templates.Templates
     ( RenderTemplate(..)
+    , renderTemplateF
+    , renderTemplateFM
     , readAllLangsTemplates
     , templateList
     , KontrakcjaTemplates
@@ -84,9 +86,10 @@ module Templates.Templates
     , langVersion
     , TemplatesMonad(..)
     , Fields
-    , Field
     , field
-    , fieldIO
+    , fieldM
+    , fieldF
+    , fieldFL
     , getTemplatesModTime
     , Lang(..)
     ) where
@@ -110,56 +113,64 @@ class (Functor a, MonadIO a) => TemplatesMonad a where
 -- logs.  Params - Templates (loaded from local files), Name of
 -- template, something that sets params value.
 class RenderTemplate a where
-    renderTemplate :: KontrakcjaTemplates -> String -> a -> IO String
-    renderTemplateM :: (TemplatesMonad m) => String -> a -> m String
+    renderTemplate  :: MonadIO m => KontrakcjaTemplates -> String -> a -> m String
+    renderTemplateM :: TemplatesMonad m => String -> a -> m String
     renderTemplateM name value = do
         templates <- getTemplates
-        liftIO $ renderTemplate templates name value
+        renderTemplate templates name value
 
 -- | Basic rendering interface It allows to pass some string
 -- attributes to templates. Usefull when working with simple templates.
 instance RenderTemplate () where
-    renderTemplate ts name () = renderTemplateMain ts name ([] :: [(String,String)]) id
+    renderTemplate ts name () =
+        liftIO $ renderTemplateMain ts name ([] :: [(String,String)]) id
 
 instance RenderTemplate [(String, String)] where
-    renderTemplate ts name attrs = renderTemplateMain ts name attrs id
+    renderTemplate ts name attrs = liftIO $ renderTemplateMain ts name attrs id
 
-instance RenderTemplate Fields where
-    renderTemplate ts name fields = do
-        attrs <- sequence $ map packIO $ execState fields []
-        renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
+-- Same here what below for Field typeclass - generalized Fields
+-- won't work as instances of RenderTemplate, so I had to make
+-- them distinct functions. Oh well, too bad.
 
-type Fields = State ([(String, IO (SElem String))]) ()
+renderTemplateF :: MonadIO m => KontrakcjaTemplates -> String -> Fields m -> m String
+renderTemplateF ts name fields = do
+    attrs <- sequence $ map packIO $ execState fields []
+    liftIO $ renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
 
-class Field a where
-    field :: String -> a -> Fields
+renderTemplateFM :: TemplatesMonad m => String -> Fields m -> m String
+renderTemplateFM name fields = do
+    ts <- getTemplates
+    renderTemplateF ts name fields
 
-instance (ToSElem a) => Field (IO a) where
-    field n v = modify $ \s -> (n, toSElem <$> v) : s
+type Fields m = State ([(String, m (SElem String))]) ()
 
-instance (ToSElem a) => Field a where
-    field n v = modify $ \s -> (n, return $ toSElem v) : s
+-- Had to scrap Field typeclass, because more generalized design
+-- wasn't working with it. I don't know if it's even possible to
+-- achieve the same result using typeclass and various instances
+-- instead of different functions (field, fieldM etc.) because
+-- even when I got this module to compile, everything else was
+-- complaining about missing instances :|
 
-instance Field Fields where
-    field n v = modify $ \s -> (n, val) : s
-      where
-        val :: Stringable a => IO (SElem a)
-        val = toSElem . Map.fromList <$> (sequence $ map packIO $ execState v [])
+field :: (MonadIO m, ToSElem a) => String -> a -> Fields m
+field n v = modify $ \s -> (n, return $ toSElem v) : s
 
-instance Field [Fields] where
-    field n fs = modify $ \s -> (n, toSElem <$> mapM vals fs) : s
+fieldM :: (Functor m, MonadIO m, ToSElem a) => String -> m a -> Fields m
+fieldM n v = modify $ \s -> (n, toSElem <$> v) : s
+
+fieldF :: (Functor m, MonadIO m) => String -> Fields m -> Fields m
+fieldF n v = modify $ \s -> (n, val) : s
+    where
+      val = toSElem . Map.fromList <$> (sequence $ map packIO $ execState v [])
+
+fieldFL :: (Functor m, MonadIO m) => String -> [Fields m] -> Fields m
+fieldFL n fs = modify $ \s -> (n, toSElem <$> mapM vals fs) : s
       where
         vals f = Map.fromList <$> (sequence $ map packIO $ execState f [])
 
-packIO :: (a, IO b) -> IO (a, b)
-packIO (name,comp)= do
+packIO :: MonadIO m => (a, m b) -> m (a, b)
+packIO (name, comp)= do
     res <- comp
     return (name,res)
-
-
---IO type forcer, to deal with universal monads
-fieldIO :: Field (IO a) => String -> IO a -> Fields
-fieldIO = field
 
 -- | Importan Util. We overide default serialisation to support serialisation of bytestrings .
 -- | We use ByteString with UTF all the time but default is Latin-1 and we get strange chars

@@ -9,8 +9,10 @@
 -----------------------------------------------------------------------------
 module PayEx.PayExConfig(PayExConfig(..),getPayExConfig) where
 
+import Control.Monad.IO.Class
+
 {- | View of payment models (not editable) -}
-getPayExConfig:: IO PayExConfig
+getPayExConfig :: MonadIO m => m PayExConfig
 getPayExConfig = return $ PayExConfig {
                             accountNumber  ="50251179"
                           , encryptionKey ="ArxLm7bk3craUnNU2K9r"

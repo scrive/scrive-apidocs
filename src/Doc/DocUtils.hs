@@ -124,13 +124,13 @@ joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 -- where does this go? -EN
-renderListTemplate :: KontrakcjaTemplates -> [String] -> IO String
-renderListTemplate templates list =
+renderListTemplate :: TemplatesMonad m => [String] -> m String
+renderListTemplate list =
   if length list > 1
-     then renderTemplate templates "morethenonelist" $ do
+     then renderTemplateFM "morethenonelist" $ do
          field "list" $ init list
          field "last" $ last list
-     else renderTemplate templates "nomorethanonelist" $ field "list" list
+     else renderTemplateFM "nomorethanonelist" $ field "list" list
 
 -- CHECKERS
 

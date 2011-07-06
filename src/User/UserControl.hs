@@ -91,7 +91,6 @@ getUserInfoUpdate  = do
           , userphone  = fromMaybe (userphone ui) mphone
         }
     where
-        getValidField :: Kontrakcja m => (String -> Result BS.ByteString) -> String -> m (Maybe BS.ByteString)
         getValidField = getDefaultedField BS.empty
 
 copyCompanyInfo :: User -> UserInfo -> UserInfo

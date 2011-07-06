@@ -22,21 +22,18 @@ import Payments.PaymentsUtils
 
 {- | View of payment models (not editable) -}
 handlePaymentsModelForViewView :: Kontrakcja m => m Response
-handlePaymentsModelForViewView = onlySuperUser $
-                                 do
-                                  ctx<- getContext
-                                  models <- query $ GetPaymentModels
-                                  content <- liftIO $ adminView (ctxtemplates ctx) models
-                                  renderFromBody TopEmpty kontrakcja content
+handlePaymentsModelForViewView = onlySuperUser $ do
+    models <- query $ GetPaymentModels
+    content <- adminView models
+    renderFromBody TopEmpty kontrakcja content
 
 {- | View of payment models (editable) -}
 handlePaymentsModelForEditView :: Kontrakcja m => m Response
-handlePaymentsModelForEditView =  onlySuperUser $
-                                  do
-                                   ctx<- getContext
-                                   models <- query $ GetPaymentModels
-                                   content <- liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
-                                   renderFromBody TopEmpty kontrakcja content
+handlePaymentsModelForEditView =  onlySuperUser $ do
+    models <- query $ GetPaymentModels
+    content <- adminViewForSuperuser models
+    renderFromBody TopEmpty kontrakcja content
+
 {- | Handle change of models values request.
      Supports full and partial upgrade.
      Fields names like in PaymentModelView (see PaymentsView) with PaymentAccountType suffix.

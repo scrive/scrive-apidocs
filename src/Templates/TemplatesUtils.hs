@@ -12,6 +12,7 @@
 module Templates.TemplatesUtils
     (wrapHTML,wrapHTML',option,soption,Option(..),markParity) where
 
+import Control.Monad.IO.Class
 import Data.Data
 import Templates.Templates
 
@@ -24,7 +25,7 @@ wrapHTML :: KontrakcjaTemplates -> String -> IO String
 wrapHTML templates body =  renderTemplate templates "wrapHTML" [("body",body)]
 
 wrapHTML' :: TemplatesMonad m => String -> m String
-wrapHTML' body = renderTemplateM "wrapHTML" $ field "body" body
+wrapHTML' body = renderTemplateFM "wrapHTML" $ field "body" body
 
 {- |
    Option one of standard wrappers. It holds two strings and bool.
@@ -50,18 +51,18 @@ soption::(a->String)->(a->String)->a->Option
 soption f g x= Option {oValue=f x, oText=g x, oSelected = True}
 
 {-| USEFULL. Marks list off fields with even and odd values. Caunts from 1!-}
-markParity::[Fields] -> [Fields]
+markParity :: MonadIO m => [Fields m] -> [Fields m]
 markParity (f0:(f1:fs)) = [markOdd f0 ,markEven f1]++markParity fs
 markParity (f:[]) = [markOdd f]
 markParity [] = []
 
-markEven::Fields -> Fields
+markEven :: MonadIO m => Fields m -> Fields m
 markEven f = do
     f
     field "even" True
     field "odd"  False
 
-markOdd::Fields -> Fields
+markOdd :: MonadIO m => Fields m -> Fields m
 markOdd f = do
     f
     field "even" False

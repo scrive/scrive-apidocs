@@ -337,7 +337,7 @@ handleHomepage = do
   case (ctxmaybeuser, ctxservice) of
     (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
     (Nothing, Nothing) -> do
-      response <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
       clearFlashMsgs
       return $ Left response
     _ -> Left <$> embeddedErrorPage
@@ -670,7 +670,7 @@ handleLoginGet = do
        Nothing -> do
          referer <- getField "referer"
          email   <- getField "email"
-         content <- liftIO $ V.pageLogin ctx referer email
+         content <- V.pageLogin referer email
          V.renderFromBody V.TopNone V.kontrakcja content
 
 {- |

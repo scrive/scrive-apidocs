@@ -104,15 +104,15 @@ getListParamsForSearch = do
 
 
 {- Standard fields-}
-pagedListFields:: PagedList a-> Fields
+pagedListFields :: (Functor m, MonadIO m) => PagedList a -> Fields m
 pagedListFields (PagedList{list,pageSize,totalCount,params}) = do
-    field "params" $ do
-        field "sorting" $ mapM_ (\sp -> field sp sp) $ sorting params
+    fieldF "params" $ do
+        fieldF "sorting" $ mapM_ (\sp -> field sp sp) $ sorting params
         field "search" $ join $ nothingIfEmpty <$> search params
-    field "pages" $ for [1..totalPages] $ \n -> do
+    fieldFL "pages" $ for [1..totalPages] $ \n -> do
         field "nr" $ show $ n
         field "current" $ n == (page params)
-    field "elements" $ do
+    fieldF "elements" $ do
         field "min" $ show $ minElementIndex
         field "max" $ show $ minElementIndex + length list - 1
         field "total" $ show totalCount
