@@ -1613,7 +1613,7 @@ $(function () {
      * We should not be doing this if there is no chance for his to work
      */
     
-    if( typeof(XMLSerializer) !== 'undefined' &&
+    if( false && typeof(XMLSerializer) !== 'undefined' &&
         hasOverrideMimeType() &&
         !!(window.history && history.pushState)) {
 
