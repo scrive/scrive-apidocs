@@ -37,6 +37,10 @@ Flag action-scheduler-test
 Flag html-test
   Description: Build kontrakcja-html-test
   Default: True
+  
+Flag login-test
+  Description: Build kontrakcja-login-test
+  Default: True
 
 Flag docstate-test
   Description: Build kontrakcja-docstate-test
@@ -104,6 +108,7 @@ Executable kontrakcja-server
   Build-depends: HPDF
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck
+  Build-depends: hxt, hxt-xpath
   Build-depends: text
   Build-depends: transformers
   Build-depends: unix
@@ -326,6 +331,44 @@ Executable kontrakcja-docstate-test
   cpp-options: -DDocStateTest=Main
 
   Main-is: DocStateTest.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable kontrakcja-login-test
+  if flag(login-test)
+    Buildable: True
+  else
+    Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  Hs-source-dirs: test/src src pdfseal/inc
+
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+
+  cpp-options: -DLoginTest=Main
+
+  Main-is: LoginTest.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

@@ -1,5 +1,6 @@
 module StateHelper(
-    withTestState
+    withTestState,
+    withTemporaryDirectory
 ) where
 
 import AppState (AppState(..))
