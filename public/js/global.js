@@ -1583,10 +1583,13 @@ function saveOverlay(d, o) {
     $(d).click(function() {
         if ($(this).data("overlay") == undefined) {
             if ($(window).height() < 1650)
-                // never seen screen with bigger respolution
-                top = standardDialogTop;
+            {
+                o.top = standardDialogTop;
+            }
             else
+            {    
                 o.top = $(this).offset().top - $(document).scrollTop() - 400;
+            }   
             o.load = true;
             $(this).overlay(o);
         }
