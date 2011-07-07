@@ -1571,6 +1571,12 @@ safeReady(function() {
     $("#toscontainer").css("position", "absolute");
 });
 
+
+safeReady(function() {
+    $(".campaign-play-video").click(function(){
+        window.open('http://player.vimeo.com/video/22397410','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+    })
+});
 /*
  * Function to deal with the situation when page is very big (more then 3000px)
  * So when basiclly all page, normally seen as 10 or more pages are interpreted

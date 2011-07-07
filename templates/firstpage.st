@@ -112,8 +112,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="rightMain">
                                         <a href="#" class="login-button"><p>Logga in</p></a>
                                         <div class="campaign-container">
-                                                <div class="campaign-play" rel=".campaign-play-video"></div>
-                                                <div class="campaign-text" rel=".campaign-play-video">
+                                                <div class="campaign-play campaign-play-video" ></div>
+                                                <div class="campaign-text campaign-play-video">
                                                         <blockquote>”Processerna blir betydligt smidigare.”</blockquote>
                                                         <em>- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise</em>
                                                 </div>
@@ -124,19 +124,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </div>
                 <div id="nav-container">
                         <div class="content">
-                                <div class="col left campaign-play" rel=".campaign-play-video">
+                                <div class="col left campaign-play campaign-play-video">
                                         <div class="icon one"></div>
                                         <a href="#"><h3>Skicka</h3>
                                         <p>Ladda upp dokument,<br />välj mottagare, skicka!</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
-                                <div class="col centre campaign-play" rel=".campaign-play-video">
+                                <div class="col centre campaign-play campaign-play-video">
                                         <div class="icon two"></div>
                                         <a href="#"><h3>Skriva på</h3>
                                         <p>Alla parter skriver på<br />elektroniskt.</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
-                                <div class="col right campaign-play" rel=".campaign-play-video">
+                                <div class="col right campaign-play campaign-play-video">
                                         <div class="icon three"></div>
                                         <a href="#"><h3>Spara och arkivera</h3>
                                         <p>Vi sparar dina dokument<br />tryggt och säkert.</p></a>
@@ -375,22 +375,6 @@ och anpassning</p>
                         <div class="spacer40"></div>
                 </div>
                 $pageFooter()$
-            <div class="modal-container campaign-play-video" style="display:none;width:653px;height: 475px">
-                                            <div class="modal-header">
-                                                <span class="modal-icon message"></span>
-                                                    <span class="modal-title">
-                                                        <h3>Demonstration</h3>
-                                                        <p>Följande är ett demonstrationsklipp av hur man undertecknar ett dokument med vår tjänst.</p>
-                                                    </span>
-                                                <a class="modal-close close"> </a>
-                                            </div>
-                                            <div class="modal-body" style="padding:0px">
-                                            <div class="modal-content">
-<iframe src="$protocol$//player.vimeo.com/video/22397410?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="653" height="400" frameborder="0"></iframe>
-
-                                            </div>
-                                            </div>
-           </div>
          </div>
         </body>
 </html>
