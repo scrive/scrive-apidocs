@@ -6,6 +6,7 @@ module AppControl
     , AppConf(..)
     , AppGlobals(..)
     , defaultAWSAction
+    , handleLoginPost
     ) where
 
 import API.IntegrationAPI
@@ -457,6 +458,10 @@ appHandler appConf appGlobals = do
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
   rq <- askRq
+  liftIO $ do
+      bi <- readInputsBody rq
+      putStrLn $ show rq
+      putStrLn $ "INPUTS BODY: " ++ show bi
   session <- handleSession
   ctx <- createContext rq session
   handle rq session ctx
