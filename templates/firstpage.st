@@ -284,7 +284,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="highlight-container">
                                                 <div class="ribbon"></div>
                                                 $_PriceTableHighlightedColumn()$
-                                                </ul>
                                         </div>
                                 </div>
                                 <div class="drop-shadow-container">
