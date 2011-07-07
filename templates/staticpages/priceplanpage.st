@@ -23,8 +23,7 @@ priceplanPageContents=
                     <table>
                         <thead>
                             <tr>
-                                <th>
-                                    $_priceplanPagePriceplanTop()$</th>
+                                $_priceplanPagePriceplanTop()$
                             </tr>
                         </thead>
                         <tbody>
