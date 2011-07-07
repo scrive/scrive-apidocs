@@ -44,7 +44,8 @@ docStateTests = [
   testThat "when I call update document, it doesn't change the document id" testDocumentUpdateDoesNotChangeID,
   testThat "when I call update document, i can change the title" testDocumentUpdateCanChangeTitle,
   testThat "when I attach a file to a real document, it ALWAYS returns Right" testDocumentAttachAlwaysRight,
-  testThat "when I attach a file to a bad docid, it ALWAYS returns Left" testNoDocumentAttachAlwaysLeft
+  testThat "when I attach a file to a bad docid, it ALWAYS returns Left" testNoDocumentAttachAlwaysLeft,
+  testThat "when I attach a file, the file is attached" testDocumentAttachHasAttachment
                 ]
                 
 testThat :: String -> Assertion -> Test
@@ -133,11 +134,29 @@ testNoDocumentAttachAlwaysLeft :: Assertion
 testNoDocumentAttachAlwaysLeft = do
   -- setup
   --execute
+  -- non-existent docid
   edoc <- update $ AttachFile (DocumentID 4) "some file" "some content"
   --assert
   case edoc of
     Left _msg     -> assertSuccess
     Right _newdoc -> assertFailure "Should not succeed if no document"
+
+testDocumentAttachHasAttachment :: Assertion
+testDocumentAttachHasAttachment = do
+  -- setup
+  mt <- whatTimeIsIt
+  author <- assumingBasicUser
+  doc <- assumingBasicContract mt author
+  let fname = "some file" :: BS.ByteString
+      content  = "some content" :: BS.ByteString
+  --execute
+  edoc <- update $ AttachFile (documentid doc) fname content
+  --assert
+  case edoc of
+    Left msg -> assertFailure $ "Could not run AttachFile: " ++ msg
+    Right newdoc -> case find ((== fname) . filename) (documentfiles newdoc) of
+      Just _ -> assertSuccess
+      _ -> assertFailure "File does exist or wrong name"
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
