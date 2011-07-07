@@ -96,7 +96,7 @@ apiResponse action = action >>= simpleResponse . encode
 -}
 
 apiCall :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c APIResponse -> m Response
-apiCall s f = dir s $ do
+apiCall s f = dir "api" $ dir s $ do
     methodM POST
     Log.debug $ "API call " ++ s ++ " matched"
     apiResponse $ do
