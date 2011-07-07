@@ -689,19 +689,24 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
+            Log.debug $ "Logging " ++ show email
             maybeuser <- query $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just User{ userid, userpassword }
                     | verifyPassword userpassword passwd -> do
+                        Log.debug $ "Logging: User logged in"
                         logUserToContext maybeuser
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordSuccessfulLogin userid time
                         return BackToReferer
                 Just User{userid } -> do
+                        Log.debug $ "Logging: User found, Not verified password"
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordFailedLogin userid time
                         return $ LinkLogin $ InvalidLoginInfo linkemail
-                Nothing -> return $ LinkLogin $ InvalidLoginInfo linkemail
+                Nothing -> do
+                    Log.debug $ "Logging: No user matching the email found"  
+                    return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
 
 {- |
