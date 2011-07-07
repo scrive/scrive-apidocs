@@ -33,7 +33,6 @@ import Routing
 import API.Service.ServiceState
 import API.APICommons
 import Doc.DocUtils
-import User.UserState
 import Company.CompanyState
 import Data.Foldable (fold)
 import System.Random (randomIO)
