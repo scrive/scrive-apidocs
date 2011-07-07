@@ -1,4 +1,7 @@
-module API.MailAPI (mailAPI) where
+module API.MailAPI (
+      handleMailCommand
+    , mailAPI
+    ) where
 
 import Doc.DocState
 import Kontra

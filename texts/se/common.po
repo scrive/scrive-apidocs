@@ -123,6 +123,11 @@ msgstr "Delning"
 msgid "_send"
 msgstr "Skicka"
 
+#: firstpage.st:firstPage
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageVAT"
+msgstr "* Alla priser är exkl moms."
+
 #: modals.st:modalAccountSetup
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts

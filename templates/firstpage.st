@@ -5,7 +5,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <title>$_title()$</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 <meta http-equiv="content-language" content="sv" />
-                <meta name="description" content="$_firstPageMetaDescription()$Signera och arkivera dina avtal elektroniskt. Spara tid, pengar och frustration – både åt dig och dina kunder." />
+                <meta name="description" content="$_firstPageMetaDescription()$" />
                 <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
@@ -111,8 +111,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="rightMain">
                                         <a href="#" class="login-button"><p>$_login()$</p></a>
                                         <div class="campaign-container">
-                                                <div class="campaign-play" rel=".campaign-play-video"></div>
-                                                <div class="campaign-text" rel=".campaign-play-video">
+                                                <div class="campaign-play campaign-play-video"></div>
+                                                <div class="campaign-text campaign-play-video">
                                                         <blockquote>$_QuoteOnVid()$</blockquote>
                                                         <em>$_QuoteOnVidBy()$</em>
                                                 </div>
@@ -123,19 +123,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </div>
                 <div id="nav-container">
                         <div class="content">
-                                <div class="col left campaign-play" rel=".campaign-play-video">
+                                <div class="col left campaign-play campaign-play-video">
                                         <div class="icon one"></div>
                                         <a href="#"><h3>$_StepsH3Send()$</h3>
                                         <p>$_StepsH3SendBody()$</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
-                                <div class="col centre campaign-play" rel=".campaign-play-video">
+                                <div class="col centre campaign-play campaign-play-video">
                                         <div class="icon two"></div>
                                         <a href="#"><h3>$_StepsH3Sign()$</h3>
                                         <p>$_StepsH3SignBody()$</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
-                                <div class="col right campaign-play" rel=".campaign-play-video">
+                                <div class="col right campaign-play campaign-play-video">
                                         <div class="icon three"></div>
                                         <a href="#"><h3>$_StepsH3Store()$</h3>
                                         <p>$_StepsH3StoreBody()$</p></a>
@@ -263,97 +263,37 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 </div>
                                 <div class="price-plan-container">
                                         <table class="price-plan">
-                                                <tr>
-                                                        <th>
-                                                                <h3>Small</h3>
-                                                                <p>Förbättra processerna i den mindre organisationen</p>
-                                                        </th>
-                                                        <th>
-                                                                <h3>Team</h3>
-                                                                <p>Effektivisera teamet med enkla medel</p>
-                                                        </th>
-                                                        <th>
-                                                                <h3>Business</h3>
-                                                                <p>En helhetslösning för många användningsområden</p>
-                                                        </th>
-                                                        <th>
-                                                                <h3>Enterprise</h3>
-                                                                <p>Större volymer, integrationer 
-och anpassning</p>
-                                                        </th>
+                                                <tr>$_PriceTableHead()$
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td>5 användare</td>
-                                                        <td>15 användare</td>
-                                                        <td>50 användare</td>
-                                                        <td>Offert</td>
+                                                        $_PriceTableRow1()$
                                                 </tr>
                                                 <tr>
-                                                        <td>500 signaturer/år</td>
-                                                        <td>1000 signaturer/år</td>
-                                                        <td>2000 signaturer/år</td>
-                                                        <td>Från 4000 signaturer/år</td>
+                                                        $_PriceTableRow2()$
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td>500 dok laging</td>
-                                                        <td>Obegränsad lagring</td>
-                                                        <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>
+                                                        $_PriceTableRow3()$
                                                 </tr>
                                                 <tr>
-                                                        <td>Basfunktioner</td>
-                                                        <td>Basfunktioner</td>
-                                                        <td>Advancerade funktioner</td>
-                                                        <td>Anpassad lösning</td>
+                                                        $_PriceTableRow4()$
                                                 </tr>
                                                 <tr class="big-row">
-                                                        <td>
-                                                                <h4>35 kr/signatur</h4>
-                                                                <a href="/priser">Detaljerad prisplan</a>
-                                                        </td>
-                                                        <td>
-                                                                <h4>32.50 kr/signatur</h4>
-                                                                <a href="/priser">Detaljerad prisplan</a>
-                                                        </td>
-                                                        <td>
-                                                                <h4>30 kr/signatur</h4>
-                                                                <a href="/priser">Detaljerad prisplan</a>                                                   
-                                                        </td>
-                                                        <td>
-                                                                <h4>Offert</h4>
-                                                                <a href="/priser">Detaljerad prisplan</a>
-                                                        </td>
+                                                        $_PriceTablePriceRow()$
                                                 </tr>
                                         </table>
                                         <div class="highlight-container">
                                                 <div class="ribbon"></div>
-                                                <ul class="highlight-rows">
-                                                        <li class="top">
-                                                                <h3>Business</h3>
-                                                                <p>En helhetslösning för många användningsområden </p>
-                                                        </li>
-                                                        <li class="odd">50 användare</li>
-                                                        <li>
-                                                                <p>2000 signaturer/år</p>
-                                                        </li>
-                                                        <li class="odd">Obegränsad lagring</li>
-                                                        <li>Avancerade funktioner</li>
-                                                        <li class="bottom">
-                                                                <h4>30 kr/signatur</h4>
-                                                                <a href="/priser">Detaljerad prisplan</a>   
-                                                        </li>
-                                                </ul>
+                                                $_PriceTableHighlightedColumn()$
                                         </div>
                                 </div>
                                 <div class="drop-shadow-container">
                                         <div class="drop-shadow"></div>
                                 </div>
                                 <div class="price-plan-annotation">
-                                * Alla priser är exkl moms.<br/>
+                                $_priceplanPageVAT()$
                                 </div>
                                 <div class="price-plan-details">
-                                  <h3>Gratis för privatpersoner och enmansföretagare</h3>
-                                  <p>Det finns tusen skäl varför alla bör signera sina dokument elektroniskt. Vår ambition är att alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt konto för alla mindre användare. 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</p>
+                                  $_BelowPriceTable1()$
                                 </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
@@ -374,22 +314,6 @@ och anpassning</p>
                         <div class="spacer40"></div>
                 </div>
                 $pageFooter()$
-            <div class="modal-container campaign-play-video" style="display:none;width:653px;height: 475px">
-                                            <div class="modal-header">
-                                                <span class="modal-icon message"></span>
-                                                    <span class="modal-title">
-                                                        <h3>$_DemovidHead()$</h3>
-                                                        <p>$_DemovidBody()$</p>
-                                                    </span>
-                                                <a class="modal-close close"> </a>
-                                            </div>
-                                            <div class="modal-body" style="padding:0px">
-                                            <div class="modal-content">
-<iframe src="http://player.vimeo.com/video/22397410?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="653" height="400" frameborder="0"></iframe>
-
-                                            </div>
-                                            </div>
-           </div>
          </div>
         </body>
 </html>

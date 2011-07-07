@@ -109,8 +109,8 @@ msgstr "Scrive"
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
+#: userpages/securitypage.st:showUserSecurity
 msgid "_sharing"
 msgstr "Sharing"
 
@@ -122,6 +122,11 @@ msgstr "Sharing"
 #: apppages.st:queryColumn
 msgid "_send"
 msgstr "Send"
+
+#: firstpage.st:firstPage
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageVAT"
+msgstr "* All prices excludes VAT"
 
 #: modals.st:modalAccountSetup
 #: userpages/accountpage.st:showUser
@@ -184,6 +189,7 @@ msgstr "OK"
 #: modals.st:loginModal
 #: apppages.st:pageLogin
 #: apppages.st:header
+#: firstpage.st:firstPage
 msgid "_login"
 msgstr "Log in"
 
@@ -271,8 +277,8 @@ msgstr "Cancel"
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
+#: userpages/securitypage.st:showUserSecurity
 msgid "_Subaccounts"
 msgstr "Subaccounts"
 
@@ -320,35 +326,107 @@ msgstr "Send reminder"
 msgid "_SearchDoc"
 msgstr "Search document"
 
-#: docpages/doclist.st:pageContractsList
-#: docpages/docorderslist.st:pageOrdersList
-msgid "_ReminderHead"
-msgstr "Send reminder"
+#: userpages/accountpage.st:showUser
+#: userpages/mailapipage.st:showUserMailAPI
+msgid "_SaveChanges"
+msgstr "Save changes"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_QuoteOnVidBy"
+msgstr "- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_QuoteOnVid"
+msgstr "”Processerna blir betydligt smidigare.”"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote6By"
+msgstr "Martin Lindström, IPAS"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote6"
+msgstr "”Notera: efter 1 veckas användning börjar era kunder visa produkten för andra.”"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote5By"
+msgstr "Michael Burman, Marknadschef, Coop Nord"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote5"
+msgstr "”Snabbt och överskådligt.”"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote4By"
+msgstr "Ola Brundin, Accenture Management Consulting"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote4"
+msgstr "”Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen.”"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote3By"
+msgstr "Christoffer Lindquist, VD, Eventbook, Eventpartner"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote3"
+msgstr "”Smart lösning.”"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote2By"
+msgstr "Alexis Barnekow, Försäljningschef, Green Hat People, Teambuilding Events"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote2"
+msgstr "”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote1By"
+msgstr "Mikael Green, VD, Account Factory, Redovisningsbyrå"
+
+#: firstpage.st:firstPage
+#: staticpages/clientspage.st:clientsPageContents
+msgid "_Quote1"
+msgstr "”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”"
 
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
+#: userpages/securitypage.st:showUserSecurity
 msgid "_HeadUserInfo"
 msgstr "User info"
 
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
-msgid "_HeadAccountSettings"
-msgstr "Account settings"
+#: userpages/securitypage.st:showUserSecurity
+msgid "_HeadMailApi"
+msgstr "Mail API"
 
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
 #: userpages/friendpage.st:viewFriends
-#: userpages/securitypage.st:showUserSecurity
 #: userpages/mailapipage.st:showUserMailAPI
-msgid "_HeadMailApi"
-msgstr "Mail API"
+#: userpages/securitypage.st:showUserSecurity
+msgid "_HeadAccountSettings"
+msgstr "Account settings"
 
+#~ msgid "_ReminderHead"
+#~ msgstr "Send reminder"
 #~ msgid "_Delete"
 #~ msgstr "Radera"
 

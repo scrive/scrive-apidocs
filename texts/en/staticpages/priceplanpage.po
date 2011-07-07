@@ -1,0 +1,172 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: staticpages/priceplanpage.st:priceplanPage
+msgid "_priceplanPageTitle"
+msgstr "| Priceplan"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow9"
+msgstr "                                <td>Third party verification</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow8"
+msgstr "                                <td>Contract, offer or order processes</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow7"
+msgstr "                                <td>Support</td>                                <td>E-mail</td>                                <td>Phone</td>                                <td>Phone</td>                                <td>Peronal contact</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow6"
+msgstr "                                <td>Configuration help</td>                                <td>1 h</td>                                <td>2 h</td>                                <td>4 h</td>                                <td>Offer</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow5"
+msgstr "                                <td>Startup training</td>                                <td>0.5 h</td>                                <td>1 h</td>                                <td>2 x 1 h</td>                                <td>Offer</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow4"
+msgstr "                                <td>Trustweaver premium storage</td>                                <td>Upgrade</td>                                <td>Upgrade</td>                                <td>Offer</td>                                <td>Offer</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow30"
+msgstr "                                <td>Create own process</td>                                <td></td>                                <td></td>                                <td></td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow3"
+msgstr "                                <td>Standard storage</td>                                <td>500 docs</td>                                <td>Unlimited</td>                                <td>Unlimited</td>                                <td>Unlimited</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow29"
+msgstr "                                <td>Full API</td>                                <td></td>                                <td></td>                                <td></td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow28"
+msgstr "                                <td>Branded e-mail</td>                                <td></td>                                <td></td>                                <td></td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow27"
+msgstr "                                <td>Branded signing page</td>                                <td></td>                                <td></td>                                <td></td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow26"
+msgstr "                                <td>Mass send</td>                                <td></td>                                <td></td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow25"
+msgstr "                                <td>Simple integration</td>                                <td></td>                                <td></td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow24"
+msgstr "                                <td>Shared archive</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow23"
+msgstr "                                <td>Sign order</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow22"
+msgstr "                                <td>Drag and drop</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow21"
+msgstr "                                <td>User roles</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow20"
+msgstr "                                <td>Multi party contract</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow2"
+msgstr "                                <td>Minimum yearly signatures</td>                                <td>500</td>                                <td>1 000</td>                                <td>2 000</td>                                <td>4 000</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow19"
+msgstr "                                <td>Request attachments</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow18"
+msgstr "                                <td>Add attachment</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow17"
+msgstr "                                <td>Save templates</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow16"
+msgstr "                                <td>Select expiary date</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow15"
+msgstr "                                <td>Edit invitation message</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow14"
+msgstr "                                <td>Reminders</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow13"
+msgstr "                                <td>Process monitoring</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow12"
+msgstr "                                <td>E-archive</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow11"
+msgstr "                                <td>E-ID signing</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow10"
+msgstr "                                <td>E-signing</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>                                <td>✓</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableRow1"
+msgstr "                                <td>Number of users</td>                                <td>5</td>                                <td>15</td>                                <td>50</td>                                <td>Offert</td>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageTableHighlightedColumn"
+msgstr "                            <li class=\"top\">                                <h3>Business</h3>                                <p>30 kr/signature</p>                            </li>                            <li>50</li>                            <li class=\"odd\">2 000</li>                            <li>Unimited</li>                            <li class=\"odd\">Offer</li>                            <li>2 x 1h</li>                            <li class=\"odd\">4h</li>                            <li>Phone</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li>✓</li>                            <li class=\"odd\">✓</li>                            <li></li>                            <li class=\"odd\"></li>                            <li></li>                            <li class=\"odd\"></li>                            <li class=\"bottom\"></li>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPagePriceplanTop"
+msgstr "<th><h2>Priceplan</h2>                                </th>                                <th>                                    <h3>Small</h3>                                    <p>35 kr/signature</p>                                </th>                                <th>                                    <h3>Team</h3>                                    <p>32.50 kr/signature</p>                                </th>                                <th>                                    <h3>Business</h3>                                    <p>30 kr/signature</p>                                </th>                                <th>                                    <h3>Enterprise</h3>                                    <p>Offer</p></th>                                "
+
+#: staticpages/priceplanpage.st:priceplanPage
+msgid "_priceplanPageMetaDescription"
+msgstr "Sign and store your contracts online. Select a priceplan that matches your needs Small, Team, Business or Enterprise."
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageH1Body2"
+msgstr "Register takes less than a minute, try it out for 14 days starting today!"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageH1Body1"
+msgstr "Sign documents, fast, simple and secure!"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageH1"
+msgstr "Prices"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageBelowTable3"
+msgstr "                    <h2>Discount for non-profit organisations</h2>                    <p>We enjoy dedication and enthusiasts who wants to make a change. We therefore support non-profit organisations by offering them large discounts on our list prices.</p>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageBelowTable2"
+msgstr "                    <h2>Free for private persons and proprietors</h2>                    <p>There are a thousand reasons for everyone to start singing their documents electronically. Our ambition is to work closely and cooperate with our customers. Unfortunently, we are not able to help all our target groups activley. Therefore, we offer a support-free account for small users. 1 user, 5 free signatures per month and storage of 50 documents.</p>"
+
+#: staticpages/priceplanpage.st:priceplanPageContents
+msgid "_priceplanPageBelowTable1"
+msgstr "                    <h2>We only charge you when you make money</h2>                    <p>We charge you per signature. Though we belive in only charging when we add value. Therefore, we only count and charge signatures in completed documents. In other words, we charge only when you deal.</p>"
+

@@ -12,41 +12,41 @@ msgstr ""
 
 #: staticpages/privacypolicypage.st:privacyPolicyPage
 msgid "_privacyPolicyPageTitle"
-msgstr "| Sekretesspolicy"
+msgstr "| Privacy Policy"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPage
 msgid "_privacyPolicyPageMetaDescription"
-msgstr "Signera och arkivera dina avtal elektroniskt. All information ni delger SkrivaPå eller dess tjänster hanteras med största möjliga försiktighet."
+msgstr "Sign and store contracts online. All data you provide to Scrive or its services are handled with highest possible carefullness."
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH24Body"
-msgstr "SkrivaPå använder cookies för att förenkla Användarens login och kontohantering. Dessa cookies kommer inte att säljas, hyras eller lånas ut eller på annat sätt visas till tredje part."
+msgstr "Scrive uses cookies to simplify user log in and account management. These cookies will not be sold, rented out or lended, or in any other way shared with a third party."
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH24"
-msgstr "Användning av Cookies"
+msgstr "Usage of Cookies"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH23Body"
-msgstr "SkrivaPå analyserar våra webbloggar för att kontinuerligt utvärdera hemsidans innehåll och hur det tillfredställer Användarnas behov. Loggarna använder ingen personligt identifierbar information. Vår server identifierar också användarnas IP-adresser. En IP-adress är ett nummer som automatiskt tillskrivs en dator när den används på internet. Vi använder IP-adresser för att identifiera Tjänstens Användare, analysera trender, följa Användares förflyttning och insamla statistisk data. Avtalsparternas IP-adresser visas i undertecknade avtals certifikat som en extra säkerhet och identifieringstjänst till avtalsparterna."
+msgstr "Scrive analysis its logs in purpose of continuously evaluate the contents of the homepage and how it satestfies user needs. The logs does not contain any personal identifiable information. Our servers also identifies the user’s IP-addresses. An IP-address is a number that a computer is given automatically when connecting to the internet. We use the IP-address to identify the service users, analyse trends, registrate user movements and gather statistical data. The parties’ IP-addresses are displayed in the verification certificate for extra security and as an extra identification service to the parties."
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH23"
-msgstr "Webbläsarinformation på Hemsidan"
+msgstr "Browser information in the homepage"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH21Body"
-msgstr "SkrivaPå kommer inte att sälja, hyra eller låna ut eller på annat sätt till tredje part delge Er information insamlad genom Tjänsten eller genom Er kontakt med oss på annat sätt, än som uttryckligen överenskommits i de Allmänna Villkoren eller genom Ert skriftliga medgivande. Vi använder dock från tid till annan Användarinformation i anonymiserad form för att göra statistiska analyser som vi kan komma att göra tillgängliga för tredje part eller våra samarbetspartners."
+msgstr "Scrive will not sell, rent out or lend, or in any other way share data that you have provided us through the service or in any other way to a to a third party except for in those cases regulated by the Terms Of Service or your written approval. Though, we somethimes use anonymous user data for statistical analyses that are available to thire parties or our partners."
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH21"
-msgstr "Återförsäljning eller delgivning av information"
+msgstr "Retailing or sharing of data"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH1Body"
-msgstr "<p>All information Ni delger SkrivaPå eller dess Tjänster hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för SkrivaPå. Er integritet är viktig för oss.</p><br /><p>Nedan följer en mer detaljerad beskrivning av hur SkrivaPå hanterar Er information. Vid vidare frågor, vänligen kontakta oss på info@skrivapa.se.</p>"
+msgstr "<p>All the data You provide to Scrive or its Services is handled with the highest caution possible and the security of the contents is of the highest priority to Scrive. Your integrity is importanat to us.</p><br /><p>A more detailed description of how your data is handled by Scrive follows below. If you have further questions, please contact us at info@skrivapa.se.</p>"
 
 #: staticpages/privacypolicypage.st:privacyPolicyPageContents
 msgid "_privacyPolicyPageH1"
-msgstr "SEKRETESSPOLICY (2011:02)"
+msgstr "PRIVACY POLICY (2011:02)"
 
