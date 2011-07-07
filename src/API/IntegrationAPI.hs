@@ -95,7 +95,7 @@ documentFromParam:: Kontrakcja m => IntegrationAPIFunction m Document
 documentFromParam = do
     srvs <- service <$> ask
     mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-    when (isNothing mdocument || sameService srvs mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
+    when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
 embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
