@@ -1,0 +1,54 @@
+"!Template name","LANG_SE","LANG_EN"
+"_addRequiredAttachments","Var vänlig bifoga begärda bilagor.","Please upload requested attachments."
+"_atLeastOneSignatoryRequired","Du måste ha minst en undertecknande part.","You must add at least one signing party."
+"_backToStepTwoAndFillPersonNumber","Var vänlig gå tillbaka till steg 2 och fyll i personnummer.","Please go back to step 2 and enter personal security number."
+"_cantSendReminder1","Det går inte att skicka påminnelser för ","It is impossible to send reminders for "
+"_cantSendReminder2"," som inte är skickade eller öppna."," which has not been sent or opened."
+"_contractSignatory","Part ","Party "
+"_differentSignatories","Various signatories.","Various signatories."
+"_emptyOrNotValidEmail","Du har inte skrivit in en e-post eller e-posten är felaktig.
+ Vänligen försök igen.","You have not entered an e-mail address, or the e-mail address
+ is incorrect. Please try again."
+"_fieldName","Namnge fältet","Name field"
+"_ie6NotSupported","Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen
+ uppgradera till en modern webbläsare","Your browser, Internet Explorer 6, is no longer supported. Please
+ upgrade to a newer version."
+"_loadingFile","Laddar upp . . .","Uploading . . ."
+"_loadingTweets","Laddar tweets..","Loading tweets.."
+"_missingNames","Du har inte namngett alla fält. Vänligen försök igen.","You have not names all fields. Please try again."
+"_missingSignatoryNames","Du har inte skrivit in något namn på en eller flera motparter.
+ Vänligen försök igen.","You have not entered names for one or several counterparties.
+ Please try again."
+"_multipleSignatory","Massutskick","Multi send"
+"_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.","You must fill in te empty fields before you sign."
+"_niceEmail","E-post","The peron's e-mail"
+"_noBankIdInstalled","Du har inte BankID installerat. Du kan ladda ned BankID från
+ din internetbank. Följande banker tillhandahåller BankID via
+ internetbanken.","You do not have BankID installed on your computer. You can download
+ BankID from your online bank. The following banks can proide
+ you with BankID online."
+"_noNordeaInstalled","Du har inte Nordeas e-legitimation installerad. Du kan ladda
+ ned Nordeas e-legitimation från Nordeas internetbank.","You do not have Nordea e-ID installed on your computer. You can
+ download Nordea e-legitimation from Nordea online bank."
+"_noTeliaInstalled","Du har inte Telias e-legitimation installerad.","You do not have Telia e-ID installed on your computer."
+"_nonsignatory","Ej undertecknande part","Non-siging party"
+"_offerAuthor","Avsändare","Sender"
+"_offerSignatory","Mottagare","Recipient"
+"_problemWithPDF","Problem med PDF","Problem with PDF"
+"_repetedEmailAddress","Du kan ej använda samma e-post för mer än 1 användare","You cannot use the same e-mail address for more than one user"
+"_secretaryCantSign","Du kan inte underteckna när du är sekreterare. Om du vill underteckna,
+ gå tillbaks till steg 2 och byt roll.","You cannot sign when you have the role Secretary. If you want
+ to sign, please go back to step 2 and change role."
+"_setAllFields","Var vänlig namnge alla skapade fält","Please name all created fields"
+"_startingSaveSigning","Inleder säker signering . . .","Initiates secure signing . . ."
+"_tbsGenerationMessage1","Du undertecknar ","You are signing"
+"_tbsGenerationMessage2"," med transaktionsnummer "," with transactional number"
+"_tbsGenerationMessage3",". Undertecknande parter är:",". Siging parties are:"
+"_verifyingSignature","Verifierar signatur...","Verifying signature..."
+"_youCanNotInviteSameEmail","Du kan inte bjuda in underkonton vars e-post inte har samma URL
+ som du har i din e-post.","You cannot invite subaccounts that do not have the same URL as
+ you have in your e-mail address."
+"_youMustSetParnerEmail","Du måste ange e-post till motpart.","You must enter an e-mail address to your counterparty."
+"_yourSigningPluginFailed","Din signerings plugin misslyckades med att signera dokumentet.
+ Var vänlig och kontakta din e-legitimationsleverantör. ","You sign plug-in failed to sign the document. Please contact
+ your e-ID provider."

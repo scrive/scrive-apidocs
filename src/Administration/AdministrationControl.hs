@@ -745,7 +745,6 @@ handleStatistics =
 
 showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do
-    liftIO $ migratePoToCsv
     liftIO $ updateCSV
     adminTranslationsPage
 
