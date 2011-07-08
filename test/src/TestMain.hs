@@ -20,12 +20,10 @@ allTests = [
     docStateTests
   , htmlTests
   , inputValidationTests
+  , loginTests
   -- everything fails for trustweaver, so commenting out for now
   --, trustWeaverTests
   , userStateTests
-  -- strangely, after login tests are run, docstate/userstate tests
-  -- stop workings :/ so put it at the end as current workaround
-  , loginTests
   ]
 
 testsToRun :: [String] -> [Either String Test]
@@ -36,7 +34,7 @@ testsToRun (t:ts) =
          "docstate"        -> Right docStateTests : rest
          "html"            -> Right htmlTests : rest
          "inputvalidation" -> Right inputValidationTests : rest
-         "login"           -> rest ++ [Right loginTests]
+         "login"           -> Right loginTests : rest
          "trustweaver"     -> Right trustWeaverTests : rest
          "userstate"       -> Right userStateTests : rest
          _                 -> Left t : rest

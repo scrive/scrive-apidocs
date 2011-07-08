@@ -1,46 +1,68 @@
 module LoginTest (loginTests) where
 
-import Network.HTTP
-import Network.URI
-import Test.HUnit (Assertion)
-import Test.Framework (Test, testGroup)
-import Test.Framework.Providers.HUnit (testCase)
+import Control.Applicative
+import Data.List
+import Happstack.Server
+import Happstack.State
+import Test.HUnit hiding (Test)
+import Test.Framework
+import Test.Framework.Providers.HUnit
+import qualified Data.ByteString.Char8 as BS
 
-import HttpHelper
+import AppControl
+import Context
+import FlashMessage
+import Redirect
+import StateHelper
+import Templates.TemplatesLoader
+import TestKontra as T
+import User.Password
+import User.UserState
 
 loginTests :: Test
-loginTests = testGroup "Login"
-    [ testGroup "https"
-        [ testCase "can login with valid user and password" testSuccessfulLogin,
-          testCase "can't login with invalid user" testCantLoginWithInvalidUser,
-          testCase "can't login with invalid password" testCantLoginWithInvalidPassword ]
+loginTests = testGroup "Login" [
+      testCase "can login with valid user and password" testSuccessfulLogin
+    , testCase "can't login with invalid user" testCantLoginWithInvalidUser
+    , testCase "can't login with invalid password" testCantLoginWithInvalidPassword
     ]
 
 testSuccessfulLogin :: Assertion
-testSuccessfulLogin = withTestServer $ do
-  rsp <- postLoginForm "lukas@skrivapa.se" "admin"
-  assertURL "/" rsp
-  assertXPathDoesntExist loginForm rsp
+testSuccessfulLogin = withTestState $ do
+    uid <- createTestUser
+    ctx <- mkContext =<< readTemplates LANG_SE
+    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
+    assertBool "Response code is 303" $ rsCode res == 303
+    assertBool "Location is /" $ T.getHeader "location" (rsHeaders res) == Just "/"
+    assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
+    assertBool "No flash messages were added" $ null $ ctxflashmessages ctx'
 
 testCantLoginWithInvalidUser :: Assertion
-testCantLoginWithInvalidUser = withTestServer $ do
-  rsp <- postLoginForm "noone@skrivapa.se" "admin"
-  assertURLStartsWith "/?logging" rsp
-  assertXPathExists loginForm rsp
+testCantLoginWithInvalidUser = withTestState $ do
+    _ <- createTestUser
+    ctx <- mkContext =<< readTemplates LANG_SE
+    req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
+    loginFailureChecks res ctx'
 
 testCantLoginWithInvalidPassword :: Assertion
-testCantLoginWithInvalidPassword = withTestServer $ do
-  rsp <- postLoginForm "lukas@skrivapa.se" "wrongpassword"
-  assertURLStartsWith "/?logging" rsp
-  assertXPathExists loginForm rsp
-  
-loginForm :: String
-loginForm = "//form[@id='loginForm']"
+testCantLoginWithInvalidPassword = withTestState $ do
+    _ <- createTestUser
+    ctx <- mkContext =<< readTemplates LANG_SE
+    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
+    loginFailureChecks res ctx'
 
-type LoginEmail = String
-type LoginPassword = String
+loginFailureChecks :: Response -> Context -> Assertion
+loginFailureChecks res ctx = do
+    assertBool "Response code is 303" $ rsCode res == 303
+    assertBool "Location starts with /?logging" $ (isPrefixOf "/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
+    assertBool "User wasn't logged into context" $ ctxmaybeuser ctx == Nothing
+    assertBool "One flash message was added" $ length (ctxflashmessages ctx) == 1
+    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx) `isFlashOfType` OperationFailed
 
-postLoginForm :: LoginEmail -> LoginPassword -> IO (URI, Response String)
-postLoginForm loginemail loginpassword =
-  postForm "/login" [("email", loginemail), ("password", loginpassword)]
-
+createTestUser :: IO UserID
+createTestUser = do
+    pwd <- createPassword $ BS.pack "admin"
+    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") pwd Nothing Nothing Nothing
+    return userid

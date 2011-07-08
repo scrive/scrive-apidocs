@@ -29,6 +29,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
 import Context
+import FlashMessage
 import KontraMonad
 import MinutesTime
 import Templates.Templates
@@ -36,14 +37,11 @@ import qualified MemCache
 
 import System.IO.Temp
 import User.UserState
-import User.Password
 import StateHelper
 import Templates.TemplatesLoader
 import Happstack.State hiding (Method)
 import API.MailAPI
 import API.API
-import AppControl
-import Redirect
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ReaderT Request (StateT (Context, Response -> Response) IO) a }
@@ -130,8 +128,8 @@ inFile path = Input {
     }
 
 -- | Constructs headers from list of string pairs
-headers :: [(String, [String])] -> Headers
-headers = M.fromList . map (f . g)
+mkHeaders :: [(String, [String])] -> Headers
+mkHeaders = M.fromList . map (f . g)
     where
         g = BSU.fromString *** map BSU.fromString
         f (name, values) = (name, HeaderPair {
@@ -140,8 +138,8 @@ headers = M.fromList . map (f . g)
         })
 
 -- | Constructs cookies from list of string pairs
-cookies :: [(String, String)] -> [(String, Cookie)]
-cookies = map f
+mkCookies :: [(String, String)] -> [(String, Cookie)]
+mkCookies = map f
     where
         f (name, value) = (name, Cookie {
               cookieVersion = ""
@@ -153,9 +151,18 @@ cookies = map f
             , httpOnly = False
         })
 
+-- | Retrieves specific header value
+getHeader :: String -> Headers -> Maybe String
+getHeader name hdrs = BSU.toString <$> join
+    (listToMaybe . hValue <$> M.lookup (BSU.fromString name) hdrs)
+
+-- | Retrieves specific cookie value
+getCookie :: String -> [(String, Cookie)] -> Maybe String
+getCookie name cookies = cookieValue <$> lookup name cookies
+
 -- | Constructs initial request with given data (POST or GET)
-request :: Method -> [(String, Input)] -> IO Request
-request method vars = do
+mkRequest :: Method -> [(String, Input)] -> IO Request
+mkRequest method vars = do
     rqbody <- newEmptyMVar
     ib <- if isReqPost
              then newMVar vars
@@ -180,8 +187,8 @@ request method vars = do
         isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
-context :: KontrakcjaTemplates -> IO Context
-context templates = do
+mkContext :: KontrakcjaTemplates -> IO Context
+mkContext templates = do
     docs <- newMVar M.empty
     enforcer <- newEmptyMVar
     memcache <- MemCache.new BS.length 52428800
@@ -226,23 +233,19 @@ testAPI f = do
          Right apictx -> either (uncurry apiError) id <$> runApiFunction f apictx
          Left emsg -> return $ uncurry apiError emsg
 
--- Two examples (will be moved into separate files later)
+-- Various helpers
 
-loginTest :: IO ()
-loginTest = withTestState $ do
-    req <- request POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    ctx <- context =<< readTemplates LANG_EN
-    pwd <- createPassword $ BS.pack "admin"
-    _ <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") pwd Nothing Nothing Nothing
-    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
-    print res
-    print $ unEmail . useremail . userinfo <$> ctxmaybeuser ctx'
-    print $ ctxflashmessages ctx'
+-- | Checks type of flash message
+isFlashOfType :: FlashMessage -> FlashType -> Bool
+isFlashOfType (FlashMessage ft _) t = ft == t
+isFlashOfType (FlashTemplate ft _ _) t = ft == t
+
+-- One example (will be moved into separate files later)
 
 mailapiTest :: IO ()
 mailapiTest = withTestState $ withSystemTempDirectory "mailapi-test" $ \tmpdir -> do
-    req <- request POST [("mail", inFile "test/mailapitest.eml")]
-    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (context =<< readTemplates LANG_EN)
+    req <- mkRequest POST [("mail", inFile "test/mailapitest.eml")]
+    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< readTemplates LANG_EN)
     Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") NoPassword Nothing Nothing Nothing
     _ <- update $ SetUserMailAPI userid $ Just UserMailAPI {
           umapiKey = read "ef545848bcd3f7d8"
