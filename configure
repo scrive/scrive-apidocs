@@ -1,13 +1,10 @@
 #!/bin/sh
 
-if [ "$test" != "1" ]; then
-  cabal configure -f-test "$@"
-else
-  # create and link kontrakcja-test tmp dir to the one used by
-  # kontrakcja-server so we won't have to compile things twice
-  mkdir -p ./dist/build/kontrakcja-server/kontrakcja-server-tmp
-  mkdir -p ./dist/build/kontrakcja-test
-  ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
-           ./dist/build/kontrakcja-test/kontrakcja-test-tmp
-  cabal configure "$@"
-fi
+# create and link kontrakcja-test tmp dir to the one used by
+# kontrakcja-server so we won't have to compile things twice
+mkdir -p ./dist/build/kontrakcja-server/kontrakcja-server-tmp
+mkdir -p ./dist/build/kontrakcja-test
+ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
+       ./dist/build/kontrakcja-test/kontrakcja-test-tmp
+
+cabal configure "$@"
