@@ -1,10 +1,8 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror -XOverloadedStrings #-}
-
-module DocStateTest where
+{-# LANGUAGE OverloadedStrings #-}
+module DocStateTest (docStateTests) where
 
 import Test.HUnit (assert, assertFailure, Assertion, assertBool, assertEqual)
-import Test.Framework (Test, testGroup, defaultMain)
+import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import StateHelper
@@ -21,23 +19,12 @@ import Util.SignatoryLinkUtils
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Data.Maybe
-import System.IO
 import Control.Monad.Trans
 
 import Data.List
 
-main :: IO ()
-main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    defaultMain tests
-
-tests :: [Test]
-tests = [ testGroup "DocState" docStateTests
-        ]
-        
-docStateTests :: [Test]
-docStateTests = [
+docStateTests :: Test
+docStateTests = testGroup "DocState" [
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs,
@@ -47,7 +34,7 @@ docStateTests = [
   testThat "when I attach a file to a bad docid, it ALWAYS returns Left" testNoDocumentAttachAlwaysLeft,
   testThat "when I attach a file, the file is attached" testDocumentAttachHasAttachment
                 ]
-                
+
 testThat :: String -> Assertion -> Test
 testThat s a = testCase s (withTestState a)
 
@@ -74,7 +61,7 @@ testDocumentCanBeCreatedAndFetchedByID = do
   case mdoc of
     Just resdoc -> assert $ sameDocID doc resdoc
     Nothing -> assertFailure "Could not read in new document I just created."
-                
+
 testDocumentCanBeCreatedAndFetchedByAllDocs :: Assertion
 testDocumentCanBeCreatedAndFetchedByAllDocs = do
   -- setup
@@ -129,7 +116,7 @@ testDocumentAttachAlwaysRight = do
   case edoc of
     Left msg -> assertFailure $ "Could not run AttachFile: " ++ msg
     Right _newdoc -> assertSuccess
-  
+
 testNoDocumentAttachAlwaysLeft :: Assertion
 testNoDocumentAttachAlwaysLeft = do
   -- setup
@@ -180,12 +167,12 @@ documentHasOneAuthor document =
   case filter isAuthor $ documentsignatorylinks document of
     [_] -> Nothing
     a -> Just $ "document must have one author (has " ++ show (length a) ++ ")"
-    
+
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
 
-addNewUserWithSupervisor :: Int -> String -> String -> String -> IO (Maybe User)
-addNewUserWithSupervisor superid = addNewUser' (Just superid)
+_addNewUserWithSupervisor :: Int -> String -> String -> String -> IO (Maybe User)
+_addNewUserWithSupervisor superid = addNewUser' (Just superid)
 
 addNewUser :: String -> String -> String -> IO (Maybe User)
 addNewUser = addNewUser' Nothing
@@ -207,7 +194,7 @@ assumingBasicContract mt author = do
       assertFailure "Could not create + store document."
       return blankDocument
     Just d -> return d
-  
+
 
 assumingBasicUser :: IO (User)
 assumingBasicUser = do

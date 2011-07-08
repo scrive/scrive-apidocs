@@ -1,15 +1,13 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
 module HttpHelper (
-  getForm,
-  postForm,
-  requestURL,
-  assertURL,
-  assertURLStartsWith,
-  withTestServer,
-  assertXPathExists,
-  assertXPathDoesntExist) where
+    getForm
+  , postForm
+  , requestURL
+  , assertURL
+  , assertURLStartsWith
+  , withTestServer
+  , assertXPathExists
+  , assertXPathDoesntExist
+  ) where
 
 import Data.Maybe
 import Data.List
@@ -48,13 +46,13 @@ makeBrowserRequest req = Network.Browser.browse $ do
   request req
 
 type XPath = String
-  
+
 assertXPathExists :: (TestableHtml a) => XPath -> a -> Assertion
 assertXPathExists xpath html = do
   let selected = selectWithXPath xpath html
   assertBool ("No elements were returned for " ++ xpath)
              (not $ null selected)
-  
+
 assertXPathDoesntExist :: (TestableHtml a) => XPath -> a -> Assertion
 assertXPathDoesntExist xpath html = do
   let selected = selectWithXPath xpath html
@@ -68,10 +66,10 @@ selectWithXPath xpath html =
 
 class TestableHtml a where
   getContent :: a -> String
-  
+
 instance TestableHtml String where
   getContent = id
-  
+
 instance TestableHtml (Response String) where
   getContent = rspBody
 
@@ -80,7 +78,7 @@ instance TestableHtml (URI, Response String) where
 
 class TestableURL a where
   getURI :: a -> URI
-             
+
 assertURL :: (TestableURL a, TestableURL b) => a -> b -> Assertion
 assertURL expectedurl actualurl =
   assertEqual "Wrong URL" (getURI expectedurl) (getURI actualurl)  
@@ -91,14 +89,14 @@ assertURLStartsWith expectedurl actualurl =
       actualstr = show $ getURI actualurl in
   assertBool ("Expected URL " ++ expectedstr ++ " but got " ++ actualstr)
              (expectedstr `isPrefixOf` actualstr)
-  
+
 instance TestableURL URI where
   getURI = id
 
 instance TestableURL String where
   getURI url@('/':_) = fromJust . parseURI $ testHost ++ url
   getURI url = getURI $ '/':url
-  
+
 instance TestableURL (URI, Response String) where
   getURI (uri, _) = getURI uri
 
@@ -120,10 +118,10 @@ withCurrentDirectory dir action = do
   bracket_ (setCurrentDirectory dir)
            (setCurrentDirectory originaldir)
            action
-  
+
 setupTestDir :: FilePath -> IO ()
 setupTestDir dir = do
-  createDirectory dir
+  --createDirectory dir
   currentdir <- getCurrentDirectory
   recursiveCopy (currentdir </> "templates") $ dir </> "templates"
   recursiveCopy (currentdir </> "texts") $ dir </> "texts"
@@ -143,7 +141,7 @@ recursiveCopy from to = do
   where
     copyChild :: FilePath -> IO ()
     copyChild child = recursiveCopy (from </> child) $ to </> (takeFileName child)
-  
+
 makeTestConf :: AppConf
 makeTestConf =
   let conf = defaultConf "kontrakcjatest" in
@@ -151,7 +149,7 @@ makeTestConf =
     httpBindAddress = (fst $ httpBindAddress conf, testPort)
   , hostpart = testHost
   }
-  
+
 testHost :: String
 testHost = "http://localhost:" ++ (show testPort)
 

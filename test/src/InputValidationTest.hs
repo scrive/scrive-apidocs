@@ -1,34 +1,18 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
--fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
-module InputValidationTest where
+module InputValidationTest (inputValidationTests) where
 
 import qualified Data.ByteString.UTF8 as BS
 import Data.Char
 import Data.Int
-import Test.Framework (Test, testGroup, defaultMain)
+import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>))
-import System.IO
 
 import InputValidation
 
-main :: IO ()
-main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    defaultMain tests
-
-tests :: [Test]
-tests = [ testGroup "InputValidation" inputValidationTests
-        ]
-
-
-inputValidationTests :: [Test]
-inputValidationTests = 
+inputValidationTests :: Test
+inputValidationTests = testGroup "InputValidation"
     [ testGroup "asValidEmail"
         [ testCase "bad examples fail" testValidEmailExampleFails
         , testCase "good examples pass" testValidEmailExamplePasses

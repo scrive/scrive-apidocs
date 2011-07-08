@@ -1,23 +1,13 @@
 #!/bin/sh
 
-if [ "$TEST" != "1" ]; then
-  cabal configure \
-    -f-input-validation-test \
-    -f-trust-weaver-test \
-    -f-action-scheduler-test \
-    -f-html-test \
-    -f-login-test \
-    -f-docstate-test \
-    "$@"
+if [ "$test" != "1" ]; then
+  cabal configure -f-test "$@"
 else
-  tests="input-validation trust-weaver action-scheduler html login docstate"
-
+  # create and link kontrakcja-test tmp dir to the one used by
+  # kontrakcja-server so we won't have to compile things twice
   mkdir -p ./dist/build/kontrakcja-server/kontrakcja-server-tmp
-  for t in $tests; do
-    mkdir -p ./dist/build/kontrakcja-${t}-test
-    ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
-           ./dist/build/kontrakcja-${t}-test/kontrakcja-${t}-test-tmp
-  done
-
+  mkdir -p ./dist/build/kontrakcja-test
+  ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
+           ./dist/build/kontrakcja-test/kontrakcja-test-tmp
   cabal configure "$@"
 fi

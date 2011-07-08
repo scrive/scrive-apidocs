@@ -1,8 +1,7 @@
-module UserStateTest(
-    userStateTests
-) where
+{-# OPTIONS_GHC -w #-}
+module UserStateTest (userStateTests) where
 
-import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
+import Test.HUnit (assert, assertEqual, assertFailure)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
@@ -19,8 +18,8 @@ import Data.Either
 import System.IO.Error
 import qualified Data.Set as Set
 
-userStateTests :: [Test]
-userStateTests = [testGroup "getUserByEmail" 
+userStateTests :: Test
+userStateTests = testGroup "UserState" [testGroup "getUserByEmail"
                      [testCase "returns nothing when there isn't a user with a matching email" test_getUserByEmail_returnsNothing
                      ,testCase "returns a user with a matching email" test_getUserByEmail_returnsTheRightUser
                      ]  

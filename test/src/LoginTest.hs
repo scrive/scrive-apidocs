@@ -1,29 +1,15 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
-module LoginTest where
+module LoginTest (loginTests) where
 
 import Network.HTTP
 import Network.URI
 import Test.HUnit (Assertion)
-import Test.Framework (Test, testGroup, defaultMain)
+import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
-import System.IO
 
 import HttpHelper
 
-main :: IO ()
-main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    defaultMain tests
-
-tests :: [Test]
-tests = [ testGroup "Login" loginTests
-        ]
-
-loginTests :: [Test]
-loginTests = 
+loginTests :: Test
+loginTests = testGroup "Login"
     [ testGroup "https"
         [ testCase "can login with valid user and password" testSuccessfulLogin,
           testCase "can't login with invalid user" testCantLoginWithInvalidUser,
