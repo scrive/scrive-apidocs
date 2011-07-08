@@ -643,6 +643,30 @@ modalSignedViewNotClosedHasAccountNotLoggedIn=
   </form>
 </div>
 #####
+modalSignedViewNotClosedNoAccount=
+<div class="modal-container">
+  <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har undertecknat!</h3>
+      <p>
+        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar SkrivaPå ett verifikat,
+        dokumentet blir bindande och en kopia skickas till din e-post.
+      </p>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      $accountFromSignInputs()$
+    </div>
+  </div>
+  <div class="modal-footer">
+    $accountFromSignFooter()$
+  </div>
+  </form>
+</div>
 #####
 modalSignedViewOrderNotClosedHasAccount=
 $if(isloggedin)$
