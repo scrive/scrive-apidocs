@@ -522,7 +522,7 @@ pageDocumentDesign=
         <span class='dragfield sigcomp inputWrapper'>
           <span style="display:none;" class="fieldid">company</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="$_comapny()$" name="signatorycompany" autocomplete="off" />
+          <input type="text" infotext="$_company()$" name="signatorycompany" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigpersnum inputWrapper'>
