@@ -17,10 +17,10 @@ import System.IO
 import Control.Monad
 
 import Misc
-import Templates.Langs
 import Templates.TemplatesFiles
 import Templates.Templates (renderTemplate)
 import Templates.TemplatesLoader (KontrakcjaTemplates, readAllLangsTemplates, langVersion)
+import Templates.TextTemplates
 
 main :: IO ()
 main = do
@@ -72,7 +72,7 @@ testNoNestedP = do
   ts <- mapM getTemplates templatesFilesPath
   texts <- mapM getTextTemplates allValues
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
+  _ <- forM allValues $ \lang -> do
     let templates = langVersion lang langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates

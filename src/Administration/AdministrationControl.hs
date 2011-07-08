@@ -67,7 +67,6 @@ import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
 import InputValidation
-import Templates.Langs
 import Text.Printf
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
@@ -759,8 +758,7 @@ handleStatistics =
 showAdminTranslations :: Kontra String
 showAdminTranslations = do
      ctx <- getContext
-     tstats <- liftIO $ getTranslationStats
-     liftIO $ adminTranslationsPage (ctxtemplates ctx) tstats
+     liftIO $ adminTranslationsPage (ctxtemplates ctx)
 
 migrateDocsNoAuthor :: Kontra Response
 migrateDocsNoAuthor = do

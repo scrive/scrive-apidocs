@@ -34,8 +34,9 @@ import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
 import Templates.TemplatesFiles
-import Templates.Langs
 import Misc
+import User.Lang
+import Templates.TextTemplates
 
 {-Names of template files -}
 

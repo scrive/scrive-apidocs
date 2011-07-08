@@ -23,7 +23,7 @@ import Data.Word
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State
-import Happstack.Util.Common
+import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import Numeric -- use new module
 import System.Exit
 import System.IO
@@ -603,3 +603,15 @@ splitOver = splitOver' []
              then (reverse c) : (splitOver' [] a (drop (length a) b) )
              else splitOver' (bh:c) a bt
 
+(||^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(||^) f g a =  f a || g a
+
+(&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(&&^) f g a =  f a && g a
+
+
+-- To be extended
+smartZip::[Maybe a] -> [b] -> [(a,b)]
+smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)
+smartZip (_: as) (_:bs) = smartZip as bs
+smartZip _ _  = []
