@@ -80,7 +80,6 @@ Executable kontrakcja-server
   Build-depends: parsec
   Build-depends: iconv
   Build-depends: json==0.4.*
-  Build-depends: i18n==0.3
   Build-depends: HPDF
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck

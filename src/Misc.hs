@@ -21,7 +21,7 @@ import Data.Monoid
 import Data.Traversable (sequenceA)
 import Data.Word
 import Happstack.Data.IxSet as IxSet
-import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import Numeric -- use new module
@@ -38,6 +38,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
 import qualified AppLogger as Log
+import System.Directory
+import System.Time
+
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
@@ -615,3 +618,18 @@ smartZip::[Maybe a] -> [b] -> [(a,b)]
 smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)
 smartZip (_: as) (_:bs) = smartZip as bs
 smartZip _ _  = []
+
+
+-- Check recursively time of modification of any file in directory
+getRecursiveMTime :: [Char] -> IO ClockTime
+getRecursiveMTime "."  = return $ TOD 0 0
+getRecursiveMTime ".." = return $ TOD 0 0
+getRecursiveMTime dir = do
+     isDir <- doesDirectoryExist dir
+     if not isDir
+      then getRecursiveMTime dir
+      else do
+          files <- getDirectoryContents dir
+          mts <- forM files $ \fn -> getModificationTime $ dir ++ "/" ++fn
+          mt <- getModificationTime dir
+          return $ maximum $ mt:mts
