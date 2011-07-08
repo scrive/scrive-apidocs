@@ -12,9 +12,6 @@ module Templates.TextTemplates
       , getTextTemplatesFrom
       , getAllTextTemplates
       , updateCSV
-      , generatePOTFiles
-      , potDirectory
-      , migratePoToCsv
       , getTextTemplates
       , getTextTemplatesMTime
       , notvalidString
@@ -30,34 +27,22 @@ import Data.Ord
 import Data.Char
 import Data.Monoid
 import System.Directory
-import System.IO
 import System.Time
-import Text.I18n.Po hiding (putStrLn, getL10n)
 import Data.Map ((!))
 import qualified Data.Map as Map
-import qualified Text.I18n.Po (getL10n)
 import Data.CSV
 import User.Lang
-import Data.Maybe
 import Text.ParserCombinators.Parsec
 
 
 notvalidString :: String
 notvalidString = "******"
 
-commonFileName :: Bool -> String
-commonFileName makeTemplates = templateFileToPOT makeTemplates "common"
-
-potDirectory :: String
-potDirectory = "pot"
+commonFileName :: String
+commonFileName = templateFileNameToCSV "common"
 
 textsDirectory :: String
 textsDirectory = "texts"
-
-
-templateFileToPOT :: Bool -> String -> String
-templateFileToPOT True  s = (takeWhile (/= '.') s) ++ ".pot"
-templateFileToPOT False s = (takeWhile (/= '.') s) ++ ".po"
 
 
 templateFileNameToCSV :: String -> String
@@ -72,32 +57,10 @@ data TemplateTextLocation = TemplateTextLocation {
 initialTTLocation::String -> String -> String -> TemplateTextLocation
 initialTTLocation file template ttname = TemplateTextLocation {name=ttname,location=[(file,template)]}
 
-generatePOTFiles:: Bool -> IO ()
-generatePOTFiles makeTemplates = do
-    ttls <- getTextsFromTemplates
-    let grouped = groupTTLs makeTemplates ttls Map.empty
-    dirExists <- doesDirectoryExist potDirectory
-    when dirExists $ removeDirectoryRecursive potDirectory
-    createDirectory potDirectory
-    sequence_ $ Map.elems $ Map.mapWithKey writePOTFile grouped
-    migratePoToCsv
-    updateCSV
 
-
-writePOTFile:: String -> [TemplateTextLocation] -> IO ()
-writePOTFile s ttls = do
-    let dirname = reverse $ drop 1 $ dropWhile (/= '/') (reverse s)
-    createDirectoryIfMissing True (potDirectory ++ "/"++dirname)
-    h <- openFile (potDirectory ++ "/" ++ s) WriteMode
-    forM_ ttls $ \ttl -> do
-        _ <- forM (location ttl) $ \(l,t)->  hPutStr h $ "#: " ++ l ++ ":" ++ t ++ "\n"
-        hPutStr h $ "msgid \""++ name ttl ++"\"\n"
-        hPutStr h $ "msgstr \"\"\n\n"
-    hClose h
-
-groupTTLs:: Bool -> [TemplateTextLocation] -> Map.Map String [TemplateTextLocation] -> Map.Map String [TemplateTextLocation]
-groupTTLs makeTemplates (t:tl) m = groupTTLs makeTemplates  tl $ Map.insertWith (++) (finalLocation makeTemplates t) [t] m
-groupTTLs _ [] m = m
+groupTTLs:: [TemplateTextLocation] -> Map.Map String [TemplateTextLocation] -> Map.Map String [TemplateTextLocation]
+groupTTLs (t:tl) m = groupTTLs tl $ Map.insertWith (++) (finalLocation t) [t] m
+groupTTLs [] m = m
 
 
 getTextsFromTemplates::IO [TemplateTextLocation]
@@ -140,10 +103,10 @@ locationMerge (t : ts) = TemplateTextLocation {name = name t, location = (concat
 locationMerge [] = error "No locations provided"
 
 
-finalLocation:: Bool -> TemplateTextLocation -> String
-finalLocation makeTemplates  ttl =  if (2 > (length $ nub $ map fst $ location ttl))
-                        then templateFileToPOT makeTemplates  $ head $ map fst $ location ttl
-                        else commonFileName makeTemplates
+finalLocation:: TemplateTextLocation -> String
+finalLocation ttl =  if (2 > (length $ nub $ map fst $ location ttl))
+                        then templateFileNameToCSV $ head $ map fst $ location ttl
+                        else commonFileName 
 
 getRecursiveMTime :: [Char] -> IO ClockTime
 getRecursiveMTime "."  = return $ TOD 0 0
@@ -209,52 +172,10 @@ getTextTemplatesFromFile path =
                                            else [(n,v)]
    addLine _ m _ = m
    
-
-migratePoToCsv:: IO ()
-migratePoToCsv = do
-    langsMap <- foldM langToMap Map.empty allValues
-    forM_ (Map.toList $ langsMapToCSV langsMap) (uncurry writeCSVFile)
-    
-
-
-writeCSVFile:: String -> [[String]] -> IO ()
-writeCSVFile s csv = do
-    let dirname = reverse $ drop 1 $ dropWhile (/= '/') (reverse s)
-    createDirectoryIfMissing True (textsDirectory ++ "/" ++ dirname)
-    writeFile (templateFileNameToCSV $ textsDirectory ++ "/" ++ s) (genCsvFile $ sortCSV csv)
-
-
-type LangsMap = Map.Map String  (Map.Map String (Map.Map Lang String)) -- NameFile -> Template name -> Lang -> Template Value
-
-langToMap::LangsMap -> Lang -> IO LangsMap
-langToMap currMap lang = do
-    texts <- getTextTemplatesFromDirPO $ langDir lang
-    let lMap =  Map.fromList $ mapSnd (Map.fromList . (mapSnd (Map.singleton lang))) texts
-    return $ Map.unionWith (Map.unionWith Map.union) currMap lMap
-    
-langsMapToCSV:: LangsMap -> Map.Map String [[String]]
-langsMapToCSV = Map.map $ (csvHeader:) . templateLines
-   where
-    csvHeader:: [String]
-    csvHeader = "!Template name" : (map show (allValues::[Lang]))
-    templateLines tMap = for (Map.toList tMap) templateLine
-    templateLine (tname, lMap) =  [tname] ++ (for allValues $ \l ->
-                                    spliter 60 $ fromMaybe "" (Map.lookup l lMap))
-
-
-
-spliter::Int -> String -> String
-spliter v s = if (v >= length s)
-                 then s
-                 else if (" " `isPrefixOf` (drop v s))
-                       then (take v s) ++ "\n" ++(spliter 60 $ drop v s)
-                       else spliter (v + 1) s
-
-
 updateCSV :: IO ()
 updateCSV = do
     ttls <- getTextsFromTemplates
-    let grouped = groupTTLs False ttls Map.empty
+    let grouped = groupTTLs ttls Map.empty
     forM_ (Map.toList $ Map.map (map name) grouped) $ \(fn, names) -> do
         let fname = textsDirectory ++ "/" ++ (templateFileNameToCSV fn)
         eCsv <- parseFromFile csvFile fname
@@ -284,32 +205,3 @@ textCsvSort::[String] -> [String] -> Ordering
 textCsvSort (s1:_) (s2:_) = compare (validName s1) (validName s2)
 textCsvSort s1 s2 = compare s1 s2
 
-
-
----- OLD, will be dropped
-
-getTextTemplatesFromDirPO:: String -> IO [(String,[(String,String)])]
-getTextTemplatesFromDirPO "."  = return []
-getTextTemplatesFromDirPO ".." = return []
-getTextTemplatesFromDirPO dir = do
-    l10 <- getL10n dir
-    let  dumbMerge v = case v of
-                    (Msgid s,a:_) -> (s,a)
-                    (Msgid s,_) -> (s,"")
-    let base = Map.toList $ Map.map (map dumbMerge) $ Map.mapKeys (\(Locale s) -> s) $ Map.map ((concatMap Map.toList) . Map.elems) l10
-    return $ mapSnd  (filter (not . null . fst)) base
-
-getL10n::String -> IO L10n
-getL10n dir = case ("." `isSuffixOf` dir) of
- True -> return Map.empty
- False -> do
-     files <- getDirectoryContents dir
-     mts <- forM files $ \fn -> do
-         isDir <- doesDirectoryExist $ dir ++ "/" ++fn
-         if not isDir
-          then return Map.empty
-          else do
-             m <- getL10n $ dir ++ "/" ++fn
-             return $ Map.mapKeys (\(Locale s) -> Locale $ fn ++ "/" ++ s) m
-     (mt,_) <- Text.I18n.Po.getL10n $ dir
-     return $ Map.unions $ mt:mts
