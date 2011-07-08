@@ -139,17 +139,7 @@ mkHeaders = M.fromList . map (f . g)
 
 -- | Constructs cookies from list of string pairs
 mkCookies :: [(String, String)] -> [(String, Cookie)]
-mkCookies = map f
-    where
-        f (name, value) = (name, Cookie {
-              cookieVersion = ""
-            , cookiePath = ""
-            , cookieDomain = ""
-            , cookieName = name
-            , cookieValue = value
-            , secure = False
-            , httpOnly = False
-        })
+mkCookies = map (\(n, v) -> (n, mkCookie n v))
 
 -- | Retrieves specific header value
 getHeader :: String -> Headers -> Maybe String
