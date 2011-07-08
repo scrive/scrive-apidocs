@@ -118,6 +118,14 @@ msgstr "<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</stron
 msgid "_pageFooterAbout"
 msgstr "Om SkrivaPå"
 
+#: apppages.st:queryColumn
+msgid "_name"
+msgstr "Namn"
+
+#: apppages.st:queryColumn
+msgid "_message"
+msgstr "Meddelande"
+
 #: apppages.st:header
 msgid "_headerSend"
 msgstr "Skicka"
@@ -125,6 +133,10 @@ msgstr "Skicka"
 #: apppages.st:header
 msgid "_headerLogOut"
 msgstr "Logga ut"
+
+#: apppages.st:header
+msgid "_headerInviteFriend"
+msgstr " Bjud en vän på 1 månad fri användning. Skriv deras e-post här!"
 
 #: apppages.st:header
 msgid "_headerInvite"

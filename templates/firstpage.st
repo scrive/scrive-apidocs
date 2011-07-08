@@ -103,7 +103,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h3>$_h3CreateAccount()$</h3>
                                                 <p class="introtext">$_h3CreateAccountBody()$</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
-                                                        <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
+                                                        <input class="shiny" type="email" name="email" infotext="$_FillInEmail()$" /> <a href="#" class="submit new-btn-small green2 center"><p>$_CreateAccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
@@ -304,7 +304,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="right">
                                                 <form method="post" action="$linksignup$" class="requestAccount">
                                                         <a href="#" class="submit new-btn-small green2 center float-right"><p>$_ButtonCreateAccount()$</p></a>
-                                                        <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" />
+                                                        <input class="shiny float-left" name="email" type="email" infotext="$_FillInEmail()$" />
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>

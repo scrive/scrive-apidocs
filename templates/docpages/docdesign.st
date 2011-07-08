@@ -502,33 +502,33 @@ pageDocumentDesign=
         <span class='dragfield sigfstname inputWrapper'>
           <span style="display:none;" class="fieldid">fstname</span>
           <span style="display:none;" class="type">author</span>
-          <input type="text" infotext="Förnamn"
+          <input type="text" infotext="$_firstname()$"
                  name="signatoryfstname" autocomplete="off" value="" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigsndname inputWrapper'>
           <span style="display:none;" class="fieldid">sndname</span>
           <span style="display:none;" class="type">author</span>
-          <input type="text" infotext="Efternamn"
+          <input type="text" infotext="$_lastname()$"
                  name="signatorysndname" autocomplete="off" value="" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigemail inputWrapper'>
           <span style="display:none;" class="fieldid">email</span>
           <span style="display:none;" class="type">author</span>
-          <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
+          <input type="email" infotext="$_email()$" name="signatoryemail" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigcomp inputWrapper'>
           <span style="display:none;" class="fieldid">company</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
+          <input type="text" infotext="$_comapny()$" name="signatorycompany" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigpersnum inputWrapper'>
           <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Pers. nr" name="signatorypersonalnumber" autocomplete="off" />
+          <input type="text" infotext="$_personnumber()$" name="signatorypersonalnumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigcompnum inputWrapper'>

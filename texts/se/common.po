@@ -425,6 +425,11 @@ msgstr "Mail API"
 msgid "_HeadAccountSettings"
 msgstr "Kontoinställningar"
 
+#: apppages.st:standardBodyWrapper
+#: firstpage.st:firstPage
+msgid "_FillInEmail"
+msgstr "Fyll i din e-postadress"
+
 #~ msgid "_ReminderHead"
 #~ msgstr "Skicka påminnelse"
 #~ msgid "_Delete"

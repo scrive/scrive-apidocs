@@ -84,7 +84,7 @@ msgstr "Partners"
 
 #: apppages.st:pageFooter
 msgid "_pageFooterLaw"
-msgstr "Law"
+msgstr "Legal"
 
 #: apppages.st:pageFooter
 msgid "_pageFooterHome"
@@ -104,7 +104,7 @@ msgstr "<strong>Send e-mail to Scrive</strong>          <a href=\"mailto:info@sk
 
 #: apppages.st:pageFooter
 msgid "_pageFooterContact3"
-msgstr "<strong>Office hours</strong>          Monday-Friday 9 am - 5 pm"
+msgstr "<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
 
 #: apppages.st:pageFooter
 msgid "_pageFooterContact2"
@@ -118,6 +118,14 @@ msgstr "<strong>Contact us for feedback, questions &amp; requests </strong>"
 msgid "_pageFooterAbout"
 msgstr "About Scrive"
 
+#: apppages.st:queryColumn
+msgid "_name"
+msgstr "Name"
+
+#: apppages.st:queryColumn
+msgid "_message"
+msgstr "Message"
+
 #: apppages.st:header
 msgid "_headerSend"
 msgstr "Send"
@@ -125,6 +133,10 @@ msgstr "Send"
 #: apppages.st:header
 msgid "_headerLogOut"
 msgstr "Log Out"
+
+#: apppages.st:header
+msgid "_headerInviteFriend"
+msgstr "Invite a friend to one month free usage. Fill in their e-mail here!"
 
 #: apppages.st:header
 msgid "_headerInvite"

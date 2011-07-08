@@ -22,6 +22,10 @@ msgstr "Back"
 msgid "_pagingFooterNext"
 msgstr "Next"
 
+#: listutils/listutils.st:pagingFooter
+msgid "_of"
+msgstr "of"
+
 #: listutils/listutils.st:listLocalDialogs
 msgid "_listLocalDialogsBody"
 msgstr "Are you sure that you want to delete "

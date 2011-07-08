@@ -22,6 +22,10 @@ msgstr "Bakåt"
 msgid "_pagingFooterNext"
 msgstr "Nästa"
 
+#: listutils/listutils.st:pagingFooter
+msgid "_of"
+msgstr "av"
+
 #: listutils/listutils.st:listLocalDialogs
 msgid "_listLocalDialogsBody"
 msgstr "Är du säker att du vill radera "

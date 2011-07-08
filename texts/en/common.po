@@ -334,12 +334,12 @@ msgstr "Save changes"
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_QuoteOnVidBy"
-msgstr "- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise"
+msgstr "- Lisa Renander och Julia Hamrin, CEO and Sales Manager at Go Enterprise"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_QuoteOnVid"
-msgstr "”Processerna blir betydligt smidigare.”"
+msgstr "\"The processes gets much smoother.\""
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
@@ -349,17 +349,17 @@ msgstr "Martin Lindström, IPAS"
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote6"
-msgstr "”Notera: efter 1 veckas användning börjar era kunder visa produkten för andra.”"
+msgstr "\"Note: after one week's usage, your customer starts showing the service to others.\""
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote5By"
-msgstr "Michael Burman, Marknadschef, Coop Nord"
+msgstr "Michael Burman, Marketing Manager, Coop Nord"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote5"
-msgstr "”Snabbt och överskådligt.”"
+msgstr "”Fast and easy to overview.”"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
@@ -369,37 +369,37 @@ msgstr "Ola Brundin, Accenture Management Consulting"
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote4"
-msgstr "”Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen.”"
+msgstr "\"The service is very smooth, and it really shows how much more efficient the contract processes can be made.\""
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote3By"
-msgstr "Christoffer Lindquist, VD, Eventbook, Eventpartner"
+msgstr "Christoffer Lindquist, CEO, Eventbook, Eventpartner"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote3"
-msgstr "”Smart lösning.”"
+msgstr "”Smart sloution.”"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote2By"
-msgstr "Alexis Barnekow, Försäljningschef, Green Hat People, Teambuilding Events"
+msgstr "Alexis Barnekow, Sales Manager, Green Hat People, Teambuilding Events"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote2"
-msgstr "”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”"
+msgstr "\"The overview of signed contracts is much better. That's the thing according to me.\""
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote1By"
-msgstr "Mikael Green, VD, Account Factory, Redovisningsbyrå"
+msgstr "Mikael Green, CEO, Account Factory, Accounting firm"
 
 #: firstpage.st:firstPage
 #: staticpages/clientspage.st:clientsPageContents
 msgid "_Quote1"
-msgstr "”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”"
+msgstr "\"Nice. Faster responses from customers and no paper archiving.\""
 
 #: userpages/accountpage.st:showUser
 #: userpages/subaccountslist.st:viewSubaccounts
@@ -424,6 +424,11 @@ msgstr "Mail API"
 #: userpages/securitypage.st:showUserSecurity
 msgid "_HeadAccountSettings"
 msgstr "Account settings"
+
+#: apppages.st:standardBodyWrapper
+#: firstpage.st:firstPage
+msgid "_FillInEmail"
+msgstr "Fill in your e-mail address"
 
 #~ msgid "_ReminderHead"
 #~ msgstr "Send reminder"

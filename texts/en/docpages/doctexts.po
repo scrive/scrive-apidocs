@@ -15,7 +15,7 @@ msgstr "support@scrive.com"
 
 #: docpages/doctexts.st:documentInfoText
 msgid "_documentInfoTextElseBody"
-msgstr "We are sorry, a problem occured when rendering the seal on the PDF. Please up-load the document again. If the problem reoccurs, please contact"
+msgstr "We are sorry, a problem occured when rendering the seal on the PDF. Please upload the document again. If the problem reoccurs, please contact"
 
 #: docpages/doctexts.st:documentInfoText
 msgid "_documentInfoTextElseHead"

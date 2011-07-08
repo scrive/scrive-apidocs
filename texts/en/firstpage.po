@@ -31,6 +31,10 @@ msgid "_h1"
 msgstr "Why struggle? - Sign with Scrive!"
 
 #: firstpage.st:firstPage
+msgid "_firstPageMetaDescription"
+msgstr "Sign and store your contracts online. Save time, money and frustrantion – both for yourself and your customers."
+
+#: firstpage.st:firstPage
 msgid "_StepsH3StoreBody"
 msgstr "We save your documents<br />safely and securely."
 
@@ -59,16 +63,40 @@ msgid "_QuotesHead"
 msgstr "Customer quotes"
 
 #: firstpage.st:firstPage
+msgid "_PriceTableRow4"
+msgstr "<td>Basic features</td>                                                        <td>Basic features</td>                                                        <td>Advanced features</td>                                                        <td>Custom solution</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow3"
+msgstr "<td>500 doc storage</td>                                                        <td>Unlimited storage</td>                                                        <td>Unlimited storage</td>                                                        <td>Offer</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow2"
+msgstr "<td>500 signatures/year</td>                                                        <td>1000 signatures/year</td>                                                        <td>2000 signatures/year</td>                                                        <td>From 4000 signatures/year</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow1"
+msgstr "<td>5 users</td>                                                        <td>15 users</td>                                                        <td>50 users</td>                                                        <td>Offer</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTablePriceRow"
+msgstr "<td>                                                                <h4>35 kr/signature</h4>                                                                <a href=\"/priser\">Detailed priceplan</a>                                                        </td>                                                        <td>                                                                <h4>32.50 kr/signature</h4>                                                                <a href=\"/priser\">Detailed priceplan</a>                                                        </td>                                                        <td>                                                                <h4>30 kr/signature</h4>                                                                <a href=\"/priser\">Detailed priceplan</a>                                                                                                           </td>                                                        <td>                                                                <h4>Offer</h4>                                                                <a href=\"/priser\">Detailed priceplan</a>                                                        </td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableHighlightedColumn"
+msgstr "<ul class=\"highlight-rows\">                                                        <li class=\"top\">                                                                <h3>Business</h3>                                                                <p>One solution for many usages</p>                                                        </li>                                                        <li class=\"odd\">50 users</li>                                                        <li>                                                                <p>2000 signatures/year</p>                                                        </li>                                                        <li class=\"odd\">Unlimited storage</li>                                                        <li>Advanced features</li>                                                        <li class=\"bottom\">                                                                <h4>30 kr/signature</h4>                                                                <a href=\"/priser\">Detailed priceplan</a>                                                           </li></ul>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableHead"
+msgstr "                                                        <th>                                                                <h3>Small</h3>                                                                <p>Improve small organisations</p>                                                        </th>                                                        <th>                                                                <h3>Team</h3>                                                                <p>Make the team more efficient</p>                                                        </th>                                                        <th>                                                                <h3>Business</h3>                                                                <p>One solution for many usages</p>                                                        </th>                                                        <th>                                                                <h3>Enterprise</h3>                                                                <p>Larger volume, integrations and customization</p>                                                        </th>"
+
+#: firstpage.st:firstPage
 msgid "_PartnersHead"
 msgstr "Partners"
 
 #: firstpage.st:firstPage
-msgid "_DemovidHead"
-msgstr "Demonstration"
-
-#: firstpage.st:firstPage
-msgid "_DemovidBody"
-msgstr "This is a demo video of how to sign a document with our service."
+msgid "_CreateAccount"
+msgstr "Create account!"
 
 #: firstpage.st:firstPage
 msgid "_ButtonCreateAccount"
@@ -138,6 +166,14 @@ msgstr "Document handeling is time consuming. Time is money. Scrive is a tailore
 msgid "_Bemefit1"
 msgstr "Reduce costs"
 
+#: firstpage.st:firstPage
+msgid "_BelowPriceTable1"
+msgstr "                    <h3>Free for private persons and proprietors</h3>                    <p>There are a thousand reasons for everyone to start singing their documents electronically. Our ambition is to work closely and cooperate with our customers. Unfortunently, we are not able to help all our target groups activley. Therefore, we offer a support-free account for small users. 1 user, 5 free signatures per month and storage of 50 documents.</p>"
+
+#~ msgid "_DemovidHead"
+#~ msgstr "Demonstration"
+#~ msgid "_DemovidBody"
+#~ msgstr "This is a demo video of how to sign a document with our service."
 #~ msgid "_PricePlanVAT"
 #~ msgstr "* All prices are ecluding VAT"
 #~ msgid "_PricePlanLink"
@@ -150,8 +186,6 @@ msgstr "Reduce costs"
 #~ msgstr "Unlimited number of users"
 #~ msgid "_PricePlan4Storage"
 #~ msgstr "Unlimited storage"
-#~ msgid "_PricePlan4Price"
-#~ msgstr "Offer"
 #~ msgid "_PricePlan4H3Body"
 #~ msgstr "Large volumes and/or <BR/>complex needs"
 #~ msgid "_PricePlan4H3"

@@ -95,12 +95,8 @@ msgid "_PartnersHead"
 msgstr "Partners"
 
 #: firstpage.st:firstPage
-msgid "_DemovidHead"
-msgstr "Demonstration"
-
-#: firstpage.st:firstPage
-msgid "_DemovidBody"
-msgstr "Följande är ett demonstrationsklipp av hur man undertecknar ett dokument med vår tjänst."
+msgid "_CreateAccount"
+msgstr "Skapa konto!"
 
 #: firstpage.st:firstPage
 msgid "_ButtonCreateAccount"
@@ -174,6 +170,12 @@ msgstr "Minska kostnaderna"
 msgid "_BelowPriceTable1"
 msgstr "<h3>Gratis för privatpersoner och enmansföretagare</h3>                                  <p>Det finns tusen skäl varför alla bör signera sina dokument elektroniskt. Vår ambition är att alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt konto för alla mindre användare. 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</p>"
 
+#~ msgid "_DemovidHead"
+#~ msgstr "Demonstration"
+#~ msgid "_DemovidBody"
+#~ msgstr ""
+#~ "Följande är ett demonstrationsklipp av hur man undertecknar ett dokument "
+#~ "med vår tjänst."
 #~ msgid "_PricePlanVAT"
 #~ msgstr "* Alla priser är exkl moms"
 #~ msgid "_PricePlanLink"

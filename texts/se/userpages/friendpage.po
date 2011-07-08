@@ -18,6 +18,10 @@ msgstr "Vänner"
 msgid "_SortEmail"
 msgstr "E-postadress"
 
+#: userpages/friendpage.st:viewFriends
+msgid "_InviteBox"
+msgstr "Skriv e-post för att lägga till fler"
+
 #~ msgid "_Shareing"
 #~ msgstr "Delning"
 #~ msgid "_Subaccounts"

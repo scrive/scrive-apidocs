@@ -95,7 +95,7 @@ standardBodyWrapper=
                                             <form method="post" action="$linksignup$" class="requestAccount">
                                               <input class="shiny float-left"
                                                      name="email" type="email"
-                                                     infotext="Fyll i din e-postadress"
+                                                     infotext="$_FillInEmail()$"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
                                                                            float-right"><p>$_createaccount()$!</p></a>
@@ -122,7 +122,7 @@ queryColumn=
                                                 action="$linksignup$" class="requestAccount">
                                                         <input type="email"
                                                         name="email"
-                                                        infotext="E-post"
+                                                        infotext="$_email()$"
                                                         /><br /><br />
 
                                                         <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
@@ -140,10 +140,10 @@ queryColumn=
                                                 <br />
                                                 <form method="post"
                                                       action="$linkquestion$">
-                                                        <input type="text" name="name" infotext="Namn" /><br />
-                                                        <input type="email" name="email" infotext="E-post" /><br />
-                                                        <input type="tel" name="phone" infotext="Telefonnummer" /><br />
-                                                        <textarea name="message" infotext="Meddelande" style="height:42px;"></textarea>
+                                                        <input type="text" name="name" infotext="$_name()$" /><br />
+                                                        <input type="email" name="email" infotext="$_email()$" /><br />
+                                                        <input type="tel" name="phone" infotext="$_phone()$" /><br />
+                                                        <textarea name="message" infotext="$_message()$" style="height:42px;"></textarea>
                                                         <a class="submit new-btn-small green2 center"><p>$_send()$!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
@@ -272,7 +272,7 @@ header=
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
                                   <div>
-                                       <input type="email" class="float-left" autocomplete="off" name="invitedemail" infotext=" Bjud en vän på 1 månad fri användning. Skriv deras e-post här!"/>
+                                       <input type="email" class="float-left" autocomplete="off" name="invitedemail" infotext="$_headerInviteFriend()$"/>
                                        <a class="btn-tiny green float-right submit" href="#">
                                             <div class="left"></div>
                                             <div class="label"><p>$_headerInvite()$</p></div>

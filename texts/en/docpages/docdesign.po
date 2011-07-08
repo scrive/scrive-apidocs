@@ -289,7 +289,7 @@ msgstr "Multi send"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogCsvupload1ChooseFileToUpLoad"
-msgstr "Select file to up-load"
+msgstr "Select file to upload"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogCsvupload1ChooseFile"
@@ -301,7 +301,7 @@ msgstr "OBSERVE! .CSV only!"
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogCsvupload1Body"
-msgstr "            You have chosen to multi send. To complete this you are required to up-load a document with format .csv          "
+msgstr "            You have chosen to multi send. To complete this you are required to upload a document with format .csv          "
 
 #: docpages/docdesign.st:pageDocumentForAuthorHelpersLocalDialogs
 msgid "_dialogConfirmTextSendNormalBody2"

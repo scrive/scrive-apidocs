@@ -18,6 +18,10 @@ msgstr "Friends"
 msgid "_SortEmail"
 msgstr "E-mail address"
 
+#: userpages/friendpage.st:viewFriends
+msgid "_InviteBox"
+msgstr "Fill in e-mail to add more"
+
 #~ msgid "_Shareing"
 #~ msgstr "Delning"
 #~ msgid "_Subaccounts"

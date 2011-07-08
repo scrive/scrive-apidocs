@@ -108,7 +108,7 @@ msgstr "Loading tweets.."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_loadingFile"
-msgstr "Up-loading . . ."
+msgstr "Uploading . . ."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_ie6NotSupported"
@@ -148,7 +148,7 @@ msgstr "You must add at least one signing party."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_addRequiredAttachments"
-msgstr "Please up-load requested attachments."
+msgstr "Please upload requested attachments."
 
 #~ msgid "_sndname"
 #~ msgstr "Efternamn"
