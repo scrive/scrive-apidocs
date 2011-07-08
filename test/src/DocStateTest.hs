@@ -32,7 +32,9 @@ docStateTests = testGroup "DocState" [
   testThat "when I call update document, i can change the title" testDocumentUpdateCanChangeTitle,
   testThat "when I attach a file to a real document, it ALWAYS returns Right" testDocumentAttachAlwaysRight,
   testThat "when I attach a file to a bad docid, it ALWAYS returns Left" testNoDocumentAttachAlwaysLeft,
-  testThat "when I attach a file, the file is attached" testDocumentAttachHasAttachment
+  testThat "when I attach a file, the file is attached" testDocumentAttachHasAttachment,
+  testThat "when I attach a sealed file to a bad docid, it always returns left" testNoDocumentAttachSealedAlwaysLeft,
+  testThat "when I attach a sealed file to a real doc, it always returns Right" testDocumentAttachSealedAlwaysRight
                 ]
 
 testThat :: String -> Assertion -> Test
@@ -144,6 +146,31 @@ testDocumentAttachHasAttachment = do
     Right newdoc -> case find ((== fname) . filename) (documentfiles newdoc) of
       Just _ -> assertSuccess
       _ -> assertFailure "File does exist or wrong name"
+
+testNoDocumentAttachSealedAlwaysLeft :: Assertion
+testNoDocumentAttachSealedAlwaysLeft = do
+  -- setup
+  --execute
+  -- non-existent docid
+  edoc <- update $ AttachSealedFile (DocumentID 4) "some file" "some content"
+  --assert
+  case edoc of
+    Left _msg     -> assertSuccess
+    Right _newdoc -> assertFailure "Should not succeed if no document"
+
+testDocumentAttachSealedAlwaysRight :: Assertion
+testDocumentAttachSealedAlwaysRight = do
+  -- setup
+  mt <- whatTimeIsIt
+  author <- assumingBasicUser
+  doc <- assumingBasicContract mt author
+  --execute
+  edoc <- update $ AttachSealedFile (documentid doc) "some file" "some content"
+  --assert
+  case edoc of
+    Left msg -> assertFailure $ "Could not run AttachFile: " ++ msg
+    Right _newdoc -> assertSuccess
+
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
