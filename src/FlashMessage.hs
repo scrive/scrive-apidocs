@@ -3,6 +3,7 @@ module FlashMessage (
     , FlashMessage(..)
     , unFlashMessage
     , toFlashMsg
+    , toModal
     , toFlashTemplate
     , instantiate
     , updateFlashCookie
@@ -68,6 +69,9 @@ data FlashMessage
 toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg = FlashMessage
 
+toModal :: String -> FlashMessage
+toModal = FlashMessage Modal
+
 toFlashTemplate :: FlashType -> String -> [(String, String)] -> FlashMessage
 toFlashTemplate = FlashTemplate
 
@@ -75,10 +79,10 @@ unFlashMessage :: FlashMessage -> Maybe (FlashType, String)
 unFlashMessage (FlashMessage ftype msg) = Just (ftype, msg)
 unFlashMessage _ = Nothing
 
-instantiate :: KontrakcjaTemplates -> FlashMessage -> IO FlashMessage
-instantiate templates (FlashTemplate ftype templatename fields) =
-    toFlashMsg ftype <$> renderTemplate templates templatename fields
-instantiate _ fm = return fm
+instantiate :: TemplatesMonad m => FlashMessage -> m FlashMessage
+instantiate (FlashTemplate ftype templatename fields) =
+    toFlashMsg ftype <$> renderTemplateM templatename fields
+instantiate fm = return fm
 
 updateFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => AESConf -> [FlashMessage] -> [FlashMessage] -> m ()
 updateFlashCookie aesconf oldflashes newflashes =

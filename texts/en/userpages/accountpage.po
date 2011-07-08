@@ -30,10 +30,6 @@ msgstr "City"
 msgid "_address"
 msgstr "Address"
 
-#: userpages/accountpage.st:showUser
-msgid "_SaveChanges"
-msgstr "Save changes"
-
 #~ msgid "_shareing"
 #~ msgstr "Delning"
 #~ msgid "_HeadSubaccounts"

@@ -32,7 +32,7 @@ msgstr "Varför krångla? - Signera med SkrivaPå!"
 
 #: firstpage.st:firstPage
 msgid "_firstPageMetaDescription"
-msgstr ""
+msgstr "Signera och arkivera dina avtal elektroniskt. Spara tid, pengar och frustration – både åt dig och dina kunder."
 
 #: firstpage.st:firstPage
 msgid "_StepsH3StoreBody"
@@ -61,6 +61,34 @@ msgstr "Skicka"
 #: firstpage.st:firstPage
 msgid "_QuotesHead"
 msgstr "Kunder berättar"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow4"
+msgstr "<td>Basfunktioner</td>                                                        <td>Basfunktioner</td>                                                        <td>Advancerade funktioner</td>                                                        <td>Anpassad lösning</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow3"
+msgstr "<td>500 dok laging</td>                                                        <td>Obegränsad lagring</td>                                                        <td>Obegränsad lagring</td>                                                        <td>Offert</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow2"
+msgstr "<td>500 signaturer/år</td>                                                        <td>1000 signaturer/år</td>                                                        <td>2000 signaturer/år</td>                                                        <td>Från 4000 signaturer/år</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableRow1"
+msgstr "<td>5 användare</td>                                                        <td>15 användare</td>                                                        <td>50 användare</td>                                                        <td>Offert</td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTablePriceRow"
+msgstr "<td>                                                                <h4>35 kr/signatur</h4>                                                                <a href=\"/priser\">Detaljerad prisplan</a>                                                        </td>                                                        <td>                                                                <h4>32.50 kr/signatur</h4>                                                                <a href=\"/priser\">Detaljerad prisplan</a>                                                        </td>                                                        <td>                                                                <h4>30 kr/signatur</h4>                                                                <a href=\"/priser\">Detaljerad prisplan</a>                                                                                                           </td>                                                        <td>                                                                <h4>Offert</h4>                                                                <a href=\"/priser\">Detaljerad prisplan</a>                                                        </td>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableHighlightedColumn"
+msgstr "<ul class=\"highlight-rows\">                                                        <li class=\"top\">                                                                <h3>Business</h3>                                                                <p>En helhetslösning för många användningsområden </p>                                                        </li>                                                        <li class=\"odd\">50 användare</li>                                                        <li>                                                                <p>2000 signaturer/år</p>                                                        </li>                                                        <li class=\"odd\">Obegränsad lagring</li>                                                        <li>Avancerade funktioner</li>                                                        <li class=\"bottom\">                                                                <h4>30 kr/signatur</h4>                                                                <a href=\"/priser\">Detaljerad prisplan</a>                                                           </li></ul>"
+
+#: firstpage.st:firstPage
+msgid "_PriceTableHead"
+msgstr "                                                        <th>                                                                <h3>Small</h3>                                                                <p>Förbättra processerna i den mindre organisationen</p>                                                        </th>                                                        <th>                                                                <h3>Team</h3>                                                                <p>Effektivisera teamet med enkla medel</p>                                                        </th>                                                        <th>                                                                <h3>Business</h3>                                                                <p>En helhetslösning för många användningsområden</p>                                                        </th>                                                        <th>                                                                <h3>Enterprise</h3>                                                                <p>Större volymer, integrationer och anpassning</p>                                                        </th>"
 
 #: firstpage.st:firstPage
 msgid "_PartnersHead"
@@ -142,6 +170,10 @@ msgstr "Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är ett s
 msgid "_Bemefit1"
 msgstr "Minska kostnaderna"
 
+#: firstpage.st:firstPage
+msgid "_BelowPriceTable1"
+msgstr "<h3>Gratis för privatpersoner och enmansföretagare</h3>                                  <p>Det finns tusen skäl varför alla bör signera sina dokument elektroniskt. Vår ambition är att alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt konto för alla mindre användare. 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</p>"
+
 #~ msgid "_PricePlanVAT"
 #~ msgstr "* Alla priser är exkl moms"
 #~ msgid "_PricePlanLink"
@@ -154,8 +186,6 @@ msgstr "Minska kostnaderna"
 #~ msgstr "Obegränsat antal användare"
 #~ msgid "_PricePlan4Storage"
 #~ msgstr "Obegränsad lagring"
-#~ msgid "_PricePlan4Price"
-#~ msgstr "Offert"
 #~ msgid "_PricePlan4H3Body"
 #~ msgstr "Stora volymer och/eller <BR/>komplexa behov"
 #~ msgid "_PricePlan4H3"

@@ -53,6 +53,7 @@ import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
 import Data.Ratio
+import Templates.Templates
 import qualified Data.ByteString.Base64 as BASE64
 import qualified AppLogger as Log (debug)
 
@@ -60,11 +61,12 @@ import qualified AppLogger as Log (debug)
 type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
-{- | API functions are build over Kontra with a ability to exit, and with some context -}
---type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra) a
-
-newtype Kontrakcja m => APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
+{- | API functions are build over Kontra with an ability to exit, and with some context -}
+newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+
+instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
+    getTemplates = liftKontra getTemplates
 
 instance Kontrakcja m => KontraMonad (APIFunction m c) where
     getContext    = liftKontra getContext
@@ -94,7 +96,7 @@ apiResponse action = action >>= simpleResponse . encode
 -}
 
 apiCall :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c APIResponse -> m Response
-apiCall s f = dir s $ do
+apiCall s f = dir "api" $ dir s $ do
     methodM POST
     Log.debug $ "API call " ++ s ++ " matched"
     apiResponse $ do
@@ -105,30 +107,6 @@ apiCall s f = dir s $ do
                  Log.debug $ "API call result: " ++ encode res
                  return res
              Left emsg -> return $ uncurry apiError emsg
-
--- commented out, doesn't want to work :/ but I don't really see
--- a point of it, APIContext provides enough abstraction imho. there
--- is only one instance of APICall anyway and it more obscures what
--- it's doing rather than help (recursive call in different context ftw)
-{-class APICall m a where
-    apiCall :: String -> a -> m Response
-
-instance Kontrakcja m => APICall m (m APIResponse) where
-    apiCall s action = dir "api" $ dir s $ do
-                    methodM POST 
-                    Log.debug $ "API call " ++ s ++ " matched"
-                    apiResponse action
-
-
-instance (APIContext m c, Kontrakcja m) => APICall m (APIFunction m c APIResponse) where
-    apiCall s action = apiCall s $ do
-        mcontext <- apiContext
-        case mcontext  of
-             Right apicontext -> do
-                 res <- either (uncurry apiError) id <$> runApiFunction action apicontext
-                 Log.debug $ "API call result: " ++ encode res
-                 return res
-                 Left emsg -> return $ uncurry apiError emsg-}
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
 apiUnknownCall :: Kontrakcja m => m Response

@@ -1,5 +1,5 @@
-{-# LANGUAGE CPP #-}
-module TrustWeaverTest where
+{-# OPTIONS_GHC -w #-}
+module TrustWeaverTest (trustWeaverTests) where
 
 import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup, defaultMain)
@@ -10,16 +10,6 @@ import MinutesTime
 
 import qualified Data.ByteString as BS
 import qualified TrustWeaver as TW
-
-main :: IO ()
-main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    defaultMain tests
-
-tests :: [Test]
-tests = [ testGroup "TrustWeaver" trustWeaverTests
-        ]
 
 {-
 
@@ -109,8 +99,8 @@ twconf_bad = TW.TrustWeaverConf
     , TW.timeout = 10
     }
 
-trustWeaverTests :: [Test]
-trustWeaverTests = [ testGroup "TrustWeaver"
+trustWeaverTests :: Test
+trustWeaverTests = testGroup "TrustWeaver" [ testGroup "TrustWeaver"
                      [ testCase "Signing and validation (F1.1 and F1.2) (1.1 and 2.1)" $ 
                                 testSignAndValidate twconf
                      , testCase "Register and enable section (F1.6) (6.1.1, 6.1.2, 6.1.3)" $

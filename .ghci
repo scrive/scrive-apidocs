@@ -1,4 +1,4 @@
-:set -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+:set -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
 :set -isrc -ipdfseal/src -ipdfseal/inc -itest/src
 :set -XBangPatterns
 :set -XDeriveDataTypeable
