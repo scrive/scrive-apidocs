@@ -78,7 +78,7 @@ integrationService = do
          Nothing -> return Nothing
 
 integrationAPI :: Kontra Response
-integrationAPI = dir "integration" $ msum [
+integrationAPI = dir "api" $ dir "integration" $ msum [
       apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
     , apiCall "new_document" createDocument              :: Kontrakcja m => m Response
     , apiCall "documents" getDocuments                   :: Kontrakcja m => m Response

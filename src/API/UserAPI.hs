@@ -60,7 +60,7 @@ apiUser = do
                else return Nothing
 
 userAPI :: Kontra Response
-userAPI =  dir "userapi" $ msum [
+userAPI =  dir "api" $ dir "userapi" $ msum [
       apiCall "sendnewdocument" sendNewDocument   :: Kontrakcja m => m Response
     , apiCall "sendFromTemplate" sendFromTemplate :: Kontrakcja m => m Response
     , apiCall "document" getDocument              :: Kontrakcja m => m Response
