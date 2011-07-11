@@ -64,5 +64,8 @@ lift_M f v = do
   mv <- v
   maybe (return Nothing) (liftM Just . f) mv
 
-when_::(Monad m) => Bool -> m a -> m ()
+{- |
+   like when but always returns ()
+ -}
+when_ :: (Monad m) => Bool -> m a -> m ()
 when_ b c = when b $ c >> return ()
