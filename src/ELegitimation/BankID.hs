@@ -38,6 +38,7 @@ import Data.Either (lefts, rights)
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -319,8 +320,7 @@ handleIssuePostBankID docid = withUserPost $ do
     signlast <- isFieldSet "signlast"
     document <- queryOrFail $ GetDocumentByDocumentID docid
 
-    failIfNotAuthor document author
-
+    guard $ isAuthor (document, author)
 
     -- valid transaction?
     ELegTransaction { transactiondocumentid
@@ -329,7 +329,7 @@ handleIssuePostBankID docid = withUserPost $ do
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (transactiondocumentid /= docid)  mzero
+    guard $ transactiondocumentid == docid
     -- end validation
     Log.debug $ "document status on post: " ++ show (documentstatus document)
     eudoc <- case documentstatus document of
@@ -431,7 +431,7 @@ handleSignCanceledDataMismatch :: Kontrakcja m => DocumentID -> SignatoryLinkID 
 handleSignCanceledDataMismatch docid signatorylinkid = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
-    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+    signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
     let mcancelationreason = documentcancelationreason document
     case mcancelationreason of
         Just (ELegDataMismatch msg sid _ _ _)
@@ -728,7 +728,7 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
 
 findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m ELegTransaction
 findTransactionByIDOrFail transactions transactionsid =
-    returnJustOrMZero $ find ((== transactionsid) . transactiontransactionid) transactions
+    guardJust $ find ((== transactionsid) . transactiontransactionid) transactions
 
 getTBS :: TemplatesMonad m => Doc.DocState.Document -> m String
 getTBS doc = do
