@@ -912,20 +912,14 @@ handlePasswordReminderPost aid hash = do
 
 handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountRemovalGet aid hash = do
-    getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
-        let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
-        if hash == token
-           then (query $ GetDocumentByDocumentID docid) >>= maybe mzero (\doc -> do
-               let sigs = filter ((==) sigid . signatorylinkid) $ documentsignatorylinks doc
-               case sigs of
-                    [sig] -> do
-                        extendActionEvalTimeToOneDayMinimum aid
-                        addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
-                        sendRedirect $ LinkSignDoc doc sig
-                    _ -> mzero
-               )
-           else mzero
-        )
+  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
+  let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
+  guard $ hash == token
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  sig <- guardJust $ getSigLinkFor doc sigid
+  extendActionEvalTimeToOneDayMinimum aid
+  addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
+  sendRedirect $ LinkSignDoc doc sig
 
 handleAccountRemovalFromSign :: Kontrakcja m => ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign aid hash = do
@@ -944,30 +938,28 @@ handleAccountRemovalPost aid hash = do
 -}
 handleAccountRemoval' :: Kontrakcja m => ActionID -> MagicHash -> m Document
 handleAccountRemoval' aid hash = do
-    getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
-        let AccountCreatedBySigning _ _ (docid, _) token = actionType action
-        if hash == token
-           then (query $ GetDocumentByDocumentID docid) >>= maybe mzero (\doc -> do
-               -- there should be done account and its documents removal, but
-               -- since the functionality is not there yet, we just remove
-               -- this action to prevent user from account activation and
-               -- receiving further reminders
-               dropExistingAction aid
-               return doc)
-           else mzero
-        )
+  action <- guardJustM $ getAccountCreatedBySigningIDAction aid        
+  let AccountCreatedBySigning _ _ (docid, _) token = actionType action
+  guard $ hash == token
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  -- there should be done account and its documents removal, but
+  -- since the functionality is not there yet, we just remove
+  -- this action to prevent user from account activation and
+  -- receiving further reminders
+  dropExistingAction aid
+  return doc
 
 getAccountCreatedBySigningIDAction :: Kontrakcja m => ActionID -> m (Maybe Action)
-getAccountCreatedBySigningIDAction aid =
-    (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
-        -- allow for account created by signing links only
-        if (actionTypeID $ actionType action) /= AccountCreatedBySigningID
-           then return Nothing
-           else if (acbsState $ actionType action) /= ReminderSent
-                   then return $ Just action
-                   else do
-                       now <- liftIO $ getMinutesTime
-                       return $ checkValidity now $ Just action)
+getAccountCreatedBySigningIDAction aid = do
+  action <- queryOrFail $ GetAction aid
+  -- allow for account created by signing links only
+  if actionTypeID (actionType action) /= AccountCreatedBySigningID
+    then return Nothing
+    else if acbsState (actionType action) /= ReminderSent
+         then return $ Just action
+         else do
+           now <- liftIO $ getMinutesTime
+           return $ checkValidity now $ Just action
 
 getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do
@@ -1005,19 +997,19 @@ dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
+  
+readXToken :: Kontrakcja m => m (Either String MagicHash)
+readXToken = do
+  xtokenpost <- getDataFnM (look "xtoken")
+  xtokenstr <- guardJust $ readM xtokenpost
+  mxtoken <- readM xtokenstr
+  return $ maybe (Left $ "xtoken read failure: " ++ xtokenstr) Right mxtoken
 
 guardXToken :: Kontrakcja m => m ()
 guardXToken = do
-    Context { ctxxtoken } <- getContext
-    (readM <$> getDataFnM (look "xtoken")) >>= maybe mzero (\xtokenstr -> do
-        maybe (readError xtokenstr) (\xtoken -> do
-            unless (xtoken == ctxxtoken) (do
-                Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
-                          ++ " param: " ++ show xtoken
-                mzero)
-            ) $ readM xtokenstr
-        )
-    where
-        readError v = do
-            Log.debug $ "couldn't read xtoken value: " ++ v
-            mzero
+  Context { ctxxtoken } <- getContext
+  xtoken <- guardRightM readXToken
+  unless (xtoken == ctxxtoken) $ do
+    Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
+      ++ " param: " ++ show xtoken
+    mzero
