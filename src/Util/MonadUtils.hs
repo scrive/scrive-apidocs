@@ -28,3 +28,4 @@ guardRight (Right val) = return val
 guardRight (Left  msg) = do 
   Log.debug (show msg)
   mzero
+  
