@@ -4,6 +4,13 @@ if (!window.console) {
     };
 }
 
+//ie doesn't support trim naturally!
+if(typeof String.prototype.trim !== 'function') {
+  String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, ''); 
+  }
+}
+
 function safeReady(f) {
     $(function() {
         try {
