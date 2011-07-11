@@ -33,6 +33,7 @@ import qualified Data.Map as Map
 import Data.CSV
 import User.Lang
 import Text.ParserCombinators.Parsec
+import System.IO
 
 
 {- | Reading CSV files
@@ -45,9 +46,9 @@ getTextTemplatesMTime = getRecursiveMTime textsDirectory
 -- | We recursively read all csv files from texts directory
 --   This function will also merge selected lang with default lang
 getTextTemplates:: Lang -> IO [(String,String)]
-getTextTemplates lang = do
-    texts <- getAllTextTemplates
-    return $ unionBy (\x y -> fst x == fst y) (texts ! lang) (texts ! defaultValue)
+getTextTemplates _ = do
+    texts <- getAllTextTemplates -- Language selection turned off and we fall back to default
+    return $ unionBy (\x y -> fst x == fst y) (texts ! defaultValue) (texts ! defaultValue)
 
 -- | All texts maped by the language
 --   Should be used only for tests since it does not do a mergewith default language
@@ -76,12 +77,10 @@ getTextTemplatesFromFile path =
  if (not $ ".csv" `isSuffixOf` path)
   then return emptyLangsMap
   else do
-    eCsv <- parseFromFile csvFile path
-    case eCsv of
-       Right (schemeString:csv) -> return $ foldl (addLine $ getScheme schemeString) emptyLangsMap csv
-       Right _ -> error $ "CSV parsing error in" ++path ++ "  \n Empty file"
-       Left s -> error $ "CSV parsing error in" ++path ++ "  \n" ++ show s
-       
+    csv <- basicCSVParser path
+    case csv of
+       schemeString:csv' -> return $ foldl (addLine $ getScheme schemeString) emptyLangsMap csv'
+       _ -> error $ "CSV parsing error in" ++path ++ "  \n Empty file"
  where
    getScheme s  = drop 1 (map maybeRead s)
    addLine::[Maybe Lang] -> (Map.Map Lang [(String,String)]) -> [String] -> Map.Map Lang [(String,String)]
@@ -108,10 +107,8 @@ updateCSV = do
     let grouped = groupTTLs ttls Map.empty
     forM_ (Map.toList $ Map.map (map name) grouped) $ \(fn, names) -> do
         let fname = textsDirectory ++ "/" ++ (templateFileNameToCSV fn)
-        eCsv <- parseFromFile csvFile fname
-        case eCsv of
-          Right csv -> writeFile fname (genCsvFile $ sortCSV $ updateTexts csv names)
-          Left s -> error $ "CSV parsing error in" ++fname ++ "  \n" ++ show s
+        csv <- basicCSVParser fname
+        writeFile fname (genCsvFile $ sortCSV $ updateTexts csv names)
         
 updateTexts::[[String]] -> [String] -> [[String]]
 updateTexts ((h:hs):r) names = if (validName h `elem` names || "!" `isPrefixOf` h)
@@ -233,3 +230,13 @@ textCsvSort s1 s2 = compare s1 s2
 emptyLangsMap:: (Monoid a) => Map.Map Lang a
 emptyLangsMap = Map.fromList $  for allValues $ \s -> (s,mempty)
 
+basicCSVParser :: String -> IO [[String]]
+basicCSVParser path = do
+    h <- openFile path ReadMode
+    hSetEncoding h utf8
+    content <- hGetContents h
+    res <- case (parse csvFile "(unknown)" content) of
+     Right csv -> return csv
+     Left s -> error $ "CSV parsing error in" ++path ++ "  \n" ++ show s
+    hClose h
+    return res

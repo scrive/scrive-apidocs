@@ -1006,10 +1006,8 @@ dropExistingAction aid = do
  -}
 readXToken :: Kontrakcja m => m (Either String MagicHash)
 readXToken = do
-  xtokenpost <- getDataFnM (look "xtoken")
-  xtokenstr <- guardJust $ readM xtokenpost
-  mxtoken <- readM xtokenstr
-  return $ maybe (Left $ "xtoken read failure: " ++ xtokenstr) Right mxtoken
+  mxtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
+  return $ maybe (Left $ "xtoken read failure" ) Right mxtoken
 
 guardXToken :: Kontrakcja m => m ()
 guardXToken = do
