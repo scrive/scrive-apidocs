@@ -31,6 +31,7 @@ import Templates.Templates
 import Templates.LocalTemplates
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
+import Doc.DocInfo
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -346,7 +347,7 @@ handleAcceptAccountFromSign documentid
       Nothing -> mzero
       Just signatorylink -> do
         case muser of
-          Nothing | Closed == documentstatus document -> addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
+          Nothing | isClosed document -> addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
           Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           Just _ -> addFlashM $ flashMessageAccountActivatedFromSign
         return $ LinkSignDoc document signatorylink
@@ -419,16 +420,16 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
           company = signatorycompany details
       muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
       case muser of
-        (Just (user, actionid, magichash)) -> do
+        Just (user, actionid, magichash) -> do
           _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
-          if (Closed == documentstatus document)
+          if isClosed document
             then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
             else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
     Just user -> do
      _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
-     if Closed == documentstatus document
+     if isClosed document
        then addFlashM $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
        else addFlashM $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
   return $ LinkSignDoc document signatorylink
@@ -466,13 +467,10 @@ rejectDocument documentid
    Get the SignatoryLink associated with a SignatoryLinkID or mzero if not found
  -}
 signatoryLinkFromDocumentByID :: Kontrakcja m => Document -> SignatoryLinkID -> m SignatoryLink
-signatoryLinkFromDocumentByID Document{ documentsignatorylinks } linkid = do
-    let invitedlinks = filter (\x -> signatorylinkid x == linkid
-                               {- && signatorymagichash x == magichash1 -})
-                              documentsignatorylinks
-    case invitedlinks of
-      [invitedlink] -> return invitedlink
-      _ -> mzero
+signatoryLinkFromDocumentByID document linkid =
+  case getSigLinkFor document linkid of
+    Just siglink -> return siglink
+    _            -> mzero
 
 {- |
    Show the document to be signed
@@ -517,7 +515,7 @@ handleSignShow documentid
 maybeAddDocumentCancelationMessage :: Kontrakcja m => Document -> m ()
 maybeAddDocumentCancelationMessage document = do
   let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-  when (documentstatus document == Canceled && isJust mMismatchMessage) $
+  when (isCanceled document && isJust mMismatchMessage) $
     addFlash (OperationFailed, fromJust mMismatchMessage)
   return ()
 
@@ -548,7 +546,7 @@ handleIssueShowGet docid = do
               (_, True, _) -> Right <$> pageAttachmentView document
               (True, _, _) -> do
                 let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-                when (documentstatus document == Canceled && isJust mMismatchMessage) $
+                when (isCanceled document && isJust mMismatchMessage) $
                   addFlash (OperationFailed, fromJust mMismatchMessage)
                 ctx2 <- getContext -- need to get new context because we may have added flash msg
                 step <- getDesignStep (documentid document)
@@ -2033,7 +2031,7 @@ handleMigrateDocumentAuthorAttachments = onlySuperUser $ do
 
 -- Fix for broken production | To be removed after fixing is done
 isBroken :: Document -> Bool
-isBroken doc = documentstatus doc == Closed && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
+isBroken doc = isClosed doc && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
 
 handleFixDocument :: Kontrakcja m => DocumentID -> m KontraLink
 handleFixDocument docid = onlySuperUser $ do
