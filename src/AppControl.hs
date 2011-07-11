@@ -273,7 +273,6 @@ handleRoutes = msum [
 
      -- a temporary service to help migration
 
-     , dir "adminonly" $ dir "migrate0" $ hGet0 $ toK0 $ Administration.handleMigrate0
      , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ toK0 $ Administration.handleMigrateForDeletion
      , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ toK0 $ DocControl.handleMigrateDocumentAuthorAttachments
      , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ toK0 $ Administration.migrateDocsNoAuthor
