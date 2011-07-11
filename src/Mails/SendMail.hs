@@ -45,6 +45,7 @@ import Data.List
 import API.Service.ServiceState
 import Happstack.State (query)
 import Control.Monad
+import Util.MonadUtils
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String

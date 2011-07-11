@@ -32,6 +32,7 @@ import Happstack.Util.Common
 import Templates.Templates
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 
 payexTest :: Kontrakcja m => Maybe String -> m Response
 payexTest Nothing = do
