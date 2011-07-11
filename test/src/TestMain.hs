@@ -4,7 +4,7 @@ module TestMain where
 import Control.Applicative
 import Data.Char
 import Data.Either
-import System.Environment
+import System.Environment.UTF8
 import System.IO
 import Test.Framework
 
@@ -12,6 +12,7 @@ import DocStateTest
 import HtmlTest
 import InputValidationTest
 import LoginTest
+import MailAPITest
 import TrustWeaverTest
 import UserStateTest
 
@@ -21,6 +22,7 @@ allTests = [
   , htmlTests
   , inputValidationTests
   , loginTests
+  , mailApiTests
   -- everything fails for trustweaver, so commenting out for now
   --, trustWeaverTests
   , userStateTests
@@ -35,6 +37,7 @@ testsToRun (t:ts) =
          "html"            -> Right htmlTests : rest
          "inputvalidation" -> Right inputValidationTests : rest
          "login"           -> Right loginTests : rest
+         "mailapi"         -> Right mailApiTests : rest
          "trustweaver"     -> Right trustWeaverTests : rest
          "userstate"       -> Right userStateTests : rest
          _                 -> Left t : rest

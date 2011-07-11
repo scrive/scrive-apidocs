@@ -1,14 +1,18 @@
 {-# LANGUAGE OverlappingInstances #-}
-module TestKontra {-(
-      TestKontra(unTK)
-    , RunnableTestKontra(..)
+module TestKontra (
+      TestKontra
+    , runTestKontra
     , inText
     , inFile
-    , headers
-    , cookies
-    , request
-    , context
-    )-} where
+    , mkHeaders
+    , mkCookies
+    , getHeader
+    , getCookie
+    , mkRequest
+    , mkContext
+    , testAPI
+    , isFlashOfType
+    ) where
 
 import Control.Applicative
 import Control.Arrow
@@ -17,7 +21,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Data.Maybe
 import Data.List
-import Happstack.Server hiding (method, path)
+import Happstack.Server hiding (mkHeaders, getHeader, method, path)
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -28,20 +32,13 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
+import API.API
 import Context
 import FlashMessage
 import KontraMonad
 import MinutesTime
 import Templates.Templates
 import qualified MemCache
-
-import System.IO.Temp
-import User.UserState
-import StateHelper
-import Templates.TemplatesLoader
-import Happstack.State hiding (Method)
-import API.MailAPI
-import API.API
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ReaderT Request (StateT (Context, Response -> Response) IO) a }
@@ -229,19 +226,3 @@ testAPI f = do
 isFlashOfType :: FlashMessage -> FlashType -> Bool
 isFlashOfType (FlashMessage ft _) t = ft == t
 isFlashOfType (FlashTemplate ft _ _) t = ft == t
-
--- One example (will be moved into separate files later)
-
-mailapiTest :: IO ()
-mailapiTest = withTestState $ withSystemTempDirectory "mailapi-test" $ \tmpdir -> do
-    req <- mkRequest POST [("mail", inFile "test/mailapitest.eml")]
-    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< readTemplates LANG_EN)
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") NoPassword Nothing Nothing Nothing
-    _ <- update $ SetUserMailAPI userid $ Just UserMailAPI {
-          umapiKey = read "ef545848bcd3f7d8"
-        , umapiDailyLimit = 1
-        , umapiSentToday = 0
-        , umapiLastSentDate = asInt $ ctxtime ctx
-    }
-    (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
-    print res
