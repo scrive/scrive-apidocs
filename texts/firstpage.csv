@@ -122,7 +122,7 @@
                                                         <li>Advanced
  features</li>                                              
           <li class=""bottom"">                               
-                                 <h4>30 kr/signature</h4>   
+                                 <h4>3.00 £/signature</h4>
                                                             
  <a href=""/priser"">Detailed priceplan</a>                   
                                         </li></ul>"
@@ -146,17 +146,17 @@
     <h4>Offert</h4>                                         
                        <a href=""/priser"">Detaljerad prisplan</a>
                                                         </td>","<td>                                                        
-        <h4>35 kr/signature</h4>                            
+        <h4>3.50 £/signature</h4>
                                     <a href=""/priser"">Detailed
  priceplan</a>                                              
           </td>                                             
            <td>                                             
-                   <h4>32.50 kr/signature</h4>              
+                   <h4>3.25 £/signature</h4>
                                                   <a href=""/priser"">Detailed
  priceplan</a>                                              
           </td>                                             
            <td>                                             
-                   <h4>30 kr/signature</h4>                 
+                   <h4>3.00 £/signature</h4>
                                                <a href=""/priser"">Detailed
  priceplan</a>                                              
                                                             
@@ -168,10 +168,7 @@
 "_PriceTableRow1","<td>5 användare</td>                                        
                 <td>15 användare</td>                       
                                  <td>50 användare</td>      
-                                                  <td>Offert</td>","<td>5 users</td>                                            
-            <td>15 users</td>                               
-                         <td>50 users</td>                  
-                                      <td>Offer</td>"
+                                                  <td>Offert</td>",
 "_PriceTableRow2","<td>500 signaturer/år</td>                                  
                       <td>1000 signaturer/år</td>           
                                              <td>2000 signaturer/år</td>
@@ -200,7 +197,7 @@
 "_QuotesHead","Kunder berättar","Customer quotes"
 "_StepsH3Send","Skicka","Send"
 "_StepsH3SendBody","Ladda upp dokument,<br />välj mottagare, skicka!","Upload documents,<br />select recipient, send!"
-"_StepsH3Sign","Skriva på","Sign (/Scrive?)"
+"_StepsH3Sign","Skriva på","Sign"
 "_StepsH3SignBody","Alla parter skriver på<br />elektroniskt.","All parties  signs<br /> electronically."
 "_StepsH3Store","Spara och arkivera","Save and archive"
 "_StepsH3StoreBody","Vi sparar dina dokument<br />tryggt och säkert.","We save your documents<br />safely and securely."

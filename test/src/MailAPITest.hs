@@ -1,7 +1,6 @@
 module MailAPITest (mailApiTests) where
 
 import Control.Applicative
-import Control.Arrow
 import Data.Maybe
 import Happstack.Server
 import Happstack.State hiding (Method)
@@ -20,6 +19,7 @@ import Doc.DocState
 import User.UserState
 import Templates.TemplatesLoader
 import TestKontra as T
+import Misc
 
 mailApiTests :: Test
 mailApiTests = testGroup "MailAPI" [
@@ -53,7 +53,10 @@ successChecks sl = do
     assertBool "document status is pending" $ documentstatus doc == Pending
 
 jsonToStringList :: JSObject JSValue -> [(String, String)]
-jsonToStringList = map (second $ \(JSString s) -> fromJSString s) . fromJSObject
+jsonToStringList = (mapSnd toString) . fromJSObject
+    where
+        toString (JSString s) = fromJSString s
+        toString _ = error "Pattern not matched -> Waiting for JSON string, but other structure found"
 
 withTestEnvironment :: (FilePath -> Assertion) -> Assertion
 withTestEnvironment = withTestState . withSystemTempDirectory "mailapi-test-"

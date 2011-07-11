@@ -51,13 +51,13 @@
                                 ","<th><h2>Priceplan</h2>                                </th> 
                                <th>                         
            <h3>Small</h3>                                   
- <p>35 kr/signature</p>                                </th>
+ <p>3.50 £/signature</p>                                </th>
                                 <th>                        
             <h3>Team</h3>                                   
- <p>32.50 kr/signature</p>                                </th>
+ <p>3.25 £/signature</p>                                </th>
                                 <th>                        
             <h3>Business</h3>                               
-     <p>30 kr/signature</p>                                </th>
+     <p>3.00 £/signature</p>                                </th>
                                 <th>                        
             <h3>Enterprise</h3>                             
        <p>Offer</p></th>                                "
@@ -86,7 +86,7 @@
                             <li></li>                       
      <li class=""odd""></li>                            <li class=""bottom""></li>","                            <li class=""top"">                
                 <h3>Business</h3>                           
-     <p>30 kr/signature</p>                            </li>
+     <p>3.00 £/signature</p>                            </li>
                             <li>50</li>                     
        <li class=""odd"">2 000</li>                           
  <li>Unimited</li>                            <li class=""odd"">Offer</li>

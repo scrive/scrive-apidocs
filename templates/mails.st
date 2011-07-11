@@ -272,7 +272,7 @@ signupLinkEmailPart=
 newUserMailTitle=$_newUserMailTitle()$
 ####
 newUserMailContent=
-<p>$_newUserMailContentHi()$</p>
+<p>$_hi()$,</p>
 <p>$_newUserMailContentBodyFirst()$</p>
 <p>$_newUserMailContentBodySecond()$</p>
 <p>$_newUserMailContentBodyUserName()$ $email$
