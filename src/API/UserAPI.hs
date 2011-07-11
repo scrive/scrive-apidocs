@@ -10,9 +10,7 @@
 --
 -----------------------------------------------------------------------------
 
-module API.UserAPI (userAPI)
-
-where
+module API.UserAPI (userAPI) where
 
 import API.API
 import API.APICommons hiding (SignatoryTMP(..))
@@ -36,9 +34,9 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
-type UserAPIFunction a = APIFunction UserAPIContext a
+type UserAPIFunction m a = APIFunction m UserAPIContext a
 
-instance APIContext UserAPIContext where
+instance Kontrakcja m => APIContext m UserAPIContext where
     body= wsbody
     newBody b ctx = ctx {wsbody = b}
     apiContext  = do
@@ -49,7 +47,7 @@ instance APIContext UserAPIContext where
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
              (_, Left s)             -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
 
-apiUser ::  Kontra (Maybe User)
+apiUser :: Kontrakcja m => m (Maybe User)
 apiUser = do
     email <- getFieldUTFWithDefault BS.empty "email"
     muser <- query $ GetUserByEmail Nothing (Email email)
@@ -62,14 +60,15 @@ apiUser = do
                else return Nothing
 
 userAPI :: Kontra Response
-userAPI =  dir "userapi" $ msum [ apiCall "sendnewdocument" sendNewDocument
-                                 , apiCall "sendFromTemplate" sendFromTemplate
-                                 , apiCall "document" getDocument
-                                 , apiCall "sendReminder" sendReminder
-                                 , apiUnknownCall
-                                 ]
+userAPI =  dir "api" $ dir "userapi" $ msum [
+      apiCall "sendnewdocument" sendNewDocument   :: Kontrakcja m => m Response
+    , apiCall "sendFromTemplate" sendFromTemplate :: Kontrakcja m => m Response
+    , apiCall "document" getDocument              :: Kontrakcja m => m Response
+    , apiCall "sendReminder" sendReminder         :: Kontrakcja m => m Response
+    , apiUnknownCall
+    ]
 
-sendReminder :: UserAPIFunction APIResponse
+sendReminder :: Kontrakcja m => UserAPIFunction m APIResponse
 sendReminder = do
   ctx <- getContext
   doc <- getUserDoc
@@ -77,7 +76,7 @@ sendReminder = do
                              , isSignatory sl
                              , not $ hasSigned sl]
   _ <- forM siglinkstoremind $ (\signlink -> do
-                              mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
+                              mail <- mailDocumentRemind Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
                                 to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
@@ -85,14 +84,14 @@ sendReminder = do
   return $ toJSObject []
 
 
-getDocument :: UserAPIFunction APIResponse
+getDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 getDocument = do
   doc <- getUserDoc
   api_doc <- api_document True (doc)
   return $ toJSObject [("document",api_doc)]
 
 
-getUserDoc :: UserAPIFunction Document
+getUserDoc :: Kontrakcja m => UserAPIFunction m Document
 getUserDoc = do
   author <- user <$> ask
   mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
@@ -100,7 +99,7 @@ getUserDoc = do
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
 
-sendFromTemplate :: UserAPIFunction APIResponse
+sendFromTemplate :: Kontrakcja m => UserAPIFunction m APIResponse
 sendFromTemplate = do
   author <- user <$> ask
   ctx <- getContext
@@ -140,7 +139,7 @@ sendFromTemplate = do
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
-getTemplate :: UserAPIFunction Document
+getTemplate :: Kontrakcja m => UserAPIFunction m Document
 getTemplate = do
   author <- user <$> ask
   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
@@ -151,7 +150,7 @@ getTemplate = do
   return temp
 
 
-sendNewDocument :: UserAPIFunction APIResponse
+sendNewDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 sendNewDocument = do
   author <- user <$> ask
   mtitle <- apiAskBS "title"
@@ -201,7 +200,7 @@ sendNewDocument = do
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
-getSignatories :: UserAPIFunction [SignatoryDetails]
+getSignatories :: Kontrakcja m => UserAPIFunction m [SignatoryDetails]
 getSignatories = do
     minvolved  <- apiLocal "involved" $ apiMapLocal $ fmap toSignatoryDetails <$> getSignatoryTMP
     case minvolved of

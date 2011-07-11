@@ -1,4 +1,7 @@
-module API.MailAPI where
+module API.MailAPI (
+      handleMailCommand
+    , mailAPI
+    ) where
 
 import Doc.DocState
 import Kontra
@@ -35,15 +38,15 @@ data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , ifrom :: BS.ByteString
                                      , ito :: BS.ByteString
                                      }
-type MailAPIFunction a = APIFunction MailAPIContext a
+type MailAPIFunction m a = APIFunction m MailAPIContext a
 
-instance APIContext MailAPIContext where
+instance Kontrakcja m => APIContext m MailAPIContext where
     body = ibody
     newBody b ctx = ctx {ibody = b}
     apiContext = apiContextForMail
 
 
-apiContextForMail :: Kontra (Either (API_ERROR,String) MailAPIContext)
+apiContextForMail :: Kontrakcja m => m (Either (API_ERROR, String) MailAPIContext)
 apiContextForMail = do
     Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
     content <- case contentspec of
@@ -64,14 +67,8 @@ apiContextForMail = do
                                                         , ito = to
                                                         }
 
-mailAPI :: Kontra Response
-mailAPI = do
-    methodM POST
-    apiResponse $ do
-              mcontext <- apiContext
-              case mcontext  of
-                  Right apicontext -> (either (uncurry apiError) id) <$> runApiFunction handleMailCommand apicontext
-                  Left emsg -> return $ uncurry apiError emsg
+mailAPI :: Kontrakcja m => m Response
+mailAPI = apiCall "mailapi" handleMailCommand
 
 maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return
@@ -127,7 +124,7 @@ parseEmailMessage content = runErrorT $ do
 
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
 -- handleMailCommand (JSObject json) content from to = runErrorT $ do
-handleMailCommand :: APIFunction MailAPIContext (JSObject JSValue)
+handleMailCommand :: Kontrakcja m => MailAPIFunction m (JSObject JSValue)
 handleMailCommand = do
     MailAPIContext { ifrom = from, ito = to, icontent = content } <- ask
     let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from

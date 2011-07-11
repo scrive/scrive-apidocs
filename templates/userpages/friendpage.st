@@ -27,7 +27,7 @@ viewFriends =
 				</div>
                                 <div class="col float-right">
                                   <div class="float-right">
-                                    <input type="email" name="email" class="tab-input float-left" infotext="Skriv e-post för att lägga till fler" />
+                                    <input type="email" name="email" class="tab-input float-left" infotext="$_InviteBox()$" />
                                     <a class="btn-tiny blue submit float-right" href="#">
                                       <div class="left"></div>
                                       <div class="label">

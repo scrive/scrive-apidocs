@@ -16,14 +16,15 @@ class HasProcess a where
   getValueForProcess doctype fieldname =
     fmap fieldname (getProcess doctype)
 
-  renderTemplateForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> Fields -> IO String
-  renderTemplateForProcess templates hasprocess fieldname fields =
+  renderTemplateForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> Fields m -> m String
+  renderTemplateForProcess hasprocess fieldname fields =
     case getValueForProcess hasprocess fieldname of
-      (Just templatename) -> renderTemplate templates templatename fields
+      (Just templatename) -> renderTemplateFM templatename fields
       _ -> return ""
 
-  renderTextForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> IO String
-  renderTextForProcess templates hasprocess fieldname = renderTemplateForProcess templates hasprocess fieldname $ do return ()
+  renderTextForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> m String
+  renderTextForProcess hasprocess fieldname =
+      renderTemplateForProcess hasprocess fieldname $ do return ()
 
 instance HasProcess DocumentType where
   getProcess (Signable Contract) = Just contractProcess

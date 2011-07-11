@@ -34,6 +34,25 @@ showUserSecurity =
                    </table>
                </div>
 
+           </div>
+
+           <div class="col">
+               <div class="account-header">
+                  <h2>$_LanguageSettings()$</h2>
+               </div>
+               <div class="account-body">
+                   <table>
+                       <tr>
+                           <td>$_UserLanguage()$</td>
+                           <td><select name="lang">
+                                     <option $if(lang.se)$ selected="" $endif$ value="LANG_SE">$_Swedish()$</option>
+                                     <option $if(lang.en)$ selected="" $endif$ value="LANG_EN">$_English()$</option>
+                               </select>
+                            </td>
+                       </tr>
+                   </table>
+               </div>
+
              <div class="account-footer">
                 <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">

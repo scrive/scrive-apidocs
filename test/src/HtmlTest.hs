@@ -1,40 +1,24 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
--fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
-module HtmlTest where
+module HtmlTest (htmlTests) where
 
 import Data.Char
 import Data.List
-import Test.Framework (Test, testGroup, defaultMain)
+import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
-import System.IO
 import Control.Monad
 
 import Misc
-import Templates.Langs
 import Templates.TemplatesFiles
 import Templates.Templates (renderTemplate)
 import Templates.TemplatesLoader (KontrakcjaTemplates, readAllLangsTemplates, langVersion)
+import Templates.TextTemplates
 
-main :: IO ()
-main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    defaultMain tests
-
-tests :: [Test]
-tests = [ testGroup "Html" htmlTests
-        ]
-
-
-htmlTests :: [Test]
-htmlTests = 
+htmlTests :: Test
+htmlTests = testGroup "HTML"
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
           testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,
@@ -72,7 +56,7 @@ testNoNestedP = do
   ts <- mapM getTemplates templatesFilesPath
   texts <- mapM getTextTemplates allValues
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
+  _ <- forM allValues $ \lang -> do
     let templates = langVersion lang langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates

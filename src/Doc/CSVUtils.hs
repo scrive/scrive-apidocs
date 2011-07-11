@@ -23,7 +23,7 @@ import Templates.Templates
 data CSVProblem = CSVProblem
                   { problemrowindex :: Maybe Int
                   , problemcolindex :: Maybe Int
-                  , problemdescription :: KontrakcjaTemplates -> IO FlashMessage
+                  , problemdescription :: ValidationMessage
                   , problemvalue :: Maybe BS.ByteString
                   }
 
@@ -126,7 +126,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
         numberValidator
           | isEleg = badIfEmpty flashMessageNumberIsRequired . asValidCompanyNumber
           | otherwise = asValidCompanyNumber
-        badIfEmpty :: (KontrakcjaTemplates -> IO FlashMessage) -> Result BS.ByteString -> Result BS.ByteString
+        badIfEmpty :: ValidationMessage -> Result BS.ByteString -> Result BS.ByteString
         badIfEmpty msg res =
           case res of
             Empty -> Bad msg
@@ -135,18 +135,21 @@ cleanCSVContents allowedidtypes customfieldcount contents =
     {- |
         Handy for constructing problems.
     -}
+    mkProblemForAll :: ValidationMessage -> CSVProblem
     mkProblemForAll msg = CSVProblem
                       { problemrowindex = Nothing
                       , problemcolindex = Nothing
                       , problemdescription = msg
                       , problemvalue = Nothing
                       }
+    mkProblemForRow :: Int -> ValidationMessage -> CSVProblem
     mkProblemForRow row msg = CSVProblem
                         { problemrowindex = Just row
                         , problemcolindex = Nothing
                         , problemdescription = msg
                         , problemvalue = Nothing
                         }
+    mkProblemForField :: Int -> Int -> ValidationMessage -> BS.ByteString -> CSVProblem
     mkProblemForField row col msg raw = CSVProblem
                     { problemrowindex = Just row
                     , problemcolindex = Just col
@@ -154,36 +157,36 @@ cleanCSVContents allowedidtypes customfieldcount contents =
                     , problemvalue = Just raw
                     }
 
-flashMessageNoDataInCSV :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoDataInCSV templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoDataInCSV" ()
+flashMessageNoDataInCSV :: TemplatesMonad m => m FlashMessage
+flashMessageNoDataInCSV =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoDataInCSV" ()
 
-flashMessageNoDataInCSVApartFromHeader :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoDataInCSVApartFromHeader templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoDataInCSVApartFromHeader" ()
+flashMessageNoDataInCSVApartFromHeader :: TemplatesMonad m => m FlashMessage
+flashMessageNoDataInCSVApartFromHeader =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoDataInCSVApartFromHeader" ()
 
-flashMessageRowLessThanMinColCount :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageRowLessThanMinColCount mincols templates =
+flashMessageRowLessThanMinColCount :: TemplatesMonad m => Int -> m FlashMessage
+flashMessageRowLessThanMinColCount mincols =
   toFlashMsg OperationFailed <$>
-    renderTemplate templates "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
+    renderTemplateFM "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
 
-flashMessageRowGreaterThanMaxColCount :: Int -> KontrakcjaTemplates -> IO FlashMessage
-flashMessageRowGreaterThanMaxColCount maxcols templates =
+flashMessageRowGreaterThanMaxColCount :: TemplatesMonad m => Int -> m FlashMessage
+flashMessageRowGreaterThanMaxColCount maxcols =
   toFlashMsg OperationFailed <$>
-    renderTemplate templates "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
+    renderTemplateFM "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
 
-flashMessageFirstNameIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageFirstNameIsRequired templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageFirstNameIsRequired" ()
+flashMessageFirstNameIsRequired :: TemplatesMonad m => m FlashMessage
+flashMessageFirstNameIsRequired =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageFirstNameIsRequired" ()
 
-flashMessageSecondNameIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageSecondNameIsRequired templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageSecondNameIsRequired" ()
+flashMessageSecondNameIsRequired :: TemplatesMonad m => m FlashMessage
+flashMessageSecondNameIsRequired =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageSecondNameIsRequired" ()
 
-flashMessageEmailIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageEmailIsRequired templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageEmailIsRequired" ()
+flashMessageEmailIsRequired :: TemplatesMonad m => m FlashMessage
+flashMessageEmailIsRequired =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageEmailIsRequired" ()
 
-flashMessageNumberIsRequired :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNumberIsRequired templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNumberIsRequired" ()
+flashMessageNumberIsRequired :: TemplatesMonad m => m FlashMessage
+flashMessageNumberIsRequired =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNumberIsRequired" ()

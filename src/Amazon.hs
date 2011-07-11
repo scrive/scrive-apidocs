@@ -21,6 +21,7 @@ import qualified Network.HTTP as HTTP
 
 import Doc.DocState
 import Misc (concatChunks)
+import qualified AppLogger as Log
 
 
 urlFromFile :: File -> String
@@ -33,7 +34,7 @@ uploadFile :: FilePath -> S3Action -> File -> IO ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
     BS.writeFile filepath content
-    putStrLn $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
+    Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
     update $ FileMovedToDisk fileid filepath
     return ()
 

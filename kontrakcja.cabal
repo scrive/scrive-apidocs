@@ -19,27 +19,7 @@ Flag server
   Default: True
 
 Flag test
-  Description: Build test
-  Default: True
-
-Flag input-validation-test
-  Description: Build kontrakcja-input-validation-test
-  Default: True
-
-Flag trust-weaver-test
-  Description: Build kontrakcja-trust-weaver-test
-  Default: True
-
-Flag action-scheduler-test
-  Description: Build kontrakcja-action-scheduler-test
-  Default: True
-  
-Flag html-test
-  Description: Build kontrakcja-html-test
-  Default: True
-
-Flag docstate-test
-  Description: Build kontrakcja-docstate-test
+  Description: Build tests
   Default: True
 
 Flag allow-warnings
@@ -54,7 +34,7 @@ Executable kontrakcja-server
 
   Hs-source-dirs: src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if !os(windows)
@@ -100,10 +80,10 @@ Executable kontrakcja-server
   Build-depends: parsec
   Build-depends: iconv
   Build-depends: json==0.4.*
-  Build-depends: i18n==0.3
   Build-depends: HPDF
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck
+  Build-depends: hxt, hxt-xpath
   Build-depends: text
   Build-depends: transformers
   Build-depends: unix
@@ -154,8 +134,8 @@ Executable pdfseal
               TypeSynonymInstances,
               UndecidableInstances
 
-Executable kontrakcja-input-validation-test
-  if flag(input-validation-test)
+Executable kontrakcja-test
+  if flag(test)
     Buildable: True
   else
     Buildable: False
@@ -164,168 +144,17 @@ Executable kontrakcja-input-validation-test
 
   Hs-source-dirs: test/src src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
 
-  cpp-options: -DInputValidationTest=Main
-
-  Main-is: InputValidationTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
-Executable kontrakcja-trust-weaver-test
-  if flag(trust-weaver-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DTrustWeaverTest=Main
-
-  Main-is: TrustWeaverTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
-Executable kontrakcja-action-scheduler-test
-  if flag(action-scheduler-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DSchedulerTest=Main
-
-  Main-is: SchedulerTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-              
-Executable kontrakcja-html-test
-  if flag(html-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DHtmlTest=Main
-
-  Main-is: HtmlTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
-Executable kontrakcja-docstate-test
-  if flag(docstate-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DDocStateTest=Main
-
-  Main-is: DocStateTest.hs
+  cpp-options: -DTestMain=Main
+  Main-is: TestMain.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

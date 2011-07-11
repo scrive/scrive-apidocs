@@ -29,6 +29,7 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import Control.Applicative
+import Control.Monad.IO.Class
 import Data.ByteString.UTF8 (toString)
 import Data.List (isPrefixOf, isInfixOf)
 import Data.Char
@@ -43,17 +44,17 @@ import User.UserState
 import Doc.DocState
 import API.Service.ServiceState
 import Happstack.State (query)
-import Templates.Langs
 import Util.HasSomeUserInfo
+
 {-| Main admin page - can go from here to other pages -}
-adminMainPage::KontrakcjaTemplates ->  IO String
-adminMainPage templates =  renderTemplate templates "adminsmain" ()
+adminMainPage :: TemplatesMonad m => m String
+adminMainPage = renderTemplateM "adminsmain" ()
 
 {-| Manage users page  - advanced, will be changed-}
-adminUsersAdvancedPage::KontrakcjaTemplates -> [User] -> AdminUsersPageParams -> IO String
-adminUsersAdvancedPage templates users params =
-    renderTemplate templates "adminsmanageall" $ do
-        field "users" $ map userBasicFields $ visibleUsers params users
+adminUsersAdvancedPage :: TemplatesMonad m => [User] -> AdminUsersPageParams -> m String
+adminUsersAdvancedPage users params =
+    renderTemplateFM "adminsmanageall" $ do
+        fieldFL "users" $ map userBasicFields $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -62,11 +63,11 @@ adminUsersAdvancedPage templates users params =
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage users page - can find user here -}
-adminUsersPage::KontrakcjaTemplates ->[(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPage templates users params =
-    renderTemplate templates "adminusers" $ do
+adminUsersPage :: TemplatesMonad m => [(User,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPage users params =
+    renderTemplateFM "adminusers" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "users" $ map mkUserInfoView $ visibleUsers params users
+        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -74,11 +75,11 @@ adminUsersPage templates users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPageForSales templates users params =
-    renderTemplate templates "adminUsersForSales" $ do
+adminUsersPageForSales :: TemplatesMonad m => [(User,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForSales users params =
+    renderTemplateFM "adminUsersForSales" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "users" $ map mkUserInfoView $ visibleUsers params users
+        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -86,11 +87,11 @@ adminUsersPageForSales templates users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForPayments :: KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPageForPayments templates users params =
-    renderTemplate templates "adminUsersForPayments" $ do
+adminUsersPageForPayments :: TemplatesMonad m => [(User,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForPayments users params =
+    renderTemplateFM "adminUsersForPayments" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "users" $ map mkUserInfoView $ visibleUsers params users
+        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -98,70 +99,61 @@ adminUsersPageForPayments templates users params =
         field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
-adminUserPage::KontrakcjaTemplates ->User -> PaymentAccountModel -> IO String
-adminUserPage templates user paymentModel =
-    renderTemplate templates "adminuser" $ do
+adminUserPage :: TemplatesMonad m => User -> PaymentAccountModel -> m String
+adminUserPage user paymentModel =
+    renderTemplateFM "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "user" $ userFields user
+        fieldF "user" $ userFields user
         field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
-adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> Fields -> IO String
-adminUserUsageStatsPage templates user morefields =
-    renderTemplate templates "userusagestats" $ do
+adminUserUsageStatsPage :: TemplatesMonad m => User -> Fields m -> m String
+adminUserUsageStatsPage user morefields =
+    renderTemplateFM "userusagestats" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "user" $ userFields user
+        fieldF "user" $ userFields user
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
-allUsersTable::KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> IO String
-allUsersTable templates users =
-    renderTemplate templates "allUsersTable" $ do
-        field "users" $ map mkUserInfoView $ users
+allUsersTable :: TemplatesMonad m => [(User,DocStats,UserStats)] -> m String
+allUsersTable users =
+    renderTemplateFM "allUsersTable" $ do
+        fieldFL "users" $ map mkUserInfoView $ users
         field "adminlink" $ show $ LinkAdminOnly
 
-databaseContent ::KontrakcjaTemplates -> [String] -> IO String
-databaseContent templates filenames =
-    renderTemplate templates "databaseContents" $ do
+databaseContent :: TemplatesMonad m => [String] -> m String
+databaseContent filenames =
+    renderTemplateFM "databaseContents" $ do
         field "files" $ filenames
         field "adminlink" $ show $ LinkAdminOnly
 
-statsPage::KontrakcjaTemplates -> StatsView -> String -> IO String
-statsPage templates stats sysinfo =
-    renderTemplate templates "pageStats" $ do
+statsPage :: TemplatesMonad m => StatsView -> String -> m String
+statsPage stats sysinfo =
+    renderTemplateFM "pageStats" $ do
         field "stats" $ stats
         field "sysinfo" $ sysinfo
         field "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage::KontrakcjaTemplates -> [Service] -> IO String
-servicesAdminPage templates services= do
-    renderTemplate templates "servicesAdmin" $ do
+servicesAdminPage :: TemplatesMonad m => [Service] -> m String
+servicesAdminPage services = do
+    renderTemplateFM "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "services" $ for services $ \ service -> do
+        fieldFL "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldIO "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
+            fieldM "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
-adminTranslationsPage::KontrakcjaTemplates -> [(Lang,TranslationStats)] ->  IO String
-adminTranslationsPage templates stats =
-    renderTemplate templates "adminTranslations" $
-        field "langs" $ for stats $ \(lang, stat) -> do
-            field "name" $ show lang
-            field "missingFiles" $ missingFiles stat
-            field "extraFiles" $ extraFiles stat
-            field "notSynchronisedFiles" $ notSynchronisedFiles stat
-            field "emptyTranslations" $ for (emptyTranslations stat) $ \(file,name) -> do
-                field "file" file
-                field "name" name
+adminTranslationsPage::TemplatesMonad m => m String
+adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
 
-mkUserInfoView :: (User, DocStats, UserStats) -> Fields
+mkUserInfoView :: (Functor m, MonadIO m) => (User, DocStats, UserStats) -> Fields m
 mkUserInfoView (userdetails', docstats', userstats') = do
-  field "userdetails" $ userBasicFields userdetails'
+  fieldF "userdetails" $ userBasicFields userdetails'
   field "docstats" $ docstats'
   field "userstats" $ userstats'
-  field "adminview" $ userFields userdetails'
+  fieldF "adminview" $ userFields userdetails'
 
 
 data StatsView = StatsView
@@ -219,7 +211,7 @@ data AdminUsersPageParams = AdminUsersPageParams {
                             }
 
 {-| Full fields set about user -}
-userFields ::User -> Fields
+userFields :: MonadIO m => User -> Fields m
 userFields u =  do
         field "fstname" $ getFirstName u
         field "sndname" $ getLastName u
@@ -256,5 +248,5 @@ userFields u =  do
         field "id" $ show (userid u)
 
 
-letters::[String]
+letters :: [String]
 letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]

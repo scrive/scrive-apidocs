@@ -2980,4 +2980,3 @@ instance Component Documents where
 
 $(deriveSerialize ''SignatoryRole)
 
-

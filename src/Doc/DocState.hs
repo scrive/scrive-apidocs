@@ -56,7 +56,6 @@ module Doc.DocState
     , RestartDocument(..)
     , ChangeSignatoryEmailWhenUndelivered(..)
     , signatoryDetailsFromUser
-    , SetSignatoryLinks(..)
     , GetUniqueSignatoryLinkID(..)
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
@@ -79,6 +78,7 @@ module Doc.DocState
     , MigrateDocumentAuthorAttachments(..)
     , UnquarantineAll(..)
     , MakeFirstSignatoryAuthor(..)
+    , StoreDocumentForTesting(..)
     )
 where
 
@@ -612,10 +612,6 @@ authorSignDocument documentid time ipnumber msiginfo =
 
 getMagicHash :: Update Documents MagicHash
 getMagicHash = getRandom
-
-setSignatoryLinks :: DocumentID -> [SignatoryLink] -> Update Documents (Either String Document)
-setSignatoryLinks docid links =
-    modifySignableOrTemplate docid (\doc -> Right doc { documentsignatorylinks = links })
 
 rejectDocument :: DocumentID
                -> SignatoryLinkID
@@ -1322,6 +1318,11 @@ makeFirstSignatoryAuthor docid =
 
                         rsig
                    }
+         
+storeDocumentForTesting :: Document -> Update Documents DocumentID
+storeDocumentForTesting doc = do
+  d2 <- insertNewDocument doc
+  return $ documentid d2
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1377,10 +1378,10 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
-                        , 'setSignatoryLinks
                         , 'getUniqueSignatoryLinkID
                         , 'getMagicHash
                         , 'saveSigAttachment
+                        , 'storeDocumentForTesting
 
                         , 'getDocumentByFileID
                         , 'errorDocument

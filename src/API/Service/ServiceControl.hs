@@ -32,10 +32,10 @@ import API.Service.ServiceView
 import Doc.DocUtils
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
-import FlashMessage
 import Happstack.Server.SimpleHTTP
+import Util.FlashUtil
 
-handleChangeServiceUI :: ServiceID -> Kontra KontraLink
+handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceUI sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -62,7 +62,7 @@ handleChangeServiceUI sid = do
             , servicebarsbackground =  joinEmpty $ barsbackground  `mplus` (servicebarsbackground  ui)
             , servicelogo = logo `mplus` (servicelogo ui)
             }
-           addFlashMsg $ toFlashMsg OperationDone "UI setting changes"
+           addFlash $ (OperationDone, "UI setting changes")
            return LoopBack
         (Just service,True,True) -> do
            update $ UpdateServiceUI sid $ (serviceui service) {
@@ -74,13 +74,13 @@ handleChangeServiceUI sid = do
             , servicebarsbackground =  Nothing
             , servicelogo = Nothing
             }
-           addFlashMsg $ toFlashMsg OperationDone "UI setting cleared"
+           addFlash (OperationDone, "UI setting cleared")
            return LoopBack
         _ -> do
-           addFlashMsg $ toFlashMsg OperationFailed "UI setting not saved"
+           addFlash (OperationFailed, "UI setting not saved")
            return LoopBack
 
-handleChangeServicePassword :: ServiceID -> Kontra KontraLink
+handleChangeServicePassword :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServicePassword sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -94,18 +94,18 @@ handleChangeServicePassword sid = do
                 then do
                     pwd <- liftIO $ createPassword password
                     update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
-                    addFlashMsg $ toFlashMsg OperationDone "Password changed"
+                    addFlash (OperationDone, "Password changed")
                     return LoopBack
                 else do
-                    addFlashMsg $ toFlashMsg OperationFailed "Not changed"
+                    addFlash (OperationFailed, "Not changed")
                     return LoopBack
      _ -> do
-         addFlashMsg $ toFlashMsg OperationFailed "Not changed"
+         addFlash (OperationFailed, "Not changed")
          return LoopBack
 
 
 
-handleChangeServiceSettings :: ServiceID -> Kontra KontraLink
+handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
@@ -119,50 +119,50 @@ handleChangeServiceSettings sid = do
                           , servicemailfromaddress  = mailfromaddress `mplus` (servicemailfromaddress $ servicesettings  service)
                           , serviceadmin =  fromMaybe (serviceadmin $ servicesettings service) (ServiceAdmin <$> unUserID <$> userid <$> admin)
                         }
-            addFlashMsg $ toFlashMsg OperationDone "Settings changed"
+            addFlash (OperationDone, "Settings changed")
             return LoopBack
 
      _ -> do
-         addFlashMsg $ toFlashMsg OperationFailed "Not changed"
+         addFlash (OperationFailed, "Not changed")
          return LoopBack
 
 
-handleShowService :: ServiceID -> Kontra (Either KontraLink String)
+handleShowService :: Kontrakcja m => ServiceID -> m (Either KontraLink String)
 handleShowService sid = do
     ctx <- getContext
     mservice <- query $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
             || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)))
-       then liftIO $  Right <$> serviceAdminPage (ctxtemplates ctx)  (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
+       then Right <$> serviceAdminPage (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
        else return $ Left LinkMain
 
-handleShowServiceList  :: Kontra String
+handleShowServiceList :: Kontrakcja m => m String
 handleShowServiceList = do
     ctx <- getContext
     case (ctxmaybeuser ctx, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
          (Just user, False) -> do
              srvs <- query $ GetServicesForAdmin $ ServiceAdmin $ unUserID $ userid user
-             liftIO $ servicesListPage (ctxtemplates ctx) srvs
+             servicesListPage srvs
          (_, True) -> do
              srvs <- query $ GetServices
-             liftIO $ servicesListPage (ctxtemplates ctx) srvs
+             servicesListPage srvs
          _ -> mzero
 
-handleServiceLogo :: ServiceID -> Kontra Response
+handleServiceLogo :: Kontrakcja m => ServiceID -> m Response
 handleServiceLogo sid = do
     mlogo <- join <$> fmap (servicelogo . serviceui) <$> (query $ GetService sid)
     return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mlogo) Nothing
 
 
-handleServiceButtonsBody:: ServiceID -> Kontra Response
+handleServiceButtonsBody :: Kontrakcja m =>ServiceID -> m Response
 handleServiceButtonsBody sid = do
     mimg <- join <$> fmap (fmap fst . servicebuttons . serviceui) <$> (query $ GetService sid)
     return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
                       Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mimg) Nothing
 
-handleServiceButtonsRest:: ServiceID -> Kontra Response
+handleServiceButtonsRest :: Kontrakcja m => ServiceID -> m Response
 handleServiceButtonsRest sid = do
     mimg <- join <$> fmap (fmap snd . servicebuttons . serviceui) <$> (query $ GetService sid)
     return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $

@@ -23,19 +23,28 @@ import MinutesTime
 import Mails.MailsData
 import Mails.SendMail
 import Session
-import Templates.Templates (KontrakcjaMultilangTemplates,langVersion,Lang(..))
+import Templates.Templates
 import User.UserView
 import qualified AppLogger as Log
 import System.Time
-import Misc
 import Util.HasSomeUserInfo
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
 
-type ActionScheduler a = ReaderT SchedulerData' IO a
+newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
+    deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
+
+instance TemplatesMonad ActionScheduler where
+    getTemplates = do
+        sd <- ask
+        (_, templates) <- liftIO $ readMVar $ sdTemplates sd
+        -- FIXME: how do we use proper language version here? Probably the best
+        -- bet is to use State with language and set it appropriately using
+        -- user's current settings before instantiating anything.
+        return $ langVersion LANG_SE templates
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler sched sd =
+runScheduler (AS sched) sd =
     runReaderT sched sd `E.catch` catchEverything
     where
         catchEverything :: E.SomeException -> IO ()
@@ -90,12 +99,12 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             mdoc <- query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
-                (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
-                let mailfunc = case documenttype <$> mdoc of
-                      (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
-                      (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
+                let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+                    mailfunc = case documenttype <$> mdoc of
+                      Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
+                      Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
-                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                mail <- mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent

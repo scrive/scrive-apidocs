@@ -1,0 +1,11 @@
+"!Template name","LANG_SE","LANG_EN"
+"_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller
+ öppna, var vänlig och återkalla dokumentet först.","You cannot delete documents that are sent or open, please withdraw
+ the document first."
+"_ReminderBodyMulti","            Är du säker att du vill skicka en påminnelse til
+ berörda parter för ","            Are you sure you want to send reminders to the parties
+ involved in the"
+"_ReminderBodyMulti2"," orderbekräftelse.          ","order confirmations?          "
+"_ReminderBodySingel","            Är du säker att du vill skicka en påminnelse til
+ berörda parter i orderbekräftelse ","            Are you sure you want to send a reminder to the parties
+ involved in the order confirmation"
