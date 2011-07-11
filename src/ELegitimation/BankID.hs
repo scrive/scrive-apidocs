@@ -728,7 +728,7 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
 
 findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m ELegTransaction
 findTransactionByIDOrFail transactions transactionsid =
-    guardJust $ find ((== transactionsid) . transactiontransactionid) transactions
+    guardJust $ find ((==) transactionsid . transactiontransactionid) transactions
 
 getTBS :: TemplatesMonad m => Doc.DocState.Document -> m String
 getTBS doc = do

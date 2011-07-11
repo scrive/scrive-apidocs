@@ -24,7 +24,6 @@ module TrustWeaver
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import Text.XML.HaXml.XmlContent.Parser
-import SOAP.SOAP ()
 
 import Control.Concurrent
 import Data.List

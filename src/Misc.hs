@@ -605,3 +605,4 @@ getRecursiveMTime dir = do
           mts <- forM files $ \fn -> getModificationTime $ dir ++ "/" ++fn
           mt <- getModificationTime dir
           return $ maximum $ mt:mts
+

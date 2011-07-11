@@ -15,7 +15,7 @@ import Data.Functor
 import Data.Maybe
 import Doc.DocState
 import Happstack.Server hiding (simpleHTTP,host,body)
-import Happstack.State (query)
+import Happstack.State (query, update)
 import KontraLink
 import MinutesTime
 import Misc
@@ -23,7 +23,6 @@ import Session
 import Kontra
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Happstack.State (update)
 import PayEx.PayExInterface () -- Import so at least we check if it compiles
 import InputValidation
 import Text.JSON

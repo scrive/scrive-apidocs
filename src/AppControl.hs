@@ -55,8 +55,7 @@ import Data.Word
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
-import Happstack.State (query)
-import Happstack.State (update)
+import Happstack.State (query, update)
 import ListUtil
 import Network.Socket
 import System.Directory
