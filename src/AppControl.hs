@@ -73,8 +73,7 @@ import qualified Network.HTTP as HTTP
 import InspectXMLInstances ()
 import InspectXML
 import User.Lang
-
-
+import Util.MonadUtils
 import ForkAction
 
 {- |
@@ -721,16 +720,12 @@ handleLogout = do
 -}
 serveHTMLFiles :: Kontra Response
 serveHTMLFiles =  do
-    rq <- askRq
-    let fileName = last (rqPaths rq)
-    if ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
-        then do
-            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName))
-                            (const $ return Nothing)
-            case ms of
-                (Just s) -> renderFromBody V.TopNone V.kontrakcja $ BS.toString s
-                _      -> mzero
-        else mzero
+  rq <- askRq
+  let fileName = last (rqPaths rq)
+  guard ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
+  s <- guardJustM $ (liftIO $ catch (fmap Just $ BS.readFile ("html/" ++ fileName))
+                                      (const $ return Nothing))
+  renderFromBody V.TopNone V.kontrakcja $ BS.toString s
 
 {- |
    Ensures logged in as a super user

@@ -1001,6 +1001,9 @@ dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
   
+{- | 
+   Fetch the xtoken param and double read it. Once as String and once as MagicHash.
+ -}
 readXToken :: Kontrakcja m => m (Either String MagicHash)
 readXToken = do
   xtokenpost <- getDataFnM (look "xtoken")
