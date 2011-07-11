@@ -31,6 +31,7 @@ import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
+import Util.MonadUtils
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -518,12 +519,11 @@ withUserGet action = do
 | -}
 withDocumentAuthor :: Kontrakcja m => Document -> m a -> m a
 withDocumentAuthor document action = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-      Nothing -> mzero
-      Just user -> case getAuthorSigLink document of
-        Just sl | Just (userid user) == maybesignatory sl -> action
-        _ -> mzero
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  sl <- guardJust $ getAuthorSigLink document
+  guard $ isSigLinkFor user sl
+  action
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.

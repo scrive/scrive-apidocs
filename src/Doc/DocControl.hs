@@ -836,9 +836,7 @@ handleIssueChangeFunctionality document = do
         _ -> setPreferredMode Nothing
       where
         setPreferredMode :: Kontrakcja m => Maybe DesignMode -> m (Either String User)
-        setPreferredMode designmode = do
-          muser <- update $ SetPreferredDesignMode userid designmode
-          return muser
+        setPreferredMode designmode = update $ SetPreferredDesignMode userid designmode
 
 {- |
     This will get and parse a csv file.  It
