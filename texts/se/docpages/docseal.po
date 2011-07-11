@@ -116,7 +116,7 @@ msgstr "har bekräftats"
 
 #: docpages/docseal.st:ordersealingtexts
 msgid "_ordersealingtextsverificationFooterRow1"
-msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att orderbekräftelsenummer $documentid$ har bekräftats"
+msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att orderbekräftelsenummer"
 
 #: docpages/docseal.st:ordersealingtexts
 msgid "_ordersealingtextshistoryText"
@@ -168,7 +168,7 @@ msgstr "har accepterats"
 
 #: docpages/docseal.st:offersealingtexts
 msgid "_offersealingtextsverificationFooterRow1"
-msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offertnummer $documentid$ har accepterats"
+msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offertnummer"
 
 #: docpages/docseal.st:offersealingtexts
 msgid "_offersealingtextshistoryText"

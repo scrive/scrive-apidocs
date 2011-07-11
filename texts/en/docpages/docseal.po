@@ -116,7 +116,7 @@ msgstr "has been confirmed"
 
 #: docpages/docseal.st:ordersealingtexts
 msgid "_ordersealingtextsverificationFooterRow1"
-msgstr "This verification was issued by Scrive and supports that the order confirmation $documentid$"
+msgstr "This verification was issued by Scrive and supports that the order confirmation "
 
 #: docpages/docseal.st:ordersealingtexts
 msgid "_ordersealingtextshistoryText"
@@ -168,7 +168,7 @@ msgstr "has been accepted"
 
 #: docpages/docseal.st:offersealingtexts
 msgid "_offersealingtextsverificationFooterRow1"
-msgstr "This verification was issued by Scrive and supports that the offer $documentid$"
+msgstr "This verification was issued by Scrive and supports that the offer "
 
 #: docpages/docseal.st:offersealingtexts
 msgid "_offersealingtextshistoryText"
@@ -220,7 +220,7 @@ msgstr "has been signed"
 
 #: docpages/docseal.st:contractsealingtexts
 msgid "_contractsealingtextsverificationFooterRow1"
-msgstr "This verification was issued by Scrive and supports that the document $documentid$"
+msgstr "This verification was issued by Scrive and supports that the document "
 
 #: docpages/docseal.st:contractsealingtexts
 msgid "_contractsealingtextshistoryText"
