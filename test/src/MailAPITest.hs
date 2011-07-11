@@ -1,6 +1,7 @@
 module MailAPITest (mailApiTests) where
 
 import Control.Applicative
+import Control.Arrow
 import Data.Maybe
 import Happstack.Server
 import Happstack.State hiding (Method)
