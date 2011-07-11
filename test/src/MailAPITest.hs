@@ -9,6 +9,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit hiding (Test)
 import Text.JSON.Generic
+import Text.Regex.TDFA ((=~))
 import System.IO.Temp
 import qualified Data.ByteString.Char8 as BS
 
@@ -24,6 +25,7 @@ import TestKontra as T
 mailApiTests :: Test
 mailApiTests = testGroup "MailAPI" [
       testCase "create proper document with one signatory" testSuccessfulDocCreation
+    , testCase "fail if user doesn't exist" testFailureNoSuchUser
     ]
 
 testSuccessfulDocCreation :: Assertion
@@ -40,11 +42,21 @@ testSuccessfulDocCreation = withTestEnvironment $ \tmpdir -> do
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
     successChecks $ jsonToStringList res
 
+testFailureNoSuchUser :: Assertion
+testFailureNoSuchUser = withTestEnvironment $ \tmpdir -> do
+    req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
+    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< readTemplates LANG_EN)
+    (res, _) <- first jsonToStringList <$> runTestKontra req ctx (testAPI handleMailCommand)
+    assertBool "error occured" $ isJust $ lookup "error" res
+    assertBool "message matches regex 'User .* not found'" $
+        equalsKey (=~ "^User '.*' not found$") "error_message" res
+
 successChecks :: [(String, String)] -> Assertion
-successChecks sl = do
-    --print sl
-    assertBool "status is success" $ lookup "status" sl == Just "success"
-    let mdocid = lookup "documentid" sl
+successChecks res = do
+    assertBool "status is success" $ equalsKey (== "success") "status" res
+    assertBool "message matches 'Document #* created'" $
+        equalsKey (=~ "^Document #[0-9]+ created$") "message" res
+    let mdocid = lookup "documentid" res
     assertBool "documentid is given" $ isJust mdocid
     mdoc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
@@ -52,8 +64,14 @@ successChecks sl = do
     assertBool "document has two signatories" $ length (documentsignatorylinks doc) == 2
     assertBool "document status is pending" $ documentstatus doc == Pending
 
+equalsKey :: (a -> Bool) -> String -> [(String, a)] -> Bool
+equalsKey f k list = (f <$> lookup k list) == Just True
+
 jsonToStringList :: JSObject JSValue -> [(String, String)]
-jsonToStringList = map (second $ \(JSString s) -> fromJSString s) . fromJSObject
+jsonToStringList = map (second f) . fromJSObject
+    where
+        f (JSString s) = fromJSString s
+        f _ = ""
 
 withTestEnvironment :: (FilePath -> Assertion) -> Assertion
 withTestEnvironment = withTestState . withSystemTempDirectory "mailapi-test-"
