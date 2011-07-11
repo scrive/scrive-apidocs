@@ -432,7 +432,7 @@
 	float: left;
 	font: 11px "Lucida Grande";
 	height: 16px;
-	padding: 4px 20px;
+	padding: 4px 30px;
 }
 
 #tab-viewer .tabs li a {
@@ -451,7 +451,6 @@
 #tab-viewer .tabs li.active {
 	background: url(../img/bg-header.jpg);
 	color: #d9d9d9;
-	padding: 4px 50px;
 }
 
 #tab-viewer .tab-container {
