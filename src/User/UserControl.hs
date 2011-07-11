@@ -951,15 +951,18 @@ handleAccountRemoval' aid hash = do
 
 getAccountCreatedBySigningIDAction :: Kontrakcja m => ActionID -> m (Maybe Action)
 getAccountCreatedBySigningIDAction aid = do
-  action <- queryOrFail $ GetAction aid
-  -- allow for account created by signing links only
-  if actionTypeID (actionType action) /= AccountCreatedBySigningID
-    then return Nothing
-    else if acbsState (actionType action) /= ReminderSent
-         then return $ Just action
-         else do
-           now <- liftIO $ getMinutesTime
-           return $ checkValidity now $ Just action
+  maction <- query $ GetAction aid
+  case maction of
+    Nothing -> return Nothing
+    Just action -> 
+      -- allow for account created by signing links only
+      if actionTypeID (actionType action) /= AccountCreatedBySigningID
+      then return Nothing
+      else if acbsState (actionType action) /= ReminderSent
+           then return $ Just action
+           else do
+             now <- liftIO $ getMinutesTime
+             return $ checkValidity now $ Just action
 
 getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do
