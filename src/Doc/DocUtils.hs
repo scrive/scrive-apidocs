@@ -19,6 +19,7 @@ import Misc
 import Templates.Templates
 import User.UserState
 import Util.SignatoryLinkUtils
+import Doc.DocInfo
 
 import Control.Monad
 import Data.List hiding (insert)
@@ -267,12 +268,6 @@ allowsIdentification document idtype = idtype `elem` documentallowedidtypes docu
 -- Not ready to refactor this quite yet.
 isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder muser doc siglink = isEligibleForReminder'' muser doc siglink
-
-{- |
-   Is this Document closed?
- -}
-isClosed :: Document -> Bool
-isClosed doc = documentstatus doc == Closed
 
 -- this should actually not take Maybe User but User instead
 {- |

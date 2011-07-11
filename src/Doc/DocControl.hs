@@ -32,6 +32,7 @@ import Templates.LocalTemplates
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Util.MonadUtils
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -824,7 +825,7 @@ handleIssueUpdateSigAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateSigAttachments doc = do
   ctx <- getContext
   mudoc <- updateDocument ctx doc
-  udoc <- returnRightOrMZero mudoc
+  udoc <- guardRight mudoc
 
   sigattachmentnames  <- getAndConcat "sigattachname"
   sigattachmentdescs  <- getAndConcat "sigattachdesc"
@@ -845,7 +846,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
 
     Log.debug $ show mudoc
 
-    udoc <- returnRightOrMZero mudoc
+    udoc <- guardRight mudoc
 
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"

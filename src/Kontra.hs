@@ -17,8 +17,6 @@ module Kontra
     , newAccountCreatedBySigningLink
     , scheduleEmailSendout
     , queryOrFail
-    , returnJustOrMZero
-    , returnRightOrMZero
     , param
     , currentService
     , currentServiceID
@@ -154,15 +152,7 @@ scheduleEmailSendout enforcer mail = do
 queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) => ev -> m res
 queryOrFail q = do
   mres <- query q
-  returnJustOrMZero mres
-
--- | if it's not a just, mzero. Otherwise, return the value
-returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a
-returnJustOrMZero = maybe mzero return
-
-returnRightOrMZero :: (MonadPlus m, Monad m) => Either a b -> m b
-returnRightOrMZero (Left _) = mzero
-returnRightOrMZero (Right res) = return res
+  guardJust mres
 
 -- | Checks if request contains a param , else mzero
 param :: String -> Kontra Response -> Kontra Response
