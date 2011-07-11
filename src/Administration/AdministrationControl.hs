@@ -26,7 +26,6 @@ module Administration.AdministrationControl(
           , handleDatabaseCleanup
           , handleCreateUser
           , handleUserEnableTrustWeaverStorage
-          , handleMigrate0
           , handleCreateService
           , handleStatistics
           , handleShowQuarantine
@@ -387,45 +386,6 @@ getUserPaymentAccountChange =  do
                                           , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
                                         })
 
-replace0SignatoryLinkID :: Kontrakcja m => SignatoryLink -> m SignatoryLink
-replace0SignatoryLinkID l
-    | (signatorylinkid l == SignatoryLinkID 0) = do
-                                                  liftIO $ print "changed 0 linkid"
-                                                  linkid <- update $ GetUniqueSignatoryLinkID
-                                                  return l { signatorylinkid = linkid}
-    | otherwise = return l
-
-replace0MagicHash :: Kontrakcja m => SignatoryLink -> m SignatoryLink
-replace0MagicHash l
-    | (signatorymagichash l == MagicHash 0) = do
-                                               liftIO $ print "changed 0 magichash"
-                                               magichash <- update $ GetMagicHash
-                                               return l { signatorymagichash = magichash }
-    | otherwise = return l
-
-migrate0SignatoryLinks :: Kontrakcja m =>  [SignatoryLink] -> m [SignatoryLink]
-migrate0SignatoryLinks links = do
-    l1 <- sequence $ map replace0SignatoryLinkID links
-    l2 <- sequence $ map replace0MagicHash l1
-    return l2
-
-{- |
-   A temporary service to fix the migration; 0 MagicHash and 0 SignatoryLinkID is replaced with new
-   random one.
-
-  I'm removing this! -EN
- -}
-handleMigrate0 :: Kontrakcja m => m Response
-handleMigrate0 = onlySuperUser $ do
- ctx <- getContext
- documents <- query $ GetDocuments $ currentServiceID ctx
- d2 <- sequence $ map (\d -> do
-                               links <- migrate0SignatoryLinks $ documentsignatorylinks d
-                               d2 <- update $ SetSignatoryLinks (documentid d) links
-                               return d2)
-                      documents
- liftIO $ print d2 -- force the value
- sendRedirect LinkAdminOnly
 
 {- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!! -}
 getUserPaymentPolicyChange :: Kontrakcja m => m (UserPaymentPolicy -> UserPaymentPolicy)
