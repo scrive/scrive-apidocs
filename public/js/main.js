@@ -2,7 +2,7 @@
 $(document).ready(function() {
 
     if ($.browser.msie && $.browser.version < "7.0") {
-        var alertModal = $("<div class='modal-container' style='height:80px'>" + "<div class='modal-body' style='padding:20px;font-size:13pt'>" + "<div class='modal-icon decline' style='margin-top:0px'></div>" + "<div>" + localization.ie6NotSupported + "</div>" + "" + "</div>")
+        var alertModal = $("<div class='modal-container' style='height:80px'>" + "<div class='modal-body' style='padding:20px;font-size:13pt'>" + "<div class='modal-icon decline' style='margin-top:0px'></div>" + "<div>" + localization.ie6NotSupported + "</div>" + "" + "</div>");
             $("body").html("");
         $("body").append(alertModal);
         alertModal.overlay({
@@ -42,7 +42,7 @@ $(document).ready(function() {
                 form.append('<input type="hidden" name="' + name + '" value="1" />').submit();
             });
         });
-    }
+    };
 })(jQuery);
 
 // tooltip
@@ -59,7 +59,7 @@ $(document).ready(function() {
                 container.remove();
             });
         });
-    }
+    };
 })(jQuery);
 
 /*
@@ -158,7 +158,7 @@ $(document).ready(function() {
                 } else {
                     form.append("<input type='hidden' name='add' value='YES'>").submit();
                 }
-            })
+            });
                 $(".remove", newrow).click(function() {
                 $('.newSubaccount', container).remove();
                 $("tr", container).toggleClass('odd');
