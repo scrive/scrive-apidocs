@@ -23,8 +23,8 @@ guardJust = maybe mzero return
 {- |
    Get the value from a Right or log an error and mzero if it is Left
  -}
-guardRight :: (MonadPlus m, Monad m, MonadIO m) => Either String a -> m a
+guardRight :: (MonadPlus m, Monad m, MonadIO m, Show msg) => Either msg a -> m a
 guardRight (Right val) = return val
 guardRight (Left  msg) = do 
-  Log.debug msg
+  Log.debug (show msg)
   mzero

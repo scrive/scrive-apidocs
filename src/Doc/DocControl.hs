@@ -703,17 +703,10 @@ markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time 
 handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
   ctx <- getContext
-  eudoc <- updateDocument ctx document
-  case eudoc of
-    Left _ -> mzero
-    Right _udoc -> do
-      mndoc <- update $ TemplateFromDocument $ documentid document -- ?? Should be udoc? -EN
-      case mndoc of
-        Left _ -> mzero
-        Right _newdocument -> do
-          addFlashM flashDocumentTemplateSaved
-          return $ LinkTemplates emptyListParams
-
+  udoc <- guardRight =<< (updateDocument ctx document)
+  _ndoc <- guardRight =<< (update $ TemplateFromDocument $ documentid udoc)
+  addFlashM flashDocumentTemplateSaved
+  return $ LinkTemplates emptyListParams
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
