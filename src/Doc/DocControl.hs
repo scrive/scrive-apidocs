@@ -1002,12 +1002,7 @@ handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Respon
 handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
-   mdocument <- query $ GetDocumentByFileID $ fileid'
-   document <- case mdocument of
-     Right document -> return document
-     Left msg -> do
-       Log.debug $ "Cannot file a document for fileid " ++ show fileid' ++ ", msg= " ++ msg
-       mzero
+   document <- guardRight =<< (query $ GetDocumentByFileID $ fileid')
 
    let allfiles = documentsealedfiles document ++ documentfiles document
    case filter (\file -> fileid file == fileid') allfiles of
