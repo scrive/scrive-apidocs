@@ -17,7 +17,6 @@ module Kontra
     , newAccountCreatedBySigningLink
     , scheduleEmailSendout
     , queryOrFail
-    , queryOrFailIfLeft
     , returnJustOrMZero
     , returnRightOrMZero
     , param
@@ -27,26 +26,27 @@ module Kontra
     )
     where
 
+import API.Service.ServiceState
+import ActionSchedulerState
+import Context
 import Control.Applicative
+import Control.Concurrent.MVar
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Concurrent.MVar
 import Doc.DocState
+import ELegitimation.ELeg
 import Happstack.Server
-import Misc
 import Happstack.State (query, QueryEvent)
-import User.UserState
-import User.Password hiding (Password, NoPassword)
-import qualified Data.ByteString.UTF8 as BS
-import Templates.Templates
-import Context
 import KontraLink
 import KontraMonad
-import ActionSchedulerState
-import ELegitimation.ELeg
 import Mails.SendMail
-import API.Service.ServiceState
+import Misc
+import Templates.Templates
+import User.Password hiding (Password, NoPassword)
+import User.UserState
 import Util.HasSomeUserInfo
+import qualified Data.ByteString.UTF8 as BS
+import Util.MonadUtils
 
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
@@ -155,11 +155,6 @@ queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) =
 queryOrFail q = do
   mres <- query q
   returnJustOrMZero mres
-
-queryOrFailIfLeft :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Either a res)) => ev -> m res
-queryOrFailIfLeft q = do
-  mres <- query q
-  returnRightOrMZero mres
 
 -- | if it's not a just, mzero. Otherwise, return the value
 returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a
