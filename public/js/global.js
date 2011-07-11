@@ -4,6 +4,13 @@ if (!window.console) {
     };
 }
 
+//ie doesn't support trim naturally!
+if(typeof String.prototype.trim !== 'function') {
+  String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, ''); 
+  }
+}
+
 function safeReady(f) {
     $(function() {
         try {
@@ -1564,7 +1571,7 @@ safeReady(function() {
 
 safeReady(function() {
     $("form.requestAccount").submit(function() {
-        var res = _gaq.push(['_trackPageview', '/mal/skapa-konto']);
+        /* var res = _gaq.push(['_trackPageview', '/mal/skapa-konto']); */
     });
 });
 
@@ -1572,6 +1579,12 @@ safeReady(function() {
     $("#toscontainer").css("position", "absolute");
 });
 
+
+safeReady(function() {
+    $(".campaign-play-video").click(function(){
+        window.open('http://player.vimeo.com/video/22397410','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+    })
+});
 /*
  * Function to deal with the situation when page is very big (more then 3000px)
  * So when basiclly all page, normally seen as 10 or more pages are interpreted
@@ -1584,10 +1597,13 @@ function saveOverlay(d, o) {
     $(d).click(function() {
         if ($(this).data("overlay") == undefined) {
             if ($(window).height() < 1650)
-                // never seen screen with bigger respolution
-                top = standardDialogTop;
+            {
+                o.top = standardDialogTop;
+            }
             else
+            {    
                 o.top = $(this).offset().top - $(document).scrollTop() - 400;
+            }   
             o.load = true;
             $(this).overlay(o);
         }
@@ -1613,7 +1629,7 @@ $(function () {
      * We should not be doing this if there is no chance for his to work
      */
     
-    if( typeof(XMLSerializer) !== 'undefined' &&
+    if( false && typeof(XMLSerializer) !== 'undefined' &&
         hasOverrideMimeType() &&
         !!(window.history && history.pushState)) {
 

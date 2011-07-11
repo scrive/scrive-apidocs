@@ -1,0 +1,8 @@
+"!Template name","LANG_SE","LANG_EN"
+"_signCanceledDataMismatchBody","Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina
+ personuppgifter.","We are sorry. The information in your e-ID does not match your
+ personal information."
+"_signCanceledDataMismatchIncorrectPersonalInfo","Felaktiga personuppgifter","Incorrect personal information"
+"_tbsYouSignWithEleg","Du undertecknar ""$documentname$"" med transaktionsnummer ""$documentnumber$"".
+ Undertecknande parter är:$tbssigentries$","You are signing  ""$documentname$"" with transactional number ""$documentnumber$"".
+ The signing parties are: $tbssigentries$"

@@ -65,7 +65,7 @@ showUser =
                <div class="account-body">
                    <table>
                        <tr>
-                           <td>$_comapny()$:</td>
+                           <td>$_company()$:</td>
                            <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>

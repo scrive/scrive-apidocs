@@ -2,6 +2,7 @@ module Util.FlashUtil (
       module FlashMessage
     , Flashable(..)
     , addFlashM
+    , flashOperationFailed
     ) where
 
 import KontraMonad
@@ -31,3 +32,6 @@ addFlashMsg :: KontraMonad m => FlashMessage -> m ()
 addFlashMsg flash =
     modifyContext $ \ctx@Context{ ctxflashmessages = flashmessages } ->
         ctx { ctxflashmessages = flash : flashmessages }
+
+flashOperationFailed :: KontraMonad m => String -> m ()
+flashOperationFailed msg = addFlash (OperationFailed, msg)

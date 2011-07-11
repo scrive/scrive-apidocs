@@ -38,6 +38,7 @@ import Data.Foldable (fold)
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
+import Util.ServiceUtils
 
 import qualified AppLogger as Log (debug)
 
@@ -77,7 +78,7 @@ integrationService = do
          Nothing -> return Nothing
 
 integrationAPI :: Kontra Response
-integrationAPI = dir "integration" $ msum [
+integrationAPI = dir "api" $ dir "integration" $ msum [
       apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
     , apiCall "new_document" createDocument              :: Kontrakcja m => m Response
     , apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
@@ -89,20 +90,13 @@ integrationAPI = dir "integration" $ msum [
     , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
     ]
 
---- Real api requests
--- unused function, commenting for now
-{-getRequestUser:: IntegrationAPIFunction User
-getRequestUser = do
-    sid <- serviceid <$> service <$> ask
-    memail <- apiAskBS "email"
-    when (isNothing memail) $ throwApiError API_ERROR_MISSING_VALUE "No user email provided"
-    muser <- query $ GetUserByEmail (Just sid) $ Email $ fromJust memail
-    when (isNothing muser) $ throwApiError API_ERROR_NO_USER "No user"
-    let user = fromJust muser
-    --srv <-  service <$> ask
-    --when (not $ elem (userid $ user) $ serviceusers srv) $ throwApiError "User has not accepted this service"
-    return user-}
 
+documentFromParam:: Kontrakcja m => IntegrationAPIFunction m Document
+documentFromParam = do
+    srvs <- service <$> ask
+    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+    when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
+    return $ fromJust mdocument
 
 embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 embeddDocumentFrame = do
@@ -112,21 +106,23 @@ embeddDocumentFrame = do
     let slocation = fromMaybe (ctxhostpart ctx) $ show <$> (servicelocation $ servicesettings srvs)
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> apiAskString "location"
-    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No such document"
-    let doc = fromJust mdocument
+    doc <- documentFromParam
     mcompany <- lift_M (update . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
     msiglink <- liftMM (return . getSigLinkFor doc) (apiAskBS "email")
     case (mcompany,msiglink) of
          (Just company,Nothing) -> do
+             when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
              ssid <- createServiceSession (Left $ companyid $ company) location
              returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
          (Just company, Just siglink) -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
+                     muser <- query $ GetUserByUserID $ fromJust $ maybesignatory siglink
+                     when (not $ sameService sid muser && sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching user or company| This should never happend"
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
                 else do
+                     when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
                      ssid <- createServiceSession (Left $ companyid $ company) location
                      returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
          _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
@@ -145,6 +141,8 @@ createDocument = do
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
+   -- Again, we don't check that the document is from the service
+   -- -EN
    mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
    involved  <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
    tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
@@ -236,16 +234,13 @@ getDocuments = do
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
-    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
-    api_doc <- api_document True (fromJust mdocument)
+    doc <- documentFromParam
+    api_doc <- api_document True doc
     return $ toJSObject [("document",api_doc)]
 
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
-    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
-    let doc = fromJust mdocument
+    doc <- documentFromParam
     mtag <- apiLocal "tag" $ do
               liftM2 pairMaybe (apiAskBS "name") (apiAskBS "value")
     when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
@@ -258,9 +253,7 @@ setDocumentTag =  do
 --TODO this will not work since we don't have real document removal
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
-    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document to remove can be found"
-    let doc = fromJust mdocument
+    doc <- documentFromParam
     res <- update $ ArchiveDocumentForAll $ documentid doc
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
@@ -269,14 +262,18 @@ removeDocument = do
      and redirect user to referer
 -}
 connectUserToSession :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
-connectUserToSession _ uid ssid = do
+connectUserToSession sid uid ssid = do
+    matchingService <-sameService sid <$> (query $ GetUserByUserID uid)
+    when (not matchingService) mzero
     loaded <- loadServiceSession (Right uid) ssid
     if (loaded)
      then return $ BackToReferer
      else mzero
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
-connectCompanyToSession _ cid ssid = do
+connectCompanyToSession sid cid ssid = do
+    matchingService <- sameService sid <$> (query $ GetCompany cid)
+    when (not matchingService) mzero
     loaded <- loadServiceSession (Left cid) ssid
     if (loaded)
      then return $ BackToReferer

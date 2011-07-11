@@ -116,6 +116,9 @@ newtype Email = Email { unEmail :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
 instance Read Email where
     readsPrec p s = first (Email . BS.fromString) <$> readsPrec p s
+instance Show Email where
+    show = show . unEmail
+
 
 newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -426,7 +429,6 @@ deriving instance Show UserSettings
 deriving instance Show DesignMode
 deriving instance Show UserRecordStatus
 deriving instance Show User
-deriving instance Show Email
 deriving instance Show Friend
 deriving instance Show Inviter
 deriving instance Show InviteInfo

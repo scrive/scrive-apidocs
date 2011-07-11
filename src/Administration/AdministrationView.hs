@@ -44,7 +44,6 @@ import User.UserState
 import Doc.DocState
 import API.Service.ServiceState
 import Happstack.State (query)
-import Templates.Langs
 import Util.HasSomeUserInfo
 
 {-| Main admin page - can go from here to other pages -}
@@ -146,17 +145,8 @@ servicesAdminPage services = do
             fieldM "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
-adminTranslationsPage :: TemplatesMonad m => [(Lang,TranslationStats)] -> m String
-adminTranslationsPage stats =
-    renderTemplateFM "adminTranslations" $
-        fieldFL "langs" $ for stats $ \(lang, stat) -> do
-            field "name" $ show lang
-            field "missingFiles" $ missingFiles stat
-            field "extraFiles" $ extraFiles stat
-            field "notSynchronisedFiles" $ notSynchronisedFiles stat
-            fieldFL "emptyTranslations" $ for (emptyTranslations stat) $ \(file,name) -> do
-                field "file" file
-                field "name" name
+adminTranslationsPage::TemplatesMonad m => m String
+adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
 
 mkUserInfoView :: (Functor m, MonadIO m) => (User, DocStats, UserStats) -> Fields m
 mkUserInfoView (userdetails', docstats', userstats') = do

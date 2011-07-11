@@ -3,8 +3,8 @@ priceplanPage=
     $doctype()$
     <html>
       <head>
-        <title>$pagetitle()$ | Prisplan</title>
-        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Välj prisplan efter dina behov – Free, Small, Business eller Enterprise." />
+        <title>$pagetitle()$ $_priceplanPageTitle()$</title>
+        <meta name="description" content="$_priceplanPageMetaDescription()$" />
         $standardHeaderContents()$
         $if(production)$
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
@@ -15,33 +15,15 @@ priceplanPage=
 ###
 priceplanPageContents=
                 <div class="big-price-plan">
-                    <h1>Priser</h1>
-                    <p class="stronger">Skriva på dokument snabbt, smidigt och säkert!</p>
-                    <p class="stronger">Registrera dig på under minuten och testa 14 dagar redan idag.</p>
+                    <h1>$_priceplanPageH1()$</h1>
+                    <p class="stronger">$_priceplanPageH1Body1()$</p>
+                    <p class="stronger">$_priceplanPageH1Body2()$</p>
                 </div>
                 <div class="big-pp-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>
-                                    <h2>Prisplan</h2>
-                                </th>
-                                <th>
-                                    <h3>Small</h3>
-                                    <p>35 kr/signatur</p>
-                                </th>
-                                <th>
-                                    <h3>Team</h3>
-                                    <p>32.50 kr/signatur</p>
-                                </th>
-                                <th>
-                                    <h3>Business</h3>
-                                    <p>30 kr/signatur</p>
-                                </th>
-                                <th>
-                                    <h3>Enterprise</h3>
-                                    <p>Offert</p>
-                                </th>
+                                $_priceplanPagePriceplanTop()$
                             </tr>
                         </thead>
                         <tbody>
@@ -52,256 +34,68 @@ priceplanPageContents=
                               <td></td>
                               <td></td>
                             </tr>
-                            <tr>
-                                <td>Antal användare</td>
-                                <td>5</td>
-                                <td>15</td>
-                                <td>50</td>
-                                <td>Offert</td>
+                            <tr>$_priceplanPageTableRow1()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Minimum antal signaturer per år</td>
-                                <td>500</td>
-                                <td>1 000</td>
-                                <td>2 000</td>
-                                <td>4 000</td>
+                            <tr class="odd-row">$_priceplanPageTableRow2()$
                             </tr>
-                            <tr>
-                                <td>Standardlagring</td>
-                                <td>500 dok</td>
-                                <td>Obegränsad</td>
-                                <td>Obegränsad</td>
-                                <td>Obegränsad</td>
+                            <tr>$_priceplanPageTableRow3()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Trustweaver premiumlagring</td>
-                                <td>Uppgradera</td>
-                                <td>Uppgradera</td>
-                                <td>Offert</td>
-                                <td>Offert</td>
+                            <tr class="odd-row">$_priceplanPageTableRow4()$
                             </tr>
-                            <tr>
-                                <td>Uppstartsutbildning</td>
-                                <td>0.5 h</td>
-                                <td>1 h</td>
-                                <td>2 x 1 h</td>
-                                <td>Offert</td>
+                            <tr>$_priceplanPageTableRow5()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Hjälp med konfiguration</td>
-                                <td>1 h</td>
-                                <td>2 h</td>
-                                <td>4 h</td>
-                                <td>Offert</td>
+                            <tr class="odd-row">$_priceplanPageTableRow6()$
                             </tr>
-                            <tr>
-                                <td>Support</td>
-                                <td>E-post</td>
-                                <td>Telefon</td>
-                                <td>Telefon</td>
-                                <td>Personlig kontakt</td>
+                            <tr>$_priceplanPageTableRow7()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Avtals-, offert- eller orderprocess</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow8()$
                             </tr>
-                            <tr>
-                                <td>Tredjepartsverifiering</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow9()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>E-signering</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow10()$
                             </tr>
-                            <tr>
-                                <td>E-legitimationssignering</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow11()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>E-arkiv</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow12()$
                             </tr>
-                            <tr>
-                                <td>Processbevakning</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow13()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Påminnelser</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow14()$
                             </tr>
-                            <tr>
-                                <td>Justera hälsningsmeddelande</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow15()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Välj förfallodatum</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow16()$
                             </tr>
-                            <tr>
-                                <td>Spara egna mallar</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow17()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Bifoga bilaga</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow18()$
                             </tr>
-                            <tr>
-                                <td>Begär Bilagor</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow19()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Flerpartsavtal</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow20()$
                             </tr>
-                            <tr>
-                                <td>Användarroller</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow21()$
                             </tr>
-                            <tr class="odd-row">
-                                <td >Drag and drop</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow22()$
                             </tr>
-                            <tr>
-                                <td>Signeringsordning</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow23()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Delat arkiv</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow24()$
                             </tr>
-                            <tr>
-                                <td>Enkel Integration</td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr>$_priceplanPageTableRow25()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Massutskick</td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow26()$                            </tr>
+                            <tr>$_priceplanPageTableRow27()$
                             </tr>
-                            <tr>
-                                <td>Brandad signeringssida</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
+                            <tr class="odd-row">$_priceplanPageTableRow28()$                            </tr>
+                            <tr>$_priceplanPageTableRow29()$
                             </tr>
-                            <tr class="odd-row">
-                                <td>Brandat mail</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                            </tr>
-                            <tr>
-                                <td>Fullt API</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                            </tr>
-                            <tr class="odd-row">
-                                <td>Skapa egen process</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                            </tr>
+                            <tr class="odd-row">$_priceplanPageTableRow30()$                            </tr>
                         </tbody>
                     </table>
                     <div class="highlight-container ppfix">
                         <div class="ribbon"></div>
-                        <ul class="highlight-rows">
-                            <li class="top">
-                                <h3>Business</h3>
-                                <p>30 kr/signatur</p>
-                            </li>
-                            <li>50</li>
-                            <li class="odd">2 000</li>
-                            <li>Obegränsad</li>
-                            <li class="odd">Offert</li>
-                            <li>2 x 1h</li>
-                            <li class="odd">4h</li>
-                            <li>Telefon</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li>✓</li>
-                            <li class="odd">✓</li>
-                            <li></li>
-                            <li class="odd"></li>
-                            <li></li>
-                            <li class="odd"></li>
-                            <li class="bottom"></li>
+                        <ul class="highlight-rows">$_priceplanPageTableHighlightedColumn()$
                         </ul>
                     </div>
                 </div>
@@ -310,17 +104,11 @@ priceplanPageContents=
                 </div>
                 <br />
                 <br />
-                <div>* Alla priser är exkl moms.</div>
-                <div class="big-price-plan">
-                    <h2>Vi tar bara betalt när du tjänar pengar</h2>
-                    <p>Vi tar betalt per signatur. Vi tror dock på att bara ta betalt när vi tillför som mest värde. Därför räknar vi bara signaturer i färdigställda dokument där vi utfärdat vårt verifikat. Med andra ord, vi tar bara betalt när du gör affär.</p>
+                <div>$_priceplanPageVAT()$</div>
+                <div class="big-price-plan">$_priceplanPageBelowTable1()$
                 </div>
-                <div class="big-price-plan">
-                    <h2>Gratis för privatpersoner och enmansföretagare</h2>
-                    <p>Det finns tusen skäl varför alla bör signera sina dokument elektroniskt. Vår ambition är att alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt konto för alla mindre användare. 1 användare, 5 fria signaturer per månad och 50 dokument i lagring.</p>
+                <div class="big-price-plan">$_priceplanPageBelowTable2()$
                 </div>
-                <div class="big-price-plan">
-                    <h2>Rabatter till ej vinstdrivande organisationer</h2>
-                    <p>Vi gillar engagemang och eldsjälar som vill förändra. Därför stödjer vi ej vinstdrivande organisationer genom att erbjuda bra rabatter på våra listpriser.</p>
+                <div class="big-price-plan">$_priceplanPageBelowTable3()$
                 </div>
 ###

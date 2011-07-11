@@ -60,7 +60,7 @@ apiUser = do
                else return Nothing
 
 userAPI :: Kontra Response
-userAPI =  dir "userapi" $ msum [
+userAPI =  dir "api" $ dir "userapi" $ msum [
       apiCall "sendnewdocument" sendNewDocument   :: Kontrakcja m => m Response
     , apiCall "sendFromTemplate" sendFromTemplate :: Kontrakcja m => m Response
     , apiCall "document" getDocument              :: Kontrakcja m => m Response
@@ -76,7 +76,7 @@ sendReminder = do
                              , isSignatory sl
                              , not $ hasSigned sl]
   _ <- forM siglinkstoremind $ (\signlink -> do
-                              mail <- liftKontra $ mailDocumentRemind Nothing ctx doc signlink
+                              mail <- mailDocumentRemind Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
                                 to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
