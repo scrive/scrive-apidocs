@@ -1521,7 +1521,7 @@ handlePageOfDocument' documentid mtokens = do
 
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
-  liftIO $ print "Uploading doc"
+  Log.debug "Uploading doc"
   ctx@Context{ctxdocstore, ctxs3action} <- getContext
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
