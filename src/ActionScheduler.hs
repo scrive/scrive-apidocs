@@ -28,7 +28,7 @@ import User.UserView
 import qualified AppLogger as Log
 import System.Time
 import Misc
-
+import Util.HasSomeUserInfo
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
 
@@ -90,17 +90,13 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             mdoc <- query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
-                let uinfo = userinfo user
-                    email = useremail uinfo
-                    fullname = userfullname user
                 (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
                 let mailfunc = case documenttype <$> mdoc of
                       (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
                       (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
-                      -- | TODO - so other option for order | THIS WILL GIVE A WARNING TILL IT IS FIXED
-                      _ -> error "Case for order not implemented yet"
-                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [MailAddress {fullname = fullname, email = unEmail email}] })
+                      _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
+                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
                 , acbsUserID = uid
@@ -110,7 +106,13 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
-evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} = do
+evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
+ if (unsendable mail)
+  then do -- Due to next block, bad emails were alive in queue, and making logs unreadable.
+      Log.error $ "Unsendable email found: " ++ show mail
+      _ <- update $ DeleteAction actionID
+      Log.error $ "Email was removed from the queue"
+  else do
     mailer <- sdMailer <$> ask
     success <- liftIO $ sendMail mailer actionID mail
     if success

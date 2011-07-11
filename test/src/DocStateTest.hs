@@ -217,7 +217,7 @@ blankUser = User {
                                 }
               , userservice = Nothing
               , usercompany = Nothing
-              , userapikey = Nothing
+              , usermailapi = Nothing
               , userrecordstatus = LiveUser
               }
 
@@ -231,8 +231,8 @@ blankDocument =
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
           , documentfunctionality        = BasicFunctionality
-          , documentctime                = MinutesTime 0 0
-          , documentmtime                = MinutesTime 0 0
+          , documentctime                = fromSeconds 0
+          , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
           , documentlog                  = []
@@ -246,6 +246,7 @@ blankDocument =
           , documentsharing              = Doc.DocState.Private
           , documentrejectioninfo        = Nothing
           , documenttags                 = []
+          , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing

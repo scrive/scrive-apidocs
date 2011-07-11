@@ -218,7 +218,7 @@ instance Migrate SessionData0 SessionData1 where
                           }) =
         SessionData1 { userID1 = Nothing
                      , flashMessages1 = []
-                     , expires1 = MinutesTime 0 0
+                     , expires1 = fromSeconds 0
                      }
 
 instance Migrate SessionData1 SessionData2 where
@@ -228,7 +228,7 @@ instance Migrate SessionData1 SessionData2 where
                           }) =
         SessionData2 { userID2 = Nothing
                      , flashMessages2 = []
-                     , expires2 = MinutesTime 0 0
+                     , expires2 = fromSeconds 0
                      , hash2 = MagicHash 0
                      }
 
@@ -239,7 +239,7 @@ instance Migrate SessionData2 SessionData3 where
                           }) =
         SessionData3 { userID3 = Nothing
                     , flashMessages3 = []
-                    , expires3 = MinutesTime 0 0
+                    , expires3 = fromSeconds 0
                     , hash3 = MagicHash 0
                     , elegtransactions3 = []
                     }
@@ -252,7 +252,7 @@ instance Migrate SessionData3 SessionData4 where
                           }) =
         SessionData4 { userID4           = Nothing
                     , flashMessages4    = []
-                    , expires4          = MinutesTime 0 0
+                    , expires4          = fromSeconds 0
                     , hash4             = MagicHash 0
                     , elegtransactions4 = []
                     , xtoken4           = MagicHash 0
@@ -261,7 +261,7 @@ instance Migrate SessionData3 SessionData4 where
 instance Migrate SessionData4 SessionData5 where
     migrate SessionData4{} =
         SessionData5 { userID5           = Nothing
-                    , expires5          = MinutesTime 0 0
+                    , expires5          = fromSeconds 0
                     , hash5             = MagicHash 0
                     , elegtransactions5 = []
                     , xtoken5           = MagicHash 0
@@ -270,7 +270,7 @@ instance Migrate SessionData4 SessionData5 where
 instance Migrate SessionData5 SessionData6 where
     migrate SessionData5{} =
         SessionData6 { userID6           = Nothing
-                    , expires6          = MinutesTime 0 0
+                    , expires6          = fromSeconds 0
                     , hash6             = MagicHash 0
                     , elegtransactions6 = []
                     , xtoken6           = MagicHash 0
@@ -280,7 +280,7 @@ instance Migrate SessionData5 SessionData6 where
 instance Migrate SessionData6 SessionData7 where
     migrate SessionData6{} =
         SessionData7 { userID7           = Nothing
-                    , expires7          = MinutesTime 0 0
+                    , expires7          = fromSeconds 0
                     , hash7             = MagicHash 0
                     , elegtransactions7 = []
                     , xtoken7           = MagicHash 0
@@ -290,7 +290,7 @@ instance Migrate SessionData6 SessionData7 where
 instance Migrate SessionData7 SessionData8 where
     migrate SessionData7{} =
         SessionData8 { userID8           = Nothing
-                    , expires8          = MinutesTime 0 0
+                    , expires8          = fromSeconds 0
                     , hash8             = MagicHash 0
                     , elegtransactions8 = []
                     , xtoken8           = MagicHash 0
@@ -301,7 +301,7 @@ instance Migrate SessionData7 SessionData8 where
 instance Migrate SessionData8 SessionData where
     migrate SessionData8{} =
         SessionData { userID           = Nothing
-                    , expires          = MinutesTime 0 0
+                    , expires          = fromSeconds 0
                     , hash             = MagicHash 0
                     , elegtransactions = []
                     , xtoken           = MagicHash 0
@@ -622,7 +622,7 @@ createServiceSession userorcompany loc= do
     return $ sessionId  session
 
 -- This is used to connect user or company to session when it was created by same service
-loadServiceSession::(MonadIO m,Functor m) => Either CompanyID UserID -> SessionId -> ServerPartT m Bool
+loadServiceSession :: (MonadIO m, Functor m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
 loadServiceSession userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of

@@ -2,10 +2,10 @@
 firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
         <head>
-                <title>SkrivaPå | Signera och arkivera avtal elektroniskt</title>
+                <title>$_title()$</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 <meta http-equiv="content-language" content="sv" />
-                <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Spara tid, pengar och frustration – både åt dig och dina kunder." />
+                <meta name="description" content="$_firstPageMetaDescription()$Signera och arkivera dina avtal elektroniskt. Spara tid, pengar och frustration – både åt dig och dina kunder." />
                 <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
@@ -97,12 +97,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <img src="/img/logo.png" alt="SkrivaPå" class="logo" />
                                 <div class="leftMain">
                                         <div class="intro-container">
-                                                <h1>Varför krångla? - Signera med SkrivaPå!</h1>
-                                                <p class="introtext">Signera avtal och andra dokument elektroniskt med SkrivaPå. <br />
-                                                Våra kunder och våra kunders kunder älskar enkelheten.
+                                                <h1>$_h1()$</h1>
+                                                <p class="introtext">$_h1Body()$ 
                                                 </p>
-                                                <h3>Skapa konto nu!</h3>
-                                                <p class="introtext">14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                                <h3>$_h3CreateAccount()$</h3>
+                                                <p class="introtext">$_h3CreateAccountBody()$</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
                                                         <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
                                                         <input type="submit" class="hidden" />
@@ -110,12 +109,12 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="rightMain">
-                                        <a href="#" class="login-button"><p>Logga in</p></a>
+                                        <a href="#" class="login-button"><p>$_login()$</p></a>
                                         <div class="campaign-container">
-                                                <div class="campaign-play campaign-play-video" ></div>
+                                                <div class="campaign-play campaign-play-video"></div>
                                                 <div class="campaign-text campaign-play-video">
-                                                        <blockquote>”Processerna blir betydligt smidigare.”</blockquote>
-                                                        <em>- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise</em>
+                                                        <blockquote>$_QuoteOnVid()$</blockquote>
+                                                        <em>$_QuoteOnVidBy()$</em>
                                                 </div>
                                         </div>
                                 </div>
@@ -126,20 +125,20 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         <div class="content">
                                 <div class="col left campaign-play campaign-play-video">
                                         <div class="icon one"></div>
-                                        <a href="#"><h3>Skicka</h3>
-                                        <p>Ladda upp dokument,<br />välj mottagare, skicka!</p></a>
+                                        <a href="#"><h3>$_StepsH3Send()$</h3>
+                                        <p>$_StepsH3SendBody()$</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
                                 <div class="col centre campaign-play campaign-play-video">
                                         <div class="icon two"></div>
-                                        <a href="#"><h3>Skriva på</h3>
-                                        <p>Alla parter skriver på<br />elektroniskt.</p></a>
+                                        <a href="#"><h3>$_StepsH3Sign()$</h3>
+                                        <p>$_StepsH3SignBody()$</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
                                 <div class="col right campaign-play campaign-play-video">
                                         <div class="icon three"></div>
-                                        <a href="#"><h3>Spara och arkivera</h3>
-                                        <p>Vi sparar dina dokument<br />tryggt och säkert.</p></a>
+                                        <a href="#"><h3>$_StepsH3Store()$</h3>
+                                        <p>$_StepsH3StoreBody()$</p></a>
                                 </div>
                         </div>
                         <div class="bottom-border"></div>
@@ -152,92 +151,92 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <div class="icon-container">
                                                         <div class="icon money"></div>
                                                 </div>
-                                                <h2>Minska kostnaderna</h2>
-                                                <p>Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är ett skräddarsytt redskap som optimerar dina processer. Spara 50-250kr/dokument. </p>
+                                                <h2>$_Bemefit1()$</h2>
+                                                <p>$_Bemefit1Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon watch"></div>
                                                 </div>
-                                                <h2>Snabbare avslut</h2>
-                                                <p>Snabbare avslut leder till fler avslut. Vi hjälper dig att öka din omsättning.</p>
+                                                <h2>$_Bemefit2()$</h2>
+                                                <p>$_Bemefit2Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon globe"></div>
                                                 </div>
-                                                <h2>Överallt. Alltid.</h2>
-                                                <p>Arbeta när du vill och var du vill. Glöm problemen med att buda dokument jorden runt.</p>
+                                                <h2>$_Bemefit3()$</h2>
+                                                <p>$_Bemefit3Body()$</p>
                                         </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon seal"></div>
                                                 </div>
-                                                <h2>Starkare bevis</h2>
-                                                <p>SkrivaPå verifierar transaktionen och stärker din bevisposition vid konflikt.</p>
+                                                <h2>$_Bemefit4()$</h2>
+                                                <p>$_Bemefit4Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon safe"></div>
                                                 </div>
-                                                <h2>100% kontroll</h2>
-                                                <p>Vår säkra lagring garanterar dokumentens integritet. Äntligen full kontroll. </p>
+                                                <h2>$_Bemefit5()$</h2>
+                                                <p>$_Bemefit5Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon face"></div>
                                                 </div>
-                                                <h2>Minska frustrationen</h2>
-                                                <p>Det är sällan roligt att vända papper, leta efter förlorade dokument och jaga signaturer. SkrivaPå lättar din och dina kunders administrativa börda.</p>
+                                                <h2>$_Bemefit6()$</h2>
+                                                <p>$_Bemefit6Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon paper"></div>
                                                 </div>
-                                                <h2>Spara på miljön</h2>
-                                                <p>Visa att ni tar ansvar. Skippa pappersavtalandet och minska din miljöpåverkan.</p>
+                                                <h2>$_Bemefit7()$</h2>
+                                                <p>$_Bemefit7Body()$</p>
                                         </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon ipad"></div>
                                                 </div>
-                                                <h2>Image branding</h2>
-                                                <p>Visa era kunder att ni är i framkant och gillar att tänka i nya banor.</p>
+                                                <h2>$_Bemefit8()$</h2>
+                                                <p>$_Bemefit8Body()$</p>
                                         </div>
                                 </div>
                                 <div class="clearfix"></div>
                                 <div class="slide">
                                     <div class="slide-container">
-                                        <h2>Kunder berättar</h2>
+                                        <h2>$_QuotesHead()$</h2>
                                         <div class="slide-content active">
                 							<div class="portrait-image"><img src="/img/logo-accountfactory.jpg"/></div>
-                                            <blockquote>”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”</blockquote>
-                                            <em>Mikael Green, VD, Account Factory, Redovisningsbyrå</em>
+                                            <blockquote>$_Quote1()$</blockquote>
+                                            <em>$_Quote1By()$</em>
                                         </div>
                                     <div class="slide-content">
                                         <div class="portrait-image"><img src="/img/logo-greenhatpeople.jpg"/></div>
-                                        <blockquote>”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”</blockquote>
-                                        <em>Alexis Barnekow, Försäljningschef, Green Hat People, Teambuilding Events</em>
+                                        <blockquote>$_Quote2()$</blockquote>
+                                        <em>$_Quote2By()$</em>
                                     </div>
                                     <div class="slide-content">
 								        <div class="portrait-image"><img src="/img/logo-eventbook.jpg"/></div>
-                                        <blockquote>”Smart lösning.”</blockquote>
-                                        <em>Christoffer Lindquist, VD, Eventbook, Eventpartner</em>
+                                        <blockquote>$_Quote3()$</blockquote>
+                                        <em>$_Quote3By()$</em>
                                     </div>
                                     <div class="slide-content">
 								        <div class="portrait-image"><img src="/img/logo-accenture.jpg"/></div>
-                                        <blockquote>”Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen.”</blockquote>
-                                        <em>Ola Brundin, Accenture Management Consulting</em>
+                                        <blockquote>$_Quote4()$</blockquote>
+                                        <em>$_Quote4By()$</em>
                                     </div>
                                     <div class="slide-content">
 								        <div class="portrait-image"><img src="/img/logo-coop.jpg"/></div>
-                                        <blockquote>”Snabbt och överskådligt.”</blockquote>
-                                        <em>Michael Burman, Marknadschef, Coop Nord</em>
+                                        <blockquote>$_Quote5()$</blockquote>
+                                        <em>$_Quote5By()$</em>
                                     </div>
                                     <div class="slide-content">
 								        <div class="portrait-image"></div>
-                                        <blockquote>”Notera: efter 1 veckas användning börjar era kunder visa produkten för andra.”</blockquote>
-                                        <em>Martin Lindström, IPAS</em>
+                                        <blockquote>$_Quote6()$</blockquote>
+                                        <em>$_Quote6By()$</em>
                                     </div>
                                 </div>
                                         <div class="slide-nav">
@@ -251,7 +250,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </ul>
                                         </div>
                                         <div class="bubble">
-                                                <h2>Partners</h2>
+                                                <h2>$_PartnersHead()$</h2>
                                                 <ul>
                                                         <li><a href="/partners"><img src="/img/partner-trustweaver.png"  /></a></li>
                                                         <li><a href="/partners"><img src="/img/partner-logica.png" /></a></li>
@@ -359,12 +358,12 @@ och anpassning</p>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
-                                                <h3>Skapa konto nu!</h3>
-                                                <p>14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                                <h3>$_h3CreateAccount()$</h3>
+                                                <p>$_h3CreateAccountBody()$</p>
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="$linksignup$" class="requestAccount">
-                                                        <a href="#" class="submit new-btn-small green2 center float-right"><p>Skapa konto!</p></a>
+                                                        <a href="#" class="submit new-btn-small green2 center float-right"><p>$_ButtonCreateAccount()$</p></a>
                                                         <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" />
                                                         <input type="submit" class="hidden" />
                                                 </form>

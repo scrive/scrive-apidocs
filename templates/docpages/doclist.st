@@ -182,13 +182,13 @@ $loadingdialog()$
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2>$_ReminderHead()$</h2>
+          <h2>$_SendReminder()$</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <div class="singleremindmsg">$_ReminderBodyIfSingel()$<span class="docname"></span>.
+          <div class="singleremindmsg">$_ReminderBodyIfSingel()$<span class="docname"></span>?
           </div>
           <div class="multipleremindmsg">$_ReminderBodyIfMulti()$<span class="doccount"></span>$_ReminderBodyIfMulti2()$</div>
         </div>

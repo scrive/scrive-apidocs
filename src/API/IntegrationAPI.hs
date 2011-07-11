@@ -39,6 +39,8 @@ import Company.CompanyState
 import Data.Foldable (fold)
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
+import Util.HasSomeUserInfo
+
 import qualified AppLogger as Log (debug)
 
 {- |
@@ -107,7 +109,7 @@ getRequestUser = do
 
 embeddDocumentFrame :: IntegrationAPIFunction APIResponse
 embeddDocumentFrame = do
-    ctx <- lift $ get
+    ctx <- getContext
     srvs <-  service <$> ask
     let sid = serviceid srvs
     let slocation = fromMaybe (ctxhostpart ctx) $ show <$> (servicelocation $ servicesettings srvs)
@@ -122,12 +124,14 @@ embeddDocumentFrame = do
          (Just company,Nothing) -> do
              ssid <- createServiceSession (Left $ companyid $ company) location
              returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         (Just _company, Just siglink) -> do
+         (Just company, Just siglink) -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
-                else returnLink $ LinkSignDoc doc siglink
+                else do
+                     ssid <- createServiceSession (Left $ companyid $ company) location
+                     returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
          _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
 
 
@@ -153,11 +157,19 @@ createDocument = do
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
    doc <- case mtemplate of
             Just _template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
-            Nothing -> createAPIDocument company doctype title files involved tags
+            Nothing -> do
+                        d <- createAPIDocument company doctype title files involved tags
+                        updateDocumentWithDocumentUI d
    liftIO $ putStrLn $ show $ doc
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 
+updateDocumentWithDocumentUI :: Document -> IntegrationAPIFunction Document
+updateDocumentWithDocumentUI doc = do
+    mailfooter <- apiAskBS "mailfooter"
+    ndoc <- update $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
+    return $ either (const doc) id ndoc
+    
 createAPIDocument:: Company ->
                     DocumentType ->
                     BS.ByteString ->
@@ -191,16 +203,16 @@ userFromTMP uTMP = do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
                 u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password Nothing (Just sid) Nothing
                 when (isNothing u) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
-                u' <- update $ AcceptTermsOfService (userid $ fromJust u) (MinutesTime 0 0)
+                u' <- update $ AcceptTermsOfService (userid $ fromJust u) (fromSeconds 0)
                 when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
                 return $ fromRight u'
-    user' <- update $ SetUserInfo (userid user) $ (userinfo user)
+    user' <- update $ SetUserInfo (userid user) (userinfo user)
             {
-              userfstname = fromMaybe (userfstname $ userinfo user) $ fstname uTMP
-            , usersndname = fromMaybe (usersndname $ userinfo user) $ sndname uTMP
-            , userpersonalnumber = fromMaybe (userpersonalnumber $ userinfo user) $ personalnumber uTMP
-            , usercompanyname  = fromMaybe (usercompanyname $ userinfo user) $ company  uTMP
-            , usercompanynumber  = fromMaybe (usercompanynumber $ userinfo user) $ companynumber uTMP
+              userfstname = fromMaybe (getFirstName user) $ fstname uTMP
+            , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
+            , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
+            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP
+            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP
             }
     when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
     return $ fromRight user'
@@ -218,8 +230,10 @@ getDocuments = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     documents <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    let not_deleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
-    api_docs <- sequence $  map (api_document False) $ filter not_deleted documents
+    let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
+    -- We support only offers and contracts by API calls    
+    let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
+    api_docs <- sequence $  map (api_document False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
 

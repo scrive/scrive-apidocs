@@ -10,13 +10,105 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: flash.st:flashMessageAccountsDeleted
-msgid "_flashMessageAccountsDeleted"
-msgstr "The account(s) where successfully deleted."
+#: flash.st:placeFieldName
+msgid "_placeFieldName"
+msgstr "place"
+
+#: flash.st:passwordFieldName
+msgid "_passwordFieldName"
+msgstr "password"
+
+#: flash.st:nameFieldName
+msgid "_nameFieldName"
+msgstr "name"
+
+#: flash.st:inviteTextFieldName
+msgid "_inviteTextFieldName"
+msgstr "invite text"
+
+#: flash.st:idFieldName
+msgid "_idFieldName"
+msgstr "id"
+
+#: flash.st:flashRemindMailSentSigned
+msgid "_flashRemindMailSentSigned"
+msgstr "The document has been sent to"
+
+#: flash.st:flashRemindMailSentNotSigned
+msgid "_flashRemindMailSentNotSigned"
+msgstr "A reminder has been sent to"
+
+#: flash.st:flashMessageViralInviteSent
+msgid "_flashMessageViralInviteSent"
+msgstr "The invitation has been sent!"
+
+#: flash.st:flashMessageUserWithSameEmailExists
+msgid "_flashMessageUserWithSameEmailExists"
+msgstr "A user with this email already exists."
+
+#: flash.st:flashMessageUserSignupDone
+msgid "_flashMessageUserSignupDone"
+msgstr "Your account has been created! An email containing your account details has been sent to your inbox."
+
+#: flash.st:flashMessageUserPasswordChanged
+msgid "_flashMessageUserPasswordChanged"
+msgstr "Your password has been changed."
+
+#: flash.st:flashMessageUserInvitedAsSubaccount
+msgid "_flashMessageUserInvitedAsSubaccount"
+msgstr "Your request has been sent!"
 
 #: flash.st:flashMessageUserHasLiveDocs
 msgid "_flashMessageUserHasLiveDocs"
 msgstr "Unable to remove account(s) as there are some remaining documents that need to be finalised."
+
+#: flash.st:flashMessageUserHasBecomeSubaccount
+msgid "_flashMessageUserHasBecomeSubaccount"
+msgstr "Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$ and the rights to your documents have been transferred."
+
+#: flash.st:flashMessageUserDetailsSaved
+msgid "_flashMessageUserDetailsSaved"
+msgstr "Your account settings have been saved."
+
+#: flash.st:flashMessageUserAlreadyActivated
+msgid "_flashMessageUserAlreadyActivated"
+msgstr "You have already activated this account."
+
+#: flash.st:flashMessageUserActivated
+msgid "_flashMessageUserActivated"
+msgstr "Welcome to Scrive!"
+
+#: flash.st:flashMessageThanksForTheQuestion
+msgid "_flashMessageThanksForTheQuestion"
+msgstr "Your message has been sent! We will get back to you within 24 hours."
+
+#: flash.st:flashMessageTemplateArchiveDone
+msgid "_flashMessageTemplateArchiveDone"
+msgstr "The selected templates have been deleted."
+
+#: flash.st:flashMessageSingleTemplateShareDone
+msgid "_flashMessageSingleTemplateShareDone"
+msgstr "$docname$ has been shared with your organisation."
+
+#: flash.st:flashMessageSingleAttachmentShareDone
+msgid "_flashMessageSingleAttachmentShareDone"
+msgstr "$docname$ has been shared whith your organisation."
+
+#: flash.st:flashMessageSecondNameIsRequired
+msgid "_flashMessageSecondNameIsRequired"
+msgstr "Last name required."
+
+#: flash.st:flashMessageRowLessThanMinColCount
+msgid "_flashMessageRowLessThanMinColCount"
+msgstr "The row must have at least $mincols$ columns."
+
+#: flash.st:flashMessageRowGreaterThanMaxColCount
+msgid "_flashMessageRowGreaterThanMaxColCount"
+msgstr "The row must not have more than $maxcols$ columns."
+
+#: flash.st:flashMessagePleaseSignWithEleg
+msgid "_flashMessagePleaseSignWithEleg"
+msgstr "Sign the document at the bottom of the page. E-ID is required to sign."
 
 #: flash.st:flashMessagePleaseSignOffer
 msgid "_flashMessagePleaseSignOffer"
@@ -26,193 +118,221 @@ msgstr "Accept the offer at the bottom of the page."
 msgid "_flashMessagePleaseSignContract"
 msgstr "Sign the document at the bottom of the page."
 
-#: flash.st:flashMessagePleaseSignWithEleg
-msgid "_flashMessagePleaseSignWithEleg"
-msgstr "Sign the document at the bottom of the page. E-ID is required to sign."
+#: flash.st:flashMessagePasswordsDontMatch
+msgid "_flashMessagePasswordsDontMatch"
+msgstr "\"New password\" does not match \"Repeat password\""
+
+#: flash.st:flashMessagePasswordChangeLinkNotValid
+msgid "_flashMessagePasswordChangeLinkNotValid"
+msgstr "We are sorry, this link is no longer valid.<br/> Please use \"Forgot password\" to generate a new link."
+
+#: flash.st:flashMessageOtherUserSentInvitation
+msgid "_flashMessageOtherUserSentInvitation"
+msgstr "An invitation has already been sent by another user."
 
 #: flash.st:flashMessageOnlyHaveRightsToViewDoc
 msgid "_flashMessageOnlyHaveRightsToViewDoc"
-msgstr "You are only authorized to view this document."
-
-#: flash.st:flashMessageAccountRemovedFromSign
-msgid "_flashMessageAccountRemovedFromSign"
-msgstr "Your original documentis removed from Scrive"
-
-#: flash.st:flashMessageAccountActivatedFromSign
-msgid "_flashMessageAccountActivatedFromSign"
-msgstr "Your original document is now stored by Scrive."
-
-#: flash.st:flashMessageUserHasBecomeSubaccount
-msgid "_flashMessageUserHasBecomeSubaccount"
-msgstr "Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$ and the rights to your documents has been transferred to the main account."
-
-#: flash.st:flashMessageUserInvitedAsSubaccount
-msgid "_flashMessageUserInvitedAsSubaccount"
-msgstr "Your request has been sent!"
-
-#: flash.st:flashMessageMultipleAttachmentShareDone
-msgid "_flashMessageMultipleAttachmentShareDone"
-msgstr "Selected attachments has been shared within your organisation."
-
-#: flash.st:flashMessageSingleAttachmentShareDone
-msgid "_flashMessageSingleAttachmentShareDone"
-msgstr "$docname$ has been shared whitn your organisation."
-
-#: flash.st:flashMessageMultipleTemplateShareDone
-msgid "_flashMessageMultipleTemplateShareDone"
-msgstr "Selected templates has been shared within you organisation."
-
-#: flash.st:flashMessageSingleTemplateShareDone
-msgid "_flashMessageSingleTemplateShareDone"
-msgstr "$docname$ has been shared within your organisation."
-
-#: flash.st:flashMessageCSVSent
-msgid "_flashMessageCSVSent"
-msgstr "The document has been sent to $doccount$ parties."
-
-#: flash.st:flashMessageInvalidCSV
-msgid "_flashMessageInvalidCSV"
-msgstr "An error occurred involving the data in your CSV-file. Please check it, and upload again."
-
-#: flash.st:flashMessageThanksForTheQuestion
-msgid "_flashMessageThanksForTheQuestion"
-msgstr "Your message has been sent! We will get back to you within 24 hours."
-
-#: flash.st:flashMessageAttachmentArchiveDone
-msgid "_flashMessageAttachmentArchiveDone"
-msgstr "Selected attachments has been deleted."
-
-#: flash.st:flashMessageTemplateArchiveDone
-msgid "_flashMessageTemplateArchiveDone"
-msgstr "Selected templates has been deleted."
+msgstr "You are only authorised to view this document."
 
 #: flash.st:flashMessageOfferArchiveDone
 msgid "_flashMessageOfferArchiveDone"
-msgstr "Selected offers has been deleted."
-
-#: flash.st:flashMessageContractArchiveDone
-msgid "_flashMessageContractArchiveDone"
-msgstr "Selected documents has been deleted."
-
-#: flash.st:flashMessageNoBulkOfferRemindsSent
-msgid "_flashMessageNoBulkOfferRemindsSent"
-msgstr "Sorry, there are no recipients left to accept."
-
-#: flash.st:flashMessageBulkOfferRemindsSent
-msgid "_flashMessageBulkOfferRemindsSent"
-msgstr "Reminders has been sent to all recipients who has not yet accepted."
-
-#: flash.st:flashMessageNoBulkContractRemindsSent
-msgid "_flashMessageNoBulkContractRemindsSent"
-msgstr "Sorry, there are no recipients left to sign."
-
-#: flash.st:flashMessageBulkContractRemindsSent
-msgid "_flashMessageBulkContractRemindsSent"
-msgstr "Reminders has been sent to all recipients who has not yet signed."
+msgstr "The selected offers have been deleted."
 
 #: flash.st:flashMessageNumberIsRequired
 msgid "_flashMessageNumberIsRequired"
 msgstr "Number required."
 
-#: flash.st:flashMessageEmailIsRequired
-msgid "_flashMessageEmailIsRequired"
-msgstr "E-mail required."
-
-#: flash.st:flashMessageSecondNameIsRequired
-msgid "_flashMessageSecondNameIsRequired"
-msgstr "Last name required."
-
-#: flash.st:flashMessageFirstNameIsRequired
-msgid "_flashMessageFirstNameIsRequired"
-msgstr "First name required."
-
-#: flash.st:flashMessageRowGreaterThanMaxColCount
-msgid "_flashMessageRowGreaterThanMaxColCount"
-msgstr "The row may not have more than $maxcols$ columns."
-
-#: flash.st:flashMessageRowLessThanMinColCount
-msgid "_flashMessageRowLessThanMinColCount"
-msgstr "THe row must at least have $mincols$ columns."
-
-#: flash.st:flashMessageNoDataInCSVApartFromHeader
-msgid "_flashMessageNoDataInCSVApartFromHeader"
-msgstr "Scrive could not find any data in the file, except for titles."
-
-#: flash.st:flashMessageNoDataInCSV
-msgid "_flashMessageNoDataInCSV"
-msgstr "Scrive could not find any data in the file."
-
-#: flash.st:flashMessageCSVHasTooManyRows
-msgid "_flashMessageCSVHasTooManyRows"
-msgstr "Vi beklagar, men vi har begränsat denna fuktion til $maxrows$ rader.<br/>Var vänlig kontakta vår support om du behöver infoga fler än $maxrows$ rader."
-
-#: flash.st:flashMessageFailedToParseCSV
-msgid "_flashMessageFailedToParseCSV"
-msgstr "Misslyckad tolkning av .csv, var vänlig och kontrollera och ladda upp igen."
-
-#: flash.st:flashMessageMissingRequiredField
-msgid "_flashMessageMissingRequiredField"
-msgstr "Du har missat att fylla i ett obligatoriskt fält."
-
-#: flash.st:flashMessageInputExceedsMaxLength
-msgid "_flashMessageInputExceedsMaxLength"
-msgstr "$fieldnametitlecase$ får max innehålla $maxlength$ tecken."
-
-#: flash.st:flashMessageInputLessThanMinLength
-msgid "_flashMessageInputLessThanMinLength"
-msgstr "$fieldnametitlecase$ måste innehålla minst $minlength$ tecken."
-
-#: flash.st:flashMessageInvalidPrintableCharsInInput
-msgid "_flashMessageInvalidPrintableCharsInInput"
-msgstr "$fieldnametitlecase$ innehåller ej tillåtna tecken."
-
-#: flash.st:flashMessageInvalidUnprintableCharsInInput
-msgid "_flashMessageInvalidUnprintableCharsInInput"
-msgstr "$fieldnametitlecase$ innehåller ej tillåtna tecken."
-
-#: flash.st:flashMessageInvalidSpaceInInput
-msgid "_flashMessageInvalidSpaceInInput"
-msgstr "Blankrad är inte tillåtet i $fieldnamelowercase$."
-
-#: flash.st:flashMessageNotAValidInteger
-msgid "_flashMessageNotAValidInteger"
-msgstr "$fieldnametitlecase$ should be a number."
+#: flash.st:flashMessageNumberBelowMinimum
+msgid "_flashMessageNumberBelowMinimum"
+msgstr "$fieldnametitlecase$ must be a minimum of $min$."
 
 #: flash.st:flashMessageNumberAboveMaximum
 msgid "_flashMessageNumberAboveMaximum"
 msgstr "$fieldnametitlecase$ can be a maximum of $max$."
 
-#: flash.st:flashMessageNumberBelowMinimum
-msgid "_flashMessageNumberBelowMinimum"
-msgstr "$fieldnametitlecase$ must be a minimum of $min$."
+#: flash.st:flashMessageNotAValidInteger
+msgid "_flashMessageNotAValidInteger"
+msgstr "$fieldnametitlecase$ should be a number."
 
-#: flash.st:flashMessageInvalidFormat
-msgid "_flashMessageInvalidFormat"
-msgstr "$fieldnametitlecase$ är ej korrekt formaterad."
+#: flash.st:flashMessageNoRemainedPasswordReminderEmails
+msgid "_flashMessageNoRemainedPasswordReminderEmails"
+msgstr "You have requested a password change 10 times in a row. Please try again later."
+
+#: flash.st:flashMessageNoRemainedInvitationEmails
+msgid "_flashMessageNoRemainedInvitationEmails"
+msgstr "You have sent 10 invitations to this e-mail address. Please try again later."
+
+#: flash.st:flashMessageNoDataInCSVApartFromHeader
+msgid "_flashMessageNoDataInCSVApartFromHeader"
+msgstr "Scrive could not find any data in the file apart from column headers."
+
+#: flash.st:flashMessageNoDataInCSV
+msgid "_flashMessageNoDataInCSV"
+msgstr "Scrive could not find any data in the file."
+
+#: flash.st:flashMessageNoBulkOfferRemindsSent
+msgid "_flashMessageNoBulkOfferRemindsSent"
+msgstr "Sorry, there are no recipients left to accept."
+
+#: flash.st:flashMessageNoBulkContractRemindsSent
+msgid "_flashMessageNoBulkContractRemindsSent"
+msgstr "Sorry, there are no recipients left to sign."
+
+#: flash.st:flashMessageNoAccountType
+msgid "_flashMessageNoAccountType"
+msgstr "You must select an account type."
+
+#: flash.st:flashMessageNewActivationLinkSend
+msgid "_flashMessageNewActivationLinkSend"
+msgstr "We have resent your account invitation. Please go to your inbox and click the link in the email to activate your account."
 
 #: flash.st:flashMessageNeedsLetterAndDigit
 msgid "_flashMessageNeedsLetterAndDigit"
-msgstr "$fieldnametitlecase$ måste innehålla åtminstone två bokstäver och två nummer."
+msgstr "$fieldnametitlecase$ must contain at least two letters and two digits."
 
-#: flash.st:inviteTextFieldName
-msgid "_inviteTextFieldName"
-msgstr "invite text"
+#: flash.st:flashMessageMustAcceptTOS
+msgid "_flashMessageMustAcceptTOS"
+msgstr "To use the service, please accept Scrive Terms of Service."
 
-#: flash.st:placeFieldName
-msgid "_placeFieldName"
-msgstr "place"
+#: flash.st:flashMessageMultipleTemplateShareDone
+msgid "_flashMessageMultipleTemplateShareDone"
+msgstr "The selected templates have been shared with your organisation."
+
+#: flash.st:flashMessageMultipleAttachmentShareDone
+msgid "_flashMessageMultipleAttachmentShareDone"
+msgstr "The selected attachments have been shared with your organisation."
+
+#: flash.st:flashMessageMissingRequiredField
+msgid "_flashMessageMissingRequiredField"
+msgstr "You missed some mandatory fields."
+
+#: flash.st:flashMessageLoginPageRedirectReason
+msgid "_flashMessageLoginPageRedirectReasonWrongMailOrPassword"
+msgstr "Incorrect e-mail or password."
+
+#: flash.st:flashMessageLoginPageRedirectReason
+msgid "_flashMessageLoginPageRedirectReasonNotLoggedIn"
+msgstr "You are not logged in."
+
+#: flash.st:flashMessageLoginPageRedirectReason
+msgid "_flashMessageLoginPageRedirectReasonNotAdmin"
+msgstr "You are not authorised to see this page."
+
+#: flash.st:flashMessageInvalidUnprintableCharsInInput
+msgid "_flashMessageInvalidUnprintableCharsInInput"
+msgstr "$fieldnametitlecase$ contains invalid characters."
+
+#: flash.st:flashMessageInvalidSpaceInInput
+msgid "_flashMessageInvalidSpaceInInput"
+msgstr "Blank rows are not allowed in $fieldnamelowercase$."
+
+#: flash.st:flashMessageInvalidPrintableCharsInInput
+msgid "_flashMessageInvalidPrintableCharsInInput"
+msgstr "$fieldnametitlecase$  contains invalid characters."
+
+#: flash.st:flashMessageInvalidFormat
+msgid "_flashMessageInvalidFormat"
+msgstr "$fieldnametitlecase$ is incorrectly formated."
+
+#: flash.st:flashMessageInvalidCSV
+msgid "_flashMessageInvalidCSV"
+msgstr "An error occurred involving the data in your CSV file. Please check it, and upload again."
+
+#: flash.st:flashMessageInvalidAccountType
+msgid "_flashMessageInvalidAccountType"
+msgstr "The account type you are trying to select is not allowed."
+
+#: flash.st:flashMessageInputLessThanMinLength
+msgid "_flashMessageInputLessThanMinLength"
+msgstr "$fieldnametitlecase$ must contain at least $minlength$ characters."
+
+#: flash.st:flashMessageInputExceedsMaxLength
+msgid "_flashMessageInputExceedsMaxLength"
+msgstr "$fieldnametitlecase$ must contain at least $maxlength$ characters."
+
+#: flash.st:flashMessageFirstNameIsRequired
+msgid "_flashMessageFirstNameIsRequired"
+msgstr "First name required."
+
+#: flash.st:flashMessageFailedToParseCSV
+msgid "_flashMessageFailedToParseCSV"
+msgstr "An error occured while reading the CSV file. Please check it and upload it again."
+
+#: flash.st:flashMessageEmailIsRequired
+msgid "_flashMessageEmailIsRequired"
+msgstr "Email required."
+
+#: flash.st:flashMessageContractArchiveDone
+msgid "_flashMessageContractArchiveDone"
+msgstr "The selected documents have been deleted."
+
+#: flash.st:flashMessageChangePasswordEmailSend
+msgid "_flashMessageChangePasswordEmailSend"
+msgstr "A new password has been sent to your email address."
+
+#: flash.st:flashMessageCannotCancel
+msgid "_flashMessageCannotCancel"
+msgstr "The counterparty has already signed the document. You can no longer withdraw the invitation."
+
+#: flash.st:flashMessageCSVSent
+msgid "_flashMessageCSVSent"
+msgstr "The document has been sent to $doccount$ parties."
+
+#: flash.st:flashMessageCSVHasTooManyRows
+msgid "_flashMessageCSVHasTooManyRows"
+msgstr "We are sorry, this feature has been limited to $maxrows$ rows. <br/> Please contact our support if you need more than $maxrows$ rows."
+
+#: flash.st:flashMessageBulkOfferRemindsSent
+msgid "_flashMessageBulkOfferRemindsSent"
+msgstr "Reminders have been sent to all recipients who have not yet accepted."
+
+#: flash.st:flashMessageBulkContractRemindsSent
+msgid "_flashMessageBulkContractRemindsSent"
+msgstr "Reminders have been sent to all recipients who have not yet signed."
+
+#: flash.st:flashMessageBadOldPassword
+msgid "_flashMessageBadOldPassword"
+msgstr "Current password incorrect."
+
+#: flash.st:flashMessageAttachmentArchiveDone
+msgid "_flashMessageAttachmentArchiveDone"
+msgstr "The selected attachments have been deleted."
+
+#: flash.st:flashMessageActivationLinkNotValid
+msgid "_flashMessageActivationLinkNotValid"
+msgstr "We are sorry. This link is no longer valid.<br/> Please use \"Forgot password\" to generate a new link."
+
+#: flash.st:flashMessageAccountsDeleted
+msgid "_flashMessageAccountsDeleted"
+msgstr "The account(s) were successfully deleted."
+
+#: flash.st:flashMessageAccountRemovedFromSign
+msgid "_flashMessageAccountRemovedFromSign"
+msgstr "Your original document has been removed from Scrive"
+
+#: flash.st:flashMessageAccountActivatedFromSign
+msgid "_flashMessageAccountActivatedFromSign"
+msgstr "Your original document has been saved by Scrive."
+
+#: flash.st:flashDocumentTemplateSaved
+msgid "_flashDocumentTemplateSaved"
+msgstr "Your template has been saved."
+
+#: flash.st:flashDocumentDraftSaved
+msgid "_flashDocumentDraftSaved"
+msgstr "Your document has been saved."
+
+#: flash.st:flashAuthorSigned
+msgid "_flashAuthorSigned"
+msgstr "The document has been signed."
 
 #: flash.st:fieldValueFieldName
 msgid "_fieldValueFieldName"
-msgstr "värde på fält"
+msgstr "field value"
 
 #: flash.st:fieldNameFieldName
 msgid "_fieldNameFieldName"
-msgstr "namn på fält"
-
-#: flash.st:idFieldName
-msgid "_idFieldName"
-msgstr "id"
+msgstr "field name"
 
 #: flash.st:daysToSignFieldName
 msgid "_daysToSignFieldName"
@@ -220,174 +340,53 @@ msgstr "days to sign"
 
 #: flash.st:checkBoxFieldName
 msgid "_checkBoxFieldName"
-msgstr "check box"
-
-#: flash.st:positionFieldName
-msgid "_positionFieldName"
-msgstr "position"
+msgstr "checkbox"
 
 #: flash.st:addressFieldName
 msgid "_addressFieldName"
-msgstr "adress"
+msgstr "address"
 
-#: flash.st:companyNumberFieldName
-msgid "_companyNumberFieldName"
-msgstr "organisationsnummer"
+#~ msgid "_positionFieldName"
+#~ msgstr "position"
 
-#: flash.st:companyNameFieldName
-msgid "_companyNameFieldName"
-msgstr "företagsnamn"
+#~ msgid "_companyNumberFieldName"
+#~ msgstr "organisationsnummer"
 
-#: flash.st:secondNameFieldName
-msgid "_secondNameFieldName"
-msgstr "efternamn"
+#~ msgid "_companyNameFieldName"
+#~ msgstr "företagsnamn"
 
-#: flash.st:firstNameFieldName
-msgid "_firstNameFieldName"
-msgstr "förnamn"
+#~ msgid "_secondNameFieldName"
+#~ msgstr "efternamn"
 
-#: flash.st:nameFieldName
-msgid "_nameFieldName"
-msgstr "namn"
+#~ msgid "_firstNameFieldName"
+#~ msgstr "förnamn"
 
-#: flash.st:passwordFieldName
-msgid "_passwordFieldName"
-msgstr "lösenord"
-
-#: flash.st:emailFieldName
-msgid "_emailFieldName"
-msgstr "e-post"
-
-#: flash.st:flashMessageLoginPageRedirectReason
-msgid "_flashMessageLoginPageRedirectReasonWrongMailOrPassword"
-msgstr "Felaktig e-post eller lösenord."
-
-#: flash.st:flashMessageLoginPageRedirectReason
-msgid "_flashMessageLoginPageRedirectReasonNotAdmin"
-msgstr "Du har inte rätt behörighet att se denna sida."
-
-#: flash.st:flashMessageLoginPageRedirectReason
-msgid "_flashMessageLoginPageRedirectReasonNotLoggedIn"
-msgstr "Du är inte inloggad."
-
-#: flash.st:flashAuthorSigned
-msgid "_flashAuthorSigned"
-msgstr "Dokumentet har undertecknats."
-
-#: flash.st:flashMessageUserSignupDone
-msgid "_flashMessageUserSignupDone"
-msgstr "Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg."
-
-#: flash.st:flashMessageNewActivationLinkSend
-msgid "_flashMessageNewActivationLinkSend"
-msgstr "Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto."
-
-#: flash.st:flashMessageNoRemainedPasswordReminderEmails
-msgid "_flashMessageNoRemainedPasswordReminderEmails"
-msgstr "Du har redan begärt lösenordsbyte 10 gånger i rad. Vänligen försök igen senare."
-
-#: flash.st:flashMessageChangePasswordEmailSend
-msgid "_flashMessageChangePasswordEmailSend"
-msgstr "Ett nytt lösenord har blivit skickat till din e-post."
-
-#: flash.st:flashMessageUserAlreadyActivated
-msgid "_flashMessageUserAlreadyActivated"
-msgstr "Du har redan aktiverat detta konto."
-
-#: flash.st:flashMessageUserActivated
-msgid "_flashMessageUserActivated"
-msgstr "Välkommen till SkrivaPå!"
-
-#: flash.st:flashMessageActivationLinkNotValid
-msgid "_flashMessageActivationLinkNotValid"
-msgstr "Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd \"Glömt lösenord\" för att generera en ny länk."
-
-#: flash.st:flashMessageNoRemainedInvitationEmails
-msgid "_flashMessageNoRemainedInvitationEmails"
-msgstr "Du har redan skickat 10 inbjudningar till denna e-post. Vänligen försök senare."
-
-#: flash.st:flashMessageOtherUserSentInvitation
-msgid "_flashMessageOtherUserSentInvitation"
-msgstr "Inbjudan har redan skickats av en annan användare."
-
-#: flash.st:flashMessageViralInviteSent
-msgid "_flashMessageViralInviteSent"
-msgstr "Inbjudan har skickats!"
-
-#: flash.st:flashMessageUserWithSameEmailExists
-msgid "_flashMessageUserWithSameEmailExists"
-msgstr "En användare med samma e-post existerar redan."
-
-#: flash.st:flashMessagePasswordChangeLinkNotValid
-msgid "_flashMessagePasswordChangeLinkNotValid"
-msgstr "Vi beklagar. Länken är inte längre giltig.<br/>     Vänligen använd \"Glömt lösenord\" för att generera en ny länk."
-
-#: flash.st:flashMessageUserPasswordChanged
-msgid "_flashMessageUserPasswordChanged"
-msgstr "Ditt lösenord har ändrats."
-
-#: flash.st:flashMessagePasswordsDontMatch
-msgid "_flashMessagePasswordsDontMatch"
-msgstr "\"Nytt lösenord\" matchar inte med \"Upprepa lösenord\""
-
-#: flash.st:flashMessageBadOldPassword
-msgid "_flashMessageBadOldPassword"
-msgstr "You have entered wrong present password."
-
-#: flash.st:flashMessageUserDetailsSaved
-msgid "_flashMessageUserDetailsSaved"
-msgstr "Dina kontoändringar har sparats."
-
-#: flash.st:flashMessageMustAcceptTOS
-msgid "_flashMessageMustAcceptTOS"
-msgstr "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor."
-
-#: flash.st:flashMessageInvalidAccountType
-msgid "_flashMessageInvalidAccountType"
-msgstr "Den kontotyp du försöker att välja är inte tillåten."
-
-#: flash.st:flashMessageNoAccountType
-msgid "_flashMessageNoAccountType"
-msgstr "Du måste välja kontotyp."
-
-#: flash.st:flashMessageCannotCancel
-msgid "_flashMessageCannotCancel"
-msgstr "Motparten har redan undertecknat dokumentet. Du kan inte återkalla inbjudan. "
-
-#: flash.st:flashRemindMailSentSigned
-msgid "_flashRemindMailSentSigned"
-msgstr "Dokumentet har skickats till"
-
-#: flash.st:flashRemindMailSentNotSigned
-msgid "_flashRemindMailSentNotSigned"
-msgstr "En påminnelse har skickats till"
-
-#: flash.st:flashDocumentTemplateSaved
-msgid "_flashDocumentTemplateSaved"
-msgstr "Din mall är sparad."
-
-#: flash.st:flashDocumentDraftSaved
-msgid "_flashDocumentDraftSaved"
-msgstr "Du har sparat dokumentet. "
+#~ msgid "_emailFieldName"
+#~ msgstr "e-post"
 
 #~ msgid "_flashDocumentRestartedOffer"
 #~ msgstr "Du har startat om offerten och kan nu skicka den på nytt"
+
 #~ msgid "_flashDocumentRestartedContract"
 #~ msgstr ""
 #~ "Du har startat om dokumentet och kan nu underteckna och skicka inbjudan "
 #~ "på nytt."
+
 #~ msgid "_flashMessageCanceledOffer"
 #~ msgstr ""
 #~ "Du har nu återkallat offerten och ett meddlande om återkallelsen har "
 #~ "skickats till samtliga parter"
+
 #~ msgid "_flashMessageCanceledContract"
 #~ msgstr ""
 #~ "Du har nu återkallat inbjudan att underteckna dokumentet och ett "
 #~ "meddelande om återkallelsen har skickats till samtliga parter."
+
 #~ msgid "_IncorrectMailOrPasswordFlash"
 #~ msgstr "Felaktig e-post eller lösenord."
+
 #~ msgid "_NotAdimnFlash"
 #~ msgstr "Du har inte rätt behörighet att se denna sida."
+
 #~ msgid "_YouAreNotLoggedInFlash"
 #~ msgstr "Du är inte inloggad."
-

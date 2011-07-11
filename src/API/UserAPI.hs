@@ -71,7 +71,7 @@ userAPI =  dir "userapi" $ msum [ apiCall "sendnewdocument" sendNewDocument
 
 sendReminder :: UserAPIFunction APIResponse
 sendReminder = do
-  ctx <- askKontraContext
+  ctx <- getContext
   doc <- getUserDoc
   let siglinkstoremind = [sl | sl <- documentsignatorylinks doc
                              , isSignatory sl
@@ -79,8 +79,7 @@ sendReminder = do
   _ <- forM siglinkstoremind $ (\signlink -> do
                               mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-                                to = [MailAddress {fullname = getFullName signlink
-                                                  , email = getEmail signlink}]
+                                to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
   return $ toJSObject []
@@ -104,7 +103,7 @@ getUserDoc = do
 sendFromTemplate :: UserAPIFunction APIResponse
 sendFromTemplate = do
   author <- user <$> ask
-  ctx <- askKontraContext
+  ctx <- getContext
   temp <- getTemplate
   signatories <- getSignatories
   doc <- update $ SignableFromDocument temp
@@ -138,7 +137,7 @@ sendFromTemplate = do
         Right sdoc -> do
           liftIO $ print sdoc
 
-          lift $ lift $ postDocumentChangeAction sdoc doc Nothing
+          liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
 getTemplate :: UserAPIFunction Document
@@ -168,10 +167,10 @@ sendNewDocument = do
   let doctype = toDocumentType $ fromJust mtype
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
-  ctx <- askKontraContext
+  ctx <- getContext
   newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
   liftIO $ print newdoc
-  _ <- lift $ lift $ handleDocumentUpload (documentid newdoc) content filename
+  _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
   let saccount = getSignatoryAccount author
   edoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
@@ -199,7 +198,7 @@ sendNewDocument = do
         Right sdoc -> do
           liftIO $ print sdoc
 
-          lift $ lift $ postDocumentChangeAction sdoc doc Nothing
+          liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
 getSignatories :: UserAPIFunction [SignatoryDetails]

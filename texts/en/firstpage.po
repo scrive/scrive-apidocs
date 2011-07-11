@@ -1,0 +1,215 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: firstpage.st:firstPage
+msgid "_title"
+msgstr "Scrive | Sign and store contracts online"
+
+#: firstpage.st:firstPage
+msgid "_h3CreateAccountBody"
+msgstr "1 month full functionality free of charge. No obligations."
+
+#: firstpage.st:firstPage
+msgid "_h3CreateAccount"
+msgstr "Create account now!"
+
+#: firstpage.st:firstPage
+msgid "_h1Body"
+msgstr "Sign contracts and other documents online with Scrive. <br />                                                Our customers and our customer's customers just love the simplicity.                                                "
+
+#: firstpage.st:firstPage
+msgid "_h1"
+msgstr "Why struggle? - Sign with Scrive!"
+
+#: firstpage.st:firstPage
+msgid "_StepsH3StoreBody"
+msgstr "We save your documents<br />safely and securely."
+
+#: firstpage.st:firstPage
+msgid "_StepsH3Store"
+msgstr "Save and archive"
+
+#: firstpage.st:firstPage
+msgid "_StepsH3SignBody"
+msgstr "All parties  signs<br /> electronically."
+
+#: firstpage.st:firstPage
+msgid "_StepsH3Sign"
+msgstr "Sign (/Scrive?)"
+
+#: firstpage.st:firstPage
+msgid "_StepsH3SendBody"
+msgstr "Upload documents,<br />select recipient, send!"
+
+#: firstpage.st:firstPage
+msgid "_StepsH3Send"
+msgstr "Send"
+
+#: firstpage.st:firstPage
+msgid "_QuotesHead"
+msgstr "Customer quotes"
+
+#: firstpage.st:firstPage
+msgid "_PartnersHead"
+msgstr "Partners"
+
+#: firstpage.st:firstPage
+msgid "_DemovidHead"
+msgstr "Demonstration"
+
+#: firstpage.st:firstPage
+msgid "_DemovidBody"
+msgstr "This is a demo video of how to sign a document with our service."
+
+#: firstpage.st:firstPage
+msgid "_ButtonCreateAccount"
+msgstr "Create account!"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit8Body"
+msgstr "Show your customers that you use cutting edge technology and like new thinking."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit8"
+msgstr "Image branding"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit7Body"
+msgstr "Show that you take responsability. Skip the paper contract and reduce your effect on the environment."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit7"
+msgstr "Save the environment"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit6Body"
+msgstr "It's no fun looking for papers and hunting people to sign. Scrive eases your and your customer's administrative burden."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit6"
+msgstr "Reduce frustration"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit5Body"
+msgstr "Our secure storage guarantees the integrity of your documents. Finally, absolute control."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit5"
+msgstr "100% control"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit4Body"
+msgstr "Scrive verifies the transaction and strengthens your evidence in a conflict."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit4"
+msgstr "Stronger evidence"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit3Body"
+msgstr "Work whenever ad wherever you want. Forget to send couriers around the world."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit3"
+msgstr "Everywhere. Allways."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit2Body"
+msgstr "More rapid closures leads to more closures. We help you boost your turnover."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit2"
+msgstr "Faster closures"
+
+#: firstpage.st:firstPage
+msgid "_Bemefit1Body"
+msgstr "Document handeling is time consuming. Time is money. Scrive is a tailored tool that optimises you processes. Save 5-25£/document."
+
+#: firstpage.st:firstPage
+msgid "_Bemefit1"
+msgstr "Reduce costs"
+
+#~ msgid "_PricePlanVAT"
+#~ msgstr "* All prices are ecluding VAT"
+#~ msgid "_PricePlanLink"
+#~ msgstr "Detailed priceplan"
+#~ msgid "_PricePlanCampain"
+#~ msgstr ""
+#~ "We offer a free account with 3 signatures per month and 10 documents in "
+#~ "storage"
+#~ msgid "_PricePlan4Users"
+#~ msgstr "Unlimited number of users"
+#~ msgid "_PricePlan4Storage"
+#~ msgstr "Unlimited storage"
+#~ msgid "_PricePlan4Price"
+#~ msgstr "Offer"
+#~ msgid "_PricePlan4H3Body"
+#~ msgstr "Large volumes and/or <BR/>complex needs"
+#~ msgid "_PricePlan4H3"
+#~ msgstr "Enterprise"
+#~ msgid "_PricePlan4Functionality"
+#~ msgstr "Advanced features +"
+#~ msgid "_PricePlan4FreeSigns"
+#~ msgstr "Min 2.000 signatures/year"
+#~ msgid "_PricePlan4Archive"
+#~ msgstr "Share archive"
+#~ msgid "_PricePlan3Users"
+#~ msgstr "15 users"
+#~ msgid "_PricePlan3Storage"
+#~ msgstr "Unlimited storage"
+#~ msgid "_PricePlan3Price"
+#~ msgstr "999kr/mån"
+#~ msgid "_PricePlan3H3Body"
+#~ msgstr "Medel volym och många användningsområden"
+#~ msgid "_PricePlan3H3"
+#~ msgstr "Business"
+#~ msgid "_PricePlan3Functionality"
+#~ msgstr "Advancerade funktioner"
+#~ msgid "_PricePlan3FreeSigns"
+#~ msgstr "50 fria signaturer/mån"
+#~ msgid "_PricePlan3Archive"
+#~ msgstr "Dela arkiv"
+#~ msgid "_PricePlan2Users"
+#~ msgstr "5 användare"
+#~ msgid "_PricePlan2Storage"
+#~ msgstr "500 dok lagring"
+#~ msgid "_PricePlan2Price"
+#~ msgstr "499kr/mån"
+#~ msgid "_PricePlan2H3Body"
+#~ msgstr "Låg volym och enkla behov"
+#~ msgid "_PricePlan2H3"
+#~ msgstr "Medium"
+#~ msgid "_PricePlan2Functionality"
+#~ msgstr "Advancerade funktioner"
+#~ msgid "_PricePlan2FreeSigns"
+#~ msgstr "20 fria signaturer/mån"
+#~ msgid "_PricePlan2Archive"
+#~ msgstr "Dela arkiv"
+#~ msgid "_PricePlan1Users"
+#~ msgstr "1 användare"
+#~ msgid "_PricePlan1Storage"
+#~ msgstr "50 dok lagring"
+#~ msgid "_PricePlan1Price"
+#~ msgstr "249kr/mån"
+#~ msgid "_PricePlan1H3Body"
+#~ msgstr "För sällananvändare"
+#~ msgid "_PricePlan1H3"
+#~ msgstr "Small"
+#~ msgid "_PricePlan1Functionality"
+#~ msgstr "Basfunktioner"
+#~ msgid "_PricePlan1FreeSigns"
+#~ msgstr "10 fria signaturer/mån"
+#~ msgid "_PricePlan1Archive"
+#~ msgstr "Individuellt arkiv"
+#~ msgid "_QuoteOnVidBy"
+#~ msgstr "- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise"
+

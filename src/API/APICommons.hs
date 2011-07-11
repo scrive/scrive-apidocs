@@ -40,12 +40,13 @@ import API.API
 import Doc.DocStorage
 import Doc.DocControl
 import Control.Monad.Trans
+import Kontra
 import Misc
 import Data.Maybe
 import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
-
+import Util.HasSomeUserInfo
 
 {- -}
 
@@ -155,12 +156,12 @@ api_document_relation sl
 
 api_signatory::SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $  [
-      ("email", showJSON  $ BS.toString $ signatoryemail $ signatorydetails sl)
-    , ("fstname", showJSON  $ BS.toString $ signatoryfstname $ signatorydetails sl)
-    , ("sndname", showJSON  $ BS.toString $ signatorysndname $ signatorydetails sl)
-    , ("personalnr", showJSON $ BS.toString $ signatorypersonalnumber $ signatorydetails sl)
-    , ("company", showJSON $ BS.toString $ signatorycompany $ signatorydetails sl)
-    , ("companynr", showJSON  $ BS.toString $ signatorycompanynumber $ signatorydetails sl)
+      ("email", showJSON  $ BS.toString $ getEmail sl)
+    , ("fstname", showJSON  $ BS.toString $ getFirstName sl)
+    , ("sndname", showJSON  $ BS.toString $ getLastName sl)
+    , ("personalnr", showJSON $ BS.toString $ getPersonalNumber sl)
+    , ("company", showJSON $ BS.toString $ getCompanyName sl)
+    , ("companynr", showJSON  $ BS.toString $ getCompanyNumber sl)
     ]
     ++
     case (maybeseeninfo sl) of
@@ -185,7 +186,7 @@ api_document_tag tag = JSObject $ toJSObject $ [
 
 api_document_file::(APIContext c) => File -> APIFunction c JSValue
 api_document_file file = do
-    ctx <- askKontraContext
+    ctx <- getContext
     content <- liftIO $ getFileContents ctx file
     let base64data = BASE64.encode (BS.unpack content)
     return $ JSObject $ toJSObject $ [

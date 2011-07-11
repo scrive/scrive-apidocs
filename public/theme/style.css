@@ -1346,7 +1346,7 @@ input[type=submit].hidden
     margin-left: 55px;
 }
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
-input.multiFileInput { 
+input.multiFileInput {
     position:relative;
     z-index:10;
     cursor:pointer;
@@ -1359,6 +1359,8 @@ input.multiFileInput {
     -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
     filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
     opacity: 0;
+    /* only IE will use this, it's necessary because it ignores the maxlength att <IE7 */
+    #width:0px;
 }
 
 /* 007 code below added in 007 */

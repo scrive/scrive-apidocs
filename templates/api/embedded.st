@@ -57,6 +57,37 @@ a.btn-big .btn-symbol, a.btn-small .btn-symbol, a.btn-tiny .btn-symbol{
 
 $endif$
 
+$if(buttonstextcolor)$
+
+a.btn-small .label, a.btn-big .label, a.btn-tiny .label  {
+    color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
+}
+a.btn-small.red .label, a.btn-big.red .label, a.btn-tiny.red .label  {
+    color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
+}
+a.btn-small.green .label, a.btn-big.green .label, a.btn-tiny.green .label  {
+    color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
+}
+a.btn-small.blue .label, a.btn-big.blue .label, a.btn-tiny.blue .label  {
+    color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
+}
+a.btn-small.black .label, a.btn-big.black .label, a.btn-tiny.black .label      {
+    color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
+}
+
+a.btn-small p, a.btn-big p, a.btn-tiny p  {
+    color: $buttonstextcolor$ !important;
+    text-shadow: none !important;
+}
+
+$endif$
+
+
 $if(logo)$
 .skrivapa-logo {
     background: url("$logoLink$") no-repeat scroll 0 0 transparent;

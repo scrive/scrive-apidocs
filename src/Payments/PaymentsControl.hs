@@ -24,7 +24,7 @@ import Payments.PaymentsUtils
 handlePaymentsModelForViewView::Kontra Response
 handlePaymentsModelForViewView = onlySuperUser $
                                  do
-                                  ctx<- get
+                                  ctx<- getContext
                                   models <- query $ GetPaymentModels
                                   content <- liftIO $ adminView (ctxtemplates ctx) models
                                   renderFromBody TopEmpty kontrakcja content
@@ -33,7 +33,7 @@ handlePaymentsModelForViewView = onlySuperUser $
 handlePaymentsModelForEditView ::Kontra Response
 handlePaymentsModelForEditView =  onlySuperUser $
                                   do
-                                   ctx<- get
+                                   ctx<- getContext
                                    models <- query $ GetPaymentModels
                                    content <- liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
                                    renderFromBody TopEmpty kontrakcja content
@@ -43,7 +43,7 @@ handlePaymentsModelForEditView =  onlySuperUser $
  -}
 handleAccountModelsChange::Kontra KontraLink
 handleAccountModelsChange= do
-                            ctx<- get
+                            ctx<- getContext
                             if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
                              then do
                                   mapM_ getAndApplyAccountModelChange (allValues::[PaymentAccountType])

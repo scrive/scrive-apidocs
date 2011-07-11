@@ -30,10 +30,8 @@ msgstr "Postort"
 msgid "_address"
 msgstr "Adress"
 
-#: userpages/accountpage.st:showUser
-msgid "_SaveChanges"
-msgstr "Spara ändringar"
-
+#~ msgid "_SaveChanges"
+#~ msgstr "Spara ändringar"
 #~ msgid "_shareing"
 #~ msgstr "Delning"
 #~ msgid "_HeadSubaccounts"

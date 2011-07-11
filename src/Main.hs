@@ -25,6 +25,7 @@ import qualified AppLogger as Log
 import AppState (AppState)
 import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
 import System.IO
 import Control.Concurrent.MVar
@@ -232,7 +233,7 @@ defaultConf progName
                     aesKey = BS.pack "}>\230\206>_\222\STX\218\SI\159i\DC1H\DC3Q\ENQK\r\169\183\133bu\211\NUL\251s|\207\245J"
                   , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
                   }
-              , admins             = ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+              , admins             = map (Email . BSU.fromString) ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]

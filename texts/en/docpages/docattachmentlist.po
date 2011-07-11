@@ -24,7 +24,7 @@ msgstr "New attachments"
 
 #: docpages/docattachmentlist.st:pageAttachmentList
 msgid "_pageAttachmentListIfShared"
-msgstr "Dhared"
+msgstr "Shared"
 
 #~ msgid "_pageAttachmentListSortTemplate"
 #~ msgstr "Mall"

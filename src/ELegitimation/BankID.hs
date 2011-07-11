@@ -46,7 +46,8 @@ import Util.SignatoryLinkUtils
  -}
 handleSignBankID :: String -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignBankID provider docid signid magic = do
-    Context { ctxtime = MinutesTime time seconds, ctxtemplates } <- get
+    Context { ctxtime, ctxtemplates } <- getContext
+    let seconds = toSeconds ctxtime 
 
     -- sanity check
     document <- queryOrFail $ GetDocumentByDocumentID docid
@@ -82,7 +83,7 @@ handleSignBankID provider docid signid magic = do
                 Right txt -> do
                     -- store in session
                     addELegTransaction ELegTransaction
-                                            { transactionservertime = MinutesTime time seconds
+                                            { transactionservertime = ctxtime
                                             , transactiontransactionid = transactionid
                                             , transactiontbs = tbs
                                             , transactionencodedtbs = txt
@@ -93,12 +94,12 @@ handleSignBankID provider docid signid magic = do
                                             }
                     Log.debug $ "encoding successful: " ++
                         toJSON [("status", JInt 0)
-                            ,("servertime", JString $ show $ 60 * time + seconds)
+                            ,("servertime", JString $ show seconds)
                             ,("nonce", JString nonce)
                             ,("tbs", JString txt)
                             ,("transactionid", JString transactionid)]
                     return $ toResponse $ toJSON [("status", JInt 0)
-                                                 ,("servertime", JString $ show $ 60 * time + seconds)
+                                                 ,("servertime", JString $ show seconds)
                                                  ,("nonce", JString nonce)
                                                  ,("tbs", JString txt)
                                                  ,("transactionid", JString transactionid)]
@@ -119,7 +120,7 @@ handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
             , ctxipnumber
-            , ctxtemplates } <- get
+            , ctxtemplates } <- getContext
     liftIO $ print "eleg sign post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
@@ -243,10 +244,11 @@ handleSignPostBankID docid signid magic = do
 -}
 handleIssueBankID :: String -> DocumentID -> Kontra (Either KontraLink Response)
 handleIssueBankID provider docid = withUserGet $ do
-    ctx@Context { ctxtime = MinutesTime time seconds
-                , ctxmaybeuser = Just author
-                , ctxtemplates
-                } <- get
+    Context { ctxtime
+            , ctxmaybeuser = Just author
+            , ctxtemplates
+            } <- getContext
+    let seconds = toSeconds ctxtime
 
     document <- queryOrFail $ GetDocumentByDocumentID docid
 
@@ -276,7 +278,7 @@ handleIssueBankID provider docid = withUserGet $ do
                 Right txt -> do
                     -- store in session
                     addELegTransaction ELegTransaction
-                                        { transactionservertime      = ctxtime ctx
+                                        { transactionservertime      = ctxtime
                                         , transactiontransactionid   = transactionid
                                         , transactiontbs             = tbs
                                         , transactionencodedtbs      = txt
@@ -286,7 +288,7 @@ handleIssueBankID provider docid = withUserGet $ do
                                         , transactionnonce           = nonce
                                         }
                     return $ toResponse $ toJSON [("status", JInt 0)
-                                                 ,("servertime", JString $ show $ 60 * time + seconds)
+                                                 ,("servertime", JString $ show seconds)
                                                  ,("nonce", JString nonce)
                                                  ,("tbs", JString txt)
                                                  ,("transactionid", JString transactionid)]
@@ -313,7 +315,7 @@ handleIssuePostBankID docid = withUserPost $ do
     ctx@Context { ctxmaybeuser = Just author
                 , ctxelegtransactions
                 , ctxtime
-                , ctxipnumber } <- get
+                , ctxipnumber } <- getContext
 
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
@@ -431,7 +433,7 @@ handleIssuePostBankID docid = withUserPost $ do
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
-    ctx <- get
+    ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
     let mcancelationreason = documentcancelationreason document

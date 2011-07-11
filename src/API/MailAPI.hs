@@ -26,6 +26,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
+import MinutesTime
 import API.API
 import API.APICommons
 
@@ -69,7 +70,7 @@ mailAPI = do
     apiResponse $ do
               mcontext <- apiContext
               case mcontext  of
-                  Right apicontext -> fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT handleMailCommand apicontext
+                  Right apicontext -> (either (uncurry apiError) id) <$> runApiFunction handleMailCommand apicontext
                   Left emsg -> return $ uncurry apiError emsg
 
 maybeFail :: (Monad m) => String -> Maybe a -> m a
@@ -78,10 +79,10 @@ maybeFail msg = maybe (fail msg) return
 {-
 
 { "title": "Title of the document",
-  "persons": [
-           { "firstName": "Gracjan",
-             "lastName": "Polak",
-             "personNumber": "1412341234"
+  "involved": [
+           { "fstname": "Gracjan",
+             "sndname": "Polak",
+             "personalnumber": "1412341234",
              "email": "gracjan@skrivapa.se"
            }]
 }
@@ -124,10 +125,9 @@ parseEmailMessage content = runErrorT $ do
   json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
   return (json,pdfBinary,from,to)
 
-
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
 -- handleMailCommand (JSObject json) content from to = runErrorT $ do
-handleMailCommand :: MailAPIFunction (JSObject JSValue)
+handleMailCommand :: APIFunction MailAPIContext (JSObject JSValue)
 handleMailCommand = do
     MailAPIContext { ifrom = from, ito = to, icontent = content } <- ask
     let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
@@ -136,9 +136,13 @@ handleMailCommand = do
     -- extension and can be used as for example password
     let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
 
-    Context { ctxtime, ctxipnumber } <- askKontraContext
+    Context { ctxtime, ctxipnumber } <- getContext
     (maybeUser :: Maybe User) <- liftIO $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-    (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
+    (user :: User) <- maybeFail ("User '" ++ username ++ "' not found") maybeUser
+
+    when (isNothing $ usermailapi user) $
+        fail $ "User '" ++ username ++ "' hasn't enabled mail api"
+    let Just mailapi = usermailapi user
 
     title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
 
@@ -146,8 +150,8 @@ handleMailCommand = do
 
     case apikey of
         "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
-        "998877665544332211" -> return ()
-        z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
+        k | (show $ umapiKey mailapi) == k -> return ()
+        k -> fail $ "Apikey '" ++ k ++ "' invalid for account '" ++ username ++ "'"
 
     let toStr = BS.toString to
     mdoctype <- apiAskString "doctype"
@@ -164,15 +168,32 @@ handleMailCommand = do
              , (True,                         Signable Contract)
              ]
 
+    today <- asInt <$> liftIO getMinutesTime
+    if today == umapiLastSentDate mailapi
+       then do
+           when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
+               fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
+           let senttoday = umapiSentToday mailapi + 1
+           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
+               umapiSentToday = senttoday
+           }
+           return ()
+       else do
+           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
+                 umapiLastSentDate = today
+               , umapiSentToday = 1
+           }
+           return ()
+
     (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
     let userDetails = signatoryDetailsFromUser user
 
-    (doc :: Document) <- lift $ update $ NewDocument user title doctype ctxtime
-    (_ :: ()) <- lift $ lift $ DocControl.handleDocumentUpload (documentid doc) content title
-    (_ :: Either String Document) <- lift $ update $ UpdateDocument ctxtime (documentid doc) title
+    (doc :: Document) <- liftIO $ update $ NewDocument user title doctype ctxtime
+    (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
+    (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
                                     (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user)
                                     [EmailIdentification] Nothing AdvancedFunctionality
@@ -183,8 +204,8 @@ handleMailCommand = do
                                      Left errmsg -> return (error errmsg)
                                      Right document -> return document
 
-    (_ :: ()) <- lift $ lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
-    (_ :: ()) <- lift $ lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
+    (_ :: ()) <- liftKontra $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
+    (_ :: ()) <- liftKontra $ DocControl.postDocumentChangeAction newdocument doc Nothing
     let docid = documentid doc
     let (rjson :: JSObject JSValue) = toJSObject [ ("status", JSString (toJSString "success"))
                                                  , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))

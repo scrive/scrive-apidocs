@@ -9,6 +9,7 @@ viewSubaccounts =
           <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
           <li class="active"><a href="/account/subaccount" class="listtype">$_Subaccounts()$</a></li>
           <li><a href="/account/sharing">$_sharing()$</a></li>
+          <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content">

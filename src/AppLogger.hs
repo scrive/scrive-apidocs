@@ -15,13 +15,20 @@ import Control.Exception.Extensible (bracket)
 import Control.Monad.Trans
 import Prelude hiding (error)
 import System.Directory
-import System.IO (stdout, Handle, hSetEncoding, utf8)
+import System.IO (stdout, Handle, hSetEncoding, utf8, IOMode(..), hClose)
 import System.Log.Formatter
 import System.Log.Handler (close, setFormatter)
-import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler(..))
+import System.Log.Handler.Simple (streamHandler, GenericHandler(..))
 import System.Log.Logger (Priority(..), rootLoggerName, setLevel, setHandlers, updateGlobalLogger, noticeM)
 import qualified Control.Concurrent as C
 import qualified Control.Exception as C
+import OpenFileShared
+
+fileHandler' :: FilePath -> Priority -> IO (GenericHandler Handle)
+fileHandler' fp pri = do
+                     h <- openFileShared fp AppendMode
+                     sh <- streamHandler h pri
+                     return (sh{closeFunc = hClose})
 
 -- | Opaque type covering all information needed to teardown the logger.
 data LoggerHandle = LoggerHandle [GenericHandler Handle]
@@ -34,15 +41,16 @@ setupLogger = do
     createDirectoryIfMissing False "log" `catch` (\_ -> return ())
 
     let fmt = tfLogFormatter "%F %T" "$time $msg"
+        
+    appLog <- fileHandler' "log/app.log" INFO
+    accessLog <- fileHandler' "log/access.log" INFO
+    mailLog <- fileHandler' "log/mail.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    debugLog <- fileHandler' "log/debug.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    errorLog <- fileHandler' "log/error.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    amazonLog <- fileHandler' "log/amazon.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    trustWeaverLog <- fileHandler' "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    securityLog <- fileHandler' "log/security.log" INFO >>= \lh -> return $ setFormatter lh fmt
 
-    appLog <- fileHandler "log/app.log" INFO
-    accessLog <- fileHandler "log/access.log" INFO
-    mailLog <- fileHandler "log/mail.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    debugLog <- fileHandler "log/debug.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    errorLog <- fileHandler "log/error.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    amazonLog <- fileHandler "log/amazon.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    trustWeaverLog <- fileHandler "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    securityLog <- fileHandler "log/security.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
 
     let allLoggers = [ appLog
@@ -145,10 +153,10 @@ server :: (MonadIO m) => String -> m ()
 server msg = liftIO $ noticeM "Happstack.Server" msg
 
 
+-- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
   liftIO $ do
     _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
     return ()
-
 

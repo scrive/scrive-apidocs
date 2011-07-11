@@ -4,6 +4,13 @@ if (!window.console) {
     };
 }
 
+//ie doesn't support trim naturally!
+if(typeof String.prototype.trim !== 'function') {
+  String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, ''); 
+  }
+}
+
 function safeReady(f) {
     $(function() {
         try {
@@ -46,7 +53,7 @@ function enableInfoTextOnce(where) {
             input.addClass("grayed");
             input.val(input.attr("infotext"));
         }
-    };
+    }
 
     inputs.live("focus", function() {
         var input = $(this);
@@ -103,7 +110,7 @@ function stayontop(menu) {
 
     if (menu.size() > 0) {
         var pos = menu.offset();
-        var signStepsWrapper = $("#signStepsWrapper");
+        //var signStepsWrapper = $("#signStepsWrapper");
         var documentBox = $("#documentBox");
         $(window).scroll(function() {
             if ($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')) {
@@ -387,21 +394,21 @@ function escapeHTML(s) {
 
 function allparties() {
     var sigs = $("form .persondetails").filter(":not(.authordetails)");
-    var allparties = new Array();
+    var allpartiesret = new Array();
     sigs.each(function(index) {
         if ($("input:radio:first:checked", this).length > 0) {
 
             var fstnameelem = $("input[name='signatoryfstname']", this);
             if (isMultiPartElem(fstnameelem)) {
-                allparties.push(csvrowcount + " Parter");
+                allpartiesret.push(csvrowcount + " Parter");
             } else {
                 var fstname = fstnameelem.val();
                 var sndname = $("input[name='signatorysndname']", this).val();
-                allparties.push(escapeHTML(fstname + " " + sndname));
+                allpartiesret.push(escapeHTML(fstname + " " + sndname));
             }
         }
     });
-    return allparties;
+    return allpartiesret;
 }
 
 safeReady(function() {
@@ -640,7 +647,7 @@ safeReady(function() {
         // everything else. Is it necessary?
         // -EN
         $('textarea', $(this)).each(function() {
-            inputs = inputs.add($("<input name='" + $(this).attr('name') + "' value='" + $(this).val() + "'>"))
+            inputs = inputs.add($("<input name='" + $(this).attr('name') + "' value='" + $(this).val() + "'>"));
         });
         inputs.css("display", "none");
         newform.append(inputs);
@@ -677,7 +684,7 @@ safeReady(function() {
             if (!guardChecked) {
                 $("#signGuardField").css("border", "1px dotted red");
                 $(".signGuard").change(function() {
-                    $("#signGuardField").css("border", "")
+                    $("#signGuardField").css("border", "");
                 });
                 addFlashMessage(signguardwarntext, "red");
                 return false;
@@ -709,7 +716,7 @@ safeReady(function() {
             if (!guardChecked) {
                 $(".signGuard").parent().css("border", "1px dotted red");
                 $(".signGuard").change(function() {
-                    $(this).parent().css("border", "")
+                    $(this).parent().css("border", "");
                 });
                 //addFlashMessage("need text");
                 return false;
@@ -745,7 +752,7 @@ safeReady(function() {
 
 safeReady(function() {
     $(".validateEmail").click(function() {
-        return (emailFieldsValidation($(":email", $(this).parents("form"))))
+        return (emailFieldsValidation($(":email", $(this).parents("form"))));
     });
 });
 
@@ -909,7 +916,7 @@ function showProperSignButtons() {
 function emailFieldsValidation(fields) {
     fields.removeClass("noflash");
     fields = fields.filter(function() {
-        return ! isExceptionalField($(this))
+        return ! isExceptionalField($(this));
     });
     if (fields.length > 0) {
         var inputs = fields.validator({
@@ -1041,7 +1048,7 @@ safeReady(function() {
 
 function prepareForEdit(form) {
     $(".editable", form).each(function() {
-        var textarea = $("<textarea style='width:470px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>")
+        var textarea = $("<textarea style='width:470px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
         var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
         wrapper.append(textarea);
         $(this).replaceWith(wrapper);
@@ -1144,10 +1151,11 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
 function swedishList(list) {
     var res = strong(list[0]);
     for (i = 1; i < list.length; i++) {
-        if (i == list.length - 1)
-            res += " och " + strong(list[i])
-        else
-            res += ", " + strong(list[i])
+        if (i == list.length - 1) {
+            res += " och " + strong(list[i]);
+        } else {
+            res += ", " + strong(list[i]);
+        }
     }
     return res;
 }
@@ -1504,7 +1512,7 @@ safeReady(function() {
             url: myurl,
             success: function(data) {
                 var content = $(data);
-                var errormsg = content.find(".errormsg")
+                var errormsg = content.find(".errormsg");
                 if (errormsg.length > 0) {
                     var errdialog = $("<div title='" + localization.problemWithPDF + "'>" + errormsg.text() + "</div>");
                     errdialog.dialog({

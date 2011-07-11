@@ -1,7 +1,7 @@
 ###
 pageLogin= 
     <div class="centerdivnarrow">
-      <p class="headline">Logga in</p> 
+      <p class="headline">$_login()$</p>
       $loginBox()$
     </div>
 
@@ -88,8 +88,8 @@ standardBodyWrapper=
                                         $if(showCreateAccount)$    
                                         <div class="try-skrivapa">
                                           <div class="left">
-                                            <h3>Skapa konto nu!</h3>
-                                            <p>14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
+                                            <h3>$_standardBodyWrapperHead()$</h3>
+                                            <p>$_standardBodyWrapperBody()$</p>
                                           </div>
                                           <div class="right">
                                             <form method="post" action="$linksignup$" class="requestAccount">
@@ -98,7 +98,7 @@ standardBodyWrapper=
                                                      infotext="Fyll i din e-postadress"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
-                                                                           float-right"><p>Skapa konto!</p></a>
+                                                                           float-right"><p>$_createaccount()$!</p></a>
                                               <input type="submit" class="hidden" />
                                             </form>
                                           </div>
@@ -112,12 +112,11 @@ standardBodyWrapper=
 ####
 queryColumn=
 <div class="white thin box">
-                                                <h4>Avtala redan idag!</h4>
+                                                <h4>$_queryColumnHead()$</h4>
 <br />
-<p>SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. 
-Våra kunder och våra kunders kunder älskar enkelheten.</p>
+<p>$_queryColumnBody1()$</p>
 <br />
-<p>Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga förpliktelser.</p>
+<p>$_queryColumnBody2()$</p>
                                                 <br />
                                                 <form method="post"
                                                 action="$linksignup$" class="requestAccount">
@@ -126,17 +125,17 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                                                         infotext="E-post"
                                                         /><br /><br />
 
-                                                        <a class="submit new-btn-small green2 center"><p>Skapa konto</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
                                         <br />
                                         <div class="white thin box">
-                                                <h4>Frågor? Kontakta oss!</h4>
+                                                <h4>$_queryColumnQuestions()$</h4>
                                                 <br />
 
-                                                <p>Telefon: 010-195 99 15</p>
-                                                <p>E-post: info@skrivapa.se</p>
+                                                <p>$_queryColumnPhone()$</p>
+                                                <p>$_queryColumnEmail()$</p>
                                                 
                                                 <br />
                                                 <form method="post"
@@ -145,7 +144,7 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                                                         <input type="email" name="email" infotext="E-post" /><br />
                                                         <input type="tel" name="phone" infotext="Telefonnummer" /><br />
                                                         <textarea name="message" infotext="Meddelande" style="height:42px;"></textarea>
-                                                        <a class="submit new-btn-small green2 center"><p>Skicka!</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>$_send()$!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
 
@@ -157,59 +156,53 @@ pageFooter=
   <div class="spacer"></div>
   <div class="content">
     <div class="col left">
-      <strong>TJÄNSTEN</strong>
+      <strong>$_pageFooterTheService()$</strong>
       <ul>
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
-        <li><a href="/priser">Priser</a></li>
+        <li><a href="/priser">$_pageFooterPrices()$</a></li>
       </ul>
       <br />
-      <strong>TRYGGHET OCH VILLKOR</strong>
+      <strong>$_pageFooterTerms()$</strong>
       <ul>
-        <li><a href="/sakerhet">Säkerhet</a></li>
-        <li><a href="/juridik">Juridik</a></li>
-        <li><a href="/sekretesspolicy">Sekretesspolicy</a></li>
-        <li><a href="/allmana-villkor">Allmäna Villkor</a></li>
+        <li><a href="/sakerhet">$_pageFooterSecurity()$</a></li>
+        <li><a href="/juridik">$_pageFooterLaw()$</a></li>
+        <li><a href="/sekretesspolicy">$_pageFooterPrivacy()$</a></li>
+        <li><a href="/allmana-villkor">$_pageFooterTOS()$</a></li>
       </ul>
       <br />
-      <strong>SKRIVAPÅ</strong>
+      <strong>$_pageFooterSkrivapa()$</strong>
       <ul>
-        <li><a href="/">Hem</a></li>
-        <li><a href="/om-skrivapa">Om SkrivaPå</a></li>
-        <li><a href="http://support.skrivapa.se">Support &amp; Feedback</a></li>
-        <li><a href="/partners">Partners</a></li>
-        <li><a href="/kunder">Kunder</a></li>
+        <li><a href="/">$_pageFooterHome()$</a></li>
+        <li><a href="/om-skrivapa">$_pageFooterAbout()$</a></li>
+        <li><a href="http://support.skrivapa.se">$_pageFooterSupportFeedback()$</a></li>
+        <li><a href="/partners">$_pageFooterPartners()$</a></li>
+        <li><a href="/kunder">$_pageFooterCustomers()$</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
       </ul>
     </div>
     $if(publicsafe)$
     <div class="col centre">        
-      <strong>SKRIVAPÅ PÅ TWITTER</strong>
+      <strong>$_pageFooterTwitter()$</strong>
       <div class="tweet">
         
       </div>
     </div>
     $endif$
     <div class="col right">
-      <strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>
+      $_pageFooterContact1()$
       <ul>
         <li>
-          <strong>Telefon</strong>
-          010-195 99 15
+          $_pageFooterContact2()$
         </li>
         <li>
-          <strong>Kontorstider</strong>
-          måndag-fredag 09-17
+          $_pageFooterContact3()$
         </li>
         <li>
-          <strong>Maila SkrivaPå</strong>
-          <a href="mailto:info@skrivapa.se">info@skrivapa.se</a>
+          $_pageFooterContact4()$
         </li>
         <li>
-          <strong>Adress</strong>
-          SkrivaPå CM AB<br />
-          Saltmätargatan 19<br />
-          113 59 Stockholm
+          $_pageFooterContact5()$
         </li>
       </ul>
     </div>
@@ -254,16 +247,16 @@ loginBox=
         <input type="hidden" name="referer" value="$referer$" />
         <table>
 	  <tr>
-            <td>E-post:</td> 
+            <td>$_email()$:</td>
             <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" /></td> 
           </tr>
 	  <tr> 
-            <td>Lösenord:</td> 
+            <td>$_password()$:</td>
             <td><input type="password" name="password" autocomplete="off" /></td> 
           </tr>
 	  <tr> 
             <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
-            <td><a href="/amnesia"> Glömt lösenord</a></td>
+            <td><a href="/amnesia"> $_forgotpassword()$</a></td>
 	  </tr>
         </table>
       </form>
@@ -282,7 +275,7 @@ header=
                                        <input type="email" class="float-left" autocomplete="off" name="invitedemail" infotext=" Bjud en vän på 1 månad fri användning. Skriv deras e-post här!"/>
                                        <a class="btn-tiny green float-right submit" href="#">
                                             <div class="left"></div>
-                                            <div class="label"><p>Bjud in</p></div>
+                                            <div class="label"><p>$_headerInvite()$</p></div>
                                             <div class="right"></div> 
                                        </a>
                                        <input type="submit" class="hidden" name="invite" value="Skicka" />
@@ -291,13 +284,13 @@ header=
                                  </form>
                                 </span>
                                  
-     <a href="$linklogout$" class="document-button">Logga ut</a>
-     <a href="$linkaccount$" class="document-button">Konto</a>
-     <a href="$linkissue$" class="document-button">Arkiv</a>
-     <a href="$linkmain$" class="document-button">Skicka</a>
+     <a href="$linklogout$" class="document-button">$_headerLogOut()$</a>
+     <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
+     <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
+     <a href="$linkmain$" class="document-button">$_headerSend()$</a>
 
                                 $else$
-                                <a href="#" class="login-button"><p>Logga in</p></a>
+                                <a href="#" class="login-button"><p>$_login()$</p></a>
                                 $endif$
                             </div>
                            

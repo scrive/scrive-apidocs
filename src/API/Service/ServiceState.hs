@@ -99,15 +99,50 @@ data ServiceSettings = ServiceSettings  {
           , servicemailfromaddress :: Maybe BS.ByteString
     }  deriving (Eq, Ord, Typeable, Show)
 
+data ServiceUI1 = ServiceUI1 {
+            servicemailfooter1 :: Maybe BS.ByteString
+          , servicebuttons1 :: Maybe (BS.ByteString,BS.ByteString) -- Two sprite files
+          , servicebackground1 :: Maybe BS.ByteString
+          , serviceoverlaybackground1 :: Maybe BS.ByteString
+          , servicebarsbackground1 :: Maybe BS.ByteString
+          , servicelogo1 :: Maybe BS.ByteString -- File with the logo
+
+    }  deriving (Eq, Ord, Typeable, Show)
+
 data ServiceUI = ServiceUI {
             servicemailfooter :: Maybe BS.ByteString
           , servicebuttons :: Maybe (BS.ByteString,BS.ByteString) -- Two sprite files
+          , servicebuttonstextcolor :: Maybe BS.ByteString
           , servicebackground :: Maybe BS.ByteString
           , serviceoverlaybackground :: Maybe BS.ByteString
           , servicebarsbackground :: Maybe BS.ByteString
           , servicelogo :: Maybe BS.ByteString -- File with the logo
 
     }  deriving (Eq, Ord, Typeable, Show)
+
+
+instance Migrate () ServiceUI1  where
+    migrate _ =  error "No migration avaible"
+    
+instance Migrate ServiceUI1 ServiceUI where
+    migrate  (ServiceUI1 {
+            servicemailfooter1
+          , servicebuttons1
+          , servicebackground1
+          , serviceoverlaybackground1
+          , servicebarsbackground1 
+          , servicelogo1
+
+    }) = ServiceUI {
+            servicemailfooter = servicemailfooter1
+          , servicebuttons = servicebuttons1
+          , servicebuttonstextcolor = Nothing
+          , servicebackground = servicebackground1
+          , serviceoverlaybackground = serviceoverlaybackground1
+          , servicebarsbackground =  servicebarsbackground1 
+          , servicelogo = servicelogo1
+
+    }
 
 
 instance Migrate Service2 Service where
@@ -125,6 +160,7 @@ instance Migrate Service2 Service where
             , serviceui = ServiceUI {
                     servicemailfooter  = Nothing
                   , servicebuttons  = Nothing
+                  , servicebuttonstextcolor = Nothing
                   , servicebackground  = Nothing
                   , serviceoverlaybackground  = Nothing
                   , servicebarsbackground = Nothing
@@ -152,8 +188,10 @@ instance Typeable Service where typeOf _ = mkTypeOf "Service"
 
 instance Version ServiceLocation
 instance Version ServiceSettings
-instance Version ServiceUI
 
+instance Version ServiceUI1 
+instance Version ServiceUI where
+    mode = extension 1 (Proxy :: Proxy ServiceUI1)
 
 instance Version Service1  where
     mode = extension 1 (Proxy :: Proxy ())
@@ -228,6 +266,7 @@ createService sid passwd admin = do
                     , serviceui = ServiceUI {
                           servicemailfooter  = Nothing
                         , servicebuttons  = Nothing
+                        , servicebuttonstextcolor = Nothing
                         , servicebackground  = Nothing
                         , serviceoverlaybackground  = Nothing
                         , servicebarsbackground = Nothing
@@ -267,6 +306,7 @@ $(deriveSerializeFor [
               , ''Service1
               , ''Service2
               , ''ServiceSettings
+              , ''ServiceUI1
               , ''ServiceUI
               ])
 

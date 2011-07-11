@@ -39,6 +39,7 @@ module Doc.DocState
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTags(..)
+    , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
     , SetDocumentTrustWeaverReference(..)
     , ShareDocuments(..)
@@ -103,6 +104,7 @@ import User.UserState
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
+import Util.HasSomeUserInfo
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = queryDocs $ \documents ->
@@ -239,8 +241,8 @@ blankDocument =
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
           , documentfunctionality        = BasicFunctionality
-          , documentctime                = MinutesTime 0 0
-          , documentmtime                = MinutesTime 0 0
+          , documentctime                = fromSeconds 0 
+          , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
           , documentlog                  = []
@@ -254,6 +256,7 @@ blankDocument =
           , documentsharing              = Private
           , documentrejectioninfo        = Nothing
           , documenttags                 = []
+          , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing
@@ -701,7 +704,7 @@ getDocumentStats = queryDocs $ \documents ->
 
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = queryDocs $ \documents ->
-  maximum $ (MinutesTime 0 0) : (map documentmtime $ toList (documents @= fileid))
+  maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
 
 saveDocumentForSignedUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
@@ -759,6 +762,14 @@ setDocumentTags docid doctags =
     doc {
       documenttags = doctags
     }
+
+setDocumentUI :: DocumentID -> DocumentUI  -> Update Documents (Either String Document)
+setDocumentUI  docid docui =
+  modifySignableOrTemplate docid $ \doc -> Right $
+    doc {
+      documentui = docui
+    }
+
 
 getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag] -> Query Documents ([Document])
 getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents ->
@@ -871,7 +882,7 @@ deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignator
       doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
     _ -> doc
   where
-    quarantineExpiry = addMonths 3 now
+    quarantineExpiry = 3 `monthsAfter` now
     isInPreparation = documentstatus==Preparation
     isLive = documentrecordstatus == LiveDocument
     isQuarantined = documentrecordstatus == QuarantinedDocument
@@ -899,7 +910,7 @@ endQuarantineForDocument documentid = do
 extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
 extendDocumentQuarantine docid = do
   modifySignableOrTemplate docid $ \doc ->
-    return $ doc { documentquarantineexpiry = fmap (addMonths 1) (documentquarantineexpiry doc) }
+    return $ doc { documentquarantineexpiry = fmap (monthsAfter 1) (documentquarantineexpiry doc) }
 
 reviveQuarantinedDocument :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
 reviveQuarantinedDocument docid siglinkid = do
@@ -1134,12 +1145,12 @@ replaceSignatoryUser :: SignatoryLink
 replaceSignatoryUser siglink user =
   let newsl = replaceSignatoryData
                        siglink
-                       (userfstname         $ userinfo user)
-                       (usersndname         $ userinfo user)
-                       (unEmail $ useremail $ userinfo user)
-                       (usercompanyname     $ userinfo user)
-                       (userpersonalnumber  $ userinfo user)
-                       (usercompanynumber   $ userinfo user)
+                       (getFirstName      user)
+                       (getLastName       user)
+                       (getEmail          user)
+                       (getCompanyName    user)
+                       (getPersonalNumber user)
+                       (getCompanyNumber  user)
                        [] in
   copySignatoryAccount user newsl
 
@@ -1199,9 +1210,7 @@ migrateForDeletion users = do
                                         case find (isSignatoryForUser sl) users of
                                             Just user -> copySignatoryAccount user sl
                                             Nothing -> sl }
-    isSignatoryForUser sl u = isSavedforUser sl u || isSignedByUser sl u
-    isSavedforUser sl u = maybesignatory sl == Just (userid u)
-    isSignedByUser sl u = signatoryemail (signatorydetails sl) == (unEmail $ useremail $ userinfo u ) && isJust (maybesigninfo sl)
+    isSignatoryForUser sl u = isSigLinkFor (userid u) sl || (isSigLinkFor (getEmail u) sl && hasSigned sl)
 
 unquarantineAll :: Update Documents ([Either String Document])
 unquarantineAll = do
@@ -1347,6 +1356,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'setDocumentTags
+                        , 'setDocumentUI
                         , 'getDocumentsByCompanyAndTags
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments

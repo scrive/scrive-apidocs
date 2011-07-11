@@ -12,7 +12,7 @@ msgstr ""
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_yourSigningPluginFailed"
-msgstr "You sign plug-in failed to sign the document. Please contact your e-legitimation provider."
+msgstr "You sign plug-in failed to sign the document. Please contact your e-ID provider."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_youMustSetParnerEmail"
@@ -20,7 +20,7 @@ msgstr "You must enter an e-mail address to your counterparty."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_youCanNotInviteSameEmail"
-msgstr "You cannot invite subaccounts that does not have the same URL as you have in your e-mail address."
+msgstr "You cannot invite subaccounts that do not have the same URL as you have in your e-mail address."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_verifyingSignature"
@@ -72,11 +72,11 @@ msgstr "Non-siging party"
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_noTeliaInstalled"
-msgstr "You do not have Telia e-legitimation installed on your computer."
+msgstr "You do not have Telia e-ID installed on your computer."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_noNordeaInstalled"
-msgstr "You do not have Nordea e-legitimation installed on your computer. You can download Nordea e-legitimation from Nordea online bank."
+msgstr "You do not have Nordea e-ID installed on your computer. You can download Nordea e-legitimation from Nordea online bank."
 
 #: javascript-langs.st:javascriptLocalisation
 msgid "_noBankIdInstalled"

@@ -23,20 +23,22 @@ import User.UserState
 import Happstack.State (query)
 import Data.Functor
 import KontraLink
+import qualified Data.ByteString.UTF8 as BS
 
 serviceAdminPage :: KontrakcjaTemplates -> Bool -> Service -> IO String
 serviceAdminPage templates superuser service =
     renderTemplate templates "serviceAdminPage" $ do
        field "name" $ show $ serviceid service
        field "nameforurl" $ encodeForURL $ serviceid service
-       field "mailfooter"  $ servicemailfooter $ serviceui service
-       field "mailfromaddress"  $ servicemailfromaddress $ servicesettings service
+       field "mailfooter"  $ BS.toString <$> (servicemailfooter $ serviceui service)
+       field "mailfromaddress"  $ BS.toString <$> (servicemailfromaddress $ servicesettings service)
        field "buttons" $ isJust $ servicebuttons $ serviceui service
        field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
        field "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
-       field "background"  $ servicebackground $ serviceui service
-       field "overlaybackground"  $ serviceoverlaybackground $ serviceui service
-       field "barsbackground"  $ servicebarsbackground $ serviceui service
+       field "buttonstextcolor"  $ BS.toString <$> (servicebuttonstextcolor $ serviceui service)
+       field "background"  $ BS.toString <$> (servicebackground $ serviceui service)
+       field "overlaybackground"  $ BS.toString <$> (serviceoverlaybackground $ serviceui service)
+       field "barsbackground"  $ BS.toString <$> (servicebarsbackground $ serviceui service)
        field "logo" $ isJust $ servicelogo $ serviceui service
        field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
        fieldIO "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)

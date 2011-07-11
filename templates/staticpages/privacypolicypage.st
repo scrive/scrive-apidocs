@@ -3,8 +3,8 @@ privacyPolicyPage=
     $doctype()$
     <html>
       <head>
-        <title>$pagetitle()$ | Sekretesspolicy</title>
-        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. All information ni delger SkrivaPå eller dess tjänster hanteras med största möjliga försiktighet." />
+        <title>$pagetitle()$ $_privacyPolicyPageTitle()$</title>
+        <meta name="description" content="$_privacyPolicyPageMetaDescription()$" />
         $standardHeaderContents()$
         $if(production)$
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
@@ -15,23 +15,20 @@ privacyPolicyPage=
 ###
 privacyPolicyPageContents=
 <div class="nicetext">
-<h1>SEKRETESSPOLICY (2011:02)</h1>
+<h1>$_privacyPolicyPageH1()$</h1>
 <br />
-<p>All information Ni delger SkrivaPå eller dess Tjänster hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för SkrivaPå. Er integritet är viktig för oss.
-</p>
+$_privacyPolicyPageH1Body()$
 <br />
-<p>Nedan följer en mer detaljerad beskrivning av hur SkrivaPå hanterar Er information. Vid vidare frågor, vänligen kontakta oss på info@skrivapa.se.</p>
+<h2>$_privacyPolicyPageH21()$</h2>
 <br />
-<h2>Återförsäljning eller delgivning av information</h2>
+<p>$_privacyPolicyPageH21Body()$</p>
 <br />
-<p>SkrivaPå kommer inte att sälja, hyra eller låna ut eller på annat sätt till tredje part delge Er information insamlad genom Tjänsten eller genom Er kontakt med oss på annat sätt, än som uttryckligen överenskommits i de Allmänna Villkoren eller genom Ert skriftliga medgivande. Vi använder dock från tid till annan Användarinformation i anonymiserad form för att göra statistiska analyser som vi kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.</p>
+<h2>$_privacyPolicyPageH23()$</h2>
 <br />
-<h2>Webbläsarinformation på Hemsidan</h2>
+<p>$_privacyPolicyPageH23Body()$</p>
 <br />
-<p>SkrivaPå analyserar våra webbloggar för att kontinuerligt utvärdera hemsidans innehåll och hur det tillfredställer Användarnas behov. Loggarna använder ingen personligt identifierbar information. Vår server identifierar också användarnas IP-adresser. En IP-adress är ett nummer som automatiskt tillskrivs en dator när den används på internet. Vi använder IP-adresser för att identifiera Tjänstens Användare, analysera trender, följa Användares förflyttning och insamla statistisk data. Avtalsparternas IP-adresser visas i undertecknade avtals certifikat som en extra säkerhet och identifieringstjänst till avtalsparterna.</p>
+<h2>$_privacyPolicyPageH24()$</h2>
 <br />
-<h2>Användning av Cookies</h2>
-<br />
-<p>SkrivaPå använder cookies för att förenkla Användarens login och kontohantering. Dessa cookies kommer inte att säljas, hyras eller lånas ut eller på annat sätt visas till tredje part.</p>
+<p>$_privacyPolicyPageH24Body()$</p>
 </div>
 ###

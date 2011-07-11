@@ -16,7 +16,7 @@ msgstr "Search template"
 
 #: docpages/doctemplates.st:templatesForAjax
 msgid "_InfoSelectTemplate"
-msgstr "\tKlick the template that you want to use to start the process"
+msgstr "\tClick a template you want to use to start the process"
 
 #~ msgid "_SortTemplate"
 #~ msgstr "Mall"

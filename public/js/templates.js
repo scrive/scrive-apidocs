@@ -162,7 +162,7 @@ function magicUpdate() {
 }
 
 function isDraggableField(field) {
-    return $(field).hasClass("dragfield") && !$(field).parents("sigentry").hasClass("dragDisabled");;
+    return $(field).hasClass("dragfield") && !$(field).parents("sigentry").hasClass("dragDisabled");
 }
 
 function isDraggableText(field) {
@@ -471,7 +471,8 @@ function updateStatusForTyping(field) {
         }
     } else if (type == "text") {
         // do nothing
-        } else if (debug) {
+        console.log("type == text");
+    } else if (debug) {
         console.log("field has bad field type: " + getFieldName(field));
     }
 }
@@ -1192,7 +1193,7 @@ function signatoryToHTML(isMultiple, sig) {
     var n = "Unnamed";
 
     if (isMultiple) {
-        n = "Massutskick"
+        n = "Massutskick";
     } else if (sig.fstname == "" && sig.sndname == "") {
         n = "(Namnlös)";
     } else {

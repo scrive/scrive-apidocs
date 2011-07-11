@@ -56,6 +56,7 @@ data KontraLink
     | LinkAjaxTemplates DocumentProcess ListParams
     | LinkAccount
     | LinkSecurity
+    | LinkUserMailAPI
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
@@ -124,6 +125,7 @@ instance Show KontraLink where
     showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkSecurity = (++) "/account/security"
+    showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
     showsPrec _ (LinkLandpageSaved document signatorylink) =
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) =

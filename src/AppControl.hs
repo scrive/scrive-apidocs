@@ -44,10 +44,10 @@ import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
 import qualified TrustWeaver as TW
 import qualified User.UserControl as UserControl
+import Util.HasSomeUserInfo
 
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.State
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -74,6 +74,9 @@ import InspectXMLInstances ()
 import InspectXML
 import User.Lang
 
+
+import ForkAction
+
 {- |
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -96,7 +99,7 @@ data AppConf
               , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
               , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
               , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
-              , admins          :: [String]                    -- ^ email addresses of people regarded as admins
+              , admins          :: [Email]                    -- ^ email addresses of people regarded as admins
               }
       deriving (Show,Read,Eq,Ord)
 
@@ -152,7 +155,7 @@ handleRoutes = msum [
      , dir "d" $ hGet2                        $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost1        $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hGet0 $ DocControl.handleSTable
+     , dir "s" $ hGet0 $ sendRedirect $ LinkContracts emptyListParams
      , dir "s" $ hGet3 $ DocControl.handleSignShow
      , dir "s" $ hGet4 $ DocControl.handleAttachmentDownloadForViewer
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ DocControl.signDocument
@@ -229,6 +232,8 @@ handleRoutes = msum [
      , dir "account" $ dir "sharing" $ hPost0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "mailapi" $ hGet0 $ UserControl.handleGetUserMailAPI
+     , dir "account" $ dir "mailapi" $ hPost0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "bsa" $ hGet1 $ UserControl.handleGetBecomeSubaccountOf
      , dir "account" $ dir "bsa" $ hPost1 $ UserControl.handlePostBecomeSubaccountOf
      , dir "contacts"  $ hGet0  $ Contacts.showContacts
@@ -274,6 +279,8 @@ handleRoutes = msum [
 
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
      , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ Administration.handleUnquarantineAll
+
+     , dir "adminonly" $ dir "sysdump" $ hGet0 sysdump
 
      , dir "services" $ hGet0 $ handleShowServiceList
      , dir "services" $ hGet1 $ handleShowService
@@ -323,7 +330,7 @@ handleRoutes = msum [
 -}
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser,ctxservice } <- get
+  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
@@ -374,7 +381,7 @@ handleWholePage f = do
 -}
 handleError :: Kontra Response
 handleError = do
-    ctx <- get
+    ctx <- getContext
     case (ctxservice ctx) of
          Nothing -> do
             addModal $ V.modalError (ctxtemplates ctx)
@@ -456,7 +463,7 @@ appHandler appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx')<- toIO ctx $
+      (res,ctx') <- toIO ctx . runKontra $
          do
           res <- (handleRoutes) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
@@ -465,7 +472,7 @@ appHandler appConf appGlobals = do
              Log.error $ showRequest rq rqcontent
              response <- handleError
              setRsCode 404 response
-          ctx' <- get
+          ctx' <- getContext
           return (res,ctx')
 
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'
@@ -538,7 +545,7 @@ appHandler appConf appGlobals = do
                 , ctxcompany = mcompany
                 , ctxservice = mservice
                 , ctxlocation = location
-                , ctxadminaccounts = map (Email . BS.fromString) (admins appConf)
+                , ctxadminaccounts = admins appConf
                 }
       return ctx
 
@@ -547,7 +554,7 @@ appHandler appConf appGlobals = do
 -}
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
-  ctx <- get
+  ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -580,22 +587,21 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
 sendResetPasswordMail ctx link user = do
   mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = userfullname user
-                                                                      , email = unEmail $ useremail $ userinfo user }]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 {- |
    Handles viewing of the signup page
 -}
 _signupPageGet :: Kontra Response
 _signupPageGet = do
-    ctx <- lift get
+    ctx <- getContext
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja  content
 
 
 _signupVipPageGet :: Kontra Response
 _signupVipPageGet = do
-    ctx <- lift get
+    ctx <- getContext
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja content
 {- |
@@ -607,18 +613,15 @@ _signupVipPageGet = do
 -}
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
-    Context { ctxtime = MinutesTime time seconds } <- get
-    signup False $ Just (MinutesTime (time + 60 * 24 * 31) seconds)
-
-_signupVipPagePost :: Kontra KontraLink
-_signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
+    Context { ctxtime } <- getContext
+    signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
 
 {-
     A comment next to LoopBack says never to use it. Is this function broken?
 -}
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip _freetill =  do
-  ctx@Context{ctxtemplates,ctxhostpart} <- lift get
+  ctx@Context{ctxtemplates,ctxhostpart} <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -651,7 +654,7 @@ signup vip _freetill =  do
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
 _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user = do
-    let email = unEmail $ useremail $ userinfo user
+    let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
     scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
@@ -661,7 +664,7 @@ _sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user 
 -}
 handleLoginGet :: Kontra Response
 handleLoginGet = do
-  ctx <- lift get
+  ctx <- getContext
   case ctxmaybeuser ctx of
        Just _  -> sendRedirect LinkMain
        Nothing -> do
@@ -681,19 +684,24 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
+            Log.debug $ "Logging " ++ show email
             maybeuser <- query $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just User{ userid, userpassword }
                     | verifyPassword userpassword passwd -> do
+                        Log.debug $ "Logging: User logged in"
                         logUserToContext maybeuser
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordSuccessfulLogin userid time
                         return BackToReferer
                 Just User{userid } -> do
+                        Log.debug $ "Logging: User found, Not verified password"
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordFailedLogin userid time
                         return $ LinkLogin $ InvalidLoginInfo linkemail
-                Nothing -> return $ LinkLogin $ InvalidLoginInfo linkemail
+                Nothing -> do
+                    Log.debug $ "Logging: No user matching the email found"  
+                    return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
 
 {- |
@@ -725,7 +733,7 @@ serveHTMLFiles =  do
 -}
 onlySuperUserGet :: Kontra Response -> Kontra Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser } <- get
+    Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
         else sendRedirect $ LinkLogin NotLoggedAsSuperUser
@@ -746,3 +754,7 @@ daveUser userid = onlySuperUserGet $ do
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 
+sysdump :: Kontra Response
+sysdump = onlySuperUserGet $ do
+    dump <- liftIO getAllActionAsString
+    ok $ addHeader "refresh" "5" $ toResponse dump

@@ -37,7 +37,7 @@ import Happstack.Server.SimpleHTTP
 
 handleChangeServiceUI :: ServiceID -> Kontra KontraLink
 handleChangeServiceUI sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     clear <- isFieldSet "clear"
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
@@ -46,6 +46,7 @@ handleChangeServiceUI sid = do
            mailfooter <- getFieldUTF "mailfooter"
            buttonBody <-  getFileField "button-body"
            buttonRest <-  getFileField "button-rest"
+           buttonstextcolor <- getFieldUTF "buttonstextcolor"
            background <-  getFieldUTF "background"
            overlaybackground <-   getFieldUTF "overlaybackground"
            barsbackground <- getFieldUTF "barsbackground"
@@ -55,6 +56,7 @@ handleChangeServiceUI sid = do
               servicemailfooter = joinEmpty $ mailfooter `mplus` (servicemailfooter ui)
             , servicebuttons = (pairMaybe buttonBody buttonRest) `mplus`
                                (mapFst (`fromMaybe` buttonBody) $ mapSnd (`fromMaybe` buttonRest) $ (servicebuttons  ui))
+            , servicebuttonstextcolor = joinEmpty $ buttonstextcolor `mplus` (servicebuttonstextcolor ui)                               
             , servicebackground = joinEmpty $ background `mplus` (servicebackground ui)
             , serviceoverlaybackground = joinEmpty $ overlaybackground `mplus` (serviceoverlaybackground ui)
             , servicebarsbackground =  joinEmpty $ barsbackground  `mplus` (servicebarsbackground  ui)
@@ -66,6 +68,7 @@ handleChangeServiceUI sid = do
            update $ UpdateServiceUI sid $ (serviceui service) {
               servicemailfooter = Nothing
             , servicebuttons = Nothing
+            , servicebuttonstextcolor = Nothing
             , servicebackground = Nothing
             , serviceoverlaybackground = Nothing
             , servicebarsbackground =  Nothing
@@ -79,7 +82,7 @@ handleChangeServiceUI sid = do
 
 handleChangeServicePassword :: ServiceID -> Kontra KontraLink
 handleChangeServicePassword sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
@@ -104,7 +107,7 @@ handleChangeServicePassword sid = do
 
 handleChangeServiceSettings :: ServiceID -> Kontra KontraLink
 handleChangeServiceSettings sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     case (mservice, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
@@ -126,7 +129,7 @@ handleChangeServiceSettings sid = do
 
 handleShowService :: ServiceID -> Kontra (Either KontraLink String)
 handleShowService sid = do
-    ctx <- get
+    ctx <- getContext
     mservice <- query $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
@@ -136,7 +139,7 @@ handleShowService sid = do
 
 handleShowServiceList  :: Kontra String
 handleShowServiceList = do
-    ctx <- get
+    ctx <- getContext
     case (ctxmaybeuser ctx, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
          (Just user, False) -> do
              srvs <- query $ GetServicesForAdmin $ ServiceAdmin $ unUserID $ userid user

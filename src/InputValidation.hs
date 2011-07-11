@@ -49,7 +49,6 @@ module InputValidation
 import Control.Applicative
 import Control.Monad()
 import Control.Monad.Error
-import Control.Monad.State
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Data.Char
@@ -115,15 +114,15 @@ fromGood _ = error "Trying to get good from bad"
     is empty the user won't get told about it, you have to just act sensibly
     given a Nothing.
 -}
-getOptionalField :: (String -> Result a) -> String -> Kontra (Maybe a)
+getOptionalField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
 getOptionalField validate =
     getValidateAndHandle validate optionalFieldHandler
 
-getOptionalFieldList :: (String -> Result a) -> String -> Kontra [Maybe a]
+getOptionalFieldList :: Kontrakcja m => (String -> Result a) -> String -> m [Maybe a]
 getOptionalFieldList validate =
     getValidateAndHandleList validate optionalFieldHandler
 
-optionalFieldHandler :: (Input, Result a) -> Kontra (Maybe a)
+optionalFieldHandler :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 optionalFieldHandler result =
     logIfBad result
     >>= flashValidationMessage
@@ -132,15 +131,15 @@ optionalFieldHandler result =
 {- |
     Use this to get a field that has a default value when Empty.
 -}
-getDefaultedField :: a -> (String -> Result a) -> String -> Kontra (Maybe a)
+getDefaultedField :: Kontrakcja m => a -> (String -> Result a) -> String -> m (Maybe a)
 getDefaultedField d validate =
     getValidateAndHandle validate (defaultedFieldHandler d)
 
-getDefaultedFieldList :: a -> (String -> Result a) -> String -> Kontra [Maybe a]
+getDefaultedFieldList :: Kontrakcja m => a -> (String -> Result a) -> String -> m [Maybe a]
 getDefaultedFieldList d validate =
     getValidateAndHandleList validate (defaultedFieldHandler d)
 
-defaultedFieldHandler :: a -> (Input, Result a) -> Kontra (Maybe a)
+defaultedFieldHandler :: Kontrakcja m => a -> (Input, Result a) -> m (Maybe a)
 defaultedFieldHandler d result =
     logIfBad result
     >>= flashValidationMessage
@@ -151,15 +150,15 @@ defaultedFieldHandler d result =
     Use this to get a field that requires input from the user.
     If there is not input then it will display a flash message warning them.
 -}
-getRequiredField :: (String -> Result a) -> String -> Kontra (Maybe a)
+getRequiredField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
 getRequiredField validate =
     getValidateAndHandle validate requiredFieldHandler
 
-getRequiredFieldList :: (String -> Result a) -> String -> Kontra [Maybe a]
+getRequiredFieldList :: Kontrakcja m => (String -> Result a) -> String -> m [Maybe a]
 getRequiredFieldList validate =
     getValidateAndHandleList validate requiredFieldHandler
 
-requiredFieldHandler :: (Input, Result a) -> Kontra (Maybe a)
+requiredFieldHandler :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 requiredFieldHandler result =
     withRequiredFlash result
     >>= logIfBad
@@ -171,15 +170,15 @@ requiredFieldHandler result =
     because it is hidden.  If this field is missing that means something
     bad has happened.
 -}
-getCriticalField :: (String -> Result a) -> String -> Kontra a
+getCriticalField :: Kontrakcja m => (String -> Result a) -> String -> m a
 getCriticalField validate =
     getValidateAndHandle validate criticalFieldHandler
 
-getCriticalFieldList :: (String -> Result a) -> String -> Kontra [a]
+getCriticalFieldList :: Kontrakcja m => (String -> Result a) -> String -> m [a]
 getCriticalFieldList validate =
     getValidateAndHandleList validate criticalFieldHandler
 
-criticalFieldHandler :: (Input, Result a) -> Kontra a
+criticalFieldHandler :: Kontrakcja m => (Input, Result a) -> m a
 criticalFieldHandler result =
     withRequiredFlash result
     >>= logIfBad
@@ -189,12 +188,12 @@ criticalFieldHandler result =
 {- |
     Gets a named field, validates it, and then handles the result.
 -}
-getValidateAndHandle :: (String -> Result a) -> ((Input, Result a) -> Kontra b) -> String -> Kontra b
+getValidateAndHandle :: Kontrakcja m => (String -> Result a) -> ((Input, Result a) -> m b) -> String -> m b
 getValidateAndHandle validate handle fieldname = do
   result <- getAndValidate validate fieldname
   handle result
 
-getValidateAndHandleList :: (String -> Result a) -> ((Input, Result a) -> Kontra b) -> String -> Kontra [b]
+getValidateAndHandleList :: Kontrakcja m => (String -> Result a) -> ((Input, Result a) -> m b) -> String -> m [b]
 getValidateAndHandleList validate handle fieldname = do
   results <- getAndValidateList validate fieldname
   mapM handle results
@@ -203,19 +202,19 @@ getValidateAndHandleList validate handle fieldname = do
     Gets a named field and validates it.  It will return a pair of the input,
     and output.
 -}
-getAndValidate :: (String -> Result a) -> String -> Kontra (Input, Result a)
+getAndValidate :: Kontrakcja m => (String -> Result a) -> String -> m (Input, Result a)
 getAndValidate validate fieldname = do
   mrawvalue <- getField fieldname
   case mrawvalue of
     Nothing -> return $ (Nothing, Empty)
     (Just rawvalue) -> return $ (Just rawvalue, validate rawvalue)
 
-getAndValidateList :: (String -> Result a) -> String -> Kontra [(Input, Result a)]
+getAndValidateList :: Kontrakcja m => (String -> Result a) -> String -> m [(Input, Result a)]
 getAndValidateList validate fieldname = do
   rawvalues <- getFields fieldname
   return $ zip (map Just rawvalues) (map validate rawvalues)
 
-getFields :: String -> Kontra [String]
+getFields :: Kontrakcja m => String -> m [String]
 getFields fieldname = do
   values <- getDataFnM $ lookInputList fieldname
   return $ map (BS.toString . concatChunks) values
@@ -226,9 +225,9 @@ getFields fieldname = do
     as the one given, I thought it might be handy to include
     just in case.
 -}
-flashValidationMessage :: (Input, Result a) -> Kontra (Input, Result a)
+flashValidationMessage :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 flashValidationMessage x@(_, Bad flashmsg) = do
-  Context{ctxtemplates,ctxflashmessages} <- get
+  Context{ctxtemplates,ctxflashmessages} <- getContext
   msg <- liftIO $ flashmsg ctxtemplates
   when (msg `notElem` ctxflashmessages) $ addFlashMsg msg
   return x
@@ -239,9 +238,9 @@ flashValidationMessage x = return x
     This'll at least mean we've got a record of suspicious
     behaviour.
 -}
-logIfBad :: (Input, Result a) -> Kontra (Input, Result a)
+logIfBad :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 logIfBad x@(input, Bad flashmsg) = do
-  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- get
+  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- getContext
   flash <- liftIO $ flashmsg ctxtemplates
   let username :: String
       username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser
@@ -267,7 +266,7 @@ formatRawValueInfo (Just xs) = (show $ length xs) ++ " chars"
     so you get a Just for sensible input,
     but a Nothing for invalid or empty input.
 -}
-asMaybe :: (Input, Result a) -> Kontra (Maybe a)
+asMaybe :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 asMaybe (_,Good x) = return $ Just x
 asMaybe _        = return Nothing
 
@@ -275,7 +274,7 @@ asMaybe _        = return Nothing
     If the result is Empty then this uses the
     given default value.
 -}
-withDefault :: a -> (Input, Result a) -> Kontra (Input, Result a)
+withDefault :: Kontrakcja m => a -> (Input, Result a) -> m (Input, Result a)
 withDefault d (input, Empty) = return $ (input, Good d)
 withDefault _ x     = return x
 
@@ -283,7 +282,7 @@ withDefault _ x     = return x
     If the result is Empty then this turns it
     into a Bad result with an appropriate flash message.
 -}
-withRequiredFlash :: (Input, Result a) -> Kontra (Input, Result a)
+withRequiredFlash :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 withRequiredFlash (input, Empty) = return $ (input, Bad flashMessageMissingRequiredField)
 withRequiredFlash x     = return x
 
@@ -296,14 +295,14 @@ flashMessageMissingRequiredField =
     that's it.  Which means this'll fail
     for invalid or empty input.
 -}
-withFailure :: (Input, Result a) -> Kontra a
+withFailure :: Kontrakcja m => (Input, Result a) -> m a
 withFailure (_,Good x) = return x
 withFailure _        = mzero
 
 {- |
     You get a failure for bad input.
 -}
-withFailureIfBad :: (Input, Result a) -> Kontra (Maybe a)
+withFailureIfBad :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 withFailureIfBad (_,Good x) = return $ Just x
 withFailureIfBad (_,Bad _) = mzero
 withFailureIfBad (_,Empty) = return Nothing

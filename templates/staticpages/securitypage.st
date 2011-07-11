@@ -3,8 +3,8 @@ securityPage=
     $doctype()$
     <html>
       <head>
-        <title>$pagetitle()$ | Säkerhet</title>
-        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. SkrivaPå bevarar din säkerhet och integritet så att du kan koncentrera dig på ditt arbete." />
+        <title>$pagetitle()$ $_securityPageTitle()$</title>
+        <meta name="description" content="$_securityPageMetaDescription()$" />
         $standardHeaderContents()$
         $if(production)$
         <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
@@ -15,55 +15,46 @@ securityPage=
 ###
 securityPageContents=
 <div class="nicetext">
-<h1>SÄKERHET</h1>
+<h1>$_securityPageH1()$</h1>
 <br />
-<h2>Inledning</h2>
+<h2>$_securityPageH2Intro()$</h2>
 <br />
-<p>Säkerhet är kärnan i vår verksamhet av två huvudsakliga anledningar:</p>
+<p>$_securityPageH2IntroBody1()$</p>
 <br />
 <ol class="numbers">
-	<li>Våra kunder måste kunna lita på oss som tillhandahållare av en premiumtjänst som behandlar och skyddar deras juridiska dokument, och inte utsätter dokumentens integritet och juridiska trovärdighet för risk. Syftet är att dokument som behandlats genom tjänsten ska ha högsta möjliga trovärdighet vid eventuella tvister. Detta gör att SkrivaPå måste hålla en hög säkerhetsprofil för att möta kundernas förväntningar.</li>
-	<li>Våra kunder använder vår tjänst till lagring av sina mest känsliga företagsdata. Att skydda dessa data tillräckligt bra är inte bra nog. Material och dokument måste vara 100 % skyddade och säkra.</li>
-</ol>
+	$_securityPageH2IntroBody2()$</ol>
 <br />
-<p>Vi strävar efter att alltid tillämpa den senaste tekniken i vår tjänst för att på så sätt kunna ligga i framkant och vara marknadsledande på säkerhet. Följande är några av våra viktigaste säkerhetsåtgärder idag:</p>
+<p>$_securityPageH2IntroBody3()$</p>
 <br />
 <ul class="discs">
-	<li>	Haskell utgör själva grunden för vårt system</li>
-	<li>	TrustWeaver säkerhetsklassad premiumlagring</li>
-	<li>	Högsta möjliga SSL 256 bit kryptering för kommunikation med användare via webb och e-mail</li>
-	<li>	2048 bit kryptering, AES certifikat och RSA-nycklar för intern datatransfer mellan oss och våra partners</li>
-	<li>	Förändringshantering med flera steg av ändringsacceptans</li>
-	<li>	Strikt säkerhetspolicy för all SkrivaPå personal</li>
-	<li>	Del i ledande säkerhetsforskning via partnerskap med Chalmers datasäkerhetsgrupp</li>
-</ul>
+	$_securityPageH2IntroBody4()$</ul>
 <br />
-<h2>Haskell</h2>
+<h2>$_securityPageH2Haskell()$</h2>
 <br />
-<p>Systemet bakom tjänsten SkrivaPå är baserat på Haskell. Haskell är en robust teknik som utvecklats av några av de bästa matematiska programmerarna i världen. Två nyckelegenskaper hos tekniken är exceptionellt hög systemstabilitet och pålitlighet. Det gör att sannolikheten för uppkomsten av säkerhetsluckor är betydligt mindre än i traditionella system. Haskells stabilitet och pålitlighet är en av de främsta anledningarna till varför Haskell idag används av några av de mest säkerhetsmedvetna organisationerna i världen. Exempelvis använder USAs regering tekniken för att bygga sina plattformar för webbaserad lagring och delning av säkerhetsklassad information. </p>
+<p>$_securityPageH2HaskellBody()$</p>
 <br />
-<h2>TrustWeaver lagring</h2>
+<h2>$_securityPageH2TW()$</h2>
 <br />
-<p>SkrivaPå lagrar all juridisk data (läs mer under ”juridik”) hos TrustWeaver och vi erbjuder även våra kunder att lagra sina dokument hos dem. TrustWeavers tjänst, TrustWeaver On Demand, är installerad på två datacenter som är geografiskt separerade på ett avstånd större än 30 km. De atomsäkra serverhallarna där TrustWeaver On Demands servrar är placerade håller högsta säkerhetsstandard. De finns i bergrum som tidigare varit faciliteter åt den svenska militären och det huvudsakliga datacentret är klassat som skyddat objekt enligt svensk lag ”Lagen (1990:217) om skyddet av kritiska samhällsfunktioner, etc”. Anläggningarna är skyddade genom accesskortskontroll, slutna videoövervakningssystem, alarm med rörelsesensorer, brandskyddsystem, UPS energi system med dieselgeneratorer för backup, låsta och förseglade serverracket som endast kan öppnas med kopieringsskyddade nycklar. Alla ICC-kort är förseglade till ICC-kortsracket genom att använda specialdesignad säkerhetstejp.</p>
+<p>$_securityPageH2TWBody()$</p>
 <br />
-<h2>SSL 256 kryptering</h2>
+<h2>$_securityPageH2SSL()$</h2>
 <br />
-<p>För att säkra all kommunikation med våra användare via webbplatsen och e-mail använder vi 256 bits kryptering. Detta är den kraftigaste standardkryptering som finns att tillgå och i praktiken dubbelt så kraftig som den kryptering de största svenska bankerna använder för sina IT-banktjänster.</p>
+<p>$_securityPageH2SSLBody()$</p>
 <br />
-<h2>2048 bit kryptering för intern datatransfer</h2>
+<h2>$_securityPageH2Internal()$</h2>
 <br />
-<p>Vi använder starkast möjliga kryptering, 2048 bitar, i all kommunikation med våra säkerhetspartners. Uppkopplingen är även säkrad med AES-certifikat. Egna RSA nycklar används för autentisering och auktorisering för att ytterligare garantera högsta pålitlighet i transaktioner, dokumentlagring, användaradministration och dokumentvalidering i de fall då det kan komma att efterfrågas i domstol för att stärka bevisföring.</p>
+<p>$_securityPageH2InternalBody()$</p>
 <br />
-<h2>Förändringshantering</h2>
+<h2>$_securityPageH2Change()$</h2>
 <br />
-<p>Våra interna processer kräver flera nivåer av godkännande vid förändringar. Varje förändring valideras, kontrolleras, accepteras, loggas och definieras noggrant. En automatisk mekanism skyddar kärnan i systemet från oönskade systemmodifieringar. Skyddet är aktivt i multipla nivåer; i stadier av systemdesign, implementering, ändringar och underhåll. Vi lagrar all historisk data och kan spåra alla ändringar enda tillbaks till företagets start.</p>
+<p>$_securityPageH2ChangeBody()$</p>
 <br />
-<h2>Personalpolicy</h2>
+<h2>$_securityPageH2Staff()$</h2>
 <br />
-<p>Företagets VD och Tekniska chef är de enda individerna som har tillgång till SkrivaPå’s huvudservrar. Vi gör en bakgrundskontroll på alla anställda och alla måste underteckna strikta och ekonomiskt kraftfulla sekretessavtal gällande all känslig information som kan äventyra företagets eller våra kunders säkerhet.</p>
+<p>$_securityPageH2StaffBody()$</p>
 <br />
-<h2>Partnerskap med Chalmers datasäkerhetsgrupp</h2>
+<h2>$_securityPageH2Chalmers()$</h2>
 <br />
-<p>Tillsammans med Google, Intel och Klarna har vi blivit utvalda av Chalmers datasäkerhetsgrupp för att vara del av deras webbsäkerhetsforskningsprogram. De arbetar för närvarande på att utveckla andra generationens säkra dataflödesprogram. Den nya generationen är den första där det är möjligt att matematiskt bevisa, och på så sätt garantera, att vissa saker omöjligen kan hända. Vi utvecklar även vårt system i nära samarbete med ovan nämnda forskningsteam.</p>
+<p>$_securityPageH2ChalmersBody()$</p>
 </div>
 ###

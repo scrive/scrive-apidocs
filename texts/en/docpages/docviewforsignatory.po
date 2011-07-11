@@ -100,7 +100,7 @@ msgstr ".             You can review the message below and adjust it by clicking
 
 #: docpages/docviewforsignatory.st:ordersignatorycancelmodaltitle
 msgid "_ordersignatorycancelmodaltitleBody"
-msgstr "When you have rejected, we send an e-mail to notify"
+msgstr "When you reject, an e-mail is sent to notify "
 
 #: docpages/docviewforsignatory.st:orderrejectbuttontext
 msgid "_orderrejectbuttontext"
@@ -136,7 +136,7 @@ msgstr ".             You can review the message below and adjust it by clicking
 
 #: docpages/docviewforsignatory.st:offersignatorycancelmodaltitle
 msgid "_offersignatorycancelmodaltitleBody"
-msgstr "When you have rejected, we send an e-mail to notify"
+msgstr "When you reject, an e-mail is sent to notify "
 
 #: docpages/docviewforsignatory.st:offerrejectbuttontext
 msgid "_offerrejectbuttontext"

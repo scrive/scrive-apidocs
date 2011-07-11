@@ -47,7 +47,7 @@ personFromSignatoryDetails details =
                                      else ""
                 , Seal.company = BS.toString $ signatorycompany details
                 , Seal.email = BS.toString $ signatoryemail details
-                -- | FIXME: this should be split to company/personal number
+                -- FIXME: this should be split to company/personal number
                 , Seal.personalnumber = BS.toString $ signatorypersonalnumber details
                 , Seal.companynumber = BS.toString $ signatorycompanynumber details
                 , Seal.fullnameverified = False

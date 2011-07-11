@@ -16,7 +16,7 @@ msgstr "Select template"
 
 #: docpages/docupload.st:uploadPage
 msgid "_signStepsBodyUploadBoxStep1TemplateSaved"
-msgstr "Saved by Scrive"
+msgstr "Saved in Scrive"
 
 #: docpages/docupload.st:uploadPage
 msgid "_signStepsBodyUploadBoxStep1ChooseTemplate"
@@ -28,7 +28,7 @@ msgstr "Select file"
 
 #: docpages/docupload.st:uploadPage
 msgid "_signStepsBodyUploadBoxStep1UpLoadOnlyPDF"
-msgstr "OBSERVE! PDF only!"
+msgstr "PDF only!"
 
 #: docpages/docupload.st:uploadPage
 msgid "_signStepsBodyUploadBoxStep1UpLoadChooseFile"

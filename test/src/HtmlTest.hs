@@ -14,10 +14,13 @@ import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
 import System.IO
+import Control.Monad
 
 import Misc
 import Templates.Langs
 import Templates.TemplatesFiles
+import Templates.Templates (renderTemplate)
+import Templates.TemplatesLoader (KontrakcjaTemplates, readAllLangsTemplates, langVersion)
 
 main :: IO ()
 main = do
@@ -34,7 +37,8 @@ htmlTests :: [Test]
 htmlTests = 
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
-          testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ]
+          testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,
+          testCase "no nested p tags when templates are rendered" testNoNestedP ]
     ]
 
 excludedTemplates :: [String]
@@ -62,6 +66,52 @@ testNoUnecessaryDoubleDivs = do
   _ <- mapM assertNoUnecessaryDoubleDivs . filter isIncluded $ concat templates
   assertSuccess
 
+testNoNestedP :: Assertion
+testNoNestedP = do
+  langtemplates <- readAllLangsTemplates
+  ts <- mapM getTemplates templatesFilesPath
+  texts <- mapM getTextTemplates allValues
+  let alltemplatenames = map fst (concat texts ++ concat ts)
+  _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
+    let templates = langVersion lang langtemplates
+    --ts <- getTextTemplates lang
+    assertNoNestedP alltemplatenames templates
+  assertSuccess
+  
+assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
+assertNoNestedP tnames templates = do
+  _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
+    t <- emptyRender templates n
+    case parseStringAsXML (n, t) of
+      Left msg -> assertFailure msg
+      Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
+  assertSuccess
+    
+checkXMLForNestedP :: String -> Content Posn -> Assertion
+checkXMLForNestedP templatename e =
+  if isPAndHasP e 
+  then assertFailure $ "nested <p> tags in template " ++ templatename ++ ":\n" ++ 
+                         (show $ content e)
+  else assertSuccess
+
+isPOrHasP :: Content Posn -> Bool
+isPOrHasP (CElem (Elem tag _ children) _) =
+  if map toLower tag == "p"
+  then True
+  else any isPOrHasP children
+isPOrHasP _ = False
+
+isPAndHasP :: Content Posn -> Bool
+isPAndHasP (CElem (Elem tag _ children) _) =
+  if map toLower tag == "p"
+  then any isPOrHasP children
+  else any isPAndHasP children
+isPAndHasP _ = False
+
+emptyRender :: KontrakcjaTemplates -> String -> IO String
+emptyRender templates name =
+  renderTemplate templates name ()
+
 assertNoUnecessaryDoubleDivs :: (String, String) -> Assertion
 assertNoUnecessaryDoubleDivs t@(name,_) =
   case parseTemplateAsXML t of
@@ -85,9 +135,9 @@ checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
         isDivElem _ = False
 checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 
-parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
-parseTemplateAsXML (name, rawtxt) =
-  let preparedtxt = "<template>\n" ++ (clearTemplating rawtxt) ++ "\n</template>"
+parseStringAsXML :: (String, String) -> Either String (Document Posn)
+parseStringAsXML (name, rawtxt) = 
+  let preparedtxt = "<template>\n" ++ rawtxt ++ "\n</template>"
       prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
       mklinewithno no line --okay, i did indenting in a horrible way, it's just a test!
         | no<10  = (show no) ++ ".    |" ++ line
@@ -97,6 +147,11 @@ parseTemplateAsXML (name, rawtxt) =
   in case xmlParse' name preparedtxt of
     Left msg -> Left $ msg ++ "\n" ++ prettyprinttxt
     r@(Right _) -> r
+  
+
+parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
+parseTemplateAsXML (name, rawtxt) =
+  parseStringAsXML (name, clearTemplating rawtxt)
 
 clearTemplating :: String -> String
 clearTemplating = clearTemplating' NotTag NotTemplateCode . removeDocTypeDeclaration

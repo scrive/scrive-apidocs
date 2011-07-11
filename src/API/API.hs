@@ -11,11 +11,13 @@
 -----------------------------------------------------------------------------
 module API.API(
      -- Main stuff to build new API instance
-       APIFunction
+       APIFunction(unAF)
      , APIRequestBody
      , APIResponse
      , APIContext(..)
      , APICall(..)
+     , liftKontra
+     , runApiFunction
      , apiUnknownCall
      -- Diggers for JSON embedded params
      , apiAskBS
@@ -26,8 +28,6 @@ module API.API(
      , apiAskMap
      , apiMapLocal
      , apiLocal
-     -- Asking about Kontra context
-     , askKontraContext
      -- Standard way of getting JSON request body
      , apiBody
      , apiError
@@ -59,7 +59,20 @@ type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
 {- | API functions are build over Kontra with a ability to exit, and with some context -}
-type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra') a
+--type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra) a
+
+newtype APIFunction c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) Kontra) a }
+    deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+
+instance KontraMonad (APIFunction c) where
+    getContext    = liftKontra getContext
+    modifyContext = liftKontra . modifyContext
+
+runApiFunction :: APIFunction c a -> c -> Kontra (Either (API_ERROR, String) a)
+runApiFunction f ctx = runErrorT $ runReaderT (unAF f) ctx
+
+liftKontra :: Kontra a -> APIFunction c a
+liftKontra = AF . lift . lift
 
 {- |  Used to convert json object to HTTP response-}
 apiResponse ::  Kontra APIResponse ->  Kontra Response
@@ -92,7 +105,7 @@ instance (APIContext c) => APICall (APIFunction c APIResponse) where
         mcontext <- apiContext
         case mcontext  of
              Right apicontext -> do
-                 res <- fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT action apicontext
+                 res <- either (uncurry apiError) id <$> runApiFunction action apicontext
                  Log.debug $ "API call result: " ++ encode res
                  return res
              Left emsg -> return $ uncurry apiError emsg
@@ -119,7 +132,7 @@ class APIContext a where
 -- Here are some helper functions for that. Some can be localized (like in ReaderMonad) to subcontext.
 
 apiAskBS::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)
-apiAskBS =  fmap (fmap BS.fromString) . apiAskString
+apiAskBS = fmap (fmap BS.fromString) . apiAskString
 
 apiAskString::(APIContext c) => String -> APIFunction c (Maybe String)
 apiAskString s = apiLocal s (fromString <$> askBody)
@@ -160,15 +173,15 @@ apiAskList = fromList <$> askBody
         fromList _ = Nothing
 
 apiLocal ::(APIContext c) => String -> APIFunction c (Maybe a) -> APIFunction c (Maybe a)
-apiLocal s digger= do
+apiLocal s digger = do
     mobj <- apiAskField s
     case mobj of
-         Just obj ->  withReaderT (newBody obj) digger
+         Just obj -> AF $ withReaderT (newBody obj) (unAF digger)
          Nothing -> return Nothing
 
 apiMapLocal :: (APIContext c) => APIFunction c (Maybe a) -> APIFunction c (Maybe [a])
 apiMapLocal digger = do
-    mdiggers <- (fmap $ map (\nbody -> withReaderT (newBody nbody) digger)) <$> apiAskList
+    mdiggers <- (fmap $ map (\nbody -> AF $ withReaderT (newBody nbody) (unAF digger))) <$> apiAskList
     case mdiggers of
          Just diggers -> runDiggers $ diggers
          Nothing -> return Nothing
@@ -192,10 +205,6 @@ apiAskField s = fromObject <$> askBody
 
 askBody :: (APIContext c) => APIFunction c APIRequestBody
 askBody = body <$> ask
-
-askKontraContext :: (APIContext c) => APIFunction c Context
-askKontraContext = lift $ lift $ get
-
 
 --- This will read JSON object from some HTTP request body parameter
 apiBody ::  Kontra (Either String JSValue)

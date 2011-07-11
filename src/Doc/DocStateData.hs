@@ -12,6 +12,7 @@ module Doc.DocStateData
     , DocumentSharing(..)
     , DocumentStatus(..)
     , DocumentTag(..)
+    , DocumentUI(..)
     , DocumentType(..)
     , DocumentProcess(..)
     , DocumentRecordStatus(..)
@@ -37,6 +38,7 @@ module Doc.DocStateData
     , SignatoryAttachment(..)
     , Supervisor(..)
     , documentHistoryToDocumentLog
+    , emptyDocumentUI
     ) where
 
 import API.Service.ServiceState
@@ -441,6 +443,15 @@ data DocumentTag = DocumentTag {
         tagname :: BS.ByteString
      ,  tagvalue :: BS.ByteString
      } deriving (Eq, Ord, Typeable)
+
+data DocumentUI = DocumentUI {
+        documentmailfooter :: Maybe BS.ByteString
+    } deriving (Eq, Ord, Typeable)
+    
+emptyDocumentUI :: DocumentUI
+emptyDocumentUI = DocumentUI {
+                    documentmailfooter = Nothing
+                   }
 
 data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTime }
                           | DocumentHistoryInvitationSent0 { dochisttime0 :: MinutesTime
@@ -1013,6 +1024,38 @@ data Document25 = Document25
     } deriving Typeable
 
 -- migration for author attachments
+data Document26 = Document26
+    { documentid26                     :: DocumentID
+    , documenttitle26                  :: BS.ByteString
+    , documentsignatorylinks26         :: [SignatoryLink]
+    , documentfiles26                  :: [File]
+    , documentsealedfiles26            :: [File]
+    , documentstatus26                 :: DocumentStatus
+    , documenttype26                   :: DocumentType
+    , documentfunctionality26          :: DocumentFunctionality
+    , documentctime26                  :: MinutesTime
+    , documentmtime26                  :: MinutesTime
+    , documentdaystosign26             :: Maybe Int
+    , documenttimeouttime26            :: Maybe TimeoutTime
+    , documentinvitetime26             :: Maybe SignInfo
+    , documentlog26                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext26             :: BS.ByteString
+    , documenttrustweaverreference26   :: Maybe BS.ByteString
+    , documentallowedidtypes26         :: [IdentificationType]
+    , documentcsvupload26              :: Maybe CSVUpload
+    , documentcancelationreason26      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing26                :: DocumentSharing
+    , documentrejectioninfo26          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags26                   :: [DocumentTag]
+    , documentservice26                :: Maybe ServiceID
+    , documentattachments26            :: [DocumentID] -- this needs to go away in next migration
+    , documentoriginalcompany26        :: Maybe CompanyID
+    , documentrecordstatus26           :: DocumentRecordStatus
+    , documentquarantineexpiry26       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
+    , documentauthorattachments26      :: [AuthorAttachment]
+    , documentsignatoryattachments26   :: [SignatoryAttachment]
+    }  deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -1043,6 +1086,7 @@ data Document = Document
     , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
     , documentauthorattachments      :: [AuthorAttachment]
     , documentsignatoryattachments   :: [SignatoryAttachment]
+    , documentui                     :: DocumentUI
     }
 
 
@@ -1160,6 +1204,7 @@ deriving instance Show CSVUpload
 deriving instance Show ChargeMode
 deriving instance Show DocumentSharing
 deriving instance Show DocumentTag
+deriving instance Show DocumentUI
 deriving instance Show Author
 
 deriving instance Show DocStats
@@ -1792,9 +1837,14 @@ $(deriveSerialize ''Document25)
 instance Version Document25 where
     mode = extension 25 (Proxy :: Proxy Document24)
 
+$(deriveSerialize ''Document26)
+instance Version Document26 where
+    mode = extension 26 (Proxy :: Proxy Document25)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 26 (Proxy :: Proxy Document25)
+    mode = extension 27 (Proxy :: Proxy Document26)
+
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) =
@@ -2648,7 +2698,7 @@ instance Migrate Document24 Document25 where
                 }
 
 
-instance Migrate Document25 Document where
+instance Migrate Document25 Document26 where
     migrate (Document25
              { documentid25
              , documenttitle25
@@ -2677,36 +2727,100 @@ instance Migrate Document25 Document where
              , documentattachments25
              , documentrecordstatus25
              , documentquarantineexpiry25
-             }) = Document
-                { documentid                     = documentid25
-                , documenttitle                  = documenttitle25
-                , documentsignatorylinks         = documentsignatorylinks25
-                , documentfiles                  = documentfiles25
-                , documentsealedfiles            = documentsealedfiles25
-                , documentstatus                 = documentstatus25
-                , documenttype                   = documenttype25
-                , documentfunctionality          = documentfunctionality25
-                , documentctime                  = documentctime25
-                , documentmtime                  = documentmtime25
-                , documentdaystosign             = documentdaystosign25
-                , documenttimeouttime            = documenttimeouttime25
-                , documentinvitetime             = documentinvitetime25
-                , documentlog                    = documentlog25
-                , documentinvitetext             = documentinvitetext25
-                , documenttrustweaverreference   = documenttrustweaverreference25
-                , documentallowedidtypes         = documentallowedidtypes25
-                , documentcsvupload              = documentcsvupload25
-                , documentcancelationreason      = documentcancelationreason25
-                , documentsharing                = documentsharing25
-                , documentrejectioninfo          = documentrejectioninfo25
-                , documenttags                   = documenttags25
-                , documentservice                = documentservice25
-                , documentoriginalcompany        = documentoriginalcompany25
-                , documentattachments            = documentattachments25
-                , documentrecordstatus           = documentrecordstatus25
-                , documentquarantineexpiry       = documentquarantineexpiry25
-                , documentauthorattachments      = []
-                , documentsignatoryattachments   = []
+             }) = Document26
+                { documentid26                     = documentid25
+                , documenttitle26                  = documenttitle25
+                , documentsignatorylinks26         = documentsignatorylinks25
+                , documentfiles26                  = documentfiles25
+                , documentsealedfiles26            = documentsealedfiles25
+                , documentstatus26                 = documentstatus25
+                , documenttype26                   = documenttype25
+                , documentfunctionality26          = documentfunctionality25
+                , documentctime26                  = documentctime25
+                , documentmtime26                  = documentmtime25
+                , documentdaystosign26             = documentdaystosign25
+                , documenttimeouttime26            = documenttimeouttime25
+                , documentinvitetime26             = documentinvitetime25
+                , documentlog26                    = documentlog25
+                , documentinvitetext26             = documentinvitetext25
+                , documenttrustweaverreference26   = documenttrustweaverreference25
+                , documentallowedidtypes26         = documentallowedidtypes25
+                , documentcsvupload26              = documentcsvupload25
+                , documentcancelationreason26      = documentcancelationreason25
+                , documentsharing26                = documentsharing25
+                , documentrejectioninfo26          = documentrejectioninfo25
+                , documenttags26                   = documenttags25
+                , documentservice26                = documentservice25
+                , documentoriginalcompany26        = documentoriginalcompany25
+                , documentattachments26            = documentattachments25
+                , documentrecordstatus26           = documentrecordstatus25
+                , documentquarantineexpiry26       = documentquarantineexpiry25
+                , documentauthorattachments26      = []
+                , documentsignatoryattachments26   = []
+                }
+
+instance Migrate Document26 Document where
+    migrate ( Document26
+                { documentid26                 
+                , documenttitle26             
+                , documentsignatorylinks26    
+                , documentfiles26            
+                , documentsealedfiles26    
+                , documentstatus26       
+                , documenttype26          
+                , documentfunctionality26  
+                , documentctime26         
+                , documentmtime26         
+                , documentdaystosign26     
+                , documenttimeouttime26    
+                , documentinvitetime26    
+                , documentlog26           
+                , documentinvitetext26       
+                , documenttrustweaverreference26  
+                , documentallowedidtypes26    
+                , documentcsvupload26       
+                , documentcancelationreason26  
+                , documentsharing26        
+                , documentrejectioninfo26    
+                , documenttags26          
+                , documentservice26           
+                , documentoriginalcompany26    
+                , documentattachments26       
+                , documentrecordstatus26     
+                , documentquarantineexpiry26   
+                , documentauthorattachments26 
+                , documentsignatoryattachments26  
+                }) = Document
+                { documentid                     = documentid26
+                , documenttitle                  = documenttitle26
+                , documentsignatorylinks         = documentsignatorylinks26
+                , documentfiles                  = documentfiles26
+                , documentsealedfiles            = documentsealedfiles26
+                , documentstatus                 = documentstatus26
+                , documenttype                   = documenttype26
+                , documentfunctionality          = documentfunctionality26
+                , documentctime                  = documentctime26
+                , documentmtime                  = documentmtime26
+                , documentdaystosign             = documentdaystosign26
+                , documenttimeouttime            = documenttimeouttime26
+                , documentinvitetime             = documentinvitetime26
+                , documentlog                    = documentlog26
+                , documentinvitetext             = documentinvitetext26
+                , documenttrustweaverreference   = documenttrustweaverreference26
+                , documentallowedidtypes         = documentallowedidtypes26
+                , documentcsvupload              = documentcsvupload26
+                , documentcancelationreason      = documentcancelationreason26
+                , documentsharing                = documentsharing26
+                , documentrejectioninfo          = documentrejectioninfo26
+                , documenttags                   = documenttags26
+                , documentservice                = documentservice26
+                , documentoriginalcompany        = documentoriginalcompany26
+                , documentattachments            = documentattachments26
+                , documentrecordstatus           = documentrecordstatus26
+                , documentquarantineexpiry       = documentquarantineexpiry26
+                , documentauthorattachments      = documentauthorattachments26
+                , documentsignatoryattachments   = documentsignatoryattachments26
+                , documentui                     = emptyDocumentUI
                 }
 
 
@@ -2745,6 +2859,10 @@ instance Version DocumentSharing where
 
 $(deriveSerialize ''DocumentTag)
 instance Version DocumentTag where
+
+$(deriveSerialize ''DocumentUI)
+instance Version DocumentUI where
+
 
 $(deriveSerialize ''DocStats)
 instance Version DocStats where

@@ -1,0 +1,145 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: apppages.st:standardBodyWrapper
+msgid "_standardBodyWrapperHead"
+msgstr "Skapa konto nu!"
+
+#: apppages.st:standardBodyWrapper
+msgid "_standardBodyWrapperBody"
+msgstr "14 dagar full funktionalitet utan kostnad. Inga förpliktelser."
+
+#: apppages.st:queryColumn
+msgid "_queryColumnQuestions"
+msgstr "Frågor? Kontakta oss!"
+
+#: apppages.st:queryColumn
+msgid "_queryColumnPhone"
+msgstr "Telefon: 010-195 99 15"
+
+#: apppages.st:queryColumn
+msgid "_queryColumnHead"
+msgstr "Avtala redan idag!"
+
+#: apppages.st:queryColumn
+msgid "_queryColumnEmail"
+msgstr "E-post: info@skrivapa.se"
+
+#: apppages.st:queryColumn
+msgid "_queryColumnBody2"
+msgstr "Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga förpliktelser."
+
+#: apppages.st:queryColumn
+msgid "_queryColumnBody1"
+msgstr "SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. Våra kunder och våra kunders kunder älskar enkelheten."
+
+#: apppages.st:pageFooter
+msgid "_pageFooterTwitter"
+msgstr "SKRIVAPÅ PÅ TWITTER"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterTheService"
+msgstr "TJÄNSTEN"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterTerms"
+msgstr "TRYGGHET OCH VILLKOR"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterTOS"
+msgstr "Allmäna Villkor"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterSupportFeedback"
+msgstr "Support &amp; Feedback"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterSkrivapa"
+msgstr "SKRIVAPÅ"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterSecurity"
+msgstr "Säkerhet"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterPrivacy"
+msgstr "Sekretesspolicy"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterPrices"
+msgstr "Priser"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterPartners"
+msgstr "Partners"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterLaw"
+msgstr "Juridik"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterHome"
+msgstr "Hem"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterCustomers"
+msgstr "Kunder"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterContact5"
+msgstr "<strong>Adress</strong>          SkrivaPå CM AB<br />          Saltmätargatan 19<br />          113 59 Stockholm"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterContact4"
+msgstr "<strong>Maila SkrivaPå</strong>          <a href=\"mailto:info@skrivapa.se\">info@skrivapa.se</a>"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterContact3"
+msgstr "<strong>Kontorstider</strong>          måndag-fredag 09-17"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterContact2"
+msgstr "<strong>Telefon</strong>          010-195 99 15"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterContact1"
+msgstr "<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>"
+
+#: apppages.st:pageFooter
+msgid "_pageFooterAbout"
+msgstr "Om SkrivaPå"
+
+#: apppages.st:header
+msgid "_headerSend"
+msgstr "Skicka"
+
+#: apppages.st:header
+msgid "_headerLogOut"
+msgstr "Logga ut"
+
+#: apppages.st:header
+msgid "_headerInvite"
+msgstr "Bjud in"
+
+#: apppages.st:header
+msgid "_headerArchive"
+msgstr "Arkiv"
+
+#: apppages.st:header
+msgid "_headerAccount"
+msgstr "Konto"
+
+#: apppages.st:standardBodyWrapper
+#: apppages.st:queryColumn
+msgid "_createaccount"
+msgstr "Skapa konto"
+

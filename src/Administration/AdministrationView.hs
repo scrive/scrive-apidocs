@@ -203,11 +203,11 @@ avaibleUsers (AdminUsersPageParams {startletter=Just startLetter}) =  startLette
 avaibleUsers _  = id
 
 startLetterUsers :: (UserBased a) => String->[a]->[a]
-startLetterUsers startletter = filter (\u -> (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ userfullname $ getUser u) ||
-                                            (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))
+startLetterUsers startletter = filter (\u -> (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ getFullName $ getUser u) ||
+                                            (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ getEmail $ getUser u))
 searchUsers :: (UserBased a) => String->[a]->[a]
-searchUsers searchString =  filter (\u -> (isInfixOf (map toUpper searchString) $ map toUpper $ toString $ userfullname $ getUser u) ||
-                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))
+searchUsers searchString =  filter (\u -> (isInfixOf (map toUpper searchString) $ map toUpper $ toString $ getFullName $ getUser u) ||
+                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ getEmail $ getUser u))
 
 
 
@@ -221,19 +221,19 @@ data AdminUsersPageParams = AdminUsersPageParams {
 {-| Full fields set about user -}
 userFields ::User -> Fields
 userFields u =  do
-        field "fstname" $ toString $ userfstname $ userinfo u
-        field "sndname" $ toString $ usersndname $ userinfo u
-        field "personalnumber" $ toString $ userpersonalnumber $ userinfo u
-        field "companyname" $  toString $ usercompanyname $ userinfo u
-        field "companyposition" $  toString $ usercompanyposition $ userinfo u
-        field "companynumber" $  toString $ usercompanynumber $ userinfo u
-        field "address" $ toString $ useraddress$ userinfo u
+        field "fstname" $ getFirstName u
+        field "sndname" $ getLastName u
+        field "personalnumber" $ getPersonalNumber u
+        field "companyname" $  getCompanyName u
+        field "companyposition" $ usercompanyposition $ userinfo u
+        field "companynumber" $ getCompanyNumber u
+        field "address" $ toString $ useraddress $ userinfo u
         field "zip" $  toString $ userzip  $ userinfo u
         field "city" $  toString $ usercity $ userinfo u
         field "country" $ toString $ usercountry $ userinfo u
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
-        field "email" $  toString $ unEmail $ useremail $ userinfo u
+        field "email" $ getEmail u
         field "accounttype" $  for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)

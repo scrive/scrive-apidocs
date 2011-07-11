@@ -12,6 +12,7 @@
 module Mails.SendMail
     ( Mail(..)
     , emptyMail
+    , unsendable 
     , MailAddress(..)
     , Mailer(..)
     , createSendgridMailer
@@ -76,6 +77,12 @@ emptyMail = Mail
     , from           = Nothing
     , mailInfo       = None
 }
+
+
+-- Mail is unsendable if there is no to adress provided
+unsendable :: Mail -> Bool
+unsendable mail = all BS.null (email <$> to mail)
+
 --
 newtype Mailer = Mailer { sendMail :: ActionID -> Mail -> IO Bool }
 

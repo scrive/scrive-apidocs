@@ -48,7 +48,7 @@ msgstr "            Are you sure you want to send reminders to the parties invol
 
 #: docpages/docofferslist.st:pageOffersList
 msgid "_CantRemoveActiveOffers"
-msgstr "It is not possible to delete offers that are sent or open, please withdraw the document first."
+msgstr "You cannot delete documents that are sent or open, please withdraw the document first."
 
 #~ msgid "_Options"
 #~ msgstr "Alternativ"
