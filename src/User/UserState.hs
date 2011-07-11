@@ -758,6 +758,7 @@ instance Migrate User16 User where
                 , userlogininfo16
                 , userservice16
                 , usercompany16
+                , userrecordstatus16
                 }) = User
                 { userid                         = userid16
                 , userpassword                   = userpassword16
@@ -776,7 +777,7 @@ instance Migrate User16 User where
                 , userservice                    = userservice16
                 , usercompany                    = usercompany16
                 , usermailapi                    = Nothing
-                , userrecordstatus               = LiveUser
+                , userrecordstatus               = userrecordstatus16
                 }
 
 composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
