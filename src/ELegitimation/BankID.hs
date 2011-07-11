@@ -38,6 +38,7 @@ import Data.Either (lefts, rights)
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -728,7 +729,7 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
 
 findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m ELegTransaction
 findTransactionByIDOrFail transactions transactionsid =
-    returnJustOrMZero $ find ((== transactionsid) . transactiontransactionid) transactions
+    guardJust $ find ((== transactionsid) . transactiontransactionid) transactions
 
 getTBS :: TemplatesMonad m => Doc.DocState.Document -> m String
 getTBS doc = do

@@ -32,6 +32,7 @@ import Templates.LocalTemplates
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Util.MonadUtils
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -702,17 +703,10 @@ markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time 
 handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
   ctx <- getContext
-  eudoc <- updateDocument ctx document
-  case eudoc of
-    Left _ -> mzero
-    Right _udoc -> do
-      mndoc <- update $ TemplateFromDocument $ documentid document -- ?? Should be udoc? -EN
-      case mndoc of
-        Left _ -> mzero
-        Right _newdocument -> do
-          addFlashM flashDocumentTemplateSaved
-          return $ LinkTemplates emptyListParams
-
+  udoc <- guardRight =<< (updateDocument ctx document)
+  _ndoc <- guardRight =<< (update $ TemplateFromDocument $ documentid udoc)
+  addFlashM flashDocumentTemplateSaved
+  return $ LinkTemplates emptyListParams
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
@@ -720,15 +714,10 @@ handleIssueChangeToContract :: Kontrakcja m => Document -> m KontraLink
 handleIssueChangeToContract document = do
   ctx <- getContext
   signlast <- isFieldSet "signlast"
-  when (isNothing $ ctxmaybeuser ctx) mzero
-  mcontract <- update $ SignableFromDocumentIDWithUpdatedAuthor (fromJust $ ctxmaybeuser ctx) (documentid document)
-  case mcontract of
-    Right contract -> do
-      mncontract <- updateDocument ctx contract
-      case mncontract of
-        Right ncontract -> return $ LinkDesignDoc $ DesignStep3 (documentid ncontract) signlast
-        Left _ -> mzero
-    Left _ -> mzero
+  guard (isJust $ ctxmaybeuser ctx)
+  contract <- guardRight =<< (update $ SignableFromDocumentIDWithUpdatedAuthor (fromJust $ ctxmaybeuser ctx) (documentid document))
+  ncontract <- guardRight =<< (updateDocument ctx contract)
+  return $ LinkDesignDoc $ DesignStep3 (documentid ncontract) signlast
 
 {- |
     If the document has a multiple part this will pump csv values through it to create multiple docs, and then
@@ -749,16 +738,13 @@ splitUpDocument doc =
           addFlashM flashMessageInvalidCSV
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          mudoc <- if (isTemplate doc)
-                    then return $ Right doc
-                    else update $ TemplateFromDocument $ documentid doc
-          case mudoc of
-            Left _ -> mzero
-            Right udoc -> do
-              mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
-              if Data.List.null (lefts mdocs)
-                then return $ Right (rights mdocs)
-                else mzero
+          udoc <- guardRight =<< if (isTemplate doc)
+                                 then return $ Right doc
+                                 else update $ TemplateFromDocument $ documentid doc
+          mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
+          if Data.List.null (lefts mdocs)
+            then return $ Right (rights mdocs)
+            else mzero
   where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc sigindex xs =
           update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
@@ -771,29 +757,24 @@ splitUpDocument doc =
 handleIssueCSVUpload :: Kontrakcja m => Document -> m KontraLink
 handleIssueCSVUpload document = do
   ctx <- getContext
-  mudoc <- updateDocument ctx document
+  udoc <- guardRight =<< (updateDocument ctx document)
   signlast <- isFieldSet "signlast"
-  case mudoc of
-    Left _ -> mzero
-    Right udoc -> do
-      mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
-      mcsvfile <- getCSVFile "csv"
-      case (mcsvsigindex, mcsvfile) of
-        (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
-        (Nothing, Just _) ->  do
-          Log.error "something weird happened, got csv file but there's no relevant person index"
-          mzero
-        (Just csvsigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ csvsigindex + 1) Nothing signlast
-        (Just csvsigindex, Just (title, contents)) ->  do
-          let csvupload = CSVUpload
-                          { csvtitle = title
-                          , csvcontents = contents
-                          , csvsignatoryindex = csvsigindex
-                          }
-          mndoc <- update $ AttachCSVUpload (documentid udoc) csvupload
-          case mndoc of
-            Left _ -> mzero
-            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
+      
+  mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
+  mcsvfile <- getCSVFile "csv"
+  case (mcsvsigindex, mcsvfile) of
+    (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
+    (Nothing, Just _) ->  do
+      Log.error "something weird happened, got csv file but there's no relevant person index"
+      mzero
+    (Just csvsigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ csvsigindex + 1) Nothing signlast
+    (Just csvsigindex, Just (title, contents)) ->  do
+      let csvupload = CSVUpload { csvtitle = title
+                                , csvcontents = contents
+                                , csvsignatoryindex = csvsigindex
+                                }
+      ndoc <- guardRight =<< (update $ AttachCSVUpload (documentid udoc) csvupload)
+      return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
 makeSigAttachment name desc email =
@@ -802,7 +783,6 @@ makeSigAttachment name desc email =
                       , signatoryattachmentname = name
                       , signatoryattachmentdescription = desc
                       }
-
 
 trim :: String -> String
 trim = f . f
@@ -824,7 +804,7 @@ handleIssueUpdateSigAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateSigAttachments doc = do
   ctx <- getContext
   mudoc <- updateDocument ctx doc
-  udoc <- returnRightOrMZero mudoc
+  udoc <- guardRight mudoc
 
   sigattachmentnames  <- getAndConcat "sigattachname"
   sigattachmentdescs  <- getAndConcat "sigattachdesc"
@@ -841,11 +821,7 @@ handleIssueUpdateSigAttachments doc = do
 handleIssueUpdateAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do
     ctx <- getContext
-    mudoc <- updateDocument ctx doc
-
-    Log.debug $ show mudoc
-
-    udoc <- returnRightOrMZero mudoc
+    udoc <- guardRight =<< (updateDocument ctx doc)
 
     attidsnums <- getCriticalFieldList asValidID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
@@ -856,8 +832,6 @@ handleIssueUpdateAttachments doc = withUserPost $ do
                                               , r] :: [FileID]
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
-    liftIO $ print "mattachments: "
-    liftIO $ print mattachments
     -- read in the ids as both FileID and DocumentID
     -- if the FileID exists in the existing author attachments
     -- it's not a DocumentID
@@ -867,15 +841,8 @@ handleIssueUpdateAttachments doc = withUserPost $ do
                                                                     , not r]
                          , not $ fid `elem` existingattachments]
                     ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
-    liftIO $ print "idsforadd: "
-    liftIO $ print idsforadd
-    mndoc <- update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
-    liftIO $ print "mndoc"
-    liftIO $ print mndoc
-    case mndoc of
-        Left _msg -> mzero
-        Right ndoc -> return $ LinkDesignDoc $ DesignStep3 (documentid ndoc) signlast
-
+    ndoc <- guardRight =<< (update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval)
+    return $ LinkDesignDoc $ DesignStep3 (documentid ndoc) signlast
 
 {- |
     Deals with a switch to the document's functionality.
@@ -885,17 +852,12 @@ handleIssueUpdateAttachments doc = withUserPost $ do
 handleIssueChangeFunctionality :: Kontrakcja m => Document -> m KontraLink
 handleIssueChangeFunctionality document = do
   ctx <- getContext
-  mudoc <- updateDocument ctx document
+  udoc <- guardRight =<< (updateDocument ctx document)
   signlast <- isFieldSet "signlast"
-  case mudoc of
-    Left _ -> mzero
-    Right udoc -> case getAuthorSigLink udoc of
-      Just SignatoryLink { maybesignatory = Just authorid } -> do
-        muser <- handlePreferenceChange authorid
-        case muser of
-          Left _ -> mzero
-          Right _ -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
-      _ -> mzero
+  SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
+  _user <- guardRight =<< (handlePreferenceChange authorid)
+  return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
+
   where
     handlePreferenceChange :: Kontrakcja m => UserID -> m (Either String User)
     handlePreferenceChange userid = do
@@ -1028,10 +990,8 @@ handleIssueShowTitleGet' docid _title = do
 -- | Check if current user is author or friend so he can view the document
 withAuthorOrFriend :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
 withAuthorOrFriend docid action = do
-  edoc <- getDocByDocID docid
-  case edoc of
-    Left  _ -> mzero
-    Right _ -> action
+  _ <- guardRight =<<  getDocByDocID docid
+  action
 
 {- |
    Show the document with title in the url
@@ -1042,12 +1002,7 @@ handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Respon
 handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
-   mdocument <- query $ GetDocumentByFileID $ fileid'
-   document <- case mdocument of
-     Right document -> return document
-     Left msg -> do
-       Log.debug $ "Cannot file a document for fileid " ++ show fileid' ++ ", msg= " ++ msg
-       mzero
+   document <- guardRight =<< (query $ GetDocumentByFileID $ fileid')
 
    let allfiles = documentsealedfiles document ++ documentfiles document
    case filter (\file -> fileid file == fileid') allfiles of
@@ -1434,43 +1389,37 @@ showItemList' viewPage getDocs = checkUserTOSGet $ do
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
-  case edoc of
-    Left _ -> mzero
-    Right doc -> do
-      ctx <- getContext
-      let pending JpegPagesPending = True
-          pending _                = False
-          files                    = map authorattachmentfile (documentauthorattachments doc)
-      case files of
-        [] -> return $ toResponse ""
-        f  -> do
-          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
-          if any pending b
-             then notFound (toResponse "temporary unavailable (document has files pending for process)")
-            else do
-            pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
-            simpleResponse pages
+  doc <- guardRight =<< (getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh)
+  ctx <- getContext
+  let pending JpegPagesPending = True
+      pending _                = False
+      files                    = map authorattachmentfile (documentauthorattachments doc)
+  case files of
+    [] -> return $ toResponse ""
+    f  -> do
+      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
+      if any pending b
+        then notFound (toResponse "temporary unavailable (document has files pending for process)")
+        else do
+        pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
+        simpleResponse pages
 
 handleAttachmentViewForAuthor :: Kontrakcja m => DocumentID -> m Response
 handleAttachmentViewForAuthor docid = do
-  edoc <- getDocByDocID docid
-  case edoc of
-    Left _ -> mzero
-    Right doc -> do
-      ctx <- getContext
-      let pending JpegPagesPending = True
-          pending _                = False
-          files                    = map authorattachmentfile (documentauthorattachments doc)
-      case files of
-        [] -> return $ toResponse ""
-        f  -> do
-          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
-          if any pending b
-             then notFound (toResponse "temporary unavailable (document has files pending for process)")
-            else do
-            pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
-            simpleResponse pages
+  doc <- guardRight =<< (getDocByDocID docid)
+  ctx <- getContext
+  let pending JpegPagesPending = True
+      pending _                = False
+      files                    = map authorattachmentfile (documentauthorattachments doc)
+  case files of
+    [] -> return $ toResponse ""
+    f  -> do
+      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
+      if any pending b
+        then notFound (toResponse "temporary unavailable (document has files pending for process)")
+        else do
+        pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
+        simpleResponse pages
 
 -- get rid of duplicates
 -- FIXME: nub is very slow
@@ -1654,18 +1603,13 @@ handleIssueShare = do
     Context { ctxmaybeuser = Just user } <- getContext
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
-    mdocs <- update $ ShareDocuments user ids
-    case mdocs of
-      Left _msg  -> mzero
-      Right docs -> return docs
+    guardRight =<< (update $ ShareDocuments user ids)
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
   newname <- getCriticalField (return . BS.fromString) "docname"
-  mdoc <- update $ SetDocumentTitle docid newname
-  case mdoc of
-    Left _msg -> mzero
-    Right doc -> return $ LinkIssueDoc $ documentid doc
+  doc <- guardRight =<< (update $ SetDocumentTitle docid newname)
+  return $ LinkIssueDoc $ documentid doc
 
 handleBulkContractRemind :: Kontrakcja m => m KontraLink
 handleBulkContractRemind = withUserPost $ do
@@ -1758,22 +1702,19 @@ showPage' fileid pageno = do
 
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
+  doc <- guardRight =<< (getDocByDocID docid)
   ctx@Context { ctxtime, ctxipnumber } <- getContext
-  edoc <- getDocByDocID docid
-  case edoc of
-    Left _ -> mzero
-    Right doc -> do
-      case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-        False -> addFlashM flashMessageCannotCancel
-        True -> do
-          customMessage <- getCustomTextField "customtext"
-          mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
-          case mdoc' of
-            Right doc' -> do
-              sendCancelMailsForDocument customMessage ctx doc
-              addFlashM $ flashMessageCanceled doc'
-            Left errmsg -> addFlash (OperationFailed, errmsg)
-      return (LinkIssueDoc $ documentid doc)
+  if isPending doc || isAwaitingAuthor doc
+    then do
+    customMessage <- getCustomTextField "customtext"
+    mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
+    case mdoc' of
+      Right doc' -> do
+        sendCancelMailsForDocument customMessage ctx doc
+        addFlashM $ flashMessageCanceled doc'
+      Left errmsg -> addFlash (OperationFailed, errmsg)
+    else addFlashM flashMessageCannotCancel
+  return (LinkIssueDoc $ documentid doc)
 
 {-
 handleWithdrawn:: DocumentID -> Kontra KontraLink
@@ -1788,32 +1729,21 @@ handleWithdrawn docid = do
 
 handleRestart :: Kontrakcja m => DocumentID -> m KontraLink
 handleRestart docid = withUserPost $ do
-  edoc  <- getDocByDocID docid
-  case edoc of
-    Left _ -> mzero
-    Right doc -> do
-      edoc2 <- restartDocument doc
-      case edoc2 of
-        Left _ -> mzero
-        Right doc2 -> do
-          addFlashM $ flashDocumentRestarted doc2
-          return $ LinkIssueDoc (documentid doc2)
+  doc <- guardRight =<< (getDocByDocID docid)
+  doc2 <- guardRight =<< (restartDocument doc)
+  addFlashM $ flashDocumentRestarted doc2
+  return $ LinkIssueDoc (documentid doc2)
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
   ctx@Context { ctxmaybeuser = Just user } <- getContext
-  edoc <- getDocByDocID docid
-  case edoc of
-    Left _ -> mzero
-    Right doc -> do
-      failIfNotAuthor doc user -- only author can resend
-      case getSigLinkFor doc signlinkid of
-        Nothing -> mzero
-        Just signlink -> do
-          customMessage <- getCustomTextField "customtext"
-          _ <- sendReminderEmail customMessage ctx doc signlink
-          addFlashM $ flashRemindMailSent signlink
-          return (LinkIssueDoc docid)
+  doc <- guardRight =<< getDocByDocID docid
+  guard (isAuthor (doc, user)) -- only author can resend
+  signlink <- guardJust $ getSigLinkFor doc signlinkid
+  customMessage <- getCustomTextField "customtext"
+  _ <- sendReminderEmail customMessage ctx doc signlink
+  addFlashM $ flashRemindMailSent signlink
+  return (LinkIssueDoc docid)
 
 {- |
     If the custom text field is empty then that's okay, but if it's invalid
@@ -1949,24 +1879,22 @@ sigAttachmentHasFileID fid attachment =
  -}
 handleAttachmentDownloadForAuthor :: Kontrakcja m => DocumentID -> FileID -> m Response
 handleAttachmentDownloadForAuthor did fid = do
-  edoc <- getDocByDocID did
-  case edoc of
-    Left _ -> mzero
-    Right doc -> case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
-      Just AuthorAttachment{ authorattachmentfile } -> do
+  doc <- guardRight =<< getDocByDocID did
+  case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
+    Just AuthorAttachment{ authorattachmentfile } -> do
+      ctx <- getContext
+      contents <- liftIO $ getFileContents ctx authorattachmentfile
+      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+      return res2
+    Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
+      Just SignatoryAttachment{ signatoryattachmentfile = Just file } -> do
         ctx <- getContext
-        contents <- liftIO $ getFileContents ctx authorattachmentfile
+        contents <- liftIO $ getFileContents ctx file
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
         return res2
-      Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
-        Just SignatoryAttachment{ signatoryattachmentfile = Just file } -> do
-          ctx <- getContext
-          contents <- liftIO $ getFileContents ctx file
-          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-              res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-          return res2
-        _ -> mzero -- attachment with this file ID does not exist
+      _ -> mzero -- attachment with this file ID does not exist
 
 
 {- |
@@ -2053,35 +1981,21 @@ showDocumentsToFix = onlySuperUser $ do
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSigAttach docid siglinkid mh = do
-  liftIO $ print "handleSigAttach"
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
-  case edoc of
-    Left _ -> do
-      liftIO $ print "Doc doesn't exist."
-      mzero
-    Right doc -> case getSigLinkFor doc siglinkid of
-      Nothing -> do
-        liftIO $ print "No siglink."
-        mzero
-      Just siglink -> do
-        attachname <- getCriticalField asValidFieldValue "attachname"
-        let email = getEmail siglink
-        case find (\sa -> signatoryattachmentemail sa == email
-                          && signatoryattachmentname sa == attachname) (documentsignatoryattachments doc) of
-          Nothing -> do
-            liftIO $ print "No email."
-            liftIO $ print $ show doc
-            mzero
-          Just _ -> do
-            (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
-            content1 <- case contentspec of
-              Left filepath -> liftIO $ BSL.readFile filepath
-              Right content -> return content
-            -- we need to downgrade the PDF to 1.4 that has uncompressed structure
-            -- we use gs to do that of course
-            ctx <- getContext
-            content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
-            _ <- update $ SaveSigAttachment docid attachname email content
-            return $ LinkSignDoc doc siglink
+  doc <- guardRight =<< getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  siglink <- guardJust $ getSigLinkFor doc siglinkid
+  attachname <- getCriticalField asValidFieldValue "attachname"
+  let email = getEmail siglink
+  _ <- guardJust $  find (\sa -> signatoryattachmentemail sa == email
+                                && signatoryattachmentname sa == attachname) (documentsignatoryattachments doc)
+  (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
+  content1 <- case contentspec of
+    Left filepath -> liftIO $ BSL.readFile filepath
+    Right content -> return content
+  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+  -- we use gs to do that of course
+  ctx <- getContext
+  content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
+  _ <- update $ SaveSigAttachment docid attachname email content
+  return $ LinkSignDoc doc siglink
 
 
