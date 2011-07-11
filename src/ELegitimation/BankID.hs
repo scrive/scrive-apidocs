@@ -320,8 +320,7 @@ handleIssuePostBankID docid = withUserPost $ do
     signlast <- isFieldSet "signlast"
     document <- queryOrFail $ GetDocumentByDocumentID docid
 
-    failIfNotAuthor document author
-
+    guard $ isAuthor (document, author)
 
     -- valid transaction?
     ELegTransaction { transactiondocumentid
@@ -330,7 +329,7 @@ handleIssuePostBankID docid = withUserPost $ do
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (transactiondocumentid /= docid)  mzero
+    guard $ transactiondocumentid == docid
     -- end validation
     Log.debug $ "document status on post: " ++ show (documentstatus document)
     eudoc <- case documentstatus document of
@@ -432,7 +431,7 @@ handleSignCanceledDataMismatch :: Kontrakcja m => DocumentID -> SignatoryLinkID 
 handleSignCanceledDataMismatch docid signatorylinkid = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
-    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+    signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
     let mcancelationreason = documentcancelationreason document
     case mcancelationreason of
         Just (ELegDataMismatch msg sid _ _ _)
