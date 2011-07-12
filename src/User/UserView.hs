@@ -130,7 +130,7 @@ showUserMailAPI :: TemplatesMonad m => User -> m String
 showUserMailAPI user@User{usermailapi} =
     renderTemplateFM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI
-        field "mailapienabled" $ maybe False (const True) usermailapi
+        field "mailapienabled" $ isJust usermailapi
         field "mailapikey" $ show . umapiKey <$> usermailapi
         field "mapidailylimit" $ umapiDailyLimit <$> usermailapi
         field "mapisenttoday" $ umapiSentToday <$> usermailapi

@@ -125,7 +125,7 @@ function magicUpdate() {
 }
 
 function isDraggableField(field) {
-    return $(field).hasClass("dragfield") && !$(field).parents("sigentry").hasClass("dragDisabled");;
+    return $(field).hasClass("dragfield") && !$(field).parents("sigentry").hasClass("dragDisabled");
 }
 
 function isDraggableText(field) {
@@ -334,7 +334,7 @@ function docstateToHTML() {
             f.id = newUUID();
             placePlacements(f.placements, f.label, f.value, "author", f.id);
             var val = f.value;
-            var c = ""
+            var c = "";
             if (val === "") {
                 val = f.label;
                 c = "grayed";
@@ -404,12 +404,12 @@ function docstateToHTML() {
 
                     if (ff.text().indexOf(s.email) > -1) {
                         var val = f.value;
-                        var c = ""
+                        var c = "";
                         if (val === "") {
                             val = f.label;
                             c = "grayed";
                         }
-                        ff.find(".signatoryfields").append(makeFieldValue(c,val))
+                        ff.find(".signatoryfields").append(makeFieldValue(c,val));
 
                         }
                 });
@@ -490,7 +490,7 @@ function docstateToHTML() {
                     //console.log(s);
                     if (ff.text().indexOf(currentsig.email) > -1) {
                         var val = f.value;
-                        var c = ""
+                        var c = "";
                         if (val === "") {
                             val = f.label;
                             c = "grayed";
@@ -504,7 +504,7 @@ function docstateToHTML() {
 }
 
 function makeFieldValue(c,val){
-    return $("<div class='field'/>").append($("<input readonly='' autocomplete='off' class='fieldvalue "+c+"'/>").val(val))
+    return $("<div class='field'/>").append($("<input readonly='' autocomplete='off' class='fieldvalue "+c+"'/>").val(val));
 }
 
 function getIcon(field) {

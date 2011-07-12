@@ -18,7 +18,6 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
-import Data.Traversable (sequenceA)
 import Data.Word
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP,dir)
@@ -338,30 +337,6 @@ class SafeEnum a where
 for :: [a] -> (a -> b) -> [b]
 for = flip map
 
--- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation
--- that gives a then we can get real computation that may fail m
--- @(Maybe a)@ 'sequenceMM' does the same, but is aware that first
--- computation can also fail, and so it joins two posible fails.
-sequenceMM :: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
-sequenceMM = (fmap join) . sequenceA
-
-liftMM ::(Monad m) => (a -> m (Maybe b)) -> m (Maybe a) -> m (Maybe b)
-liftMM f v = do
-    mv <- v
-    case mv of
-         Just a -> f a
-         _ -> return Nothing
-
-
-lift_M ::(Monad m) => (a -> m b) -> m (Maybe a) -> m (Maybe b)
-lift_M f v = do
-    mv <- v
-    case mv of
-         Just a -> liftM Just (f a)
-         _ -> return Nothing
-
-when_::(Monad m) => Bool -> m a -> m ()
-when_ b c =  when b $ c >> return ()
 
 maybe' :: a -> Maybe a -> a
 maybe' a ma = maybe a id ma
@@ -405,7 +380,6 @@ whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c
 whenMaybe False _ = return Nothing
 
-
 getFileField:: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
 getFileField name = do
     finput <- getDataFn (lookInput name)
@@ -416,7 +390,6 @@ getFileField name = do
                 Left filepath -> joinEmpty <$> Just . concatChunks <$> (liftIO $ BSL.readFile filepath)
                 Right content -> return $ joinEmpty . Just $ concatChunks content
         _ -> return Nothing
-
 
 -- | Pack value to just unless we have 'mzero'.  Since we can not check
 -- emptyness of string in templates we want to pack it in maybe.
@@ -575,8 +548,7 @@ joinB (Just b) = b
 joinB _ = False
 
 mapJust :: (a -> Maybe b) -> [a] -> [b]
---mapJust = map fromJust . filter isJust . map
-mapJust f ls = [l | Just l <- map f ls]
+mapJust f l = catMaybes $ map f l
 
 onFst ::  (a -> c) -> (a,b) -> (c,b)
 onFst f (a,b) = (f a,b)
@@ -633,3 +605,4 @@ getRecursiveMTime dir = do
           mts <- forM files $ \fn -> getModificationTime $ dir ++ "/" ++fn
           mt <- getModificationTime dir
           return $ maximum $ mt:mts
+

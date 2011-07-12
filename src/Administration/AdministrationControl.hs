@@ -71,6 +71,7 @@ import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Data.List
 import Templates.TextTemplates
+import Util.MonadUtils
 
 eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do

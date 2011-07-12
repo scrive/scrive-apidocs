@@ -32,6 +32,7 @@ import Text.JSON
 import qualified Data.ByteString as BS
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
 
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a

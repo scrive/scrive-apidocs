@@ -771,9 +771,6 @@ getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag]
 getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents ->
   toList $ (documents @= (Just company)  @= mservice @* doctags)
 
-mapWhen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
-mapWhen p f ls = map (\i -> if p i then f i else i) ls
-
 archiveDocuments :: UserID -> BS.ByteString -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
 archiveDocuments userid useremail docs = do
   -- FIXME: can use a fold here
@@ -805,7 +802,7 @@ deleteDocumentSignatoryLinks docid users p = do
   where
     deleteSigLinks doc@Document{documentsignatorylinks} =
       let deleteSigLink sl = sl { signatorylinkdeleted = True }
-          newsiglinks = mapWhen p deleteSigLink $ documentsignatorylinks in
+          newsiglinks = mapIf p deleteSigLink $ documentsignatorylinks in
       doc { documentsignatorylinks = newsiglinks }
 
 {- |
@@ -911,7 +908,7 @@ extendDocumentQuarantine docid = do
 reviveQuarantinedDocument :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
 reviveQuarantinedDocument docid siglinkid = do
   modifySignableOrTemplate docid $ \doc ->
-    let newsiglinks = mapWhen (\sl -> siglinkid == signatorylinkid sl)
+    let newsiglinks = mapIf (isSigLinkFor siglinkid)
                               (\sl -> sl { signatorylinkdeleted = False })
                               (documentsignatorylinks doc) in
     return $ doc { documentsignatorylinks = newsiglinks,

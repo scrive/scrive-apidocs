@@ -34,6 +34,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 import Happstack.Server.SimpleHTTP
 import Util.FlashUtil
+import Util.MonadUtils
 
 handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceUI sid = do

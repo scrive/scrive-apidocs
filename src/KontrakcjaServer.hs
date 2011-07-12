@@ -4,7 +4,6 @@ module KontrakcjaServer (defaultConf,
 
 import Control.Concurrent (forkIO, killThread)
 import Happstack.Util.Cron (cron)
-import Happstack.State (waitForTermination)
 import Happstack.Server
   ( Conf(port)
   , simpleHTTPWithSocket
@@ -18,6 +17,9 @@ import Happstack.State
   , runTxSystem
   , shutdownSystem
   , createCheckpoint
+  , waitForTermination
+  , update
+  , query  
   )
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
@@ -39,7 +41,6 @@ import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
-import Happstack.State (update,query)
 import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig

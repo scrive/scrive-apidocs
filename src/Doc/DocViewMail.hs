@@ -28,6 +28,7 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
 
 import Control.Monad
 import Data.Functor

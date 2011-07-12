@@ -16,8 +16,7 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host)
-import Happstack.State (query)
-import Happstack.State (update)
+import Happstack.State (query, update)
 import Text.JSON
 import Text.JSON.String
 import qualified Codec.MIME.Parse as MIME

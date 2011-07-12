@@ -15,7 +15,7 @@ import Data.Functor
 import Data.Maybe
 import Doc.DocState
 import Happstack.Server hiding (simpleHTTP,host,body)
-import Happstack.State (query)
+import Happstack.State (query, update)
 import KontraLink
 import MinutesTime
 import Misc
@@ -23,7 +23,6 @@ import Session
 import Kontra
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Happstack.State (update)
 import PayEx.PayExInterface () -- Import so at least we check if it compiles
 import InputValidation
 import Text.JSON
@@ -39,6 +38,7 @@ import System.Random (randomIO)
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Util.ServiceUtils
+import Util.MonadUtils
 
 import qualified AppLogger as Log (debug)
 
@@ -78,14 +78,14 @@ integrationService = do
          Nothing -> return Nothing
 
 integrationAPI :: Kontra Response
-integrationAPI = dir "api" $ dir "integration" $ msum [
-      apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
-    , apiCall "new_document" createDocument              :: Kontrakcja m => m Response
-    , apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
-    , apiCall "document" getDocument                     :: Kontrakcja m => m Response
-    , apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
-    , apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
-    , apiUnknownCall
+integrationAPI = dir "integration" $ msum [
+      dir "api" $  apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "new_document" createDocument              :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "document" getDocument                     :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
+    , dir "api" $ apiUnknownCall
     , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSession
     , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
     ]
