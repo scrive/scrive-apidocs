@@ -17,9 +17,8 @@
 "_contractsealingtextssecretaryText","Ej undertecknande part","Non-signing party"
 "_contractsealingtextssignedText","Undertecknat","Signed"
 "_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att
- dokument nummer","This verification was issued by Scrive and supports that the
- document $documentid$"
-"_contractsealingtextsverificationFooterRow12"," har undertecknats","has been signed"
+ dokument nummer $documentid$ har undertecknats","This verification was issued by Scrive and supports that the
+ document $documentid$ has been signed"
 "_contractsealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
  är säkert verifierad genom vår tjänst.","by the parites, and is legally binding. Itallic data is safely
  verifyed by our service."
@@ -41,10 +40,9 @@
 "_offersealingtextssignedText","Offert accepterad","Offer accepted"
 "_offersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att
  offertnummer $documentid$ har accepterats","This verification was issued by Scrive and supports that the
- offer $documentid$"
-"_offersealingtextsverificationFooterRow12","har accepterats","has been accepted"
+ offer $documentid$ has been accepted"
 "_offersealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
- är verifierad genom vår tjänst.","by the parites, and is legally binding. Itallic data is safely
+ är verifierad genom vår tjänst.","by the parties, and is legally binding. Itallic data is safely
  verifyed by our service."
 "_offersealingtextsverificationFooterRow3","Du kan kontrollera offerten mot vår databas genom följande länk:","Verify the offer against our database by following the link:"
 "_offersealingtextsverificationTitle","Acceptverifikat","Acceptance verification"
@@ -64,8 +62,7 @@
 "_ordersealingtextssignedText","Ordern bekräftad","Order confirmed"
 "_ordersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att
  orderbekräftelsenummer $documentid$ har bekräftats","This verification was issued by Scrive and supports that the
- order confirmation $documentid$"
-"_ordersealingtextsverificationFooterRow12","har bekräftats","has been confirmed"
+ order confirmation $documentid$ has been confirmed"
 "_ordersealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
  är säkert verifierad genom vår tjänst.","by the parites, and is legally binding. Itallic data is safely
  verifyed by our service."
