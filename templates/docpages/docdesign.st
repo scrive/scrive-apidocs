@@ -669,7 +669,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-attachments-dialog" rel=".stepForm">
     <input type="hidden" name="updateattachments" value="true" />
-    <div class="modal-container" style="width: 780px;">
+    <div class="modal-container" style="width: 800px;left: -80px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -683,8 +683,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-content">
           <a href="#" id="attachmentback" style="display:none;"> </a>
           <div>$_updateAttachmentsDialogChooseAttachment()$</div>
-          <div id="possibleAttachmentsList">
-          <span id="attachmentbuttons">
+          <div id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
@@ -716,7 +715,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
-          </span>
+          </div>
+          <div id="possibleAttachmentsList">
           <span id="attachmentselectlist" style="display:none">
             <div class="existingattachments">
               <ul>
@@ -765,7 +765,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container" style="width: 780px;">
+    <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
