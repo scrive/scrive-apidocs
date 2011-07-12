@@ -44,12 +44,7 @@ instance TemplatesMonad ActionScheduler where
         return $ langVersion LANG_SE templates
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler (AS sched) sd =
-    runReaderT sched sd `E.catch` catchEverything
-    where
-        catchEverything :: E.SomeException -> IO ()
-        catchEverything e =
-            Log.error $ "Oops, scheduler error: " ++ show e
+runScheduler (AS sched) sd = runReaderT sched sd
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -64,9 +59,17 @@ runEnforceableScheduler interval enforcer sched sd = listen 0
 -- | Gets 'expired' actions and evaluates them
 actionScheduler :: ActionImportance -> ActionScheduler ()
 actionScheduler imp = do
-        liftIO getMinutesTime
-    >>= query . GetExpiredActions imp
-    >>= sequence_ . map evaluateAction
+    sd <- ask
+    liftIO $ getMinutesTime
+         >>= query . GetExpiredActions imp
+         >>= sequence_ . map (run sd)
+    where
+        run sd a = runScheduler (evaluateAction a) sd `E.catch` catchEverything a
+        catchEverything :: Action -> E.SomeException -> IO ()
+        catchEverything a e =
+            Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
+
+-- Internal stuff
 
 -- | Evaluates one action depending on its type
 evaluateAction :: Action -> ActionScheduler ()
