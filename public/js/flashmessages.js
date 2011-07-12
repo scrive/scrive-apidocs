@@ -24,7 +24,7 @@ var FlashMessage = Backbone.Model.extend({
       if (!this.isActive()){
         this.set({"active": "true"});
         var current = this;
-        setTimeout(function(){current.deactivate()},10000);
+        setTimeout(function(){current.deactivate();},10000);
       }  
   },  
   deactivate: function() {
