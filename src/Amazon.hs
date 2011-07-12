@@ -23,13 +23,22 @@ import Doc.DocState
 import Misc (concatChunks)
 import qualified AppLogger as Log
 
-
+-- | Convert a file to Amazon URL. We use the following format:
+--
+-- > "file" </> fileid </> filename ++ ".pdf"
+--
+-- where filename is urlencoded (percent encoded in utf-8)
 urlFromFile :: File -> String
 urlFromFile File{filename, fileid} =
     -- here we use BSC.unpack, as HTTP.urlEncode
     -- does only %-escaping for 8bit values
     "file" </> show fileid </> HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
 
+-- | Upload a document file. This means one of:
+--
+-- - upload a file to Amazon storage
+-- - save a file in a local directory
+-- - do nothing and keep it in memory database
 uploadFile :: FilePath -> S3Action -> File -> IO ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
@@ -49,7 +58,7 @@ uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
     result <- AWS.runAction action
     case result of
          Right _ -> do
-             Log.debug $ "AWS uploaded: " ++ bucket </> url
+             Log.debug $ "AWS uploaded " ++ bucket </> url
              _ <- update $ FileMovedToAWS fileid (BS.fromString bucket) (BS.fromString url)
              return ()
          Left err -> do -- FIXME: do much better error handling
@@ -60,6 +69,13 @@ uploadFile _ _ _ = do
     Log.debug "No uploading/saving to disk as bucket/docstore is ''"
     return ()
 
+-- | Get file contents as strict 'BS.ByteString'. Either reads a file
+-- from disk or memory or downloads from Amazon.
+--
+-- In case there are problems uses plain and old 'error'
+-- function. Sorry for that.
+--
+-- FIXME: This function could use much better error reporting.
 getFileContents :: S3Action -> File -> IO BS.ByteString
 getFileContents _ File{filestorage = FileStorageDisk filepath} =
     BS.readFile filepath `catch` (\e -> do
@@ -77,3 +93,4 @@ getFileContents s3action File{filestorage = FileStorageAWS bucket url} = do
   case result of
        Right rsp -> return $ concatChunks $ HTTP.rspBody rsp
        _ -> error (show result)
+
