@@ -827,7 +827,7 @@ $if(loginModal)$
             <div class="body">
               <div class="wrapper" style="text-align:right">
                 <input type="hidden" name="referer" value="$referer$" />
-                <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+                <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="$_email()$" autocomplete="off"/><br />
                 <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
                 <input type="submit" class="hidden" />
               </div>
@@ -865,7 +865,7 @@ $if(loginModal)$
           <div class="modal-content"> 
             <div class="body">
               <div class="wrapper">
-                <span class="txt">$_email()$</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
+                <span class="txt">$_email()$</span><input type="email" name="email" infotext="$_email()$" autocomplete="off"/>
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -897,7 +897,7 @@ loginModalPart=
     <div class="body">
       <div class="wrapper" style="text-align:right">
         <input type="hidden" name="referer" value="$referer$" />
-        <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+        <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="$_email()$" autocomplete="off"/><br />
         <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
         <input type="submit" class="hidden" />
       </div>

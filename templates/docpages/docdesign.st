@@ -543,9 +543,9 @@ pageDocumentDesign=
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
         <input type="hidden" name="signatoryrole" value="signatory"/>
-        <input type="radio" class="sigrole_signatory" value="signatory" checked="checked"><label class="radiolabel">Undertecknande part</label></input>
+        <input type="radio" class="sigrole_signatory" value="signatory" checked="checked"><label class="radiolabel">$_authorsignatoryradioSenderSign()$</label></input>
         <br/>
-        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
+        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">$_authorsignatoryradioSenderNotSign()$</label></input>
       </div>
     </div>
   </span>
@@ -796,7 +796,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <a  class="close cancel float-left">Avbryt</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
       </div>
     </div>
   </form>

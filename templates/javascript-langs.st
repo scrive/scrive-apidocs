@@ -20,7 +20,7 @@ javascriptLocalisation =
              , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
-             , author : "Avsändare"
+             , author : "$_sender()$"
              , youMustSetParnerEmail : "$_youMustSetParnerEmail()$"
              , emptyOrNotValidEmail :  "$_emptyOrNotValidEmail()$"
              , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
