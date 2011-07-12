@@ -78,14 +78,14 @@ integrationService = do
          Nothing -> return Nothing
 
 integrationAPI :: Kontra Response
-integrationAPI = dir "api" $ dir "integration" $ msum [
-      apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
-    , apiCall "new_document" createDocument              :: Kontrakcja m => m Response
-    , apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
-    , apiCall "document" getDocument                     :: Kontrakcja m => m Response
-    , apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
-    , apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
-    , apiUnknownCall
+integrationAPI = dir "integration" $ msum [
+      dir "api" $  apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "new_document" createDocument              :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "document" getDocument                     :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
+    , dir "api" $ apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
+    , dir "api" $ apiUnknownCall
     , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSession
     , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
     ]

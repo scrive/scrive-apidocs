@@ -110,7 +110,7 @@ apiCall s f = dir s $ do
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
 apiUnknownCall :: Kontrakcja m => m Response
-apiUnknownCall = dir "api" $ apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
+apiUnknownCall = apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
 
 
 
