@@ -806,7 +806,10 @@ safeReady(function() {
 
     $("#personpane .signorder").live("change", updatePeopleListSignOrder);
 
-    $("#personpane .sigrole_nonsignatory").live("change", function() {
+    $("#personpane .sigrole_nonsignatory").live("click", function() {
+        /** IE7 is stupid, it doesn't like dynamically added radio inputs so won't do the checking itself */
+        $('input[name="' + $(this).name + '"]').removeAttr("checked");
+        $(this).attr("checked", "checked");
         var signorder = $(this).parents(".persondetails").find(".signorder");
         signorder.hide();
         makeNonSignatory(signorder);
@@ -814,7 +817,10 @@ safeReady(function() {
         updatePeopleListSignOrder();
     });
 
-    $("#personpane .sigrole_signatory").live("change", function() {
+    $("#personpane .sigrole_signatory").live("click", function() {
+        /** IE7 is stupid, it doesn't like dynamically added radio inputs so won't do the checking itself */
+        $('input[name="' + $(this).name + '"]').removeAttr("checked");
+        $(this).attr("checked", "checked");
         var signorder = $(this).parents(".persondetails").find(".signorder");
         makeSignatory(signorder);
         if (signingOrderEnabled)
@@ -1132,13 +1138,15 @@ function signatoryToHTML(isMultiple, sig) {
 
     var signorder = sigentry.find(".signorder");
     if (sig.role == "signatory") {
-        partyrole.find(".sigrole_signatory").attr("checked", true);
+        partyrole.find(".sigrole_nonsignatory").removeAttr("checked");
+        partyrole.find(".sigrole_signatory").attr("checked", "checked");
         partyrole.find("input[name=signatoryrole]").val("signatory");
         signorder.val(sig.signorder);
         if (signingOrderEnabled)
             signorder.show();
     } else {
-        partyrole.find(".sigrole_nonsignatory").attr("checked", true);
+        partyrole.find(".sigrole_signatory").removeAttr("checked");
+        partyrole.find(".sigrole_nonsignatory").attr("checked", "checked");
         partyrole.find("input[name=signatoryrole]").val("nonsignatory");
         signorder.hide();
         makeNonSignatory(signorder);
