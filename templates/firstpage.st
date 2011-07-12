@@ -26,6 +26,12 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 $javascriptLocalisation()$</script>
                <script src="$prefix$/js/global.js"
                 type="text/javascript"></script>
+               <script src="$prefix$/js/underscore.js"
+                type="text/javascript"></script>
+               <script src="$prefix$/js/backbone.js"
+                type="text/javascript"></script>
+               <script src="$prefix$/js/flashmessages.js"
+                type="text/javascript"></script>
                 <script src="/js/jquery.tweet.js" type="text/javascript"></script>
                 <script src="/js/main.js" type="text/javascript"></script>
                 <script type="text/javascript">

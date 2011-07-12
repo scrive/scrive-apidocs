@@ -67,13 +67,13 @@ var FlashMessageView = Backbone.View.extend({
         this.render()
     },
     render: function () {
-        this.el = $("<div class='flash-container " + this.model.get("color") + "'>" +
-                                "<div class='flash-content'>" +
-                                   "<div class='skrivapa-logo float-left'></div>" +
-                                   "<div class='flash-icon " + this.model.get("color") + "'></div>" +
-                                   "<div class='flash-body'>" + this.model.get("content") + "</div>" +
-                                   "<div class='flash-close modal-close'></div>"+
-                          "</div></div>");
+        this.el = $("<div class='flash-container " + this.model.get("color") + "'/>")
+                    .append($("<div class='flash-content'> </div>")
+                            .append("<div class='skrivapa-logo float-left'></div>")
+                            .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )                                
+                            .append($("<div class='flash-body'></div>").append(this.model.get("content")))
+                            .append("<div class='flash-close modal-close'></div>")
+                           )
         return this;
     },
     hide: function(){
@@ -126,5 +126,5 @@ var FlashMessagesView = Backbone.View.extend({
  * Its view is bind to .flashmsgbox dom element
  */
 window.FlashMessages = new FlashMessagesList
-new FlashMessagesView({model: FlashMessages,  el:  $(".flashmsgbox"),})
+new FlashMessagesView({model: FlashMessages,  el:  $(".flashmsgbox")})
 });

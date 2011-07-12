@@ -606,3 +606,5 @@ getRecursiveMTime dir = do
           mt <- getModificationTime dir
           return $ maximum $ mt:mts
 
+jsText :: String -> String
+jsText  = filter (not . isControl) 

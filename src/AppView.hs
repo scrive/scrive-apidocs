@@ -280,7 +280,7 @@ flashMessageFields flash = do
              OperationDone   -> "green"
              OperationFailed -> "red"
              _               -> "") <$> ftype
-    fieldM "message" msg
+    fieldM "message" $ jsText <$> msg
     fieldM "isModal" $ (== Modal) <$> ftype
     where
         fm :: TemplatesMonad m => m (FlashType, String)

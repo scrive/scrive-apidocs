@@ -50,9 +50,9 @@ standardHeaderContents=
         <script src="$prefix$/js/underscore.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/backbone.js"
-                type="text/javascript"></script>
+                type="text/javascript"></script> 
         <script src="$prefix$/js/flashmessages.js"
-                type="text/javascript"></script>
+                type="text/javascript"></script> 
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
                 type="text/javascript"></script>

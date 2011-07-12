@@ -68,20 +68,19 @@ spanNoEscape=<span>$it:noescape()$</span>
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 ####
 flashmessages = 
-<div class="flashmsgbox">
-            $flashmessages:{ flash | 
-              $if(!flash.isModal)$
-                <div class='flash-container $flash.type$'>
-                    <div class='flash-content'>
-                    <div class='skrivapa-logo float-left'></div>
-                    <div class='flash-icon $flash.type$'></div>
-                    <div class='flash-body'>$flash.message:noescape()$</div>
-                    <div class='flash-close modal-close'></div>
-                    </div> 
-               </div>
-              $endif$
-            }$
-</div>
+<div class="flashmsgbox"> </div>
+<script>
+   jQuery(function(){
+     $flashmessages:{ flash |
+         $if(!flash.isModal)$
+            FlashMessages.add({
+              "color" : "$flash.type$",
+              "content": "$flash.message$"
+            })
+         $endif$
+     }$
+   })
+</script>
 <div class="modalcontainer">
 $flashmessages:{ flash | 
     $if(flash.isModal)$
