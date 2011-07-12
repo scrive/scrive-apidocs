@@ -606,11 +606,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <table id="sigattachmenttable">
             <thead>
               <tr>
-                <th class="minusbutton">   $_pageDocumentForAuthorHelpersLocalDialogsMinusbutton()$</th>
+                <th class="minusbutton"></th>
                 <th class="attachmentname">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$</th>
                 <th class="attachmentdesc">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc()$</th>
                 <th class="attachmentsigs">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$</th>
-                <th class="attachmentsels">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsels()$</th>
+                <th class="attachmentsels"></th>
               </tr>
             </thead>
             <tbody>
