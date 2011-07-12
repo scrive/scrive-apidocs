@@ -156,7 +156,7 @@ safeReady(function() {
             } else {
                 if (countSentOrOpenRows(selectedrows) > 0) {
                     var flashtxt = $(".cantdeleteopenflashmsgtxt").text();
-                    addFlashMessage(flashtxt, "red");
+                    FlashMessages.add({content: flashtxt, color: "red"});
                     return false;
                 }
                 var deletionDetails = "";
@@ -184,7 +184,7 @@ safeReady(function() {
             } else {
                 if (countSentOrOpenRows(selectedrows) != selectedrows.length) {
                     var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-                    addFlashMessage(localization.cantSendReminder(listtype), "red");
+                    FlashMessages.add({content: localization.cantSendReminder(listtype), color: "red"});
                     return false;
                 }
                 var singlemsg = $("#dialog-list-remind-confirm").find(".singleremindmsg");
@@ -329,7 +329,6 @@ safeReady(function() {
 });
 
 safeReady(function() {
-    flashFlashMessages();
     flashSpecialFlashMessages();
     showModal();
     enableInfoTextOnce();
@@ -506,7 +505,7 @@ function checkSignatoriesHaveUniqueEmail() {
     }
 
     if (isRepetition || isAuthorUsedAsSignatory) {
-        addFlashMessage(localization.repetedEmailAddress, "red");
+        FlashMessages.add({content: localization.repetedEmailAddress, color: "red"});
         return false;
     } else {
         return true;
@@ -677,7 +676,7 @@ safeReady(function() {
             var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
             if (trs.length > 0) {
                 trs.addClass("redborder");
-                addFlashMessage(localization.addRequiredAttachments, "red");
+                FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
                 return false;
             }
             var guardChecked = $(".signGuard:checked").size() > 0;
@@ -686,7 +685,7 @@ safeReady(function() {
                 $(".signGuard").change(function() {
                     $("#signGuardField").css("border", "");
                 });
-                addFlashMessage(signguardwarntext, "red");
+                FlashMessages.add({content: signguardwarntext, color: "red"});
                 return false;
             }
         }
@@ -718,7 +717,6 @@ safeReady(function() {
                 $(".signGuard").change(function() {
                     $(this).parent().css("border", "");
                 });
-                //addFlashMessage("need text");
                 return false;
             }
         }
@@ -759,7 +757,7 @@ safeReady(function() {
 safeReady(function() {
     $(".flashOnClick").click(function() {
         $(".flashMessage", $(this).parent()).each(function() {
-            addFlashMessage($(this).html(), $(this).attr("flashtype"));
+            FlashMessages.add({content: $(this).html(), color:  $(this).attr("flashtype")});
             $(this).remove();
         });
     });
@@ -768,7 +766,8 @@ safeReady(function() {
         var ftype = $(this).attr("flashtype");
         if ($(this).val() == "off") {
             $(".flashMessage", $(this).parent()).each(function() {
-                addFlashMessage($(this).html(), ftype);
+                FlashMessages.add({content: $(this).html(), color: ftype});
+
             });
         }
     });
@@ -937,7 +936,7 @@ function checkSignPossibility() {
     if ($("#authorsecretaryradio").attr("checked")) {
         // secretary
         $(".authordetails .man").addClass("redborder");
-        addFlashMessage(localization.secretaryCantSign, "red");
+        FlashMessages.add({content: localization.secretaryCantSign, color: "red"});
         return false;
     } else {
         // sign is possible
@@ -952,7 +951,7 @@ function checkAllCustomFieldsAreNamed() {
     unamedfields = $("#personpane .newfield");
     unamedfields.addClass("redborder");
     if (unamedfields.length > 0) {
-        addFlashMessage(localization.setAllFields, "red");
+        FlashMessages.add({content: localization.setAllFields, color: "red"});
         return false;
     } else {
         return true;
@@ -971,13 +970,13 @@ function authorFieldsValidation() {
     if (remainingAuthorFields.size() > 0) {
         console.log(remainingAuthorFields);
         if (remainingAuthorFields.hasClass('sigfstname') || remainingAuthorFields.hasClass('sigsndname')) {
-            addFlashMessage(localization.missingSignatoryNames, "red");
+           FlashMessages.add({content: localization.missingSignatoryNames, color: "red"});
         }
         if (remainingAuthorFields.hasClass('customfield')) {
-            addFlashMessage(localization.missingNames, "red");
+           FlashMessages.add({content: localization.missingNames, color: "red"});
         }
         if (remainingAuthorFields.hasClass('sigpersnum')) {
-            addFlashMessage(localization.backToStepTwoAndFillPersonNumber, "red");
+           FlashMessages.add({content: localization.backToStepTwoAndFillPersonNumber, color: "red"});
         }
         remainingAuthorFields.addClass('redborder').addClass('offending');
         fieldValidationType = "fillstatus";
@@ -997,7 +996,7 @@ function sigFieldsValidation() {
     });
 
     if (remainingSigFields.size() > 0) {
-        addFlashMessage(localization.mustFillFieldsBeforeSigning, "red");
+        FlashMessages.add({content: localization.mustFillFieldsBeforeSigning, color: "red"});
         remainingSigFields.addClass("redborder");
         return false;
     } else {
@@ -1024,9 +1023,7 @@ function nonZeroSignatories() {
     var error = (sigs === 0);
 
     if (error) {
-        addFlashMessage(localization.atLeastOneSignatoryRequired, "red");
-        //saving this for later
-        //addFlashMessage('Du kan inte underteckna med endast dig sjГ¤lv.', "red");
+        FlashMessages.add({content: localization.atLeastOneSignatoryRequired, color: "red"});
         $("li.plus").addClass("redborder");
         return false;
     }
@@ -1066,25 +1063,6 @@ function flashSpecialFlashMessages() {
     flashmsgbox.delay(12000).fadeOut();
 }
 
-function flashFlashMessages() {
-    // try to preload image before showing flash
-    var preload = new Image();
-    preload.onload = function() {
-        var flashmsgbox = $(".flashmsgbox");
-        if ($(".flash-container", flashmsgbox).size() > 0) {
-            // delay() and click() doesn't work correctly in document
-            // creator since clearQueue() doesn't call clearTimeout(),
-            // so we need to use setTimeout() and unregister set events
-            // with clearTimeout() if user closed flash message by himself
-            var event = setTimeout(hideFlashMessages, 10000);
-            flashmsgbox.slideDown(800);
-            flashmsgbox.click(function() {
-                hideFlashMessages(event);
-            });
-        }
-    };
-    preload.src = "/img/spr-flash-bg.png";
-}
 
 function showModal() {
     var modalbox = $(".modalbox");
@@ -1107,13 +1085,6 @@ function hideFlashMessages(event) {
     $(".flashmsgbox").slideUp(800, function() {
         $(this).children().remove();
     });
-}
-
-function addFlashMessage(msg, type) {
-    var flashmsgbox = $('.flashmsgbox');
-    flashmsgbox.children().remove();
-    flashmsgbox.append("<div class='flash-container " + type + "'>" + "<div class='flash-content'>" + "<div class='skrivapa-logo float-left'></div>" + "<div class='flash-icon " + type + "'></div>" + "<div class='flash-body'>" + msg + "</div>" + "<div class='flash-close modal-close'></div></div></div>");
-    flashFlashMessages();
 }
 
 function prepareEditor(textarea) {

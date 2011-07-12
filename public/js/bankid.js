@@ -326,19 +326,19 @@ function netIDSignAuthor() {
 }
 
 function flashNordeaMessage() {
-    addFlashMessage(localization.noNordeaInstalled, "red");
+    FlashMessages.add({ content: localization.noNordeaInstalled, color: "red"});
 }
 
 function flashBankIDMessage() {
-    addFlashMessage(localization.noBankIdInstalled, "red");
+    FlashMessages.add({ content: localization.noBankIdInstalled, color: "red"});
 }
 
 function flashTeliaMessage() {
-    addFlashMessage(localization.noTeliaInstalled, "red");
+    FlashMessages.add({ content: localization.noTeliaInstalled, color: "red"});
 }
 
 function failEleg(msg) {
-    addFlashMessage(msg, "red");
+    FlashMessages.add({ content: msg, color: "red"});
     closeLoadingOverlay();
 }
 

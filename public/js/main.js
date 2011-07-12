@@ -154,7 +154,7 @@ $(document).ready(function() {
                 var email = emailfield.val();
 
                 if (email.replace(/.*@/, "") != useremail.replace(/.*@/, "")) {
-                    addFlashMessage(localization.youCanNotInviteSameEmail, "red");
+                    FlashMessages.add({context: localization.youCanNotInviteSameEmail , color:  "red"});
                 } else {
                     form.append("<input type='hidden' name='add' value='YES'>").submit();
                 }

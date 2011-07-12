@@ -2,7 +2,7 @@
  * Usage
  *   FlashMessages.add({ color : "red | green | blue" , content: "Text to be displayed"})
  * 
- * Adding many flash messages is short perriod of time will que them and display them one by one
+ * Adding next flash messages when previous one is active will deactivate previous one.
  */
   
 $(function(){
@@ -13,9 +13,9 @@ $(function(){
 var FlashMessage = Backbone.Model.extend({
   initialize: function(attr) {
        if (!(attr.color == "red" || attr.color == "blue" || attr.color == "green"))
-            return "FlashMessage error: Bad color selected ( "  + attr.color +" )";
+            console.log("FlashMessage error: Bad color selected ( "  + attr.color +" )");
         if (!_.isString(attr.content) || attr.content.length === 0 )
-            return "FlashMessage error: No content provided";
+            console.log("FlashMessage error: No content provided");
   },
   isActive : function() {
                 return this.has("active");
@@ -33,17 +33,22 @@ var FlashMessage = Backbone.Model.extend({
 });
 
 /* Collection of flash messages. There will be only one instance in the system
- * It tries to keep al least one flash message active if it is not empty
+ * It tries to keep last flash message active if it is not empty.
  */
 var FlashMessagesList = Backbone.Collection.extend({
     model: FlashMessage ,
     initialize: function (args) {
-        this.bind('add', this.activateFirst);
-        this.bind('remove', this.activateFirst);
+        this.bind('add', this.reactivate);
+        this.bind('remove', this.reactivate);
     },
-    activateFirst: function(){
+    reactivate: function(){
         if (!this.isEmpty())
-        this.first().activate();
+        {
+            for(i=0;i<this.length-1;i++)
+                this.at(i).deactivate();
+            this.last().activate();
+        }
+        
     },
     closeCurrent: function() {
         if (!this.isEmpty() && this.first().isActive())
@@ -61,7 +66,6 @@ var FlashMessageView = Backbone.View.extend({
 
     initialize: function (args) {
         _.bindAll(this, 'render', 'hide');
-        this.model.bind('change:active', this.render);
         this.model.bind('deactivate', this.hide);
         this.model.view = this;
         this.render()
@@ -88,7 +92,7 @@ var FlashMessageView = Backbone.View.extend({
 
 /* View for flash message list.
  * It makes sure that each flash message added to the list will have a view
- * and it can agragete rendered views of flash messages
+ * and it can agragete rendered views of active flash messages
  */
 var FlashMessagesView = Backbone.View.extend({
     events: {
@@ -101,7 +105,6 @@ var FlashMessagesView = Backbone.View.extend({
         this.model.view = this;
     },
     render: function () {
-         console.log("Rendering main");
          if (this.model.isEmpty())
          { this.el.hide();}
          else
@@ -109,7 +112,6 @@ var FlashMessagesView = Backbone.View.extend({
            var el = this.el;
            this.model.forEach(function(e){
               if (e.isActive())   {
-                 console.log("Active found") 
                  el.append(e.view.el)
               }
            });
@@ -117,7 +119,7 @@ var FlashMessagesView = Backbone.View.extend({
            this.el.slideDown(800);
         }
     },
-    addFlashMessage : function(fm){ new FlashMessageView({model: fm}); this.render()  },
+    addFlashMessage : function(fm){new FlashMessageView({model: fm}); this.render() ;},
     closeCurrent: function () { this.model.closeCurrent(); }
 });
 
@@ -125,6 +127,6 @@ var FlashMessagesView = Backbone.View.extend({
 /* Globally visible list of flash messages
  * Its view is bind to .flashmsgbox dom element
  */
-window.FlashMessages = new FlashMessagesList
-new FlashMessagesView({model: FlashMessages,  el:  $(".flashmsgbox")})
+window.FlashMessages = new FlashMessagesList;
+new FlashMessagesView({model: FlashMessages,  el:  $(".flashmsgbox")});
 });

@@ -75,7 +75,7 @@ flashmessages =
          $if(!flash.isModal)$
             FlashMessages.add({
               "color" : "$flash.type$",
-              "content": "$flash.message$"
+              "content": "$flash.message:noescape()$"
             })
          $endif$
      }$
