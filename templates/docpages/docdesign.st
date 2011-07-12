@@ -528,7 +528,7 @@ pageDocumentDesign=
         <span class='dragfield sigpersnum inputWrapper'>
           <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="$_personnumber()$ Shouldn't be here in UK version" name="signatorypersonalnumber" autocomplete="off" />
+          <input type="text" infotext="$_personnumber()$" name="signatorypersonalnumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigcompnum inputWrapper'>
