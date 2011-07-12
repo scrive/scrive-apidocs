@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module DocStateTest (docStateTests) where
 
 import Test.HUnit (assert, assertFailure, Assertion, assertBool, assertEqual)
@@ -16,12 +17,18 @@ import Misc
 import Payments.PaymentsState as Payments
 
 import Util.SignatoryLinkUtils
+import Doc.DocInfo
+import qualified AppLogger as Log
+
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Data.Maybe
 import Control.Monad.Trans
-
 import Data.List
+import Test.QuickCheck
+import Test.QuickCheck.Gen
+import Control.Monad
+import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
@@ -34,8 +41,10 @@ docStateTests = testGroup "DocState" [
   testThat "when I attach a file to a bad docid, it ALWAYS returns Left" testNoDocumentAttachAlwaysLeft,
   testThat "when I attach a file, the file is attached" testDocumentAttachHasAttachment,
   testThat "when I attach a sealed file to a bad docid, it always returns left" testNoDocumentAttachSealedAlwaysLeft,
-  testThat "when I attach a sealed file to a real doc, it always returns Right" testDocumentAttachSealedAlwaysRight
-                ]
+  testThat "when I attach a sealed file to a real doc, it always returns Right" testDocumentAttachSealedAlwaysRight,
+  testThat "when I call updateDocument, it fails when the doc doesn't exist" testNoDocumentUpdateDocumentAlwaysLeft,
+  testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" testNotPreparationUpdateDocumentAlwaysLeft
+  ]
 
 testThat :: String -> Assertion -> Test
 testThat s a = testCase s (withTestState a)
@@ -171,6 +180,37 @@ testDocumentAttachSealedAlwaysRight = do
     Left msg -> assertFailure $ "Could not run AttachFile: " ++ msg
     Right _newdoc -> assertSuccess
 
+testNotPreparationUpdateDocumentAlwaysLeft :: Assertion
+testNotPreparationUpdateDocumentAlwaysLeft = do
+  -- setup
+  mt <- whatTimeIsIt
+  author <- addNewRandomUser
+  do100Times $ do
+                 docid <- addRandomDocumentWithAuthor author
+                 mdoc <- query $ GetDocumentByDocumentID docid
+                 case mdoc of
+                   Nothing -> assertFailure "Could not stored document."
+                   Just doc | isPreparation doc -> return ()
+                   Just _doc -> do
+                     --execute
+                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+                     --assert
+                     case edoc of
+                       Left _msg     -> return ()
+                       Right _newdoc -> assertFailure "Should not succeed if not preparation"
+  assertSuccess
+
+testNoDocumentUpdateDocumentAlwaysLeft :: Assertion
+testNoDocumentUpdateDocumentAlwaysLeft = do
+  -- setup
+  mt <- whatTimeIsIt
+  --execute
+  -- non-existent docid
+  edoc <- update $ UpdateDocument mt (DocumentID 24) "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+  --assert
+  case edoc of
+    Left _msg     -> assertSuccess
+    Right _newdoc -> assertFailure "Should not succeed if no document"
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
@@ -222,7 +262,6 @@ assumingBasicContract mt author = do
       return blankDocument
     Just d -> return d
 
-
 assumingBasicUser :: IO (User)
 assumingBasicUser = do
   muser <- addNewUser "Eric" "Normand" "eric@fds.com"
@@ -231,6 +270,19 @@ assumingBasicUser = do
     Nothing -> do
       assertFailure "Cannot create a new user (in setup)"
       return blankUser -- should not be possible
+      
+addNewRandomUser :: IO (User)
+addNewRandomUser = do
+  stdgn <- getStdGen
+  let fn = unGen arbitrary stdgn 10
+      ln = unGen arbitrary stdgn 10
+      em = unGen arbEmail  stdgn 10
+  muser <- addNewUser fn ln (BS.toString em)
+  case muser of
+    Just user -> return user
+    Nothing -> do
+      Log.debug "Could not create user, trying again."
+      addNewRandomUser
 
 blankUser :: User
 blankUser = User {  
@@ -313,3 +365,116 @@ blankDocument =
           , documentsignatoryattachments = []
           , documentattachments          = []
           }
+
+emptySignatoryDetails :: SignatoryDetails
+emptySignatoryDetails = SignatoryDetails
+    { signatoryfstname        = ""
+    , signatorysndname        = ""
+    , signatorycompany        = ""
+    , signatorypersonalnumber = ""
+    , signatorycompanynumber  = ""
+    , signatoryemail          = ""
+    , signatorysignorder = SignOrder 1
+    , signatoryfstnameplacements        = []
+    , signatorysndnameplacements        = []
+    , signatorycompanyplacements        = []
+    , signatoryemailplacements          = []
+    , signatorypersonalnumberplacements = []
+    , signatorycompanynumberplacements  = []
+    , signatoryotherfields              = []
+    }
+    
+instance Arbitrary BS.ByteString where
+  arbitrary = fmap BS.fromString arbitrary
+
+arbString :: Int -> Int -> Gen String
+arbString minl maxl = do
+  l <- choose (minl, maxl)
+  vectorOf l $ elements ['a'..'z']
+
+arbEmail :: Gen BS.ByteString
+arbEmail = do
+  n <- arbString 1 7
+  d <- arbString 3 7
+  return $ BS.fromString (n ++ "@" ++ d ++ ".com")
+    
+instance Arbitrary SignatoryDetails where
+  arbitrary = do
+    fn <- arbitrary
+    ln <- arbitrary
+    cn <- arbitrary
+    pn <- arbitrary
+    cm <- arbitrary
+    em <- arbEmail
+    return $ SignatoryDetails { signatoryfstname        = fn
+                              , signatorysndname        = ln
+                              , signatorycompany        = cn
+                              , signatorypersonalnumber = pn
+                              , signatorycompanynumber  = cm
+                              , signatoryemail          = em
+                              , signatorysignorder = SignOrder 1
+                              , signatoryfstnameplacements        = []
+                              , signatorysndnameplacements        = []
+                              , signatorycompanyplacements        = []
+                              , signatoryemailplacements          = []
+                              , signatorypersonalnumberplacements = []
+                              , signatorycompanynumberplacements  = []
+                              , signatoryotherfields              = []
+                              }
+
+instance Arbitrary UserInfo where
+  arbitrary = do
+    fn <- arbitrary
+    ln <- arbitrary
+    cn <- arbitrary
+    pn <- arbitrary
+    cm <- arbitrary
+    em <- arbEmail
+
+    return $ UserInfo { userfstname     = fn
+                      , usersndname     = ln
+                      , userpersonalnumber  = pn
+                      , usercompanyname     = cn
+                      , usercompanyposition = ""
+                      , usercompanynumber   = cm
+                      , useraddress         = ""
+                      , userzip             = ""
+                      , usercity            = ""
+                      , usercountry         = ""
+                      , userphone           = ""
+                      , usermobile          = ""
+                      , useremail           = Email em
+                      }
+
+addRandomDocumentWithAuthor :: User -> IO (DocumentID)
+addRandomDocumentWithAuthor user = do
+  stdgen <- getStdGen
+  let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+              stdgen 10000
+  let doc = unGen arbitrary stdgen 10
+  asl <- update $ SignLinkFromDetailsForTest (signatoryDetailsFromUser user) roles
+  let adoc = doc { documentsignatorylinks = (documentsignatorylinks doc) ++ 
+                                            [asl { maybesignatory = Just (userid user) }]
+                 }
+  update $ StoreDocumentForTesting adoc
+  
+instance Arbitrary Document where
+  arbitrary = do
+    ds <- arbitrary
+    return $ blankDocument { documentstatus = ds }
+
+instance Arbitrary DocumentStatus where
+  arbitrary = elements [ Preparation
+                       , Pending
+                       , Closed
+                       , Canceled
+                       , Timedout
+                       , Rejected
+                       , AwaitingAuthor
+                       , DocumentError "Bad document."
+                       ]
+
+do100Times :: IO a -> IO ()
+do100Times action = do
+             _ <- forM ([0..100]::[Int]) $ (\_ -> action)
+             return ()

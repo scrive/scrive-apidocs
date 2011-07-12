@@ -79,6 +79,7 @@ module Doc.DocState
     , UnquarantineAll(..)
     , MakeFirstSignatoryAuthor(..)
     , StoreDocumentForTesting(..)
+    , SignLinkFromDetailsForTest(..)
     )
 where
 
@@ -1065,6 +1066,9 @@ signLinkFromDetails details roles = do
                      , signatorylinkdeleted = False
                      }
 
+signLinkFromDetailsForTest :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
+signLinkFromDetailsForTest = signLinkFromDetails
+
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
 getUniqueSignatoryLinkID = do
   sg <- ask
@@ -1379,6 +1383,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getMagicHash
                         , 'saveSigAttachment
                         , 'storeDocumentForTesting
+                        , 'signLinkFromDetailsForTest
 
                         , 'getDocumentByFileID
                         , 'errorDocument
