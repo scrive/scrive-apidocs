@@ -1328,7 +1328,7 @@ showOrdersList =
 showTemplatesList :: Kontrakcja m => m (Either KontraLink String)
 showTemplatesList =
   let userTemplates user = do
-        mydocuments <- query $ GetDocumentsByUser user
+        mydocuments <- query $ GetDocumentsByAuthor (userid user)
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList userTemplates
 
@@ -1789,7 +1789,7 @@ getTemplatesForAjax = do
     case (ctxmaybeuser ctx,mdocprocess) of
             (Just user, Just docprocess) -> do
                 let tfilter doc = (Template docprocess == documenttype doc)
-                userdocs <- liftIO $ query $ GetDocumentsByUser user
+                userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
                 relatedusers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
                 shareddocs <- liftIO $ query $ GetSharedTemplates (map userid relatedusers)
                 let templates = filter tfilter $ nub (userdocs ++ shareddocs)

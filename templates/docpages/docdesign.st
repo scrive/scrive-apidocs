@@ -528,7 +528,7 @@ pageDocumentDesign=
         <span class='dragfield sigpersnum inputWrapper'>
           <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="$_personnumber()$ Shouldn't be here in UK version" name="signatorypersonalnumber" autocomplete="off" />
+          <input type="text" infotext="$_personnumber()$" name="signatorypersonalnumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigcompnum inputWrapper'>
@@ -543,9 +543,9 @@ pageDocumentDesign=
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
         <input type="hidden" name="signatoryrole" value="signatory"/>
-        <input type="radio" class="sigrole_signatory" value="signatory" checked="checked"><label class="radiolabel">Undertecknande part</label></input>
+        <input type="radio" class="sigrole_signatory" value="signatory" checked="checked"><label class="radiolabel">$_authorsignatoryradioSenderSign()$</label></input>
         <br/>
-        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
+        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">$_authorsignatoryradioSenderNotSign()$</label></input>
       </div>
     </div>
   </span>
@@ -603,14 +603,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div style="padding-bottom:10px;">     
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
+          <div class="sigattachmentlist">
           <table id="sigattachmenttable">
             <thead>
               <tr>
-                <th class="minusbutton">   $_pageDocumentForAuthorHelpersLocalDialogsMinusbutton()$</th>
+                <th class="minusbutton"></th>
                 <th class="attachmentname">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$</th>
                 <th class="attachmentdesc">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc()$</th>
                 <th class="attachmentsigs">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$</th>
-                <th class="attachmentsels">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsels()$</th>
+                <th class="attachmentsels"></th>
               </tr>
             </thead>
             <tbody>
@@ -647,6 +648,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               }$
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -669,7 +671,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-attachments-dialog" rel=".stepForm">
     <input type="hidden" name="updateattachments" value="true" />
-    <div class="modal-container" style="width: 780px;">
+    <div class="modal-container" style="width: 800px;left: -80px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -683,8 +685,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-content">
           <a href="#" id="attachmentback" style="display:none;"> </a>
           <div>$_updateAttachmentsDialogChooseAttachment()$</div>
-          <div id="possibleAttachmentsList">
-          <span id="attachmentbuttons">
+          <div id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
@@ -716,7 +717,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
-          </span>
+          </div>
+          <div id="possibleAttachmentsList">
           <span id="attachmentselectlist" style="display:none">
             <div class="existingattachments">
               <ul>
@@ -765,7 +767,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container" style="width: 780px;">
+    <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -796,7 +798,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <a  class="close cancel float-left">Avbryt</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
       </div>
     </div>
   </form>

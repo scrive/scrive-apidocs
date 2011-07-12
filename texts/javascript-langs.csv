@@ -25,6 +25,7 @@
 "_problemWithPDF","Problem med PDF","Problem with PDF"
 "_repetedEmailAddress","Du kan ej använda samma e-post för mer än 1 användare","You cannot use the same e-mail address for more than one user"
 "_secretaryCantSign","Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.","You cannot sign when you have the role Secretary. If you want to sign, please go back to step 2 and change role."
+"_sender","Avsändare","Sender"
 "_setAllFields","Var vänlig namnge alla skapade fält","Please name all created fields"
 "_startingSaveSigning","Inleder säker signering . . .","Initiates secure signing . . ."
 "_tbsGenerationMessage1","Du undertecknar ","You are signing"

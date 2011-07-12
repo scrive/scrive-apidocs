@@ -22,13 +22,13 @@ var FlashMessage = Backbone.Model.extend({
   }, 
   activate : function(){
       if (!this.isActive()){
-        this.set({"active": "true"})
-        var current = this
-        setTimeout(function(){current.deactivate()},10000);
+        this.set({"active": "true"});
+        var current = this;
+        setTimeout(function(){current.deactivate();},10000);
       }  
   },  
   deactivate: function() {
-       this.trigger("deactivate")
+       this.trigger("deactivate");
       }
 });
 
@@ -52,7 +52,7 @@ var FlashMessagesList = Backbone.Collection.extend({
     },
     closeCurrent: function() {
         if (!this.isEmpty() && this.first().isActive())
-        this.first().deactivate();
+            this.first().deactivate();
       
     }
 });
@@ -68,7 +68,7 @@ var FlashMessageView = Backbone.View.extend({
         _.bindAll(this, 'render', 'hide');
         this.model.bind('deactivate', this.hide);
         this.model.view = this;
-        this.render()
+        this.render();
     },
     render: function () {
         this.el = $("<div class='flash-container " + this.model.get("color") + "'/>")
@@ -77,7 +77,7 @@ var FlashMessageView = Backbone.View.extend({
                             .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )                                
                             .append($("<div class='flash-body'></div>").append(this.model.get("content")))
                             .append("<div class='flash-close modal-close'></div>")
-                           )
+                           );
         return this;
     },
     hide: function(){
@@ -112,7 +112,7 @@ var FlashMessagesView = Backbone.View.extend({
            var el = this.el;
            this.model.forEach(function(e){
               if (e.isActive())   {
-                 el.append(e.view.el)
+                 el.append(e.view.el);
               }
            });
            if (this.el.css("display") == "none")

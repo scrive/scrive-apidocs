@@ -2923,6 +2923,11 @@ table#sigattachmenttable {
     width: 100%;
 }
 
+.sigattachmentlist {
+    max-height: 230px;
+    overflow: auto;
+}
+
 input.attachmentname {
 
 }
