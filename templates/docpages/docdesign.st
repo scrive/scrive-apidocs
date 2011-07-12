@@ -603,6 +603,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div style="padding-bottom:10px;">     
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
+          <div class="sigattachmentlist">
           <table id="sigattachmenttable">
             <thead>
               <tr>
@@ -647,6 +648,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               }$
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
