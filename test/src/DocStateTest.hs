@@ -27,7 +27,7 @@ import Control.Monad.Trans
 import Data.List
 import Test.QuickCheck
 import Test.QuickCheck.Gen
-import Control.Monad
+--import Control.Monad
 import System.Random
 
 docStateTests :: Test
@@ -199,19 +199,19 @@ testNotPreparationUpdateDocumentAlwaysLeft = do
   -- setup
   mt <- whatTimeIsIt
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | isPreparation doc -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
                      edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
-                       Left _msg     -> return ()
-                       Right _newdoc -> assertFailure "Should not succeed if not preparation"
+                       Left _msg     -> return $ Just $ return ()
+                       Right _newdoc -> return $ Just $ assertFailure "Should not succeed if not preparation"
   assertSuccess
 
 testPreparationUpdateDocumentAlwaysRight :: Assertion
@@ -219,19 +219,19 @@ testPreparationUpdateDocumentAlwaysRight = do
   -- setup
   mt <- whatTimeIsIt
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | not $ isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
                      edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
-                       Left _msg     -> assertFailure "Should always succeed if not preparation"
-                       Right _newdoc -> return ()
+                       Left _msg     -> return $ Just $ assertFailure "Should always succeed if not preparation"
+                       Right _newdoc -> return $ Just $ return ()
   assertSuccess
 
 
@@ -251,38 +251,38 @@ testNotPreparationUpdateDocumentSimpleAlwaysLeft :: Assertion
 testNotPreparationUpdateDocumentSimpleAlwaysLeft = do
   -- setup
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | isPreparation doc -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
                      edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, (UserID 1, Nothing)) []
                      --assert
                      case edoc of
-                       Left _msg     -> return ()
-                       Right _newdoc -> assertFailure "Should not succeed if not preparation"
+                       Left _msg     -> return $ Just $ return ()
+                       Right _newdoc -> return $ Just $ assertFailure "Should not succeed if not preparation"
   assertSuccess
 
 testPreparationUpdateDocumentSimpleAlwaysRight :: Assertion
 testPreparationUpdateDocumentSimpleAlwaysRight = do
   -- setup
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | not $ isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
                      edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, (UserID 1, Nothing)) []
                      --assert
                      case edoc of
-                       Left _msg     -> assertFailure "Should always succeed if not preparation"
-                       Right _newdoc -> return ()
+                       Left _msg     -> return $ Just $ assertFailure "Should always succeed if not preparation"
+                       Right _newdoc -> return $ Just $ return ()
   assertSuccess
 
 
@@ -304,7 +304,7 @@ testNoDocumentAttachCSVUploadAlwaysLeft = do
   -- setup
   --execute
   -- non-existent docid
-  stdgn <- getStdGen
+  stdgn <- newStdGen
   let csvupload = unGen arbitrary stdgn 10
   edoc <- update $ AttachCSVUpload (DocumentID 24) csvupload
   --assert
@@ -316,44 +316,44 @@ testNotPreparationAttachCSVUploadAlwaysLeft :: Assertion
 testNotPreparationAttachCSVUploadAlwaysLeft = do
   -- setup
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
-                 stdgn <- getStdGen
+                 stdgn <- newStdGen
                  let csvupload = unGen arbitrary stdgn 10
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | isPreparation doc -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
                      edoc <- update $ AttachCSVUpload docid csvupload
                      --assert
                      case edoc of
-                       Left _msg     -> return ()
-                       Right _newdoc -> assertFailure "Should not succeed if not preparation"
+                       Left _msg     -> return $ Just $ return ()
+                       Right _newdoc -> return $ Just $ assertFailure "Should not succeed if not preparation"
   assertSuccess
 
 testPreparationAttachCSVUploadAuthorIndexLeft :: Assertion
 testPreparationAttachCSVUploadAuthorIndexLeft = do
   -- setup
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
-                 stdgn <- getStdGen
+                 stdgn <- newStdGen
                  let csvupload = unGen arbitrary stdgn 10
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | not $ isPreparation doc -> return Nothing
                    Just doc -> do
                      let Just ai = authorIndex (documentsignatorylinks doc)
                      --execute                     
-                     Log.debug $ "author index: " ++ show ai
+                     liftIO $ print $ "author index: " ++ show ai
                      edoc <- update $ AttachCSVUpload docid (csvupload { csvsignatoryindex = ai })
                      --assert
                      case edoc of
-                       Left _msg     -> return ()
-                       Right _newdoc -> assertFailure "Should fail if author is csvsignatoryindex"
+                       Left _msg     -> return $ Just $ return ()
+                       Right _newdoc -> return $ Just $ assertFailure "Should fail if author is csvsignatoryindex"
   assertSuccess
 
 authorIndex :: [SignatoryLink] -> Maybe Int
@@ -365,21 +365,21 @@ testPreparationAttachCSVUploadIndexNeg :: Assertion
 testPreparationAttachCSVUploadIndexNeg = do
   -- setup
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
-                 stdgn <- getStdGen
+                 stdgn <- newStdGen
                  let csvupload = unGen arbitrary stdgn 10
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc || csvsignatoryindex csvupload >= 0 -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | not $ isPreparation doc || csvsignatoryindex csvupload >= 0 -> return Nothing
                    Just _doc -> do
                      --execute                     
                      edoc <- update $ AttachCSVUpload docid csvupload
                      --assert
                      case edoc of
-                       Left _msg     -> return ()
-                       Right _newdoc -> assertFailure "Should fail if csvsignatoryindex is negative"
+                       Left _msg     -> return $ Just $ return ()
+                       Right _newdoc -> return $ Just $ assertFailure "Should fail if csvsignatoryindex is negative"
   assertSuccess
 
 
@@ -387,21 +387,21 @@ testPreparationAttachCSVUploadIndexGreaterThanLength :: Assertion
 testPreparationAttachCSVUploadIndexGreaterThanLength = do
   -- setup
   author <- addNewRandomUser
-  do100Times $ do
+  do100Times' $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
-                 stdgn <- getStdGen
+                 stdgn <- newStdGen
                  let csvupload = unGen arbitrary stdgn 10
                  case mdoc of
-                   Nothing -> assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc || csvsignatoryindex csvupload < length (documentsignatorylinks doc) -> return ()
+                   Nothing -> return $ Just $ assertFailure "Could not stored document."
+                   Just doc | not $ isPreparation doc || csvsignatoryindex csvupload < length (documentsignatorylinks doc) -> return Nothing
                    Just _doc -> do
                      --execute                     
                      edoc <- update $ AttachCSVUpload docid csvupload
                      --assert
                      case edoc of
-                       Left _msg     -> return ()
-                       Right _newdoc -> assertFailure "Should fail if csvsignatoryindex is too high"
+                       Left _msg     -> return $ Just $ return ()
+                       Right _newdoc -> return $ Just $ assertFailure "Should fail if csvsignatoryindex is too high"
   assertSuccess
 
 apply :: a -> (a -> b) -> b
@@ -465,7 +465,7 @@ assumingBasicUser = do
       
 addNewRandomUser :: IO (User)
 addNewRandomUser = do
-  stdgn <- getStdGen
+  stdgn <- newStdGen
   let fn = unGen arbitrary stdgn 10
       ln = unGen arbitrary stdgn 10
       em = unGen arbEmail  stdgn 10
@@ -640,7 +640,7 @@ instance Arbitrary UserInfo where
 
 addRandomDocumentWithAuthor :: User -> IO (DocumentID)
 addRandomDocumentWithAuthor user = do
-  stdgen <- getStdGen
+  stdgen <- newStdGen
   let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
               stdgen 10000
   let doc = unGen arbitrary stdgen 10
@@ -672,10 +672,19 @@ instance Arbitrary DocumentStatus where
                        , DocumentError "Bad document."
                        ]
 
-do100Times :: IO a -> IO ()
-do100Times action = do
-             _ <- forM ([0..100]::[Int]) $ (\_ -> action)
-             return ()
+do100Times' :: IO (Maybe Assertion) -> IO ()
+do100Times' action = doTimes 100 action
+             
+doTimes :: Int -> IO (Maybe Assertion) -> IO ()
+doTimes i action 
+  | i == 0 = return ()
+  | otherwise = do
+    res <- action
+    case res of
+      Nothing -> doTimes i action
+      Just ass -> do
+        _ <- ass
+        doTimes (i - 1) action
 
 instance Arbitrary CSVUpload where
   arbitrary = do
@@ -688,3 +697,4 @@ instance Arbitrary CSVUpload where
                        , csvcontents = b
                        , csvsignatoryindex = c
                        }
+
