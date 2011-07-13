@@ -15,7 +15,7 @@ import MinutesTime
 import Happstack.State
 import Misc
 import Payments.PaymentsState as Payments
-
+import Doc.DocStateQuery
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import qualified AppLogger as Log
@@ -32,6 +32,7 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "A supervisor's friends can view a document"testSupervisorsFriendsCanSee,
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs,
@@ -398,13 +399,29 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = do
                    Just doc | (csvsignatoryindex csvupload) < length (documentsignatorylinks doc) -> return Nothing
                    Just _doc -> do
                      --execute                     
-                     liftIO $ print csvupload
                      edoc <- update $ AttachCSVUpload docid csvupload
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ return ()
                        Right _newdoc -> return $ Just $ assertFailure "Should fail if csvsignatoryindex is too high"
   assertSuccess
+  
+testSupervisorsFriendsCanSee :: Assertion
+testSupervisorsFriendsCanSee = do
+  friend <- assumingNewUser "Friend" "Amigo" "abc@friend.com"
+  super <- assumingNewUser "Super" "Visor" "super@visor.com"
+  author <- assumingNewUserWithSupervisor (userid super) "Author" "Pendragon" "author@contract.com"
+  _ <- update $ AddViewerByEmail (userid super) (Email "abc@friend.com")
+  
+  docid <- addRandomDocumentWithAuthor author
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> assertFailure "Could not stored document."
+    Just doc -> do
+      canView <- canUserViewDoc friend doc
+      if canView then assertSuccess else assertFailure "Supervisor's friends cannot view document"
+                  
+  
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
@@ -432,16 +449,15 @@ documentHasOneAuthor document =
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
 
-_addNewUserWithSupervisor :: Int -> String -> String -> String -> IO (Maybe User)
-_addNewUserWithSupervisor superid = addNewUser' (Just superid)
+addNewUserWithSupervisor :: UserID -> String -> String -> String -> IO (Maybe User)
+addNewUserWithSupervisor superid = addNewUser' (Just superid)
 
 addNewUser :: String -> String -> String -> IO (Maybe User)
 addNewUser = addNewUser' Nothing
 
-addNewUser' :: Maybe Int -> String -> String -> String -> IO (Maybe User)
-addNewUser' msuperid firstname secondname email = do
-  muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword (fmap UserID msuperid) Nothing Nothing
-  return muser
+addNewUser' :: Maybe UserID -> String -> String -> String -> IO (Maybe User)
+addNewUser' msuperid firstname secondname email = 
+  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword msuperid Nothing Nothing
 
 whatTimeIsIt :: IO (MinutesTime)
 whatTimeIsIt = liftIO $ getMinutesTime
@@ -456,6 +472,25 @@ assumingBasicContract mt author = do
       return blankDocument
     Just d -> return d
 
+assumingNewUser :: String -> String -> String -> IO User
+assumingNewUser fn ln em = do
+  muser <- addNewUser fn ln em
+  case muser of
+    Just user -> return user
+    Nothing -> do
+      assertFailure "Cannot create a new user (in setup)"
+      return blankUser
+
+assumingNewUserWithSupervisor :: UserID -> String -> String -> String -> IO User
+assumingNewUserWithSupervisor sid fn ln em = do
+  muser <- addNewUserWithSupervisor sid fn ln em
+  case muser of
+    Just user -> return user
+    Nothing -> do
+      assertFailure "Cannot create a new user (in setup)"
+      return blankUser
+  
+
 assumingBasicUser :: IO (User)
 assumingBasicUser = do
   muser <- addNewUser "Eric" "Normand" "eric@fds.com"
@@ -463,7 +498,7 @@ assumingBasicUser = do
     Just user -> return user
     Nothing -> do
       assertFailure "Cannot create a new user (in setup)"
-      return blankUser -- should not be possible
+      return blankUser
       
 addNewRandomUser :: IO (User)
 addNewRandomUser = do
