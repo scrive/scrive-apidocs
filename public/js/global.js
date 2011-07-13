@@ -872,43 +872,79 @@ function activateSignInvite() {
     var checkBox = $("#switchercheckbox");
     checkBox.removeAttr("DISABLED");
 }
+
+function isAuthorSignatory() {
+    return $("#authorsignatoryradio").attr("checked");
+}
+
+/*************************************************************
+
+  RULES FOR SHOWING THE SIGN/SEND BUTTON
+
+  1. If the author IS NOT a signatory:
+         ALWAYS show SEND button
+                check the box (#switchercheckbox)
+                change the label to "Ej undertecknande part"
+                deactivate label + checkbox
+                show correct confirmation text
+
+  2. If the author IS a signatory:
+         show usual label
+         show correct confirmation text
+         numsigs <- number of signatories (excluding author)
+         1. If numsigs === 0:
+                deactivate checkbox
+                uncheck the box
+
+         2. If numsigs > 0:
+                1. if sign order is enabled: 
+                    deactivate checkbox
+
+                2. if sign order is not enabled:
+                    activate checkbox
+
+  This is still crazy, but it's a little better than before.
+
+  Specific instances of crazy:
+  1. sign order system messes with button.
+  2. changing to and from secretary unchecks sign last button
+
+  When refactoring this with Backbone, we should hold all of the
+  application state in one model.
+
+ *************************************************************/
 function showProperSignButtons() {
     var checkBox = $("#switchercheckbox");
-    var numsigs = $("#personpane .persondetails").length;
-    if (numsigs > 1) {
-        if ($("#authorsignatoryradio").attr("checked")) {
-            if (!signingOrderEnabled)
-                activateSignInvite();
-            checkBox.parent().find(".usual").show();
-            checkBox.parent().find(".secretary").hide();
-        } else {
-            if (!checkBox.attr("checked")) {
-                checkBox.attr("checked", true).change();
-            }
-            deactivateSignInvite();
-            checkBox.parent().find(".usual").hide();
-            checkBox.parent().find(".secretary").show();
+    if(!isAuthorSignatory()) {
+        if (!checkBox.attr("checked")) {
+            checkBox.attr("checked", true).change();
         }
-    } else {
-        if (checkBox.attr("checked")) {
-            console.log("global.js:869");
-            checkBox.attr("checked", false).change();
-        }
-        checkBox.parent().find(".usual").show();
-        checkBox.parent().find(".secretary").hide();
         deactivateSignInvite();
-    }
-
-    if ($("#authorsecretaryradio").attr("checked")) {
+        checkBox.parent().find(".usual").hide();
+        checkBox.parent().find(".secretary").show();        
         $("#dialog-confirm-text-send").show();
         $("#dialog-confirm-text-send-fields").hide();
         $("#dialog-confirm-text-send-normal").hide();
+
     } else {
-        // normal
+        checkBox.parent().find(".usual").show();
+        checkBox.parent().find(".secretary").hide();
         $("#dialog-confirm-text-send").hide();
         $("#dialog-confirm-text-send-fields").hide();
         $("#dialog-confirm-text-send-normal").show();
-
+        var numsigs = $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
+        if(numsigs === 0) {
+            deactivateSignInvite();
+            if (checkBox.attr("checked")) {
+                checkBox.attr("checked", false).change();
+            }
+        } else {
+            if (signingOrderEnabled) {
+                deactivateSignInvite();
+            } else {
+                activateSignInvite();
+            }
+        }
     }
 }
 
@@ -1168,7 +1204,7 @@ function showStep3() {
     $('#signStep2Content').hide();
     $('#signStep3Content').show();
     $('#signStepsNextButton').hide();
-
+    console.log("here");
     showProperSignButtons();
     return false;
 }
