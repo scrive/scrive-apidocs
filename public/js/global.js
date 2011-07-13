@@ -399,7 +399,7 @@ function allparties() {
 
             var fstnameelem = $("input[name='signatoryfstname']", this);
             if (isMultiPartElem(fstnameelem)) {
-                allpartiesret.push(csvrowcount + " Parter");
+                allpartiesret.push(csvrowcount + " " + localization.multiPartPartner);
             } else {
                 var fstname = fstnameelem.val();
                 var sndname = $("input[name='signatorysndname']", this).val();
@@ -1275,10 +1275,10 @@ $(document).ready(function() {
             return;
         }
         if (fstname == "" && sndname == "") {
-            val = "(NamnlГ¶s)";
+            val = "("+  localization.noNamePerson +")";
         }
         if (isMultiPartElem($(this))) {
-            val = "Massutskick";
+            val = localization.multipleSignatory;
         }
         $('#peopleList li:eq(' + idx + ') a').text(val).append(newSignOrderListElement(role.val() == "signatory" ? signorder.val() : "-"));
     });

@@ -1201,9 +1201,9 @@ function signatoryToHTML(isMultiple, sig) {
     var n = "Unnamed";
 
     if (isMultiple) {
-        n = "Massutskick";
+        n =  localization.multipleSignatory
     } else if (sig.fstname == "" && sig.sndname == "") {
-        n = "(Namnlös)";
+        n = "("+ localization.noNamePerson +")";
     } else {
         n = sig.fstname + " " + sig.sndname;
     }
@@ -1563,7 +1563,7 @@ safeReady(function() {
         var em = emfield.val();
         sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
       } else if(csvindex === ("" + (i + 1))) {
-        sigoptions = sigoptions.add($('<option value="csv">Massutskick</option>'));
+        sigoptions = sigoptions.add($('<option value="csv">'+localization.multipleSignatory+'</option>'));
       }
         });
 
