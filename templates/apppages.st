@@ -50,6 +50,9 @@ standardHeaderContents=
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
                 type="text/javascript"></script>
+            $if(production)$
+                <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+            $endif$
        $endif$
        <script src="/js/main.js" 
                 type="text/javascript"></script>
@@ -96,6 +99,7 @@ standardBodyWrapper=
                                               <input class="shiny float-left"
                                                      name="email" type="email"
                                                      infotext="$_FillInEmail()$"
+                                                     autocomplete="off"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
                                                                            float-right"><p>$_createaccount()$!</p></a>
@@ -123,6 +127,7 @@ queryColumn=
                                                         <input type="email"
                                                         name="email"
                                                         infotext="$_email()$"
+                                                        autocomplete="off"
                                                         /><br /><br />
 
                                                         <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
@@ -140,10 +145,10 @@ queryColumn=
                                                 <br />
                                                 <form method="post"
                                                       action="$linkquestion$">
-                                                        <input type="text" name="name" infotext="$_name()$" /><br />
-                                                        <input type="email" name="email" infotext="$_email()$" /><br />
-                                                        <input type="tel" name="phone" infotext="$_phone()$" /><br />
-                                                        <textarea name="message" infotext="$_message()$" style="height:42px;"></textarea>
+                                                        <input type="text" name="name" infotext="$_name()$" autocomplete="off" /><br />
+                                                        <input type="email" name="email" infotext="$_email()$" autocomplete="off"/><br />
+                                                        <input type="tel" name="phone" infotext="$_phone()$" autocomplete="off"/><br />
+                                                        <textarea name="message" infotext="$_message()$" style="height:42px;" autocomplete="off"></textarea>
                                                         <a class="submit new-btn-small green2 center"><p>$_send()$!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>

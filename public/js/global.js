@@ -1571,7 +1571,7 @@ safeReady(function() {
 
 safeReady(function() {
     $("form.requestAccount").submit(function() {
-        /* var res = _gaq.push(['_trackPageview', '/mal/skapa-konto']); */
+         if ( window._gaq != undefined ) _gaq.push(['_trackPageview', '/mal/skapa-konto']);
     });
 });
 
