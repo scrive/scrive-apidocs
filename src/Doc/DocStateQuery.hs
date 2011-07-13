@@ -82,7 +82,6 @@ getDocByDocID docid = do
         Just doc -> do
           canAccess <- liftIO $ canUserViewDoc user doc              
           case canAccess of
-              usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
             True  -> return $ Right doc
             False -> return $ Left DBResourceNotAvailable
     (_, Just company) -> do
