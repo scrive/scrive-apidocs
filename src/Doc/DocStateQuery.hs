@@ -64,9 +64,10 @@ getDocByDocID docid = do
             False -> do
               Log.debug "Is not author"
               usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
+              usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
               usersImSupervising <- query $ GetUserSubaccounts     (userid user)
               related            <- query $ GetUserRelatedAccounts (userid user)
-              let canAcces = (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith)))
+              let canAcces = (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith ++ usersFriendsAreSupervising)))
                               || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
               case canAcces of
                 True  -> return $ Right doc
