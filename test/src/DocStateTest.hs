@@ -348,7 +348,6 @@ testPreparationAttachCSVUploadAuthorIndexLeft = do
                    Just doc -> do
                      let Just ai = authorIndex (documentsignatorylinks doc)
                      --execute                     
-                     liftIO $ print $ "author index: " ++ show ai
                      edoc <- update $ AttachCSVUpload docid (csvupload { csvsignatoryindex = ai })
                      --assert
                      case edoc of
@@ -372,7 +371,8 @@ testPreparationAttachCSVUploadIndexNeg = do
                  let csvupload = unGen arbitrary stdgn 10
                  case mdoc of
                    Nothing -> return $ Just $ assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc || csvsignatoryindex csvupload >= 0 -> return Nothing
+                   Just doc | not $ isPreparation doc -> return Nothing
+                   Just _   | (csvsignatoryindex csvupload) >= 0 -> return Nothing
                    Just _doc -> do
                      --execute                     
                      edoc <- update $ AttachCSVUpload docid csvupload
@@ -394,9 +394,11 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = do
                  let csvupload = unGen arbitrary stdgn 10
                  case mdoc of
                    Nothing -> return $ Just $ assertFailure "Could not stored document."
-                   Just doc | not $ isPreparation doc || csvsignatoryindex csvupload < length (documentsignatorylinks doc) -> return Nothing
+                   Just doc | not $ isPreparation doc -> return Nothing
+                   Just doc | (csvsignatoryindex csvupload) < length (documentsignatorylinks doc) -> return Nothing
                    Just _doc -> do
                      --execute                     
+                     liftIO $ print csvupload
                      edoc <- update $ AttachCSVUpload docid csvupload
                      --assert
                      case edoc of

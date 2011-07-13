@@ -190,7 +190,7 @@ instance  MaybeAttachment Document where
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
   | n<0 || n>=slcount = Left $ "signatory with index " ++ show n ++ " doesn't exist."
-  | n==0 && slcount>0 && isAuthor (head sls) = Left "author can't be set from csv"
+  | isAuthor (sls !! n) = Left "author can't be set from csv"
   | otherwise = Right n
   where slcount = length sls
 
