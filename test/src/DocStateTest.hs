@@ -27,7 +27,6 @@ import Control.Monad.Trans
 import Data.List
 import Test.QuickCheck
 import Test.QuickCheck.Gen
---import Control.Monad
 import System.Random
 
 docStateTests :: Test
@@ -50,7 +49,9 @@ docStateTests = testGroup "DocState" [
   testThat "when I call updateDocument, it fails when the doc doesn't exist" testNoDocumentUpdateDocumentAlwaysLeft,
   testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" testNotPreparationUpdateDocumentAlwaysLeft,
   testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" testPreparationUpdateDocumentAlwaysRight,
-  
+
+  testThat "when I create document from shared template author custom fields are stored" testCreateFromSharedTemplate,
+
   testThat "when I call updateDocumentSimple, it fails when the doc doesn't exist" testNoDocumentUpdateDocumentSimpleAlwaysLeft,
   testThat "When I call updateDocumentSimple with a doc that is not in Preparation, always returns left" testNotPreparationUpdateDocumentSimpleAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" testPreparationUpdateDocumentSimpleAlwaysRight,
@@ -59,6 +60,7 @@ docStateTests = testGroup "DocState" [
   testThat "when I call attachcsvupload and the csvindex is the author, return left" testPreparationAttachCSVUploadAuthorIndexLeft,
   testThat "when I call attachcsvupload and the csvindex is negative, return left" testPreparationAttachCSVUploadIndexNeg,
   testThat "when I call attachcsvupload and the csvindex is too large, return Left" testPreparationAttachCSVUploadIndexGreaterThanLength
+
   ]
 
 testThat :: String -> Assertion -> Test
@@ -421,7 +423,22 @@ testSupervisorsFriendsCanSee = do
       canView <- canUserViewDoc friend doc
       if canView then assertSuccess else assertFailure "Supervisor's friends cannot view document"
                   
-  
+
+testCreateFromSharedTemplate::Assertion
+testCreateFromSharedTemplate = do
+   user <- addNewRandomUser
+   docid <- addRandomDocumentWithAuthor user
+   tmpdoc <- fmap fromJust $ query $ GetDocumentByDocumentID docid
+   doc <- if (isTemplate tmpdoc)
+             then return tmpdoc
+             else fmap fromRight $ update (TemplateFromDocument docid)
+   newuser <- addNewRandomUser
+   doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser (documentid doc)
+   let [author1] = filter isAuthor $ documentsignatorylinks doc
+   let [author2] = filter isAuthor $ documentsignatorylinks doc'
+   if (fmap fieldvalue $ signatoryotherfields $ signatorydetails author1) == (fmap fieldvalue $ signatoryotherfields $ signatorydetails author2)
+      then assertSuccess
+      else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294" 
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
@@ -569,7 +586,7 @@ blankDocument =
           , documentfiles                = []
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
-          , documentfunctionality        = BasicFunctionality
+          , documentfunctionality        = AdvancedFunctionality
           , documentctime                = fromSeconds 0
           , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
@@ -635,6 +652,7 @@ instance Arbitrary SignatoryDetails where
     pn <- arbitrary
     cm <- arbitrary
     em <- arbEmail
+    ofields <- arbitrary
     return $ SignatoryDetails { signatoryfstname        = fn
                               , signatorysndname        = ln
                               , signatorycompany        = cn
@@ -648,9 +666,20 @@ instance Arbitrary SignatoryDetails where
                               , signatoryemailplacements          = []
                               , signatorypersonalnumberplacements = []
                               , signatorycompanynumberplacements  = []
-                              , signatoryotherfields              = []
+                              , signatoryotherfields              = ofields
                               }
 
+instance Arbitrary FieldDefinition where
+   arbitrary = do
+    name <- arbitrary
+    value <- arbitrary
+    filledByAuthor <- arbitrary
+    return $ FieldDefinition { fieldlabel = name,
+                               fieldvalue = value,
+                               fieldplacements = [],
+                               fieldfilledbyauthor = filledByAuthor
+                             }
+                      
 instance Arbitrary UserInfo where
   arbitrary = do
     fn <- arbitrary
@@ -685,7 +714,8 @@ addRandomDocumentWithAuthor user = do
       sldets = unGen (vectorOf sls arbitrary) stdgen 10
       slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  asl <- update $ SignLinkFromDetailsForTest (signatoryDetailsFromUser user) roles
+  asd <- extendRandomness $ signatoryDetailsFromUser user
+  asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]
                  }
@@ -735,3 +765,21 @@ instance Arbitrary CSVUpload where
                        , csvsignatoryindex = c
                        }
 
+
+{- | Sometimes we get and object that is not as random as we would expect (from some reason)
+     Like author signatorylink that by default does not have any fields attached
+     This is a class to make it more random - so to attach this fields for example.
+-}
+class ExtendWithRandomnes a where
+    moreRandom :: a -> Gen a
+    extendRandomness ::  a -> IO a
+    extendRandomness a = do
+          stdgen <- newStdGen
+          return $ unGen (moreRandom a) stdgen 10
+
+        
+instance ExtendWithRandomnes SignatoryDetails where
+    moreRandom sl = do
+        ofields <- arbitrary
+        return $ sl {signatoryotherfields = ofields}
+    
