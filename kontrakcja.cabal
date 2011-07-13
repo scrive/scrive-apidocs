@@ -22,6 +22,34 @@ Flag test
   Description: Build tests
   Default: True
 
+Flag test-docstate
+  Description: Build docstate testsuite
+  Default: True
+
+Flag test-html
+  Description: Build html testsuite
+  Default: True
+
+Flag test-input-validation
+  Description: Build input-validation testsuite
+  Default: True
+
+Flag test-login
+  Description: Build login testsuite
+  Default: True
+
+Flag test-mailapi
+  Description: Build mailapi testsuite
+  Default: True
+
+Flag test-trust-weaver
+  Description: Build trust-weaver testsuite
+  Default: True
+
+Flag test-userstate
+  Description: Build userstate testsuite
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
   Default: False
@@ -152,6 +180,21 @@ Executable kontrakcja-test
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+
+  if !flag(test-docstate)
+    cpp-options: -DNO_DOCSTATE
+  if !flag(test-html)
+    cpp-options: -DNO_HTML
+  if !flag(test-input-validation)
+    cpp-options: -DNO_INPUTVALIDATION
+  if !flag(test-login)
+    cpp-options: -DNO_LOGIN
+  if !flag(test-mailapi)
+    cpp-options: -DNO_MAILAPI
+  if !flag(test-trust-weaver)
+    cpp-options: -DNO_TRUSTWEAVER
+  if !flag(test-userstate)
+    cpp-options: -DNO_USERSTATE
 
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs
