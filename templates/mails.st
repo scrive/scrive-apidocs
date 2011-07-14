@@ -321,6 +321,17 @@ mailAccountBySigningOfferReminderContent=
 
 $poweredBySkrivaPaPara()$
 ###
+mailAccountBySigningOrderReminderTitle= $_mailAccountBySigningOrderReminderTitle()$
+###
+mailAccountBySigningOrderReminderContent=
+<p>$_hi()$ <strong>$personname$</strong>,</p>
+
+<p>$_mailAccountBySigningOrderReminderContentBody()$</p>
+
+<p>$_mailAccountBySigningOrderReminderContentInstruction()$</p>
+
+$poweredBySkrivaPaPara()$
+###
 mailViralInviteTitle=$_mailViralInviteTitle()$
 ###
 mailViralInviteContent=

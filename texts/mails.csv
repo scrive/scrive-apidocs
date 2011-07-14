@@ -87,6 +87,15 @@
  Definiera lösenord och acceptera villkoren<br/>3. Färdig","It works like this:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOfferReminderTitle","Du har inte sparat ditt original","You have not saved your original"
+"_mailAccountBySigningOrderReminderContentBody","Du har inte bekräftat att du vill spara din orderbekräftelse ""$documenttitle$""
+ hos SkrivaPå. SkrivaPås system kommer att radera bekräftelsen automatiskt
+ inom 72h. Det kostar ingenting att spara offerten.","""You have not confirmed that you want to save your order""""$documenttitle$""""
+ with Scrive. Scrive will erase the order within 72h. It doesnt
+ cost anything to save the order."""
+"_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
+ Definiera lösenord och acceptera villkoren<br/>3. Färdig","It works like this:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
+ Define passwords and accept the terms of agreement <br/>3. Done"
+"_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original","You have not saved your original"
 "_mailCancelContractByAuthorContentBody","      <strong>$creatorname$</strong> har valt att återkalla sin
  inbjudan att underteckna dokument $documenttitle$.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
