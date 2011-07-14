@@ -311,8 +311,9 @@ makeMailAttachments ctx document = do
   let mainfile = head $ case documentsealedfiles document of
         [] -> documentfiles document
         fs -> fs
-      attachments = map authorattachmentfile $ documentauthorattachments document
-      allfiles = mainfile : attachments
+      aattachments = map authorattachmentfile $ documentauthorattachments document
+      sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
+      allfiles = [mainfile] ++ aattachments ++ sattachments
       filenames = map filename allfiles
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
