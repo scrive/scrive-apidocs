@@ -458,6 +458,7 @@ pageDocumentDesign=
     var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
     var issendonly = $if(process.isauthorsend)$true$else$false$endif$;
+    $if(step3)$ safeReady(function(){showStep3()});$endif$
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
   <div class="waiting4page"></div>

@@ -15,6 +15,7 @@ module User.UserView (
     mailNewAccountCreatedByAdmin,
     mailAccountCreatedBySigningContractReminder,
     mailAccountCreatedBySigningOfferReminder,
+    mailAccountCreatedBySigningOrderReminder,
     resetPasswordMail,
 
     mailInviteUserAsSubaccount,
@@ -236,6 +237,11 @@ mailAccountCreatedBySigningOfferReminder :: TemplatesMonad m => String -> BS.Byt
 mailAccountCreatedBySigningOfferReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningOfferReminderTitle"
                                  "mailAccountBySigningOfferReminderContent"
+
+mailAccountCreatedBySigningOrderReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+mailAccountCreatedBySigningOrderReminder =
+    mailAccountCreatedBySigning' "mailAccountBySigningOrderReminderTitle"
+                                 "mailAccountBySigningOrderReminderContent"
 
 mailAccountCreatedBySigning' :: TemplatesMonad m => String -> String -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigning' title_template content_template hostpart doctitle personname activationlink = do

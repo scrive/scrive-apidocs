@@ -48,13 +48,19 @@
  automatiskt inom 72h. Det kostar ingenting att spara dokumentet.","Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningContractReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Set a password and accept the terms of agreement <br/>3. Done"
-"_mailAccountBySigningContractReminderTitle","Du har inte säkrat ditt original","You have not saved"
+"_mailAccountBySigningContractReminderTitle","Du har inte säkrat ditt original","You have not saved your original"
 "_mailAccountBySigningOfferReminderContentBody","Du har inte bekräftat att du vill spara din offert ""$documenttitle$""
  hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt
  inom 72h. Det kostar ingenting att spara offerten.","Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningOfferReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Set a password and accept the terms of agreement <br/>3. Done"
-"_mailAccountBySigningOfferReminderTitle","Du har inte sparat ditt original","You have not saved"
+ Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
+"_mailAccountBySigningOfferReminderTitle","Du har inte sparat ditt original","You have not saved your original"
+"_mailAccountBySigningOrderReminderContentBody","Du har inte bekräftat att du vill spara din orderbekräftelse ""$documenttitle$""
+ hos SkrivaPå. SkrivaPås system kommer att radera bekräftelsen automatiskt
+ inom 72h. Det kostar ingenting att spara offerten.","Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
+"_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
+ Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
+"_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original","You have not saved your original"
 "_mailCancelContractByAuthorContentBody","      <strong>$creatorname$</strong> har valt att återkalla sin
  inbjudan att underteckna dokument $documenttitle$.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
