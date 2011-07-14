@@ -2949,9 +2949,12 @@ table#signViewSigAttachmentBoxList input.multiFileInput {
     float: left;
     left: -112px;
     top: 0px;
-    height: 33px;
+    height: 29px;
 }
 
+table#signViewSigAttachmentBoxList .btn-small {
+    margin-top: 5px;
+}
 table#signViewSigAttachmentBoxList .btn-small .label {
     text-align: center;
 }
