@@ -1466,15 +1466,15 @@ input.multiFileInput {
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .subheader
+#signViewBodyLeft .subheader, .subheader
 {
     font-weight: bold;
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .attachmentListContainer
+.attachmentListContainer
 {
-    padding: 10px 0px;
+    padding: 16px 0px;
 }
 
 .signViewBodyRight .header
@@ -2949,9 +2949,12 @@ table#signViewSigAttachmentBoxList input.multiFileInput {
     float: left;
     left: -112px;
     top: 0px;
-    height: 33px;
+    height: 29px;
 }
 
+table#signViewSigAttachmentBoxList .btn-small {
+    margin-top: 5px;
+}
 table#signViewSigAttachmentBoxList .btn-small .label {
     text-align: center;
 }

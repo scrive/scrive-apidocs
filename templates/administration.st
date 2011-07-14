@@ -536,7 +536,7 @@ userusagestats=
               <td style="width:200px">Viral invites</td>
               <td style="width:200px">Admin invites</td>
 	    </thead>
-            $stats:{stat|<tr>
+            $allMonthsStats:{stat|<tr>
               <td>$stat.date$</td>
               <td>$stat.documents.signatures$ </td>
               <td>$stat.documents.signaturesInClosed$ </td>
