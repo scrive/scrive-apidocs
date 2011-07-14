@@ -50,7 +50,7 @@ data DocProcessInfo =
   , processuploadname :: String
 
   -- used in the design view
-  , processadvancedview :: Bool
+  , processbasicavailable :: Bool
   , processauthorsend :: Bool
   , processvalidationchoiceforbasic :: Bool
   , processexpiryforbasic :: Bool
@@ -137,7 +137,7 @@ contractProcess =
   , processuploadname = "contractuploadname"
 
   -- used in the design view
-  , processadvancedview = True
+  , processbasicavailable = True
   , processauthorsend = False
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
@@ -224,7 +224,7 @@ offerProcess =
   , processuploadprompttext = "offeruploadprompttext"
 
   -- used in the design view
-  , processadvancedview = False
+  , processbasicavailable = True
   , processauthorsend = True
   , processvalidationchoiceforbasic = False
   , processexpiryforbasic = True
@@ -311,7 +311,7 @@ orderProcess =
   , processuploadname = "orderuploadname"
 
   -- used in the design view
-  , processadvancedview = True
+  , processbasicavailable = False
   , processauthorsend = True
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
