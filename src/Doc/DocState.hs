@@ -1148,7 +1148,7 @@ replaceSignatoryUser siglink user =
                        (getCompanyName    user)
                        (getPersonalNumber user)
                        (getCompanyNumber  user)
-                       [] in
+                       (map fieldvalue $ signatoryotherfields $ signatorydetails siglink) in
   copySignatoryAccount user newsl
 
 {- |
