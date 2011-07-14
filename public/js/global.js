@@ -1689,3 +1689,14 @@ $(function () {
         });
     }
 });
+
+safeReady(function() {
+    $(document).unload(function() {
+        $("input").each(function() {
+            var i = $(this);
+            if(i.val().trim() === i.attr('infotext').trim()) {
+                i.val("");
+            }
+        });
+    });
+});
