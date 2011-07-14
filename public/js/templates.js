@@ -735,7 +735,7 @@ function addSigningOrderPosition() {
 }
 
 function newSignOrderListElement(value) {
-    var signorderlist = $("<span class='signorderlist'>").text(value);
+    var signorderlist = $("<span class='signorderlist'></span>").text(value);
     if (!signingOrderEnabled && signorderlist.length > 0)
         signorderlist.hide();
     return signorderlist;
@@ -750,7 +750,7 @@ function initSigningOrder() {
     for (var i = authorSignatory ? 1: 0, j = 1; i < siglen;++i) {
         console.log(docstate.signatories[i].role);
         if (docstate.signatories[i].role == "signatory") {
-            signorder.append($("<option>").attr("value", j).text(j));++j;
+            signorder.append($("<option/>").attr("value", j).text(j));++j;
         }
     }
     // only author, in such case another signatory is added "for free",
