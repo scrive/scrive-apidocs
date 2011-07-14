@@ -222,7 +222,7 @@ testPreparationUpdateDocumentAlwaysRight = do
   -- setup
   mt <- whatTimeIsIt
   author <- addNewRandomUser
-  do100Times' $ do
+  doTimes 10 $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
@@ -273,7 +273,7 @@ testPreparationUpdateDocumentSimpleAlwaysRight :: Assertion
 testPreparationUpdateDocumentSimpleAlwaysRight = do
   -- setup
   author <- addNewRandomUser
-  do100Times' $ do
+  doTimes 10 $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  case mdoc of
@@ -340,7 +340,7 @@ testPreparationAttachCSVUploadAuthorIndexLeft :: Assertion
 testPreparationAttachCSVUploadAuthorIndexLeft = do
   -- setup
   author <- addNewRandomUser
-  do100Times' $ do
+  doTimes 10 $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  stdgn <- newStdGen
@@ -367,7 +367,7 @@ testPreparationAttachCSVUploadIndexNeg :: Assertion
 testPreparationAttachCSVUploadIndexNeg = do
   -- setup
   author <- addNewRandomUser
-  do100Times' $ do
+  doTimes 10 $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  stdgn <- newStdGen
@@ -390,7 +390,7 @@ testPreparationAttachCSVUploadIndexGreaterThanLength :: Assertion
 testPreparationAttachCSVUploadIndexGreaterThanLength = do
   -- setup
   author <- addNewRandomUser
-  do100Times' $ do
+  doTimes 10 $ do
                  docid <- addRandomDocumentWithAuthor author
                  mdoc <- query $ GetDocumentByDocumentID docid
                  stdgn <- newStdGen

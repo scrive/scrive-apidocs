@@ -619,7 +619,7 @@ pageDocumentDesign ctx
      getProcessText = renderTextForProcess document
      getProcessValue = getValueForProcess document
      processFields = do
-       field "hasadvancedview" $ getProcessValue processadvancedview
+       field "isbasicavailable" $ getProcessValue processbasicavailable
        field "isauthorsend" $ getProcessValue processauthorsend
        field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
        field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
@@ -644,12 +644,9 @@ documentAttachmentDesignFields atts = do
       field "attachmentname" $ filename
 
 documentFunctionalityFields :: MonadIO m => Document -> Fields m
-documentFunctionalityFields Document{documenttype, documentfunctionality} = do
+documentFunctionalityFields Document{documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
-  -- it might not really be basic, it's just if there isn't an advanced mode we pretend we are
-  field "isbasic" $ documentfunctionality==BasicFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
-  field "featureenabled" $ documentfunctionality==AdvancedFunctionality || (Just False == getValueForProcess documenttype processadvancedview)
-  field "isorder" $ documenttype == Signable Order
+  field "isbasic" $ documentfunctionality==BasicFunctionality
 
 documentCsvFields :: TemplatesMonad m => Document -> m (Fields m)
 documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =  do
