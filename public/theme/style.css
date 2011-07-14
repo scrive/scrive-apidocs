@@ -1466,15 +1466,15 @@ input.multiFileInput {
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .subheader
+#signViewBodyLeft .subheader, .subheader
 {
     font-weight: bold;
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .attachmentListContainer
+.attachmentListContainer
 {
-    padding: 10px 0px;
+    padding: 16px 0px;
 }
 
 .signViewBodyRight .header
