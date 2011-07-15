@@ -777,7 +777,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-body" style="height:180px;">
         <div class="modal-content">
           <div>$_dialogCsvupload1Body()$</div>
-          <div class="signStepsBodyUploadBox">
+          <div class="signStepsBodyUploadBox" style="right: 0px; left: 0px; float: none; margin-left: auto; margin-right: auto;">
             <div>
               <span id="signStepsBodyUploadTextContainer"> 
                 <span class="header">$_dialogCsvupload1ChooseFileToUpLoad()$</span><br/>
