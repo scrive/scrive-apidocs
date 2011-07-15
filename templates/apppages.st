@@ -236,17 +236,7 @@ safeReady(function() {
   }
 })
 </script>
-$preloadImages()$
-#####
-##### Preload images. Added by Eric Normand from http://dev.iceburg.net/jquery/jqModal/
-preloadImages=
-<style type="text/css">
-@media projection, screen {
-     div.imgCache { position: absolute; left: -8000px; top: -8000px; }
-     div.imgCache img { display:block; }
-}
-@media print { div.imgCache { display: none; } }
-</style>
+
 <div class="imgCache">
   <img src="/theme/../img/spr-flash-bg.png" />
   <img src="/img/spr-flash-bg.png" />

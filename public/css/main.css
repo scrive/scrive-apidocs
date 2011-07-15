@@ -32,6 +32,14 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
     font-style: normal;
 }
 
+/* Preload images. Added by Eric Normand from http://dev.iceburg.net/jquery/jqModal/ */
+@media projection, screen {
+     div.imgCache { position: absolute; left: -8000px; top: -8000px; }
+     div.imgCache img { display:block; }
+}
+@media print { div.imgCache { display: none; } }
+
+
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
 	display: block;
