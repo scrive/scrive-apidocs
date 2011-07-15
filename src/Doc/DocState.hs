@@ -77,6 +77,7 @@ module Doc.DocState
     , SaveSigAttachment(..)
     , MigrateDocumentAuthorAttachments(..)
     , UnquarantineAll(..)
+    , MigrateDocumentSigAccounts(..)
     , MakeFirstSignatoryAuthor(..)
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
@@ -1224,6 +1225,29 @@ unquarantineAll = do
       return $ doc { documentrecordstatus = LiveDocument,
                      documentquarantineexpiry = Nothing }
 
+migrateDocumentSigAccounts :: DocumentID -> [User] -> Update Documents (Either String Document)
+migrateDocumentSigAccounts docid sigusers =
+  modifySignableOrTemplate docid $ \doc ->
+    return $ doc {
+      documentsignatorylinks = map (migrateSigLink doc) $ documentsignatorylinks doc
+    }
+  where 
+    migrateSigLink :: Document -> SignatoryLink -> SignatoryLink
+    migrateSigLink doc' siglink
+      | isSuitableForSave doc' siglink =
+          let sigemail = signatoryemail $ signatorydetails siglink
+              muser = find ((==) sigemail . unEmail . useremail . userinfo) sigusers in
+          case muser of
+            Nothing -> siglink --okay we can't find the user, but they may have been deleted or not signed up.  we can leave be.
+            (Just user) -> copySignatoryAccount user siglink
+      | otherwise = clearSignatoryAccount siglink
+    isSuitableForSave :: Document -> SignatoryLink -> Bool
+    isSuitableForSave Document{documenttype,documentstatus} siglink =
+         isAuthor siglink 
+      || (documenttype==Attachment) 
+      || ((isSignable documenttype) && (documentstatus /= Preparation))
+    clearSignatoryAccount :: SignatoryLink -> SignatoryLink
+    clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybesupervisor = Nothing }
 
 updateSigAttachments :: DocumentID -> [SignatoryAttachment] -> Update Documents (Either String Document)
 updateSigAttachments docid sigatts =
@@ -1400,6 +1424,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'migrateForDeletion
                         , 'migrateDocumentAuthorAttachments
                         , 'unquarantineAll
+                        , 'migrateDocumentSigAccounts
                         , 'getDocumentByDocumentIDAllEvenQuarantinedDocuments
                         , 'makeFirstSignatoryAuthor
                         ])
