@@ -86,13 +86,15 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- getContext
-        saveddoc <- saveDocumentForSignatories document
-        case saveddoc of
-          (Left msg) -> Log.error $ "Failed to save document #" ++ (show documentid) ++ " for signatories " ++ msg
-          _ -> return ()
+        msaveddoc <- saveDocumentForSignatories document
+        document' <- case msaveddoc of
+          (Left msg) -> do
+            Log.error $ "Failed to save document #" ++ (show documentid) ++ " for signatories " ++ msg
+            return document
+          (Right saveddoc) -> return saveddoc
         -- we don't need to forkIO here since we only schedule emails here
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-        sendInvitationEmails ctx document
+        sendInvitationEmails ctx document'
         return ()
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
