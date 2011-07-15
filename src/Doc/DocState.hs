@@ -36,7 +36,7 @@ module Doc.DocState
     , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
     , NewDocumentWithMCompany(..)
-    , SaveDocumentForSignedUser(..)
+    , SaveDocumentForUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTags(..)
     , SetDocumentUI(..)
@@ -77,6 +77,7 @@ module Doc.DocState
     , SaveSigAttachment(..)
     , MigrateDocumentAuthorAttachments(..)
     , UnquarantineAll(..)
+    , MigrateDocumentSigAccounts(..)
     , MakeFirstSignatoryAuthor(..)
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
@@ -131,8 +132,7 @@ getDocumentsByAuthor userid = queryDocs $ \documents ->
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
   documents <- ask
-  -- this should be looking up by userid, but it would miss docs that aren't yet saved for the user
-  return $  filter (\d -> documentservice d == userservice user) $ IxSet.toList (documents @= (useremail $ userinfo user))
+  return $  filter (\d -> documentservice d == userservice user) $ IxSet.toList (documents @= (userid user))
 
 filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksByUser doc user =
@@ -159,8 +159,7 @@ signatoryCanView' siglinks docstatus docsignorder =
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = queryDocs $ \documents ->
-    -- this should be looking up by userid but it would miss docs that aren't yet saved for the user
-    filter (signatoryCanView user) (toList $ documents @= (useremail $ userinfo user) @= userservice user)
+    filter (signatoryCanView user) (toList $ documents @= (userid user) @= userservice user)
 
 filterSignatoryLinksBySupervisor :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksBySupervisor doc user =
@@ -702,18 +701,17 @@ fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = queryDocs $ \documents ->
   maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
-
-saveDocumentForSignedUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
+saveDocumentForUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
                           -> Update Documents (Either String Document)
-saveDocumentForSignedUser documentid useraccount signatorylinkid1 = do
+saveDocumentForUser documentid useraccount signatorylinkid1 = do
   modifySignable documentid $ \document ->
-      let signeddocument = document { documentsignatorylinks = newsignatorylinks }
-          newsignatorylinks = map maybesign (documentsignatorylinks document)
-          maybesign x@(SignatoryLink {signatorylinkid} )
+      let saveddocument = document { documentsignatorylinks = newsignatorylinks }
+          newsignatorylinks = map maybesave (documentsignatorylinks document)
+          maybesave x@(SignatoryLink {signatorylinkid} )
             | signatorylinkid == signatorylinkid1 =
               copySignatoryAccount useraccount x
-          maybesign x = x
-      in Right signeddocument
+          maybesave x = x
+      in Right saveddocument
 
 
 getNumberOfDocumentsOfUser :: User -> Query Documents Int
@@ -1028,13 +1026,20 @@ clearSignInfofromDoc doc = do
               documentsignatorylinks = newsiglinks
              }
 
-changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> BS.ByteString ->  Update Documents (Either String Document)
-changeSignatoryEmailWhenUndelivered did slid email = modifySignable did $ changeEmail
+changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> Maybe SignatoryAccount -> BS.ByteString ->  Update Documents (Either String Document)
+changeSignatoryEmailWhenUndelivered did slid msigaccount email = modifySignable did $ changeEmail
   where changeEmail doc = let signlinks = documentsignatorylinks doc
                               mnsignlink = do
                                            sl <- find ((== slid) . signatorylinkid) signlinks
                                            when (invitationdeliverystatus sl /= Undelivered && invitationdeliverystatus sl /= Deferred) Nothing
-                                           return $ sl {invitationdeliverystatus = Unknown, signatorydetails = (signatorydetails sl) {signatoryemail = email}}
+                                           let correctedsl = sl 
+                                                     { invitationdeliverystatus = Unknown
+                                                     , signatorydetails = (signatorydetails sl) {signatoryemail = email}
+                                                     , maybesignatory = Nothing
+                                                     , maybesupervisor = Nothing }
+                                           case msigaccount of
+                                             Nothing -> return correctedsl
+                                             (Just sigaccount) -> return $ copySignatoryAccount sigaccount correctedsl
 
                           in case mnsignlink  of
                            Just nsl -> let sll = for signlinks $ \sl -> if ( slid == signatorylinkid sl) then nsl else sl
@@ -1220,6 +1225,29 @@ unquarantineAll = do
       return $ doc { documentrecordstatus = LiveDocument,
                      documentquarantineexpiry = Nothing }
 
+migrateDocumentSigAccounts :: DocumentID -> [User] -> Update Documents (Either String Document)
+migrateDocumentSigAccounts docid sigusers =
+  modifySignableOrTemplate docid $ \doc ->
+    return $ doc {
+      documentsignatorylinks = map (migrateSigLink doc) $ documentsignatorylinks doc
+    }
+  where 
+    migrateSigLink :: Document -> SignatoryLink -> SignatoryLink
+    migrateSigLink doc' siglink
+      | isSuitableForSave doc' siglink =
+          let sigemail = signatoryemail $ signatorydetails siglink
+              muser = find ((==) sigemail . unEmail . useremail . userinfo) sigusers in
+          case muser of
+            Nothing -> siglink --okay we can't find the user, but they may have been deleted or not signed up.  we can leave be.
+            (Just user) -> copySignatoryAccount user siglink
+      | otherwise = clearSignatoryAccount siglink
+    isSuitableForSave :: Document -> SignatoryLink -> Bool
+    isSuitableForSave Document{documenttype,documentstatus} siglink =
+         isAuthor siglink 
+      || (documenttype==Attachment) 
+      || ((isSignable documenttype) && (documentstatus /= Preparation))
+    clearSignatoryAccount :: SignatoryLink -> SignatoryLink
+    clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybesupervisor = Nothing }
 
 updateSigAttachments :: DocumentID -> [SignatoryAttachment] -> Update Documents (Either String Document)
 updateSigAttachments docid sigatts =
@@ -1352,7 +1380,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentStats
                         , 'getDocumentStatsByUser
                         , 'fileModTime
-                        , 'saveDocumentForSignedUser
+                        , 'saveDocumentForUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
@@ -1396,6 +1424,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'migrateForDeletion
                         , 'migrateDocumentAuthorAttachments
                         , 'unquarantineAll
+                        , 'migrateDocumentSigAccounts
                         , 'getDocumentByDocumentIDAllEvenQuarantinedDocuments
                         , 'makeFirstSignatoryAuthor
                         ])

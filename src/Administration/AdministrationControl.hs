@@ -33,6 +33,7 @@ module Administration.AdministrationControl(
           , handleMigrateForDeletion
           , handleUnquarantineAll
           , migrateDocsNoAuthor
+          , migrateSigAccounts
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -723,3 +724,49 @@ migrateDocsNoAuthor = do
   liftIO $ print (intercalate "\n" $ [r | Left r <- res])
   liftIO $ print ("successful: " ++ show (length [r | Right r <- res]))
   sendRedirect LinkMain
+
+{- |
+    Piece of migration in response to SKRIVAPADEV-380.  The idea is to populate
+    maybesignatory and maybesupervisor on the siglinks.  Want it so that:
+    
+    * they are correctly populated for every author siglink 
+      - this should already be the case, unless an earlier migration went really wrong!
+    * they are correctly populated for every non-author siglink
+      - they should be populated where a doc is signable or an attachment and not in preparation mode
+      - they shouldn't be populated for templates or template attachments or docs in preparation mode
+      
+    I'm scared that previous migrations may have put this data in the wrong place (so for those in preparation mode).
+    Also, we have some documents that certainly need this populating.
+    
+    From now on we're populate these values whenever a doc is signed or sent, or when a user signs up
+    for an account after signing a document.
+    
+    Some things that'll happen which I think make good sense:
+      * people who sign up in the future, and have previous not saved a document won't be able to see that document
+      * people who haved signed up in the past can currently see documents that they may have refused to save.  they
+        will still be able to see them after migration.
+      * At the moment we don't offer an account creation, document saving thing, for those viewing a document rather than
+    signing it.  This means that if they subsequently sign up they won't see those documents they viewed in the past.
+    
+    Because of the niggles above, ideally this migration should just be ran once.  Otherwise people may see documents they
+    asked not to save appearing in their archive (although thankfully it's perfectly possible there is no-one like this
+    using our service).
+-}
+migrateSigAccounts :: Kontrakcja m => m Response
+migrateSigAccounts = onlySuperUser $ do
+  services <- query $ GetServices
+  mapM_ migrateSigAccountsForService $ Nothing : map (Just . serviceid) services
+  sendRedirect LinkMain
+  where
+    migrateSigAccountsForService :: Kontrakcja m => Maybe ServiceID -> m ()
+    migrateSigAccountsForService service = do
+      ldocs <- query $ GetDocuments service
+      qdocs <- query $ GetQuarantinedDocuments service
+      mapM_ migrateSigAccountsForDocument ldocs
+      mapM_ migrateSigAccountsForDocument qdocs
+      return ()
+    migrateSigAccountsForDocument :: Kontrakcja m => Document -> m (Either String Document)
+    migrateSigAccountsForDocument Document{documentid,documentservice,documentsignatorylinks} = do
+      musers <- mapM (query . GetUserByEmail documentservice . Email . signatoryemail . signatorydetails) documentsignatorylinks
+      update $ MigrateDocumentSigAccounts documentid (catMaybes musers) 
+

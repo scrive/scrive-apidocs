@@ -2946,10 +2946,6 @@ instance Indexable Document where
                       , ixFun (\x -> (map Supervisor (catMaybes (map maybesupervisor
                                                                 (filter (not . signatorylinkdeleted)
                                                                  (documentsignatorylinks x))))) :: [Supervisor])
-                      -- shouldn't be using emails really, need to start savings docs for users earlier
-                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails)
-                                     (filter (not . signatorylinkdeleted)
-                                       (documentsignatorylinks x)) :: [Email])
 
                       -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
                       -- the scope of a single document! FIXME
