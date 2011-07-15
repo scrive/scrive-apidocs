@@ -1769,7 +1769,8 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Left _ -> return LinkMain
         Right doc -> do
           guard $ isAuthor (doc, user)
-          mnewdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid email
+          muser <- query $ GetUserByEmail (documentservice doc) (Email email)
+          mnewdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid (fmap getSignatoryAccount muser) email
           case mnewdoc of
             Right newdoc -> do
               -- get (updated) siglink from updated document

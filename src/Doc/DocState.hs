@@ -1025,13 +1025,20 @@ clearSignInfofromDoc doc = do
               documentsignatorylinks = newsiglinks
              }
 
-changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> BS.ByteString ->  Update Documents (Either String Document)
-changeSignatoryEmailWhenUndelivered did slid email = modifySignable did $ changeEmail
+changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> Maybe SignatoryAccount -> BS.ByteString ->  Update Documents (Either String Document)
+changeSignatoryEmailWhenUndelivered did slid msigaccount email = modifySignable did $ changeEmail
   where changeEmail doc = let signlinks = documentsignatorylinks doc
                               mnsignlink = do
                                            sl <- find ((== slid) . signatorylinkid) signlinks
                                            when (invitationdeliverystatus sl /= Undelivered && invitationdeliverystatus sl /= Deferred) Nothing
-                                           return $ sl {invitationdeliverystatus = Unknown, signatorydetails = (signatorydetails sl) {signatoryemail = email}}
+                                           let correctedsl = sl 
+                                                     { invitationdeliverystatus = Unknown
+                                                     , signatorydetails = (signatorydetails sl) {signatoryemail = email}
+                                                     , maybesignatory = Nothing
+                                                     , maybesupervisor = Nothing }
+                                           case msigaccount of
+                                             Nothing -> return correctedsl
+                                             (Just sigaccount) -> return $ copySignatoryAccount sigaccount correctedsl
 
                           in case mnsignlink  of
                            Just nsl -> let sll = for signlinks $ \sl -> if ( slid == signatorylinkid sl) then nsl else sl
