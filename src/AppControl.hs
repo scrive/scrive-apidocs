@@ -253,6 +253,7 @@ handleRoutes = msum [
 
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
      , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ toK0 $ Administration.handleUnquarantineAll
+     , dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
