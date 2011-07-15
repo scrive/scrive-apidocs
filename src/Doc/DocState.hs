@@ -36,7 +36,7 @@ module Doc.DocState
     , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
     , NewDocumentWithMCompany(..)
-    , SaveDocumentForSignedUser(..)
+    , SaveDocumentForUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTags(..)
     , SetDocumentUI(..)
@@ -702,18 +702,17 @@ fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = queryDocs $ \documents ->
   maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
-
-saveDocumentForSignedUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
+saveDocumentForUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
                           -> Update Documents (Either String Document)
-saveDocumentForSignedUser documentid useraccount signatorylinkid1 = do
+saveDocumentForUser documentid useraccount signatorylinkid1 = do
   modifySignable documentid $ \document ->
-      let signeddocument = document { documentsignatorylinks = newsignatorylinks }
-          newsignatorylinks = map maybesign (documentsignatorylinks document)
-          maybesign x@(SignatoryLink {signatorylinkid} )
+      let saveddocument = document { documentsignatorylinks = newsignatorylinks }
+          newsignatorylinks = map maybesave (documentsignatorylinks document)
+          maybesave x@(SignatoryLink {signatorylinkid} )
             | signatorylinkid == signatorylinkid1 =
               copySignatoryAccount useraccount x
-          maybesign x = x
-      in Right signeddocument
+          maybesave x = x
+      in Right saveddocument
 
 
 getNumberOfDocumentsOfUser :: User -> Query Documents Int
@@ -1352,7 +1351,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentStats
                         , 'getDocumentStatsByUser
                         , 'fileModTime
-                        , 'saveDocumentForSignedUser
+                        , 'saveDocumentForUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime

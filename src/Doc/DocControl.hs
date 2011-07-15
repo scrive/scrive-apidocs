@@ -86,6 +86,10 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- getContext
+        saveddoc <- saveDocumentForSignatories document
+        case saveddoc of
+          (Left msg) -> Log.error $ "Failed to save document #" ++ (show documentid) ++ " for signatories " ++ msg
+          _ -> return ()
         -- we don't need to forkIO here since we only schedule emails here
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
         sendInvitationEmails ctx document
@@ -153,6 +157,36 @@ postDocumentChangeAction document@Document  { documentstatus
     | otherwise =
          return ()
     where msignalink = maybe Nothing (getSigLinkFor document) msignalinkid
+
+{- |
+    Goes through each signatory, and if a user exists this saves it for that user
+    by linking the signatory to the user's account.
+-}
+saveDocumentForSignatories :: Kontrakcja m => Document -> m (Either String Document)
+saveDocumentForSignatories doc@Document{documentsignatorylinks} =
+  foldM foldSaveForSig (Right doc) .filter (not . isAuthor) $ documentsignatorylinks
+  where
+    {- |
+        Wraps up the saveDocumentForSignatory so we can use it in a fold
+    -}
+    foldSaveForSig :: Kontrakcja m => (Either String Document) -> SignatoryLink -> m (Either String Document)
+    foldSaveForSig (Left msg) _ = return $ Left msg
+    foldSaveForSig (Right doc') siglink = saveDocumentForSignatory doc' siglink
+    {- |
+        Saves the document for the given signatorylink.  It does this by checking to see
+        if there is a user with a matching email, and if there is it hooks up the signatory
+        link to that user.
+    -}
+    saveDocumentForSignatory :: Kontrakcja m => Document -> SignatoryLink -> m (Either String Document)
+    saveDocumentForSignatory doc'@Document{documentid,documentservice}
+                             SignatoryLink{signatorylinkid,signatorydetails} = do
+      let sigemail = signatoryemail signatorydetails
+      muser <- query $ GetUserByEmail documentservice (Email sigemail)
+      case muser of
+        Nothing -> return $ Right doc'
+        (Just user) -> do
+          udoc <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
+          return udoc
 
 -- EMAILS
 
@@ -415,14 +449,14 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
-          _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
+          --TODO: may want to remove this line when save docs upon account creation - emily
+          _ <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
           if isClosed document
             then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
             else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
-    Just user -> do
-     _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
+    Just _ -> do
      if isClosed document
        then addFlashM $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
        else addFlashM $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
