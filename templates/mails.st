@@ -95,7 +95,7 @@ mailInvitationToSignContractContent=
     <p>
      <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
      $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedcontractinfoformail:noescape()$<br/>
+     $whohadsignedcontractinfoformail()$<br/>
      $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -236,7 +236,7 @@ remindMailNotSignedOfferContent=
       <p>
         <i>$_remindMailNotSignedOfferContentInfo()$</i><br/>
         $_remindMailNotSignedOfferContentPartys()$ $partnersinfo:noescape()$<br/>
-        $whohadsignedofferinfo:noescape()$<br/>
+        $whohadsignedofferinfo()$<br/>
         $_remindMailNotSignedOfferContentSender()$<strong>$creatorname$</strong><br/>
         $timetosigninfo:noescape()$
         $appendixList()$
@@ -252,7 +252,7 @@ remindMailNotSignedOrderContent=
     <span>
       <p><i>$_remindMailNotSignedOrderContentInfo()$</i><br/>
         $_remindMailNotSignedOrderContentPartys()$ $partnersinfo:noescape()$<br/>
-        $whohadsignedorderinfo:noescape()$<br/> 
+        $whohadsignedorderinfo()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
@@ -426,7 +426,8 @@ updateinglistwithauthor=
       <span class="partylistupdate"></span>
     </span>
 ####
-noonehadsignedtext=$_noonehadsignedtext()$####
+noonehadsignedtext=$_noonehadsignedtext()$
+####
 contracthassignedformailtext=$_contracthassignedformailtext()$
 ####
 offerhassignedformailtext=$_offerhassignedformailtext()$
