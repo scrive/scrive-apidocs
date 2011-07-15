@@ -31,6 +31,7 @@ module Doc.DocView (
   , flashRemindMailSent
   , getDataMismatchMessage
   , isNotLinkForUserID
+  , modalPdfTooLarge
   , mailCancelDocumentByAuthor
   , mailCancelDocumentByAuthorContent
   , mailDocumentAwaitingForAuthor
@@ -93,6 +94,8 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
+modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
+modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
 
 modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
 modalSignAwaitingAuthorLast = toModal <$> renderTemplateM "signAwaitingAuthorLast" ()
