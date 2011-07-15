@@ -63,20 +63,18 @@ pageDocumentDesign=
       $endif$
       <div id="signStepsMenuEmptyStep">
         $if(!template)$
-        $if(featureenabled)$
+        $if(!isbasic)$
         <div class="signStepsBodySave extraLink">
           <small><a class="submit" form=".stepForm" rel="template">$_signStepsMenuEmptyStepSaveAsTemplate()$</a></small>
         </div>
         $endif$
         $endif$
 
-        $if(!isorder)$
+        $if(process.isbasicavailable)$
         $if(isbasic)$
-        $if(process.hasadvancedview)$
         <div class="signStepsFunctionalityChange  extraLink">
           <small><a id="toadvanced" class="switchIcon" rel="#dialog-confirm-advanced" style="padding-right:19px;">$_signStepsFunctionalityChangeToAdvanced()$</a></small>
         </div>
-        $endif$
         $else$
         <div class="signStepsFunctionalityChange extraLink">
           <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">$_signStepsFunctionalityChangeToSimplified()$</a></small>
@@ -134,13 +132,13 @@ pageDocumentDesign=
                     <option value=""></option>
                   </select>
                   $endif$
-                  $if(featureenabled)$
+                  $if(!isbasic)$
                   <a class="plus" href="#"></a>
                   $endif$
                 </div>
                 
                 <!-- 013 changed -->
-                <div class="sigentry signStepsBodyForms $if(!featureenabled)$dragDisabled$endif$" id="peopleDetails">
+                <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
                   <span class="fields">
                     $if(authorfstname)$
                     <span class='dragtext authorfstname inputWrapper'>
@@ -460,6 +458,7 @@ pageDocumentDesign=
     var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
     var issendonly = $if(process.isauthorsend)$true$else$false$endif$;
+    $if(step3)$ safeReady(function(){showStep3()});$endif$
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
   <div class="waiting4page"></div>
@@ -489,13 +488,13 @@ pageDocumentDesign=
       <a href="#" class="signingOrder"></a>
       <select class="signorder float-right" name="signatorysignorder"></select>
       $endif$
-      $if(featureenabled)$
+      $if(!isbasic)$
       <a href="#" class="plus"></a>
       $endif$
     </div>
     
     <!-- 013 changed -->
-    <div class="sigentry signStepsBodyForms $if(!featureenabled)$dragDisabled$endif$" id="peopleDetails">
+    <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
 
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
@@ -554,7 +553,7 @@ pageDocumentDesign=
 docname=
 <span class="docname">
   <span class="docname-display">
-    $if(featureenabled)$
+    $if(!isbasic)$
     <a href="#" class="icon edit" style="margin-right: 2px"></a>
     $endif$
     <span class="visible-docname">$documenttitle$</span>
@@ -566,7 +565,7 @@ docname=
 </span>
 ####
 dragndropIcon=
-$if(featureenabled)$
+$if(!isbasic)$
 <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
 $endif$
 #####
