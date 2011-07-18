@@ -349,6 +349,7 @@ function docstateToHTML() {
         updateStatus(this);
     });
     $("#signStepsWrapper").show();
+    $("input").blur();
     stayontop($('#signStepsContainer.follow'));
 }
 
