@@ -52,11 +52,11 @@ $loadingdialog()$
                             </th>
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$<em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortAttachment()$<em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&amp;sorting=titleREV">$_SortTemplate()$<em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">$_SortAttachment()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$</a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortAttachment()$</a>
                                $endif$
                             </th>
                             <th style="width: 100px;"></th>

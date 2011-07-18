@@ -1568,7 +1568,7 @@ safeReady(function() {
         });
 
         console.log(sigoptions);
-        $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" >'))).append($("<td />").append($('<textarea name="sigattachdesc" >'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
+        $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" />'))).append($("<td />").append($('<textarea name="sigattachdesc" />'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
 
             
         return false;
