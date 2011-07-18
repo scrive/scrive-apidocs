@@ -1,0 +1,260 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodEleg"
+msgstr "e-legitimation"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodElegTelia"
+msgstr "Telia e-legitimation"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodElegNordea"
+msgstr "Nordea e-legitimation"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodElegBankID"
+msgstr "BankID"
+
+#: docpages/docseal.st:signMethod
+msgid "_signMethodEmail"
+msgstr "e-post"
+
+#: docpages/docseal.st:orderSignHistEntry
+msgid "_orderSignHistEntry"
+msgstr "bekräftar ordern online med "
+
+#: docpages/docseal.st:offerSignHistEntry
+msgid "_offerSignHistEntry"
+msgstr "accepterar offerten med "
+
+#: docpages/docseal.st:contractSignHistEntry
+msgid "_contractSignHistEntry"
+msgstr " undertecknar dokumentet online med "
+
+#: docpages/docseal.st:orderSeenHistEntry
+msgid "_orderSeenHistEntry"
+msgstr "granskar orderbekräftelsen online "
+
+#: docpages/docseal.st:offerSeenHistEntry
+msgid "_offerSeenHistEntry"
+msgstr "granskar offerten online "
+
+#: docpages/docseal.st:contractSeenHistEntry
+msgid "_contractSeenHistEntry"
+msgstr " granskar dokumentet online "
+
+#: docpages/docseal.st:orderInvitationSentEntry
+msgid "_orderInvitationSentEntryIfElse"
+msgstr "parterna"
+
+#: docpages/docseal.st:orderInvitationSentEntry
+msgid "_orderInvitationSentEntryIfoneSignatory"
+msgstr "parten"
+
+#: docpages/docseal.st:orderInvitationSentEntry
+msgid "_orderInvitationSentEntry"
+msgstr " skickar orderbekräftelsen till"
+
+#: docpages/docseal.st:offerInvitationSentEntry
+msgid "_offerInvitationSentEntryIfElse"
+msgstr "parterna"
+
+#: docpages/docseal.st:offerInvitationSentEntry
+msgid "_offerInvitationSentEntryIfoneSignatory"
+msgstr "parten"
+
+#: docpages/docseal.st:offerInvitationSentEntry
+msgid "_offerInvitationSentEntry"
+msgstr " skickar offerten till"
+
+#: docpages/docseal.st:contractInvitationSentEntry
+msgid "_contractInvitationSentEntryIfElse"
+msgstr "parterna"
+
+#: docpages/docseal.st:contractInvitationSentEntry
+msgid "_contractInvitationSentEntryIfoneSignatory"
+msgstr "parten"
+
+#: docpages/docseal.st:contractInvitationSentEntry
+msgid "_contractInvitationSentEntry"
+msgstr " skickar en inbjudan att underteckna till"
+
+#: docpages/docseal.st:orderLastHistEntry
+msgid "_orderLastHistEntry"
+msgstr "    Samligta parter har bekräftat ordern."
+
+#: docpages/docseal.st:offerLastHistEntry
+msgid "_offerLastHistEntry"
+msgstr "    Samligta parter har accepterat offerten."
+
+#: docpages/docseal.st:contractLastHistEntry
+msgid "_contractLastHistEntry"
+msgstr "    Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow3"
+msgstr "Kontrollera orderbekräftelsen mot vår databas genom följande länk: "
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow2"
+msgstr "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow12"
+msgstr "har bekräftats"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationFooterRow1"
+msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att orderbekräftelsenummer"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextshistoryText"
+msgstr "Händelser"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsdateText"
+msgstr "Datum"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextseventsText"
+msgstr "Registrerade händelser"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsorgNumberText"
+msgstr "Org.nr. "
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextssecretaryText"
+msgstr "Avsändare"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextspartnerText"
+msgstr "Mottagare"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextssignedText"
+msgstr "Ordern bekräftad"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsdocPrefix"
+msgstr "Orderbekräftelsenummer"
+
+#: docpages/docseal.st:ordersealingtexts
+msgid "_ordersealingtextsverificationTitle"
+msgstr "Orderbekräftelse"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow3"
+msgstr "Du kan kontrollera offerten mot vår databas genom följande länk:"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow2"
+msgstr "av parterna och är juridiskt bindande. Kursiverad information är verifierad genom vår tjänst."
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow12"
+msgstr "har accepterats"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationFooterRow1"
+msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offertnummer"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextshistoryText"
+msgstr "Händelser"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsdateText"
+msgstr "Datum"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextseventsText"
+msgstr "Registrerade händelser"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsorgNumberText"
+msgstr "Org.nr. "
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextssecretaryText"
+msgstr "Avsändare"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextspartnerText"
+msgstr "Mottagare"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextssignedText"
+msgstr "Offert accepterad"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsdocPrefix"
+msgstr "Offertnummer"
+
+#: docpages/docseal.st:offersealingtexts
+msgid "_offersealingtextsverificationTitle"
+msgstr "Acceptverifikat"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow3"
+msgstr "Kontrollera dokumentet mot vår databas genom följande länk:"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow2"
+msgstr "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow12"
+msgstr " har undertecknats"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsverificationFooterRow1"
+msgstr "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextshistoryText"
+msgstr "Händelser"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsdateText"
+msgstr "Datum"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextseventsText"
+msgstr "Registrerade händelser"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsorgNumberText"
+msgstr "Org.nr. "
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextssecretaryText"
+msgstr "Ej undertecknande part"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextspartnerText"
+msgstr "Parter"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextssignedText"
+msgstr "Undertecknat"
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtextsdocPrefix"
+msgstr "Dok.nr."
+
+#: docpages/docseal.st:contractsealingtexts
+msgid "_contractsealingtexts"
+msgstr "Verifikat"
+
