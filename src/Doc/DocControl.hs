@@ -1800,7 +1800,9 @@ mainPage :: Kontrakcja m => m String
 mainPage =  do
     params <- getListParams
     showTemplates <- isFieldSet "showTemplates"
+    tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess
+    when tooLarge $ addFlashM modalPdfTooLarge
     uploadPage params mdocprocess showTemplates
 
 getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)

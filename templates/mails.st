@@ -419,7 +419,7 @@ passwordChangeLinkMailContent=
 ###
 ####UTILS
 timetosigninfo=
-    <span>$_timetosigninfo()$ <strong>$time$</strong>.</span>
+    <span>$_timetosigninfo()$ <strong>$time$</strong>.</span><br/>
 ###
 updateinglistwithauthor=
     <span>
