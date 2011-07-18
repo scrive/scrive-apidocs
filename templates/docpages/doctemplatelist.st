@@ -61,7 +61,7 @@ $loadingdialog()$
                                $endif$
                             </th>
                             -->
-                            <th style="width: 100px;">
+                            <th style="width: 120px;">
                               $if(params.sorting.typeREV)$
                                 <a href="$currentlink$&amp;sorting=type">$_SortType()$<em> ▲</em></a>
                                $elseif(params.sorting.type)$
