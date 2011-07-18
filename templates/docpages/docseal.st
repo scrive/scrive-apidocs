@@ -60,7 +60,7 @@ orderLastHistEntry=
 $_orderLastHistEntry()$
 ####
 contractInvitationSentEntry=
-    $authorfstname$ $authorsndname$$_contractInvitationSentEntry()$
+    $authorfstname$ $authorsndname$ $_contractInvitationSentEntry()$
     $if(oneSignatory)$
         $_contractInvitationSentEntryIfoneSignatory()$
     $else$
@@ -90,22 +90,22 @@ orderInvitationSentEntry=
     $ip$
 ###
 contractSeenHistEntry=
-    $personname$$_contractSeenHistEntry()$ $seenip$
+    $personname$ $_contractSeenHistEntry()$ $seenip$
 ###
 offerSeenHistEntry=
-    $personname$$_offerSeenHistEntry()$ $seenip$
+    $personname$ $_offerSeenHistEntry()$ $seenip$
 ####
 orderSeenHistEntry=
-    $personname$$_orderSeenHistEntry()$ $seenip$
+    $personname$ $_orderSeenHistEntry()$ $seenip$
 ####
 contractSignHistEntry=
-    $personname$$_contractSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_contractSignHistEntry()$ $signMethod()$ $signip$
 ####
 offerSignHistEntry=
-    $personname$$_offerSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_offerSignHistEntry()$ $signMethod()$ $signip$
 ###
 orderSignHistEntry=
-    $personname$$_orderSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_orderSignHistEntry()$ $signMethod()$ $signip$
 ###
 signMethod=
         $if(!provider)$
