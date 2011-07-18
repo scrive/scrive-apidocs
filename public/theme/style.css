@@ -1087,6 +1087,8 @@ input[type=submit].hidden
 #signStepsTitleRowTextContainer
 {
     min-height: 19px;
+    max-height: 22px;
+    float: left;
 }
 
 #signStepsTitleRow .title
