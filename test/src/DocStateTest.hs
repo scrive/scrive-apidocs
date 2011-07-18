@@ -59,7 +59,8 @@ docStateTests = testGroup "DocState" [
   testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" testNotPreparationAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload and the csvindex is the author, return left" testPreparationAttachCSVUploadAuthorIndexLeft,
   testThat "when I call attachcsvupload and the csvindex is negative, return left" testPreparationAttachCSVUploadIndexNeg,
-  testThat "when I call attachcsvupload and the csvindex is too large, return Left" testPreparationAttachCSVUploadIndexGreaterThanLength
+  testThat "when I call attachcsvupload and the csvindex is too large, return Left" testPreparationAttachCSVUploadIndexGreaterThanLength,
+  testThat "updateDocumentAttachment fails if not in preparation" testUpdateDocumentAttachmentFailsIfNotPreparation
 
   ]
 
@@ -439,6 +440,24 @@ testCreateFromSharedTemplate = do
    if (fmap fieldvalue $ signatoryotherfields $ signatorydetails author1) == (fmap fieldvalue $ signatoryotherfields $ signatorydetails author2)
       then assertSuccess
       else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294" 
+           
+testUpdateDocumentAttachmentFailsIfNotPreparation :: Assertion
+testUpdateDocumentAttachmentFailsIfNotPreparation =
+  doTimes 100 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isPreparation doc -> return Nothing
+      Just _doc -> do
+        --execute                     
+        edoc <- update $ UpdateDocumentAttachments docid [] []
+        --assert
+        case edoc of
+          Left _msg     -> return $ Just $ return ()
+          Right _newdoc -> return $ Just $ assertFailure "Should fail if document is not in preparation"
+
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
