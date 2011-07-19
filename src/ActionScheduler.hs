@@ -68,6 +68,14 @@ actionScheduler imp = do
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
 
+-- | Old scheduler (used as main one before action scheduler was implemented)
+oldScheduler :: ActionScheduler ()
+oldScheduler = do
+    now <- liftIO getMinutesTime
+    timeoutDocuments now
+    dropExpiredSessions now
+    deleteQuarantinedDocuments now
+
 -- Internal stuff
 
 -- | Evaluates one action depending on its type
@@ -154,14 +162,7 @@ deleteAction aid = do
     _ <- update $ DeleteAction aid
     return ()
 
--- | Old scheduler
-oldScheduler :: ActionScheduler ()
-oldScheduler = do
-    now <- liftIO getMinutesTime
-    timeoutDocuments now
-    dropExpiredSessions now
-    deleteQuarantinedDocuments now
-    Log.debug $ "Scheduler is running ..."
+-- Old scheduler internal stuff
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
