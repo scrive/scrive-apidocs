@@ -60,8 +60,9 @@ docStateTests = testGroup "DocState" [
   testThat "when I call attachcsvupload and the csvindex is the author, return left" testPreparationAttachCSVUploadAuthorIndexLeft,
   testThat "when I call attachcsvupload and the csvindex is negative, return left" testPreparationAttachCSVUploadIndexNeg,
   testThat "when I call attachcsvupload and the csvindex is too large, return Left" testPreparationAttachCSVUploadIndexGreaterThanLength,
-  testThat "updateDocumentAttachment fails if not in preparation" testUpdateDocumentAttachmentFailsIfNotPreparation
-
+  testThat "updateDocumentAttachment fails if not in preparation" testUpdateDocumentAttachmentFailsIfNotPreparation,
+  testThat "updateDocumentAttachment fails if in preparation but not all ids are found" testUpdateDocumentAttachmentFailsNotFound,
+  testThat "updateDocumentAttachment doesn't fail if there's no attachments" testUpdateDocumentAttachmentOk
   ]
 
 testThat :: String -> Assertion -> Test
@@ -458,6 +459,39 @@ testUpdateDocumentAttachmentFailsIfNotPreparation =
           Left _msg     -> return $ Just $ return ()
           Right _newdoc -> return $ Just $ assertFailure "Should fail if document is not in preparation"
 
+testUpdateDocumentAttachmentFailsNotFound :: Assertion
+testUpdateDocumentAttachmentFailsNotFound = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isPreparation doc -> return Nothing
+      Just _doc -> do
+        --execute                     
+        edoc <- update $ UpdateDocumentAttachments docid [DocumentID 1] []
+        --assert
+        case edoc of
+          Left _msg     -> return $ Just $ return ()
+          Right _newdoc -> return $ Just $ assertFailure "Should fail if documentid is not found"
+  
+testUpdateDocumentAttachmentOk :: Assertion
+testUpdateDocumentAttachmentOk = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isPreparation doc -> return Nothing
+      Just _doc -> do
+        --execute                     
+        edoc <- update $ UpdateDocumentAttachments docid [] []
+        --assert
+        case edoc of
+          Left _msg     -> return $ Just $ assertFailure "Should not fail if empty attachments."
+          Right _newdoc -> return $ Just $ return ()
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
