@@ -21,11 +21,11 @@ $loadingdialog()$
                         </ul>
                     </div>
 
-                    <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:160px;margin-left: 20px;" >
+                    <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:120px;margin-left: 20px;" >
                         <div class="left"> </div>
-                        <div class="label"> $_createNew()$</div>
+                        <div class="label" style="min-width:105px;text-align:center;"> $_createNew()$</div>
                         <div class="right"> </div>
-                        <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+                        <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
                     </a>
                     <div class="filelist" style="padding-left:10px;display:none"></div> 
 
