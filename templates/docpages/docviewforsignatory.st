@@ -191,7 +191,15 @@ pageDocumentForSignContent=
             <table id="signatorysignatoryattachments">
               <tbody>
                 $sigattachments:{attachment |
-                <tr><td><a style="margin-right:10px" href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
+                <tr><td>
+                  $if(attachment.viewerlink)$
+                  <a href="$attachment.viewerlink$"
+                  style="margin-right:10px"
+                  target="_blank">$attachment.name$</a>
+                  $else$
+                  <span  style="margin-right:10px">$attachment.name$</span>
+                  $endif$
+                </td><td>$attachment.signame$</td></tr>
                 }$
                 </tbody>
             </table>
