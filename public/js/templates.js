@@ -183,7 +183,7 @@ function getValue(field) {
     if (isDraggableField(field)) {
         var s = $(field).find("input[type='text'], input[type='email']");
         if (s.size()) {
-            if (s.attr("value") == s.attr("infotext")) {
+            if (s.attr("value") === s.attr("infotext") && s.hasClass("grayed")) {
                 return "";
             } else {
                 return s.attr("value");
