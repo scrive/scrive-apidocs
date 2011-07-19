@@ -115,7 +115,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                (_, templates) <- liftIO $ second (langVersion $ lang $ usersettings user) <$> readMVar (sdTemplates sd)
+                templates <- getLangTemplates $ lang $ usersettings user
                 mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
@@ -161,6 +161,12 @@ deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
     _ <- update $ DeleteAction aid
     return ()
+
+getLangTemplates :: Lang -> ActionScheduler KontrakcjaTemplates
+getLangTemplates lang = do
+    sd <- ask
+    (_, templates) <- liftIO $ second (langVersion lang) <$> readMVar (sdTemplates sd)
+    return templates
 
 -- Old scheduler internal stuff
 
