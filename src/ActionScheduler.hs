@@ -107,7 +107,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
-                      _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
+                      t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
                 mail <- mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
