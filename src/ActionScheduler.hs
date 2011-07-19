@@ -7,6 +7,7 @@ module ActionScheduler (
     ) where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
@@ -23,6 +24,7 @@ import MinutesTime
 import Mails.MailsData
 import Mails.SendMail
 import Session
+import Templates.LocalTemplates
 import Templates.Templates
 import User.UserView
 import qualified AppLogger as Log
@@ -34,14 +36,11 @@ type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaM
 newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
-instance TemplatesMonad ActionScheduler where
-    getTemplates = do
-        sd <- ask
-        (_, templates) <- liftIO $ readMVar $ sdTemplates sd
-        -- FIXME: how do we use proper language version here? Probably the best
-        -- bet is to use State with language and set it appropriately using
-        -- user's current settings before instantiating anything.
-        return $ langVersion LANG_SE templates
+-- Note: Do not define TemplatesMonad instance for ActionScheduler, use
+-- LocalTemplates instead. Reason? We don't have access to currently used
+-- language, so we should rely on user's language settings the action is
+-- assigned to and since TemplatesMonad doesn't give us the way to get
+-- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler (AS sched) sd = runReaderT sched sd
@@ -108,7 +107,8 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                mail <- mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                (_, templates) <- liftIO $ second (langVersion $ lang $ usersettings user) <$> readMVar (sdTemplates sd)
+                mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
