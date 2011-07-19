@@ -184,7 +184,7 @@ api_document_tag tag = JSObject $ toJSObject $ [
       ("name", showJSON $ BS.toString $ tagname tag)
     , ("value", showJSON $ BS.toString $ tagvalue tag)]
 
-api_document_file :: (APIContext m c, Kontrakcja m) => File -> APIFunction m c JSValue
+api_document_file :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
 api_document_file file = do
     ctx <- getContext
     content <- liftIO $ getFileContents ctx file
@@ -194,7 +194,7 @@ api_document_file file = do
         , ("content", showJSON $ base64data)]
 
 
-api_document :: (APIContext m c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
+api_document :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
 api_document addFiles doc = do
     files <- if addFiles
               then do
@@ -231,7 +231,7 @@ data SignatoryTMP = SignatoryTMP {
                 fields :: [(BS.ByteString,Maybe BS.ByteString)]
             } deriving Show
 
-getSignatoryTMP :: (APIContext m c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
+getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
     fstname <- apiAskBS "fstname"
     sndname <- apiAskBS "sndname"
@@ -271,7 +271,7 @@ toSignatoryDetails sTMP =
                                                         }
             }
 
-mergeSignatoryWithTMP :: (APIContext m c, Kontrakcja m) => SignatoryTMP -> SignatoryLink-> APIFunction m c SignatoryLink
+mergeSignatoryWithTMP :: (APIContext c, Kontrakcja m) => SignatoryTMP -> SignatoryLink-> APIFunction m c SignatoryLink
 mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do
   return $ sl { signatorydetails =  sd {
       signatoryfstname = fromMaybe (signatoryfstname sd) (fstname sTMP)
@@ -290,7 +290,7 @@ fillFields [] _ = []
 
 
 -- High level commons. Used buy some simmilar API's, but not all of them
-getFiles :: (APIContext m c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]
+getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]
 getFiles = fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
     name    <- apiAskBS     "name"
     content <- apiAskBase64 "content"
