@@ -31,6 +31,14 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "SignDocument fails when doc doesn't exist" testSignDocumentNotLeft,
+  testThat "SignDocument succeeds when doc is Signable and Pending" testSignDocumentSignablePendingRight,
+  testThat "SignDocument fails when the document is Signable but not in Pending" testSignDocumentSignableNotPendingLeft,
+  testThat "SignDocument fails when document is not signable" testSignDocumentNonSignableLeft,  
+  
+  testThat "TimeoutDocument fails when doc doesn't exist" testTimeoutDocumentSignableNotLeft,
+  testThat "TimeoutDocument succeeds when doc is Signable and Pending" testTimeoutDocumentSignablePendingRight,
+  testThat "TimeoutDocument fails when the document is Signable but not in Pending" testTimeoutDocumentSignableNotPendingLeft,
   testThat "A supervisor's friends can view a document"testSupervisorsFriendsCanSee,
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
@@ -62,7 +70,11 @@ docStateTests = testGroup "DocState" [
   testThat "when I call attachcsvupload and the csvindex is too large, return Left" testPreparationAttachCSVUploadIndexGreaterThanLength,
   testThat "updateDocumentAttachment fails if not in preparation" testUpdateDocumentAttachmentFailsIfNotPreparation,
   testThat "updateDocumentAttachment fails if in preparation but not all ids are found" testUpdateDocumentAttachmentFailsNotFound,
-  testThat "updateDocumentAttachment doesn't fail if there's no attachments" testUpdateDocumentAttachmentOk
+  testThat "updateDocumentAttachment doesn't fail if there's no attachments" testUpdateDocumentAttachmentOk,
+  -- we need to do one that tests updateDocumentAttachment where there is an attachment
+  testThat "documentFromSignatoryData fails when document doesn't exist" testDocumentFromSignatoryDataFailsDoesntExist,
+  testThat "documentFromSignatoryData succeeds when document exists" testDocumentFromSignatoryDataSucceedsExists,
+  testThat "TimeoutDocument fails when document is not signable" testTimeoutDocumentNonSignableLeft
   ]
 
 testThat :: String -> Assertion -> Test
@@ -492,6 +504,193 @@ testUpdateDocumentAttachmentOk = do
         case edoc of
           Left _msg     -> return $ Just $ assertFailure "Should not fail if empty attachments."
           Right _newdoc -> return $ Just $ return ()
+          
+          
+testDocumentFromSignatoryDataFailsDoesntExist :: Assertion
+testDocumentFromSignatoryDataFailsDoesntExist = do
+  doTimes 100 $ do
+    stdgn <- newStdGen    
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+        c = unGen arbitrary stdgn 10
+        d = unGen arbitrary stdgn 10
+        e = unGen arbitrary stdgn 10
+        f = unGen arbitrary stdgn 10
+        g = unGen arbitrary stdgn 10
+        h = unGen arbitrary stdgn 10
+        count = unGen arbitrary stdgn 10
+        i = unGen (vectorOf count arbitrary) stdgn 10
+    mdoc <- update $ DocumentFromSignatoryData a b c d e f g h i
+    case mdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if document does not exist."
+      
+        
+testDocumentFromSignatoryDataSucceedsExists :: Assertion
+testDocumentFromSignatoryDataSucceedsExists = do
+  doTimes 100 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    stdgn <- newStdGen    
+    let b = unGen arbitrary stdgn 10
+        c = unGen arbitrary stdgn 10
+        d = unGen arbitrary stdgn 10
+        e = unGen arbitrary stdgn 10
+        f = unGen arbitrary stdgn 10
+        g = unGen arbitrary stdgn 10
+        h = unGen arbitrary stdgn 10
+        count = unGen arbitrary stdgn 10
+        i = unGen (vectorOf count arbitrary) stdgn 10
+    mdoc <- update $ DocumentFromSignatoryData docid b c d e f g h i
+    case mdoc of
+      Left _ -> return $ Just $ assertFailure "Should succeed if document exists."
+      Right _ -> return $ Just $ return ()
+          
+testTimeoutDocumentNonSignableLeft :: Assertion
+testTimeoutDocumentNonSignableLeft = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _doc -> do
+        etdoc <- update $ TimeoutDocument docid mt
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not signable"
+    
+testTimeoutDocumentSignableNotPendingLeft :: Assertion
+testTimeoutDocumentSignableNotPendingLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | isPending doc -> return Nothing
+      Just _doc -> do
+        etdoc <- update $ TimeoutDocument docid mt
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not pending"
+    
+testTimeoutDocumentSignablePendingRight :: Assertion
+testTimeoutDocumentSignablePendingRight = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | not $ isPending doc -> return Nothing
+      Just _doc -> do
+        etdoc <- update $ TimeoutDocument docid mt
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
+testTimeoutDocumentSignableNotLeft :: Assertion
+testTimeoutDocumentSignableNotLeft = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    etdoc <- update $ TimeoutDocument did mt
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+
+
+testSignDocumentNonSignableLeft :: Assertion
+testSignDocumentNonSignableLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+            c = unGen arbitrary stdgn 10
+            d = unGen arbitrary stdgn 10
+        etdoc <- update $ SignDocument docid a mt b c d
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not signable"
+
+    
+testSignDocumentSignableNotPendingLeft :: Assertion
+testSignDocumentSignableNotPendingLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | isPending doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+            c = unGen arbitrary stdgn 10
+            d = unGen arbitrary stdgn 10
+        etdoc <- update $ SignDocument docid a mt b c d
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not pending"
+    
+testSignDocumentSignablePendingRight :: Assertion
+testSignDocumentSignablePendingRight = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | not $ isPending doc -> return Nothing
+      Just doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+            c = unGen arbitrary stdgn 10
+            d = unGen arbitrary stdgn 10
+        print doc
+        print a
+        etdoc <- update $ SignDocument docid a mt b c d
+        print etdoc
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
+testSignDocumentNotLeft :: Assertion
+testSignDocumentNotLeft = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+        c = unGen arbitrary stdgn 10
+        d = unGen arbitrary stdgn 10
+    etdoc <- update $ SignDocument did a mt b c d
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
@@ -774,12 +973,30 @@ addRandomDocumentWithAuthor user = do
                  }
   update $ StoreDocumentForTesting adoc
 
+instance Arbitrary DocumentID where
+  arbitrary = do
+    ds <- arbitrary
+    return $ DocumentID ds
 
+instance Arbitrary DocumentType where
+  arbitrary = elements [ Signable Contract
+                       , Signable Order
+                       , Signable Offer
+                       , Template Contract
+                       , Template Order
+                       , Template Offer
+                       , Attachment
+                       , AttachmentTemplate
+                       ]
+         
 
 instance Arbitrary Document where
   arbitrary = do
     ds <- arbitrary
-    return $ blankDocument { documentstatus = ds }
+    dt <- arbitrary
+    return $ blankDocument { documentstatus = ds 
+                           , documenttype = dt
+                           }
 
 instance Arbitrary DocumentStatus where
   arbitrary = elements [ Preparation
@@ -836,3 +1053,31 @@ instance ExtendWithRandomnes SignatoryDetails where
         ofields <- arbitrary
         return $ sl {signatoryotherfields = ofields}
     
+instance Arbitrary SignatoryLinkID where
+  arbitrary = do
+    si <- arbitrary
+    return $ SignatoryLinkID si
+
+instance Arbitrary SignatureProvider where
+  arbitrary = elements [ BankIDProvider
+                       , TeliaProvider
+                       , NordeaProvider
+                       ]
+
+instance Arbitrary SignatureInfo where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary
+    g <- arbitrary
+    return $ SignatureInfo { signatureinfotext        = a
+                           , signatureinfosignature   = b
+                           , signatureinfocertificate = c
+                           , signatureinfoprovider    = d
+                           , signaturefstnameverified = e
+                           , signaturelstnameverified = f
+                           , signaturepersnumverified = g
+                           }
