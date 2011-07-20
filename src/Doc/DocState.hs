@@ -498,7 +498,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifySignable documentid $ \document ->
     let signeddocument = document { documentsignatorylinks = newsignatorylinks
                                   } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
-        Just signatoryLink = find (\x -> signatorylinkid x == signatorylinkid1) (documentsignatorylinks document)
+        Just signatoryLink = getSigLinkFor document signatorylinkid1
         newsignatorylinks = map maybesign (documentsignatorylinks document)
         maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} )
           | signatorylinkid == signatorylinkid1 =

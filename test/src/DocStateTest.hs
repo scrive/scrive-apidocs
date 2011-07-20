@@ -663,16 +663,13 @@ testSignDocumentSignablePendingRight = do
       Nothing -> return $ Just $ assertFailure "Could not stored document."
       Just doc | not $ isSignable doc -> return Nothing
       Just doc | not $ isPending doc -> return Nothing
-      Just doc -> do
+      Just _doc -> do
         stdgn <- newStdGen
         let a = unGen arbitrary stdgn 10
             b = unGen arbitrary stdgn 10
             c = unGen arbitrary stdgn 10
             d = unGen arbitrary stdgn 10
-        print doc
-        print a
         etdoc <- update $ SignDocument docid a mt b c d
-        print etdoc
         case etdoc of
           Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
           Right _ -> return $ Just $ return ()
