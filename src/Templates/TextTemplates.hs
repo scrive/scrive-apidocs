@@ -88,7 +88,7 @@ getTextTemplatesFromFile path =
                        then m
                        else Map.unionWith (++) m $ Map.fromList $
                                     smartZip scheme $ for rest $ \v ->
-                                        if (all (isSpace ||^ isControl) v)
+                                        if (all (isSpace ||^ isControl) v && (length v < 6))
                                            then []
                                            else [(n,v)]
    addLine _ m _ = m
