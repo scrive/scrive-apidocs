@@ -623,6 +623,11 @@ safeReady(function() {
                 }
             });
             $(".partylistupdate").html(swedishList(partners));
+        },
+        onLoad : function() {
+           var offset = this.getOverlay().offset()
+           this.getOverlay().css("position","absolute");
+           this.getOverlay().offset(offset);
         }
     });
 });
