@@ -33,6 +33,7 @@ module Administration.AdministrationControl(
           , handleMigrateForDeletion
           , handleUnquarantineAll
           , migrateDocsNoAuthor
+          , resealFile
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -71,6 +72,8 @@ import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Data.List
 import Templates.TextTemplates
+import qualified AppLogger as Log
+import Doc.DocSeal (sealDocument)
 
 eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do
@@ -722,3 +725,24 @@ migrateDocsNoAuthor = do
   liftIO $ print (intercalate "\n" $ [r | Left r <- res])
   liftIO $ print ("successful: " ++ show (length [r | Right r <- res]))
   sendRedirect LinkMain
+
+
+-- This method can be used do reseal a document 
+resealFile :: Kontrakcja m => DocumentID -> m KontraLink
+resealFile docid = onlySuperUser $ do
+  Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> mzero
+    Just doc -> case (documentfiles doc,documentsealedfiles doc, documentstatus doc) of  
+                     ((_:_),[], Closed) -> do
+                         ctx <- getContext
+                         Log.debug "Document is valid for resealing sealing"
+                         res <- sealDocument ctx doc
+                         case res of
+                           Left  _ -> Log.debug "We failed to reseal the document"
+                           Right _ -> Log.debug "Ok, so the document has been resealed"
+                         return LoopBack
+                     _ -> do
+                         Log.debug "Document is not valid for resealing sealing"
+                         mzero
