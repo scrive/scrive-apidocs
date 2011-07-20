@@ -451,14 +451,14 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
-          --TODO: may want to remove this line when save docs upon account creation - emily
           _ <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
           if isClosed document
             then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
             else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
-    Just _ -> do
+    Just user -> do
+     _ <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
      if isClosed document
        then addFlashM $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
        else addFlashM $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
@@ -1327,22 +1327,17 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
      update $ UpdateDocument ctxtime documentid docname
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
 
-{- |
-    This stuff is deeply messed up.  At the moment maybesignatory and maybesupervisor aren't populated
-    until a signatory signs.  This means that to make docs available to signatories, viewers or supervisors
-    until a sign happens (which is never in the case of viewers!) is to lookup by email.  We need to change
-    so we lookup not by email, but by userid only.  This means linking up and saving the docs far earlier for users.
--}
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mydocuments <- query $ GetDocumentsByUser user --docs saved for user, so not included if yet to sign or viewer
+  mydocuments <- query $ GetDocumentsBySignatory user
+  supervised'Documents <- query $ GetDocumentsBySupervisor user
+  
+  --one day we'll get rid of friends! who needs friends anyway.
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
-  usersISupervise <- query $ GetUserSubaccounts $ userid user
-  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-  supervised'Documents <- query $ GetDocumentsBySupervisor user --supervised docs saved for user (required if subaccount is deleted), again just saved ones
-  moresupervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise --all supervised docs for undeleted subaccounts
+  friends'Documents <- mapM (query . GetDocumentsBySignatory) usersICanView
+  
   return . filter ((\d -> documenttype d == doctype)) $ nub $
-          mydocuments ++ concat friends'Documents ++ supervised'Documents ++ concat moresupervised'Documents
+          mydocuments ++ supervised'Documents ++ concat friends'Documents
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
@@ -1570,17 +1565,12 @@ handleAttachmentArchive = do
 
 handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
-    Log.debug "handleIssueArchive"
     Context { ctxmaybeuser = Just user } <- getContext
-    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-    let ids = map DocumentID idnumbers
-    idsAndUsers <- mapM lookupUsersRelevantToDoc ids
-    let uid = userid user
-        uemail = getEmail user
-    res <- update $ ArchiveDocuments uid uemail idsAndUsers
+    docids <- getCriticalFieldList asValidDocID "doccheck"
+    res <- update . ArchiveDocuments (userid user) $ map DocumentID docids
     case res of
       Left msg -> do
-        Log.debug $ "Failed to delete docs " ++ (show ids) ++ " : " ++ msg
+        Log.debug $ "Failed to delete docs " ++ (show docids) ++ " : " ++ msg
         mzero
       Right _ -> return ()
 
@@ -1831,8 +1821,9 @@ getTemplatesForAjax = do
                 let tfilter doc = (Template docprocess == documenttype doc)
                 userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
                 relatedusers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
-                shareddocs <- liftIO $ query $ GetSharedTemplates (map userid relatedusers)
-                let templates = filter tfilter $ nub (userdocs ++ shareddocs)
+                relateduserdocs <- liftIO $ mapM (query . GetDocumentsByAuthor . userid) relatedusers
+                let shareddocs = filter ((== Shared) . documentsharing) $ concat relateduserdocs
+                let templates = nub $ filter tfilter (userdocs ++ shareddocs)
                 content <- templatesForAjax (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
@@ -1922,26 +1913,6 @@ handleAttachmentDownloadForViewer did sid mh fid = do
               res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
         _ -> mzero -- attachment with this file ID does not exist
-
-handleMigrateDocumentAuthorAttachments :: Kontrakcja m => m Response
-handleMigrateDocumentAuthorAttachments = onlySuperUser $ do
-  docs <- query $ GetDocuments Nothing
-  forM_ docs (\doc -> do
-                         eatts <- query $ GetDocumentsByDocumentID (documentattachments doc)
-                         case eatts of
-                           Left msg -> do
-                             liftIO $ print msg
-                             return ()
-                           Right atts -> do
-                             eres <- update $
-                                     MigrateDocumentAuthorAttachments (documentid doc) (map (head . documentfiles) atts)
-                             case eres of
-                               Left msg2 -> do
-                                 liftIO $ print msg2
-                                 return ()
-                               Right _udoc -> return ())
-  addFlash (OperationDone, "All documents migrated!")
-  sendRedirect LinkMain
 
 -- Fix for broken production | To be removed after fixing is done
 isBroken :: Document -> Bool

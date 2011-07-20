@@ -255,8 +255,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-     , dir "adminonly" $ dir "quarantine" $ hGet0  $ toK0 $ Administration.handleShowQuarantine
-     , dir "adminonly" $ dir "quarantine" $ hPost0 $ toK0 $ Administration.handleQuarantinePost
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Administration.handleStatistics
@@ -270,13 +268,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "translations" $ hGet0 $ toK0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
-
-     , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ toK0 $ Administration.handleMigrateForDeletion
-     , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ toK0 $ DocControl.handleMigrateDocumentAuthorAttachments
-     , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ toK0 $ Administration.migrateDocsNoAuthor
-
---     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
-     , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ toK0 $ Administration.handleUnquarantineAll
      , dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
@@ -742,7 +733,7 @@ onlySuperUserGet action = do
 -}
 daveDocument :: Kontrakcja m => DocumentID -> m Response
 daveDocument documentid = onlySuperUserGet $ do
-    document <- queryOrFail $ GetDocumentByDocumentIDAllEvenQuarantinedDocuments documentid
+    document <- queryOrFail $ GetDocumentByDocumentID documentid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
 
 {- |

@@ -74,7 +74,6 @@ oldScheduler = do
     now <- liftIO getMinutesTime
     timeoutDocuments now
     dropExpiredSessions now
-    deleteQuarantinedDocuments now
 
 -- Internal stuff
 
@@ -176,11 +175,4 @@ timeoutDocuments now = do
     forM_ docs $ \doc -> do
         _ <- update $ TimeoutDocument (documentid doc) now
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
-
-deleteQuarantinedDocuments :: MinutesTime -> ActionScheduler ()
-deleteQuarantinedDocuments now = do
-    docs <- query $ GetExpiredQuarantinedDocuments now
-    forM_ docs $ \doc -> do
-        _ <- update $ EndQuarantineForDocument (documentid doc)
-        Log.debug $ "Document quarantine expired " ++ (show $ documenttitle doc)
 

@@ -659,8 +659,7 @@ blankDocument =
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing
-          , documentrecordstatus         = LiveDocument
-          , documentquarantineexpiry     = Nothing
+          , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
           }

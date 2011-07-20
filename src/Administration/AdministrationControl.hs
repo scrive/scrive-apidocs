@@ -28,11 +28,6 @@ module Administration.AdministrationControl(
           , handleUserEnableTrustWeaverStorage
           , handleCreateService
           , handleStatistics
-          , handleShowQuarantine
-          , handleQuarantinePost
-          , handleMigrateForDeletion
-          , handleUnquarantineAll
-          , migrateDocsNoAuthor
           , migrateSigAccounts
           ) where
 import Control.Monad.State
@@ -66,10 +61,8 @@ import API.Service.ServiceState
 import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
-import InputValidation
 import Text.Printf
 import Util.FlashUtil
-import Util.SignatoryLinkUtils
 import Data.List
 import Templates.TextTemplates
 import Util.MonadUtils
@@ -597,71 +590,6 @@ calculateStatsFromUsers users =
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
 
-fieldsForQuarantine :: (Functor m, MonadIO m) => [Document] -> Fields m
-fieldsForQuarantine documents = do
-  field "linkquarantine" $ show LinkAdminQuarantine
-  fieldFL "documents" $ map fieldsForDoc documents
-  where
-    fieldsForDoc Document{documentid, documenttitle, documentquarantineexpiry, documentsignatorylinks} = do
-      field "docid" $ show documentid
-      field "name" $ documenttitle
-      field "expiry" $ fmap showDateYMD documentquarantineexpiry
-      fieldFL "signatories" $ map fieldsForSignatory documentsignatorylinks
-    fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails, signatorylinkdeleted} = do
-      field "siglinkid" $ show signatorylinkid
-      field "email" $ signatoryemail signatorydetails
-      field "isrevivable" $ signatorylinkdeleted
-
-handleShowQuarantine :: Kontrakcja m => m Response
-handleShowQuarantine =
-  onlySuperUser $ do
-    ctx <- getContext
-    documents <- query $ GetQuarantinedDocuments $ currentServiceID ctx
-    content <- renderTemplateFM "quarantinePage" $ do
-      fieldsForQuarantine documents
-    renderFromBody TopEmpty kontrakcja content
-
-handleQuarantinePost :: Kontrakcja m => m KontraLink
-handleQuarantinePost = onlySuperUser $ do
-  revive <- isFieldSet "revive"
-  extend <- isFieldSet "extend"
-  _ <- case (revive, extend) of
-    (True, _) -> handleQuarantineRevive
-    (_, True) -> handleQuarantineExtend
-    _ -> mzero
-  return LinkAdminQuarantine
-
-handleQuarantineRevive :: Kontrakcja m => m KontraLink
-handleQuarantineRevive = onlySuperUser $ do
-  docid <- getCriticalField asValidDocID "docid"
-  sigid <- getCriticalField asValidNumber "siglinkid"
-  _ <- update $ ReviveQuarantinedDocument (DocumentID docid) (SignatoryLinkID sigid)
-  return LinkAdminQuarantine
-
-handleQuarantineExtend :: Kontrakcja m => m KontraLink
-handleQuarantineExtend = onlySuperUser $ do
-  docid <- getCriticalField asValidDocID "docid"
-  _ <- update $ ExtendDocumentQuarantine (DocumentID docid)
-  return LinkAdminQuarantine
-
-{- |
-    Another temporary migration thing! Em
--}
-handleMigrateForDeletion :: Kontrakcja m => m Response
-handleMigrateForDeletion = onlySuperUser $ do
-  users <- query $ GetAllUsers
-  _ <- update $ MigrateForDeletion users
-  liftIO $ putStrLn $ "Migration Done"
-  handleShowQuarantine
-
-handleUnquarantineAll :: Kontrakcja m => m KontraLink
-handleUnquarantineAll = onlySuperUser $ do
-  res <- update $ UnquarantineAll
-  mapM_ (\r -> case r of
-            Left msg -> liftIO $ putStrLn msg
-            Right _msg -> return ()) res
-  return LinkMain
-
 fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
@@ -710,21 +638,6 @@ showAdminTranslations = do
     liftIO $ updateCSV
     adminTranslationsPage
 
-migrateDocsNoAuthor :: Kontrakcja m => m Response
-migrateDocsNoAuthor = do
-  ctx <- getContext
-  guard (isJust (ctxmaybeuser ctx))
-  let Just user = ctxmaybeuser ctx
-  guard (useremail (userinfo user) == Email (fromString "ericwnormand@gmail.com"))
-  udocs <- query $ GetDocuments Nothing
-  qdocs <- query $ GetQuarantinedDocuments Nothing
-  let docswithnoauthor = [d | d <- udocs ++ qdocs
-                             , isNothing $ getAuthorSigLink d]
-  res <- forM docswithnoauthor (update . MakeFirstSignatoryAuthor . documentid)
-  liftIO $ print (intercalate "\n" $ [r | Left r <- res])
-  liftIO $ print ("successful: " ++ show (length [r | Right r <- res]))
-  sendRedirect LinkMain
-
 {- |
     Piece of migration in response to SKRIVAPADEV-380.  The idea is to populate
     maybesignatory and maybesupervisor on the siglinks.  Want it so that:
@@ -760,10 +673,8 @@ migrateSigAccounts = onlySuperUser $ do
   where
     migrateSigAccountsForService :: Kontrakcja m => Maybe ServiceID -> m ()
     migrateSigAccountsForService service = do
-      ldocs <- query $ GetDocuments service
-      qdocs <- query $ GetQuarantinedDocuments service
-      mapM_ migrateSigAccountsForDocument ldocs
-      mapM_ migrateSigAccountsForDocument qdocs
+      docs <- query $ GetDocuments service
+      mapM_ migrateSigAccountsForDocument docs
       return ()
     migrateSigAccountsForDocument :: Kontrakcja m => Document -> m (Either String Document)
     migrateSigAccountsForDocument Document{documentid,documentservice,documentsignatorylinks} = do

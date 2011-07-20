@@ -44,23 +44,24 @@ import Control.Monad.State
 {- |
    Assuming user is the logged in user, can he view the Document?
 
+   Checks if signatory or supervisor
    Checks author's friends.
-   Checks author.
-   Checks author's supervisors.
    Checks author's supervisors friends.
    Checks if sharing is enabled and author is related to user.
  -}
 canUserViewDoc :: User -> Document -> IO Bool
 canUserViewDoc user doc 
-  | isAuthor (doc, user) = return True
+  | any isSignatoryOrSupervisor $ documentsignatorylinks doc = return True
   | otherwise = do
     usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
     usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
-    usersImSupervising <- query $ GetUserSubaccounts     (userid user)
     related            <- query $ GetUserRelatedAccounts (userid user)
-    return $ (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith ++ usersFriendsAreSupervising)))
+    return $ (any isAuthor (zip (repeat doc) (usersImFriendsWith ++ usersFriendsAreSupervising)))
       || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
-  
+  where
+    isSignatoryOrSupervisor :: SignatoryLink -> Bool
+    isSignatoryOrSupervisor SignatoryLink{maybesignatory, maybesupervisor} =
+      maybesignatory == Just (userid user) || maybesupervisor == Just (userid user) 
 
 {- |
    Securely find a document by documentid for the author or his friends.

@@ -10,6 +10,9 @@ module Doc.DocState
     , undeliveredSignatoryLinks
     , ArchiveDocuments(..)
     , ArchiveDocumentForAll(..)
+    , RestoreArchivedDocuments(..)
+    , ReallyDeleteDocuments(..)
+    , DeleteDocumentRecordIfRequired(..)
     , AttachFile(..)
     , AttachSealedFile(..)
     , AuthorSignDocument(..)
@@ -19,11 +22,9 @@ module Doc.DocState
     , FileMovedToAWS(..)
     , FileMovedToDisk(..)
     , GetDocumentByDocumentID(..)
-    , GetDocumentByDocumentIDAllEvenQuarantinedDocuments(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
     , GetDocuments(..)
-    , GetQuarantinedDocuments(..)
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
     , GetDocumentsBySupervisor(..)
@@ -60,25 +61,13 @@ module Doc.DocState
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
     , ErrorDocument(..)
-    , GetUserTemplates(..)
-    , GetSharedTemplates(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
     , SignableFromDocumentIDWithUpdatedAuthor(..)
     , DocumentFromSignatoryData(..)
---    , MigrateToSigLinks(..)
-    , ExtendDocumentQuarantine(..)
-    , ReviveQuarantinedDocument(..)
-    , GetExpiredQuarantinedDocuments(..)
-    , EndQuarantineForDocument(..)
-    , MigrateForDeletion(..)
-    , UpdateDocumentRecordStatus(..)
     , UpdateSigAttachments(..)
     , SaveSigAttachment(..)
-    , MigrateDocumentAuthorAttachments(..)
-    , UnquarantineAll(..)
     , MigrateDocumentSigAccounts(..)
-    , MakeFirstSignatoryAuthor(..)
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
     )
@@ -88,7 +77,6 @@ import API.Service.ServiceState
 import Company.CompanyState
 import Control.Monad
 import Control.Monad.Reader (ask)
-import Control.Monad.State (modify)
 import Data.List (find)
 import Data.Maybe
 import Data.Word
@@ -96,7 +84,6 @@ import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
 import Doc.DocUtils
-import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.State
 import Mails.MailsUtil
@@ -108,82 +95,106 @@ import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 
+{- |
+    All documents for the given service.  This does not include
+    documents where documentdeleted = True.
+-}
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = queryDocs $ \documents ->
     toList $ documents @= mservice
 
-getQuarantinedDocuments :: (Maybe ServiceID) -> Query Documents [Document]
-getQuarantinedDocuments mservice = queryQuarantinedDocs $ \documents ->
-    toList $ documents @= mservice
-
+{- |
+    Document for the given ID.  This would return a document even if
+    documentdeleted = True.
+-}
 getDocumentByDocumentID :: DocumentID -> Query Documents (Maybe Document)
 getDocumentByDocumentID documentid = queryDocs $ \documents ->
     getOne $ documents @= documentid
 
-getDocumentByDocumentIDAllEvenQuarantinedDocuments :: DocumentID -> Query Documents (Maybe Document)
-getDocumentByDocumentIDAllEvenQuarantinedDocuments documentid = do
-  documents <- ask
-  return $ getOne $ documents @= documentid
-
-getDocumentsByAuthor :: UserID -> Query Documents [Document]
-getDocumentsByAuthor userid = queryDocs $ \documents ->
-    IxSet.toList (documents @= Author (userid))
-
-getDocumentsByUser :: User -> Query Documents [Document]
-getDocumentsByUser user = do
-  documents <- ask
-  return $  filter (\d -> documentservice d == userservice user) $ IxSet.toList (documents @= (userid user))
-
-filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
-filterSignatoryLinksByUser doc user =
-    [sl | sl <- documentsignatorylinks doc
-        , isSigLinkFor user sl     -- user must match
-        , not $ signatorylinkdeleted sl    ]  -- filter out deleted links
-
-signatoryCanView :: User -> Document -> Bool
-signatoryCanView user doc =
-    let usersiglinks = filterSignatoryLinksByUser doc user
-    in signatoryCanView' usersiglinks (documentstatus doc) (documentcurrentsignorder doc)
+{- |
+    Filter documents according to whether the given user's sig link has even been deleted
+    by a user.  The first param should be True to get the docs which have been deleted,
+    and so would appear in the recycle bin//trash can.  It should be False to get docs which
+    have never been deleted.
+-}
+filterDocsWhereDeleted :: Bool -> UserID -> [Document] -> [Document]
+filterDocsWhereDeleted deleted userid docs =
+  filter isIncludedDoc docs
+  where
+    isIncludedDoc Document{documentsignatorylinks} = 
+      not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
+    isIncludedSigLink SignatoryLink{maybesignatory, maybesupervisor, signatorylinkdeleted} =
+      (maybesignatory == Just userid || maybesupervisor == Just userid) || signatorylinkdeleted==deleted
 
 {- |
-    Purpose of this is to share the filtering of documents for signatories
-    between getDocumentsBySignatory and getDocumentsBySupervisor.
+    All documents authored by the user that have never been deleted.
 -}
-signatoryCanView' :: [SignatoryLink] -> DocumentStatus -> SignOrder -> Bool
-signatoryCanView' siglinks docstatus docsignorder =
-    let isnotpreparation = Preparation /= docstatus
-        hasLink = not $ Prelude.null siglinks
-        signatoryActivated = all ((>=) docsignorder . signatorysignorder . signatorydetails) siglinks
-    in isnotpreparation && hasLink && signatoryActivated
+getDocumentsByAuthor :: UserID -> Query Documents [Document]
+getDocumentsByAuthor userid = queryDocs $ \documents ->
+    filterDocsWhereDeleted False userid $ IxSet.toList (documents @= Author (userid))
 
+{- |
+    All documents which are saved for the user which have never been deleted.
+    This also makes sure that the documents match the user's service.
+-}
+getDocumentsByUser :: User -> Query Documents [Document]
+getDocumentsByUser User{userid, userservice} = queryDocs $ \documents ->
+  filterDocsWhereDeleted False userid $ IxSet.toList $ (documents @= userid) @= userservice
 
+{- |
+    Filter documents according to whether the given user's signatory has been activated
+    according to the sign order.  Author links are included either way.
+-}
+filterDocsWhereActivated :: UserID -> [Document] -> [Document]
+filterDocsWhereActivated userid docs =
+  filter isIncludedDoc docs
+  where
+    isIncludedDoc doc@Document{documentsignatorylinks} = 
+      not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
+    isIncludedSigLink doc 
+                      SignatoryLink{maybesignatory, 
+                                    maybesupervisor, 
+                                    signatorylinkdeleted, 
+                                    signatoryroles, 
+                                    signatorydetails} =
+      let isRelevant = (maybesignatory == Just userid || maybesupervisor == Just userid) 
+                         && (not signatorylinkdeleted)
+          isAuthorLink = SignatoryAuthor `elem` signatoryroles
+          isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
+      in  isRelevant && (isAuthorLink || isActivatedForSig)
+
+{- |
+    All documents where the user is a signatory that are not deleted.  An author is a type
+    of signatory, so authored documents are included too.
+    This also filters so that documents where a user is a signatory, but that signatory
+    has not yet been activated according to the document's sign order are excluded.
+-}
 getDocumentsBySignatory :: User -> Query Documents [Document]
-getDocumentsBySignatory user = queryDocs $ \documents ->
-    filter (signatoryCanView user) (toList $ documents @= (userid user) @= userservice user)
+getDocumentsBySignatory User{userid, userservice} = queryDocs $ \documents ->
+  filterDocsWhereActivated userid . filterDocsWhereDeleted False userid $ 
+    IxSet.toList $ (documents @= (Signatory userid)) @= userservice
 
-filterSignatoryLinksBySupervisor :: Document -> User -> [SignatoryLink]
-filterSignatoryLinksBySupervisor doc user =
-    [sl | sl <- documentsignatorylinks doc
-        , isSigLinkFor (Supervisor (userid user)) sl
-        , not $ signatorylinkdeleted sl]
-
-supervisorCanView :: User -> Document -> Bool
-supervisorCanView user doc =
-    let supersiglinks = filterSignatoryLinksBySupervisor doc user
-        isSupervisedSignatory = signatoryCanView' supersiglinks (documentstatus doc) (documentcurrentsignorder doc)
-        isSupervisedAuthor = any isAuthor supersiglinks
-    in isSupervisedAuthor || isSupervisedSignatory
-
+{- |
+    All documents where the user is a supervisor that are not deleted.  This filters
+    in a similar way as getDocumentsBySignatory.
+-}
 getDocumentsBySupervisor :: User -> Query Documents [Document]
-getDocumentsBySupervisor user = queryDocs $ \documents ->
-   filter (supervisorCanView user) (toList $ documents @= Supervisor (userid user))
+getDocumentsBySupervisor User{userid, userservice} = queryDocs $ \documents ->
+  filterDocsWhereActivated userid . filterDocsWhereDeleted False userid $ 
+    IxSet.toList $ (documents @= (Supervisor userid)) @= userservice
 
+{- |
+    All documents which are in a pending state and have a timeout time that comes
+    before the given time.
+-}
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
-getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
-  (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
-                                            Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
-                                            _ -> False
+getTimeoutedButPendingDocuments now = queryDocs $ \documents ->
+  IxSet.toList $ (documents @= Pending) @< TimeoutTime now
 
+{- |
+    Determines whether a new document should have either Advanced or Basic
+    functionality according to the document's type and the user's preferences.
+-}
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user =
   case (getValueForProcess documenttype processbasicavailable, 
@@ -192,6 +203,10 @@ newDocumentFunctionality documenttype user =
     (Just True, Just BasicMode) -> BasicFunctionality
     _ -> AdvancedFunctionality
 
+{- |
+    Creates and saves a new document that's authored by the given user,
+    and doesn't belong to a company.
+-}
 newDocument :: User
             -> BS.ByteString
             -> DocumentType
@@ -199,6 +214,10 @@ newDocument :: User
             -> Update Documents Document
 newDocument = newDocumentWithMCompany Nothing
 
+{- |
+    Creates and saves a new documents that's authored by the given user,
+    on behalf a the indicated company.
+-}
 newDocumentWithMCompany :: (Maybe CompanyID)
             -> User
             -> BS.ByteString
@@ -230,6 +249,10 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
 
   insertNewDocument doc
 
+{- |
+    A blank document containing default values that need to be set before
+    saving.
+-}
 blankDocument :: Document
 blankDocument =
           Document
@@ -259,8 +282,7 @@ blankDocument =
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing
-          , documentrecordstatus         = LiveDocument
-          , documentquarantineexpiry     = Nothing
+          , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
           }
@@ -296,12 +318,22 @@ fileMovedTo fid fstorage = do
     movedsig sa = sa
     movedaut aa@AuthorAttachment{authorattachmentfile = file} = aa {authorattachmentfile = moved1 file}
 
+{- |
+    Gets the document for the given FileID.  This includes documents where
+    documentdeleted = True.  If a document cannot be found then this is counted
+    as an error and a Left is returned.
+ -}
 getDocumentByFileID :: FileID -> Query Documents (Either String Document)
 getDocumentByFileID fileid' = queryDocs $ \documents ->
   case getOne (documents @= fileid') of
     Nothing -> Left $ "cannot find document for file #" ++ show fileid'
     Just document -> Right document
 
+{- |
+    Attaches a file to the indicated document.
+    If there is a problem, such as the document not existing,
+    then a Left is returned.
+-}
 attachFile :: DocumentID
            -> BS.ByteString
            -> BS.ByteString
@@ -315,6 +347,12 @@ attachFile documentid filename1 content = do
                        , filestorage = FileStorageMemory content
                        }
       in Right $ document { documentfiles = documentfiles document ++ [nfile] }
+
+{- |
+    Attaches a sealed file to the indicated document.
+    If there is a problem, such as the document not existing,
+    or the document not being a signable then a Left is returned.
+-}
 
 attachSealedFile :: DocumentID
                  -> BS.ByteString
@@ -330,6 +368,11 @@ attachSealedFile documentid filename1 content = do
                        }
       in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
 
+{- |
+    Updates an existing document, typically this stores information collected
+    from the doc design view.  If there is a problem, such as the document not existing,
+    or the document not being in preparation mode then a Left is returned.
+-}
 updateDocument :: MinutesTime
                -> DocumentID
                -> BS.ByteString
@@ -370,6 +413,11 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     }
          else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
+{- |
+    A cut down version of updateDocument that requires fewer parameters.  This is used by the integration api.
+    If there is a problem, such as the document not existing,
+    or the document not being in preparation mode then a Left is returned.
+-}
 updateDocumentSimple::DocumentID -> (SignatoryDetails, SignatoryAccount) -> [SignatoryDetails] -> Update Documents (Either String Document)
 updateDocumentSimple did (authordetails,authoraccount) signatories = do
    now <- getMinuteTimeDB
@@ -389,6 +437,8 @@ updateDocumentSimple did (authordetails,authoraccount) signatories = do
 
 {- |
     This attaches a csv upload to the document.
+    If there is a problem, such as the document not existing,
+    or the document not being in preparation mode then a Left is returned.
 -}
 attachCSVUpload :: DocumentID
                    -> CSVUpload
@@ -403,7 +453,12 @@ attachCSVUpload documentid csvupload =
           (Right _, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use attachCSVUpload"
 
-
+{- |
+    A bulk version of getDocumentsByDocumentID, this will get a list of
+    documents corresponding to the given list of document ids.  This would return documents
+    where documentdeleted = True.  If one of the documents doesn't exist then this returns
+    a Left.
+-}
 getDocumentsByDocumentID :: [DocumentID] -> Query Documents (Either String [Document])
 getDocumentsByDocumentID docids = queryDocs $ \documents ->
   let relevantdocs = documents @+ docids in
@@ -412,8 +467,10 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
     else Left "documents don't exist for all the given ids"
 
 {- |
-   Add and remove attachments to a document in Preparation
- -}
+   Add and remove attachments to a document in Preparation.
+   If there is a problem, such as the document not existing, or
+   the document not being in preparation mode then a Left is returned.
+-}
 updateDocumentAttachments :: DocumentID
                           -> [DocumentID]
                           -> [FileID]
@@ -439,7 +496,9 @@ updateDocumentAttachments docid idstoadd idstoremove = do
         _ -> Left "Can only attach to document in Preparation"
 
 {- |
-    Creates a new contract by pumping some values into a particular signatory.
+    Creates a new document by copying an existing document pumping some values into a particular signatory.
+    This is used as part of the csv functionality.
+    If there is a problem, such as the document not existing, then a Left is returned.
 -}
 documentFromSignatoryData :: DocumentID
                               -> Int
@@ -476,6 +535,10 @@ documentFromSignatoryData docid sigindex fstname sndname email company personaln
     pumpData :: SignatoryLink -> SignatoryLink
     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
+{- |
+    Timeouts the indicated document.  If there is a problem, such as the document not existing,
+    or the document not being in a pending status, then a Left will be returned.
+-}
 timeoutDocument :: DocumentID
                 -> MinutesTime
                 -> Update Documents (Either String Document)
@@ -487,6 +550,10 @@ timeoutDocument documentid time = do
            Pending -> Right newdocument
            _ -> Left "Illegal document status change"
 
+{- |
+    Signs a particular signatory link.  If there is a problem, such as the document not existing,
+    or the document not being pending, or having timedout then a Left is returned.
+-}
 signDocument :: DocumentID
              -> SignatoryLinkID
              -> MinutesTime
@@ -541,6 +608,9 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
       Timedout -> Left "FÃ¶rfallodatum har passerat"
       _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
+{- |
+    A helper function that signs the given signatory link.
+-}
 signWithUserID :: [SignatoryLink]
                   -> UserID
                   -> Maybe SignInfo
@@ -551,6 +621,10 @@ signWithUserID (s:ss) uid sinfo msiginfo
     | maybe False (((==) uid)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
     | otherwise = s : signWithUserID ss uid sinfo msiginfo
 
+{- |
+    Called when an author sends a document.  This will return Left when there are problems
+    such as the document not existing, or it not being in Preparation mode, or it being timedout.
+-}
 authorSendDocument :: DocumentID
                    -> MinutesTime
                    -> Word32
@@ -575,8 +649,14 @@ authorSendDocument documentid time ipnumber _msiginfo =
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
-
--- maybe this goes away
+{- |
+    Signs the document as an author.  This expects the document to be in preparation mode,
+    so is the signing that happens just before sending the doc to be signed by others.
+    This returns Left if there is a problem such as the document
+    not existing, or the document not being in preparation mode.
+    
+    As author is no longer special we should consider refactoring to delete this function.
+-}
 authorSignDocument :: DocumentID
                    -> MinutesTime
                    -> Word32
@@ -612,6 +692,11 @@ authorSignDocument documentid time ipnumber msiginfo =
 getMagicHash :: Update Documents MagicHash
 getMagicHash = getRandom
 
+{- |
+    Rejects a doc for a particular signatory.
+    Returns Left if there is a problem, such as the document not existing,
+    or having timedout, or not being in pending mode.
+-}
 rejectDocument :: DocumentID
                -> SignatoryLinkID
                -> MinutesTime
@@ -632,7 +717,15 @@ rejectDocument documentid signatorylinkid1 time ipnumber customtext = do
            Timedout -> Left "FÃ¶rfallodatum har passerat"
            _ ->        Left "Bad document status"
 
-
+{- |
+    Marks an signatory invitation to sign as being read.
+    This would happen when the sendgrid api tells us that the user has read their
+    initial invitation email.
+    It shouldn't change the read time later on.
+    
+    This goes against a trend and doesn't return an Either (String Document).
+    It probably should.
+-}
 markInvitationRead :: DocumentID
                    -> SignatoryLinkID
                    -> MinutesTime
@@ -647,9 +740,15 @@ markInvitationRead documentid linkid time = do
         shouldMark l = (signatorylinkid l) == linkid && (isNothing $ maybeseeninfo l)
         mark l =  l { maybereadinvite = Just time }
 
--- | 'markDocumentSeen' should set the time when the document was seen
--- first time by the user. It should change the first seen time later
--- on.
+{- |
+    Marks an document to sign as being seen by a signatory.
+    This would happen when the document was first seen by the user.
+    It shouldn't change the first seen time later on.
+    
+    If it doesn't mark the time it returns a Left.  This could be because
+    the document doesn't exist, or because the signatory has already been marked
+    as seen.
+-}
 markDocumentSeen :: DocumentID
                  -> SignatoryLinkID
                  -> MagicHash
@@ -665,12 +764,11 @@ markDocumentSeen documentid signatorylinkid1 mh time ipnumber = do
           shouldMark l = (signatorylinkid l) == signatorylinkid1 && (signatorymagichash l == mh) && (isNothing $ maybeseeninfo l)
           mark l = l { maybeseeninfo = Just (SignInfo time ipnumber) }
 
-
-
-
-
-
--- | We set info about delivering invitation. On undeliver we autocancel document
+{- |
+    Sets information about a signatory's invitation delivery.
+    Elsewhere in the code we as autocancel the document if an inviation is undelivered.
+    This will return a Left if there is a problem such as the document not existing.
+-}
 setInvitationDeliveryStatus::DocumentID -> SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Either String Document)
 setInvitationDeliveryStatus docid siglnkid status = do
     modifySignable docid $ \doc -> do
@@ -681,15 +779,20 @@ setInvitationDeliveryStatus docid siglnkid status = do
                 then sl {invitationdeliverystatus = status}
                 else sl
 
-
-
+{- |
+    Gets summary stats about the documents in the system.
+    This excludes documents where documentdeleted = True.
+    When calculating signature counts this includes ones which are deleted.
+    It looks like this function needs work.
+-}
 getDocumentStats :: Query Documents DocStats
 getDocumentStats = queryDocs $ \documents ->
-  let signatureCountForDoc :: Document -> Int
+  let undeleteddocs = filter (not . documentdeleted) $ IxSet.toList documents
+      signatureCountForDoc :: Document -> Int
       signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc) in
   DocStats
-      { doccount = (size documents)
-      , signaturecount = sum $ map signatureCountForDoc (toList documents)
+      { doccount = (length undeleteddocs)
+      , signaturecount = sum $ map signatureCountForDoc undeleteddocs
       , signaturecount1m = 0
       , signaturecount2m = 0
       , signaturecount3m = 0
@@ -697,10 +800,22 @@ getDocumentStats = queryDocs $ \documents ->
       , signaturecount12m = 0
       }
 
+{- |
+    Queries for the last modified time of the document for the indicated file.
+    If there isn't a document for the file this will return the 0 time.
+    
+    Maybe we should have some sort of error case instead of returning 0.
+-}
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = queryDocs $ \documents ->
   maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
+{- |
+    Links up a signatory link to a user account.  This should happen when 
+      \1. a document moves from preparation to pending more
+      \2. a signer creates an account after signing to save their document
+      \3. the email of a signatory is corrected to that of an existing user
+-}
 saveDocumentForUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
                           -> Update Documents (Either String Document)
 saveDocumentForUser documentid useraccount signatorylinkid1 = do
@@ -713,11 +828,20 @@ saveDocumentForUser documentid useraccount signatorylinkid1 = do
           maybesave x = x
       in Right saveddocument
 
+{- |
+    The number of documents that a user has authored.  This excludes documents that they have deleted.
 
+    This function needs checking - especially to see if deletion is done correctly.
+-}
 getNumberOfDocumentsOfUser :: User -> Query Documents Int
-getNumberOfDocumentsOfUser user = queryDocs $ \documents ->
-  size $ documents @= Author (userid user)
+getNumberOfDocumentsOfUser User{userid} = queryDocs $ \documents ->
+  length . filterDocsWhereDeleted False userid $ IxSet.toList (documents @= Author (userid))
 
+{- |
+    Gets documents stats for a particular user.  This excludes documents that they have deleted.
+
+    This function needs checking - especially to see if deletion is done correctly.
+-}
 getDocumentStatsByUser :: User -> MinutesTime -> Query Documents DocStats
 getDocumentStatsByUser user time = do
   doccount' <- getNumberOfDocumentsOfUser user
@@ -744,12 +868,20 @@ getDocumentStatsByUser user time = do
                   , signaturecount12m = signaturecount12m'
                   }
 
+{- |
+    Sets the document's timeout time.  This will return a Left if the document isn't a signable,
+    or if the document doesn't exist.
+-}
 setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents (Either String Document)
 setDocumentTimeoutTime documentid timeouttime = do
   -- check if document status change is a legal transition
   modifySignable documentid $ \doc ->
       Right $ doc{ documenttimeouttime = Just timeouttime }
 
+{- |
+    Sets tags on a document.  This will return a Left if the document doesn't exist.
+    This is used by the API.
+-}
 setDocumentTags :: DocumentID -> [DocumentTag] -> Update Documents (Either String Document)
 setDocumentTags docid doctags =
   modifySignableOrTemplate docid $ \doc -> Right $
@@ -757,6 +889,10 @@ setDocumentTags docid doctags =
       documenttags = doctags
     }
 
+{- |
+    Sets the UI settings on a document.  This will return a Left if the document doesn't exist.
+    This is used by the API for white labelling.
+-}
 setDocumentUI :: DocumentID -> DocumentUI  -> Update Documents (Either String Document)
 setDocumentUI  docid docui =
   modifySignableOrTemplate docid $ \doc -> Right $
@@ -764,44 +900,136 @@ setDocumentUI  docid docui =
       documentui = docui
     }
 
-
+{- |
+    Fetches documents by company and tags.  This won't return docs where documentdeleted is True.
+-}
 getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag] -> Query Documents ([Document])
 getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents ->
   toList $ (documents @= (Just company)  @= mservice @* doctags)
 
-archiveDocuments :: UserID -> BS.ByteString -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
-archiveDocuments userid useremail docs = do
-  -- FIXME: can use a fold here
-  mdocs <- mapM (\d -> deleteDocumentSignatoryLinks (fst d) (snd d) isSignatoryOrSupervisor) docs
-  return $ sequence mdocs
-  where isSignatoryOrSupervisor :: SignatoryLink -> Bool
-        isSignatoryOrSupervisor sl = isSigLinkFor (userid, useremail) sl || isSigLinkFor (Supervisor userid) sl
-
-archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
-archiveDocumentForAll docid = deleteDocumentSignatoryLinks docid [] (const True)
+{- |
+    Deletes documents for the given user.  This is just a soft delete, the document
+    will appear in their recycle bin//trash can.
+    A Left is returned when there are problems, such as a document not existing or a document
+    being in pending mode.
+-}
+archiveDocuments :: UserID -> [DocumentID] -> Update Documents (Either String [Document])
+archiveDocuments userid docids = archiveDocumentsFor docids isSignatoryOrSupervisor
+  where
+    isSignatoryOrSupervisor :: SignatoryLink -> Bool
+    isSignatoryOrSupervisor SignatoryLink{maybesignatory,maybesupervisor} =
+      maybesignatory == Just userid || maybesupervisor == Just userid
 
 {- |
-    This function deletes any signatory link that passes the predicate you gave it.
-    This will then assess whether the document needs to be deleted, and delete as required.
-
-    This is pretty icky but I couldn't get it nicer :(
-
-    You need to pass this function a list of live users (probably just the live
-    users relevant to the document in question, but you could pass all the users
-    if you really wanted).  It'll use this list to lookup whether a user exists or not.
+    Deletes a document for all of it's signatory links.  This is just a soft delete,
+    the document will appear in their recycle bin//trash cans.
+    A Left is returned when there are problems, such as the document not existing or a document
+    being in pending mode.
 -}
-deleteDocumentSignatoryLinks :: DocumentID -> [User] -> (SignatoryLink -> Bool) -> Update Documents (Either String Document)
-deleteDocumentSignatoryLinks docid users p = do
-  now <- getMinuteTimeDB
-  modifySignableOrTemplate docid $ \doc ->
+archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
+archiveDocumentForAll docid = archiveDocumentFor (const True) docid
+
+{- |
+    Helper function that makes it easier to run update functions that return Either over
+    a list of documents.
+-}
+forEachDocument :: (a -> Update Documents (Either String Document)) 
+                   -> [a]
+                   -> Update Documents (Either String [Document])
+forEachDocument updateFunc items = foldM updateFoldFunc (Right []) items
+  where
+    updateFoldFunc (Left msg) _ = return $ Left msg
+    updateFoldFunc (Right docs) item = do
+      mdoc <- updateFunc item
+      case mdoc of
+        Left msg -> return $ Left msg
+        Right doc -> return . Right $ docs ++ [doc]
+
+{- |
+    A helper function that archives signatory links that pass the given filter function.
+    This will set signatorylinkisdeleted to True, which won't really delete the document,
+    but put it in the recycle bin//trash can.  This won't allow documents to be deleted when they
+    are pending.
+-}
+archiveDocumentsFor :: [DocumentID] -> (SignatoryLink -> Bool) -> Update Documents (Either String [Document])
+archiveDocumentsFor docids sigfilter = forEachDocument (archiveDocumentFor sigfilter) docids
+
+archiveDocumentFor :: (SignatoryLink -> Bool) -> DocumentID -> Update Documents (Either String Document)
+archiveDocumentFor sigfilter docid = do
+  modifySignableOrTemplate docid $ \doc -> do
     if isDeletableDocument doc
-      then Right $ deleteDocumentIfRequired now users $ deleteSigLinks doc
+      then Right $ doc { documentsignatorylinks = map maybeDeleteSigLink $ documentsignatorylinks doc }
       else Left "Document is pending so it can't be removed"
   where
-    deleteSigLinks doc@Document{documentsignatorylinks} =
-      let deleteSigLink sl = sl { signatorylinkdeleted = True }
-          newsiglinks = mapIf p deleteSigLink $ documentsignatorylinks in
-      doc { documentsignatorylinks = newsiglinks }
+    maybeDeleteSigLink sl =
+      if sigfilter sl
+        then sl { signatorylinkdeleted = True }
+        else sl
+
+{- |
+    Restores documents for the given user.  This will undo an archive for those documents which have
+    been soft deleted and so are in the recycle bin//trash can.
+    A Left is returned when there are problems, such as a document not existing.
+-}
+restoreArchivedDocuments :: UserID -> [DocumentID] -> Update Documents (Either String [Document])
+restoreArchivedDocuments userid docids = forEachDocument restoreDocument docids
+  where
+    restoreDocument :: DocumentID -> Update Documents (Either String Document)
+    restoreDocument docid = do
+      modifySignableOrTemplate docid $ \doc ->
+        return $ doc { documentsignatorylinks = map maybeRestoreSigLink $ documentsignatorylinks doc }
+    maybeRestoreSigLink sl@SignatoryLink{maybesignatory,maybesupervisor} =
+      if maybesignatory == Just userid || maybesupervisor == Just userid
+        then sl { signatorylinkdeleted = False }
+        else sl
+
+{- |
+    Deletes documents for the given user.  This is a hard delete that is only posssible for those documents
+    that have been soft deleted first and so are in the recycle bin//trash can.
+    You must pass through the documentid alongside a list of relevant users, the reason being that it
+    will check to see if those users still exist.  If they don't exist, then the doc link is counted
+    as being deleted.
+    A Left is returned when there are problems, such as a document not existing.
+-}
+reallyDeleteDocuments :: UserID -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
+reallyDeleteDocuments deletinguserid docidsAndUsers = forEachDocument deleteDocument docidsAndUsers
+  where
+    deleteDocument :: (DocumentID, [User]) -> Update Documents (Either String Document)
+    deleteDocument (docid, users) = do
+      mdoc <- deleteDocumentSigLinks docid
+      case mdoc of
+        Left msg -> return $ Left msg
+        Right doc -> deleteDocumentRecordIfRequired (documentid doc) users
+    deleteDocumentSigLinks :: DocumentID -> Update Documents (Either String Document)
+    deleteDocumentSigLinks docid =
+      modifySignableOrTemplate docid $ \doc ->
+        return $ doc { documentsignatorylinks = map maybeDeleteSigLink $ documentsignatorylinks doc }
+    maybeDeleteSigLink :: SignatoryLink -> SignatoryLink
+    maybeDeleteSigLink sl@SignatoryLink{ maybesignatory, maybesupervisor, signatorylinkdeleted } =
+      if (maybesignatory == Just deletinguserid || maybesupervisor == Just deletinguserid) && signatorylinkdeleted
+        then sl { signatorylinkreallydeleted = True }
+        else sl
+
+{- |
+    This checks whether any of the given users is linked to a document,
+    and if they're not if really deletes the record by setting documentdeleted = True.
+    The document won't contain any data, just the ids remain to stop repetitions in the future.
+-}
+deleteDocumentRecordIfRequired :: DocumentID -> [User] -> Update Documents (Either String Document)
+deleteDocumentRecordIfRequired docid users =
+  modifySignableOrTemplate docid $ \doc ->
+    if shouldBeReallyDeleted doc
+      then return $ setupForDeletion doc
+      else return doc
+  where
+    shouldBeReallyDeleted :: Document -> Bool
+    shouldBeReallyDeleted doc = all isCutSigLink $ documentsignatorylinks doc
+      where
+        isCutSigLink sl = isReallyDeletedSigLink sl || isOrphanedSigLink sl
+        isReallyDeletedSigLink SignatoryLink{signatorylinkreallydeleted} = signatorylinkreallydeleted
+        isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNoUser maybesignatory && isNoUser maybesupervisor
+        isNoUser Nothing = True
+        isNoUser (Just uid) = not $ uid `elem` (map userid users)
 
 {- |
     This is a very boring function that creates a new zombie document record
@@ -812,7 +1040,7 @@ deleteDocumentSignatoryLinks docid users p = do
 setupForDeletion :: Document -> Document
 setupForDeletion doc = blankDocument {
                          documentid = documentid doc,
-                         documentrecordstatus = DeletedDocument,
+                         documentdeleted = True,
                          documentfiles = map (blankFile . fileid) (documentfiles doc),
                          documentsealedfiles = map (blankFile . fileid) (documentsealedfiles doc),
                          documentsignatorylinks = map (blankSigLink . signatorylinkid) (documentsignatorylinks doc) }
@@ -835,6 +1063,7 @@ setupForDeletion doc = blankDocument {
                            , signatorysignatureinfo = Nothing
                            , signatoryroles = []
                            , signatorylinkdeleted = False
+                           , signatorylinkreallydeleted = False
                            }
   blankSigDetails :: SignatoryDetails
   blankSigDetails = SignatoryDetails {
@@ -855,73 +1084,26 @@ setupForDeletion doc = blankDocument {
     }
 
 {- |
-    Call this to go through a record and update it's status by deleting or quarantining if needed.
+    Shares the indicated documents.  This will return a Left if there is a problem,
+    such as the user trying to share isn't the document author, or if the document
+    doesn't exist.
 -}
-updateDocumentRecordStatus :: DocumentID -> [User] -> Update Documents (Either String Document)
-updateDocumentRecordStatus docid users = do
-  now <- getMinuteTimeDB
-  modifySignableOrTemplate docid $ \doc ->
-    if isDeletableDocument doc
-      then Right doc
-      else Right $ deleteDocumentIfRequired now users doc
-
-deleteDocumentIfRequired :: MinutesTime -> [User] -> Document -> Document
-deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignatorylinks, documentrecordstatus} =
-  case (isNotDeleted, isLive, isInvisible, isInPreparation) of
-    (True, _, True, True) -> setupForDeletion doc
-    (_, True, True, False) ->
-      doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
-    _ -> doc
-  where
-    quarantineExpiry = 3 `monthsAfter` now
-    isInPreparation = documentstatus==Preparation
-    isLive = documentrecordstatus == LiveDocument
-    isQuarantined = documentrecordstatus == QuarantinedDocument
-    isNotDeleted = isLive || isQuarantined
-    isInvisible = all isInvisibleSigLink documentsignatorylinks
-    isInvisibleSigLink sl = isDeletedSigLink sl || isOrphanedSigLink sl
-    isDeletedSigLink SignatoryLink{signatorylinkdeleted} = signatorylinkdeleted
-    isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNoUser maybesignatory && isNoUser maybesupervisor
-    isNoUser Nothing = True
-    isNoUser (Just uid) = not $ uid `elem` (map userid users)
-
-getExpiredQuarantinedDocuments :: MinutesTime -> Query Documents [Document]
-getExpiredQuarantinedDocuments now = queryQuarantinedDocs $ \docs ->
-  (flip filter) (toList docs) $ \doc -> case (documentquarantineexpiry doc) of
-                                          Just expiry -> expiry < now
-                                          _ -> False
-
-endQuarantineForDocument :: DocumentID -> Update Documents (Either String Document)
-endQuarantineForDocument documentid = do
-  modifySignableOrTemplate documentid $ \document ->
-    case documentrecordstatus document of
-      QuarantinedDocument -> return $ setupForDeletion document
-      _ -> Left "Document isn't in quarantine"
-
-extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
-extendDocumentQuarantine docid = do
-  modifySignableOrTemplate docid $ \doc ->
-    return $ doc { documentquarantineexpiry = fmap (monthsAfter 1) (documentquarantineexpiry doc) }
-
-reviveQuarantinedDocument :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
-reviveQuarantinedDocument docid siglinkid = do
-  modifySignableOrTemplate docid $ \doc ->
-    let newsiglinks = mapIf (isSigLinkFor siglinkid)
-                              (\sl -> sl { signatorylinkdeleted = False })
-                              (documentsignatorylinks doc) in
-    return $ doc { documentsignatorylinks = newsiglinks,
-                   documentrecordstatus = LiveDocument,
-                   documentquarantineexpiry = Nothing }
-
 shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
-shareDocuments user docidlist = do
-  mdocs <- forM docidlist $ \docid ->
-    modifySignableOrTemplate docid $ \doc ->
+shareDocuments user docids = 
+  forEachDocument shareDocument docids
+  where
+    shareDocument :: DocumentID -> Update Documents (Either String Document)
+    shareDocument docid =
+      modifySignableOrTemplate docid $ \doc ->
         if isAuthor (doc, user)
           then Right $ doc { documentsharing = Shared }
           else Left $ "Can't share document unless you are the author"
-  return $ sequence mdocs
 
+{- |
+    Sets the document title for the indicated document.
+    Will return Left if there is a problem, such as the document not existing,
+    or not being in preparation mode.
+-}
 setDocumentTitle :: DocumentID -> BS.ByteString -> Update Documents (Either String Document)
 setDocumentTitle docid doctitle =
   modifySignableOrTemplate docid $ \doc@Document{documentstatus} ->
@@ -954,6 +1136,10 @@ closeDocument docid time ipnumber msiginfo = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
+{- |
+    Cancels a document that is either in pending or awaiting autor state.
+    If it's in the wrong state, doesn't exist, or isn't a signable then a Left will be returned.
+-}
 cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> Word32 -> Update Documents (Either String Document)
 cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
     let canceledDocument =  document {
@@ -963,12 +1149,15 @@ cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
     case documentstatus document of
         Pending -> Right canceledDocument
         AwaitingAuthor -> Right canceledDocument
-        _ -> Left $ "Incalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
+        _ -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
-
+{- |
+    Gathers together all the files in the system attached to documents.
+    This excludes all documents where documentdeleted is True.
+-}
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
 getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
-  let doclist = IxSet.toList documents
+  let doclist = filter (not . documentdeleted) $ IxSet.toList documents
       getFiles d@Document{documentfiles,documentsealedfiles} =
         documentfiles
         ++ documentsealedfiles
@@ -981,51 +1170,49 @@ getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
 
 
 {- |
-   Restarts document,
-   Checks the author and status
-   Clears sign links and stuff
-   Sets status to Pending
-
-   It is passed a document
+    This restarts a document.
+    It will check that the document is in the correct state, as it can't be Canceled, Timedout, or Rejected,
+    and also that the user attempting to restart is an author.
+    To restart it will clear all the sign info from the document, and then finally return a copy of that document
+    so that it has a different document id.
+    In the event of problems it returns a Left.
 -}
 restartDocument :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
 restartDocument doc user time ipnumber = do
-   mndoc <- tryToGetRestarted doc user time ipnumber
-   case mndoc of
-        Right newdoc -> newFromDocument (const newdoc) (documentid doc)
-        other -> return other
-
-
+  mndoc <- tryToGetRestarted
+  case mndoc of
+    Right newdoc -> newFromDocument (const newdoc) (documentid doc)
+    other -> return other
+  where
+    tryToGetRestarted :: Update Documents (Either String Document)
+    tryToGetRestarted =
+      if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
+      then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+      else if (not $ isAuthor (doc, user))
+           then return $ Left $ "Can't restart document if you are not it's author"
+           else do
+             doc' <- clearSignInfofromDoc
+             let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
+             return $ Right doc''
+    clearSignInfofromDoc :: Update Documents Document
+    clearSignInfofromDoc = do
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
+          Just asl = getAuthorSigLink doc
+      newSignLinks <- sequence $ map (uncurry $ signLinkFromDetails) signatoriesDetails
+      let Just authorsiglink = find isAuthor newSignLinks
+          othersiglinks = filter (not . isAuthor) newSignLinks
+          newsiglinks = copySignatoryAccount asl authorsiglink : othersiglinks
+      return doc {documentstatus = Preparation,
+                  documenttimeouttime = Nothing,
+                  documentsignatorylinks = newsiglinks
+                 }
 
 {- |
-    Returns restarted version of document
-    Checks the autor and status
-    Clears sign links and stuff
- -}
-tryToGetRestarted :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
-tryToGetRestarted doc user time ipnumber =
-  if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
-  then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
-  else if (not $ isAuthor (doc, user))
-       then return $ Left $ "Can't restart document if you are not it's author"
-       else do
-         doc' <- clearSignInfofromDoc doc
-         let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
-         return $ Right doc''
-
-clearSignInfofromDoc :: Document -> Update Documents Document
-clearSignInfofromDoc doc = do
-  let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
-      Just asl = getAuthorSigLink doc
-  newSignLinks <- sequence $ map (uncurry $ signLinkFromDetails) signatoriesDetails
-  let Just authorsiglink = find isAuthor newSignLinks
-      othersiglinks = filter (not . isAuthor) newSignLinks
-      newsiglinks = copySignatoryAccount asl authorsiglink : othersiglinks
-  return doc {documentstatus = Preparation,
-              documenttimeouttime = Nothing,
-              documentsignatorylinks = newsiglinks
-             }
-
+    This updates a signatory email, which is required in situations where an invitation can't be delivered to an email.
+    When the signatory email is changed we need to update the maybesignatory and maybesupervisor fields
+    accordingly to keep up with who this signatory link is for.
+    If there is a problem then a Left is returned, for example if the document doesn't exist, or is not in a pending state.
+-}
 changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> Maybe SignatoryAccount -> BS.ByteString ->  Update Documents (Either String Document)
 changeSignatoryEmailWhenUndelivered did slid msigaccount email = modifySignable did $ changeEmail
   where changeEmail doc = let signlinks = documentsignatorylinks doc
@@ -1049,7 +1236,9 @@ changeSignatoryEmailWhenUndelivered did slid msigaccount email = modifySignable 
 
                            Nothing -> Left "We could not find signatory"
 
---UTILS - have to be put before creating action constructors
+{- |
+    Creates a new signatory link with a unique id, that contains the given details.
+-}
 signLinkFromDetails :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetails details roles = do
           sg <- ask
@@ -1068,17 +1257,25 @@ signLinkFromDetails details roles = do
                      , signatorysignatureinfo = Nothing
                      , signatoryroles = roles
                      , signatorylinkdeleted = False
+                     , signatorylinkreallydeleted = False
                      }
 
 signLinkFromDetailsForTest :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetailsForTest = signLinkFromDetails
 
+{- |
+    Gets a unique signatory link id.
+-}
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
 getUniqueSignatoryLinkID = do
   sg <- ask
   linkid <- getUnique sg SignatoryLinkID
   return linkid
 
+{- |
+    Sets the reference used for the document within TrustWeaver.
+    If the document doesn't exist, or isn't a signable, then this will return a Left.
+-}
 setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
 setDocumentTrustWeaverReference documentid reference = do
   modifySignable documentid $ \document ->
@@ -1086,36 +1283,29 @@ setDocumentTrustWeaverReference documentid reference = do
           newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
       in Right newdocument
 
+{- |
+    Turns the document status into DocumentError with the error given.
+    If the document doesn't exist then this will return a Left.
+-}
 errorDocument :: DocumentID -> String -> Update Documents (Either String Document)
 errorDocument documentid errormsg =
   modifySignableOrTemplate documentid $ \document ->
-      let
-          newdocument = document { documentstatus = DocumentError errormsg }
-      in Right newdocument
-
-
-getUserTemplates:: UserID -> Query Documents [Document]
-getUserTemplates userid = queryDocs $ \documents ->
-    let mydocuments = (documents @= Author userid ) in
-    toList $ justTemplates mydocuments
+      return $ document { documentstatus = DocumentError errormsg }
 
 {- |
-    The shared templates for the given users.
+    Creates a new signable document from a template document.
 -}
-getSharedTemplates :: [UserID] -> Query Documents [Document]
-getSharedTemplates userids = queryDocs $ \documents ->
-    let userdocs = documents @+ (map Author userids) in
-    filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
-
-justTemplates :: (Indexable a, Typeable a, Ord a) => IxSet a -> IxSet a
-justTemplates docs = (docs @= Template Offer) ||| (docs @= Template Contract) ||| (docs @= Template Order)
-
 signableFromDocument :: Document -> Update Documents Document
 signableFromDocument doc = insertNewDocument $ templateToDocument doc
 
-
--- You basicly always want to update author data. Not only if you want to change author
--- This is due to the fact that author personal data could get changed
+{- |
+    This is creates a new document that is a signable copy of a template.  This signable copy
+    has the author fields replaced with fields from the given user.
+    
+    
+   You basicly always want to update author data. Not only if you want to change author
+   This is due to the fact that author personal data could get changed
+-}
 signableFromDocumentIDWithUpdatedAuthor :: User -> DocumentID -> Update Documents (Either String Document)
 signableFromDocumentIDWithUpdatedAuthor user = newFromDocument $ \doc -> 
     (templateToDocument doc) {
@@ -1127,8 +1317,11 @@ signableFromDocumentIDWithUpdatedAuthor user = newFromDocument $ \doc ->
             | isAuthor sl = replaceSignatoryUser sl usr
             | otherwise = sl
 
-
-
+{- |
+    Creates a signable document from a template document.
+    The new signable will have the same process as the template,
+    and it will be in preparation mode.  It won't be shared.
+-}
 templateToDocument :: Document -> Document
 templateToDocument doc =
     let Template process = documenttype doc in
@@ -1137,6 +1330,7 @@ templateToDocument doc =
         , documenttype =  Signable process
         , documentsharing = Private
     }
+
 {- |
     Replaces signatory data with given user's data.
 -}
@@ -1185,6 +1379,12 @@ replaceSignatoryData siglink fstname sndname email company personalnumber compan
                        , fieldfilledbyauthor = (not $ BS.null val)
                        }
 
+{- |
+    Creates a new template document out of a signable document.  This template will have the same process
+    as the signable document.  The template will have preparation status.
+    If there is a problem then Left will be returned, for example if the document doesn't
+    exist, or if the document isn't a signable.
+-}
 templateFromDocument :: DocumentID -> Update Documents (Either String Document)
 templateFromDocument docid = modifySignable docid $ \doc ->
     let Signable process = documenttype doc in
@@ -1193,38 +1393,10 @@ templateFromDocument docid = modifySignable docid $ \doc ->
         , documenttype =  Template process
         }
 
-migrateForDeletion :: [User] -> Update Documents ()
-migrateForDeletion users = do
-  docs <- fmap toList ask
-  now <- getMinuteTimeDB
-  let docs2 = map propagetUsers docs
-      docs3 = map (deleteDocumentIfRequired now users) docs2
-  mapM_ (\doc -> modify (updateIx (documentid doc) doc)) docs3
-  where
-    {- |
-        This populates the maybesignatory & maybesupervisor on each of the signatory links for
-        the given user.
-    -}
-    propagetUsers :: Document -> Document
-    propagetUsers doc =
-     doc { documentsignatorylinks = for (documentsignatorylinks doc) $ \sl ->
-                                        case find (isSignatoryForUser sl) users of
-                                            Just user -> copySignatoryAccount user sl
-                                            Nothing -> sl }
-    isSignatoryForUser sl u = isSigLinkFor (userid u) sl || (isSigLinkFor (getEmail u) sl && hasSigned sl)
-
-unquarantineAll :: Update Documents ([Either String Document])
-unquarantineAll = do
-  docs <- fmap toList ask
-  let qdocs = [docid | Document{ documentrecordstatus = QuarantinedDocument
-                               , documentid = docid} <- docs ]
-  mapM unq qdocs
-  where
-    unq docid =
-      modifySignableOrTemplate docid $ \doc ->
-      return $ doc { documentrecordstatus = LiveDocument,
-                     documentquarantineexpiry = Nothing }
-
+{- |
+    This migration should be deleted soon.  It makes sure that maybesignatory and maybesupervisor
+    are properly populated on the signatory links.
+-}
 migrateDocumentSigAccounts :: DocumentID -> [User] -> Update Documents (Either String Document)
 migrateDocumentSigAccounts docid sigusers =
   modifyDocumentWithActionTime False (const True) docid $ \doc ->
@@ -1249,6 +1421,12 @@ migrateDocumentSigAccounts docid sigusers =
     clearSignatoryAccount :: SignatoryLink -> SignatoryLink
     clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybesupervisor = Nothing }
 
+{- |
+    Updates the list of required signatory attachments on the given document.
+    This ensures that the document is in a preperation state.  If there's a problem,
+    for example if the document doesn't exist, or the document is in the wrong state, then
+    a Left is returned.
+-}
 updateSigAttachments :: DocumentID -> [SignatoryAttachment] -> Update Documents (Either String Document)
 updateSigAttachments docid sigatts =
   modifySignableOrTemplate docid $ \doc ->
@@ -1256,11 +1434,16 @@ updateSigAttachments docid sigatts =
     Preparation -> Right doc { documentsignatoryattachments = sigatts }
     _ -> Left "Can only attach to document in Preparation"
 
+{- |
+    Saves a signatory attachment to a document.
+    If there's a problem such as the document isn't in a pending or awaiting author state,
+    or the document does not exist a Left is returned.
+-}
 saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Update Documents (Either String Document)
 saveSigAttachment docid name email content = do
   documents <- ask
   fileid <- getUnique documents FileID
-  modifySignableOrTemplate docid $ \doc ->
+  modifySignableOrTemplate docid $ \doc -> --use modifySignable here?  I don't think you can do on a template
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
       False -> Left "Only attach when the document is signable."
       True -> Right doc { documentsignatoryattachments = newsigatts }
@@ -1275,78 +1458,6 @@ saveSigAttachment docid name email content = do
               }
           addfile a = a
 
-
-{-
--- | Migrate author to the documentsignlinks so that he is not special anymore
-migrateToSigLinks :: DocumentID -> User -> Update Documents ()
-migrateToSigLinks docid author = do
-  sg <- ask
-  linkid <- getUnique sg SignatoryLinkID
-  magichash <- getRandom
-  modifySignable docid $
-      \doc ->
-          case getAuthorSigLink doc of
-            Just authorsiglink -> Right doc
-            Nothing ->
-                Right doc { documentsignatorylinks = newAuthorSigLink : (filter (\sl -> Just (userid author) /= maybesignatory sl) $ documentsignatorylinks doc) }
-                    where newAuthorSigLink = SignatoryLink
-                                             { signatorylinkid = linkid
-                                             , signatorydetails = authordetails
-                                             , signatorymagichash = magichash
-                                             , maybesignatory = Just $ userid author
-                                             , maybesigninfo = Nothing
-                                             , maybeseeninfo = documentinvitetime doc
-                                             , invitationdeliverystatus = Unknown
-                                             , signatorysignatureinfo = Nothing
-                                             , signatoryroles = [SignatoryAuthor]
-                                             , signatorylinkdeleted = documentdeleted doc
-                                             }
-                          authordetails = (signatoryDetailsFromUser author)
-                                          { signatoryfstnameplacements =
-                                                authorfstnameplacements doc
-                                          , signatorysndnameplacements =
-                                                authorsndnameplacements doc
-                                          , signatorycompanyplacements =
-                                                authorcompanyplacements doc
-                                          , signatoryemailplacements =
-                                                authoremailplacements doc
-                                          , signatorypersonalnumberplacements =
-                                                authorpersonalnumberplacements doc
-                                          , signatorycompanynumberplacements =
-                                                authorcompanynumberplacements doc
-                                          , signatoryotherfields =
-                                                authorotherfields doc
-                                          }
-  return ()
--}
-
-
-migrateDocumentAuthorAttachments :: DocumentID -> [File] -> Update Documents (Either String Document)
-migrateDocumentAuthorAttachments docid files =
-  modifyDocumentWithActionTime False (const True) docid $
-  \doc -> return $ if length files > 0
-          then Right doc { documentauthorattachments = for files (\f ->
-                                                                   AuthorAttachment { authorattachmentfile = f })
-                         , documentattachments = []
-                         }
-          else Left "No documentattachments."
-
-makeFirstSignatoryAuthor :: DocumentID -> Update Documents (Either String Document)
-makeFirstSignatoryAuthor docid =
-  modifySignableOrTemplate docid $
-  \doc -> case getAuthorSigLink doc of
-    Just _ -> Left "Already has an author."
-    Nothing ->
-      let fsig = head (documentsignatorylinks doc)
-          rsig = tail (documentsignatorylinks doc)
-      in Right doc { documentsignatorylinks =
-                        fsig { signatoryroles = SignatoryAuthor : (signatoryroles fsig) }
-
-                        :
-
-                        rsig
-                   }
-         
 storeDocumentForTesting :: Document -> Update Documents DocumentID
 storeDocumentForTesting doc = do
   d2 <- insertNewDocument doc
@@ -1354,7 +1465,6 @@ storeDocumentForTesting doc = do
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
-                        , 'getQuarantinedDocuments
                         , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
                         , 'getDocumentsBySupervisor
@@ -1390,7 +1500,9 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'archiveDocumentForAll
-                        , 'updateDocumentRecordStatus
+                        , 'restoreArchivedDocuments
+                        , 'reallyDeleteDocuments
+                        , 'deleteDocumentRecordIfRequired
                         , 'shareDocuments
                         , 'setDocumentTitle
                         , 'timeoutDocument
@@ -1399,10 +1511,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'fileMovedToAWS
                         , 'fileMovedToDisk
                           -- admin only area follows
-                        , 'extendDocumentQuarantine
-                        , 'reviveQuarantinedDocument
-                        , 'getExpiredQuarantinedDocuments
-                        , 'endQuarantineForDocument
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
@@ -1414,17 +1522,9 @@ $(mkMethods ''Documents [ 'getDocuments
 
                         , 'getDocumentByFileID
                         , 'errorDocument
-                        , 'getUserTemplates
-                        , 'getSharedTemplates
                         , 'signableFromDocument
                         , 'signableFromDocumentIDWithUpdatedAuthor
                         , 'documentFromSignatoryData
                         , 'templateFromDocument
---                        , 'migrateToSigLinks
-                        , 'migrateForDeletion
-                        , 'migrateDocumentAuthorAttachments
-                        , 'unquarantineAll
                         , 'migrateDocumentSigAccounts
-                        , 'getDocumentByDocumentIDAllEvenQuarantinedDocuments
-                        , 'makeFirstSignatoryAuthor
                         ])
