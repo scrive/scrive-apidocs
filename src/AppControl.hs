@@ -18,12 +18,10 @@ import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
-import Crypto
 import Doc.DocState
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
@@ -52,7 +50,6 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Word
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
