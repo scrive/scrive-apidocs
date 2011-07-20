@@ -299,9 +299,9 @@ fileMovedTo fid fstorage = do
 
 getDocumentByFileID :: FileID -> Query Documents (Either String Document)
 getDocumentByFileID fileid' = queryDocs $ \documents ->
-  case getOne (documents @= fileid') of
-    Nothing -> Left $ "cannot find document for file #" ++ show fileid'
-    Just document -> Right document
+  case toList (documents @= fileid') of
+    [] -> Left $ "cannot find document for file #" ++ show fileid'
+    (document:_) -> Right document
 
 attachFile :: DocumentID
            -> BS.ByteString
