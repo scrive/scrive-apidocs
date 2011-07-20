@@ -77,15 +77,14 @@ $elseif(!showTemplates)$
  </div>
 </td>
 <td>
-<div class="signStepsBodyUploadBox"> 
   <form action="/d" method="post" enctype="multipart/form-data" > 
-    <div>
+    <div class="signStepsBodyUploadBox">
         <input type="hidden" name="doctype" value="$selectedprocess.id$" />
         <span class="header">$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$</span><br/>
         <span class="text">$_signStepsBodyUploadBoxStep1UpLoadOnlyPDF()$</span> 
       <br/>
       <div class="signStepsButtonContainer">
-        <a class="btn-small green" style="overflow:hidden;height:34px;width:134px" >
+        <a class="btn-small green" >
           <div class="left"> </div>
           <div class="label" style="min-width:100px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div>
           <div class="right"> </div>
@@ -95,12 +94,10 @@ $elseif(!showTemplates)$
       <div class="filelist" style="padding-left:10px;display:none"></div>
     </div>
   </form>
-</div> 
 </td>
 
 <td>
-<div class="signStepsBodyUploadBox $if(showTemplates)$ selected $endif$">  
-    <div>
+  <div class="signStepsBodyUploadBox $if(showTemplates)$ selected $endif$">  
         <span class="header">$_signStepsBodyUploadBoxStep1ChooseTemplate()$</span><br/>
         <span class="text">$_signStepsBodyUploadBoxStep1TemplateSaved()$</span>
       <br/>
@@ -111,8 +108,7 @@ $elseif(!showTemplates)$
           <div class="right"> </div>
         </a>
       </div>
-    </div>   
-</div>
+  </div>
 </td> </tr></tbody></table>
 </div>
 <!-- END: Form to select new upload or template -->

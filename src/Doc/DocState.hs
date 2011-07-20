@@ -1227,8 +1227,8 @@ unquarantineAll = do
 
 migrateDocumentSigAccounts :: DocumentID -> [User] -> Update Documents (Either String Document)
 migrateDocumentSigAccounts docid sigusers =
-  modifySignableOrTemplate docid $ \doc ->
-    return $ doc {
+  modifyDocumentWithActionTime False (const True) docid $ \doc ->
+    return . Right $ doc {
       documentsignatorylinks = map (migrateSigLink doc) $ documentsignatorylinks doc
     }
   where 

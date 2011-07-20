@@ -37,7 +37,7 @@ import Util.MonadUtils
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a
 
-instance Kontrakcja m => APIContext m UserAPIContext where
+instance APIContext UserAPIContext where
     body= wsbody
     newBody b ctx = ctx {wsbody = b}
     apiContext  = do

@@ -7,6 +7,7 @@ module ActionScheduler (
     ) where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
@@ -23,6 +24,7 @@ import MinutesTime
 import Mails.MailsData
 import Mails.SendMail
 import Session
+import Templates.LocalTemplates
 import Templates.Templates
 import User.UserView
 import qualified AppLogger as Log
@@ -34,14 +36,11 @@ type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaM
 newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
-instance TemplatesMonad ActionScheduler where
-    getTemplates = do
-        sd <- ask
-        (_, templates) <- liftIO $ readMVar $ sdTemplates sd
-        -- FIXME: how do we use proper language version here? Probably the best
-        -- bet is to use State with language and set it appropriately using
-        -- user's current settings before instantiating anything.
-        return $ langVersion LANG_SE templates
+-- Note: Do not define TemplatesMonad instance for ActionScheduler, use
+-- LocalTemplates instead. Reason? We don't have access to currently used
+-- language, so we should rely on user's language settings the action is
+-- assigned to and since TemplatesMonad doesn't give us the way to get
+-- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler (AS sched) sd = runReaderT sched sd
@@ -68,6 +67,14 @@ actionScheduler imp = do
         catchEverything :: Action -> E.SomeException -> IO ()
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
+
+-- | Old scheduler (used as main one before action scheduler was implemented)
+oldScheduler :: ActionScheduler ()
+oldScheduler = do
+    now <- liftIO getMinutesTime
+    timeoutDocuments now
+    dropExpiredSessions now
+    deleteQuarantinedDocuments now
 
 -- Internal stuff
 
@@ -107,8 +114,9 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
-                      _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
-                mail <- mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                      t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
+                templates <- getLangTemplates $ lang $ usersettings user
+                mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
@@ -154,14 +162,13 @@ deleteAction aid = do
     _ <- update $ DeleteAction aid
     return ()
 
--- | Old scheduler
-oldScheduler :: ActionScheduler ()
-oldScheduler = do
-    now <- liftIO getMinutesTime
-    timeoutDocuments now
-    dropExpiredSessions now
-    deleteQuarantinedDocuments now
-    Log.debug $ "Scheduler is running ..."
+getLangTemplates :: Lang -> ActionScheduler KontrakcjaTemplates
+getLangTemplates lang = do
+    sd <- ask
+    (_, templates) <- liftIO $ second (langVersion lang) <$> readMVar (sdTemplates sd)
+    return templates
+
+-- Old scheduler internal stuff
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do

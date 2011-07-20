@@ -49,7 +49,7 @@ import qualified AppLogger as Log (debug)
 data IntegrationAPIContext = IntegrationAPIContext {ibody :: APIRequestBody , service :: Service}
 type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
 
-instance Kontrakcja m => APIContext m IntegrationAPIContext where
+instance APIContext IntegrationAPIContext where
     body= ibody
     newBody b ctx = ctx {ibody = b}
     apiContext  = do

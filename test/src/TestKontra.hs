@@ -212,7 +212,7 @@ mkContext templates = do
     }
 
 -- | Runs API function and returns its json response
-testAPI :: (Kontrakcja m, APIContext m c) => APIFunction m c APIResponse -> m APIResponse
+testAPI :: (APIContext c, Kontrakcja m) => APIFunction m c APIResponse -> m APIResponse
 testAPI f = do
     methodM POST
     mcontext <- apiContext
