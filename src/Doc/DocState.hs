@@ -325,9 +325,9 @@ fileMovedTo fid fstorage = do
  -}
 getDocumentByFileID :: FileID -> Query Documents (Either String Document)
 getDocumentByFileID fileid' = queryDocs $ \documents ->
-  case getOne (documents @= fileid') of
-    Nothing -> Left $ "cannot find document for file #" ++ show fileid'
-    Just document -> Right document
+  case toList (documents @= fileid') of
+    [] -> Left $ "cannot find document for file #" ++ show fileid'
+    (document:_) -> Right document
 
 {- |
     Attaches a file to the indicated document.
@@ -565,7 +565,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifySignable documentid $ \document ->
     let signeddocument = document { documentsignatorylinks = newsignatorylinks
                                   } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
-        Just signatoryLink = find (\x -> signatorylinkid x == signatorylinkid1) (documentsignatorylinks document)
+        Just signatoryLink = getSigLinkFor document signatorylinkid1
         newsignatorylinks = map maybesign (documentsignatorylinks document)
         maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} )
           | signatorylinkid == signatorylinkid1 =

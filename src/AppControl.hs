@@ -2,13 +2,14 @@
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
 module AppControl
-    ( appHandler
-    , AppConf(..)
+    ( module AppConf
+    , appHandler
     , AppGlobals(..)
     , defaultAWSAction
     , handleLoginPost
     ) where
 
+import AppConf
 import API.IntegrationAPI
 import API.Service.ServiceState
 import API.Service.ServiceControl
@@ -17,12 +18,10 @@ import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
-import Crypto
 import Doc.DocState
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
@@ -51,7 +50,6 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Word
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
@@ -75,31 +73,6 @@ import User.Lang
 import Util.MonadUtils
 import ForkAction
 
-{- |
-  Defines the application's configuration.  This includes amongst other things
-  the http port number, amazon, trust weaver and email configuraton,
-  as well as a handy boolean indicating whether this is a production or
-  development instance.
--}
-data AppConf
-    = AppConf { httpBindAddress :: (Word32, Word16)  -- ^ tcp address to bind to and port to listen on
-                                                  -- (0x0100007f, 8000) localhost:8000 (default)
-                                                  -- (0, 80)   all interfaces port 80
-              , hostpart        :: String                       -- ^ hostname as it should looklike in emails for example
-              , store           :: FilePath                     -- ^ where to put database files
-              , docstore        :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
-              , static          :: FilePath                     -- ^ static files directory
-              , amazonConfig    :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-              , gsCmd           :: String
-              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development
-              , trustWeaverSign :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
-              , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
-              , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
-              , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
-              , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
-              , admins          :: [Email]                    -- ^ email addresses of people regarded as admins
-              }
-      deriving (Show,Read,Eq,Ord)
 
 {- |
   Global application data
@@ -271,6 +244,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
+
+     , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
