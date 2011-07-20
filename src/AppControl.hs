@@ -254,6 +254,8 @@ handleRoutes = msum [
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
+     , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
+
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost1 $ toK1 $ handleChangeServiceUI
