@@ -34,6 +34,12 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "SetDocumentTitle fails when doc doesn't exist" testSetDocumentTitleNotLeft,
+  
+  testThat "CloseDocument fails when doc is not signable" testCloseDocumentNotSignableNothing,
+  testThat "CloseDocument fails when doc doesn't exist" testCloseDocumentNotNothing,
+  testThat "CloseDocument succeeds when doc is signable" testCloseDocumentSignableJust,
+  
   testThat "SetDocumentTags fails when does not exist" testSetDocumentTagsNotLeft,
   testThat "SetDocumentTags succeeds" testSetDocumentTagsRight,
   
@@ -1229,6 +1235,68 @@ testSetDocumentUIRight = do
         case etdoc of
           Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
           Right _ -> return $ Just $ return ()
+          
+testCloseDocumentSignableJust :: Assertion
+testCloseDocumentSignableJust = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        etdoc <- update $ CloseDocument docid mt a b
+        case etdoc of
+          Nothing -> return $ Just $ assertFailure "Should succeed if signable"
+          Just _ -> return $ Just $ return ()
+    
+testCloseDocumentNotSignableNothing :: Assertion
+testCloseDocumentNotSignableNothing = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        etdoc <- update $ CloseDocument docid mt a b
+        case etdoc of
+          Nothing -> return $ Just $ return ()
+          Just _ -> return $ Just $ assertFailure "Should fail if not signable"
+    
+testCloseDocumentNotNothing :: Assertion
+testCloseDocumentNotNothing = do
+  doTimes 10 $ do
+    stdgn <- newStdGen
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+        docid = unGen arbitrary stdgn 10
+        mt = unGen arbitrary stdgn 10
+    etdoc <- update $ CloseDocument docid mt a b
+    case etdoc of
+      Nothing -> return $ Just $ return ()
+      Just _ -> return $ Just $ assertFailure "Should fail if not existing"
+
+testSetDocumentTitleNotLeft :: Assertion
+testSetDocumentTitleNotLeft = do
+  doTimes 10 $ do
+    stdgn <- newStdGen
+    let a = unGen arbitrary stdgn 10
+        docid = unGen arbitrary stdgn 10
+    etdoc <- update $ SetDocumentTitle docid a
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if not existing"
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
