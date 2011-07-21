@@ -34,6 +34,10 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "SetDocumentTimeoutTime fails when does not exist" testSetDocumentTimeoutTimeNotLeft,
+  testThat "SetDocumentTimeoutTime fails when not signable" testSetDocumentTimeoutTimeNotSignableLeft,
+  testThat "SetDocumentTimeoutTime succeeds when signable" testSetDocumentTimeoutTimeSignableRight,
+  
   testThat "SetInvitationDeliveryStatus fails when not signable" testSetInvitationDeliveryStatusNotSignableLeft,
   testThat "SetInvitationDeliveryStatus fails when doc does not exist" testSetInvitationDeliveryStatusNotLeft,
   testThat "SetInvitationDeliveryStatus succeeds if signable" testSetInvitationDeliveryStatusSignableRight,  
@@ -1121,6 +1125,50 @@ testSetInvitationDeliveryStatusSignableRight = do
           Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
           Right _ -> return $ Just $ return ()
   
+testSetDocumentTimeoutTimeNotSignableLeft :: Assertion
+testSetDocumentTimeoutTimeNotSignableLeft = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _ -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+        edoc <- update $ SetDocumentTimeoutTime docid a
+        case edoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Not signable should fail"
+        
+testSetDocumentTimeoutTimeSignableRight :: Assertion
+testSetDocumentTimeoutTimeSignableRight = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+        etdoc <- update $ SetDocumentTimeoutTime docid a
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
+testSetDocumentTimeoutTimeNotLeft :: Assertion
+testSetDocumentTimeoutTimeNotLeft = do
+  doTimes 100 $ do
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+    etdoc <- update $ SetDocumentTimeoutTime did a
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
 
 apply :: a -> (a -> b) -> b
 apply a f = f a
@@ -1521,3 +1569,13 @@ instance Arbitrary MailsDeliveryStatus where
                        , Undelivered
                        , Unknown
                        , Deferred]
+
+instance Arbitrary TimeoutTime where
+  arbitrary = do
+    a <- arbitrary
+    return $ TimeoutTime a
+
+instance Arbitrary MinutesTime where
+  arbitrary = do
+    a <- arbitrary
+    return $ fromSeconds a
