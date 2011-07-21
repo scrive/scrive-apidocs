@@ -34,6 +34,12 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "SetDocumentTags fails when does not exist" testSetDocumentTagsNotLeft,
+  testThat "SetDocumentTags succeeds" testSetDocumentTagsRight,
+  
+  testThat "SetDocumentUI fails when does not exist" testSetDocumentUINotLeft,
+  testThat "SetDocumentUI succeeds" testSetDocumentUIRight,
+  
   testThat "SetDocumentTimeoutTime fails when does not exist" testSetDocumentTimeoutTimeNotLeft,
   testThat "SetDocumentTimeoutTime fails when not signable" testSetDocumentTimeoutTimeNotSignableLeft,
   testThat "SetDocumentTimeoutTime succeeds when signable" testSetDocumentTimeoutTimeSignableRight,
@@ -1170,6 +1176,60 @@ testSetDocumentTimeoutTimeNotLeft = do
       Left _ -> return $ Just $ return ()
       Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
 
+testSetDocumentTagsNotLeft :: Assertion
+testSetDocumentTagsNotLeft = do
+  doTimes 100 $ do
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+    etdoc <- update $ SetDocumentTags did a
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+
+testSetDocumentTagsRight :: Assertion
+testSetDocumentTagsRight = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+        etdoc <- update $ SetDocumentTags docid a
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
+testSetDocumentUINotLeft :: Assertion
+testSetDocumentUINotLeft = do
+  doTimes 100 $ do
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+    etdoc <- update $ SetDocumentUI did a
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+
+testSetDocumentUIRight :: Assertion
+testSetDocumentUIRight = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+        etdoc <- update $ SetDocumentUI docid a
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
 apply :: a -> (a -> b) -> b
 apply a f = f a
 
@@ -1579,3 +1639,14 @@ instance Arbitrary MinutesTime where
   arbitrary = do
     a <- arbitrary
     return $ fromSeconds a
+
+instance Arbitrary DocumentTag where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    return $ DocumentTag a b
+
+instance Arbitrary DocumentUI where
+  arbitrary = do
+    a <- arbitrary
+    return $ DocumentUI a
