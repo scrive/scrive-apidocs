@@ -18,6 +18,7 @@ import Payments.PaymentsState as Payments
 import Doc.DocStateQuery
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Mails.MailsUtil
 import qualified AppLogger as Log
 
 import qualified Data.ByteString.UTF8 as BS
@@ -33,6 +34,10 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "SetInvitationDeliveryStatus fails when not signable" testSetInvitationDeliveryStatusNotSignableLeft,
+  testThat "SetInvitationDeliveryStatus fails when doc does not exist" testSetInvitationDeliveryStatusNotLeft,
+  testThat "SetInvitationDeliveryStatus succeeds if signable" testSetInvitationDeliveryStatusSignableRight,  
+  
   testThat "MarkDocumentSeen fails when not signable" testMarkDocumentSeenNotSignableLeft,
   testThat "MarkDocumentSeen fails when closed or preparation" testMarkDocumentSeenClosedOrPreparationLeft,
   testThat "MarkDocumentSeen fails when doc does not exist" testMarkDocumentSeenNotLeft,
@@ -1066,6 +1071,57 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = do
               Right _ -> assertFailure "Should fail if the magich hash is incorrect"
           else return ()
 
+testSetInvitationDeliveryStatusNotSignableLeft :: Assertion
+testSetInvitationDeliveryStatusNotSignableLeft = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _ -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        edoc <- update $ SetInvitationDeliveryStatus docid a b
+        case edoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Not signable should fail"
+        
+  
+testSetInvitationDeliveryStatusNotLeft :: Assertion
+testSetInvitationDeliveryStatusNotLeft = do
+  doTimes 100 $ do
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+    etdoc <- update $ SetInvitationDeliveryStatus did a b
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+  
+
+testSetInvitationDeliveryStatusSignableRight :: Assertion
+testSetInvitationDeliveryStatusSignableRight = do
+  doTimes 10 $ do
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        etdoc <- update $ SetInvitationDeliveryStatus docid a b
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+  
+
 apply :: a -> (a -> b) -> b
 apply a f = f a
 
@@ -1459,3 +1515,9 @@ instance Arbitrary MagicHash where
   arbitrary = do
     a <- arbitrary
     return $ MagicHash a
+
+instance Arbitrary MailsDeliveryStatus where
+  arbitrary = elements [ Delivered 
+                       , Undelivered
+                       , Unknown
+                       , Deferred]
