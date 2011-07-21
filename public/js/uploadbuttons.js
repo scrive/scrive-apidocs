@@ -71,7 +71,7 @@ var UploadButtonView = Backbone.View.extend({
         button .append(right);
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         fileinput.attr("accept","application/pdf").attr("maxlength",model.maxlength()).attr("name",model.name())
-        fileinput.css("width",model.width()  + "px")
+        fileinput.css("width",model.width()  + "px");
         var list = model.list();
         if (list == undefined)
             {
@@ -87,7 +87,7 @@ var UploadButtonView = Backbone.View.extend({
                 }
             }
         });
-        button .append(fileinput)
+        button .append(fileinput);
         this.el.append(button);
         return this;
     }
@@ -97,10 +97,10 @@ var UploadButtonView = Backbone.View.extend({
 window.UploadButton = {
     init: function (args) {
           var model = new UploadButtonModel(args);
-          var input = $("<div style='position:relative;overflow:hidden'/>")
-          var view = new UploadButtonView({model : model, el : input})
+          var input = $("<div style='position:relative;overflow:hidden'/>");
+          var view = new UploadButtonView({model : model, el : input});
           return new Object({
-              input : function() {return input}
+              input : function() {return input;}
             });
         }
 }
