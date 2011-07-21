@@ -31,10 +31,21 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
-  testThat "AuthorSendDocument succeeds when signable and pending" testAuthorSendDocumentSignablePreparationRight,
+  testThat "RejectDocument succeeds when signable and pending" testRejectDocumentSignablePendingRight,
+  testThat "RejectDocument fails when document doesn't exist" testRejectDocumentNotLeft,
+  testThat "RejectDocument fails when signable but not pending" testRejectDocumentSignableNotPendingLeft,
+  testThat "RejectDocument fails when not signable" testRejectDocumentNotSignableLeft,
+  
+  testThat "AuthorSignDocument succeeds when signable and preparation" testAuthorSignDocumentSignablePreparationRight,
+  testThat "AuthorSignDocument fails when document doesn't exist" testAuthorSignDocumentNotLeft,
+  testThat "AuthorSignDocument fails when signable but not preparation" testAuthorSignDocumentSignableNotPreparationLeft,
+  testThat "AuthorSignDocument fails when not signable" testAuthorSignDocumentNotSignableLeft,
+  
+  testThat "AuthorSendDocument succeeds when signable and preparation" testAuthorSendDocumentSignablePreparationRight,
   testThat "AuthorSendDocument fails when document doesn't exist" testAuthorSendDocumentNotLeft,
-  testThat "AuthorSendDocument fails when signable but not pending" testAuthorSendDocumentSignableNotPreparationLeft,
+  testThat "AuthorSendDocument fails when signable but not preparation" testAuthorSendDocumentSignableNotPreparationLeft,
   testThat "AuthorSendDocument fails when not signable" testAuthorSendDocumentNotSignableLeft,
+  
   testThat "SignDocument fails when doc doesn't exist" testSignDocumentNotLeft,
   testThat "SignDocument succeeds when doc is Signable and Pending" testSignDocumentSignablePendingRight,
   testThat "SignDocument fails when the document is Signable but not in Pending" testSignDocumentSignableNotPendingLeft,
@@ -761,6 +772,154 @@ testAuthorSendDocumentSignablePreparationRight = do
         let a = unGen arbitrary stdgn 10
             b = unGen arbitrary stdgn 10
         etdoc <- update $ AuthorSendDocument docid mt a b
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
+testAuthorSignDocumentNotSignableLeft :: Assertion
+testAuthorSignDocumentNotSignableLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        etdoc <- update $ AuthorSignDocument docid mt a b
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not signable"
+  
+testAuthorSignDocumentSignableNotPreparationLeft :: Assertion
+testAuthorSignDocumentSignableNotPreparationLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | isPreparation doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        etdoc <- update $ AuthorSignDocument docid mt a b
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not pending"
+
+testAuthorSignDocumentNotLeft :: Assertion
+testAuthorSignDocumentNotLeft = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+    etdoc <- update $ AuthorSignDocument did mt a b
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+  
+testAuthorSignDocumentSignablePreparationRight :: Assertion
+testAuthorSignDocumentSignablePreparationRight = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | not $ isPreparation doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+        etdoc <- update $ AuthorSignDocument docid mt a b
+        case etdoc of
+          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
+          Right _ -> return $ Just $ return ()
+
+testRejectDocumentNotSignableLeft :: Assertion
+testRejectDocumentNotSignableLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+            c = unGen arbitrary stdgn 10
+        etdoc <- update $ RejectDocument docid a mt b c
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not signable"
+  
+testRejectDocumentSignableNotPendingLeft :: Assertion
+testRejectDocumentSignableNotPendingLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | isPending doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+            c = unGen arbitrary stdgn 10
+        etdoc <- update $ RejectDocument docid a mt b c
+        case etdoc of
+          Left _ -> return $ Just $ return ()
+          Right _ -> return $ Just $ assertFailure "Should fail if not pending"
+
+testRejectDocumentNotLeft :: Assertion
+testRejectDocumentNotLeft = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+        c = unGen arbitrary stdgn 10
+    etdoc <- update $ RejectDocument did a mt b c
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+  
+testRejectDocumentSignablePendingRight :: Assertion
+testRejectDocumentSignablePendingRight = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | not $ isPending doc -> return Nothing
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+            b = unGen arbitrary stdgn 10
+            c = unGen arbitrary stdgn 10
+        etdoc <- update $ RejectDocument docid a mt b c
         case etdoc of
           Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
           Right _ -> return $ Just $ return ()
