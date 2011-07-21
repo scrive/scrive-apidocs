@@ -366,11 +366,7 @@ lookupUsersRelevantToDoc docid = do
   musers <- mapM (query . GetUserByUserID) (linkedUserIDs doc)
   return $ (docid, catMaybes musers)
   where
-  linkedUserIDs = concatMap usersFromSigLink . documentsignatorylinks
-  usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} =
-    mkList maybesignatory ++ mkList maybesupervisor
-  mkList Nothing = []
-  mkList (Just x) = [x]
+    linkedUserIDs = catMaybes . map maybesignatory . documentsignatorylinks
 
 handleTakeOverSubaccount :: Kontrakcja m => BS.ByteString -> m ()
 handleTakeOverSubaccount email = do

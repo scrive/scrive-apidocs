@@ -3,8 +3,6 @@
 module Doc.DocState
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
-    , SignatoryAccount -- fromUtils
-    , getSignatoryAccount -- fromUtils
     , isDeletableDocument -- fromUtils
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks
@@ -27,7 +25,7 @@ module Doc.DocState
     , GetDocuments(..)
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
-    , GetDocumentsBySupervisor(..)
+    , GetDocumentsByCompany(..)
     , GetDocumentsByUser(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
@@ -112,19 +110,19 @@ getDocumentByDocumentID documentid = queryDocs $ \documents ->
     getOne $ documents @= documentid
 
 {- |
-    Filter documents according to whether the given user's sig link has even been deleted
-    by a user.  The first param should be True to get the docs which have been deleted,
+    Filter documents according to whether the given indicated sig link has even been deleted.
+    The first param should be True to get the docs which have been deleted,
     and so would appear in the recycle bin//trash can.  It should be False to get docs which
     have never been deleted.
 -}
-filterDocsWhereDeleted :: Bool -> UserID -> [Document] -> [Document]
-filterDocsWhereDeleted deleted userid docs =
+filterDocsWhereDeleted :: (SignatoryLinkIdentity a) => Bool -> a -> [Document] -> [Document]
+filterDocsWhereDeleted deleted siglinkidentifier docs =
   filter isIncludedDoc docs
   where
     isIncludedDoc Document{documentsignatorylinks} = 
       not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
-    isIncludedSigLink SignatoryLink{maybesignatory, maybesupervisor, signatorylinkdeleted} =
-      (maybesignatory == Just userid || maybesupervisor == Just userid) || signatorylinkdeleted==deleted
+    isIncludedSigLink sl@SignatoryLink{signatorylinkdeleted} =
+      isSigLinkFor siglinkidentifier sl && signatorylinkdeleted==deleted
 
 {- |
     All documents authored by the user that have never been deleted.
@@ -135,6 +133,7 @@ getDocumentsByAuthor userid = queryDocs $ \documents ->
 
 {- |
     All documents which are saved for the user which have never been deleted.
+    This doesn't respect sign order, so should be used carefully.
     This also makes sure that the documents match the user's service.
 -}
 getDocumentsByUser :: User -> Query Documents [Document]
@@ -142,23 +141,20 @@ getDocumentsByUser User{userid, userservice} = queryDocs $ \documents ->
   filterDocsWhereDeleted False userid $ IxSet.toList $ (documents @= userid) @= userservice
 
 {- |
-    Filter documents according to whether the given user's signatory has been activated
+    Filter documents according to whether the indicated signatory link has been activated
     according to the sign order.  Author links are included either way.
 -}
-filterDocsWhereActivated :: UserID -> [Document] -> [Document]
-filterDocsWhereActivated userid docs =
+filterDocsWhereActivated :: SignatoryLinkIdentity a => a -> [Document] -> [Document]
+filterDocsWhereActivated siglinkidentifier docs =
   filter isIncludedDoc docs
   where
     isIncludedDoc doc@Document{documentsignatorylinks} = 
       not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
     isIncludedSigLink doc 
-                      SignatoryLink{maybesignatory, 
-                                    maybesupervisor, 
-                                    signatorylinkdeleted, 
-                                    signatoryroles, 
-                                    signatorydetails} =
-      let isRelevant = (maybesignatory == Just userid || maybesupervisor == Just userid) 
-                         && (not signatorylinkdeleted)
+                      sl@SignatoryLink{signatorylinkdeleted, 
+                                       signatoryroles, 
+                                       signatorydetails} =
+      let isRelevant = isSigLinkFor siglinkidentifier sl && not signatorylinkdeleted
           isAuthorLink = SignatoryAuthor `elem` signatoryroles
           isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
       in  isRelevant && (isAuthorLink || isActivatedForSig)
@@ -167,7 +163,7 @@ filterDocsWhereActivated userid docs =
     All documents where the user is a signatory that are not deleted.  An author is a type
     of signatory, so authored documents are included too.
     This also filters so that documents where a user is a signatory, but that signatory
-    has not yet been activated according to the document's sign order are excluded.
+    has not yet been activated according to the document's sign order, are excluded.
 -}
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory User{userid, userservice} = queryDocs $ \documents ->
@@ -175,13 +171,14 @@ getDocumentsBySignatory User{userid, userservice} = queryDocs $ \documents ->
     IxSet.toList $ (documents @= (Signatory userid)) @= userservice
 
 {- |
-    All documents where the user is a supervisor that are not deleted.  This filters
-    in a similar way as getDocumentsBySignatory.
+    All documents for a company that are not deleted.  This filters
+    in a similar way as getDocumentsBySignatory so that documents returned would
+    have been activated if there was a sign order on the document.
 -}
-getDocumentsBySupervisor :: User -> Query Documents [Document]
-getDocumentsBySupervisor User{userid, userservice} = queryDocs $ \documents ->
-  filterDocsWhereActivated userid . filterDocsWhereDeleted False userid $ 
-    IxSet.toList $ (documents @= (Supervisor userid)) @= userservice
+getDocumentsByCompany :: CompanyID -> Maybe ServiceID -> Query Documents [Document]
+getDocumentsByCompany companyid service = queryDocs $ \documents ->
+  filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ 
+    IxSet.toList $ (documents @= companyid) @= service
 
 {- |
     All documents which are in a pending state and have a timeout time that comes
@@ -232,7 +229,9 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
                   (signatoryDetailsFromUser user)
                   authorRoles)
 
-  let authorlink = copySignatoryAccount user authorlink0
+  let authorlink = authorlink0 {
+                     maybesignatory = Just $ userid user, 
+                     maybecompany = mcompany `mplus` usercompany user }
 
   let doc = blankDocument {
               documenttitle                = title
@@ -244,7 +243,6 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
             , documentservice              = userservice user
             , documentauthorattachments    = []
             , documentsignatoryattachments = []
-            , documentoriginalcompany      = mcompany `mplus` usercompany user
             } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
@@ -281,7 +279,6 @@ blankDocument =
           , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
-          , documentoriginalcompany      = Nothing
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
@@ -379,17 +376,20 @@ updateDocument :: MinutesTime
                -> [(SignatoryDetails,[SignatoryRole])]
                -> Maybe Int
                -> BS.ByteString
-               -> (SignatoryDetails, [SignatoryRole], SignatoryAccount)
+               -> (SignatoryDetails, [SignatoryRole], UserID, Maybe CompanyID) -- could we make so just pass author User?
                -> [IdentificationType]
                -> Maybe Int
                -> DocumentFunctionality
                -> Update Documents (Either String Document)
-updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authoraccount) idtypes mcsvsigindex docfunctionality =
+updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authorid, authorcompany) idtypes mcsvsigindex docfunctionality =
     modifySignableOrTemplateWithAction documentid $ \document ->
         if documentstatus document == Preparation
          then do
              authorlink0 <- signLinkFromDetails authordetails authorroles
-             let authorlink = copySignatoryAccount authoraccount authorlink0
+             let authorlink = authorlink0 {
+                                maybesignatory = Just authorid,
+                                maybecompany = authorcompany
+                              }
              signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
              let alllinks = authorlink : signatorylinks
                  csvupload = case (documentcsvupload document,
@@ -418,14 +418,17 @@ updateDocument time documentid docname signatories daystosign invitetext (author
     If there is a problem, such as the document not existing,
     or the document not being in preparation mode then a Left is returned.
 -}
-updateDocumentSimple::DocumentID -> (SignatoryDetails, SignatoryAccount) -> [SignatoryDetails] -> Update Documents (Either String Document)
-updateDocumentSimple did (authordetails,authoraccount) signatories = do
+updateDocumentSimple::DocumentID -> (SignatoryDetails, User) -> [SignatoryDetails] -> Update Documents (Either String Document)
+updateDocumentSimple did (authordetails,author) signatories = do
    now <- getMinuteTimeDB
    modifySignableOrTemplateWithAction did $ \document ->
         if documentstatus document == Preparation
          then do
              authorlink0 <- signLinkFromDetails authordetails [SignatoryPartner,SignatoryAuthor]
-             let authorlink = copySignatoryAccount authoraccount authorlink0
+             let authorlink = authorlink0 {
+                                maybesignatory = Just $ userid author,
+                                maybecompany = usercompany author
+                              }
              signatorylinks <- sequence $ map (flip signLinkFromDetails [SignatoryPartner]) signatories
              let alllinks = authorlink : signatorylinks
              return $ Right $ document
@@ -816,15 +819,16 @@ fileModTime fileid = queryDocs $ \documents ->
       \2. a signer creates an account after signing to save their document
       \3. the email of a signatory is corrected to that of an existing user
 -}
-saveDocumentForUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID
+saveDocumentForUser :: DocumentID -> User -> SignatoryLinkID
                           -> Update Documents (Either String Document)
-saveDocumentForUser documentid useraccount signatorylinkid1 = do
+saveDocumentForUser documentid User{userid, usercompany} signatorylinkid1 = do
   modifySignable documentid $ \document ->
       let saveddocument = document { documentsignatorylinks = newsignatorylinks }
           newsignatorylinks = map maybesave (documentsignatorylinks document)
           maybesave x@(SignatoryLink {signatorylinkid} )
             | signatorylinkid == signatorylinkid1 =
-              copySignatoryAccount useraccount x
+               x { maybesignatory = Just userid,
+                   maybecompany = usercompany }
           maybesave x = x
       in Right saveddocument
 
@@ -856,7 +860,7 @@ getDocumentStatsByUser user time = do
       isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) . documentmtime
       allsigns = filter (isSigned . relevantSigLink) sigdocs
       relevantSigLink :: Document -> Maybe SignatoryLink
-      relevantSigLink doc = listToMaybe $ filter (isSigLinkFor user) (documentsignatorylinks doc)
+      relevantSigLink doc = listToMaybe $ filter (isSigLinkFor $ userid user) (documentsignatorylinks doc)
       isSigned :: Maybe SignatoryLink -> Bool
       isSigned = maybe False (isJust . maybesigninfo)
   return DocStats { doccount          = doccount'
@@ -901,11 +905,14 @@ setDocumentUI  docid docui =
     }
 
 {- |
-    Fetches documents by company and tags.  This won't return docs where documentdeleted is True.
+    Fetches documents by company and tags, this won't return documents that have been deleted (so ones
+    that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
+    cases where the company is linked via a signatory that hasn't yet been activated.
 -}
 getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag] -> Query Documents ([Document])
-getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents ->
-  toList $ (documents @= (Just company)  @= mservice @* doctags)
+getDocumentsByCompanyAndTags  mservice companyid doctags = queryDocs $ \documents ->
+  filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ 
+    IxSet.toList $ ((documents @= companyid)  @= mservice) @* doctags
 
 {- |
     Deletes documents for the given user.  This is just a soft delete, the document
@@ -913,12 +920,9 @@ getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents 
     A Left is returned when there are problems, such as a document not existing or a document
     being in pending mode.
 -}
-archiveDocuments :: UserID -> [DocumentID] -> Update Documents (Either String [Document])
-archiveDocuments userid docids = archiveDocumentsFor docids isSignatoryOrSupervisor
-  where
-    isSignatoryOrSupervisor :: SignatoryLink -> Bool
-    isSignatoryOrSupervisor SignatoryLink{maybesignatory,maybesupervisor} =
-      maybesignatory == Just userid || maybesupervisor == Just userid
+archiveDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
+archiveDocuments User{userid, usercompany} docids =
+  archiveDocumentsFor docids (\sl -> isSigLinkFor userid sl || isSigLinkFor usercompany sl) --TODO: sort this out!
 
 {- |
     Deletes a document for all of it's signatory links.  This is just a soft delete,
@@ -933,7 +937,7 @@ archiveDocumentForAll docid = archiveDocumentFor (const True) docid
     Helper function that makes it easier to run update functions that return Either over
     a list of documents.
 -}
-forEachDocument :: (a -> Update Documents (Either String Document)) 
+forEachDocument :: (a -> Update Documents (Either String Document))
                    -> [a]
                    -> Update Documents (Either String [Document])
 forEachDocument updateFunc items = foldM updateFoldFunc (Right []) items
@@ -971,15 +975,15 @@ archiveDocumentFor sigfilter docid = do
     been soft deleted and so are in the recycle bin//trash can.
     A Left is returned when there are problems, such as a document not existing.
 -}
-restoreArchivedDocuments :: UserID -> [DocumentID] -> Update Documents (Either String [Document])
-restoreArchivedDocuments userid docids = forEachDocument restoreDocument docids
+restoreArchivedDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
+restoreArchivedDocuments User{userid,usercompany} docids = forEachDocument restoreDocument docids
   where
     restoreDocument :: DocumentID -> Update Documents (Either String Document)
     restoreDocument docid = do
       modifySignableOrTemplate docid $ \doc ->
         return $ doc { documentsignatorylinks = map maybeRestoreSigLink $ documentsignatorylinks doc }
-    maybeRestoreSigLink sl@SignatoryLink{maybesignatory,maybesupervisor} =
-      if maybesignatory == Just userid || maybesupervisor == Just userid
+    maybeRestoreSigLink sl =
+      if isSigLinkFor userid sl || isSigLinkFor usercompany sl --TODO: sort this out!
         then sl { signatorylinkdeleted = False }
         else sl
 
@@ -991,9 +995,11 @@ restoreArchivedDocuments userid docids = forEachDocument restoreDocument docids
     as being deleted.
     A Left is returned when there are problems, such as a document not existing.
 -}
-reallyDeleteDocuments :: UserID -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
-reallyDeleteDocuments deletinguserid docidsAndUsers = forEachDocument deleteDocument docidsAndUsers
+reallyDeleteDocuments :: User -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
+reallyDeleteDocuments deletinguser docidsAndUsers = forEachDocument deleteDocument docidsAndUsers
   where
+    deletinguserid = userid deletinguser
+    deletingusercompany = usercompany deletinguser
     deleteDocument :: (DocumentID, [User]) -> Update Documents (Either String Document)
     deleteDocument (docid, users) = do
       mdoc <- deleteDocumentSigLinks docid
@@ -1005,8 +1011,8 @@ reallyDeleteDocuments deletinguserid docidsAndUsers = forEachDocument deleteDocu
       modifySignableOrTemplate docid $ \doc ->
         return $ doc { documentsignatorylinks = map maybeDeleteSigLink $ documentsignatorylinks doc }
     maybeDeleteSigLink :: SignatoryLink -> SignatoryLink
-    maybeDeleteSigLink sl@SignatoryLink{ maybesignatory, maybesupervisor, signatorylinkdeleted } =
-      if (maybesignatory == Just deletinguserid || maybesupervisor == Just deletinguserid) && signatorylinkdeleted
+    maybeDeleteSigLink sl@SignatoryLink{signatorylinkdeleted} =
+      if (isSigLinkFor deletinguserid sl || isSigLinkFor deletingusercompany sl) && signatorylinkdeleted --TODO sort this out
         then sl { signatorylinkreallydeleted = True }
         else sl
 
@@ -1027,7 +1033,7 @@ deleteDocumentRecordIfRequired docid users =
       where
         isCutSigLink sl = isReallyDeletedSigLink sl || isOrphanedSigLink sl
         isReallyDeletedSigLink SignatoryLink{signatorylinkreallydeleted} = signatorylinkreallydeleted
-        isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNoUser maybesignatory && isNoUser maybesupervisor
+        isOrphanedSigLink SignatoryLink{maybesignatory,maybecompany} = isNoUser maybesignatory && isNothing maybecompany
         isNoUser Nothing = True
         isNoUser (Just uid) = not $ uid `elem` (map userid users)
 
@@ -1055,7 +1061,8 @@ setupForDeletion doc = blankDocument {
                            , signatorydetails = blankSigDetails
                            , signatorymagichash = MagicHash { unMagicHash = 0 }
                            , maybesignatory = Nothing
-                           , maybesupervisor = Nothing
+                           , maybesupervisor = Nothing -- this field is now deprecated, should use maybecompany instead
+                           , maybecompany = Nothing
                            , maybesigninfo  = Nothing
                            , maybeseeninfo  = Nothing
                            , maybereadinvite = Nothing
@@ -1199,9 +1206,13 @@ restartDocument doc user time ipnumber = do
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
       newSignLinks <- sequence $ map (uncurry $ signLinkFromDetails) signatoriesDetails
-      let Just authorsiglink = find isAuthor newSignLinks
+      let Just authorsiglink0 = find isAuthor newSignLinks
+          authorsiglink = authorsiglink0 {
+                            maybesignatory = maybesignatory asl,
+                            maybecompany = maybecompany asl
+                          }
           othersiglinks = filter (not . isAuthor) newSignLinks
-          newsiglinks = copySignatoryAccount asl authorsiglink : othersiglinks
+          newsiglinks = authorsiglink : othersiglinks
       return doc {documentstatus = Preparation,
                   documenttimeouttime = Nothing,
                   documentsignatorylinks = newsiglinks
@@ -1209,25 +1220,20 @@ restartDocument doc user time ipnumber = do
 
 {- |
     This updates a signatory email, which is required in situations where an invitation can't be delivered to an email.
-    When the signatory email is changed we need to update the maybesignatory and maybesupervisor fields
+    When the signatory email is changed we need to update the maybesignatory and maybecompany fields
     accordingly to keep up with who this signatory link is for.
     If there is a problem then a Left is returned, for example if the document doesn't exist, or is not in a pending state.
 -}
-changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> Maybe SignatoryAccount -> BS.ByteString ->  Update Documents (Either String Document)
-changeSignatoryEmailWhenUndelivered did slid msigaccount email = modifySignable did $ changeEmail
+changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> Maybe User -> BS.ByteString ->  Update Documents (Either String Document)
+changeSignatoryEmailWhenUndelivered did slid mnewuser email = modifySignable did $ changeEmail
   where changeEmail doc = let signlinks = documentsignatorylinks doc
                               mnsignlink = do
                                            sl <- find ((== slid) . signatorylinkid) signlinks
                                            when (invitationdeliverystatus sl /= Undelivered && invitationdeliverystatus sl /= Deferred) Nothing
-                                           let correctedsl = sl 
-                                                     { invitationdeliverystatus = Unknown
+                                           return sl { invitationdeliverystatus = Unknown
                                                      , signatorydetails = (signatorydetails sl) {signatoryemail = email}
-                                                     , maybesignatory = Nothing
-                                                     , maybesupervisor = Nothing }
-                                           case msigaccount of
-                                             Nothing -> return correctedsl
-                                             (Just sigaccount) -> return $ copySignatoryAccount sigaccount correctedsl
-
+                                                     , maybesignatory = fmap userid mnewuser
+                                                     , maybecompany = mnewuser >>= usercompany }
                           in case mnsignlink  of
                            Just nsl -> let sll = for signlinks $ \sl -> if ( slid == signatorylinkid sl) then nsl else sl
                                        in  if (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
@@ -1249,7 +1255,8 @@ signLinkFromDetails details roles = do
                      , signatorydetails = details
                      , signatorymagichash = magichash
                      , maybesignatory = Nothing
-                     , maybesupervisor = Nothing
+                     , maybesupervisor = Nothing  -- This field is now deprecated should use maybecompany instead
+                     , maybecompany = Nothing
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
                      , maybereadinvite = Nothing
@@ -1347,7 +1354,8 @@ replaceSignatoryUser siglink user =
                        (getPersonalNumber user)
                        (getCompanyNumber  user)
                        (map fieldvalue $ signatoryotherfields $ signatorydetails siglink) in
-  copySignatoryAccount user newsl
+  newsl { maybesignatory = Just $ userid user,
+          maybecompany = usercompany user }
 
 {- |
     Pumps data into a signatory link
@@ -1411,7 +1419,10 @@ migrateDocumentSigAccounts docid sigusers =
               muser = find ((==) sigemail . unEmail . useremail . userinfo) sigusers in
           case muser of
             Nothing -> siglink --okay we can't find the user, but they may have been deleted or not signed up.  we can leave be.
-            (Just user) -> copySignatoryAccount user siglink
+            (Just user) -> siglink {
+                             maybesignatory = Just $ userid user,
+                             maybesupervisor = fmap (UserID . unSupervisorID) $ usersupervisor user
+                           }
       | otherwise = clearSignatoryAccount siglink
     isSuitableForSave :: Document -> SignatoryLink -> Bool
     isSuitableForSave Document{documenttype,documentstatus} siglink =
@@ -1467,7 +1478,7 @@ storeDocumentForTesting doc = do
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
-                        , 'getDocumentsBySupervisor
+                        , 'getDocumentsByCompany
                         , 'newDocument
                         , 'newDocumentWithMCompany
                         , 'getDocumentByDocumentID

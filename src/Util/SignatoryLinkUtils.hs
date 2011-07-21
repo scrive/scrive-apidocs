@@ -21,9 +21,12 @@ module Util.SignatoryLinkUtils (
   isSignatory,
   isViewer,
   isDeletedFor,
-  getSigLinkFor
+  getSigLinkFor,
+  
+  SignatoryLinkIdentity
        ) where
 
+import Company.CompanyState
 import Doc.DocStateData
 import Mails.MailsUtil
 import User.UserState
@@ -70,8 +73,8 @@ instance SignatoryLinkIdentity User where
 instance SignatoryLinkIdentity Author where
   isSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl
 
-instance SignatoryLinkIdentity Supervisor where
-  isSigLinkFor (Supervisor uid) sl = Just uid == maybesupervisor sl
+instance SignatoryLinkIdentity CompanyID where
+  isSigLinkFor cid sl = Just cid == maybecompany sl
 
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isSigLinkFor (Just a) sl = isSigLinkFor a sl

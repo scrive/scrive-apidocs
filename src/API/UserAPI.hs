@@ -110,7 +110,6 @@ sendFromTemplate = do
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
   let Just authorsiglink = mauthorsiglink
-  let saccount = getSignatoryAccount author
   medoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx)
@@ -119,7 +118,7 @@ sendFromTemplate = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext doc)
-          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, saccount)
+          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality
@@ -171,7 +170,6 @@ sendNewDocument = do
   newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
   liftIO $ print newdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  let saccount = getSignatoryAccount author
   edoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx)
@@ -180,7 +178,7 @@ sendNewDocument = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext newdoc)
-          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], saccount)
+          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality

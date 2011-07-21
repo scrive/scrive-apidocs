@@ -27,29 +27,6 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
--- some docs please? -EN
-type SignatoryAccount = (UserID, Maybe UserID)
-
-class HasSignatoryAccount a where
-  getSignatoryAccount :: a -> SignatoryAccount
-
-instance HasSignatoryAccount User where
-  getSignatoryAccount User{userid, usersupervisor} =
-    (userid, fmap (UserID . unSupervisorID) usersupervisor)
-
-instance HasSignatoryAccount SignatoryAccount where
-  getSignatoryAccount = id
-
-instance HasSignatoryAccount SignatoryLink where
-  getSignatoryAccount sl =
-    let Just userid = maybesignatory sl in
-    (userid, maybesupervisor sl)
-
-copySignatoryAccount :: (HasSignatoryAccount a) => a -> SignatoryLink -> SignatoryLink
-copySignatoryAccount acc siglink =
-  let (userid, msuperid) = getSignatoryAccount acc in
-  siglink { maybesignatory = Just userid, maybesupervisor = msuperid }
-
 {- |
     Checks whether the document is deletable, this is not the case for live documents.
 -}

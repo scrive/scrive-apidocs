@@ -181,7 +181,7 @@ createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
     doc <- update $ NewDocumentWithMCompany (Just $ companyid company) author title doctype now
     sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
     _ <- update $ SetDocumentTags (documentid doc) tags
-    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, getSignatoryAccount author) (map toSignatoryDetails signTMPS)
+    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 

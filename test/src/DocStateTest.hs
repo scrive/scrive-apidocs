@@ -144,7 +144,7 @@ testDocumentUpdateDoesNotChangeID = do
   doc <- assumingBasicContract mt author
   --execute
   let sd = signatoryDetailsFromUser author
-  enewdoc <- update $ UpdateDocument mt (documentid doc) "Test Document" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], (userid author, Nothing)) [EmailIdentification] Nothing AdvancedFunctionality 
+  enewdoc <- update $ UpdateDocument mt (documentid doc) "Test Document" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
   --assert
   case enewdoc of
     Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
@@ -158,7 +158,7 @@ testDocumentUpdateCanChangeTitle = do
   doc <- assumingBasicContract mt author
   --execute
   let sd = signatoryDetailsFromUser author
-  enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], (userid author, Nothing)) [EmailIdentification] Nothing AdvancedFunctionality 
+  enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
   --assert
   case enewdoc of
     Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
@@ -242,7 +242,7 @@ testNotPreparationUpdateDocumentAlwaysLeft = do
                    Just doc | isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], UserID 1, Nothing) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ return ()
@@ -262,7 +262,7 @@ testPreparationUpdateDocumentAlwaysRight = do
                    Just doc | not $ isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], UserID 1, Nothing) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ assertFailure "Should always succeed if not preparation"
@@ -276,7 +276,7 @@ testNoDocumentUpdateDocumentAlwaysLeft = do
   mt <- whatTimeIsIt
   --execute
   -- non-existent docid
-  edoc <- update $ UpdateDocument mt (DocumentID 24) "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+  edoc <- update $ UpdateDocument mt (DocumentID 24) "" []  Nothing "" (emptySignatoryDetails, [], UserID 1, Nothing) [] Nothing BasicFunctionality
   --assert
   case edoc of
     Left _msg     -> assertSuccess
@@ -294,7 +294,7 @@ testNotPreparationUpdateDocumentSimpleAlwaysLeft = do
                    Just doc | isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, (UserID 1, Nothing)) []
+                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, author) []
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ return ()
@@ -313,7 +313,7 @@ testPreparationUpdateDocumentSimpleAlwaysRight = do
                    Just doc | not $ isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, (UserID 1, Nothing)) []
+                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, author) []
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ assertFailure "Should always succeed if not preparation"
@@ -324,9 +324,10 @@ testPreparationUpdateDocumentSimpleAlwaysRight = do
 testNoDocumentUpdateDocumentSimpleAlwaysLeft :: Assertion
 testNoDocumentUpdateDocumentSimpleAlwaysLeft = do
   -- setup
+  author <- addNewRandomUser
   --execute
   -- non-existent docid
-  edoc <- update $ UpdateDocumentSimple (DocumentID 24) (emptySignatoryDetails, (UserID 1, Nothing)) []  
+  edoc <- update $ UpdateDocumentSimple (DocumentID 24) (emptySignatoryDetails, author) []  
   --assert
   case edoc of
     Left _msg     -> assertSuccess
@@ -1117,7 +1118,6 @@ blankDocument =
           , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
-          , documentoriginalcompany      = Nothing
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []

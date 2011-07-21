@@ -191,7 +191,7 @@ handleMailCommand = do
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
     (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
-                                    (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user)
+                                    (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)
                                     [EmailIdentification] Nothing AdvancedFunctionality
 
     (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing

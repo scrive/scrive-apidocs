@@ -51,17 +51,13 @@ import Control.Monad.State
  -}
 canUserViewDoc :: User -> Document -> IO Bool
 canUserViewDoc user doc 
-  | any isSignatoryOrSupervisor $ documentsignatorylinks doc = return True
+  | any (\sl -> isSigLinkFor (userid user) sl || isSigLinkFor (usercompany user) sl) $ documentsignatorylinks doc = return True --TODO change this!
   | otherwise = do
     usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
     usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
     related            <- query $ GetUserRelatedAccounts (userid user)
     return $ (any isAuthor (zip (repeat doc) (usersImFriendsWith ++ usersFriendsAreSupervising)))
       || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
-  where
-    isSignatoryOrSupervisor :: SignatoryLink -> Bool
-    isSignatoryOrSupervisor SignatoryLink{maybesignatory, maybesupervisor} =
-      maybesignatory == Just (userid user) || maybesupervisor == Just (userid user) 
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -90,7 +86,7 @@ getDocByDocID docid = do
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if (documentoriginalcompany doc == Just (companyid company))
+        Just doc -> if any ((== (Just . companyid $ company)) . maybecompany) (documentsignatorylinks doc)
                      then return $ Right doc
                      else return $ Left DBResourceNotAvailable
 
