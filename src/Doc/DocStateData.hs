@@ -3102,10 +3102,7 @@ instance Indexable Document where
                                        ++ map authorattachmentfile (documentauthorattachments x)
                                        ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
           
-          , ixFun $ ifDocumentNotDeleted (\x -> 
-                      (case documenttimeouttime x of
-                        Just time -> [time]
-                        Nothing -> []) :: [TimeoutTime])
+          , ixFun $ ifDocumentNotDeleted (maybeToList . documenttimeouttime)
           , ixFun $ ifDocumentNotDeleted (\x -> [documenttype x] :: [DocumentType])
           , ixFun $ ifDocumentNotDeleted (\x -> documenttags x :: [DocumentTag])
           , ixFun $ ifDocumentNotDeleted (\x -> [documentservice x] :: [Maybe ServiceID])
@@ -3123,6 +3120,7 @@ instance Indexable Document where
                          filter (\sl -> (SignatoryAuthor `elem` signatoryroles sl)) $ undeletedSigLinks x) :: [Author])
           ]
           where
+            ifDocumentNotDeleted :: (Document -> [a]) -> Document -> [a]
             ifDocumentNotDeleted f doc
               | documentdeleted doc = []
               | otherwise = f doc
