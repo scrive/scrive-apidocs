@@ -23,6 +23,8 @@ import qualified AppLogger as Log
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Data.Maybe
+import Control.Applicative
+import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Test.QuickCheck
@@ -31,6 +33,12 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "MarkDocumentSeen fails when not signable" testMarkDocumentSeenNotSignableLeft,
+  testThat "MarkDocumentSeen fails when not pending" testMarkDocumentSeenNotPendingLeft,
+  testThat "MarkDocumentSeen fails when doc does not exist" testMarkDocumentSeenNotLeft,
+  testThat "MarkDocumentSeen succeeds when siglink and magichash match" testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
+  testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft,
+  
   testThat "MarkInvitationRead never fails" testMarkInvitationRead,
   testThat "MarkInvitationRead never fails when doc doesn't exist" testMarkInvitationReadDocDoesntExist,
   
@@ -951,7 +959,113 @@ testMarkInvitationReadDocDoesntExist = do
         b = unGen arbitrary stdgn 10
     _ <- update $ MarkInvitationRead a b mt
     return $ Just $ return ()
+    
+testMarkDocumentSeenNotSignableLeft :: Assertion
+testMarkDocumentSeenNotSignableLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | isSignable doc -> return Nothing
+      Just doc -> do
+        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
+          if isNothing $ maybeseeninfo sl 
+          then do
+            stdgn <- newStdGen
+            let a = unGen arbitrary stdgn 10
+            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
+            case etdoc of
+              Left _ -> return ()
+              Right _ -> assertFailure "Should fail if document is not signable"
+          else return ()
+  
+testMarkDocumentSeenNotPendingLeft :: Assertion
+testMarkDocumentSeenNotPendingLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | isPending doc -> return Nothing
+      Just doc -> do
+        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
+          if isNothing $ maybeseeninfo sl 
+          then do
+            stdgn <- newStdGen
+            let a = unGen arbitrary stdgn 10
+            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
+            case etdoc of
+              Left _ -> return ()
+              Right _ -> assertFailure "Should succeed if document is signable but not pending"
+          else return ()
+
+testMarkDocumentSeenNotLeft :: Assertion
+testMarkDocumentSeenNotLeft = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt
+    stdgn <- newStdGen    
+    let did = unGen arbitrary stdgn 1000
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+        c = unGen arbitrary stdgn 10
+    etdoc <- update $ MarkDocumentSeen did a b mt c
+    case etdoc of
+      Left _ -> return $ Just $ return ()
+      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+  
+testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Assertion
+testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | not $ isPending doc -> return Nothing
+      Just doc -> do
+        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
+          if isNothing $ maybeseeninfo sl 
+          then do
+            stdgn <- newStdGen
+            let a = unGen arbitrary stdgn 10
+            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
+            case etdoc of
+              Left _ -> assertFailure "Should succeed if document exists, is Signable, and is Pending"
+              Right _ -> return ()
+          else return ()
         
+testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft :: Assertion
+testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft = do
+  doTimes 10 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just doc | not $ isSignable doc -> return Nothing
+      Just doc | not $ isPending doc -> return Nothing
+      Just doc -> do
+        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
+          if isNothing $ maybeseeninfo sl 
+          then do
+            stdgn <- newStdGen
+            let a = unGen arbitrary stdgn 10
+                b = unGen arbitrary stdgn 10
+            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) b mt a
+            case etdoc of
+              Left _ -> return ()
+              Right _ -> assertFailure "Should fail if the magich hash is incorrect"
+          else return ()
+
 apply :: a -> (a -> b) -> b
 apply a f = f a
 
@@ -1340,3 +1454,8 @@ instance Arbitrary SignatureInfo where
                            , signaturelstnameverified = f
                            , signaturepersnumverified = g
                            }
+
+instance Arbitrary MagicHash where
+  arbitrary = do
+    a <- arbitrary
+    return $ MagicHash a
