@@ -31,6 +31,9 @@ import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
+  testThat "MarkInvitationRead never fails" testMarkInvitationRead,
+  testThat "MarkInvitationRead never fails when doc doesn't exist" testMarkInvitationReadDocDoesntExist,
+  
   testThat "RejectDocument succeeds when signable and pending" testRejectDocumentSignablePendingRight,
   testThat "RejectDocument fails when document doesn't exist" testRejectDocumentNotLeft,
   testThat "RejectDocument fails when signable but not pending" testRejectDocumentSignableNotPendingLeft,
@@ -924,6 +927,31 @@ testRejectDocumentSignablePendingRight = do
           Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
           Right _ -> return $ Just $ return ()
 
+testMarkInvitationRead :: Assertion
+testMarkInvitationRead = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt    
+    author <- addNewRandomUser
+    docid <- addRandomDocumentWithAuthor author
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Just $ assertFailure "Could not stored document."
+      Just _doc -> do
+        stdgn <- newStdGen
+        let a = unGen arbitrary stdgn 10
+        _ <- update $ MarkInvitationRead docid a mt
+        return $ Just $ return ()
+        
+testMarkInvitationReadDocDoesntExist :: Assertion
+testMarkInvitationReadDocDoesntExist = do
+  doTimes 100 $ do
+    mt <- whatTimeIsIt        
+    stdgn <- newStdGen
+    let a = unGen arbitrary stdgn 10
+        b = unGen arbitrary stdgn 10
+    _ <- update $ MarkInvitationRead a b mt
+    return $ Just $ return ()
+        
 apply :: a -> (a -> b) -> b
 apply a f = f a
 
