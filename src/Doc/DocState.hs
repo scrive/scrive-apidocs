@@ -756,7 +756,10 @@ markDocumentSeen :: DocumentID
                  -> Word32
                  -> Update Documents (Either String Document)
 markDocumentSeen documentid signatorylinkid1 mh time ipnumber = do
-    modifySignable documentid $ \document ->
+    modifySignable documentid $ \document -> case documentstatus document of
+      Closed -> Left "Cannot modify a Closed document"
+      Preparation -> Left "Cannot view a document in Preparation"
+      _ -> 
         if (any shouldMark (documentsignatorylinks document))
           then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document) }
           else Left ""

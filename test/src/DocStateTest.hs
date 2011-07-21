@@ -34,10 +34,10 @@ import System.Random
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
   testThat "MarkDocumentSeen fails when not signable" testMarkDocumentSeenNotSignableLeft,
-  testThat "MarkDocumentSeen fails when not pending" testMarkDocumentSeenNotPendingLeft,
+  testThat "MarkDocumentSeen fails when closed or preparation" testMarkDocumentSeenClosedOrPreparationLeft,
   testThat "MarkDocumentSeen fails when doc does not exist" testMarkDocumentSeenNotLeft,
-  testThat "MarkDocumentSeen succeeds when siglink and magichash match" testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
-  testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft,
+  testThat "MarkDocumentSeen succeeds when siglink and magichash match" testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
+  testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft,
   
   testThat "MarkInvitationRead never fails" testMarkInvitationRead,
   testThat "MarkInvitationRead never fails when doc doesn't exist" testMarkInvitationReadDocDoesntExist,
@@ -982,8 +982,8 @@ testMarkDocumentSeenNotSignableLeft = do
               Right _ -> assertFailure "Should fail if document is not signable"
           else return ()
   
-testMarkDocumentSeenNotPendingLeft :: Assertion
-testMarkDocumentSeenNotPendingLeft = do
+testMarkDocumentSeenClosedOrPreparationLeft :: Assertion
+testMarkDocumentSeenClosedOrPreparationLeft = do
   doTimes 10 $ do
     mt <- whatTimeIsIt    
     author <- addNewRandomUser
@@ -992,7 +992,7 @@ testMarkDocumentSeenNotPendingLeft = do
     case mdoc of
       Nothing -> return $ Just $ assertFailure "Could not stored document."
       Just doc | not $ isSignable doc -> return Nothing
-      Just doc | isPending doc -> return Nothing
+      Just doc | not (isClosed doc || isPreparation doc) -> return Nothing
       Just doc -> do
         return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
           if isNothing $ maybeseeninfo sl 
@@ -1002,7 +1002,7 @@ testMarkDocumentSeenNotPendingLeft = do
             etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
             case etdoc of
               Left _ -> return ()
-              Right _ -> assertFailure "Should succeed if document is signable but not pending"
+              Right _ -> assertFailure "Should succeed if document is signable and closed or preparation"
           else return ()
 
 testMarkDocumentSeenNotLeft :: Assertion
@@ -1019,8 +1019,8 @@ testMarkDocumentSeenNotLeft = do
       Left _ -> return $ Just $ return ()
       Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
   
-testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Assertion
-testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = do
+testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Assertion
+testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = do
   doTimes 10 $ do
     mt <- whatTimeIsIt    
     author <- addNewRandomUser
@@ -1029,7 +1029,7 @@ testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight
     case mdoc of
       Nothing -> return $ Just $ assertFailure "Could not stored document."
       Just doc | not $ isSignable doc -> return Nothing
-      Just doc | not $ isPending doc -> return Nothing
+      Just doc | isClosed doc || isPreparation doc -> return Nothing      
       Just doc -> do
         return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
           if isNothing $ maybeseeninfo sl 
@@ -1042,8 +1042,8 @@ testMarkDocumentSeenSignablePendingSignatoryLinkIDAndMagicHashAndNoSeenInfoRight
               Right _ -> return ()
           else return ()
         
-testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft :: Assertion
-testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft = do
+testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: Assertion
+testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = do
   doTimes 10 $ do
     mt <- whatTimeIsIt    
     author <- addNewRandomUser
@@ -1052,7 +1052,7 @@ testMarkDocumentSeenSignablePendingSignatoryLinkIDBadMagicHashLeft = do
     case mdoc of
       Nothing -> return $ Just $ assertFailure "Could not stored document."
       Just doc | not $ isSignable doc -> return Nothing
-      Just doc | not $ isPending doc -> return Nothing
+      Just doc | isClosed doc || isPreparation doc -> return Nothing      
       Just doc -> do
         return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
           if isNothing $ maybeseeninfo sl 
