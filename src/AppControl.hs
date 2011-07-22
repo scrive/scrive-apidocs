@@ -198,16 +198,16 @@ handleRoutes = msum [
      -- UserControl
      , dir "account"                    $ hGet0  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost0 $ toK0 $ UserControl.handleUserPost
-     , dir "account" $ dir "subaccount" $ hGet0  $ toK0 $ UserControl.handleGetSubaccount
-     , dir "account" $ dir "subaccount" $ hPost0 $ toK0 $ UserControl.handlePostSubaccount
+     , dir "account" $ dir "companyaccounts" $ hGet0  $ toK0 $ UserControl.handleGetCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ hPost0 $ toK0 $ UserControl.handlePostCompanyAccounts
      , dir "account" $ dir "sharing" $ hGet0 $ toK0 $ UserControl.handleGetSharing
      , dir "account" $ dir "sharing" $ hPost0 $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet0 $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost0 $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet0 $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost0 $ toK0 $ UserControl.handlePostUserMailAPI
-     , dir "account" $ dir "bsa" $ hGet1 $ toK1 $ UserControl.handleGetBecomeSubaccountOf
-     , dir "account" $ dir "bsa" $ hPost1 $ toK1 $ UserControl.handlePostBecomeSubaccountOf
+     , dir "account" $ dir "bsa" $ hGet1 $ toK1 $ UserControl.handleGetBecomeCompanyAccount
+     , dir "account" $ dir "bsa" $ hPost1 $ toK1 $ UserControl.handlePostBecomeCompanyAccount
      , dir "contacts"  $ hGet0  $ toK0 $ Contacts.showContacts
      , dir "contacts"  $ hPost0 $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet0  $ toK0 $ UserControl.handleAcceptTOSGet

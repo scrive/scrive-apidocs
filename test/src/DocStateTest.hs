@@ -15,7 +15,6 @@ import MinutesTime
 import Happstack.State
 import Misc
 import Payments.PaymentsState as Payments
-import Doc.DocStateQuery
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Mails.MailsUtil
@@ -80,7 +79,6 @@ docStateTests = testGroup "DocState" [
   testThat "TimeoutDocument fails when doc doesn't exist" testTimeoutDocumentSignableNotLeft,
   testThat "TimeoutDocument succeeds when doc is Signable and Pending" testTimeoutDocumentSignablePendingRight,
   testThat "TimeoutDocument fails when the document is Signable but not in Pending" testTimeoutDocumentSignableNotPendingLeft,
-  testThat "A supervisor's friends can view a document"testSupervisorsFriendsCanSee,
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs,
@@ -463,22 +461,6 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = do
                        Left _msg     -> return $ Just $ return ()
                        Right _newdoc -> return $ Just $ assertFailure "Should fail if csvsignatoryindex is too high"
   assertSuccess
-  
-testSupervisorsFriendsCanSee :: Assertion
-testSupervisorsFriendsCanSee = do
-  friend <- assumingNewUser "Friend" "Amigo" "abc@friend.com"
-  super <- assumingNewUser "Super" "Visor" "super@visor.com"
-  author <- assumingNewUserWithSupervisor (userid super) "Author" "Pendragon" "author@contract.com"
-  _ <- update $ AddViewerByEmail (userid super) (Email "abc@friend.com")
-  
-  docid <- addRandomDocumentWithAuthor author
-  mdoc <- query $ GetDocumentByDocumentID docid
-  case mdoc of
-    Nothing -> assertFailure "Could not stored document."
-    Just doc -> do
-      canView <- canUserViewDoc friend doc
-      if canView then assertSuccess else assertFailure "Supervisor's friends cannot view document"
-                  
 
 testCreateFromSharedTemplate::Assertion
 testCreateFromSharedTemplate = do
@@ -1257,15 +1239,9 @@ documentHasOneAuthor document =
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
 
-addNewUserWithSupervisor :: UserID -> String -> String -> String -> IO (Maybe User)
-addNewUserWithSupervisor superid = addNewUser' (Just superid)
-
 addNewUser :: String -> String -> String -> IO (Maybe User)
-addNewUser = addNewUser' Nothing
-
-addNewUser' :: Maybe UserID -> String -> String -> String -> IO (Maybe User)
-addNewUser' msuperid firstname secondname email = 
-  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword msuperid Nothing Nothing
+addNewUser firstname secondname email = 
+  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword False Nothing Nothing
 
 whatTimeIsIt :: IO (MinutesTime)
 whatTimeIsIt = liftIO $ getMinutesTime
@@ -1279,25 +1255,6 @@ assumingBasicContract mt author = do
       assertFailure "Could not create + store document."
       return blankDocument
     Just d -> return d
-
-assumingNewUser :: String -> String -> String -> IO User
-assumingNewUser fn ln em = do
-  muser <- addNewUser fn ln em
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
-
-assumingNewUserWithSupervisor :: UserID -> String -> String -> String -> IO User
-assumingNewUserWithSupervisor sid fn ln em = do
-  muser <- addNewUserWithSupervisor sid fn ln em
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
-  
 
 assumingBasicUser :: IO (User)
 assumingBasicUser = do
@@ -1325,7 +1282,8 @@ blankUser :: User
 blankUser = User {  
                    userid                  =  UserID 0
                  , userpassword            =  NoPassword
-                 , usersupervisor          =  Nothing 
+                 , usersupervisor          =  Nothing
+                 , useriscompanyadmin = False
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
                  , userfreetrialexpirationdate = Nothing
@@ -1365,7 +1323,7 @@ blankUser = User {
               , userservice = Nothing
               , usercompany = Nothing
               , usermailapi = Nothing
-              , userrecordstatus = LiveUser
+              , userdeleted = False
               }
 
 blankDocument :: Document 

@@ -358,7 +358,7 @@ addTag _ (n,v) = [DocumentTag n v]
    Should be moved to User and imported
  -}
 isFriendOf :: UserID -> User -> Bool
-isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Just (SupervisorID $ unUserID uid) == usersupervisor user)
+isFriendOf uid user = unUserID uid `elem` map unFriend (userfriends user) -- TODO EM what to do with this?|| Just (SupervisorID $ unUserID uid) == usersupervisor user)
 
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser

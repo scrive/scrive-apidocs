@@ -16,6 +16,7 @@ import qualified Data.ByteString.UTF8 as BS
 import ActionSchedulerState
 import AppView
 import Doc.DocState
+import Company.CompanyState
 import InputValidation
 import Kontra
 import KontraLink
@@ -53,9 +54,9 @@ handleUserPost = do
          Just user -> do
              infoUpdate <- getUserInfoUpdate
              _ <- update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             -- propagate company info to all subaccounts since it might have changed
+             -- propagate company info to all company accounts since it might have changed
              query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
-                 subs <- query $ GetUserSubaccounts $ userid newuser
+                 subs <- query $ GetCompanyAccounts (userid newuser)
                  forM_ subs $ \sub -> do
                      update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
                  )
@@ -212,24 +213,24 @@ handleGetSharing = withUserGet $ do
 -- Searching, sorting and paging
 friendsSortSearchPage :: ListParams -> [User] -> PagedList User
 friendsSortSearchPage  =
-    listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
+    listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
 
-handleGetSubaccount :: Kontrakcja m => m (Either KontraLink Response)
-handleGetSubaccount = withUserGet $ do
-    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    subaccounts <- query $ GetUserSubaccounts userid
+handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
+handleGetCompanyAccounts = withUserGet $ do
+    Context{ctxmaybeuser = Just user} <- getContext
+    companyaccounts <- query $ GetCompanyAccounts (userid user)
     params <- getListParams
-    content <- viewSubaccounts user (subaccountsSortSearchPage params $ subaccounts)
+    content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
 
 -- Searching, sorting and paging
-subaccountsSortSearchPage :: ListParams -> [User] -> PagedList User
-subaccountsSortSearchPage  =
-    listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
+companyAccountsSortSearchPage :: ListParams -> [User] -> PagedList User
+companyAccountsSortSearchPage  =
+    listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
-subaccountsSearchFunc :: SearchingFunction User
-subaccountsSearchFunc s user = userMatch user s -- split s so we support spaces
+companyAccountsSearchFunc :: SearchingFunction User
+companyAccountsSearchFunc s user = userMatch user s -- split s so we support spaces
     where
         match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
         userMatch u s' = match s' (usercompanyposition $ userinfo u)
@@ -238,21 +239,21 @@ subaccountsSearchFunc s user = userMatch user s -- split s so we support spaces
                       || match s' (getPersonalNumber u)
                       || match s' (getEmail u)
 
-subaccountsSortFunc :: SortingFunction User
-subaccountsSortFunc "fstname" = viewComparing getFirstName
-subaccountsSortFunc "fstnameREV" = viewComparingRev getFirstName
-subaccountsSortFunc "sndname" = viewComparing getLastName
-subaccountsSortFunc "sndnameREV" = viewComparingRev getLastName
-subaccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
-subaccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
-subaccountsSortFunc "phone" = viewComparing $  userphone . userinfo
-subaccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
-subaccountsSortFunc "email" = viewComparing getEmail
-subaccountsSortFunc "emailREV" = viewComparingRev getEmail
-subaccountsSortFunc _ = const $ const EQ
+companyAccountsSortFunc :: SortingFunction User
+companyAccountsSortFunc "fstname" = viewComparing getFirstName
+companyAccountsSortFunc "fstnameREV" = viewComparingRev getFirstName
+companyAccountsSortFunc "sndname" = viewComparing getLastName
+companyAccountsSortFunc "sndnameREV" = viewComparingRev getLastName
+companyAccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
+companyAccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
+companyAccountsSortFunc "phone" = viewComparing $  userphone . userinfo
+companyAccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
+companyAccountsSortFunc "email" = viewComparing getEmail
+companyAccountsSortFunc "emailREV" = viewComparingRev getEmail
+companyAccountsSortFunc _ = const $ const EQ
 
-subaccountsPageSize :: Int
-subaccountsPageSize = 20
+companyAccountsPageSize :: Int
+companyAccountsPageSize = 20
 
 ----
 
@@ -278,8 +279,8 @@ handleAddFriend User{userid} email = do
       Left msg -> addFlash (OperationFailed, msg)
       Right _  -> return ()
 
-handlePostSubaccount :: Kontrakcja m => m KontraLink
-handlePostSubaccount = do
+handlePostCompanyAccounts :: Kontrakcja m => m KontraLink
+handlePostCompanyAccounts = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
@@ -288,31 +289,21 @@ handlePostSubaccount = do
              takeover <- isFieldSet "takeover"
              case (add,remove,takeover) of
                   (True, _, _) -> do
-                    handleCreateSubaccount user
-                    return $ LinkSubaccount emptyListParams
-                  (_, True, _) -> handleDeleteSubaccounts user
+                    handleCreateCompanyUser user
+                    return $ LinkCompanyAccounts emptyListParams
+                  (_, True, _) -> handleDeleteCompanyUser user
                   (_, _, True) -> do
                       memail <- getOptionalField asValidEmail "email"
-                      handleTakeOverSubaccount (fromJust memail)
-                      return $ LinkSubaccount emptyListParams
-                  _ -> LinkSubaccount <$> getListParamsForSearch
+                      handleTakeOverUserForCompany (fromJust memail)
+                      return $ LinkCompanyAccounts emptyListParams
+                  _ -> LinkCompanyAccounts <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
-handleDeleteSubaccounts :: Kontrakcja m => User -> m KontraLink
-handleDeleteSubaccounts user = do
-  subaccountids <- getCriticalFieldList asValidNumber "subcheck"
-  handleUserDelete user (map UserID subaccountids)
-  return $ LinkSubaccount emptyListParams
-
-{- | I've commented this out for now, because I haven't got anywhere
-     that'll call this.  Em
-handleSelfDelete :: Kontrakcja m => User -> m KontraLink
-handleSelfDelete user = do
-  subaccounts <- query $ GetUserSubaccounts (userid user)
-  handleUserDelete user (map userid $ (toList subaccounts) ++ [user])
-  -- log them out!
-  return $ LinkMain
--}
+handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
+handleDeleteCompanyUser user = do
+  companyaccountsids <- getCriticalFieldList asValidNumber "subcheck"
+  handleUserDelete user (map UserID companyaccountsids)
+  return $ LinkCompanyAccounts emptyListParams
 
 {- |
     Deletes a list of users one at a time.  It first checks the permissions
@@ -321,14 +312,14 @@ handleSelfDelete user = do
 -}
 handleUserDelete :: Kontrakcja m => User -> [UserID] -> m ()
 handleUserDelete deleter deleteeids = do
-  msubaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
-  case lefts msubaccounts of
+  mcompanyaccountss <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
+  case lefts mcompanyaccountss of
     (NoDeletionRights:_) -> mzero
     (UserHasLiveDocs:_) -> do
       addFlashM flashMessageUserHasLiveDocs
       return ()
     [] -> do
-      mapM_ performUserDeletion (rights msubaccounts)
+      mapM_ performUserDeletion (rights mcompanyaccountss)
       addFlashM flashMessageAccountsDeleted
       return ()
 
@@ -338,11 +329,12 @@ data UserDeletionProblem = NoDeletionRights | UserHasLiveDocs
 
 getUserDeletionDetails :: Kontrakcja m => UserID -> UserID -> m (Either UserDeletionProblem UserDeletionDetails)
 getUserDeletionDetails deleterid deleteeid = do
+  deleter <- queryOrFail $ GetUserByUserID deleterid
   deletee <- queryOrFail $ GetUserByUserID deleteeid
   let isSelfDelete = deleterid == deleteeid
-      isSuperDelete = maybe False (\sid -> deleterid == (UserID $ unSupervisorID sid)) (usersupervisor deletee)
-      isPermissioned = isSelfDelete || isSuperDelete
-  userdocs <- query $ GetDocumentsByUser deletee
+      isAdminDelete = maybe False ((== (usercompany deleter)) . Just) (usercompany deletee)
+      isPermissioned = isSelfDelete || isAdminDelete
+  userdocs <- query $ GetDocumentsByUser deletee  --maybe this should be GetDocumentsBySignatory, but what happens to things yet to be activated?
   let isAllDeletable = all isDeletableDocument userdocs
   case (isPermissioned, isAllDeletable) of
     (False, _) -> return $ Left NoDeletionRights
@@ -368,17 +360,16 @@ lookupUsersRelevantToDoc docid = do
   where
     linkedUserIDs = catMaybes . map maybesignatory . documentsignatorylinks
 
-handleTakeOverSubaccount :: Kontrakcja m => BS.ByteString -> m ()
-handleTakeOverSubaccount email = do
+handleTakeOverUserForCompany :: Kontrakcja m => BS.ByteString -> m ()
+handleTakeOverUserForCompany email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- getContext
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
-  mail <- mailInviteUserAsSubaccount ctx invited supervisor
+  mail <- mailInviteUserAsCompanyAccount ctx invited supervisor
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
-  addFlashM flashMessageUserInvitedAsSubaccount
+  addFlashM flashMessageUserInvitedAsCompanyAccount
 
-
-handleCreateSubaccount :: Kontrakcja m => User -> m ()
-handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
+handleCreateCompanyUser :: Kontrakcja m => User -> m ()
+handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
     ctx <- getContext
     memail <- getOptionalField asValidEmail "email"
     fstname <- maybe "" id <$> getField "fstname"
@@ -386,14 +377,14 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
     let fullname = (BS.fromString fstname, BS.fromString sndname)
     case memail of
       Just email -> do
-        muser <- createUser ctx (ctxhostpart ctx) fullname email (Just user) False
+        muser <- createUser ctx (ctxhostpart ctx) fullname email (usercompany user) False
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
             _ <- update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
-            addFlashM $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
+            addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
             return ()
       _ -> return ()
 
@@ -442,20 +433,20 @@ randomPassword :: IO BS.ByteString
 randomPassword =
     BS.fromString <$> randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
-createUser :: TemplatesMonad m => Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Bool -> m (Maybe User)
-createUser ctx hostpart names email maybesupervisor vip = do
+createUser :: TemplatesMonad m => Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe CompanyID -> Bool -> m (Maybe User)
+createUser ctx hostpart names email maybecompany vip = do
     passwdhash <- liftIO $ createPassword =<< randomPassword
-    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor) Nothing Nothing
+    muser <- update $ AddUser names email passwdhash False Nothing maybecompany
     case muser of
          Just user -> do
              let fullname = composeFullName names
-             mail <- case maybesupervisor of
-                          Nothing -> do
+             mail <- {- case maybecompany of
+                          Nothing -> -} do
                               al <- newAccountCreatedLink user
                               newUserMail hostpart email fullname al vip
-                          Just supervisor -> do
+                      {-    Just supervisor -> do
                               al <- newAccountCreatedLink user
-                              inviteSubaccountMail hostpart (getSmartName supervisor) (getCompanyName supervisor) email fullname al
+                              inviteCompanyAccountMail hostpart (getSmartName supervisor) (getCompanyName supervisor) email fullname al -} --TODO EM
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
@@ -485,7 +476,7 @@ createNewUserByAdmin ctx names email _freetill custommessage = do
 createInvitedUser :: (BS.ByteString, BS.ByteString) -> BS.ByteString -> IO (Maybe User)
 createInvitedUser names email = do
     passwdhash <- createPassword =<< randomPassword
-    update $ AddUser names email passwdhash Nothing Nothing Nothing
+    update $ AddUser names email passwdhash False Nothing Nothing
 
 {- |
    Guard against a POST with no logged in user.
@@ -577,32 +568,31 @@ handleQuestion = do
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
-handleGetBecomeSubaccountOf :: Kontrakcja m => UserID -> m (Either KontraLink Response)
-handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
-  addFlashM modalDoYouWantToBeSubaccount
+handleGetBecomeCompanyAccount :: Kontrakcja m => UserID -> m (Either KontraLink Response)
+handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
+  addFlashM modalDoYouWantToBeCompanyAccount
   Context{ctxmaybeuser = Just user} <- getContext
   content <- showUser user
   renderFromBody TopAccount kontrakcja content
 
-handlePostBecomeSubaccountOf :: Kontrakcja m => UserID -> m KontraLink
-handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
+handlePostBecomeCompanyAccount :: Kontrakcja m => UserID -> m KontraLink
+handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
   ctx@Context{ctxmaybeuser = Just user} <- getContext
-  if userid user /= supervisorid
-     then do
-          setsupervisorresult <- update $ SetUserSupervisor (userid user) supervisorid
+  supervisor <- fromMaybe user <$> (query $ GetUserByUserID supervisorid)
+  case (userid user /= supervisorid, usercompany supervisor) of
+     (True, Just companyid) -> do
+          setsupervisorresult <- update $ SetUserCompany (userid user) companyid
           case setsupervisorresult of
             Left errmsg -> do
-              let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ errmsg
+              let msg = "Cannot become company account for " ++ show supervisorid ++ ": " ++ errmsg
               Log.debug $ msg
               addFlash (OperationFailed, msg)
             Right _ -> do
-              Just supervisor <- query $ GetUserByUserID supervisorid
-              addFlashM $ flashMessageUserHasBecomeSubaccount supervisor
-              mail <- mailSubaccountAccepted ctx user supervisor
+              addFlashM $ flashMessageUserHasBecomeCompanyAccount supervisor
+              mail <- mailCompanyAccountAccepted ctx user supervisor
               scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress supervisor] }
           return LinkAccount
-     else do
-          return LinkAccount
+     _ -> return LinkAccount
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
@@ -735,42 +725,41 @@ handleAccountSetupPost aid hash = do
 
         handleActivate signupmethod user = do
             acctype <- join . fmap (readM . BS.unpack) <$> getOptionalField asValidName "accounttype"
-            msupervisor <- maybe (return Nothing) (query . GetUserByUserID . UserID . unSupervisorID) $ usersupervisor user
             case acctype of
                  Just PrivateAccount -> do
-                     ifAccountTypeIsValid msupervisor PrivateAccount $
+                     ifAccountTypeIsValid (usercompany user) PrivateAccount $
                          finalizeActivation signupmethod user PrivateAccount id
                  Just CompanyAccount -> do
                      mfname <- getRequiredField asValidName "fname"
                      mlname <- getRequiredField asValidName "lname"
                      mcompanyname <- maybe (getRequiredField asValidName "companyname")
-                                         (\_ -> return $ Just BS.empty) msupervisor
+                                         (\_ -> return $ Just BS.empty) $ usercompany user
                      mcompanyposition <- getRequiredField asValidName "companyposition"
                      mphone <- getRequiredField asValidPhone "phone"
                      case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
                           (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
                               -- inherit company info from supervisor
-                              let infoupdatef = case msupervisor of
+                              let infoupdatef = {- case usercompany user of
                                    Just sv -> \info -> info {
                                          userfstname = fname
                                        , usersndname = lname
                                        , usercompanyposition = companytitle
                                        , userphone = phone
-                                       , usercompanyname = getCompanyName sv
-                                       , usercompanynumber = getCompanyNumber sv
-                                       , useraddress = useraddress $ userinfo sv
-                                       , userzip = userzip $ userinfo sv
-                                       , usercity = usercity $ userinfo sv
-                                       , usercountry = usercountry $ userinfo sv
+                                       , usercompanyname = BS.empty
+                                       , usercompanynumber = BS.empty
+                                       , useraddress = BS.empty
+                                       , userzip = BS.empty
+                                       , usercity = BS.empty
+                                       , usercountry = BS.empty
                                    }
-                                   Nothing -> \info -> info {
+                                   Nothing -> -} \info -> info {
                                        userfstname = fname
                                      , usersndname = lname
                                      , usercompanyname = companyname
                                      , usercompanyposition = companytitle
                                      , userphone = phone
                                    }
-                              ifAccountTypeIsValid msupervisor CompanyAccount $
+                              ifAccountTypeIsValid (usercompany user) CompanyAccount $
                                 finalizeActivation signupmethod user CompanyAccount infoupdatef
                           _ -> returnToAccountSetup user
                  _ -> do
@@ -780,15 +769,16 @@ handleAccountSetupPost aid hash = do
                 -- we protect from choosing account type that doesn't match
                 -- supervisor in browser, but someone may just send invalid
                 -- data directly to the server
-                ifAccountTypeIsValid msupervisor acctype action = do
-                    case msupervisor of
-                         Just sv -> do
+                ifAccountTypeIsValid _mcompany _acctype action = do
+                  action
+                  {-  case mcompany of
+                         Just company -> do
                              if (accounttype $ usersettings sv) == acctype
                                 then action
                                 else do
                                     addFlashM flashMessageNoAccountType
                                     returnToAccountSetup user
-                         Nothing -> action
+                         Nothing -> action -} --TODO EM this is so wrong
 
         finalizeActivation signupmethod user acctype infoupdatefunc = do
             muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
@@ -841,9 +831,9 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
               }
               _ <- update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {
                   paymentaccountfreesignatures =
-                      case usersupervisor user of
-                           Just _  -> 0
-                           Nothing -> 100 -- later we should set here either
+                      if useriscompanyadmin user
+                           then 0
+                           else 100 -- later we should set here either
                            -- 10 or 20, depending on user's account type. for
                            -- now we don't modify that number anyway.
               }

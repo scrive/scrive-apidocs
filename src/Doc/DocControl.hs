@@ -1330,17 +1330,15 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mydocuments <- query $ GetDocumentsBySignatory user
-  supervised'Documents <- case usercompany user of
-                            Nothing -> return []
-                            (Just company) -> query $ GetDocumentsByCompany company (userservice user)--TODO: need the user to have rights too!
+  mydocuments <- if useriscompanyadmin user
+                   then query $ GetDocumentsByCompany user
+                   else query $ GetDocumentsBySignatory user
   
-  --one day we'll get rid of friends! who needs friends anyway.
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
   friends'Documents <- mapM (query . GetDocumentsBySignatory) usersICanView
   
   return . filter ((\d -> documenttype d == doctype)) $ nub $
-          mydocuments ++ supervised'Documents ++ concat friends'Documents
+          mydocuments ++ concat friends'Documents
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
@@ -1823,10 +1821,8 @@ getTemplatesForAjax = do
             (Just user, Just docprocess) -> do
                 let tfilter doc = (Template docprocess == documenttype doc)
                 userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
-                relatedusers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
-                relateduserdocs <- liftIO $ mapM (query . GetDocumentsByAuthor . userid) relatedusers
-                let shareddocs = filter ((== Shared) . documentsharing) $ concat relateduserdocs
-                let templates = nub $ filter tfilter (userdocs ++ shareddocs)
+                shareddocs <- liftIO $ query $ GetDocumentsSharedInCompany user
+                let templates = nub . filter tfilter $ userdocs ++ shareddocs
                 content <- templatesForAjax (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
@@ -1840,22 +1836,18 @@ handleCreateFromTemplate = withUserPost $ do
     Just did -> do
       let user = fromJust ctxmaybeuser
       document <- queryOrFail $ GetDocumentByDocumentID $ did
-      sharedWithUser <- isShared user document
-      enewdoc <- if (isAuthor (document, user) ||  sharedWithUser) 
+      let haspermission = maybe False 
+                                (\sl -> isSigLinkFor (userid user) sl
+                                        || (isSigLinkSavedFor user sl 
+                                              && documentsharing document == Shared))
+                                $ getAuthorSigLink document
+      enewdoc <- if haspermission
                     then update $ SignableFromDocumentIDWithUpdatedAuthor user did
                     else mzero
       case enewdoc of
         Right newdoc -> return $ LinkIssueDoc $ documentid newdoc
         Left _ -> mzero
     Nothing -> mzero
-  where
-    isShared :: Kontrakcja m => User -> Document -> m Bool
-    isShared user document = do
-      let Just authorsiglink = getAuthorSigLink document
-          Just authorid = maybesignatory authorsiglink
-      relatedaccounts <- query $ GetUserRelatedAccounts (userid user)
-      return $ (documentsharing document == Shared)
-        && (authorid `elem` (map userid relatedaccounts))
 
 {- |
    The FileID matches the AuthorAttachment.

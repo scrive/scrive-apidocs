@@ -1,5 +1,5 @@
 ####    Pages for users - usual from my account
-viewSubaccounts =
+viewCompanyAccounts =
   <div>
     <form method="post" action="$currentlink$" class="listForm">
       <div id="tab-viewer">
@@ -7,7 +7,7 @@ viewSubaccounts =
 	<ul class="tabs">
 	  <li><a href="/account">$_HeadUserInfo()$</a></li>
           <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
-          <li class="active"><a href="/account/subaccount" class="listtype">$_Subaccounts()$</a></li>
+          <li class="active"><a href="/account/companyaccounts" class="listtype">$_CompanyAccounts()$</a></li>
           <li><a href="/account/sharing">$_sharing()$</a></li>
           <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
 	</ul>
@@ -19,13 +19,13 @@ viewSubaccounts =
 		  <a href="javascript:;"><p>$_options()$</p></a>
                 </div>
 		<ul class="tab-dd-opts">
-		  <li><a href="javascript:;" class="subaccount-add-sub">$_AddSubaccount()$</a></li>
+		  <li><a href="javascript:;" class="subaccount-add-sub">$_AddCompanyAccount()$</a></li>
 		  <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
 		</ul>
 	      </div>
 	    </div>
 	    <div class="col float-right">
-	      $searchBox(infotext=_SearchSubaccount())$
+	      $searchBox(infotext=_SearchCompanyAccount())$
 	    </div>
 	    <div class="clearfix"></div>
 	  </div>
@@ -83,19 +83,19 @@ viewSubaccounts =
 		</tr>
 	      </thead>
 	      <tbody id="selectable">
-		$subaccounts:{subaccount |
+		$comapnyaccounts:{comapnyaccount |
 		<!-- Every other row should have class="odd" (Begin with first row) -->
-		<tr $if(subaccount.odd)$class="odd"$endif$>
-		  <td><input type="checkbox" name="subcheck" value="$subaccount.id$" class="check" />
+		<tr $if(comapnyaccount.odd)$class="odd"$endif$>
+		  <td><input type="checkbox" name="subcheck" value="$comapnyaccount.id$" class="check" />
                     <span class="listname" style="display:none;">
-                      $subaccount.fstname$ $subaccount.sndname$ &lt;$subaccount.email$&gt;
+                      $comapnyaccount.fstname$ $comapnyaccount.sndname$ &lt;$comapnyaccount.email$&gt;
                     </span>
                   </td>
-		  <td>$subaccount.fstname$</td>
-		  <td>$subaccount.sndname$</td>
-		  <td>$subaccount.companyposition$</td>
-		  <td>$subaccount.phone$</td>
-		  <td>$subaccount.email$</td>
+		  <td>$comapnyaccount.fstname$</td>
+		  <td>$comapnyaccount.sndname$</td>
+		  <td>$comapnyaccount.companyposition$</td>
+		  <td>$comapnyaccount.phone$</td>
+		  <td>$comapnyaccount.email$</td>
 		  <td class="right">
 		    <!-- <em>▼</em> -->
 		  </td>

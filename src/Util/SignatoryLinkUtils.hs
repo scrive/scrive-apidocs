@@ -11,6 +11,7 @@
 module Util.SignatoryLinkUtils (
 
   isSigLinkFor,
+  isSigLinkSavedFor,
   isAuthorSignatory,
   getAuthorSigLink,
   getAuthorName,
@@ -36,6 +37,19 @@ import Data.List
 import Data.Maybe
 
 import qualified Data.ByteString as BS
+
+{- |
+    This is counts a user as being for the signatory link
+    if the userid is mentioned on the sig link, or if the user
+    is an admin for a company that is mentioned on the sig link.
+    The idea of this function is to be used when we need to be a bit
+    more strict that just isSigLinkFor, as in particular isSigLinkFor
+    would link by email.
+-}
+isSigLinkSavedFor :: User -> SignatoryLink -> Bool
+isSigLinkSavedFor User{userid, useriscompanyadmin, usercompany} sl =
+  isSigLinkFor userid sl || 
+    (useriscompanyadmin && maybe False (flip isSigLinkFor sl) usercompany)
 
 {- |
    Anything that could identify a SignatoryLink

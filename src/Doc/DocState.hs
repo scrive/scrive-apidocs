@@ -26,6 +26,7 @@ module Doc.DocState
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
     , GetDocumentsByCompany(..)
+    , GetDocumentsSharedInCompany(..)
     , GetDocumentsByUser(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
@@ -171,14 +172,31 @@ getDocumentsBySignatory User{userid, userservice} = queryDocs $ \documents ->
     IxSet.toList $ (documents @= (Signatory userid)) @= userservice
 
 {- |
-    All documents for a company that are not deleted.  This filters
-    in a similar way as getDocumentsBySignatory so that documents returned would
+    All documents for a company that are not deleted.  This only returns docs that the user
+    has admin rights to.
+    This filters in a similar way as getDocumentsBySignatory so that documents returned would
     have been activated if there was a sign order on the document.
 -}
-getDocumentsByCompany :: CompanyID -> Maybe ServiceID -> Query Documents [Document]
-getDocumentsByCompany companyid service = queryDocs $ \documents ->
-  filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ 
-    IxSet.toList $ (documents @= companyid) @= service
+getDocumentsByCompany :: User -> Query Documents [Document]
+getDocumentsByCompany User{useriscompanyadmin, usercompany, userservice} = 
+  case (useriscompanyadmin, usercompany) of
+    (True, Just companyid) -> do
+      queryDocs $ \documents ->
+        filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ 
+          IxSet.toList $ (documents @= companyid) @= userservice
+    _ -> return []
+
+{- |
+    All documents that have been authored within the company and which are shared.
+-}
+getDocumentsSharedInCompany :: User -> Query Documents [Document]
+getDocumentsSharedInCompany User{usercompany, userservice} =
+  case usercompany of
+    (Just companyid) -> do
+      queryDocs $ \documents ->
+        filter ((== Shared) . documentsharing) . filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ 
+          IxSet.toList $ (documents @= companyid) @= userservice
+    _ -> return []
 
 {- |
     All documents which are in a pending state and have a timeout time that comes
@@ -924,8 +942,8 @@ getDocumentsByCompanyAndTags  mservice companyid doctags = queryDocs $ \document
     being in pending mode.
 -}
 archiveDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
-archiveDocuments User{userid, usercompany} docids =
-  archiveDocumentsFor docids (\sl -> isSigLinkFor userid sl || isSigLinkFor usercompany sl) --TODO: sort this out!
+archiveDocuments user docids =
+  archiveDocumentsFor docids (isSigLinkSavedFor user)
 
 {- |
     Deletes a document for all of it's signatory links.  This is just a soft delete,
@@ -979,14 +997,14 @@ archiveDocumentFor sigfilter docid = do
     A Left is returned when there are problems, such as a document not existing.
 -}
 restoreArchivedDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
-restoreArchivedDocuments User{userid,usercompany} docids = forEachDocument restoreDocument docids
+restoreArchivedDocuments user docids = forEachDocument restoreDocument docids
   where
     restoreDocument :: DocumentID -> Update Documents (Either String Document)
     restoreDocument docid = do
       modifySignableOrTemplate docid $ \doc ->
         return $ doc { documentsignatorylinks = map maybeRestoreSigLink $ documentsignatorylinks doc }
     maybeRestoreSigLink sl =
-      if isSigLinkFor userid sl || isSigLinkFor usercompany sl --TODO: sort this out!
+      if isSigLinkSavedFor user sl
         then sl { signatorylinkdeleted = False }
         else sl
 
@@ -1001,8 +1019,6 @@ restoreArchivedDocuments User{userid,usercompany} docids = forEachDocument resto
 reallyDeleteDocuments :: User -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
 reallyDeleteDocuments deletinguser docidsAndUsers = forEachDocument deleteDocument docidsAndUsers
   where
-    deletinguserid = userid deletinguser
-    deletingusercompany = usercompany deletinguser
     deleteDocument :: (DocumentID, [User]) -> Update Documents (Either String Document)
     deleteDocument (docid, users) = do
       mdoc <- deleteDocumentSigLinks docid
@@ -1015,7 +1031,7 @@ reallyDeleteDocuments deletinguser docidsAndUsers = forEachDocument deleteDocume
         return $ doc { documentsignatorylinks = map maybeDeleteSigLink $ documentsignatorylinks doc }
     maybeDeleteSigLink :: SignatoryLink -> SignatoryLink
     maybeDeleteSigLink sl@SignatoryLink{signatorylinkdeleted} =
-      if (isSigLinkFor deletinguserid sl || isSigLinkFor deletingusercompany sl) && signatorylinkdeleted --TODO sort this out
+      if isSigLinkSavedFor deletinguser sl && signatorylinkdeleted
         then sl { signatorylinkreallydeleted = True }
         else sl
 
@@ -1433,7 +1449,7 @@ migrateDocumentSigAccounts docid sigusers =
       || (documenttype==Attachment) 
       || ((isSignable documenttype) && (documentstatus /= Preparation))
     clearSignatoryAccount :: SignatoryLink -> SignatoryLink
-    clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybesupervisor = Nothing }
+    clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybecompany = Nothing }
 
 {- |
     Updates the list of required signatory attachments on the given document.
@@ -1482,6 +1498,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
                         , 'getDocumentsByCompany
+                        , 'getDocumentsSharedInCompany
                         , 'newDocument
                         , 'newDocumentWithMCompany
                         , 'getDocumentByDocumentID

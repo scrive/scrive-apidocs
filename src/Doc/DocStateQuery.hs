@@ -44,20 +44,27 @@ import Control.Monad.State
 {- |
    Assuming user is the logged in user, can he view the Document?
 
-   Checks if signatory or supervisor
-   Checks author's friends.
-   Checks author's supervisors friends.
-   Checks if sharing is enabled and author is related to user.
+   They can if:
+     the document is saved for them or their company if they are a company admin
+     the document is authored within the user's company and shared
+     the document is saved for one of the user's friends, or saved for their friend's company if their friend is a company admin
  -}
 canUserViewDoc :: User -> Document -> IO Bool
 canUserViewDoc user doc 
-  | any (\sl -> isSigLinkFor (userid user) sl || isSigLinkFor (usercompany user) sl) $ documentsignatorylinks doc = return True --TODO change this!
-  | otherwise = do
-    usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
-    usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
-    related            <- query $ GetUserRelatedAccounts (userid user)
-    return $ (any isAuthor (zip (repeat doc) (usersImFriendsWith ++ usersFriendsAreSupervising)))
-      || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
+  | docIsSavedFor user = return True --the doc is saved for the user (or the user's company if they are an admin)
+  | isSharedWithinCompany = return True --the doc is shared within the user's company
+  | otherwise = do --the doc is saved for one of the user's friends (or the user's friend's company if their friend is an admin)
+      friends <- query $ GetUsersByFriendUserID (userid user)
+      return $ any docIsSavedFor friends
+  where
+    docIsSavedFor u =
+      any (isSigLinkSavedFor u) $ documentsignatorylinks doc
+    isSharedWithinCompany = Shared == documentsharing doc && isAuthoredWithinCompany
+    isAuthoredWithinCompany = 
+      case usercompany user of
+        Nothing -> False
+        Just companyid ->
+          any (\sl -> SignatoryAuthor `elem` signatoryroles sl && isSigLinkFor companyid sl) $ documentsignatorylinks doc
 
 {- |
    Securely find a document by documentid for the author or his friends.
