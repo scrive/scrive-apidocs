@@ -327,6 +327,63 @@ worddoc = SealSpec
      , staticTexts = sampleSealingTexts                  
     }
 
+formatB5 :: SealSpec
+formatB5 = SealSpec 
+    { input = "pdfseal/flowchart.pdf"
+    , output = "pdfseal/flowchart_sealed.pdf"
+    , documentNumber = "0000001234"
+    , hostpart = "http://host.skrivapa"
+    , fields = []
+    , secretaries = []
+    , persons = 
+        [ Person 
+          { fullname = "Lukas Duczko öåä ÖÅÄ"
+          , email = "lukas@duczko.se öåä ÖÅÄ"
+          , company = "CEO, SkrivaPa öåä ÖÅÄ"
+          , personalnumber = "123456-4567 öåä ÖÅÄ"
+          , companynumber = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
+          }
+        , Person 
+          { fullname = "Żółw Łódź öåä ÖÅÄ"
+          , email = "lukas@duczko.se öåä ÖÅÄ"
+          , company = "CEO, öåä ÖÅÄ"
+          , personalnumber = "123456-4567 öåä ÖÅÄ"
+          , companynumber = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
+          }
+        , Person 
+          { fullname = "Żółw Łódź öåä ÖÅÄ"
+          , email = "some kind of email that is also quite long lukas@duczko.se"
+          , company = "Really long company name, CEO, öåä ÖÅÄ"
+          , personalnumber = "123456-4567"
+          , companynumber = "123456-4567"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
+          }
+        ]
+    , initials = "öåä, ÖÅÄ"
+      , history = [ HistEntry { histdate = "2010-06-01 13:34"
+                              , histcomment = "I was here and mucked around with PDFs"
+                              }
+                  , HistEntry { histdate = "One year later öåä ÖÅÄ"
+                              , histcomment = "Still mucking around with PDFs öåä ÖÅÄ"
+                              }
+                  , HistEntry { histdate = "10 years later öåä ÖÅÄ"
+                              , histcomment = "Really soon now öåä ÖÅÄ"
+                              }
+                  ]
+     , staticTexts = sampleSealingTexts                  
+    }
+
 sampleSealingTexts::SealingTexts
 sampleSealingTexts = SealingTexts
     {   verificationTitle="Verifikat"

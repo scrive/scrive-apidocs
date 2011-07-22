@@ -11,7 +11,7 @@ SealingTexts
       , dateText="$_contractsealingtextsdateText()$"
       , historyText="$_contractsealingtextshistoryText()$"
       , verificationFooter=[
-          "$_contractsealingtextsverificationFooterRow1()$$documentid$ $_contractsealingtextsverificationFooterRow12()$"
+          "$_contractsealingtextsverificationFooterRow1()$"
         , "$_contractsealingtextsverificationFooterRow2()$"
         , "$_contractsealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
@@ -28,7 +28,7 @@ SealingTexts
       , dateText="$_offersealingtextsdateText()$"
       , historyText="$_offersealingtextshistoryText()$"
       , verificationFooter=[
-          "$_offersealingtextsverificationFooterRow1()$$documentid$ $_offersealingtextsverificationFooterRow12()$"
+          "$_offersealingtextsverificationFooterRow1()$"
         , "$_offersealingtextsverificationFooterRow2()$."
         , "$_offersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
@@ -45,7 +45,7 @@ SealingTexts
       , dateText="$_ordersealingtextsdateText()$"
       , historyText="$_ordersealingtextshistoryText()$"
       , verificationFooter=[
-          "$_ordersealingtextsverificationFooterRow1()$ $documentid$ $_ordersealingtextsverificationFooterRow12()$"
+          "$_ordersealingtextsverificationFooterRow1()$"
         , "$_ordersealingtextsverificationFooterRow2()$."
         , "$_ordersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
@@ -60,7 +60,7 @@ orderLastHistEntry=
 $_orderLastHistEntry()$
 ####
 contractInvitationSentEntry=
-    $authorfstname$ $authorsndname$$_contractInvitationSentEntry()$
+    $authorfstname$ $authorsndname$ $_contractInvitationSentEntry()$
     $if(oneSignatory)$
         $_contractInvitationSentEntryIfoneSignatory()$
     $else$
@@ -90,22 +90,22 @@ orderInvitationSentEntry=
     $ip$
 ###
 contractSeenHistEntry=
-    $personname$$_contractSeenHistEntry()$ $seenip$
+    $personname$ $_contractSeenHistEntry()$ $seenip$
 ###
 offerSeenHistEntry=
-    $personname$$_offerSeenHistEntry()$ $seenip$
+    $personname$ $_offerSeenHistEntry()$ $seenip$
 ####
 orderSeenHistEntry=
-    $personname$$_orderSeenHistEntry()$ $seenip$
+    $personname$ $_orderSeenHistEntry()$ $seenip$
 ####
 contractSignHistEntry=
-    $personname$$_contractSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_contractSignHistEntry()$ $signMethod()$ $signip$
 ####
 offerSignHistEntry=
-    $personname$$_offerSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_offerSignHistEntry()$ $signMethod()$ $signip$
 ###
 orderSignHistEntry=
-    $personname$$_orderSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_orderSignHistEntry()$ $signMethod()$ $signip$
 ###
 signMethod=
         $if(!provider)$

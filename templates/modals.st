@@ -827,7 +827,7 @@ $if(loginModal)$
             <div class="body">
               <div class="wrapper" style="text-align:right">
                 <input type="hidden" name="referer" value="$referer$" />
-                <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+                <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="$_email()$" autocomplete="off"/><br />
                 <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
                 <input type="submit" class="hidden" />
               </div>
@@ -865,7 +865,7 @@ $if(loginModal)$
           <div class="modal-content"> 
             <div class="body">
               <div class="wrapper">
-                <span class="txt">$_email()$</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
+                <span class="txt">$_email()$</span><input type="email" name="email" infotext="$_email()$" autocomplete="off"/>
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -897,7 +897,7 @@ loginModalPart=
     <div class="body">
       <div class="wrapper" style="text-align:right">
         <input type="hidden" name="referer" value="$referer$" />
-        <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+        <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="$_email()$" autocomplete="off"/><br />
         <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
         <input type="submit" class="hidden" />
       </div>
@@ -1104,4 +1104,36 @@ signAwaitingAuthorLast=
   </div>
 </div>
 ###
-
+pdfTooBigModal=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h1>$_modalPdfTooBigTitle()$</h1>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">   
+      <div class="modal-content"> 
+        <div class="recovery-container">
+          <div class="body">
+            $_modalPdfTooBigBody()$
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">$_cancel()$</a>
+      </div>
+      <a class="btn-small green float-right close">
+        <div class="left"></div>
+        <div class="label">
+          <p>$_ok()$</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+</div>
+####

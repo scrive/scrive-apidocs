@@ -183,7 +183,7 @@ function getValue(field) {
     if (isDraggableField(field)) {
         var s = $(field).find("input[type='text'], input[type='email']");
         if (s.size()) {
-            if (s.attr("value") == s.attr("infotext")) {
+            if (s.attr("value") === s.attr("infotext") && s.hasClass("grayed")) {
                 return "";
             } else {
                 return s.attr("value");
@@ -349,6 +349,7 @@ function docstateToHTML() {
         updateStatus(this);
     });
     $("#signStepsWrapper").show();
+    $("input").blur();
     stayontop($('#signStepsContainer.follow'));
 }
 
@@ -735,7 +736,7 @@ function addSigningOrderPosition() {
 }
 
 function newSignOrderListElement(value) {
-    var signorderlist = $("<span class='signorderlist'>").text(value);
+    var signorderlist = $("<span class='signorderlist'></span>").text(value);
     if (!signingOrderEnabled && signorderlist.length > 0)
         signorderlist.hide();
     return signorderlist;
@@ -750,7 +751,7 @@ function initSigningOrder() {
     for (var i = authorSignatory ? 1: 0, j = 1; i < siglen;++i) {
         console.log(docstate.signatories[i].role);
         if (docstate.signatories[i].role == "signatory") {
-            signorder.append($("<option>").attr("value", j).text(j));++j;
+            signorder.append($("<option/>").attr("value", j).text(j));++j;
         }
     }
     // only author, in such case another signatory is added "for free",
@@ -1201,9 +1202,9 @@ function signatoryToHTML(isMultiple, sig) {
     var n = "Unnamed";
 
     if (isMultiple) {
-        n = "Massutskick";
+        n =  localization.multipleSignatory
     } else if (sig.fstname == "" && sig.sndname == "") {
-        n = "(Namnlös)";
+        n = "("+ localization.noNamePerson +")";
     } else {
         n = sig.fstname + " " + sig.sndname;
     }
@@ -1563,12 +1564,12 @@ safeReady(function() {
         var em = emfield.val();
         sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
       } else if(csvindex === ("" + (i + 1))) {
-        sigoptions = sigoptions.add($('<option value="csv">Massutskick</option>'));
+        sigoptions = sigoptions.add($('<option value="csv">'+localization.multipleSignatory+'</option>'));
       }
         });
 
         console.log(sigoptions);
-        $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" >'))).append($("<td />").append($('<textarea name="sigattachdesc" >'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
+        $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" />'))).append($("<td />").append($('<textarea name="sigattachdesc" />'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
 
             
         return false;

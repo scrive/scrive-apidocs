@@ -95,7 +95,7 @@ mailInvitationToSignContractContent=
     <p>
      <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
      $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedcontractinfoformail:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
      $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -117,7 +117,7 @@ mailInvitationToSignOfferContent=
     <p>
      <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
      $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedofferinfoformail:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
      $_mailInvitationToSignOfferContentSender()$<strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -139,7 +139,7 @@ mailInvitationToSignOrderContent=
     <p>
      <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
      $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedorderinfoformail:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
      $_mailInvitationToSignOrderContentSender()$<strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
@@ -236,7 +236,7 @@ remindMailNotSignedOfferContent=
       <p>
         <i>$_remindMailNotSignedOfferContentInfo()$</i><br/>
         $_remindMailNotSignedOfferContentPartys()$ $partnersinfo:noescape()$<br/>
-        $whohadsignedofferinfo:noescape()$<br/>
+        $whohadsignedinfo:noescape()$<br/>
         $_remindMailNotSignedOfferContentSender()$<strong>$creatorname$</strong><br/>
         $timetosigninfo:noescape()$
         $appendixList()$
@@ -252,7 +252,7 @@ remindMailNotSignedOrderContent=
     <span>
       <p><i>$_remindMailNotSignedOrderContentInfo()$</i><br/>
         $_remindMailNotSignedOrderContentPartys()$ $partnersinfo:noescape()$<br/>
-        $whohadsignedorderinfo:noescape()$<br/> 
+        $whohadsignedinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
         $appendixList()$
       </p>
@@ -318,6 +318,17 @@ mailAccountBySigningOfferReminderContent=
 <p>$_mailAccountBySigningOfferReminderContentBody()$</p>
 
 <p>$_mailAccountBySigningOfferReminderContentInstruction()$</p>
+
+$poweredBySkrivaPaPara()$
+###
+mailAccountBySigningOrderReminderTitle= $_mailAccountBySigningOrderReminderTitle()$
+###
+mailAccountBySigningOrderReminderContent=
+<p>$_hi()$ <strong>$personname$</strong>,</p>
+
+<p>$_mailAccountBySigningOrderReminderContentBody()$</p>
+
+<p>$_mailAccountBySigningOrderReminderContentInstruction()$</p>
 
 $poweredBySkrivaPaPara()$
 ###
@@ -408,14 +419,15 @@ passwordChangeLinkMailContent=
 ###
 ####UTILS
 timetosigninfo=
-    <span>$_timetosigninfo()$ <strong>$time$</strong>.</span>
+    <span>$_timetosigninfo()$ <strong>$time$</strong>.</span><br/>
 ###
 updateinglistwithauthor=
     <span>
       <span class="partylistupdate"></span>
     </span>
 ####
-noonehadsignedtext=$_noonehadsignedtext()$####
+noonehadsignedtext=$_noonehadsignedtext()$
+####
 contracthassignedformailtext=$_contracthassignedformailtext()$
 ####
 offerhassignedformailtext=$_offerhassignedformailtext()$

@@ -28,11 +28,8 @@ module Administration.AdministrationControl(
           , handleUserEnableTrustWeaverStorage
           , handleCreateService
           , handleStatistics
-          , handleShowQuarantine
-          , handleQuarantinePost
-          , handleMigrateForDeletion
-          , handleUnquarantineAll
-          , migrateDocsNoAuthor
+          , migrateSigAccounts
+          , resealFile
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -65,13 +62,13 @@ import API.Service.ServiceState
 import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
-import InputValidation
 import Text.Printf
 import Util.FlashUtil
-import Util.SignatoryLinkUtils
 import Data.List
 import Templates.TextTemplates
 import Util.MonadUtils
+import qualified AppLogger as Log
+import Doc.DocSeal (sealDocument)
 
 eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do
@@ -596,71 +593,6 @@ calculateStatsFromUsers users =
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
 
-fieldsForQuarantine :: (Functor m, MonadIO m) => [Document] -> Fields m
-fieldsForQuarantine documents = do
-  field "linkquarantine" $ show LinkAdminQuarantine
-  fieldFL "documents" $ map fieldsForDoc documents
-  where
-    fieldsForDoc Document{documentid, documenttitle, documentquarantineexpiry, documentsignatorylinks} = do
-      field "docid" $ show documentid
-      field "name" $ documenttitle
-      field "expiry" $ fmap showDateYMD documentquarantineexpiry
-      fieldFL "signatories" $ map fieldsForSignatory documentsignatorylinks
-    fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails, signatorylinkdeleted} = do
-      field "siglinkid" $ show signatorylinkid
-      field "email" $ signatoryemail signatorydetails
-      field "isrevivable" $ signatorylinkdeleted
-
-handleShowQuarantine :: Kontrakcja m => m Response
-handleShowQuarantine =
-  onlySuperUser $ do
-    ctx <- getContext
-    documents <- query $ GetQuarantinedDocuments $ currentServiceID ctx
-    content <- renderTemplateFM "quarantinePage" $ do
-      fieldsForQuarantine documents
-    renderFromBody TopEmpty kontrakcja content
-
-handleQuarantinePost :: Kontrakcja m => m KontraLink
-handleQuarantinePost = onlySuperUser $ do
-  revive <- isFieldSet "revive"
-  extend <- isFieldSet "extend"
-  _ <- case (revive, extend) of
-    (True, _) -> handleQuarantineRevive
-    (_, True) -> handleQuarantineExtend
-    _ -> mzero
-  return LinkAdminQuarantine
-
-handleQuarantineRevive :: Kontrakcja m => m KontraLink
-handleQuarantineRevive = onlySuperUser $ do
-  docid <- getCriticalField asValidDocID "docid"
-  sigid <- getCriticalField asValidNumber "siglinkid"
-  _ <- update $ ReviveQuarantinedDocument (DocumentID docid) (SignatoryLinkID sigid)
-  return LinkAdminQuarantine
-
-handleQuarantineExtend :: Kontrakcja m => m KontraLink
-handleQuarantineExtend = onlySuperUser $ do
-  docid <- getCriticalField asValidDocID "docid"
-  _ <- update $ ExtendDocumentQuarantine (DocumentID docid)
-  return LinkAdminQuarantine
-
-{- |
-    Another temporary migration thing! Em
--}
-handleMigrateForDeletion :: Kontrakcja m => m Response
-handleMigrateForDeletion = onlySuperUser $ do
-  users <- query $ GetAllUsers
-  _ <- update $ MigrateForDeletion users
-  liftIO $ putStrLn $ "Migration Done"
-  handleShowQuarantine
-
-handleUnquarantineAll :: Kontrakcja m => m KontraLink
-handleUnquarantineAll = onlySuperUser $ do
-  res <- update $ UnquarantineAll
-  mapM_ (\r -> case r of
-            Left msg -> liftIO $ putStrLn msg
-            Right _msg -> return ()) res
-  return LinkMain
-
 fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
@@ -709,17 +641,66 @@ showAdminTranslations = do
     liftIO $ updateCSV
     adminTranslationsPage
 
-migrateDocsNoAuthor :: Kontrakcja m => m Response
-migrateDocsNoAuthor = do
-  ctx <- getContext
-  guard (isJust (ctxmaybeuser ctx))
-  let Just user = ctxmaybeuser ctx
-  guard (useremail (userinfo user) == Email (fromString "ericwnormand@gmail.com"))
-  udocs <- query $ GetDocuments Nothing
-  qdocs <- query $ GetQuarantinedDocuments Nothing
-  let docswithnoauthor = [d | d <- udocs ++ qdocs
-                             , isNothing $ getAuthorSigLink d]
-  res <- forM docswithnoauthor (update . MakeFirstSignatoryAuthor . documentid)
-  liftIO $ print (intercalate "\n" $ [r | Left r <- res])
-  liftIO $ print ("successful: " ++ show (length [r | Right r <- res]))
+{- |
+    Piece of migration in response to SKRIVAPADEV-380.  The idea is to populate
+    maybesignatory and maybesupervisor on the siglinks.  Want it so that:
+    
+    * they are correctly populated for every author siglink 
+      - this should already be the case, unless an earlier migration went really wrong!
+    * they are correctly populated for every non-author siglink
+      - they should be populated where a doc is signable or an attachment and not in preparation mode
+      - they shouldn't be populated for templates or template attachments or docs in preparation mode
+      
+    I'm scared that previous migrations may have put this data in the wrong place (so for those in preparation mode).
+    Also, we have some documents that certainly need this populating.
+    
+    From now on we're populate these values whenever a doc is signed or sent, or when a user signs up
+    for an account after signing a document.
+    
+    Some things that'll happen which I think make good sense:
+      * people who sign up in the future, and have previous not saved a document won't be able to see that document
+      * people who haved signed up in the past can currently see documents that they may have refused to save.  they
+        will still be able to see them after migration.
+      * At the moment we don't offer an account creation, document saving thing, for those viewing a document rather than
+    signing it.  This means that if they subsequently sign up they won't see those documents they viewed in the past.
+    
+    Because of the niggles above, ideally this migration should just be ran once.  Otherwise people may see documents they
+    asked not to save appearing in their archive (although thankfully it's perfectly possible there is no-one like this
+    using our service).
+-}
+migrateSigAccounts :: Kontrakcja m => m Response
+migrateSigAccounts = onlySuperUser $ do
+  services <- query $ GetServices
+  mapM_ migrateSigAccountsForService $ Nothing : map (Just . serviceid) services
   sendRedirect LinkMain
+  where
+    migrateSigAccountsForService :: Kontrakcja m => Maybe ServiceID -> m ()
+    migrateSigAccountsForService service = do
+      docs <- query $ GetDocuments service
+      mapM_ migrateSigAccountsForDocument docs
+      return ()
+    migrateSigAccountsForDocument :: Kontrakcja m => Document -> m (Either String Document)
+    migrateSigAccountsForDocument Document{documentid,documentservice,documentsignatorylinks} = do
+      musers <- mapM (query . GetUserByEmail documentservice . Email . signatoryemail . signatorydetails) documentsignatorylinks
+      update $ MigrateDocumentSigAccounts documentid (catMaybes musers) 
+
+-- This method can be used do reseal a document 
+resealFile :: Kontrakcja m => DocumentID -> m KontraLink
+resealFile docid = onlySuperUser $ do
+  Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> mzero
+    Just doc -> case (documentfiles doc,documentsealedfiles doc, documentstatus doc) of  
+                     ((_:_),[], Closed) -> do
+                         ctx <- getContext
+                         Log.debug "Document is valid for resealing sealing"
+                         res <- sealDocument ctx doc
+                         case res of
+                           Left  _ -> Log.debug "We failed to reseal the document"
+                           Right _ -> Log.debug "Ok, so the document has been resealed"
+                         return LoopBack
+                     _ -> do
+                         Log.debug "Document is not valid for resealing sealing"
+                         mzero
+

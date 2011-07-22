@@ -1088,6 +1088,8 @@ input[type=submit].hidden
 #signStepsTitleRowTextContainer
 {
     min-height: 19px;
+    max-height: 22px;
+    float: left;
 }
 
 #signStepsTitleRow .title
@@ -1149,7 +1151,7 @@ input[type=submit].hidden
     font-size:16px;
     font-weight:bold;
     color:#FFFFFF;
-    width: 710px;
+    width: 450px;
     font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
@@ -1344,8 +1346,17 @@ input[type=submit].hidden
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
-    margin-left: 55px;
+    margin-left:auto;
+    margin-right:auto;
+    width:134px;
 }
+
+.signStepsButtonContainer a {
+    overflow:hidden;
+    height:34px;
+    width:134px;
+}
+
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
 input.multiFileInput {
     position:relative;
@@ -1467,15 +1478,15 @@ input.multiFileInput {
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .subheader
+#signViewBodyLeft .subheader, .subheader
 {
     font-weight: bold;
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .attachmentListContainer
+.attachmentListContainer
 {
-    padding: 10px 0px;
+    padding: 16px 0px;
 }
 
 .signViewBodyRight .header
@@ -2924,6 +2935,11 @@ table#sigattachmenttable {
     width: 100%;
 }
 
+.sigattachmentlist {
+    max-height: 230px;
+    overflow: auto;
+}
+
 input.attachmentname {
 
 }
@@ -2945,9 +2961,12 @@ table#signViewSigAttachmentBoxList input.multiFileInput {
     float: left;
     left: -112px;
     top: 0px;
-    height: 33px;
+    height: 29px;
 }
 
+table#signViewSigAttachmentBoxList .btn-small {
+    margin-top: 5px;
+}
 table#signViewSigAttachmentBoxList .btn-small .label {
     text-align: center;
 }

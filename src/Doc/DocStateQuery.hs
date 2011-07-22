@@ -27,6 +27,7 @@ module Doc.DocStateQuery
     ( getDocByDocID
     , getDocsByLoggedInUser
     , getDocByDocIDSigLinkIDAndMagicHash
+    , canUserViewDoc
     ) where
 
 import DBError
@@ -38,6 +39,29 @@ import Misc
 import Happstack.State     (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
+import Control.Monad.State
+
+{- |
+   Assuming user is the logged in user, can he view the Document?
+
+   Checks if signatory or supervisor
+   Checks author's friends.
+   Checks author's supervisors friends.
+   Checks if sharing is enabled and author is related to user.
+ -}
+canUserViewDoc :: User -> Document -> IO Bool
+canUserViewDoc user doc 
+  | any isSignatoryOrSupervisor $ documentsignatorylinks doc = return True
+  | otherwise = do
+    usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
+    usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
+    related            <- query $ GetUserRelatedAccounts (userid user)
+    return $ (any isAuthor (zip (repeat doc) (usersImFriendsWith ++ usersFriendsAreSupervising)))
+      || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
+  where
+    isSignatoryOrSupervisor :: SignatoryLink -> Bool
+    isSignatoryOrSupervisor SignatoryLink{maybesignatory, maybesupervisor} =
+      maybesignatory == Just (userid user) || maybesupervisor == Just (userid user) 
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -56,21 +80,11 @@ getDocByDocID docid = do
         Nothing  -> do
           Log.debug "Does not exist"
           return $ Left DBResourceNotAvailable
-        Just doc ->
-          case isAuthor (doc, user) of
-            True  -> do
-              Log.debug "Is author"
-              return $ Right doc
-            False -> do
-              Log.debug "Is not author"
-              usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
-              usersImSupervising <- query $ GetUserSubaccounts     (userid user)
-              related            <- query $ GetUserRelatedAccounts (userid user)
-              let canAcces = (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith)))
-                              || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
-              case canAcces of
-                True  -> return $ Right doc
-                False -> return $ Left DBResourceNotAvailable
+        Just doc -> do
+          canAccess <- liftIO $ canUserViewDoc user doc              
+          case canAccess of
+            True  -> return $ Right doc
+            False -> return $ Left DBResourceNotAvailable
     (_, Just company) -> do
       Log.debug "Logged in as company"
       mdoc <- query $ GetDocumentByDocumentID docid

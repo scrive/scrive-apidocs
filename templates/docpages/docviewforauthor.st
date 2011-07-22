@@ -56,34 +56,34 @@ pageDocumentForAuthor=
   $if(hasanyattachments)$
   <span id="attachmenttabview" style="display:none">
     <div id="signStepsBody" class="ericfix forauthor"> 
-      <div id="signViewBodyLeft" >
-        <span id="signViewBodyLeftTextContainer"> 
-          <div class="attachmentListContainer">  
-            <div class="subheader">$_Attachment()$</div>
-            $attachments:{attachment |
-            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
-            }$
-
+       <div class="attachmentListContainer">
+            <div class="float-left">
+             <div class="subheader">$_Attachment()$</div>
+             $attachments:{attachment |
+              <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+             }$
+            </div>
             $if(hassigattachments)$
+            <div class="float-left" style="margin-left:20px;">
             <div class="subheader">$_RequestedAttachments()$</div>
             <table class="authorsigattachment">
               $sigattachments:{attachment |
               <tr><td>
                   $if(attachment.viewerlink)$
                   <a href="$attachment.viewerlink$"
+                  style="margin-right:10px"
                   target="_blank">$attachment.name$</a>
                   $else$
-                  $attachment.name$
+                  <span  style="margin-right:10px">$attachment.name$</span>
                   $endif$
                 </td><td>$attachment.signame$</td></tr>
               }$
             </table>
+            </div>
             $endif$
 
           </div>
-        </span>
       </div>
-    </div>
     <div id="attachmentbox waiting4page"></div>
   </span>
   $endif$

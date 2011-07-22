@@ -6,147 +6,109 @@
  identifierat ett problem med mottagarens e-postserver. Antingen
  finns inte e-postadressen eller så ligger mottagarens e-postserver
  nere för tillfället. Vänligen kontrollera att mottagarens e-post
- är korrekt.","We are sending this message to notify you that our system has
- identified a problem with the recipients e-mail server. Probably
- the e-mail does not exist or the recipients e-mail server is
- down for the moment. Please check that the recipients e-mail
- is correct."
+ är korrekt.","We are sending this message to notify you of a problem delivering an invitation to a counterpart’s email. Either their address is incorrect or their mail server is experiencing issues. Please verify their email address."
 "_invitationMailDeferredContentBodySecond","Vi fortsätter försöka att nå mottagarens server och meddelar
  inom kort hur det gått. Klicka på länken nedan om du vill stoppa
  våra försök eller om du vill ändra e-post adressen.<br />  
-    ","We will continue to try reaching the recipients server and will
- notify you shortly about how the process. Click the linc below
- if you wish to cancel the procedure or change the e-mail adress.<br
- />      "
-"_invitationMailDeferredTitle","Problem med leverans","Probelms with the delivery"
+    ","We will continue to try and deliver the mail and will  notify you of progress. Click the link below if you wish to cancel the process or change the address.<br  />      "
+"_invitationMailDeferredTitle","Problem med leverans","Delivery problems"
 "_invitationMailDeliveredAfterDeferredContentBody","Vi meddelade dig tidigare om att vi hade problem att nå mottagarens
  server. Efter upprepade försök har vår server lyckats leverera
  inbjudan till dokumentet <strong>$documenttitle$</strong> till
- $email$.","We notified you earlier that we had difficulties reaching the
- recipients server. After serveral attempts our server has succeded
- to deliver the invitation to the document<strong>$documenttitle$</strong>
+ $email$.","We notified you earlier that we had difficulties delivering an email. After several attempts we have successfully delivered the invitation for document<strong>$documenttitle$</strong>
  to $email$."
-"_invitationMailDeliveredAfterDeferredTitle","Lyckosam leverans","Lyckosam leverans = Successfully delivered"
+"_invitationMailDeliveredAfterDeferredTitle","Lyckosam leverans"," Successfully delivered"
 "_invitationMailUndeliveredContentBody","Vi har inte kunnat leverera din inbjudan att underteckna dokumentet
  <strong>$documenttitle$</strong>. Det beror antingen på problem
  med mottagarens e-post server eller mer troligt på att adressen
  $email$ inte existerar.       Processen har därmed avbrutits.
- Gör så här om du vill börja om:","We have not been able to deliver you invitation for signing the
- document <strong>$documenttitle$</strong>.  It probably has
- to do with the recievers email server but most prabably the
- e-mail $email$ does not exist. .       The process has therefore
- been cancelled. Do the following to start over again:"
+ Gör så här om du vill börja om:","We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been cancelled, to restart it:"
 "_invitationMailUndeliveredContentInstruction","Kontrollera vilken som är mottagarens korrekta adress<br/>  
      2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
- in rätt e-postadress och skicka igen      ","Review wich adress is correct for the recipient<br/>  2. Click
- the document in your archive or the following linc.<br/>   
-    <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
-       <br/>       3. Click ""Restart""<br/>       4. Fill in the
- right e-mail and send again"
-"_invitationMailUndeliveredTitle","Felaktig e-post","Incorrect e-mail"
+ in rätt e-postadress och skicka igen      ","Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
+"_invitationMailUndeliveredTitle","Felaktig e-post","Incorrect email"
 "_inviteSubaccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
     underkonto på SkrivaPå genom vilket du kan skriva avtal 
    för organisationen <strong>$companyname$</strong>. Observera
  att detta konto inte    är avsett för privat bruk då samtliga
- dokument i kontot    tillhör organisationen","<strong>$supervisorname$</strong> har bjudit in dig till ett
-    underkonto på SkrivaPå genom vilket du kan skriva avtal 
-   för organisationen <strong>$companyname$</strong>. Observera
- att detta konto inte    är avsett för privat bruk då samtliga
- dokument i kontot    tillhör organisationen"
+ dokument i kontot    tillhör organisationen","<strong>$supervisorname$</strong> has invited you to be a subaccount on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
 "_inviteSubaccountMailContentBodyUserName","  Användarnamn:<br/>  ","Username:<br/>  "
-"_inviteSubaccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Please click the linc to activate the account:<br/>    "
-"_inviteSubaccountMailTitle","Inbjudan från $supervisorname$ till underkonto","Invitation from $supervisorname$ to a sub-account"
+"_inviteSubaccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Please click to activate your account:<br/>    "
+"_inviteSubaccountMailTitle","Inbjudan från $supervisorname$ till underkonto","Invitation from $supervisorname$"
 "_legalparagraphBody","   Detta e-postmeddelande innehåller konfidentiell information
  och får inte vidarebefordras.   Avslöjande, kopiering, distribution
  eller annan behandling av informationen i    meddelandet är
  förbjuden och kan vara olagligt. Om du felaktigt mottagit detta
  meddelande    ber vi dig omedelbart informera avsändaren samt
- att därefter radera meddelandet. ","Detta e-postmeddelande innehåller konfidentiell information och
- får inte vidarebefordras.  Avslöjande, kopiering, distribution
- eller annan behandling av informationen i meddelandet är förbjuden
- och kan vara olagligt. Om du felaktigt mottagit detta meddelande
- ber vi dig omedelbart informera avsändaren samt att därefter
- radera meddelandet. "
+ att därefter radera meddelandet. ","This email contains confidential information and may not be forwarded.  Disclosure, copying, distribution or other processing of the information contained in this message is prohibited and may be unlawful.  If you have received this in error please notify the sender and delete immediately."
 "_mailAccountBySigningContractReminderContentBody","Du har inte bekräftat att du vill spara ditt dokument ""$documenttitle$""
  hos SkrivaPå. SkrivaPås system kommer att radera dokumentet
- automatiskt inom 72h. Det kostar ingenting att spara dokumentet.","""You have not confirmed that you want to save your dokument""""$documenttitle$""""
- with Scrive. Scrive will erase the dokument within 72h. It does
- not cost anything to save the document."""
+ automatiskt inom 72h. Det kostar ingenting att spara dokumentet.","Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningContractReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Definiera lösenord och acceptera villkoren<br/>3. Färdig","It works like this:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Define password and accept the terms of agreement <br/>3. Done"
+ Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Set a password and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningContractReminderTitle","Du har inte säkrat ditt original","You have not saved your original"
 "_mailAccountBySigningOfferReminderContentBody","Du har inte bekräftat att du vill spara din offert ""$documenttitle$""
  hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt
- inom 72h. Det kostar ingenting att spara offerten.","""You have not confirmed that you wan to save your estimate""""$documenttitle$""""
- with Scrive. Scrive will erase the estimate within 72h. It doesnt
- cost anything to save the estimate."""
+ inom 72h. Det kostar ingenting att spara offerten.","Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningOfferReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Definiera lösenord och acceptera villkoren<br/>3. Färdig","It works like this:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Define passwords and accept the terms of agreement <br/>3. Done"
+ Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOfferReminderTitle","Du har inte sparat ditt original","You have not saved your original"
+"_mailAccountBySigningOrderReminderContentBody","Du har inte bekräftat att du vill spara din orderbekräftelse ""$documenttitle$""
+ hos SkrivaPå. SkrivaPås system kommer att radera bekräftelsen automatiskt
+ inom 72h. Det kostar ingenting att spara offerten.","Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
+"_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
+ Definiera lösenord och acceptera villkoren<br/>3. Färdig","To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
+"_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original","You have not saved your original"
 "_mailCancelContractByAuthorContentBody","      <strong>$creatorname$</strong> har valt att återkalla sin
  inbjudan att underteckna dokument $documenttitle$.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
- dokumentet.    ","      <strong>$creatorname$</strong> has chosen to withdrawl
- the invitation to sign the dokument $documenttitle$.      Therefore
- the agreementprocess is cancelled and you will not be able to
- sign the document."
+ dokumentet.    ","      <strong>$creatorname$</strong> has chosen to withdraw
+ the invitation to sign $documenttitle$. Therefore the
+ agreement process has been cancelled."
 "_mailCancelDocumentByAuthorTitle","Återkallelsenotis: $documenttitle$","Cancellation notice: $documenttitle$"
 "_mailCancelOfferByAuthorContentBody","      <strong>$creatorname$</strong>   har valt att återkalla
- offerten  $documenttitle$.    ","      <strong>$creatorname$</strong>   has chosen to withdrawl
+ offerten  $documenttitle$.    ","      <strong>$creatorname$</strong>   has chosen to withdraw
  the offer  $documenttitle$.    "
 "_mailCancelOrderByAuthorContentBody","      <strong>$creatorname$</strong>   har valt att återkalla
- orderbekräftelsen  $documenttitle$.    ","      <strong>$creatorname$</strong>   has chosen to withdrawl
- the orderconfirmation  $documenttitle$.    "
-"_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.","The completed dokument is attached in this mail."
+ orderbekräftelsen  $documenttitle$.    ","      <strong>$creatorname$</strong>   has chosen to withdraw
+ the order confirmation  $documenttitle$.    "
+"_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.","The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
-         av $partylist:noescape()$. Avtalet är nu bindande.","The document <strong>$documenttitle$</strong> has been signes
- by  $partylist:noescape()$. The agreement is now binding."
+         av $partylist:noescape()$. Avtalet är nu bindande.","The document <strong>$documenttitle$</strong> has been signed
+ by  $partylist:noescape()$. This agreement is now binding."
 "_mailDocumentAwaitingForAuthorContentInstruction","För att färdigställa dokumentet gör följande:<br/>      1. Klicka
  på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
       <br/>      2. Granska uppgifterna<br/>      3. Underteckna
- För att avtalet skall färdigställas krävs din underskrift.","To complete the document, do the following:<br/>      1. Click
- the link<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
-      <br/>      2. Review the details<br/>      3. Sign the
- agreement for the document to be completed."
+ För att avtalet skall färdigställas krävs din underskrift.","To finalise the document:<br/>      1. Click  the link<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>       <br/>2. Review<br/>3. Sign the  agreement"
 "_mailDocumentAwaitingForAuthorContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
  av $partylist:noescape()$.      Därmed är det bara du kvar innan
- dokumentet är färdigställt.","The document <strong>$documenttitle$</strong> has been signed
- by $partylist:noescape()$.      Therefor its only you left to
- sign before the documet is complete."
-"_mailDocumentAwaitingForAuthorTitle","Vänligen underteckna $documenttitle$","Kindly sign $documenttitle$"
+ dokumentet är färdigställt.","The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
+"_mailDocumentAwaitingForAuthorTitle","Vänligen underteckna $documenttitle$","Please sign $documenttitle$"
 "_mailDocumentClosedTitle","Bekräftelse: $documenttitle$","Confirmation: $documenttitle$"
 "_mailDocumentErrorContentBodyFirst","We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
       There are probably very good reasons for this, but they
  might be hard to explain.","We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
-  There are probably very good reasons for this, but they might
- be hard to explain."
-"_mailDocumentErrorContentBodyFourth","We are sorry for the inconvenience","We are sorry for the inconveniance."
+  There were problems related to the format of the document contents."
+"_mailDocumentErrorContentBodyFourth","We are sorry for the inconvenience","We are sorry for the inconvenience"
 "_mailDocumentErrorContentBodySecond","ur technicians were notified about this issue. We will (probably)
- contact you when fix is available.","Our technicians were notified about this issue. We will (most
- probably) contact you when a fix is available."
+ contact you when fix is available.","Our technicians were notified about this issue. We will contact you when a fix is available."
 "_mailDocumentErrorContentBodyThird","Processen har därmed avbrutits.","The process has therefore been cancelled"
-"_mailDocumentErrorTitle","SkrivaPå could no handle $documenttitle$","SkrivaPå could not handle $documenttitle$"
+"_mailDocumentErrorTitle","SkrivaPå could no handle $documenttitle$","Scrive could not handle $documenttitle$"
 "_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har endast behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:","You only have permission to view this document    Click the on
- the link below to view the document:"
+ nedan för att se dokumentet:","You only have permission to view this document    Click to view:"
 "_mailInvitationToSignContractContentIfSignatoryInstruction","      <i>Så här går du vidare</i><br/>      1. Klicka på länken
  <br/>      <a href=""$link$"">$link$</a><br/>      2. Granska
  online<br/>      3. Underteckna (eller avvisa)<br/>       4.
- Färdig    ","<i>This is how to continue</i><br/>      1. Click the link <br/>
-      <a href=""$link$"">$link$</a><br/>      2. Review online<br/>
-      3. Sign  (or decline)<br/>       4. Done"
+ Färdig    ","<i>To continue:</i><br/>      1. Click the link <br/>       <a href=""$link$"">$link$</a><br/>      2. Review online<br/>       3. Sign  (or decline)<br/>       4. Done"
 "_mailInvitationToSignContractContentInfo","Översiktlig information","General information"
 "_mailInvitationToSignContractContentPartys","Parter:","Parties:"
 "_mailInvitationToSignContractContentSender","Avsändare: ","Sender:"
 "_mailInvitationToSignContractDefaultHeaderBody1"," har bjudit in dig att underteckna dokumentet "," has invited you to sign the document "
 "_mailInvitationToSignContractDefaultHeaderBody2"," online via tjänsten SkrivaPå.    "," online via Scrive.    "
 "_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har endast behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:","You only have permission to view this document    Click the link
- below to view the document:"
+ nedan för att se dokumentet:","You only have permission to view this document    Click to view:"
 "_mailInvitationToSignOfferContentIfSignatoryInstruction","      1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
       2. Granska online<br/>      3. Acceptera offert (eller
  avvisa)<br/>       4. Färdig    ","1. Click the link <br/>      <a href=""$link$"">$link$</a><br/>
@@ -157,14 +119,12 @@
 "_mailInvitationToSignOfferContentSender","Avsändare: ","Sender:"
 "_mailInvitationToSignOfferDefaultHeaderBody1"," har skickat offerten "," has sent the offer "
 "_mailInvitationToSignOfferDefaultHeaderBody2","  till dig och önskar din accept.      Acceptera offerten genom
- att följa instruktionerna nedan.    ","  to you and wants you to accept it.      Accept the offer by
- following the instructions below.    "
+ att följa instruktionerna nedan.    ","  to you and wants you to accept it.     To accept the offer:   "
 "_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har endast behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:","You only have permission to view this document    Click the link
- below to view the document:"
+ nedan för att se dokumentet:","You only have permission to view this document    Click to view:"
 "_mailInvitationToSignOrderContentIfSignatoryInstruction","      1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
       2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>
-       4. Färdig   ","      1. Click the linc <br/>      <a href=""$link$"">$link$</a><br/>
+       4. Färdig   ","      1. Click the link <br/>      <a href=""$link$"">$link$</a><br/>
       2. Confirm your order <br/>      3. Sign or  (or decline)<br/>
        4. Done   "
 "_mailInvitationToSignOrderContentInfo","Översiktlig information","General information"
@@ -172,96 +132,79 @@
 "_mailInvitationToSignOrderContentSender","Avsändare: ","Sender: "
 "_mailInvitationToSignOrderDefaultHeaderBody1"," har skickat orderbekräftelsen "," has sent the order confirmation "
 "_mailInvitationToSignOrderDefaultHeaderBody2"," till dig och önskar din bekräftelse. Bekräfta ordern genom att
- följa instruktionerna nedan.     ","to you and wants your confirmation. Confirm the order by following
- the instructions below.     "
-"_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$","Invite from $creatorname$ to $documenttitle$"
-"_mailInvitationToViewDefaultHeaderBody1","har bjudit in dig att se dokumentet ","has invitet you to view the document "
+ följa instruktionerna nedan.     ","to you and wants your confirmation. To confirm the order:"
+"_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$","Invite from $creatorname$ for $documenttitle$"
+"_mailInvitationToViewDefaultHeaderBody1","har bjudit in dig att se dokumentet ","has invited you to view the document "
 "_mailInvitationToViewDefaultHeaderBody2"," online via tjänsten SkrivaPå.    "," online via Scrive.    "
-"_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$","Invite from $creatorname$ to $documenttitle$"
+"_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$","Invite from $creatorname$ for $documenttitle$"
 "_mailInviteUserAsSubaccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
  huvudkonto till ditt konto. Om du accepterar blir ditt konto
  ett underkonto till avsändaren. Du kommer fortfarande att kunna
  se och administrera dina avtal, dock tar huvudkontot över ägarskapet
  över samtliga dokument i ditt konto. ","The user $supervisor.fullnamePlusEmail$ has requested to become
- to become the main account of your account. If you accept, your
- account will become a subaccount to the sender. You will still
- be able to see and administrate your agreements and the main
- account will take over the ownership over all documents in your
- account."
+ to become the supervisor of your account. If you accept, your
+ account will become their subaccount. You will still
+ be able to see and administrate your agreements and the supervising
+ account will take over the ownership over all your documents."
 "_mailInviteUserAsSubaccountContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om
  du  har privata dokument i kontot.","Please review before accepting, especially if you have private
  documents in the account."
-"_mailInviteUserAsSubaccountContentInstructionFirst","Så här går du vidare","This is how you continue"
+"_mailInviteUserAsSubaccountContentInstructionFirst","Så här går du vidare","To continue"
 "_mailInviteUserAsSubaccountContentInstructionSecond"," <li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
  <li>Spara ned samtliga privata dokument till din dator</li>
  <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
- <li>Acceptera</li> <li>Ditt konto är nu underkonto</li> ","<li>Please check that you do not have any private documents in
- your account archive.</li> <li>Save all private dokuments to
- your computer</li> <li>Click the linc below</li> <li>Read the
- message online</li> <li>Accept</li>  <li>Your account is now
- a subacount</li> "
-"_mailInviteUserAsSubaccountContentLink","Detta är länken nedan","This is the linc below"
-"_mailInviteUserAsSubaccountTitle","Förfrågan att göra till underkonto","Inquiry to create a subaccount"
+ <li>Acceptera</li> <li>Ditt konto är nu underkonto</li> ","<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now  a subaccount</li> "
+"_mailInviteUserAsSubaccountContentLink","Detta är länken nedan","This is the link below"
+"_mailInviteUserAsSubaccountTitle","Förfrågan att göra till underkonto","Subaccount enquiry"
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar","Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
  e-legitimation.","We are sorry, the information given to us in <a href=""$doclink$"">$documenttitle$</a>
- do not match the one with  <a href=""mailto:$bademail$"">$badname$</a>s
- e-legitimation."
+ does not match information from  <a href=""mailto:$bademail$"">$badname$</a>'s
+ E-legitimation."
 "_mailMismatchAuthorContentBodySecond","Avtalsprocessen för <a href=""$doclink$"">$documenttitle$</a> har
  därför avbrutits. Du kan välja att starta om avtalsprocessen
  och skicka en ny inbjudan till dina motparter, ett e-post meddelande
  har även skickats ut till dina motparter med information om
- att avtalsprocessen har avbrutits.","The agreement process for <a href=""$doclink$"">$documenttitle$</a>
- has therefor been interrupted. You can choose to start over
- the the agreement process and send a new invitation to your
- counterparts, an email has been sent to your conterparts with
- information about the agreement process cancellation."
-"_mailMismatchAuthorContentErrorReport","<strong>Felrapport:</strong>","<strong>Bug raport:</strong>"
-"_mailMismatchAuthorTitle","Felaktiga personuppgifter","Incorrect private information"
+ att avtalsprocessen har avbrutits.","The agreement process for <a href=""$doclink$"">$documenttitle$</a>  has therefore been interrupted. Emails have been sent to those involved.  You may restart the process.  This will send new invitations to your  counterparts."
+"_mailMismatchAuthorContentErrorReport","<strong>Felrapport:</strong>","<strong>Bug report:</strong>"
+"_mailMismatchAuthorTitle","Felaktiga personuppgifter","Mismatched information"
 "_mailMismatchSignatoryContentBestRegards","Med Vänliga Hälsningar","Best regards"
 "_mailMismatchSignatoryContentBodyFirst","Vi beklagar, men någon av de uppgifter <a href=""mailto:$authoremail$"">$authorname$</a>
  har angivit i <a href=""$doclink$"">$documenttitle$</a> matchar
  inte personuppgifterna hos $badname$s e-legitmation.","We are sorry, some of the information given to us in <a href=""$doclink$"">$documenttitle$</a>
- do not match the one with <a href=""mailto:$bademail$"">$badname$</a>s
- e-legitimation."
-"_mailMismatchSignatoryContentBodyIfMessages","<strong>Felrapport:</strong>","<strong>Bug raport:</strong>"
+ does not match information from <a href=""mailto:$bademail$"">$badname$</a>'s
+ E-legitimation."
+"_mailMismatchSignatoryContentBodyIfMessages","<strong>Felrapport:</strong>","<strong>Bug report:</strong>"
 "_mailMismatchSignatoryContentBodySecond","Avtalsprocessen för <a href=""$doclink$"">$documenttitle$</a> har
  därför avbrutits. Var vänliga invänta en ny inbjudan eller kontakta
  <a href=""mailto:$authoremail$"">$authorname$</a>.","""The agreement process for <a href=""$doclink$"">$documenttitle$</a>
- has therefor been interrupted. Please wait for a new invitation
+ has therefore been interrupted. Please wait for a new invitation
  or contact <a href=""mailto:$authoremail$"">$authorname$</a>."""
-"_mailMismatchSignatoryTitle","Problem med matchning av personuppgifter","Problems with matching of private information"
-"_mailNewAccountCreatedByAdminContentBody","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Please click the linc to activate the account:<br/>    "
+"_mailMismatchSignatoryTitle","Problem med matchning av personuppgifter","Mismatched information"
+"_mailNewAccountCreatedByAdminContentBody","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Click to activate:<br/>    "
 "_mailNewAccountCreatedByAdminContentHeaderBody","$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå.
      SkrivaPå är en tjänst för att skriva på och arkivera dokument
  elektroniskt.     Spara pengar, frustration och miljö och använd
- SkrivaPå istället.     Du kan spara mellan 50-250kr/dokument!","$creatorname$ has invited you to an account at the service Scrive.
- Scrive is a service for signing and archiving legal documents
- electronically.  Save money, frustration and environment. Use
- Scrive instead, you can save between £5 to £25 per document!
- "
+ SkrivaPå istället.     Du kan spara mellan 50-250kr/dokument!","$creatorname$ has invited you to Scrive.  Scrive is a service for signing and archiving legal documents  electronically.  Save money, reduce frustration and help the environment.  Use  Scrive instead.   You can save between £5 to £25 per document."
 "_mailNewAccountCreatedByAdminContentUserName","Användarnamn:<br/>    ","Username:<br/>    "
 "_mailNewAccountCreatedByAdminTitle","Nytt konto","New account"
-"_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.","Attached to this mail you will find a PDF with the offer and
- verification."
+"_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.","The verified offer is attached."
 "_mailOfferClosedContentOfferAccepted","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat
- för accepten. ","The offer <strong>$documenttitle$</strong> has accepteds by $partylist:noescape()$
- and Scrive has issued a verification for the confirmation."
+ för accepten. ","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
+ and Scrive has verified the confirmation."
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
- och verifikatet.","Attached to this mail you will find a PDF with a orderconfirmation
- and verification."
+ och verifikatet.","The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$  och SkrivaPå har utfärdat ett verifikat
- för bekräftelsen. ","The orderconfirmation <strong>$documenttitle$</strong> has been
- accepted by $partylist:noescape()$  and Scrive has issued a
- verification for the confirmation."
+ för bekräftelsen. ","The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$  and Scrive has verified the confirmation."
 "_mailRejectContractMailContentContractRejected","        <strong>$rejectorName$</strong> har avvisat att underteckna
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
- är därmed avbruten.      ","        <strong>$rejectorName$</strong> has  rejecter to sign
- the document <strong>$documenttitle$</strong>. The agreement
- process is there for cancelled."
+ är därmed avbruten.      ","        <strong>$rejectorName$</strong> has  rejected
+the document <strong>$documenttitle$</strong>. The agreement
+ process is therefore cancelled."
 "_mailRejectMailTitle","Avvisat: $documenttitle$","Rejected: $documenttitle$"
 "_mailRejectOfferMailContentOfferRejected","        <strong>$rejectorName$</strong> har avvisat offerten
  <strong>$documenttitle$</strong>.      ","        <strong>$rejectorName$</strong> has rejected the offer
@@ -269,22 +212,21 @@
 "_mailRejectOrderMailContentHasRejected","        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.
       ","        <strong>$rejectorName$</strong> has rejected the order
  <strong>$documenttitle$</strong>.      "
-"_mailSubaccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.","$invited.fullnameOrEmail$ has agreed to become an subaccount."
-"_mailSubaccountAcceptedTitle","Kontoförfrågan","Account inquiry"
+"_mailSubaccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.","$invited.fullnameOrEmail$ has agreed to become a subaccount."
+"_mailSubaccountAcceptedTitle","Kontoförfrågan","Account enquiry"
 "_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
  tjänsten SkrivaPå.    Det betyder nog att han/hon gillar vår
  tjänst och tror du också skulle uppskatta den också.","$invitername$ has treated you to two months of free service with
- Scrive.com. The means he/she likes our site and belives you
- would appreshiate it to. "
+ Scrive.com. This means he/she likes our site and believes you
+Would appreciate it too."
 "_mailViralInviteContentBodySecond","SkrivaPå är en tjänst för att skriva på och arkivera dokument
  elektroniskt.    Spara pengar, frustration och miljö och använd
  SkrivaPå istället.     Du kan spara mellan 50-250kr/dokument!","Scrive is a service for signing and archiving legal documents
- electronically.  Save money, frustration and the environment.
- Use Scrive instead, you can save between £5 to £25 per document!
- "
-"_mailViralInviteContentBodyThird","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Please click the linc to activate the account:<br/>    "
+ electronically.  Save money, reduce frustration and help the environment.
+ Use Scrive instead.  You can save between £5 to £25 per document."
+"_mailViralInviteContentBodyThird","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Click to activate:<br/>    "
 "_mailViralInviteContentBodyUserName","Användarnamn:<br/>    ","Username:<br/>    "
-"_mailViralInviteTitle","Inbjudan från $invitername$","This is an invite from $invitername$"
+"_mailViralInviteTitle","Inbjudan från $invitername$","Invite from $invitername$"
 "_newUserMailContentBodyFirst","  Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att
  du har  skapat ett konto hos oss. När du aktiverat ditt konto
  kommer du  kunna använda tjänsten med full funktionalitet med
@@ -293,94 +235,71 @@
  du givetvis tillgång  till samtliga dina dokument på SkrivaPå
  och kan fortsätta använda  tjänsten genom vår fria kontoplan
  Free.","My name is Lukas Duczko and I am the CEO of Scrive. Thank you
- for signing an account with us. When you have acivated your
- account you will be able to use the service with full functionality
- with the Business version for one month without any charges.
- If you choose not to continue with a payed subscription after
- the free trial you will still have access to all your documents
+for creating an account with us. When you have activated your account you will be able to trial the full functionality
+ of the Business plan for one month without any charge.
+ If you choose not to continue with a paid subscription afterwards you will still have access to all your documents
  at Scrive and can keep using Scrive  with our Free plan."
 "_newUserMailContentBodySecond","  Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka
  inte  att höra av dig med feedback eller bara en enkel hälsning.
- Din åsikt  är värdefull.","We hope you will be happy with our services. Please dont hestitate
- to give us feedback or just a hello. Your opinion is valuble
- to us."
+ Din åsikt  är värdefull.","We hope you will be happy with our services. Please don't hesitate  to give us feedback or just a hello. We'd love to hear what you think."
 "_newUserMailContentBodyThird","  Du aktiverar ditt konto genom att klicka på länken nedan. Länken
- är  giltig i 12 timmar.<br/>    ","Activate your account by clicking the linc below. The linc is
- active for 12 hours.<br/>    "
+ är  giltig i 12 timmar.<br/>    ","Click to activate, the link is valid for 12 hours:<br/>    "
 "_newUserMailContentBodyUserName","  Användarnamn:<br/>  ","Username:<br/>  "
-"_newUserMailContentHi","Hej,","Hello,"
+"******_newUserMailContentHi","Hej,","Hello,"
 "_newUserMailTitle","Nytt konto","New account"
 "_noonehadsignedtext","    Ingen har undertecknat dokumentet ännu","No one has signed the document yet"
 "_offerhassignedformailtext","Har accepterat","Has accepted"
 "_orderhassignedformailtext","Har bekräftat","Has confirmed"
 "_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka
  på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>
-    ","You have requested to change your password at Scrive. Please
- click the following linc to procees. The linc is valid for 12
- hours.<br/>    "
+    ","You've requested a password change for your Scrive account. Please click to proceed, the link is valid for 12 hours:<br/>    "
 "_passwordChangeLinkMailTitle","Nytt lösenord","New password"
 "_remindMailNotSignedContractContentInfo","Översiktlig information","General information"
 "_remindMailNotSignedContractContentInstruction","        <i>Så här går du vidare</i><br/>        1. Klicka på
  länken<br/>        <a href=""$link$"">$link$</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
-         4. Färdig      ","        <i>How to continue</i><br/>        1. Clic the linc<br/>
-        <a href=""$link$"">$link$</a><br/>        2. Review online<br/>
-        3. Sign (or reject)<br/>         4. Done"
+         4. Färdig      ","        <i>To continue</i><br/>        1. Click the link<br/>         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done"
 "_remindMailNotSignedContractContentPartys","Parter:","Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat
- dokument <strong>$documenttitle$</strong> ännu.","<strong>$author$</strong> wants to remind you that you havent
- confirmed the order  <strong>$documenttitle$</strong> yet."
+ dokument <strong>$documenttitle$</strong> ännu.","<strong>$author$</strong> wants to remind you that you haven't
+Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information","General information"
 "_remindMailNotSignedOfferContentInstruction","        1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
- avvisa)<br/>        4. Färdig      ","        1. Clic the linc<br/>        <a href=""$link$"">$link$</a><br/>
+ avvisa)<br/>        4. Färdig      ","        1. Click the link<br/>        <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
  reject)<br/>        4. Done"
 "_remindMailNotSignedOfferContentPartys","Parter:","Parties:"
 "_remindMailNotSignedOfferContentSender","Avsändare:","Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera
- offerten genom att följa instruktionerna nedan.      ","<strong>$author$</strong>  wants to remind you that you havent
- confirmed the order  <strong>$documenttitle$</strong> yet. Confirm
- the order by following the intructions below."
+ offerten genom att följa instruktionerna nedan.      ","<strong>$author$</strong>  wants to remind you that you haven't  confirmed the order  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information","General information"
 "_remindMailNotSignedOrderContentInstruction","        1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
- avvisa)<br/>         4. Färdig      ","        1. Clic the linc<br/>        <a href=""$link$"">$link$</a><br/>
+ avvisa)<br/>         4. Färdig      ","        1. Click the link<br/>        <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3. Confirm the order (or
  reject)<br/>         4. Done   "
 "_remindMailNotSignedOrderContentPartys","Parter:","Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern
- genom att följa instruktionerna nedan.      ","<strong>$author$</strong> wants to remind you that you havent
- confirmed the order <strong>$documenttitle$</strong> yet. Confirm
- the order by following the intructions below."
+ genom att följa instruktionerna nedan.      ","<strong>$author$</strong> wants to remind you that you haven't  confirmed the order <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedTitle","Påminnelse att underteckna  $documenttitle$","Reminder to sign  $documenttitle$"
 "_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas
- med detta mail.","<strong>$author$</strong> has requested we send this document
- <strong>$documenttitle$</strong>        to you. The document
- has been signed by you via the thervice Scrive. The document
- is attatched in this mail."
+ med detta mail.","<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using Scrive. Please find it attached."
 "_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig via tjänsten SkrivaPå. Den accepterade
- offerten bifogas med detta mail.","<strong>$author$</strong> has requested that we send the orderconfrmation
- <strong>$documenttitle$</strong>      to you. The offer has
- been accepted by you via the service Scrive.  The accepted offer
- is attached in this mail<strong>$author$</strong><strong>$documenttitle$</strong>
-       "
+ offerten bifogas med detta mail.","<strong>$author$</strong> has requested that we send the order confrmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using Scrive. Please find it attached.        "
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med
- detta mail.","<strong>$author$</strong>has requested that we send the orderconfrmation<strong>$documenttitle$</strong>
-        to you who has confirmed via the service Scrive. The
- orderconfirmation is attached in this mail."
+ detta mail.","<strong>$author$</strong>requested that we send the orderconfrmation<strong>$documenttitle$</strong>  .  You have confirmed it using Scrive.  Please find it attached."
 "_sigattachlistRequestedAttachment","Begärda bilagor:","Requested attachments:"
 "_signupLinkEmailPartClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    <br/>
-    ","Please click the linc to activate the account:<br/>    <br/>
-    "
+    ","Click to activate:<br/>    <br/>     "
 "_signupLinkEmailPartUserName","Användarnamn:<br/>    ","Username:<br/>    "
 "_timetosigninfo","Undertecknas senast:","Sign before:"
 "_whohadsignedcontractinfoformailIfNotSigned","    Har undertecknat: ","Has signed: "

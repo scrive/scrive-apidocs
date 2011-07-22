@@ -20,7 +20,7 @@ javascriptLocalisation =
              , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
-             , author : "Avsändare"
+             , author : "$_sender()$"
              , youMustSetParnerEmail : "$_youMustSetParnerEmail()$"
              , emptyOrNotValidEmail :  "$_emptyOrNotValidEmail()$"
              , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
@@ -51,5 +51,15 @@ javascriptLocalisation =
              , companyNumber : "$_orgnumber()$"
              , loadingTweets : "$_loadingTweets()$"
              , fieldName : "$_fieldName()$"
+             , multiPartPartner : "Parter"
+             , noNamePerson : "Namnlös"
+             , senderName : "Avsändare namn på motpart"
+             , senderTitle : "Avsändare  titel, företag"
+             , senderNumber :  "Avsändare Orgnr/Persnr"
+             , senderEmail :  "Avsändare personens e-mail"
+             , partnerName : "Namn på motpart"
+             , partnerTitle : "Titel, företag"
+             , partnerNumber : "Orgnr/Persnr"
+             , partnerEmail : "Personens e-mail"
    }
 ####

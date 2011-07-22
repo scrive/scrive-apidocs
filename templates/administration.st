@@ -46,9 +46,6 @@ adminsmain=
         </tr>
         <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-          <td style="height:50px;width:200px"><a href="/adminonly/quarantine"><button style="width:150px"> Quarantine </button></a></td>
-        </tr>
-        <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> </td>
         </tr>
     </tbody></table>
@@ -536,7 +533,7 @@ userusagestats=
               <td style="width:200px">Viral invites</td>
               <td style="width:200px">Admin invites</td>
 	    </thead>
-            $stats:{stat|<tr>
+            $allMonthsStats:{stat|<tr>
               <td>$stat.date$</td>
               <td>$stat.documents.signatures$ </td>
               <td>$stat.documents.signaturesInClosed$ </td>
@@ -638,54 +635,6 @@ statisticsPage=
       </table>
     </div>
 ###
-###
-quarantinePage=
-    $backtoadminmainlink()$
-    <div>
-      <h1>Document Quarantine</h1>
-      <table>
-        <thead>
-          <td style="width:200px">Doc Name</td>
-          <td style="width:200px">Quarantine Expiry</td>
-          <td style="width:200px">Signatories</td>
-          <td style="width:200px"></td>
-          <td style="width:200px"></td>
-       </thead>
-        $documents:{doc|
-          <tr>
-            <td>$doc.name$</td>
-            <td>$doc.expiry$</td>
-            <td></td>
-            <td></td>
-            <td>
-              <form action="$linkquarantine$" method="post">
-                <input type="hidden" name="extend" value="true"/>
-                <input type="hidden" name="docid" value="$doc.docid$"/>
-                <input type="submit" value="Extend Quarantine"/>
-              </form>
-            </td>
-          </tr>
-          $doc.signatories:{sig|
-          <tr>
-            <td></td>
-            <td></td>
-            <td>$sig.email$</td>
-            <td>
-              $if(sig.isrevivable)$
-              <form action="$linkquarantine$" method="post">
-                <input type="hidden" name="revive" value="true"/>
-                <input type="hidden" name="docid" value="$doc.docid$"/>
-                <input type="hidden" name="siglinkid" value="$sig.siglinkid$"/>
-                <input type="submit" value="Undo Delete"/>
-              </form>
-              $endif$
-            </td>
-            <td></td>
-          </tr>
-          }$
-        }$
-      </table>
-    </div>
 ###
 databaseContents=
     $backtoadminmainlink()$

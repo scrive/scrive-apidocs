@@ -39,7 +39,7 @@ data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      }
 type MailAPIFunction m a = APIFunction m MailAPIContext a
 
-instance Kontrakcja m => APIContext m MailAPIContext where
+instance APIContext MailAPIContext where
     body = ibody
     newBody b ctx = ctx {ibody = b}
     apiContext = apiContextForMail

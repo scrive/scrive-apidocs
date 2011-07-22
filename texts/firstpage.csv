@@ -8,20 +8,20 @@
  5 fria signaturer per månad och 50 dokument i lagring.</p>","                    <h3>Free for private persons and proprietors</h3>
                     <p>There are a thousand reasons for everyone
  to start singing their documents electronically. Our ambition
- is to work closely and cooperate with our customers. Unfortunently,
- we are not able to help all our target groups activley. Therefore,
+ is to work closely and cooperate with our customers. Unfortunately,
+ we are not able to help all our target groups actively. Therefore,
  we offer a support-free account for small users. 1 user, 5 free
  signatures per month and storage of 50 documents.</p>"
 "_Bemefit1","Minska kostnaderna","Reduce costs"
 "_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är
  ett skräddarsytt redskap som optimerar dina processer. Spara
- 50-250kr/dokument. ","Document handeling is time consuming. Time is money. Scrive is
- a tailored tool that optimises you processes. Save 5-25£/document."
+ 50-250kr/dokument. ","Document handling is time consuming. Time is money. Scrive is
+ a tailored tool that optimises your processes. Save £5-25 per document."
 "_Bemefit2","Snabbare avslut","Faster closures"
 "_Bemefit2Body","Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
- din omsättning.","More rapid closures leads to more closures. We help you boost
+ din omsättning.","More rapid closures lead to more closures. We help you boost
  your turnover."
-"_Bemefit3","Överallt. Alltid.","Everywhere. Allways."
+"_Bemefit3","Överallt. Alltid.","Any time.  Any place."
 "_Bemefit3Body","Arbeta när du vill och var du vill. Glöm problemen med att buda
  dokument jorden runt.","Work whenever ad wherever you want. Forget to send couriers around
  the world."
@@ -36,12 +36,12 @@
 "_Bemefit6","Minska frustrationen","Reduce frustration"
 "_Bemefit6Body","Det är sällan roligt att vända papper, leta efter förlorade dokument
  och jaga signaturer. SkrivaPå lättar din och dina kunders administrativa
- börda.","It's no fun looking for papers and hunting people to sign. Scrive
+ börda.","It's no fun looking for papers and chasing people to sign. Scrive
  eases your and your customer's administrative burden."
 "_Bemefit7","Spara på miljön","Save the environment"
 "_Bemefit7Body","Visa att ni tar ansvar. Skippa pappersavtalandet och minska din
- miljöpåverkan.","Show that you take responsability. Skip the paper contract and
- reduce your effect on the environment."
+ miljöpåverkan.","Show that you take responsability. Ditch the paper contract and
+ reduce your affect on the environment."
 "_Bemefit8","Image branding","Image branding"
 "_Bemefit8Body","Visa era kunder att ni är i framkant och gillar att tänka i nya
  banor.","Show your customers that you use cutting edge technology and
@@ -77,17 +77,17 @@
                                                      <th>   
                                                             
  <h3>Team</h3>                                              
-                  <p>Make the team more efficient</p>       
+                  <p>Make your team more efficient</p>       
                                                  </th>      
                                                   <th>      
                                                           <h3>Business</h3>
                                                             
-    <p>One solution for many usages</p>                     
+    <p>One solution with many uses</p>                     
                                    </th>                    
                                     <th>                    
                                             <h3>Enterprise</h3>
                                                             
-    <p>Larger volume, integrations and customization</p>    
+    <p>Larger volume, integrations and customisation</p>    
                                                     </th>"
 "_PriceTableHighlightedColumn","<ul class=""highlight-rows"">                                 
                        <li class=""top"">                     
@@ -111,7 +111,7 @@
                        <li class=""top"">                     
                                            <h3>Business</h3>
                                                             
-    <p>One solution for many usages</p>                     
+    <p>One solution with many uses</p>                     
                                    </li>                    
                                     <li class=""odd"">50 users</li>
                                                         <li>
@@ -122,7 +122,7 @@
                                                         <li>Advanced
  features</li>                                              
           <li class=""bottom"">                               
-                                 <h4>3.00 £/signature</h4>
+                                 <h4>£3/signature</h4>
                                                             
  <a href=""/priser"">Detailed priceplan</a>                   
                                         </li></ul>"
@@ -146,17 +146,17 @@
     <h4>Offert</h4>                                         
                        <a href=""/priser"">Detaljerad prisplan</a>
                                                         </td>","<td>                                                        
-        <h4>3.50 £/signature</h4>
+        <h4>£3.50/signature</h4>
                                     <a href=""/priser"">Detailed
  priceplan</a>                                              
           </td>                                             
            <td>                                             
-                   <h4>3.25 £/signature</h4>
+                   <h4>£3.25/signature</h4>
                                                   <a href=""/priser"">Detailed
  priceplan</a>                                              
           </td>                                             
            <td>                                             
-                   <h4>3.00 £/signature</h4>
+                   <h4>£3/signature</h4>
                                                <a href=""/priser"">Detailed
  priceplan</a>                                              
                                                             
@@ -198,11 +198,11 @@
 "_StepsH3Send","Skicka","Send"
 "_StepsH3SendBody","Ladda upp dokument,<br />välj mottagare, skicka!","Upload documents,<br />select recipient, send!"
 "_StepsH3Sign","Skriva på","Sign"
-"_StepsH3SignBody","Alla parter skriver på<br />elektroniskt.","All parties  signs<br /> electronically."
+"_StepsH3SignBody","Alla parter skriver på<br />elektroniskt.","All parties sign<br /> electronically."
 "_StepsH3Store","Spara och arkivera","Save and archive"
 "_StepsH3StoreBody","Vi sparar dina dokument<br />tryggt och säkert.","We save your documents<br />safely and securely."
 "_firstPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Spara tid, pengar
- och frustration – både åt dig och dina kunder.","Sign and store your contracts online. Save time, money and frustrantion
+ och frustration – både åt dig och dina kunder.","Sign and store your contracts online. Save time, and money.  Reduce frustration.
  – both for yourself and your customers."
 "_h1","Varför krångla? - Signera med SkrivaPå!","Why struggle? - Sign with Scrive!"
 "_h1Body","Signera avtal och andra dokument elektroniskt med SkrivaPå. <br
@@ -210,7 +210,7 @@
  och våra kunders kunder älskar enkelheten.                 
                                ","Sign contracts and other documents online with Scrive. <br />
                                                 Our customers
- and our customer's customers just love the simplicity.     
+ and our customers' customers just love the simplicity.     
                                            "
 "_h3CreateAccount","Skapa konto nu!","Create account now!"
 "_h3CreateAccountBody","1 månad full funktionalitet utan kostnad. Inga förpliktelser.","1 month full functionality free of charge. No obligations."

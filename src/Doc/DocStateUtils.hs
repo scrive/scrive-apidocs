@@ -16,7 +16,6 @@ module Doc.DocStateUtils (
       insertNewDocument
     , newFromDocument
     , queryDocs
-    , queryQuarantinedDocs
     , modifySignable
     , modifySignableWithAction
     , modifySignableOrTemplate
@@ -38,20 +37,10 @@ import MinutesTime
 import Misc
 import Util.SignatoryLinkUtils
 
-{- |
-    Cleans out all the deleted and quarantined documents
--}
 queryDocs :: (Documents -> a) -> Query Documents a
 queryDocs queryFunc = do
   docs <- ask
-  let livedocs = docs @= LiveDocument
-  return $ queryFunc livedocs
-
-queryQuarantinedDocs :: (Documents -> a) -> Query Documents a
-queryQuarantinedDocs queryFunc = do
-  docs <- ask
-  let quarantineddocs = docs @= QuarantinedDocument
-  return $ queryFunc quarantineddocs
+  return $ queryFunc docs
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
@@ -108,8 +97,9 @@ modifyDocumentWithActionTime :: Bool
                -> Update Documents (Either String Document)                            
 modifyDocumentWithActionTime touchtime condition docid action = do
   documents <- ask
-  case getOne (documents @= docid @+ [LiveDocument, QuarantinedDocument] ) of
+  case getOne (documents @= docid) of
     Nothing -> return $ Left "no such document"
+    Just document | documentdeleted document -> return $ Left "document has been deleted"
     Just document ->
       if (condition document)
        then do

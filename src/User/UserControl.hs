@@ -353,7 +353,7 @@ performUserDeletion :: Kontrakcja m => UserDeletionDetails -> m ()
 performUserDeletion (user, docs) = do
   _ <- update $ DeleteUser (userid user)
   idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
-  mapM_ (\iu -> update $ UpdateDocumentRecordStatus  (fst iu) (snd iu)) idsAndUsers
+  mapM_ (\iu -> update $ DeleteDocumentRecordIfRequired  (fst iu) (snd iu)) idsAndUsers
 
 {- |
     This looks up all the users relevant for the given docid.
