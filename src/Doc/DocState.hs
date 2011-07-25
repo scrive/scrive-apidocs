@@ -92,6 +92,7 @@ import User.UserState
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
 {- |
@@ -233,7 +234,7 @@ newDocument = newDocumentWithMCompany Nothing
     Creates and saves a new documents that's authored by the given user,
     on behalf a the indicated company.
 -}
-newDocumentWithMCompany :: (Maybe CompanyID)
+newDocumentWithMCompany :: (Maybe Company)
             -> User
             -> BS.ByteString
             -> DocumentType
@@ -244,12 +245,12 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
                     then [SignatoryAuthor]
                     else [SignatoryPartner, SignatoryAuthor]
   authorlink0 <- (signLinkFromDetails
-                  (signatoryDetailsFromUser user)
+                  (signatoryDetailsFromUser user mcompany)
                   authorRoles)
 
   let authorlink = authorlink0 {
                      maybesignatory = Just $ userid user, 
-                     maybecompany = mcompany `mplus` usercompany user }
+                     maybecompany = (fmap companyid mcompany) `mplus` usercompany user }
 
   let doc = blankDocument {
               documenttitle                = title
@@ -1330,17 +1331,18 @@ signableFromDocument doc = insertNewDocument $ templateToDocument doc
     
     
    You basicly always want to update author data. Not only if you want to change author
-   This is due to the fact that author personal data could get changed
+   This is due to the fact that author personal data could get changed.  Also the company
+   data may have changed.
 -}
-signableFromDocumentIDWithUpdatedAuthor :: User -> DocumentID -> Update Documents (Either String Document)
-signableFromDocumentIDWithUpdatedAuthor user = newFromDocument $ \doc -> 
+signableFromDocumentIDWithUpdatedAuthor :: User -> Maybe Company -> DocumentID -> Update Documents (Either String Document)
+signableFromDocumentIDWithUpdatedAuthor user mcompany = newFromDocument $ \doc -> 
     (templateToDocument doc) {
-          documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
+          documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
                                    -- FIXME: Need to remove authorfields?
     }
-    where replaceAuthorSigLink :: User -> Document -> SignatoryLink -> SignatoryLink
-          replaceAuthorSigLink usr _ sl
-            | isAuthor sl = replaceSignatoryUser sl usr
+    where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
+          replaceAuthorSigLink sl
+            | isAuthor sl = replaceSignatoryUser sl user mcompany
             | otherwise = sl
 
 {- |
@@ -1362,16 +1364,17 @@ templateToDocument doc =
 -}
 replaceSignatoryUser :: SignatoryLink
                         -> User
+                        -> Maybe Company
                         -> SignatoryLink
-replaceSignatoryUser siglink user =
+replaceSignatoryUser siglink user mcompany =
   let newsl = replaceSignatoryData
                        siglink
                        (getFirstName      user)
                        (getLastName       user)
                        (getEmail          user)
-                       (getCompanyName    user)
+                       (getCompanyName    mcompany)
                        (getPersonalNumber user)
-                       (getCompanyNumber  user)
+                       (getCompanyNumber  mcompany)
                        (map fieldvalue $ signatoryotherfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }

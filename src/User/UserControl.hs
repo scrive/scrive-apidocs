@@ -29,6 +29,7 @@ import Redirect
 import Templates.Templates
 import User.UserView
 import Util.FlashUtil
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
@@ -40,11 +41,20 @@ checkPasswordsMatch p1 p2 =
        then Right ()
        else Left flashMessagePasswordsDontMatch
 
+--TODO EM put somewhere better
+getCompanyForUser :: Kontrakcja m => Maybe User -> m (Maybe Company)
+getCompanyForUser muser =
+  case muser >>= usercompany of
+    Just companyid -> query $ GetCompany companyid
+    _ -> return Nothing
+
 handleUserGet :: Kontrakcja m => m Response
 handleUserGet = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> showUser user >>= renderFromBody TopAccount kontrakcja
+         Just user -> do
+           mcompany <- getCompanyForUser $ Just user
+           showUser user mcompany >>= renderFromBody TopAccount kontrakcja
          Nothing -> sendRedirect $ LinkLogin NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
@@ -54,12 +64,13 @@ handleUserPost = do
          Just user -> do
              infoUpdate <- getUserInfoUpdate
              _ <- update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             -- propagate company info to all company accounts since it might have changed
-             query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
-                 subs <- query $ GetCompanyAccounts (userid newuser)
-                 forM_ subs $ \sub -> do
-                     update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
-                 )
+             mcompany <- getCompanyForUser $ Just user
+             case (useriscompanyadmin user, mcompany) of
+               (True, Just company) -> do
+                 companyinfoupdate <- getCompanyInfoUpdate
+                 _ <- update $ SetCompanyInfo company (companyinfoupdate $ companyinfo company)
+                 return ()
+               _ -> return ()
              addFlashM flashMessageUserDetailsSaved
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
@@ -70,41 +81,28 @@ getUserInfoUpdate  = do
     mfstname          <- getValidField asValidName "fstname"
     msndname          <- getValidField asValidName "sndname"
     mpersonalnumber   <- getFieldUTF "personalnumber"
-    maddress          <- getValidField asValidAddress "address"
-    mcity             <- getFieldUTF "city"
-    mcountry          <- getFieldUTF "country"
-    mzip              <- getFieldUTF "zip"
     mphone            <- getFieldUTF "phone"
     mcompanyposition  <- getValidField asValidPosition "companyposition"
-    mcompanynumber    <- getValidField asValidCompanyNumber "companynumber"
-    mcompanyname      <- getValidField asValidCompanyName "companyname"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
           , usersndname = fromMaybe (usersndname ui) msndname
           , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
-          , usercompanyname = fromMaybe (usercompanyname ui) mcompanyname
           , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
-          , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
-          , useraddress  = fromMaybe (useraddress ui) maddress
-          , userzip    = fromMaybe (userzip ui) mzip
-          , usercity  = fromMaybe (usercity ui) mcity
-          , usercountry  = fromMaybe (usercountry  ui) mcountry
           , userphone  = fromMaybe (userphone ui) mphone
         }
     where
         getValidField = getDefaultedField BS.empty
 
-copyCompanyInfo :: User -> UserInfo -> UserInfo
-copyCompanyInfo fromuser info =
-  info
-  { usercompanyname = getCompanyName fromuser
-  , usercompanynumber = getCompanyNumber fromuser
-  , useraddress = useraddress $ userinfo fromuser
-  , userzip = userzip $ userinfo fromuser
-  , usercity = usercity $ userinfo fromuser
-  , usercountry = usercountry $ userinfo fromuser
-  }
+getCompanyInfoUpdate :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
+getCompanyInfoUpdate = do
+  mcompanyname <- getValidField asValidCompanyName "companyname" --TODO EM add more here
+  return $ \ci ->
+      ci {
+         companyname = fromMaybe (companyname ci) mcompanyname
+      }
+  where
+    getValidField = getDefaultedField BS.empty
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
@@ -214,7 +212,6 @@ handleGetSharing = withUserGet $ do
 friendsSortSearchPage :: ListParams -> [User] -> PagedList User
 friendsSortSearchPage  =
     listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
-
 
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
 handleGetCompanyAccounts = withUserGet $ do
@@ -377,11 +374,12 @@ handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
     let fullname = (BS.fromString fstname, BS.fromString sndname)
     case memail of
       Just email -> do
-        muser <- createUser ctx (ctxhostpart ctx) fullname email (usercompany user) False
+        mcompany <- getCompanyForUser $ Just user
+        muser <- createUser ctx (ctxhostpart ctx) fullname email (Just user) mcompany False
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
-            _ <- update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
+            _ <- update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
             addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
@@ -433,28 +431,27 @@ randomPassword :: IO BS.ByteString
 randomPassword =
     BS.fromString <$> randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
-createUser :: TemplatesMonad m => Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe CompanyID -> Bool -> m (Maybe User)
-createUser ctx hostpart names email maybecompany vip = do
+createUser :: TemplatesMonad m => Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Maybe Company -> Bool -> m (Maybe User)
+createUser ctx hostpart names email madminuser mcompany vip = do
     passwdhash <- liftIO $ createPassword =<< randomPassword
-    muser <- update $ AddUser names email passwdhash False Nothing maybecompany
+    muser <- update $ AddUser names email passwdhash False Nothing (fmap companyid mcompany)
     case muser of
          Just user -> do
              let fullname = composeFullName names
-             mail <- {- case maybecompany of
-                          Nothing -> -} do
+             mail <- case (fmap useriscompanyadmin madminuser, madminuser, mcompany) of  -- TODO EM can't add company user unless you are an admin
+                            (Just True, Just adminuser, Just company) -> do
+                              al <- newAccountCreatedLink user
+                              inviteCompanyAccountMail hostpart (getSmartName adminuser) (getCompanyName company) email fullname al
+                            _ -> do
                               al <- newAccountCreatedLink user
                               newUserMail hostpart email fullname al vip
-                      {-    Just supervisor -> do
-                              al <- newAccountCreatedLink user
-                              inviteCompanyAccountMail hostpart (getSmartName supervisor) (getCompanyName supervisor) email fullname al -} --TODO EM
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
-createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe (User, ActionID, MagicHash))
-createUserBySigning _ctx _doctitle names email companyname doclinkdata =
+createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe (User, ActionID, MagicHash))
+createUserBySigning _ctx _doctitle names email doclinkdata =
     createInvitedUser names email >>= maybe (return Nothing) (\user -> do
-        _ <- update $ SetUserInfo (userid user) $ (userinfo user) { usercompanyname = companyname }
         (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
         return $ Just (user, actionid, magichash)
     )
@@ -572,7 +569,8 @@ handleGetBecomeCompanyAccount :: Kontrakcja m => UserID -> m (Either KontraLink 
 handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
   addFlashM modalDoYouWantToBeCompanyAccount
   Context{ctxmaybeuser = Just user} <- getContext
-  content <- showUser user
+  mcompany <- getCompanyForUser $ Just user
+  content <- showUser user mcompany
   renderFromBody TopAccount kontrakcja content
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => UserID -> m KontraLink
@@ -737,28 +735,13 @@ handleAccountSetupPost aid hash = do
                      mcompanyposition <- getRequiredField asValidName "companyposition"
                      mphone <- getRequiredField asValidPhone "phone"
                      case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
-                          (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
-                              -- inherit company info from supervisor
-                              let infoupdatef = {- case usercompany user of
-                                   Just sv -> \info -> info {
-                                         userfstname = fname
-                                       , usersndname = lname
-                                       , usercompanyposition = companytitle
-                                       , userphone = phone
-                                       , usercompanyname = BS.empty
-                                       , usercompanynumber = BS.empty
-                                       , useraddress = BS.empty
-                                       , userzip = BS.empty
-                                       , usercity = BS.empty
-                                       , usercountry = BS.empty
-                                   }
-                                   Nothing -> -} \info -> info {
+                          (Just fname, Just lname, Just _companyname, Just companytitle, Just phone) -> do
+                              let infoupdatef = \info -> info {
                                        userfstname = fname
                                      , usersndname = lname
-                                     , usercompanyname = companyname
                                      , usercompanyposition = companytitle
                                      , userphone = phone
-                                   }
+                                   } --TODO EM this stuff is a mess
                               ifAccountTypeIsValid (usercompany user) CompanyAccount $
                                 finalizeActivation signupmethod user CompanyAccount infoupdatef
                           _ -> returnToAccountSetup user

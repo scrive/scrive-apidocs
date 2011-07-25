@@ -11,6 +11,7 @@
 
 module Doc.DocUtils where
 
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
 import API.Service.ServiceState
@@ -20,6 +21,7 @@ import Templates.Templates
 import User.UserState
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Company.CompanyState
 
 import Control.Monad
 import Data.List hiding (insert)
@@ -204,14 +206,14 @@ documentcurrentsignorder doc =
 {- |
    Build a SignatoryDetails from a User with no fields
  -}
-signatoryDetailsFromUser :: User -> SignatoryDetails
-signatoryDetailsFromUser user =
+signatoryDetailsFromUser :: User -> Maybe Company -> SignatoryDetails
+signatoryDetailsFromUser user mcompany =
     SignatoryDetails { signatoryfstname                  = getFirstName      user
                      , signatorysndname                  = getLastName       user
                      , signatoryemail                    = getEmail          user
-                     , signatorycompany                  = getCompanyName    user
+                     , signatorycompany                  = getCompanyName    mcompany
                      , signatorypersonalnumber           = getPersonalNumber user
-                     , signatorycompanynumber            = getCompanyNumber  user
+                     , signatorycompanynumber            = getCompanyNumber  mcompany
                      , signatorysignorder                = SignOrder 1
                      , signatoryfstnameplacements        = []
                      , signatorysndnameplacements        = []

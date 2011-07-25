@@ -36,6 +36,7 @@ import GHC.Word
 import GHC.Unicode (toLower)
 import Data.Either (lefts, rights)
 import Util.FlashUtil
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils

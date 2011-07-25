@@ -83,6 +83,7 @@ import MinutesTime
 import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 

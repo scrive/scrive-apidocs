@@ -46,6 +46,7 @@ import Data.Maybe
 import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
 {- -}

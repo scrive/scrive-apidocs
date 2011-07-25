@@ -66,6 +66,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Maybe
 import ActionSchedulerState
+import Company.CompanyState
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
@@ -77,12 +78,25 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 import FlashMessage
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-showUser :: TemplatesMonad m => User -> m String
-showUser user = renderTemplateFM "showUser" $ do
+showUser :: TemplatesMonad m => User -> Maybe Company -> m String
+showUser user mcompany = renderTemplateFM "showUser" $ do
     userFields user
+    companyFields mcompany
     field "linkaccount" $ show LinkAccount
+
+companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields mcompany = do
+    field "companyid" $ show $ fmap companyid mcompany
+    field "address" $ fmap (companyaddress . companyinfo) mcompany
+    field "city" $ fmap (companycity . companyinfo) mcompany
+    field "country" $ fmap (companycountry . companyinfo) mcompany
+    field "zip" $ fmap (companyzip . companyinfo) mcompany
+    field "companyname" $ getCompanyName mcompany
+    field "companynumber" $ getCompanyNumber mcompany
+    field "companyimagelink" False
 
 userFields :: MonadIO m => User -> Fields m
 userFields user = do
@@ -96,17 +110,10 @@ userFields user = do
     field "sndname" $ getLastName user
     field "email" $ getEmail user
     field "personalnumber" $ getPersonalNumber user
-    field "address" $ useraddress $ userinfo user
-    field "city" $ usercity $ userinfo user
-    field "country" $ usercountry $ userinfo user
-    field "zip" $ userzip $ userinfo user
     field "phone" $ userphone $ userinfo user
     field "mobile" $ usermobile $ userinfo user
-    field "companyname" $ getCompanyName user
     field "companyposition" $ usercompanyposition $ userinfo user
-    field "companynumber" $ getCompanyNumber user
     field "userimagelink" False
-    field "companyimagelink" False
     field "fullname" $ fullname
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
@@ -457,11 +464,11 @@ modalDoYouWantToBeCompanyAccount =
 -------------------------------------------------------------------------------
 
 {- | Basic fields for the user  -}
-userBasicFields :: MonadIO m => User -> Fields m
-userBasicFields u = do
+userBasicFields :: MonadIO m => User -> Maybe Company -> Fields m
+userBasicFields u mc = do
     field "id" $ show $ userid u
     field "fullname" $ getFullName u
     field "email" $ getEmail u
-    field "company" $ getCompanyName u
+    field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)

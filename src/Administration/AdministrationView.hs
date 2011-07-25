@@ -42,19 +42,21 @@ import MinutesTime
 import User.UserView
 import User.UserState
 import Doc.DocState
+import Company.CompanyState
 import API.Service.ServiceState
 import Happstack.State (query)
 import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => m String
 adminMainPage = renderTemplateM "adminsmain" ()
 
 {-| Manage users page  - advanced, will be changed-}
-adminUsersAdvancedPage :: TemplatesMonad m => [User] -> AdminUsersPageParams -> m String
+adminUsersAdvancedPage :: TemplatesMonad m => [(User,Maybe Company)] -> AdminUsersPageParams -> m String
 adminUsersAdvancedPage users params =
     renderTemplateFM "adminsmanageall" $ do
-        fieldFL "users" $ map userBasicFields $ visibleUsers params users
+        fieldFL "users" $ map (uncurry userBasicFields) $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -63,7 +65,7 @@ adminUsersAdvancedPage users params =
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage users page - can find user here -}
-adminUsersPage :: TemplatesMonad m => [(User,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
 adminUsersPage users params =
     renderTemplateFM "adminusers" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -75,7 +77,7 @@ adminUsersPage users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: TemplatesMonad m => [(User,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
 adminUsersPageForSales users params =
     renderTemplateFM "adminUsersForSales" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -87,7 +89,7 @@ adminUsersPageForSales users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForPayments :: TemplatesMonad m => [(User,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
 adminUsersPageForPayments users params =
     renderTemplateFM "adminUsersForPayments" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -99,25 +101,25 @@ adminUsersPageForPayments users params =
         field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
-adminUserPage :: TemplatesMonad m => User -> PaymentAccountModel -> m String
-adminUserPage user paymentModel =
+adminUserPage :: TemplatesMonad m => User -> Maybe Company -> PaymentAccountModel -> m String
+adminUserPage user mcompany paymentModel =
     renderTemplateFM "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldF "user" $ userFields user
+        fieldF "user" $ userFields user mcompany
         field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
-adminUserUsageStatsPage :: TemplatesMonad m => User -> Fields m -> m String
-adminUserUsageStatsPage user morefields =
+adminUserUsageStatsPage :: TemplatesMonad m => User -> Maybe Company -> Fields m -> m String
+adminUserUsageStatsPage user mcompany morefields =
     renderTemplateFM "userusagestats" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldF "user" $ userFields user
+        fieldF "user" $ userFields user mcompany
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
-allUsersTable :: TemplatesMonad m => [(User,DocStats,UserStats)] -> m String
+allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> m String
 allUsersTable users =
     renderTemplateFM "allUsersTable" $ do
         fieldFL "users" $ map mkUserInfoView $ users
@@ -148,12 +150,12 @@ servicesAdminPage services = do
 adminTranslationsPage::TemplatesMonad m => m String
 adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
 
-mkUserInfoView :: (Functor m, MonadIO m) => (User, DocStats, UserStats) -> Fields m
-mkUserInfoView (userdetails', docstats', userstats') = do
-  fieldF "userdetails" $ userBasicFields userdetails'
-  field "docstats" $ docstats'
-  field "userstats" $ userstats'
-  fieldF "adminview" $ userFields userdetails'
+mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats, UserStats) -> Fields m
+mkUserInfoView (user, mcompany, docstats, userstats) = do
+  fieldF "userdetails" $ userBasicFields user mcompany
+  field "docstats" $ docstats
+  field "userstats" $ userstats
+  fieldF "adminview" $ userFields user mcompany
 
 
 data StatsView = StatsView
@@ -179,9 +181,12 @@ class UserBased a where
 
 instance UserBased User where
   getUser = id
+  
+instance UserBased (User,Maybe Company) where
+  getUser (user,_) = user
 
-instance UserBased (User,DocStats,UserStats) where
-  getUser (user,_,_) = user
+instance UserBased (User,Maybe Company,DocStats,UserStats) where
+  getUser (user,_,_,_) = user
 
 {-| Users on current page-}
 visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]
@@ -211,18 +216,18 @@ data AdminUsersPageParams = AdminUsersPageParams {
                             }
 
 {-| Full fields set about user -}
-userFields :: MonadIO m => User -> Fields m
-userFields u =  do
+userFields :: MonadIO m => User -> Maybe Company -> Fields m
+userFields u mc =  do
         field "fstname" $ getFirstName u
         field "sndname" $ getLastName u
         field "personalnumber" $ getPersonalNumber u
-        field "companyname" $  getCompanyName u
+        field "companyname" $  getCompanyName mc
         field "companyposition" $ usercompanyposition $ userinfo u
-        field "companynumber" $ getCompanyNumber u
-        field "address" $ toString $ useraddress $ userinfo u
-        field "zip" $  toString $ userzip  $ userinfo u
-        field "city" $  toString $ usercity $ userinfo u
-        field "country" $ toString $ usercountry $ userinfo u
+        field "companynumber" $ getCompanyNumber mc
+        field "address" $ maybe "" (toString . companyaddress . companyinfo) mc
+        field "zip" $  maybe "" (toString . companyzip . companyinfo)  mc
+        field "city" $  maybe "" (toString . companycity . companyinfo) mc
+        field "country" $ maybe "" (toString . companycountry . companyinfo) mc
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u

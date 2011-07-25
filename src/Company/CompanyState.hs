@@ -11,11 +11,13 @@
 -----------------------------------------------------------------------------
 module Company.CompanyState
     ( Company(..)
+    , CompanyInfo(..)
     , CompanyID(..)
     , CompanyUser(..)
     , Companies
     , GetCompany(..)
     , GetCompanyByExternalID(..)
+    , SetCompanyInfo(..)
     , GetOrCreateCompanyWithExternalID(..)
 ) where
 import API.Service.ServiceState
@@ -48,19 +50,61 @@ newtype CompanyUser = CompanyUser { unCompanyUser :: Int }
 
 deriving instance Data CompanyUser
 
+data Company0 = Company0
+               { companyid0 :: CompanyID
+               , companyexternalid0 :: ExternalCompanyID
+               , companyservice0 :: Maybe ServiceID
+               }
+             deriving (Eq, Ord, Show, Typeable)
+
 data Company = Company
                { companyid :: CompanyID
                , companyexternalid :: ExternalCompanyID
                , companyservice :: Maybe ServiceID
+               , companyinfo :: CompanyInfo
                }
-             deriving (Eq, Ord)
+             deriving (Eq, Ord, Show)
 
 instance Typeable Company where typeOf _ = mkTypeOf "Company"
 
+instance Migrate Company0 Company where
+    migrate (Company0 {
+               companyid0
+             , companyexternalid0
+             , companyservice0
+          }) = Company {
+              companyid         = companyid0
+            , companyexternalid = companyexternalid0
+            , companyservice    = companyservice0
+            , companyinfo       = CompanyInfo {
+                                      companyname       = BS.empty
+                                    , companynumber     = BS.empty
+                                    , companyaddress    = BS.empty
+                                    , companyzip        = BS.empty
+                                    , companycity       = BS.empty
+                                    , companycountry    = BS.empty
+                                  }
+          }
 
-deriving instance Show Company
+instance Version Company0
 
-instance Version Company
+instance Version Company where
+    mode = extension 1 (Proxy :: Proxy Company0)
+
+data CompanyInfo = CompanyInfo
+               { companyname :: BS.ByteString
+               , companynumber :: BS.ByteString
+               , companyaddress :: BS.ByteString
+               , companyzip :: BS.ByteString
+               , companycity :: BS.ByteString
+               , companycountry :: BS.ByteString
+               }
+             deriving (Eq, Ord, Show)
+
+instance Typeable CompanyInfo where typeOf _ = mkTypeOf "CompanyInfo"
+
+instance Version CompanyInfo
+
 instance Version CompanyUser
 instance Version CompanyID
 instance Version ExternalCompanyID
@@ -122,6 +166,10 @@ getCompanyByExternalID sid ecid = do
   companies <- ask
   return $ getOne (companies @= sid @= ecid)
 
+setCompanyInfo :: Company -> CompanyInfo -> Update Companies (Either String Company)
+setCompanyInfo Company{companyid,companyservice} newcompanyinfo = modifyCompany companyservice companyid $ \company ->
+  return $ company { companyinfo = newcompanyinfo }
+
 getOrCreateCompanyWithExternalID :: (Maybe ServiceID) -> ExternalCompanyID -> Update Companies Company
 getOrCreateCompanyWithExternalID sid ecid = do
     companies <- ask
@@ -134,6 +182,14 @@ getOrCreateCompanyWithExternalID sid ecid = do
                       companyid = cid
                     , companyservice = sid
                     , companyexternalid = ecid
+                    , companyinfo = CompanyInfo {
+                                        companyname = BS.empty
+                                      , companynumber = BS.empty
+                                      , companyaddress = BS.empty
+                                      , companyzip = BS.empty
+                                      , companycity = BS.empty
+                                      , companycountry = BS.empty
+                                   }
                     }
         modify $ insert company
         return $ company
@@ -147,6 +203,7 @@ getCompanies sid = do
 $(mkMethods ''Companies [
                        'getCompany
                      , 'getCompanyByExternalID
+                     , 'setCompanyInfo
                      , 'getCompanies
                      , 'getOrCreateCompanyWithExternalID
                         ])
@@ -154,6 +211,8 @@ $(mkMethods ''Companies [
 $(deriveSerializeFor [ ''CompanyID
                      , ''CompanyUser
                      , ''Company
+                     , ''Company0
+                     , ''CompanyInfo
                      , ''ExternalCompanyID
                      ])
 

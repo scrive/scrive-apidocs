@@ -170,7 +170,7 @@ testDocumentUpdateDoesNotChangeID = do
   author <- assumingBasicUser
   doc <- assumingBasicContract mt author
   --execute
-  let sd = signatoryDetailsFromUser author
+  let sd = signatoryDetailsFromUser author Nothing
   enewdoc <- update $ UpdateDocument mt (documentid doc) "Test Document" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
   --assert
   case enewdoc of
@@ -184,7 +184,7 @@ testDocumentUpdateCanChangeTitle = do
   author <- assumingBasicUser
   doc <- assumingBasicContract mt author
   --execute
-  let sd = signatoryDetailsFromUser author
+  let sd = signatoryDetailsFromUser author Nothing
   enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
   --assert
   case enewdoc of
@@ -477,7 +477,7 @@ testCreateFromSharedTemplate = do
              then return tmpdoc
              else fmap fromRight $ update (TemplateFromDocument docid)
    newuser <- addNewRandomUser
-   doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser (documentid doc)
+   doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc)
    let [author1] = filter isAuthor $ documentsignatorylinks doc
    let [author2] = filter isAuthor $ documentsignatorylinks doc'
    if (fmap fieldvalue $ signatoryotherfields $ signatorydetails author1) == (fmap fieldvalue $ signatoryotherfields $ signatorydetails author2)
@@ -1499,17 +1499,15 @@ instance Arbitrary UserInfo where
   arbitrary = do
     fn <- arbitrary
     ln <- arbitrary
-    cn <- arbitrary
     pn <- arbitrary
-    cm <- arbitrary
     em <- arbEmail
-
+    
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyname     = cn
+                      , usercompanyname     = ""
                       , usercompanyposition = ""
-                      , usercompanynumber   = cm
+                      , usercompanynumber   = ""
                       , useraddress         = ""
                       , userzip             = ""
                       , usercity            = ""
@@ -1529,7 +1527,7 @@ addRandomDocumentWithAuthor user = do
       sldets = unGen (vectorOf sls arbitrary) stdgen 10
       slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  asd <- extendRandomness $ signatoryDetailsFromUser user
+  asd <- extendRandomness $ signatoryDetailsFromUser user Nothing
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]

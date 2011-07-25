@@ -178,7 +178,7 @@ createAPIDocument _ _ _ _ [] _  =
 createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
     now <- liftIO $ getMinutesTime
     author <- userFromTMP authorTMP
-    doc <- update $ NewDocumentWithMCompany (Just $ companyid company) author title doctype now
+    doc <- update $ NewDocumentWithMCompany (Just company) author title doctype now
     sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
     _ <- update $ SetDocumentTags (documentid doc) tags
     doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
@@ -206,8 +206,8 @@ userFromTMP uTMP = do
               userfstname = fromMaybe (getFirstName user) $ fstname uTMP
             , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
-            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP
-            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP
+--            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP -- TODO EM ??
+--            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP --TODO EM ??
             }
     when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
     return $ fromRight user'

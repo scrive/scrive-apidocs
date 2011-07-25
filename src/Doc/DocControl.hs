@@ -447,8 +447,8 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       let details = signatorydetails signatorylink
           fullname = (signatoryfstname details, signatorysndname details)
           email = signatoryemail details
-          company = signatorycompany details
-      muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
+          -- company = signatorycompany details --TODO EM, should we make them a company account?
+      muser <- liftIO $ createUserBySigning ctx documenttitle fullname email (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
           _ <- update $ SaveDocumentForUser documentid user signatorylinkid
@@ -721,7 +721,9 @@ handleIssueChangeToContract document = do
   ctx <- getContext
   signlast <- isFieldSet "signlast"
   guard (isJust $ ctxmaybeuser ctx)
-  contract <- guardRightM $ update $ SignableFromDocumentIDWithUpdatedAuthor (fromJust $ ctxmaybeuser ctx) (documentid document)
+  let user = fromJust $ ctxmaybeuser ctx
+  mcompany <- getCompanyForUser $ Just user
+  contract <- guardRightM $ update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany (documentid document)
   ncontract <- guardRightM $ updateDocument ctx contract
   return $ LinkDesignDoc $ DesignStep3 (documentid ncontract) signlast
 
@@ -1842,7 +1844,9 @@ handleCreateFromTemplate = withUserPost $ do
                                               && documentsharing document == Shared))
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
-                    then update $ SignableFromDocumentIDWithUpdatedAuthor user did
+                    then do
+                      mcompany <- getCompanyForUser $ Just user
+                      update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did
                     else mzero
       case enewdoc of
         Right newdoc -> return $ LinkIssueDoc $ documentid newdoc

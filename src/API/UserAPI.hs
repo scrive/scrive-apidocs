@@ -16,6 +16,7 @@ import API.API
 import API.APICommons hiding (SignatoryTMP(..))
 import Doc.DocControl
 import Doc.DocState
+import Company.CompanyState
 import Kontra
 import Misc
 import Doc.DocViewMail
@@ -149,10 +150,12 @@ getTemplate = do
   when (not $ isTemplate temp) $ throwApiError API_ERROR_OTHER "This document is not a template"
   return temp
 
-
 sendNewDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 sendNewDocument = do
   author <- user <$> ask
+  mcompany <- case usercompany author of
+                Just companyid -> query $ GetCompany companyid
+                Nothing -> return Nothing
   mtitle <- apiAskBS "title"
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""
   let title = fromJust mtitle
@@ -178,7 +181,7 @@ sendNewDocument = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext newdoc)
-          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
+          ((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality

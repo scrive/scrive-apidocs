@@ -161,13 +161,13 @@ data UserInfo = UserInfo {
             userfstname                   :: BS.ByteString
           , usersndname                   :: BS.ByteString
           , userpersonalnumber            :: BS.ByteString
-          , usercompanyname               :: BS.ByteString
+          , usercompanyname               :: BS.ByteString --Don't use this anymore, use the one on company
           , usercompanyposition           :: BS.ByteString
-          , usercompanynumber             :: BS.ByteString
-          , useraddress                   :: BS.ByteString
-          , userzip                       :: BS.ByteString
-          , usercity                      :: BS.ByteString
-          , usercountry                   :: BS.ByteString
+          , usercompanynumber             :: BS.ByteString --Don't use this anymore, use the one on company
+          , useraddress                   :: BS.ByteString --Don't use this anymore, use the one on company
+          , userzip                       :: BS.ByteString --Don't use this anymore, use the one on company
+          , usercity                      :: BS.ByteString --Don't use this anymore, use the one on company
+          , usercountry                   :: BS.ByteString --Don't use this anymore, use the one on company
           , userphone                     :: BS.ByteString
           , usermobile                    :: BS.ByteString
           , useremail                     :: Email
@@ -224,7 +224,7 @@ instance Typeable UserMailAPI where
 data User = User
           { userid                        :: !UserID
           , userpassword                  :: !Password
-          , usersupervisor                :: !(Maybe SupervisorID)
+          , usersupervisor                :: !(Maybe SupervisorID) --don't use this anymore, it's been deprecated
           , useriscompanyadmin            :: !Bool
           , useraccountsuspended          :: !Bool
           , userhasacceptedtermsofservice :: !(Maybe MinutesTime)
