@@ -2955,14 +2955,6 @@ table#signViewSigAttachmentBoxList td {
     width: 33%;
 }
 
-table#signViewSigAttachmentBoxList input.multiFileInput {
-    width: 112px;
-    float: left;
-    left: -112px;
-    top: 0px;
-    height: 29px;
-}
-
 table#signViewSigAttachmentBoxList .btn-small {
     margin-top: 5px;
 }
