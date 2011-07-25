@@ -46,9 +46,9 @@ getTextTemplatesMTime = getRecursiveMTime textsDirectory
 -- | We recursively read all csv files from texts directory
 --   This function will also merge selected lang with default lang
 getTextTemplates:: Lang -> IO [(String,String)]
-getTextTemplates lang = do
+getTextTemplates _ = do
     texts <- getAllTextTemplates 
-    return $ unionBy (\x y -> fst x == fst y) (texts ! lang) (texts ! defaultValue)
+    return $ unionBy (\x y -> fst x == fst y) (texts ! defaultValue) (texts ! defaultValue)
 
 -- | All texts maped by the language
 --   Should be used only for tests since it does not do a mergewith default language
