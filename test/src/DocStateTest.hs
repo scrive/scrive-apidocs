@@ -207,32 +207,36 @@ testDocumentAttachAlwaysRight = do
     Right _newdoc -> assertSuccess
 
 testNoDocumentAttachAlwaysLeft :: Assertion
-testNoDocumentAttachAlwaysLeft = do
+testNoDocumentAttachAlwaysLeft = doTimes 100 $ do
   -- setup
+  stdgn <- newStdGen
+  let a = unGen arbitrary stdgn 100
+      b = unGen arbitrary stdgn 10
+      c = unGen arbitrary stdgn 100
   --execute
   -- non-existent docid
-  edoc <- update $ AttachFile (DocumentID 4) "some file" "some content"
+  edoc <- update $ AttachFile a b c
   --assert
   case edoc of
-    Left _msg     -> assertSuccess
-    Right _newdoc -> assertFailure "Should not succeed if no document"
+    Left _msg     -> return $ Just $ assertSuccess
+    Right _newdoc -> return $ Just $ assertFailure "Should not succeed if no document"
 
 testDocumentAttachHasAttachment :: Assertion
-testDocumentAttachHasAttachment = do
+testDocumentAttachHasAttachment = doTimes 100 $ do
   -- setup
-  mt <- whatTimeIsIt
-  author <- assumingBasicUser
-  doc <- assumingBasicContract mt author
-  let fname = "some file" :: BS.ByteString
-      content  = "some content" :: BS.ByteString
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthor' author
+  stdgn <- newStdGen  
+  let a = unGen arbitrary stdgn 10
+      b = unGen arbitrary stdgn 100
   --execute
-  edoc <- update $ AttachFile (documentid doc) fname content
+  edoc <- update $ AttachFile (documentid doc) a b
   --assert
   case edoc of
-    Left msg -> assertFailure $ "Could not run AttachFile: " ++ msg
-    Right newdoc -> case find ((== fname) . filename) (documentfiles newdoc) of
-      Just _ -> assertSuccess
-      _ -> assertFailure "File does exist or wrong name"
+    Left msg -> return $ Just $ assertFailure $ "Could not run AttachFile: " ++ msg
+    Right newdoc -> case find ((== a) . filename) (documentfiles newdoc) of
+      Just _ -> return $ Just $ assertSuccess
+      _ -> return $ Just $ assertFailure "File does not exist or wrong name"
 
 testNoDocumentAttachSealedAlwaysLeft :: Assertion
 testNoDocumentAttachSealedAlwaysLeft = do
@@ -261,17 +265,15 @@ testDocumentAttachSealedAlwaysRight = do
 testNotPreparationUpdateDocumentAlwaysLeft :: Assertion
 testNotPreparationUpdateDocumentAlwaysLeft = do
   -- setup
-  mt <- whatTimeIsIt
-  author <- addNewRandomUser
   do100Times' $ do
-                 docid <- addRandomDocumentWithAuthor author
-                 mdoc <- query $ GetDocumentByDocumentID docid
-                 case mdoc of
-                   Nothing -> return $ Just $ assertFailure "Could not stored document."
-                   Just doc | isPreparation doc -> return Nothing
-                   Just _doc -> do
+                 mt <- whatTimeIsIt
+                 author <- addNewRandomUser
+                 doc <- addRandomDocumentWithAuthor' author
+                 if isPreparation doc
+                   then return Nothing
+                   else do
                      --execute
-                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+                     edoc <- update $ UpdateDocument mt (documentid doc) "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ return ()
@@ -957,19 +959,14 @@ testRejectDocumentSignablePendingRight = do
           Right _ -> return $ Just $ return ()
 
 testMarkInvitationRead :: Assertion
-testMarkInvitationRead = do
-  doTimes 100 $ do
-    mt <- whatTimeIsIt    
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-        _ <- update $ MarkInvitationRead docid a mt
-        return $ Just $ return ()
+testMarkInvitationRead = doTimes 100 $ do
+  mt <- whatTimeIsIt    
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthor' author
+  stdgn <- newStdGen
+  let a = unGen arbitrary stdgn 10
+  _ <- update $ MarkInvitationRead (documentid doc) a mt
+  return $ Just $ return ()
         
 testMarkInvitationReadDocDoesntExist :: Assertion
 testMarkInvitationReadDocDoesntExist = do
@@ -1561,7 +1558,7 @@ instance Arbitrary UserInfo where
                       , useremail           = Email em
                       }
 
-addRandomDocumentWithAuthor :: User -> IO (DocumentID)
+addRandomDocumentWithAuthor :: User -> IO DocumentID
 addRandomDocumentWithAuthor user = do
   stdgen <- newStdGen
   let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
@@ -1577,6 +1574,29 @@ addRandomDocumentWithAuthor user = do
                                             [asl { maybesignatory = Just (userid user) }]
                  }
   update $ StoreDocumentForTesting adoc
+
+addRandomDocumentWithAuthor' :: User -> IO Document
+addRandomDocumentWithAuthor' user = do
+  stdgen <- newStdGen
+  let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+              stdgen 10000
+  let doc = unGen arbitrary stdgen 10
+      sls = 1 + (abs $ unGen arbitrary stdgen 10)
+      sldets = unGen (vectorOf sls arbitrary) stdgen 10
+      slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
+  slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
+  asd <- extendRandomness $ signatoryDetailsFromUser user
+  asl <- update $ SignLinkFromDetailsForTest asd roles
+  let adoc = doc { documentsignatorylinks = slinks ++ 
+                                            [asl { maybesignatory = Just (userid user) }]
+                 }
+  docid <- update $ StoreDocumentForTesting adoc
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> do
+      assertFailure "Could not stored document."
+      return doc
+    Just doc' -> return doc'
 
 instance Arbitrary DocumentID where
   arbitrary = do
