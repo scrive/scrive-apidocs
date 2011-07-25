@@ -271,7 +271,7 @@ testNotPreparationUpdateDocumentAlwaysLeft = do
                    then return Nothing
                    else do
                      --execute
-                     edoc <- update $ UpdateDocument mt (documentid doc) "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+                     edoc <- update $ UpdateDocument mt (documentid doc) "" []  Nothing "" (emptySignatoryDetails, [], UserID 1, Nothing) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ return ()
@@ -1541,7 +1541,7 @@ addRandomDocumentWithAuthor' user = do
       sldets = unGen (vectorOf sls arbitrary) stdgen 10
       slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  asd <- extendRandomness $ signatoryDetailsFromUser user
+  asd <- extendRandomness $ signatoryDetailsFromUser user Nothing
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]
