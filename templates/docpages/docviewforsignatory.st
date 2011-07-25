@@ -261,12 +261,14 @@ pageDocumentForSignContent=
                 <input type="hidden" name="sigattachment" value="yes" />
                 <input type="hidden" name="attachname"
                        value="$attachment.name$" />
+                <div class="signStepsButtonContainer">
                   <a class="btn-small green">  
                     <div class="left"> </div>
-                    <div class="label" style="width:80px">$_signViewSigAttachmentBoxChooseFile()$</div>
+                    <div class="label" style="min-width:100px">$_signViewSigAttachmentBoxChooseFile()$</div>
                     <div class="right"> </div>                 
                     <input class="multiFileInput submitOnUpload" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
                   </a>
+                </div>
                 <div id="tobeattached-$attachment.name$" style="display:none;"></div>
               </form>
 
