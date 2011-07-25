@@ -15,7 +15,6 @@ import MinutesTime
 import Happstack.State
 import Misc
 import Payments.PaymentsState as Payments
-import Doc.DocStateQuery
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Mails.MailsUtil
@@ -86,7 +85,6 @@ docStateTests = testGroup "DocState" [
   testThat "TimeoutDocument fails when doc doesn't exist" testTimeoutDocumentSignableNotLeft,
   testThat "TimeoutDocument succeeds when doc is Signable and Pending" testTimeoutDocumentSignablePendingRight,
   testThat "TimeoutDocument fails when the document is Signable but not in Pending" testTimeoutDocumentSignableNotPendingLeft,
-  testThat "A supervisor's friends can view a document"testSupervisorsFriendsCanSee,
   testThat "create document and check invariants" testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" testDocumentCanBeCreatedAndFetchedByAllDocs,
@@ -172,8 +170,8 @@ testDocumentUpdateDoesNotChangeID = do
   author <- assumingBasicUser
   doc <- assumingBasicContract mt author
   --execute
-  let sd = signatoryDetailsFromUser author
-  enewdoc <- update $ UpdateDocument mt (documentid doc) "Test Document" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], (userid author, Nothing)) [EmailIdentification] Nothing AdvancedFunctionality 
+  let sd = signatoryDetailsFromUser author Nothing
+  enewdoc <- update $ UpdateDocument mt (documentid doc) "Test Document" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
   --assert
   case enewdoc of
     Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
@@ -186,8 +184,8 @@ testDocumentUpdateCanChangeTitle = do
   author <- assumingBasicUser
   doc <- assumingBasicContract mt author
   --execute
-  let sd = signatoryDetailsFromUser author
-  enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], (userid author, Nothing)) [EmailIdentification] Nothing AdvancedFunctionality 
+  let sd = signatoryDetailsFromUser author Nothing
+  enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
   --assert
   case enewdoc of
     Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
@@ -293,7 +291,7 @@ testPreparationUpdateDocumentAlwaysRight = do
                    Just doc | not $ isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+                     edoc <- update $ UpdateDocument mt docid "" []  Nothing "" (emptySignatoryDetails, [], UserID 1, Nothing) [] Nothing BasicFunctionality
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ assertFailure "Should always succeed if not preparation"
@@ -307,7 +305,7 @@ testNoDocumentUpdateDocumentAlwaysLeft = do
   mt <- whatTimeIsIt
   --execute
   -- non-existent docid
-  edoc <- update $ UpdateDocument mt (DocumentID 24) "" []  Nothing "" (emptySignatoryDetails, [], (UserID 1, Nothing)) [] Nothing BasicFunctionality
+  edoc <- update $ UpdateDocument mt (DocumentID 24) "" []  Nothing "" (emptySignatoryDetails, [], UserID 1, Nothing) [] Nothing BasicFunctionality
   --assert
   case edoc of
     Left _msg     -> assertSuccess
@@ -325,7 +323,7 @@ testNotPreparationUpdateDocumentSimpleAlwaysLeft = do
                    Just doc | isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, (UserID 1, Nothing)) []
+                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, author) []
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ return ()
@@ -344,7 +342,7 @@ testPreparationUpdateDocumentSimpleAlwaysRight = do
                    Just doc | not $ isPreparation doc -> return Nothing
                    Just _doc -> do
                      --execute
-                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, (UserID 1, Nothing)) []
+                     edoc <- update $ UpdateDocumentSimple docid (emptySignatoryDetails, author) []
                      --assert
                      case edoc of
                        Left _msg     -> return $ Just $ assertFailure "Should always succeed if not preparation"
@@ -355,9 +353,10 @@ testPreparationUpdateDocumentSimpleAlwaysRight = do
 testNoDocumentUpdateDocumentSimpleAlwaysLeft :: Assertion
 testNoDocumentUpdateDocumentSimpleAlwaysLeft = do
   -- setup
+  author <- addNewRandomUser
   --execute
   -- non-existent docid
-  edoc <- update $ UpdateDocumentSimple (DocumentID 24) (emptySignatoryDetails, (UserID 1, Nothing)) []  
+  edoc <- update $ UpdateDocumentSimple (DocumentID 24) (emptySignatoryDetails, author) []  
   --assert
   case edoc of
     Left _msg     -> assertSuccess
@@ -470,22 +469,6 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = do
                        Left _msg     -> return $ Just $ return ()
                        Right _newdoc -> return $ Just $ assertFailure "Should fail if csvsignatoryindex is too high"
   assertSuccess
-  
-testSupervisorsFriendsCanSee :: Assertion
-testSupervisorsFriendsCanSee = do
-  friend <- assumingNewUser "Friend" "Amigo" "abc@friend.com"
-  super <- assumingNewUser "Super" "Visor" "super@visor.com"
-  author <- assumingNewUserWithSupervisor (userid super) "Author" "Pendragon" "author@contract.com"
-  _ <- update $ AddViewerByEmail (userid super) (Email "abc@friend.com")
-  
-  docid <- addRandomDocumentWithAuthor author
-  mdoc <- query $ GetDocumentByDocumentID docid
-  case mdoc of
-    Nothing -> assertFailure "Could not stored document."
-    Just doc -> do
-      canView <- canUserViewDoc friend doc
-      if canView then assertSuccess else assertFailure "Supervisor's friends cannot view document"
-                  
 
 testCreateFromSharedTemplate::Assertion
 testCreateFromSharedTemplate = do
@@ -496,7 +479,7 @@ testCreateFromSharedTemplate = do
              then return tmpdoc
              else fmap fromRight $ update (TemplateFromDocument docid)
    newuser <- addNewRandomUser
-   doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser (documentid doc)
+   doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc)
    let [author1] = filter isAuthor $ documentsignatorylinks doc
    let [author2] = filter isAuthor $ documentsignatorylinks doc'
    if (fmap fieldvalue $ signatoryotherfields $ signatorydetails author1) == (fmap fieldvalue $ signatoryotherfields $ signatorydetails author2)
@@ -1321,15 +1304,9 @@ documentHasOneAuthor document =
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
 
-addNewUserWithSupervisor :: UserID -> String -> String -> String -> IO (Maybe User)
-addNewUserWithSupervisor superid = addNewUser' (Just superid)
-
 addNewUser :: String -> String -> String -> IO (Maybe User)
-addNewUser = addNewUser' Nothing
-
-addNewUser' :: Maybe UserID -> String -> String -> String -> IO (Maybe User)
-addNewUser' msuperid firstname secondname email = 
-  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword msuperid Nothing Nothing
+addNewUser firstname secondname email = 
+  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword False Nothing Nothing
 
 whatTimeIsIt :: IO (MinutesTime)
 whatTimeIsIt = liftIO $ getMinutesTime
@@ -1343,25 +1320,6 @@ assumingBasicContract mt author = do
       assertFailure "Could not create + store document."
       return blankDocument
     Just d -> return d
-
-assumingNewUser :: String -> String -> String -> IO User
-assumingNewUser fn ln em = do
-  muser <- addNewUser fn ln em
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
-
-assumingNewUserWithSupervisor :: UserID -> String -> String -> String -> IO User
-assumingNewUserWithSupervisor sid fn ln em = do
-  muser <- addNewUserWithSupervisor sid fn ln em
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
-  
 
 assumingBasicUser :: IO (User)
 assumingBasicUser = do
@@ -1389,7 +1347,8 @@ blankUser :: User
 blankUser = User {  
                    userid                  =  UserID 0
                  , userpassword            =  NoPassword
-                 , usersupervisor          =  Nothing 
+                 , usersupervisor          =  Nothing
+                 , useriscompanyadmin = False
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
                  , userfreetrialexpirationdate = Nothing
@@ -1429,7 +1388,7 @@ blankUser = User {
               , userservice = Nothing
               , usercompany = Nothing
               , usermailapi = Nothing
-              , userrecordstatus = LiveUser
+              , userdeleted = False
               }
 
 blankDocument :: Document 
@@ -1460,7 +1419,6 @@ blankDocument =
           , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
-          , documentoriginalcompany      = Nothing
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
@@ -1538,17 +1496,15 @@ instance Arbitrary UserInfo where
   arbitrary = do
     fn <- arbitrary
     ln <- arbitrary
-    cn <- arbitrary
     pn <- arbitrary
-    cm <- arbitrary
     em <- arbEmail
-
+    
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyname     = cn
+                      , usercompanyname     = ""
                       , usercompanyposition = ""
-                      , usercompanynumber   = cm
+                      , usercompanynumber   = ""
                       , useraddress         = ""
                       , userzip             = ""
                       , usercity            = ""
@@ -1568,7 +1524,7 @@ addRandomDocumentWithAuthor user = do
       sldets = unGen (vectorOf sls arbitrary) stdgen 10
       slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  asd <- extendRandomness $ signatoryDetailsFromUser user
+  asd <- extendRandomness $ signatoryDetailsFromUser user Nothing
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]

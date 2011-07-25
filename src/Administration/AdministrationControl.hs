@@ -45,6 +45,7 @@ import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy  as L
+import Company.CompanyState
 import KontraLink
 import Payments.PaymentsControl(getPaymentChangeChange)
 import MinutesTime
@@ -90,8 +91,9 @@ showAdminMainPage = onlySuperUser $ do
 showAdminUserAdvanced :: Kontrakcja m => m Response
 showAdminUserAdvanced = onlySuperUser $ do
   users <- query $ GetAllUsers
+  mcompanies <- mapM (getCompanyForUser . Just) users
   params <- getAdminUsersPageParams
-  content <- adminUsersAdvancedPage users params
+  content <- adminUsersAdvancedPage (zip users mcompanies) params
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param
@@ -109,7 +111,8 @@ showAdminUsers (Just userId) = onlySuperUser $ do
     Nothing -> mzero
     Just user -> do
       paymentmodel <- query $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
-      content <- adminUserPage user paymentmodel
+      mcompany <- getCompanyForUser $ Just user
+      content <- adminUserPage user mcompany paymentmodel
       renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForSales :: Kontrakcja m => m Response
@@ -126,14 +129,15 @@ showAdminUsersForPayments = onlySuperUser $ do
   content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
-getUsersAndStats :: Kontrakcja m => m [(User,DocStats,UserStats)]
+getUsersAndStats :: Kontrakcja m => m [(User,Maybe Company, DocStats,UserStats)]
 getUsersAndStats = do
     Context{ctxtime} <- getContext
     users <- query $ GetAllUsers
     let queryStats user = do
+          mcompany <- getCompanyForUser $ Just user
           docstats <- query $ GetDocumentStatsByUser user ctxtime
           userstats <- query $ GetUserStatsByUser user
-          return (user, docstats, userstats)
+          return (user, mcompany, docstats, userstats)
     users2 <- mapM queryStats users
     return users2
 
@@ -141,7 +145,8 @@ showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
   documents <- query $ GetDocumentsByAuthor userid
   Just user <- query $ GetUserByUserID userid
-  content <- adminUserUsageStatsPage user $ do
+  mcompany <- getCompanyForUser $ Just user
+  content <- adminUserUsageStatsPage user mcompany $ do
     fieldsFromStats [user] documents
   renderFromBody TopEmpty kontrakcja content
 
@@ -214,6 +219,7 @@ handleUserChange a = onlySuperUser $
                                            --Reading changes from params using dedicated functions for each user part
                                            freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"
                                            infoChange <- getUserInfoChange
+                                           companyInfoChange <- getCompanyInfoChange
                                            settingsChange <- getUserSettingsChange
                                            paymentAccountChange <- getUserPaymentAccountChange
                                            paymentPaymentPolicy <- getUserPaymentPolicyChange
@@ -223,6 +229,13 @@ handleUserChange a = onlySuperUser $
                                            _ <- update $ SetUserSettings userId $ settingsChange $ usersettings user
                                            _ <- update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
                                            _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
+                                           mcompany <- getCompanyForUser $ Just user
+                                           case mcompany of
+                                             Just company -> do
+                                               _ <- update $ SetCompanyInfo company (companyInfoChange $ companyinfo company)
+                                               return ()
+                                             Nothing -> do
+                                               return ()
                                            return $ LinkUserAdmin $ Just userId
 
 handleUserEnableTrustWeaverStorage :: Kontrakcja m => String -> m KontraLink
@@ -301,6 +314,31 @@ handleCreateUser = onlySuperUser $ do
 
     -- FIXME: where to redirect?
     return LinkStats
+    
+{- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
+getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
+getCompanyInfoChange = do
+                     mcompanyname    <- getFieldUTF "usercompanyname" --TODO EM change the name of these fields
+                     mcompanynumber  <- getFieldUTF "usercompanynumber"
+                     mcompanyaddress        <- getFieldUTF "useraddress"
+                     mcompanyzip            <- getFieldUTF "userzip"
+                     mcompanycity           <- getFieldUTF "usercity"
+                     mcompanycountry        <- getFieldUTF "usercountry"
+                     return (\CompanyInfo {
+                                    companyname
+                                  , companynumber
+                                  , companyaddress
+                                  , companyzip
+                                  , companycity
+                                  , companycountry
+                                  } ->  CompanyInfo {
+                                            companyname =  maybe' companyname mcompanyname
+                                          , companynumber  =  maybe' companynumber mcompanynumber
+                                          , companyaddress =  maybe' companyaddress mcompanyaddress
+                                          , companyzip = maybe' companyzip mcompanyzip
+                                          , companycity  = maybe' companycity mcompanycity
+                                          , companycountry = maybe' companycountry mcompanycountry
+                                        })
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
 getUserInfoChange :: Kontrakcja m => m (UserInfo -> UserInfo)

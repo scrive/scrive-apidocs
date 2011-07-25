@@ -79,5 +79,5 @@ withTestEnvironment = withTestState . withSystemTempDirectory "mailapi-test-"
 
 createTestUser :: IO UserID
 createTestUser = do
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") NoPassword Nothing Nothing Nothing
+    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") NoPassword False Nothing Nothing
     return userid

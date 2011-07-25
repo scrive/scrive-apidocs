@@ -4,6 +4,7 @@ module API.MailAPI (
     ) where
 
 import Doc.DocState
+import Company.CompanyState
 import Kontra
 import Misc
 import PayEx.PayExInterface ()-- Import so at least we check if it compiles
@@ -185,13 +186,16 @@ handleMailCommand = do
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
-    let userDetails = signatoryDetailsFromUser user
+    mcompany <- case usercompany user of --TODO EM maybe make signatoryDetailsFromUser figure out the company
+                  Just companyid -> query $ GetCompany companyid
+                  Nothing -> return Nothing
+    let userDetails = signatoryDetailsFromUser user mcompany
 
     (doc :: Document) <- liftIO $ update $ NewDocument user title doctype ctxtime
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
     (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
-                                    (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user)
+                                    (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)
                                     [EmailIdentification] Nothing AdvancedFunctionality
 
     (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing

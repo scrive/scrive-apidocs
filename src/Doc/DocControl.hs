@@ -187,7 +187,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
       case muser of
         Nothing -> return $ Right doc'
         (Just user) -> do
-          udoc <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
+          udoc <- update $ SaveDocumentForUser documentid user signatorylinkid
           return udoc
 
 -- EMAILS
@@ -447,18 +447,18 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       let details = signatorydetails signatorylink
           fullname = (signatoryfstname details, signatorysndname details)
           email = signatoryemail details
-          company = signatorycompany details
-      muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
+          -- company = signatorycompany details --TODO EM, should we make them a company account?
+      muser <- liftIO $ createUserBySigning ctx documenttitle fullname email (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
-          _ <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
+          _ <- update $ SaveDocumentForUser documentid user signatorylinkid
           if isClosed document
             then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
             else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
     Just user -> do
-     _ <- update $ SaveDocumentForUser documentid (getSignatoryAccount user) signatorylinkid
+     _ <- update $ SaveDocumentForUser documentid user signatorylinkid
      if isClosed document
        then addFlashM $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
        else addFlashM $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
@@ -721,7 +721,9 @@ handleIssueChangeToContract document = do
   ctx <- getContext
   signlast <- isFieldSet "signlast"
   guard (isJust $ ctxmaybeuser ctx)
-  contract <- guardRightM $ update $ SignableFromDocumentIDWithUpdatedAuthor (fromJust $ ctxmaybeuser ctx) (documentid document)
+  let user = fromJust $ ctxmaybeuser ctx
+  mcompany <- getCompanyForUser $ Just user
+  contract <- guardRightM $ update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany (documentid document)
   ncontract <- guardRightM $ updateDocument ctx contract
   return $ LinkDesignDoc $ DesignStep3 (documentid ncontract) signlast
 
@@ -1293,7 +1295,8 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
-      authoraccount = getSignatoryAccount authorsiglink
+      Just authorid = maybesignatory authorsiglink
+      authorcompany = maybecompany authorsiglink
   let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
   Log.debug $ "set author sign order to " ++ (show authorsignorder)
 
@@ -1302,7 +1305,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
                                        else [SignatoryAuthor],
-                                       authoraccount)
+                                       authorid, authorcompany)
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
@@ -1318,7 +1321,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   if docfunctionality == BasicFunctionality
     then do
      --if they are switching to basic we want to lose information
-     let basicauthordetails = ((removeFieldsAndPlacements authordetails), [SignatoryPartner, SignatoryAuthor], authoraccount)
+     let basicauthordetails = ((removeFieldsAndPlacements authordetails), [SignatoryPartner, SignatoryAuthor], authorid, authorcompany)
          basicsignatories = zip
                              (take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
      update $ UpdateDocument ctxtime documentid docname
@@ -1329,15 +1332,15 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mydocuments <- query $ GetDocumentsBySignatory user
-  supervised'Documents <- query $ GetDocumentsBySupervisor user
+  mydocuments <- if useriscompanyadmin user
+                   then query $ GetDocumentsByCompany user
+                   else query $ GetDocumentsBySignatory user
   
-  --one day we'll get rid of friends! who needs friends anyway.
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
   friends'Documents <- mapM (query . GetDocumentsBySignatory) usersICanView
   
   return . filter ((\d -> documenttype d == doctype)) $ nub $
-          mydocuments ++ supervised'Documents ++ concat friends'Documents
+          mydocuments ++ concat friends'Documents
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
@@ -1567,7 +1570,7 @@ handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
     Context { ctxmaybeuser = Just user } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
-    res <- update . ArchiveDocuments (userid user) $ map DocumentID docids
+    res <- update . ArchiveDocuments user $ map DocumentID docids
     case res of
       Left msg -> do
         Log.debug $ "Failed to delete docs " ++ (show docids) ++ " : " ++ msg
@@ -1762,7 +1765,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Right doc -> do
           guard $ isAuthor (doc, user)
           muser <- query $ GetUserByEmail (documentservice doc) (Email email)
-          mnewdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid (fmap getSignatoryAccount muser) email
+          mnewdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid muser email
           case mnewdoc of
             Right newdoc -> do
               -- get (updated) siglink from updated document
@@ -1820,10 +1823,8 @@ getTemplatesForAjax = do
             (Just user, Just docprocess) -> do
                 let tfilter doc = (Template docprocess == documenttype doc)
                 userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
-                relatedusers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
-                relateduserdocs <- liftIO $ mapM (query . GetDocumentsByAuthor . userid) relatedusers
-                let shareddocs = filter ((== Shared) . documentsharing) $ concat relateduserdocs
-                let templates = nub $ filter tfilter (userdocs ++ shareddocs)
+                shareddocs <- liftIO $ query $ GetDocumentsSharedInCompany user
+                let templates = nub . filter tfilter $ userdocs ++ shareddocs
                 content <- templatesForAjax (ctxtime ctx) user docprocess $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
@@ -1837,22 +1838,20 @@ handleCreateFromTemplate = withUserPost $ do
     Just did -> do
       let user = fromJust ctxmaybeuser
       document <- queryOrFail $ GetDocumentByDocumentID $ did
-      sharedWithUser <- isShared user document
-      enewdoc <- if (isAuthor (document, user) ||  sharedWithUser) 
-                    then update $ SignableFromDocumentIDWithUpdatedAuthor user did
+      let haspermission = maybe False 
+                                (\sl -> isSigLinkFor (userid user) sl
+                                        || (isSigLinkSavedFor user sl 
+                                              && documentsharing document == Shared))
+                                $ getAuthorSigLink document
+      enewdoc <- if haspermission
+                    then do
+                      mcompany <- getCompanyForUser $ Just user
+                      update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did
                     else mzero
       case enewdoc of
         Right newdoc -> return $ LinkIssueDoc $ documentid newdoc
         Left _ -> mzero
     Nothing -> mzero
-  where
-    isShared :: Kontrakcja m => User -> Document -> m Bool
-    isShared user document = do
-      let Just authorsiglink = getAuthorSigLink document
-          Just authorid = maybesignatory authorsiglink
-      relatedaccounts <- query $ GetUserRelatedAccounts (userid user)
-      return $ (documentsharing document == Shared)
-        && (authorid `elem` (map userid relatedaccounts))
 
 {- |
    The FileID matches the AuthorAttachment.

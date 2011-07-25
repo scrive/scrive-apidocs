@@ -1,6 +1,6 @@
 module User.UserView (
     -- pages
-    viewSubaccounts,
+    viewCompanyAccounts,
     viewFriends,
     showUser,
     showUserSecurity,
@@ -10,7 +10,7 @@ module User.UserView (
 
     -- mails
     newUserMail,
-    inviteSubaccountMail,
+    inviteCompanyAccountMail,
     viralInviteMail,
     mailNewAccountCreatedByAdmin,
     mailAccountCreatedBySigningContractReminder,
@@ -18,16 +18,16 @@ module User.UserView (
     mailAccountCreatedBySigningOrderReminder,
     resetPasswordMail,
 
-    mailInviteUserAsSubaccount,
-    mailSubaccountAccepted,
+    mailInviteUserAsCompanyAccount,
+    mailCompanyAccountAccepted,
 
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
-    modalInviteUserAsSubaccount,
-    modalDoYouWantToBeSubaccount,
+    modalInviteUserAsCompanyAccount,
+    modalDoYouWantToBeCompanyAccount,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -51,8 +51,8 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
-    flashMessageUserInvitedAsSubaccount,
-    flashMessageUserHasBecomeSubaccount,
+    flashMessageUserInvitedAsCompanyAccount,
+    flashMessageUserHasBecomeCompanyAccount,
     flashMessageUserHasLiveDocs,
     flashMessageAccountsDeleted,
 
@@ -66,7 +66,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Maybe
 import ActionSchedulerState
-import Happstack.State (query)
+import Company.CompanyState
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
@@ -78,12 +78,25 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 import FlashMessage
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-showUser :: TemplatesMonad m => User -> m String
-showUser user = renderTemplateFM "showUser" $ do
+showUser :: TemplatesMonad m => User -> Maybe Company -> m String
+showUser user mcompany = renderTemplateFM "showUser" $ do
     userFields user
+    companyFields mcompany
     field "linkaccount" $ show LinkAccount
+
+companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields mcompany = do
+    field "companyid" $ show $ fmap companyid mcompany
+    field "address" $ fmap (companyaddress . companyinfo) mcompany
+    field "city" $ fmap (companycity . companyinfo) mcompany
+    field "country" $ fmap (companycountry . companyinfo) mcompany
+    field "zip" $ fmap (companyzip . companyinfo) mcompany
+    field "companyname" $ getCompanyName mcompany
+    field "companynumber" $ getCompanyNumber mcompany
+    field "companyimagelink" False
 
 userFields :: MonadIO m => User -> Fields m
 userFields user = do
@@ -97,21 +110,15 @@ userFields user = do
     field "sndname" $ getLastName user
     field "email" $ getEmail user
     field "personalnumber" $ getPersonalNumber user
-    field "address" $ useraddress $ userinfo user
-    field "city" $ usercity $ userinfo user
-    field "country" $ usercountry $ userinfo user
-    field "zip" $ userzip $ userinfo user
     field "phone" $ userphone $ userinfo user
     field "mobile" $ usermobile $ userinfo user
-    field "companyname" $ getCompanyName user
     field "companyposition" $ usercompanyposition $ userinfo user
-    field "companynumber" $ getCompanyNumber user
     field "userimagelink" False
-    field "companyimagelink" False
     field "fullname" $ fullname
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
-    field "hassupervisor" $ isJust $ usersupervisor user
+    field "iscompanyadmin" $ useriscompanyadmin user
+    field "iscompanyaccount" $ isJust $ usercompany user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
@@ -150,13 +157,13 @@ viewFriends friends user =
 
 menuFields :: MonadIO m => User -> Fields m
 menuFields user = do
-    field "issubaccounts" $ isAbleToHaveSubaccounts user
+    field "iscompanyadmin" $ useriscompanyadmin user
 
-viewSubaccounts :: TemplatesMonad m => User -> PagedList User -> m String
-viewSubaccounts user subusers =
-  renderTemplateFM "viewSubaccounts" $ do
-    fieldFL "subaccounts" $ markParity $ map userFields $ list subusers
-    field "currentlink" $ show $ LinkSubaccount $ params subusers
+viewCompanyAccounts :: TemplatesMonad m => User -> PagedList User -> m String
+viewCompanyAccounts user subusers =
+  renderTemplateFM "viewCompanyAccounts" $ do
+    fieldFL "companyaccounts" $ markParity $ map userFields $ list subusers
+    field "currentlink" $ show $ LinkCompanyAccounts $ params subusers
     fieldF "user" $ userFields user
     pagedListFields subusers
 
@@ -188,10 +195,10 @@ newUserMail hostpart emailaddress personname activatelink vip = do
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-inviteSubaccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
-inviteSubaccountMail hostpart supervisorname companyname emailaddress personname setpasslink = do
-  title   <- renderTemplateM "inviteSubaccountMailTitle" ()
-  content <- (renderTemplateFM "inviteSubaccountMailContent" $ do
+inviteCompanyAccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
+inviteCompanyAccountMail hostpart supervisorname companyname emailaddress personname setpasslink = do
+  title   <- renderTemplateM "inviteCompanyAccountMailTitle" ()
+  content <- (renderTemplateFM "inviteCompanyAccountMailContent" $ do
     field "personname"     $ BS.toString personname
     field "email"          $ BS.toString emailaddress
     field "passwordlink"   $ show setpasslink
@@ -254,20 +261,20 @@ mailAccountCreatedBySigning' title_template content_template hostpart doctitle p
         ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailInviteUserAsSubaccount :: TemplatesMonad m => Context -> User -> User -> m Mail
-mailInviteUserAsSubaccount ctx invited supervisor = do
-    title <- renderTemplateM "mailInviteUserAsSubaccountTitle" ()
-    content <- (renderTemplateFM "mailInviteUserAsSubaccountContent" $ do
+mailInviteUserAsCompanyAccount :: TemplatesMonad m => Context -> User -> User -> m Mail
+mailInviteUserAsCompanyAccount ctx invited supervisor = do
+    title <- renderTemplateM "mailInviteUserAsCompanyAccountTitle" ()
+    content <- (renderTemplateFM "mailInviteUserAsCompanyAccountContent" $ do
                    field "hostpart" (ctxhostpart ctx)
                    fieldF "supervisor" $ userFields supervisor
                    fieldF "invited" $ userFields invited
         ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailSubaccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
-mailSubaccountAccepted ctx invited supervisor = do
-    title <- renderTemplateM "mailSubaccountAcceptedTitle" ()
-    content <- (renderTemplateFM "mailSubaccountAcceptedContent" $ do
+mailCompanyAccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
+mailCompanyAccountAccepted ctx invited supervisor = do
+    title <- renderTemplateM "mailCompanyAccountAcceptedTitle" ()
+    content <- (renderTemplateFM "mailCompanyAccountAcceptedContent" $ do
                    field "hostpart" $ ctxhostpart ctx
                    fieldF "user" $ userFields supervisor
                    fieldF "invited" $ userFields invited
@@ -276,9 +283,9 @@ mailSubaccountAccepted ctx invited supervisor = do
 
 -------------------------------------------------------------------------------
 
-modalInviteUserAsSubaccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage
-modalInviteUserAsSubaccount fstname sndname email =
-    toModal <$> (renderTemplateFM "modalInviteUserAsSubaccount" $ do
+modalInviteUserAsCompanyAccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage
+modalInviteUserAsCompanyAccount fstname sndname email =
+    toModal <$> (renderTemplateFM "modalInviteUserAsCompanyAccount" $ do
       field "email" email
       field "fstname" fstname
       field "sndname" sndname)
@@ -288,11 +295,11 @@ modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
 modalAccountSetup :: MonadIO m => Maybe User -> KontraLink -> m FlashMessage
-modalAccountSetup muser signuplink = do
-    msupervisor <- case msupervisorid of
+modalAccountSetup _muser _signuplink = do
+{-    msupervisor <- case msupervisorid of
         Just sid -> query $ GetUserByUserID $ UserID $ unSupervisorID sid
-        Nothing  -> return Nothing
-    return $ toFlashTemplate Modal "modalAccountSetup" $
+        Nothing  -> return Nothing -}
+    return $ toFlashTemplate Modal "modalAccountSetup" [] {-$
         supervisorfields msupervisor ++ [
               ("fstname", showUserField userfstname)
             , ("sndname", showUserField usersndname)
@@ -301,7 +308,7 @@ modalAccountSetup muser signuplink = do
             , ("phone", showUserField userphone)
             , ("signuplink", show signuplink)
             ]
-    where
+    where    TODO EM
         showUserField f = maybe "" (BS.toString . f . userinfo) muser
         msupervisorid = join (usersupervisor <$> muser)
         supervisorfields Nothing = []
@@ -312,7 +319,7 @@ modalAccountSetup muser signuplink = do
             , (supervisoraccounttype, "true")
             ]
             where
-                supervisoraccounttype = show $ accounttype $ usersettings svis
+                supervisoraccounttype = show $ accounttype $ usersettings svis -}
 
 modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
 modalAccountRemoval doctitle activationlink removallink = do
@@ -374,9 +381,9 @@ flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
 flashMessageUserPasswordChanged =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserPasswordChanged" ()
 
-flashMessageUserHasBecomeSubaccount :: TemplatesMonad m => User -> m FlashMessage
-flashMessageUserHasBecomeSubaccount supervisor =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageUserHasBecomeSubaccount" $ do
+flashMessageUserHasBecomeCompanyAccount :: TemplatesMonad m => User -> m FlashMessage
+flashMessageUserHasBecomeCompanyAccount supervisor =
+  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageUserHasBecomeCompanyAccount" $ do
     fieldF "supervisor" $ userFields supervisor)
 
 flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
@@ -440,28 +447,28 @@ flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
 
-flashMessageUserInvitedAsSubaccount :: TemplatesMonad m => m FlashMessage
-flashMessageUserInvitedAsSubaccount =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserInvitedAsSubaccount" ()
+flashMessageUserInvitedAsCompanyAccount :: TemplatesMonad m => m FlashMessage
+flashMessageUserInvitedAsCompanyAccount =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserInvitedAsCompanyAccount" ()
 
 modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do
   toModal <$> (renderTemplateFM "modalNewPasswordView" $ do
             field "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
 
-modalDoYouWantToBeSubaccount :: TemplatesMonad m => m FlashMessage
-modalDoYouWantToBeSubaccount =
-  toModal <$> renderTemplateM "modalDoYouWantToBeSubaccount" ()
+modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => m FlashMessage
+modalDoYouWantToBeCompanyAccount =
+  toModal <$> renderTemplateM "modalDoYouWantToBeCompanyAccount" ()
 
 
 -------------------------------------------------------------------------------
 
 {- | Basic fields for the user  -}
-userBasicFields :: MonadIO m => User -> Fields m
-userBasicFields u = do
+userBasicFields :: MonadIO m => User -> Maybe Company -> Fields m
+userBasicFields u mc = do
     field "id" $ show $ userid u
     field "fullname" $ getFullName u
     field "email" $ getEmail u
-    field "company" $ getCompanyName u
+    field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
