@@ -50,8 +50,25 @@ standardHeaderContents=
         <script src="$prefix$/js/underscore.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/backbone.js"
-                type="text/javascript"></script> 
+                type="text/javascript"></script>
+
         <script src="$prefix$/js/flashmessages.js"
+                type="text/javascript"></script>
+
+        <script src="$prefix$/js/infotextinputs.js"
+                type="text/javascript"></script>
+        
+        <script src="$prefix$/js/buttons.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/tooltips.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/submits.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/confirmations.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/selects.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/lists.js"
                 type="text/javascript"></script> 
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 

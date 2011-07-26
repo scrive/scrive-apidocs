@@ -29,6 +29,7 @@ module ListUtil(
               PagedList(..)
             , ListParams
             , emptyListParams
+            , getListParamsNew
             , getListParams
             , getListParamsForSearch
             , pagedListFields
@@ -38,6 +39,7 @@ module ListUtil(
             , PageSize
             , viewComparing
             , viewComparingRev
+            , pagingParamsJSON
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
@@ -54,6 +56,7 @@ import Data.Char (toUpper)
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
 import Data.ByteString.UTF8 (ByteString)
+import Text.JSON
 
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a = PagedList{
@@ -78,6 +81,34 @@ instance Show ListParams where
 
 emptyListParams :: ListParams
 emptyListParams = ListParams {sorting=[], search=Nothing, page = 1}
+
+{- New version working with JSON interface-}
+getListParamsNew :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
+getListParamsNew = do
+    page <- readField "page"
+    search <- getField "filter"
+    sorting <- getField "sort"
+    sortingReversed <- joinB <$> fmap (== "true") <$> getField "sortReversed"
+    let sorting'  = if (sortingReversed)
+                     then sorting
+                     else (++ "REV") <$> sorting
+    return ListParams {
+          page     = 1 + (fromMaybe 0 page)
+        , search  = search
+        , sorting  = maybeToList sorting' }
+
+pagingParamsJSON :: PagedList a -> JSValue
+pagingParamsJSON (PagedList{list,pageSize,totalCount,params}) = JSObject $ toJSObject [
+    ("pageMax",showJSON totalPages ),
+    ("pageCurrent", showJSON $ (page params) - 1),
+    ("itemMin",showJSON $ minElementIndex),
+    ("itemMax",showJSON $ minElementIndex + length list - 1),
+    ("itemTotal",showJSON $ totalCount)
+    ]
+    where
+    totalPages =  (totalCount -1) `div` pageSize 
+    minElementIndex = pageSize * (page params - 1) 
+
 
 {- | Getting sorting , paging and filtering params-}
 getListParams :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams

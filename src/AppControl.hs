@@ -175,6 +175,7 @@ handleRoutes = msum [
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost0 $ toK0 $ DocControl.handleContractsReload
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
+     , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
 
 
      , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet

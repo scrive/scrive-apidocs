@@ -53,6 +53,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
+import Text.JSON (JSValue(..), toJSObject)
 
 import ForkAction
 
@@ -1953,3 +1954,15 @@ handleSigAttach docid siglinkid mh = do
   content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
   _ <- update $ SaveSigAttachment docid attachname email content
   return $ LinkSignDoc doc siglink
+
+
+jsonDocumentsList ::  Kontrakcja m => m JSValue
+jsonDocumentsList = do
+    Just user <- ctxmaybeuser <$> getContext
+    allDocs <- getDocumentsForUserByType (Signable Contract) user
+    params <- getListParamsNew
+    let docs = docSortSearchPage params allDocs
+    cttime <- liftIO $ getMinutesTime
+    return $ JSObject $ toJSObject [("list",(JSArray $ map (JSObject . docForListJSON cttime) $ list docs)),
+                                    ("paging", pagingParamsJSON docs)]
+    

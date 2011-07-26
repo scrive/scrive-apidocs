@@ -66,6 +66,7 @@ module Doc.DocView (
   , templatesForAjax
   , documentsToFixView
   , uploadPage
+  , docForListJSON
   ) where
 
 import ActionSchedulerState (ActionID)
@@ -93,6 +94,8 @@ import Data.List (find, isInfixOf)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import Text.JSON (JSValue(..), toJSObject, JSObject, toJSString)
+import Data.List (intercalate)
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -272,6 +275,38 @@ flashMessagePleaseSignWithEleg =
 flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
+
+docForListJSON :: MinutesTime -> Document -> JSObject JSValue
+docForListJSON crtime doc = toJSObject $
+                [ ("fields" , JSObject $ toJSObject  $ mapSnd (JSString . toJSString) $ docFieldsListForJSON crtime doc),
+                  ("subfields" , JSArray $ map (JSObject . toJSObject . mapSnd (JSString . toJSString) . signatoryFieldsListForJSON crtime doc) $ documentsignatorylinks doc),
+                  ("link", JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
+                ]
+docFieldsListForJSON :: MinutesTime -> Document -> [(String,String)]
+docFieldsListForJSON crtime doc =  [
+    ("id", show $ documentid doc),
+    ("title", BS.toString $ documenttitle doc),
+    ("status", show $ documentStatusClass doc),
+    ("partner", intercalate ", " $ map (BS.toString . getSmartName) (documentsignatorylinks doc)),
+    ("time", showDateAbbrev crtime (documentmtime doc))
+    ]
+
+signatoryFieldsListForJSON :: MinutesTime -> Document ->  SignatoryLink -> [(String,String)]
+signatoryFieldsListForJSON crtime doc sl = [
+    ("status", show $ signatoryStatusClass doc sl ),
+    ("partner", BS.toString $ getSmartName sl ),
+    ("time", fromMaybe "" $ (showDateAbbrev crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
+    ]
+    where
+        sign = signtime <$> maybesigninfo sl
+        seen = signtime <$> maybesigninfo sl
+        reject = case documentrejectioninfo doc of
+                    Just (rt, slid, _)
+                        | slid == signatorylinkid sl -> Just $ rt
+                    _                             -> Nothing
+        open = maybereadinvite sl
+
+  
 
 -- All doc view
 singlnkFields :: MonadIO m => Document -> (MinutesTime -> String) -> SignatoryLink -> Fields m

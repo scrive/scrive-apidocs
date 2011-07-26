@@ -61,5 +61,17 @@ javascriptLocalisation =
              , partnerTitle : "Titel, företag"
              , partnerNumber : "Orgnr/Persnr"
              , partnerEmail : "Personens e-mail"
+             , statusToolTip: {
+                   draft: "$_tooltipdraft()$"
+                 , cancelled : "$_tooltipcancelled()$"
+                 , sent : "$_tooltipsent()$"
+                 , delivered : "$_tooltipdelivered()$"
+                 , reviewed : "$_tooltipreviewed()$"
+                 , read : "$_tooltipread()$"
+                 , opened : "$_tooltipopened()$"
+                 , signed : "$_tooltipsigned()$"
+             }
+             , select : "$_options()$"
+             , of : "$_of()$"
    }
 ####
