@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
+{-# LANGUAGE OverloadedStrings #-}
 module InputValidationTest (inputValidationTests) where
 
 import qualified Data.ByteString.UTF8 as BS
@@ -14,7 +15,14 @@ import InputValidation
 
 inputValidationTests :: Test
 inputValidationTests = testGroup "InputValidation"
-    [ testGroup "asValidEmail"
+    [ testGroup "sanitizing"
+      [ testCase "alphanum string doesn't change" (assert (isGoodAndEquals (sanitize "abcsdfsdf432423") "abcsdfsdf432423"))
+      , testCase "tab string turns to whitespace" (assert (isGoodAndEquals (sanitize "\t") " "))
+      , testCase "two tabs works" (assert (isGoodAndEquals (sanitize "\t\t") "  "))
+      , testCase "tabs in between works" (assert (isGoodAndEquals (sanitize "hello\tthere") "hello there"))
+      , testCase "sanitize company name" (assert (isGood (sanitize "Company \tassociates")))
+      ]
+    , testGroup "asValidEmail"
         [ testCase "bad examples fail" testValidEmailExampleFails
         , testCase "good examples pass" testValidEmailExamplePasses
         , testCase "lower cases" testValidEmailLowercases
@@ -114,7 +122,7 @@ inputValidationTests = testGroup "InputValidation"
         , testCase "bad examples fail" testValidInviteTextBadExamples
         , testCase "good examples pass" testValidInviteTextGoodExamples ]
     ]
-
+    
 testValidEmailExampleFails :: Assertion
 testValidEmailExampleFails = do
     let results = map asValidEmail
@@ -586,3 +594,6 @@ isBad _ = False
 isEmpty :: Result a -> Bool
 isEmpty Empty = True
 isEmpty _ = False
+
+isGoodAndEquals :: (Eq a) => Result a -> a -> Bool
+isGoodAndEquals r a = isGood r && fromGood r == a

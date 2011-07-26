@@ -44,7 +44,8 @@ module InputValidation
     , asValidFieldName
     , asValidFieldValue
     , asValidPlace
-    , asValidInviteText) where
+    , asValidInviteText
+    , sanitize) where
 
 import Control.Applicative
 import Control.Monad()
@@ -394,6 +395,17 @@ asValidName input =
     >>= checkOnly (isAlpha : map (==) " \'-") fieldtemplate
     >>= mkByteString
     where fieldtemplate = "nameFieldName"
+          
+{- |
+   Sanitize characters that are not allowed but can be converted
+into something we do allow without upsetting the user.
+ -}
+sanitize :: String -> Result String
+sanitize input = 
+  replaceChar '\t' ' ' input
+  
+replaceChar :: Char -> Char -> String -> Result String
+replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 
 {- |
     Creates a clean and validated company name.
@@ -402,7 +414,8 @@ asValidName input =
 -}
 asValidCompanyName :: String -> Result BS.ByteString
 asValidCompanyName input =
-    stripWhitespace input
+    sanitize input 
+    >>= stripWhitespace
     >>= checkIfEmpty
     >>= checkLengthIsMax 100 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?") fieldtemplate
