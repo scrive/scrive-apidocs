@@ -86,7 +86,7 @@ viewCompanyAccounts =
 		$comapnyaccounts:{comapnyaccount |
 		<!-- Every other row should have class="odd" (Begin with first row) -->
 		<tr $if(comapnyaccount.odd)$class="odd"$endif$>
-		  <td><input type="checkbox" name="subcheck" value="$comapnyaccount.id$" class="check" />
+		  <td><input type="checkbox" name="acccheck" value="$comapnyaccount.id$" class="check" />
                     <span class="listname" style="display:none;">
                       $comapnyaccount.fstname$ $comapnyaccount.sndname$ &lt;$comapnyaccount.email$&gt;
                     </span>

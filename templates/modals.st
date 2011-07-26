@@ -162,11 +162,20 @@ modalAccountSetup=
         <input type="checkbox" id="tosCBox" name="tos" />
         <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
         <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
-            <td><input id="accountTypePrivate" type="radio" value="PrivateAccount" $if(iscompanyaccount)$disabled="true"$else$name="accounttype"$endif$ $if(PrivateAccount)$checked="true"$endif$ /> <label for="accountTypePrivate">$_modalAccountSetupIfPrivateAccount()$</label></td>
-            <td><input id="accountTypeCompany" type="radio" value="CompanyAccount" $if(iscompanyaccount)$disabled="true"$else$name="accounttype"$endif$ $if(CompanyAccount)$checked="true"$endif$ /> <label for="accountTypeCompany">$_company()$:</label></td>
-            $if(iscompanyaccount)$
-            <td><input type="hidden" name="accounttype" value="$supervisoraccounttype$" /></td>
-            $endif$
+            <td><input id="accountTypePrivate" 
+                       type="radio" 
+                       value="PrivateAccount" 
+                       name="accounttype" 
+                       $if(iscompanyaccount)$disabled="true"$endif$
+                       $if(!iscompanyaccount)$checked="true"$endif$ /> 
+                <label for="accountTypePrivate">$_modalAccountSetupIfPrivateAccount()$</label></td>
+            <td><input id="accountTypeCompany" 
+                       type="radio"
+                       value="CompanyAccount"
+                       name="accounttype"
+                       $if(iscompanyaccount)$disabled="true"$endif$
+                       $if(iscompanyaccount)$checked="true"$endif$ />
+                <label for="accountTypeCompany">$_company()$:</label></td>
         </tr></tbody></table>
         <table id="companyInfo"><tbody>
             <tr>
@@ -179,13 +188,11 @@ modalAccountSetup=
             </tr>
             <tr>
                 <td>$_company()$:</td>
-                <td><input type="text" name="companyname" autocomplete="off"
-                    $if(!iscompanyaccount)$
-                    disabled="true" value="$supervisorcompany$"
-                    $else$
-                    value="$if(companyname)$$companyname$$endif$"
-                    $endif$
-                /></td>
+                <td><input type="text" 
+                           name="companyname" 
+                           autocomplete="off"
+                           $if(iscompanyaccount)$$if(!iscompanyadmin)$disabled="true"$endif$$endif$
+                           value="$companyname$"/></td>
             </tr>
             <tr>
                 <td>$_modalAccountSetupPosition()$</td>

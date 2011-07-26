@@ -117,7 +117,6 @@ userFields user = do
     field "fullname" $ fullname
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
-    field "iscompanyadmin" $ useriscompanyadmin user
     field "iscompanyaccount" $ isJust $ usercompany user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
@@ -160,12 +159,12 @@ menuFields user = do
     field "iscompanyadmin" $ useriscompanyadmin user
 
 viewCompanyAccounts :: TemplatesMonad m => User -> PagedList User -> m String
-viewCompanyAccounts user subusers =
+viewCompanyAccounts user companyusers =
   renderTemplateFM "viewCompanyAccounts" $ do
-    fieldFL "companyaccounts" $ markParity $ map userFields $ list subusers
-    field "currentlink" $ show $ LinkCompanyAccounts $ params subusers
+    fieldFL "companyaccounts" $ markParity $ map userFields $ list companyusers
+    field "currentlink" $ show $ LinkCompanyAccounts $ params companyusers
     fieldF "user" $ userFields user
-    pagedListFields subusers
+    pagedListFields companyusers
 
 activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
@@ -294,32 +293,22 @@ modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => Maybe User -> KontraLink -> m FlashMessage
-modalAccountSetup _muser _signuplink = do
-{-    msupervisor <- case msupervisorid of
-        Just sid -> query $ GetUserByUserID $ UserID $ unSupervisorID sid
-        Nothing  -> return Nothing -}
-    return $ toFlashTemplate Modal "modalAccountSetup" [] {-$
-        supervisorfields msupervisor ++ [
-              ("fstname", showUserField userfstname)
-            , ("sndname", showUserField usersndname)
-            , ("companyname", showUserField usercompanyname)
-            , ("companyposition", showUserField usercompanyposition)
-            , ("phone", showUserField userphone)
-            , ("signuplink", show signuplink)
-            ]
-    where    TODO EM
-        showUserField f = maybe "" (BS.toString . f . userinfo) muser
-        msupervisorid = join (usersupervisor <$> muser)
-        supervisorfields Nothing = []
-        supervisorfields (Just svis) = [
-              ("hassupervisor", "true")
-            , ("supervisorcompany", BS.toString $ getCompanyName svis)
-            , ("supervisoraccounttype", supervisoraccounttype)
-            , (supervisoraccounttype, "true")
-            ]
-            where
-                supervisoraccounttype = show $ accounttype $ usersettings svis -}
+modalAccountSetup :: MonadIO m => Maybe User -> Maybe Company -> KontraLink -> m FlashMessage
+modalAccountSetup muser mcompany signuplink = do
+  return $ toFlashTemplate Modal "modalAccountSetup" $
+    [ ("fstname", showUserField userfstname)
+    , ("sndname", showUserField usersndname)
+    , ("companyposition", showUserField usercompanyposition)
+    , ("phone", showUserField userphone)
+    , ("companyname", showCompanyField companyname)
+    , ("signuplink", show signuplink)
+    ] ++ boolFieldList "iscompanyadmin" (maybe False useriscompanyadmin muser)
+      ++ boolFieldList "iscompanyaccount" (maybe False (isJust . usercompany) muser)
+  where
+    showUserField f = maybe "" (BS.toString . f . userinfo) muser
+    showCompanyField f = maybe "" (BS.toString . f . companyinfo) mcompany
+    boolFieldList _ False = []
+    boolFieldList name True = [(name, "true")]
 
 modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
 modalAccountRemoval doctitle activationlink removallink = do

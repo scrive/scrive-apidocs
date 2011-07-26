@@ -51,6 +51,7 @@ module User.UserState
     , RecordSuccessfulLogin(..)
     , GetCompanyAccounts(..)
     , SetUserCompany(..)
+    , MakeCompanyAdmin(..)
     , MakeUserACompanyAdmin(..)
     , getUserPaymentSchema
     , takeImmediatelyPayment
@@ -131,6 +132,7 @@ data TrustWeaverStorage = TrustWeaverStorage
 data UserAccountType0 = MainAccount | SubAccount
     deriving (Eq, Ord, Typeable)
 
+--stop using this, you can tell the account by checking usercompany on the user
 data UserAccountType = PrivateAccount | CompanyAccount
     deriving (Eq, Ord, Typeable)
 
@@ -1113,7 +1115,18 @@ setUserCompany userid companyid = modifyUser userid $ \user ->
     usercompany = Just companyid,
     useriscompanyadmin = False
   }
-
+  
+{- |
+    Makes the user a company admin.
+-}
+makeCompanyAdmin :: UserID -> Update Users (Either String User)
+makeCompanyAdmin userid = modifyUser userid $ \user ->
+  return $ case usercompany user of
+    Just _ -> 
+      user {
+        useriscompanyadmin = True
+      }
+    Nothing -> user
 
 deleteUser :: UserID -> Update Users (Either String User)
 deleteUser uid = modifyUser uid $ \_ -> do
@@ -1433,6 +1446,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addViewerByEmail
                     , 'getCompanyAccounts
                     , 'setUserCompany
+                    , 'makeCompanyAdmin
                     , 'makeUserACompanyAdmin
                       -- the below should be only used carefully and by admins
                     --, 'addFreePaymentsForInviter

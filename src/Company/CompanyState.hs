@@ -18,13 +18,14 @@ module Company.CompanyState
     , GetCompany(..)
     , GetCompanyByExternalID(..)
     , SetCompanyInfo(..)
+    , CreateNewCompany(..)
     , GetOrCreateCompanyWithExternalID(..)
 ) where
 import API.Service.ServiceState
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Data.Data
-import Data.Maybe (isJust, fromJust)
+import Data.Maybe (isJust, fromJust, catMaybes)
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
@@ -59,7 +60,7 @@ data Company0 = Company0
 
 data Company = Company
                { companyid :: CompanyID
-               , companyexternalid :: ExternalCompanyID
+               , companyexternalid :: Maybe ExternalCompanyID
                , companyservice :: Maybe ServiceID
                , companyinfo :: CompanyInfo
                }
@@ -74,7 +75,7 @@ instance Migrate Company0 Company where
              , companyservice0
           }) = Company {
               companyid         = companyid0
-            , companyexternalid = companyexternalid0
+            , companyexternalid = Just companyexternalid0
             , companyservice    = companyservice0
             , companyinfo       = CompanyInfo {
                                       companyname       = BS.empty
@@ -136,7 +137,7 @@ type Companies = IxSet Company
 
 instance Indexable Company where
         empty = ixSet [ ixFun (\x -> [companyid x] :: [CompanyID])
-                      , ixFun (\x -> [companyexternalid x] :: [ExternalCompanyID])
+                      , ixFun (\x -> catMaybes [companyexternalid x] :: [ExternalCompanyID])
                       , ixFun (\x -> [companyservice x] :: [Maybe ServiceID])]
 
 modifyCompany :: (Maybe ServiceID) -> CompanyID
@@ -169,6 +170,26 @@ getCompanyByExternalID sid ecid = do
 setCompanyInfo :: Company -> CompanyInfo -> Update Companies (Either String Company)
 setCompanyInfo Company{companyid,companyservice} newcompanyinfo = modifyCompany companyservice companyid $ \company ->
   return $ company { companyinfo = newcompanyinfo }
+  
+createNewCompany :: Update Companies Company
+createNewCompany = do
+  companies <- ask
+  cid <- getUnique companies CompanyID
+  let company = Company {
+    companyid = cid
+  , companyservice = Nothing
+  , companyexternalid = Nothing
+  , companyinfo = CompanyInfo {
+                      companyname = BS.empty
+                    , companynumber = BS.empty
+                    , companyaddress = BS.empty
+                    , companyzip = BS.empty
+                    , companycity = BS.empty
+                    , companycountry = BS.empty
+                  }
+  }
+  modify $ insert company
+  return $ company
 
 getOrCreateCompanyWithExternalID :: (Maybe ServiceID) -> ExternalCompanyID -> Update Companies Company
 getOrCreateCompanyWithExternalID sid ecid = do
@@ -181,7 +202,7 @@ getOrCreateCompanyWithExternalID sid ecid = do
         let company = Company {
                       companyid = cid
                     , companyservice = sid
-                    , companyexternalid = ecid
+                    , companyexternalid = Just ecid
                     , companyinfo = CompanyInfo {
                                         companyname = BS.empty
                                       , companynumber = BS.empty
@@ -205,6 +226,7 @@ $(mkMethods ''Companies [
                      , 'getCompanyByExternalID
                      , 'setCompanyInfo
                      , 'getCompanies
+                     , 'createNewCompany
                      , 'getOrCreateCompanyWithExternalID
                         ])
 

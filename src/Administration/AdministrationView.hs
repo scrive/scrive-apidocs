@@ -231,9 +231,9 @@ userFields u mc =  do
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u
-        field "accounttype" $  for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
-                                                                                 then soption show show x
-                                                                                 else option show show x)
+--TODO EM        field "accounttype" $  for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
+--TODO EM                                                                                 then soption show show x
+--TODO EM                                                                                 else option show show x)
         field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)

@@ -91,7 +91,7 @@ showAdminMainPage = onlySuperUser $ do
 showAdminUserAdvanced :: Kontrakcja m => m Response
 showAdminUserAdvanced = onlySuperUser $ do
   users <- query $ GetAllUsers
-  mcompanies <- mapM (getCompanyForUser . Just) users
+  mcompanies <- mapM getCompanyForUser users
   params <- getAdminUsersPageParams
   content <- adminUsersAdvancedPage (zip users mcompanies) params
   renderFromBody TopEmpty kontrakcja content
@@ -111,7 +111,7 @@ showAdminUsers (Just userId) = onlySuperUser $ do
     Nothing -> mzero
     Just user -> do
       paymentmodel <- query $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
-      mcompany <- getCompanyForUser $ Just user
+      mcompany <- getCompanyForUser user
       content <- adminUserPage user mcompany paymentmodel
       renderFromBody TopEmpty kontrakcja content
 
@@ -134,7 +134,7 @@ getUsersAndStats = do
     Context{ctxtime} <- getContext
     users <- query $ GetAllUsers
     let queryStats user = do
-          mcompany <- getCompanyForUser $ Just user
+          mcompany <- getCompanyForUser user
           docstats <- query $ GetDocumentStatsByUser user ctxtime
           userstats <- query $ GetUserStatsByUser user
           return (user, mcompany, docstats, userstats)
@@ -145,7 +145,7 @@ showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
   documents <- query $ GetDocumentsByAuthor userid
   Just user <- query $ GetUserByUserID userid
-  mcompany <- getCompanyForUser $ Just user
+  mcompany <- getCompanyForUser user
   content <- adminUserUsageStatsPage user mcompany $ do
     fieldsFromStats [user] documents
   renderFromBody TopEmpty kontrakcja content
@@ -229,7 +229,7 @@ handleUserChange a = onlySuperUser $
                                            _ <- update $ SetUserSettings userId $ settingsChange $ usersettings user
                                            _ <- update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
                                            _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
-                                           mcompany <- getCompanyForUser $ Just user
+                                           mcompany <- getCompanyForUser user
                                            case mcompany of
                                              Just company -> do
                                                _ <- update $ SetCompanyInfo company (companyInfoChange $ companyinfo company)
@@ -389,7 +389,6 @@ getUserInfoChange = do
 {- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange =  do
-                          maccounttype          <- readField "accounttype"
                           maccountplan          <- readField "accountplan"
                           msigneddocstorage     <- readField "signeddocstorage"
                           muserpaymentmethod    <- readField "userpaymentmethod"
@@ -401,7 +400,7 @@ getUserSettingsChange =  do
                                  , preferreddesignmode
                                  , lang }
                                        -> UserSettings {
-                                            accounttype  = maybe' accounttype  maccounttype
+                                            accounttype  = accounttype
                                           , accountplan = maybe' accountplan maccountplan
                                           , signeddocstorage  = maybe' signeddocstorage  msigneddocstorage
                                           , userpaymentmethod =  maybe' userpaymentmethod muserpaymentmethod
