@@ -66,6 +66,7 @@ module Doc.DocState
     , UpdateSigAttachments(..)
     , SaveSigAttachment(..)
     , MigrateDocumentSigAccounts(..)
+    , MigrateDocumentSigLinkCompanies(..)
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
     )
@@ -1421,6 +1422,36 @@ templateFromDocument docid = modifySignable docid $ \doc ->
         }
 
 {- |
+    This will migrate the indicated document's signatory links by populating maybecompany on them.
+    The list of users passed to it is the list of live users that are signatories or supervisors 
+    of this document. The function will lookup the user for each sig link out of the given list, and then if it finds
+    a match it will copy the user's company as the sig link company.
+-} 
+migrateDocumentSigLinkCompanies :: DocumentID -> [User] -> Update Documents (Either String Document)
+migrateDocumentSigLinkCompanies docid sigusers =
+  modifyDocumentWithActionTime False (const True) docid $ \doc ->
+    return . Right $ doc {
+      documentsignatorylinks = map migrateSigLink $ documentsignatorylinks doc
+    }
+  where
+    migrateSigLink :: SignatoryLink -> SignatoryLink
+    migrateSigLink siglink@SignatoryLink{maybesignatory,maybesupervisor} =
+      case maybecompany siglink of
+        Nothing ->
+          let muser = find isMatchingUser sigusers in
+          case muser of
+            Nothing -> siglink --there isn't a relevant user
+            Just user -> siglink {
+                           -- set the sig link company to match the user's company
+                           maybecompany = usercompany user
+                         }
+        Just _ -> siglink -- the sig link already has a company, so leave it
+      where
+        isMatchingUser :: User -> Bool
+        isMatchingUser User{userid} = maybesignatory == Just userid 
+                                        || maybesupervisor == Just userid
+
+{- |
     This migration should be deleted soon.  It makes sure that maybesignatory and maybesupervisor
     are properly populated on the signatory links.
 -}
@@ -1557,4 +1588,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'documentFromSignatoryData
                         , 'templateFromDocument
                         , 'migrateDocumentSigAccounts
+                        , 'migrateDocumentSigLinkCompanies
                         ])

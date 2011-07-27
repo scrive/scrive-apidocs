@@ -51,10 +51,10 @@ module User.UserState
     , RecordSuccessfulLogin(..)
     , GetCompanyAccounts(..)
     , SetUserCompany(..)
-    , MakeCompanyAdmin(..)
     , MakeUserACompanyAdmin(..)
     , getUserPaymentSchema
     , takeImmediatelyPayment
+    , RequiresCompanyForMigration(..) --just for company migration
 ) where
 import API.Service.ServiceState
 import Company.CompanyState
@@ -927,6 +927,10 @@ instance Indexable User where
                 , ixFun $ ifUserNotDeleted userfriends
                 , ixFun $ ifUserNotDeleted (\x -> [userservice x] :: [Maybe ServiceID])
                 , ixFun $ ifUserNotDeleted (\x -> (catMaybes [usercompany x]) :: [CompanyID])
+                
+                -- need to keep this hanging around until the company migration is done.  don't
+                -- use it for anything else
+                , ixFun (\x -> maybe [] return (usersupervisor x) :: [SupervisorID])
                 ]
           where
             ifUserNotDeleted :: (User -> [a]) -> User -> [a]
@@ -1115,18 +1119,6 @@ setUserCompany userid companyid = modifyUser userid $ \user ->
     usercompany = Just companyid,
     useriscompanyadmin = False
   }
-  
-{- |
-    Makes the user a company admin.
--}
-makeCompanyAdmin :: UserID -> Update Users (Either String User)
-makeCompanyAdmin userid = modifyUser userid $ \user ->
-  return $ case usercompany user of
-    Just _ -> 
-      user {
-        useriscompanyadmin = True
-      }
-    Nothing -> user
 
 deleteUser :: UserID -> Update Users (Either String User)
 deleteUser uid = modifyUser uid $ \_ -> do
@@ -1411,6 +1403,28 @@ getUserPaymentSchema User{userpaymentpolicy } = do
 takeImmediatelyPayment::User -> Bool
 takeImmediatelyPayment user = Payments.requiresImmediatelyPayment $ userpaymentpolicy user
 
+{- |
+    Checks whether the given user should have an equivalent company made for them.
+    To qualify for this the user should be live, and not have any company set on them already.
+    Then they should either :
+       * be a single user (so without a supervisor or subaccounts) who has a company name or number set on them
+       * be a supervisor
+-}
+requiresCompanyForMigration :: UserID -> Query Users Bool
+requiresCompanyForMigration userid = queryUsers $ \users ->
+  let muser = getOne (users @= userid) in
+  case muser of
+    Just user ->
+      let islive = not $ userdeleted user
+          nocompany = isNothing $ usercompany user
+          hascompanyinfo = BS.empty /= usercompanyname (userinfo user) 
+                             || BS.empty /= usercompanynumber (userinfo user)
+          issubaccount = isJust $ usersupervisor user
+          issupervisor = not $ IxSet.null (users @= SupervisorID (unUserID userid))
+          issingle = not issubaccount && not issupervisor
+      in islive && nocompany && ((issingle && hascompanyinfo) || issupervisor)
+    Nothing -> False
+
 {-
 
 Template Haskell derivations should be kept at the end of the file
@@ -1446,8 +1460,9 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addViewerByEmail
                     , 'getCompanyAccounts
                     , 'setUserCompany
-                    , 'makeCompanyAdmin
                     , 'makeUserACompanyAdmin
+                    --just for company migration
+                    , 'requiresCompanyForMigration
                       -- the below should be only used carefully and by admins
                     --, 'addFreePaymentsForInviter
                     ])
