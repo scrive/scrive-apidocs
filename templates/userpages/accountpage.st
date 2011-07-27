@@ -7,13 +7,13 @@ showUser =
    <ul class="tabs">
        <li class="active"><a href="/account">$_HeadUserInfo()$</a></li>
        <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
-       $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
+       $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li><a href="/account/sharing">$_sharing()$</a></li>
        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
    </ul>
    <div class="tab-container">
        <div class="tab-content account">
-           <div class="col">
+           <div $if(iscompanyaccount)$class="col"$endif$>
                <div class="account-header">
                    <h2>$fstname$ $sndname$</h2>
                    <!-- <a href="javascript:;">Ladda upp ny bild...</a> -->
@@ -52,6 +52,7 @@ showUser =
                    </table>
                </div>
            </div>
+           $if(iscompanyaccount)$    
            <div class="col">
                <div class="account-header">
                    <h2>$companyname$</h2>
@@ -66,31 +67,32 @@ showUser =
                    <table>
                        <tr>
                            <td>$_company()$:</td>
-                           <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$/></td>
+                           <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>$_orgnumber()$:</td>
-                           <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(hassupervisor)$disabled="disabled"$endif$ /></td>
+                           <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(!iscompanyadmin)$disabled="disabled"$endif$ /></td>
                        </tr>
                        <tr>
                            <td>$_address()$:</td>
-                           <td><input type="text" name="address" value="$address$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
+                           <td><input type="text" name="companyaddress" value="$address$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>$_zip()$:</td>
-                           <td><input type="email" name="zip" value="$zip$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
+                           <td><input type="email" name="companyzip" value="$zip$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>$_city()$:</td>
-                           <td><input type="text" name="city" value="$city$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
+                           <td><input type="text" name="companycity" value="$city$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
                        </tr>
                        <tr>
                            <td>$_country()$:</td>
-                           <td><input type="text" name="country" value="$country$" autocomplete="off"  $if(hassupervisor)$disabled="disabled"$endif$/></td>
+                           <td><input type="text" name="companycountry" value="$country$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
                        </tr>
                    </table>
                </div>
            </div>
+           $endif$
            <div class="account-footer">
                 <a href="#" class="btn-small green submit">
                    <div class="left"></div>

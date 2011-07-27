@@ -21,9 +21,6 @@ userStateTests = testGroup "UserState" [
           testCase "returns nothing when there isn't a user with a matching id" test_getUserByUserID_returnsNothing
         , testCase "returns a user with a matching id" test_getUserByUserID_returnsTheRightUser
         ]
-    , testGroup "getUserSubaccounts" [
-          testCase "returns a list of users with matching supervisor ids" test_getUserSubaccounts_returnsTheRightUsers
-        ]
     , testGroup "getUserStats" [
           testCase "returns the number of users" test_getUserStats_returnsTheUserCount
         ]
@@ -62,15 +59,6 @@ test_getUserByUserID_returnsTheRightUser = withTestState $ do
     assert (isJust queriedUser)
     assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
-test_getUserSubaccounts_returnsTheRightUsers :: Assertion
-test_getUserSubaccounts_returnsTheRightUsers = withTestState $ do
-    Just user0 <- addNewUserWithSupervisor 100 "Emily" "Green" "emily@green.com"
-    Just user1 <- addNewUserWithSupervisor 100 "Bob" "Blue" "bob@blue.com"
-    queriedSubAccounts <- query $ GetUserSubaccounts (UserID 100)
-    assertEqual "For GetUserSubaccounts result" 2 (length queriedSubAccounts)
-    assert $ user0 `elem` queriedSubAccounts
-    assert $ user1 `elem` queriedSubAccounts
-
 test_getUserStats_returnsTheUserCount :: Assertion
 test_getUserStats_returnsTheUserCount = withTestState $ do
     Just _ <- addNewUser "Emily" "Green" "emily@green.com"
@@ -80,8 +68,8 @@ test_getUserStats_returnsTheUserCount = withTestState $ do
 
 test_getAllUsers_returnsAllUsers :: Assertion
 test_getAllUsers_returnsAllUsers = withTestState $ do
-    Just user0 <- addNewUserWithSupervisor 100 "Emily" "Green" "emily@green.com"
-    Just user1 <- addNewUserWithSupervisor 100 "Bob" "Blue" "bob@blue.com"
+    Just user0 <- addNewUser "Emily" "Green" "emily@green.com"
+    Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
     queriedUsers <- query $ GetAllUsers
     assertEqual "For GetAllUsers result" 2 (length queriedUsers)
     assert $ user0 `elem` queriedUsers
@@ -101,13 +89,7 @@ test_addUser_repeatedEmailReturnsNothing = withTestState $ do
     result <- addNewUser "Emily" "Green Again" "emily@green.com"
     assert (isNothing result)
 
-addNewUserWithSupervisor :: Int -> String -> String -> String -> IO (Maybe User)
-addNewUserWithSupervisor superid = addNewUser' (Just superid)
-
 addNewUser :: String -> String -> String -> IO (Maybe User)
-addNewUser = addNewUser' Nothing
-
-addNewUser' :: Maybe Int -> String -> String -> String -> IO (Maybe User)
-addNewUser' msuperid firstname secondname email = do
-    muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname)(BS.fromString email) NoPassword (fmap UserID msuperid) Nothing Nothing
+addNewUser firstname secondname email = do
+    muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname)(BS.fromString email) NoPassword False Nothing Nothing
     return muser

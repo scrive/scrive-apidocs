@@ -64,5 +64,5 @@ loginFailureChecks res ctx = do
 createTestUser :: IO UserID
 createTestUser = do
     pwd <- createPassword $ BS.pack "admin"
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") pwd Nothing Nothing Nothing
+    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") pwd False Nothing Nothing
     return userid

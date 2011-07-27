@@ -14,6 +14,7 @@ import Happstack.State
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 
+import Company.CompanyState
 import qualified AppLogger as Log
 import StateHelper
 import Mails.MailsUtil
@@ -22,7 +23,56 @@ import MinutesTime
 import User.UserState
 import Misc
 import Payments.PaymentsState as Payments
+import API.Service.ServiceState
 
+instance Arbitrary Company where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    return $ Company { companyid  = a
+                     , companyexternalid = b
+                     , companyservice = c
+                     , companyinfo = d
+                     }
+      
+instance Arbitrary CompanyID where
+  arbitrary = do
+    a <- arbitrary
+    return $ CompanyID a
+  
+instance Arbitrary ExternalCompanyID where
+  arbitrary = do
+    a <- arbitrary
+    return $ ExternalCompanyID a
+  
+instance Arbitrary CompanyUser where
+  arbitrary = do
+    a <- arbitrary
+    return $ CompanyUser a
+  
+instance Arbitrary CompanyInfo where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary    
+    return $ CompanyInfo { companyname       = a
+                         , companynumber     = b
+                         , companyaddress    = c
+                         , companyzip        = d
+                         , companycity       = e
+                         , companycountry    = f
+                         }
+
+instance Arbitrary ServiceID where
+  arbitrary = do
+    a <- arbitrary
+    return $ ServiceID a
+  
 instance Arbitrary MagicHash where
   arbitrary = do
     a <- arbitrary
@@ -255,6 +305,7 @@ blankUser = User {
                    userid                  =  UserID 0
                  , userpassword            =  NoPassword
                  , usersupervisor          =  Nothing 
+                 , useriscompanyadmin = False
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
                  , userfreetrialexpirationdate = Nothing
@@ -294,7 +345,7 @@ blankUser = User {
               , userservice = Nothing
               , usercompany = Nothing
               , usermailapi = Nothing
-              , userrecordstatus = LiveUser
+              , userdeleted = False
               }
 
 blankDocument :: Document 
@@ -325,7 +376,6 @@ blankDocument =
           , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []
-          , documentoriginalcompany      = Nothing
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
@@ -338,56 +388,13 @@ testThat s a = testCase s (withTestState a)
 assertSuccess :: Assertion
 assertSuccess = assertBool "not success?!" True
 
-addNewUserWithSupervisor :: UserID -> String -> String -> String -> IO (Maybe User)
-addNewUserWithSupervisor superid = addNewUser' (Just superid)
-
 addNewUser :: String -> String -> String -> IO (Maybe User)
-addNewUser = addNewUser' Nothing
-
-addNewUser' :: Maybe UserID -> String -> String -> String -> IO (Maybe User)
-addNewUser' msuperid firstname secondname email = 
-  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword msuperid Nothing Nothing
+addNewUser firstname secondname email = 
+  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword False Nothing Nothing
 
 whatTimeIsIt :: IO (MinutesTime)
 whatTimeIsIt = liftIO $ getMinutesTime
 
-assumingBasicContract :: MinutesTime -> User -> IO (Document)
-assumingBasicContract mt author = do
-  doc <- update $ NewDocument author "Test Document" (Signable Contract) mt
-  mdoc <- query $ GetDocumentByDocumentID (documentid doc)
-  case mdoc of
-    Nothing -> do
-      assertFailure "Could not create + store document."
-      return blankDocument
-    Just d -> return d
-
-assumingNewUser :: String -> String -> String -> IO User
-assumingNewUser fn ln em = do
-  muser <- addNewUser fn ln em
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
-
-assumingNewUserWithSupervisor :: UserID -> String -> String -> String -> IO User
-assumingNewUserWithSupervisor sid fn ln em = do
-  muser <- addNewUserWithSupervisor sid fn ln em
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
-  
-
-assumingBasicUser :: IO (User)
-assumingBasicUser = do
-  muser <- addNewUser "Eric" "Normand" "eric@fds.com"
-  case muser of
-    Just user -> return user
-    Nothing -> do
-      assertFailure "Cannot create a new user (in setup)"
-      return blankUser
       
 addNewRandomUser :: IO (User)
 addNewRandomUser = do
@@ -423,14 +430,19 @@ emptySignatoryDetails = SignatoryDetails
 addRandomDocumentWithAuthor :: User -> IO DocumentID
 addRandomDocumentWithAuthor user = do
   stdgen <- newStdGen
-  let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
-              stdgen 10000
+  let rs = unGen arbitrary stdgen 100
+  let roles = SignatoryAuthor : rs
   let doc = unGen arbitrary stdgen 10
       sls = 1 + (abs $ unGen arbitrary stdgen 10)
       sldets = unGen (vectorOf sls arbitrary) stdgen 10
       slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  asd <- extendRandomness $ signatoryDetailsFromUser user
+  
+  mcompany <- case usercompany user of  
+    Nothing -> return Nothing
+    Just cid -> query $ GetCompany cid
+  
+  asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]
@@ -447,7 +459,12 @@ addRandomDocumentWithAuthor' user = do
       sldets = unGen (vectorOf sls arbitrary) stdgen 10
       slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  asd <- extendRandomness $ signatoryDetailsFromUser user
+  
+  mcompany <- case usercompany user of  
+    Nothing -> return Nothing
+    Just cid -> query $ GetCompany cid
+  
+  asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]

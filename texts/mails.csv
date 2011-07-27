@@ -29,14 +29,14 @@
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen      ","Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post","Incorrect email"
-"_inviteSubaccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
+"_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
     underkonto på SkrivaPå genom vilket du kan skriva avtal 
    för organisationen <strong>$companyname$</strong>. Observera
  att detta konto inte    är avsett för privat bruk då samtliga
  dokument i kontot    tillhör organisationen","<strong>$supervisorname$</strong> has invited you to be a subaccount on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
-"_inviteSubaccountMailContentBodyUserName","  Användarnamn:<br/>  ","Username:<br/>  "
-"_inviteSubaccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Please click to activate your account:<br/>    "
-"_inviteSubaccountMailTitle","Inbjudan från $supervisorname$ till underkonto","Invitation from $supervisorname$"
+"_inviteCompanyAccountMailContentBodyUserName","  Användarnamn:<br/>  ","Username:<br/>  "
+"_inviteCompanyAccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    ","Please click to activate your account:<br/>    "
+"_inviteCompanyAccountMailTitle","Inbjudan från $supervisorname$ till underkonto","Invitation from $supervisorname$"
 "_legalparagraphBody","   Detta e-postmeddelande innehåller konfidentiell information
  och får inte vidarebefordras.   Avslöjande, kopiering, distribution
  eller annan behandling av informationen i    meddelandet är
@@ -74,6 +74,8 @@
 "_mailCancelOrderByAuthorContentBody","      <strong>$creatorname$</strong>   har valt att återkalla
  orderbekräftelsen  $documenttitle$.    ","      <strong>$creatorname$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$.    "
+"_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.","$invited.fullnameOrEmail$ has agreed to become a subaccount."
+"_mailCompanyAccountAcceptedTitle","Kontoförfrågan","Account enquiry"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.","The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.","The document <strong>$documenttitle$</strong> has been signed
@@ -137,7 +139,7 @@
 "_mailInvitationToViewDefaultHeaderBody1","har bjudit in dig att se dokumentet ","has invited you to view the document "
 "_mailInvitationToViewDefaultHeaderBody2"," online via tjänsten SkrivaPå.    "," online via Scrive.    "
 "_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$","Invite from $creatorname$ for $documenttitle$"
-"_mailInviteUserAsSubaccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
+"_mailInviteUserAsCompanyAccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
  huvudkonto till ditt konto. Om du accepterar blir ditt konto
  ett underkonto till avsändaren. Du kommer fortfarande att kunna
  se och administrera dina avtal, dock tar huvudkontot över ägarskapet
@@ -146,16 +148,16 @@
  account will become their subaccount. You will still
  be able to see and administrate your agreements and the supervising
  account will take over the ownership over all your documents."
-"_mailInviteUserAsSubaccountContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om
+"_mailInviteUserAsCompanyAccountContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om
  du  har privata dokument i kontot.","Please review before accepting, especially if you have private
  documents in the account."
-"_mailInviteUserAsSubaccountContentInstructionFirst","Så här går du vidare","To continue"
-"_mailInviteUserAsSubaccountContentInstructionSecond"," <li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
+"_mailInviteUserAsCompanyAccountContentInstructionFirst","Så här går du vidare","To continue"
+"_mailInviteUserAsCompanyAccountContentInstructionSecond"," <li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
  <li>Spara ned samtliga privata dokument till din dator</li>
  <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
  <li>Acceptera</li> <li>Ditt konto är nu underkonto</li> ","<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now  a subaccount</li> "
-"_mailInviteUserAsSubaccountContentLink","Detta är länken nedan","This is the link below"
-"_mailInviteUserAsSubaccountTitle","Förfrågan att göra till underkonto","Subaccount enquiry"
+"_mailInviteUserAsCompanyAccountContentLink","Detta är länken nedan","This is the link below"
+"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till underkonto","Subaccount enquiry"
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar","Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
@@ -212,8 +214,6 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_mailRejectOrderMailContentHasRejected","        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.
       ","        <strong>$rejectorName$</strong> has rejected the order
  <strong>$documenttitle$</strong>.      "
-"_mailSubaccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.","$invited.fullnameOrEmail$ has agreed to become a subaccount."
-"_mailSubaccountAcceptedTitle","Kontoförfrågan","Account enquiry"
 "_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
  tjänsten SkrivaPå.    Det betyder nog att han/hon gillar vår
  tjänst och tror du också skulle uppskatta den också.","$invitername$ has treated you to two months of free service with
