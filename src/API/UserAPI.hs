@@ -170,7 +170,9 @@ sendNewDocument = do
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
   ctx <- getContext
-  newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
+  mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx) --TODO EM i don't know about this
+  when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
+  let newdoc = fromRight mnewdoc
   liftIO $ print newdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
   edoc <- update $

@@ -1528,7 +1528,8 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = 
       else do
           Log.debug "Got the content, creating document"
           let title = BS.fromString (basename filename)
-          doc <- update $ NewDocument user title doctype ctxtime
+          mcompany <- getCompanyForUser user
+          doc <- guardRightM $ update $ NewDocument user mcompany title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
 makeDocumentFromFile _ _ = mzero -- to complete the patterns

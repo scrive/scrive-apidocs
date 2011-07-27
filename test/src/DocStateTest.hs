@@ -131,7 +131,7 @@ testNewDocumentDependencies = do
   mt <- whatTimeIsIt
   author <- assumingBasicUser
   -- execute
-  doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
+  Right doc <- update $ NewDocument author Nothing "Test New Document No Company" (Signable Contract) mt
   -- assert
   assertInvariants doc
   
@@ -141,7 +141,7 @@ testDocumentCanBeCreatedAndFetchedByID = do
   mt <- whatTimeIsIt
   author <- assumingBasicUser
 
-  doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
+  Right doc <- update $ NewDocument author Nothing "Test New Document No Company" (Signable Contract) mt
       
   mdoc <- query $ GetDocumentByDocumentID (documentid doc)
   -- assert
@@ -155,7 +155,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = do
   mt <- whatTimeIsIt
   author <- assumingBasicUser
   -- execute
-  doc <- update $ NewDocument author "Test New Document No Company" (Signable Contract) mt
+  Right doc <- update $ NewDocument author Nothing "Test New Document No Company" (Signable Contract) mt
   docs <- query $ GetDocuments Nothing
       
   -- assert
@@ -1313,7 +1313,7 @@ whatTimeIsIt = liftIO $ getMinutesTime
 
 assumingBasicContract :: MinutesTime -> User -> IO (Document)
 assumingBasicContract mt author = do
-  doc <- update $ NewDocument author "Test Document" (Signable Contract) mt
+  Right doc <- update $ NewDocument author Nothing "Test Document" (Signable Contract) mt
   mdoc <- query $ GetDocumentByDocumentID (documentid doc)
   case mdoc of
     Nothing -> do

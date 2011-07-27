@@ -191,7 +191,7 @@ handleMailCommand = do
                   Nothing -> return Nothing
     let userDetails = signatoryDetailsFromUser user mcompany
 
-    (doc :: Document) <- liftIO $ update $ NewDocument user title doctype ctxtime
+    (Right doc :: Either String Document) <- liftIO $ update $ NewDocument user mcompany title doctype ctxtime --TODO EM this is wrong
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
     (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty

@@ -35,7 +35,6 @@ module Doc.DocState
     , MarkInvitationRead(..)
     , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
-    , NewDocumentWithMCompany(..)
     , SaveDocumentForUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTags(..)
@@ -222,49 +221,43 @@ newDocumentFunctionality documenttype user =
 {- |
     Creates and saves a new document that's authored by the given user,
     and doesn't belong to a company.
+    If the given user and company don't match then a Left is returned.
 -}
 newDocument :: User
+            -> Maybe Company
             -> BS.ByteString
             -> DocumentType
             -> MinutesTime
-            -> Update Documents Document
-newDocument = newDocumentWithMCompany Nothing
+            -> Update Documents (Either String Document)
+newDocument user mcompany title documenttype ctime =
+  if fmap companyid mcompany /= usercompany user
+    then return $ Left "company and user don't match"
+    else do
+      let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
+                        then [SignatoryAuthor]
+                        else [SignatoryPartner, SignatoryAuthor]
+      authorlink0 <- (signLinkFromDetails
+                      (signatoryDetailsFromUser user mcompany)
+                      authorRoles)
 
-{- |
-    Creates and saves a new documents that's authored by the given user,
-    on behalf a the indicated company.
--}
-newDocumentWithMCompany :: (Maybe Company)
-            -> User
-            -> BS.ByteString
-            -> DocumentType
-            -> MinutesTime
-            -> Update Documents Document
-newDocumentWithMCompany mcompany user title documenttype ctime = do
-  let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
-                    then [SignatoryAuthor]
-                    else [SignatoryPartner, SignatoryAuthor]
-  authorlink0 <- (signLinkFromDetails
-                  (signatoryDetailsFromUser user mcompany)
-                  authorRoles)
+      let authorlink = authorlink0 {
+                         maybesignatory = Just $ userid user, 
+                         maybecompany = usercompany user }
 
-  let authorlink = authorlink0 {
-                     maybesignatory = Just $ userid user, 
-                     maybecompany = (fmap companyid mcompany) `mplus` usercompany user }
+      let doc = blankDocument {
+                  documenttitle                = title
+                , documentsignatorylinks       = [authorlink]
+                , documenttype                 = documenttype
+                , documentfunctionality        = newDocumentFunctionality documenttype user
+                , documentctime                = ctime
+                , documentmtime                = ctime
+                , documentservice              = userservice user
+                , documentauthorattachments    = []
+                , documentsignatoryattachments = []
+                } `appendHistory` [DocumentHistoryCreated ctime]
 
-  let doc = blankDocument {
-              documenttitle                = title
-            , documentsignatorylinks       = [authorlink]
-            , documenttype                 = documenttype
-            , documentfunctionality        = newDocumentFunctionality documenttype user
-            , documentctime                = ctime
-            , documentmtime                = ctime
-            , documentservice              = userservice user
-            , documentauthorattachments    = []
-            , documentsignatoryattachments = []
-            } `appendHistory` [DocumentHistoryCreated ctime]
-
-  insertNewDocument doc
+      inserteddoc <- insertNewDocument doc
+      return $ Right inserteddoc 
 
 {- |
     A blank document containing default values that need to be set before
@@ -395,19 +388,19 @@ updateDocument :: MinutesTime
                -> [(SignatoryDetails,[SignatoryRole])]
                -> Maybe Int
                -> BS.ByteString
-               -> (SignatoryDetails, [SignatoryRole], UserID, Maybe CompanyID) -- could we make so just pass author User?
+               -> (SignatoryDetails, [SignatoryRole], UserID, Maybe CompanyID)
                -> [IdentificationType]
                -> Maybe Int
                -> DocumentFunctionality
                -> Update Documents (Either String Document)
-updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authorid, authorcompany) idtypes mcsvsigindex docfunctionality =
+updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authorid, mcompanyid) idtypes mcsvsigindex docfunctionality =
     modifySignableOrTemplateWithAction documentid $ \document ->
         if documentstatus document == Preparation
          then do
              authorlink0 <- signLinkFromDetails authordetails authorroles
-             let authorlink = authorlink0 {
+             let authorlink = authorlink0 { --do we need to be doing this?  surely the author id stays the same throughout
                                 maybesignatory = Just authorid,
-                                maybecompany = authorcompany
+                                maybecompany = mcompanyid
                               }
              signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
              let alllinks = authorlink : signatorylinks
@@ -1335,11 +1328,15 @@ signableFromDocument doc = insertNewDocument $ templateToDocument doc
    data may have changed.
 -}
 signableFromDocumentIDWithUpdatedAuthor :: User -> Maybe Company -> DocumentID -> Update Documents (Either String Document)
-signableFromDocumentIDWithUpdatedAuthor user mcompany = newFromDocument $ \doc -> 
-    (templateToDocument doc) {
-          documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
-                                   -- FIXME: Need to remove authorfields?
-    }
+signableFromDocumentIDWithUpdatedAuthor user mcompany docid = 
+  if fmap companyid mcompany /= usercompany user
+    then return $ Left "company and user don't match"
+    else do
+      (flip newFromDocument) docid $ \doc -> 
+        (templateToDocument doc) {
+              documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
+                                       -- FIXME: Need to remove authorfields?
+        }
     where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
           replaceAuthorSigLink sl
             | isAuthor sl = replaceSignatoryUser sl user mcompany
@@ -1503,7 +1500,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByCompany
                         , 'getDocumentsSharedInCompany
                         , 'newDocument
-                        , 'newDocumentWithMCompany
                         , 'getDocumentByDocumentID
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocument

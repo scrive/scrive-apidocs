@@ -178,7 +178,9 @@ createAPIDocument _ _ _ _ [] _  =
 createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
     now <- liftIO $ getMinutesTime
     author <- userFromTMP authorTMP
-    doc <- update $ NewDocumentWithMCompany (Just company) author title doctype now
+    mdoc <- update $ NewDocument author (Just company) title doctype now --TODO EM this used to use NewDocumentWithMCompany ?!
+    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match"
+    let doc = fromRight mdoc
     sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
     _ <- update $ SetDocumentTags (documentid doc) tags
     doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
