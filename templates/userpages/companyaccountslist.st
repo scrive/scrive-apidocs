@@ -83,19 +83,19 @@ viewCompanyAccounts =
 		</tr>
 	      </thead>
 	      <tbody id="selectable">
-		$comapnyaccounts:{comapnyaccount |
+		$companyaccounts:{companyaccount |
 		<!-- Every other row should have class="odd" (Begin with first row) -->
-		<tr $if(comapnyaccount.odd)$class="odd"$endif$>
-		  <td><input type="checkbox" name="acccheck" value="$comapnyaccount.id$" class="check" />
+		<tr $if(companyaccount.odd)$class="odd"$endif$>
+		  <td><input type="checkbox" name="acccheck" value="$companyaccount.id$" class="check" />
                     <span class="listname" style="display:none;">
-                      $comapnyaccount.fstname$ $comapnyaccount.sndname$ &lt;$comapnyaccount.email$&gt;
+                      $companyaccount.fstname$ $companyaccount.sndname$ &lt;$companyaccount.email$&gt;
                     </span>
                   </td>
-		  <td>$comapnyaccount.fstname$</td>
-		  <td>$comapnyaccount.sndname$</td>
-		  <td>$comapnyaccount.companyposition$</td>
-		  <td>$comapnyaccount.phone$</td>
-		  <td>$comapnyaccount.email$</td>
+		  <td>$companyaccount.fstname$</td>
+		  <td>$companyaccount.sndname$</td>
+		  <td>$companyaccount.companyposition$</td>
+		  <td>$companyaccount.phone$</td>
+		  <td>$companyaccount.email$</td>
 		  <td class="right">
 		    <!-- <em>▼</em> -->
 		  </td>

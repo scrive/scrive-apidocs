@@ -74,6 +74,8 @@
 "_mailCancelOrderByAuthorContentBody","      <strong>$creatorname$</strong>   har valt att återkalla
  orderbekräftelsen  $documenttitle$.    ","      <strong>$creatorname$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$.    "
+"_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.","$invited.fullnameOrEmail$ has agreed to become a subaccount."
+"_mailCompanyAccountAcceptedTitle","Kontoförfrågan","Account enquiry"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.","The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.","The document <strong>$documenttitle$</strong> has been signed
@@ -212,8 +214,6 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_mailRejectOrderMailContentHasRejected","        <strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.
       ","        <strong>$rejectorName$</strong> has rejected the order
  <strong>$documenttitle$</strong>.      "
-"_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.","$invited.fullnameOrEmail$ has agreed to become a subaccount."
-"_mailCompanyAccountAcceptedTitle","Kontoförfrågan","Account enquiry"
 "_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
  tjänsten SkrivaPå.    Det betyder nog att han/hon gillar vår
  tjänst och tror du också skulle uppskatta den också.","$invitername$ has treated you to two months of free service with

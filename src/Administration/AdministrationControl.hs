@@ -318,12 +318,12 @@ handleCreateUser = onlySuperUser $ do
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
 getCompanyInfoChange = do
-                     mcompanyname    <- getFieldUTF "usercompanyname" --TODO EM change the name of these fields
-                     mcompanynumber  <- getFieldUTF "usercompanynumber"
-                     mcompanyaddress        <- getFieldUTF "useraddress"
-                     mcompanyzip            <- getFieldUTF "userzip"
-                     mcompanycity           <- getFieldUTF "usercity"
-                     mcompanycountry        <- getFieldUTF "usercountry"
+                     mcompanyname    <- getFieldUTF "companyname"
+                     mcompanynumber  <- getFieldUTF "companynumber"
+                     mcompanyaddress        <- getFieldUTF "companyaddress"
+                     mcompanyzip            <- getFieldUTF "companyzip"
+                     mcompanycity           <- getFieldUTF "companycity"
+                     mcompanycountry        <- getFieldUTF "companycountry"
                      return (\CompanyInfo {
                                     companyname
                                   , companynumber

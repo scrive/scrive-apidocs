@@ -609,10 +609,10 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
   supervisor <- fromMaybe user <$> (query $ GetUserByUserID supervisorid)
   case (userid user /= supervisorid, usercompany supervisor) of
      (True, Just companyid) -> do
-          setsupervisorresult <- update $ SetUserCompany (userid user) companyid
-          case setsupervisorresult of
+          setcompanyresult <- update $ SetUserCompany (userid user) companyid
+          case setcompanyresult of
             Left errmsg -> do
-              let msg = "Cannot become company account for " ++ show supervisorid ++ ": " ++ errmsg
+              let msg = "Cannot become company account for " ++ show companyid ++ ": " ++ errmsg
               Log.debug $ msg
               addFlash (OperationFailed, msg)
             Right _ -> do
@@ -696,7 +696,6 @@ handleAccountSetupFromSign aid hash = do
             _ -> return Nothing
         _-> return Nothing
 
---TODO EM link returned?
 handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
   now <- liftIO $ getMinutesTime
@@ -792,7 +791,7 @@ handleActivate aid hash signupmethod actvuser = do
     finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
     finalizeCompanyActivation user company = do
       muserf <- getUserInfoUpdateFunc user
-      mcompanyf <- getCompanyInfoUpdateFunc user
+      mcompanyf <- getCompanyInfoUpdateFunc company
       case (muserf, mcompanyf) of
         (Just userf, Just companyf) ->
           finalizeActivation user (Just company) userf companyf
@@ -817,11 +816,11 @@ handleActivate aid hash signupmethod actvuser = do
           returnToAccountSetup newuser mnewcompany
 
     getUserInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (UserInfo -> UserInfo))
-    getUserInfoUpdateFunc _user = do
-      mfname <- getRequiredField asValidName "fname"
-      mlname <- getRequiredField asValidName "lname"
-      mcompanyposition <- getRequiredField asValidName "companyposition"
-      mphone <- getRequiredField asValidPhone "phone"
+    getUserInfoUpdateFunc user = do
+      mfname <- getUserInfoField userfstname asValidName "fname"
+      mlname <- getUserInfoField usersndname asValidName "lname"
+      mcompanyposition <- getUserInfoField usercompanyposition asValidPosition "companyposition"
+      mphone <- getUserInfoField userphone (Good . BS.fromString) "phone"
       return $ 
         case (mfname, mlname, mcompanyposition, mphone) of
           (Just fname, Just lname, Just companytitle, Just phone) -> Just $ 
@@ -831,15 +830,16 @@ handleActivate aid hash signupmethod actvuser = do
                           , userphone = phone
                           }
           _ -> Nothing
+      where getUserInfoField f = getDefaultedField (f $ userinfo user)
  
-    getCompanyInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (CompanyInfo -> CompanyInfo))
-    getCompanyInfoUpdateFunc user = do
-      mcompanyname <- maybe (getRequiredField asValidName "companyname")
-                                     (\_ -> return $ Just BS.empty) $ usercompany user
-      return $ case (mcompanyname) of
-        (Just companyname') -> Just $ 
-          \info -> info { companyname = companyname' }
-        _ -> Nothing
+    getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
+    getCompanyInfoUpdateFunc company = do
+      mcompanyname <- getCompanyInfoField companyname asValidCompanyName "companyname"
+      return $ 
+        case mcompanyname of
+          (Just companyname') -> Just $ \info -> info { companyname = companyname' }
+          _ -> Nothing
+      where getCompanyInfoField f = getDefaultedField (f $ companyinfo company)
     
     performActivation :: Kontrakcja n => User
                                          -> Maybe Company

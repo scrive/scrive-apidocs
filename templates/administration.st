@@ -188,8 +188,7 @@ adminUsersForPayments=
         <thead>
           <td style="width:200px">Username</td>
           <td style="width:200px">Email</td>
-	  <td style="width:200px">Superuser Company name</td>
-	  <td style="width:200px">Superuser email</td>
+	  <td style="width:200px">Company name</td>
 	  <td style="width:200px">Payment plan</td>
 	  <td style="width:200px">Next billing date</td>
 	  <td style="width:200px">Last billing date</td>
@@ -203,7 +202,6 @@ adminUsersForPayments=
           <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$
           </td>
-	  <td>-</td>
 	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
 	  <td>?</td>
 	  <td>?</td>
@@ -250,43 +248,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.personalnumber$"  name="userpersonalnumber" />
 		  </td>
 		</tr>
-		<tr> <td>Company:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyname$"  name="usercompanyname" />
-		  </td>
-		</tr>
-		<tr> <td>Company position:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
-		  </td>
-		</tr>
-		<tr> <td>Company nr:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companynumber$"  name="usercompanynumber" />
-		  </td>
-		</tr>
-		<tr> <td style="padding-top:10px"><strong>Location</strong></td>
-		  <td> </td>
-		</tr>
-		<tr> <td>Adress:</td>
-		  <td> <input type="text" style="width:200px;margin:0" value="$user.address$"  name="useraddress" />
-		  </td>
-		</tr>
-		<tr> <td>ZIP:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.zip$"  name="userzip" />
-		  </td>
-		</tr>
-		<tr> <td>City:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.city$"  name="usercity" />
-		  </td>
-		</tr>
-		<tr> <td>Country:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.country$" name="usercountry" />
-		  </td>
-		</tr>
 		<tr> <td style="padding-top:10px" ><strong>Contact</strong></td>
 		  <td>
 		  </td>
@@ -306,13 +267,57 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
 		  </td>
 		</tr>
+		<tr> <td>Company position:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
+		  </td>
+		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company data</strong></td>
+		  <td> </td>
+		</tr>
+		<tr> <td>Company:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyname$"  name="companyname" />
+		  </td>
+		</tr>
+		<tr> <td>Company nr:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companynumber$"  name="companynumber" />
+		  </td>
+		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company Location</strong></td>
+		  <td> </td>
+		</tr>
+		<tr> <td>Adress:</td>
+		  <td> <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyaddress$"  name="companyaddress" />
+		  </td>
+		</tr>
+		<tr> <td>ZIP:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyzip$"  name="companyzip" />
+		  </td>
+		</tr>
+		<tr> <td>City:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companycity$"  name="companycity" />
+		  </td>
+		</tr>
+		<tr> <td>Country:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companycountry$" name="companycountry" />
+		  </td>
+		</tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>
 		</tr>
 		<tr> <td>Account type:</td>
 		  <td>
-		    <select autocomplete="off" name="accounttype">$user.accounttype:options()$</select>
+		    $if(user.iscompanyaccount)$
+		    $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
+		    $else$
+		    Private Account
+		    $endif$
 		  </td>
 		</tr>
 		<tr> <td>Account plan:</td>

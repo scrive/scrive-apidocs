@@ -355,17 +355,6 @@ addTag ((DocumentTag n v):ts) (n',v') = if n == n'
                            else (DocumentTag n v)  : (addTag ts (n',v'))
 addTag _ (n,v) = [DocumentTag n v]
 
-{- |
-   The user with id uid is a friend of user.
-   Should be moved to User and imported
- -}
-isFriendOf :: UserID -> User -> Bool
-isFriendOf uid user = unUserID uid `elem` map unFriend (userfriends user) -- TODO EM what to do with this?|| Just (SupervisorID $ unUserID uid) == usersupervisor user)
-
-isFriendOf' :: UserID -> Maybe User -> Bool
-isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
-
-
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 

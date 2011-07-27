@@ -35,6 +35,7 @@ import Data.List (isPrefixOf, isInfixOf)
 import Data.Char
 import Data.Typeable
 import Data.Data
+import Data.Maybe
 import Payments.PaymentsView
 import Payments.PaymentsState
 import Misc
@@ -105,7 +106,8 @@ adminUserPage :: TemplatesMonad m => User -> Maybe Company -> PaymentAccountMode
 adminUserPage user mcompany paymentModel =
     renderTemplateFM "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldF "user" $ userFields user mcompany
+        fieldF "user" $ userFields user
+        fieldF "company" $ companyFields mcompany
         field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
@@ -115,7 +117,8 @@ adminUserUsageStatsPage :: TemplatesMonad m => User -> Maybe Company -> Fields m
 adminUserUsageStatsPage user mcompany morefields =
     renderTemplateFM "userusagestats" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldF "user" $ userFields user mcompany
+        fieldF "user" $ userFields user
+        fieldF "company" $ companyFields mcompany
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
@@ -155,7 +158,8 @@ mkUserInfoView (user, mcompany, docstats, userstats) = do
   fieldF "userdetails" $ userBasicFields user mcompany
   field "docstats" $ docstats
   field "userstats" $ userstats
-  fieldF "adminview" $ userFields user mcompany
+  fieldF "adminview" $ do userFields user
+                          companyFields mcompany
 
 
 data StatsView = StatsView
@@ -214,26 +218,28 @@ data AdminUsersPageParams = AdminUsersPageParams {
                              startletter::Maybe String,
                              page::Int
                             }
+                            
+companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields mc = do
+        field "companyname" $  getCompanyName mc
+        field "companynumber" $ getCompanyNumber mc
+        field "companyaddress" $ maybe "" (toString . companyaddress . companyinfo) mc
+        field "companyzip" $  maybe "" (toString . companyzip . companyinfo)  mc
+        field "companycity" $  maybe "" (toString . companycity . companyinfo) mc
+        field "companycountry" $ maybe "" (toString . companycountry . companyinfo) mc
 
 {-| Full fields set about user -}
-userFields :: MonadIO m => User -> Maybe Company -> Fields m
-userFields u mc =  do
+userFields :: MonadIO m => User -> Fields m
+userFields u =  do
         field "fstname" $ getFirstName u
         field "sndname" $ getLastName u
         field "personalnumber" $ getPersonalNumber u
-        field "companyname" $  getCompanyName mc
         field "companyposition" $ usercompanyposition $ userinfo u
-        field "companynumber" $ getCompanyNumber mc
-        field "address" $ maybe "" (toString . companyaddress . companyinfo) mc
-        field "zip" $  maybe "" (toString . companyzip . companyinfo)  mc
-        field "city" $  maybe "" (toString . companycity . companyinfo) mc
-        field "country" $ maybe "" (toString . companycountry . companyinfo) mc
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u
---TODO EM        field "accounttype" $  for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
---TODO EM                                                                                 then soption show show x
---TODO EM                                                                                 else option show show x)
+        field "iscompanyaccount" $ isJust $ usercompany u
+        field "iscompanyadmin" $ useriscompanyadmin u
         field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)

@@ -173,7 +173,6 @@ modalAccountSetup=
                        type="radio"
                        value="CompanyAccount"
                        name="accounttype"
-                       $if(iscompanyaccount)$disabled="true"$endif$
                        $if(iscompanyaccount)$checked="true"$endif$ />
                 <label for="accountTypeCompany">$_company()$:</label></td>
         </tr></tbody></table>
