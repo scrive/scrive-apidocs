@@ -28,6 +28,7 @@ import Misc
 import Kontra
 import qualified User.UserControl as UserControl
 import Redirect
+import Text.JSON
 
 type RedirectOrContent = Either KontraLink String
 
@@ -48,6 +49,9 @@ instance ToResp KontraLink where
 
 instance ToResp String where
     toResp = page . return
+
+instance ToResp JSValue where
+    toResp = simpleResponse . encode
 
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
