@@ -66,7 +66,7 @@ assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
     t <- emptyRender templates n
-    case parseStringAsXML (n, t) of
+    case parseStringAsXML (n, removeScripts t) of
       Left msg -> assertFailure msg
       Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
   assertSuccess
@@ -138,13 +138,26 @@ parseTemplateAsXML (name, rawtxt) =
   parseStringAsXML (name, clearTemplating rawtxt)
 
 clearTemplating :: String -> String
-clearTemplating = clearTemplating' NotTag NotTemplateCode . removeDocTypeDeclaration
+clearTemplating = clearTemplating' NotTag NotTemplateCode . removeScripts . removeDocTypeDeclaration
 
 removeDocTypeDeclaration :: String -> String
 removeDocTypeDeclaration s =
   if "<!DOCTYPE" `isPrefixOf` s
     then tail $ dropWhile (/= '>') s
     else s
+    
+removeScripts :: String -> String
+removeScripts = removeScripts' NotScript
+
+data ScriptState = NotScript | ScriptStartTag | InScript
+
+removeScripts' :: ScriptState -> String -> String
+removeScripts' _ [] = []
+removeScripts' NotScript ('<':'s':'c':'r':'i':'p':'t':xs) = "<script" ++ removeScripts' ScriptStartTag xs
+removeScripts' ScriptStartTag ('>':xs) = '>' : removeScripts' InScript xs
+removeScripts' InScript ('<':'/':'s':'c':'r':'i':'p':'t':'>':xs) = "</script>" ++ removeScripts' NotScript xs
+removeScripts' InScript (_:xs) = removeScripts' InScript xs
+removeScripts' s (x:xs) = x : removeScripts' s xs
 
 {-
   this is wrong.  but it pretty much seems to work.  i really really really need to make nicer :-(  but then again, this is just a test.
