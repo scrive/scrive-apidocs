@@ -209,11 +209,14 @@ testDocumentUpdateCanChangeTitle = do
   doc <- addRandomDocumentWithAuthor' author
   --execute
   let sd = signatoryDetailsFromUser author Nothing
-  enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
-  --assert
-  case enewdoc of
-    Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
-    Right newdoc -> assertEqual "document name should be different" (documenttitle newdoc) "New Title"
+  if not $ isPreparation doc 
+    then invalidateTest
+    else do
+      enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
+      --assert
+      case enewdoc of
+        Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
+        Right newdoc -> assertEqual "document name should be different" (documenttitle newdoc) "New Title"
     
 testDocumentAttachAlwaysRight :: Assertion
 testDocumentAttachAlwaysRight = do
