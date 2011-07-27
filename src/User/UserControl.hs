@@ -772,7 +772,7 @@ handleActivate aid hash signupmethod actvuser = do
       -- we need to make a new company, because one doesn't already exist - this user should be the admin too
       company <- update $ CreateNewCompany
       Right nuser' <- update $ SetUserCompany (userid actvuser) (companyid company)
-      Right nuser <- update $ MakeCompanyAdmin (userid nuser')
+      Right nuser <- update $ MakeUserACompanyAdmin (userid nuser')
       finalizeCompanyActivation nuser company
   where
     returnToAccountSetup :: Kontrakcja n => User -> Maybe Company -> n (Maybe User)

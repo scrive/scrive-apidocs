@@ -29,6 +29,7 @@ module Administration.AdministrationControl(
           , handleCreateService
           , handleStatistics
           , migrateSigAccounts
+          , migrateCompanies
           , resealFile
           ) where
 import Control.Monad.State
@@ -70,6 +71,8 @@ import Templates.TextTemplates
 import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
 
 eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do
@@ -677,6 +680,173 @@ showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do
     liftIO $ updateCSV
     adminTranslationsPage
+    
+{- |
+    Migrate companies.  This takes the following steps
+    
+    * setup things for the companies which are already stored on the users' usercompany field,
+      by making the user an admin if they're not a subaccount, and by copying the relevant company info from the user
+      onto the company
+    * creating new companies for individual users with company name or company number set, or for supervisors.
+      the user is made a company admin and the relevant company info is copied from them onto the company
+    * link each subaccount to their supervisor's company, by making their companyuser field the same
+    * link each signatory link to the relevant company by finding a user which is their maybesignatory or maybesupervisor
+      and copying the usercompany information onto the new siglink field maybecompany.
+      
+    After migration there will be a whole load of fields that are currently deprecated, but we will be able to remove from
+    the codebase.
+    
+    Don't run this more than once!  Because of the setupInfoForExistingCompanies step it'll make all the subaccounts
+    into admins if you do.
+-}
+migrateCompanies :: Kontrakcja m => m Response
+migrateCompanies = onlySuperUser $ do
+  setupInfoForExistingCompanies --sets things up for companies already stored on usercompany
+  createNewCompaniesThatAreRequired --sets up new companies where needed, for example for supervisors
+  linkSubaccountsToCompanies --links subaccounts to their supervisor's company
+  linkSignatoryLinksToCompanies --links signatorylinks to their supervisor's company
+  Log.debug "company migration complete"
+  sendRedirect LinkMain
+  where
+    {- |
+        Where we have users with a usercompany already
+        we want to copy over the company info onto that company.
+    -}
+    setupInfoForExistingCompanies :: Kontrakcja m => m ()
+    setupInfoForExistingCompanies = do
+      users <- query $ GetAllUsers
+      mapM_ maybeSetupInfoForUsersCompany users
+      return ()
+    
+    {- |
+        If a user has a company and is either a supervisor or a single user
+        then we make them an admin, and copy their company info over onto the company.
+    -}
+    maybeSetupInfoForUsersCompany :: Kontrakcja m => User -> m ()
+    maybeSetupInfoForUsersCompany user'@User{userid} = do
+      mcompany <- getCompanyForUser user'
+      case (mcompany, userShouldBeAdmin user') of
+        (Just company, True) -> do
+          _ <- guardRightM . update $ MakeUserACompanyAdmin userid
+          user <- queryOrFail $ GetUserByUserID userid
+          let newcompanyinfo = makeCompanyInfoFromUserInfo user
+          newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
+          Log.debug $ "Setup existing company with admin user " ++ (show $ getEmail user) ++ " : "
+                        ++ "id " ++ (show $ companyid newcompany)
+                        ++ "name " ++ (show $ getCompanyName newcompany)
+          return ()  
+        _ -> return ()
+          
+    {- |
+        Checks to see if the user should be made a company admin.
+        To qualify for this they need:
+          * to be live
+          * have a company
+          * be either a single user or a supervisor (same as not being a subaccount)
+    -}
+    userShouldBeAdmin :: User -> Bool
+    userShouldBeAdmin user =
+      let islive = not $ userdeleted user
+          hascompany = isJust $ usercompany user
+          issubaccount = isJust $ usersupervisor user
+      in islive && hascompany && (not issubaccount)
+  
+    {- |
+        This creates any new companies that are required.
+    -}
+    createNewCompaniesThatAreRequired :: Kontrakcja m => m ()
+    createNewCompaniesThatAreRequired = do
+      users <- query $ GetAllUsers
+      mapM_ maybeSetupCompanyForUser users
+      return ()
+  
+    {- |
+        If the user is a single user with company info, or a supervisor
+        then we should setup a company for them, copy their data over,
+        and make them the admin of it.
+    -}
+    maybeSetupCompanyForUser :: Kontrakcja m => User -> m ()
+    maybeSetupCompanyForUser user@User{userid} = do
+      companyrequired <- query $ RequiresCompanyForMigration userid
+      when companyrequired (setupCompanyForUser user)
+    
+    {- |
+        This sets up a brand new company based on the given
+        user, including copying their user info over to be company info.
+    -}
+    setupCompanyForUser :: Kontrakcja m => User -> m ()
+    setupCompanyForUser User{userid} = do
+      company@Company{companyid} <- update $ CreateNewCompany
+      _ <- guardRightM . update $ SetUserCompany userid companyid
+      _ <- guardRightM . update $ MakeUserACompanyAdmin userid
+      user <- queryOrFail $ GetUserByUserID userid
+      let newcompanyinfo = makeCompanyInfoFromUserInfo user
+      newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
+      Log.debug $ "Created new company for " ++ (show $ getEmail user) ++ " : "
+                    ++ "id " ++ (show companyid)
+                    ++ "name " ++ (show $ getCompanyName newcompany)
+      return ()
+    
+    makeCompanyInfoFromUserInfo user =
+      CompanyInfo {
+          companyname = usercompanyname $ userinfo user
+        , companynumber = usercompanynumber $ userinfo user
+        , companyaddress = useraddress $ userinfo user
+        , companyzip = userzip $ userinfo user
+        , companycity = usercity $ userinfo user
+        , companycountry = usercountry $ userinfo user 
+      }
+    
+    {- |
+        This will go through and set the company on each subaccount
+        by looking it up from their supervisor.
+    -}
+    linkSubaccountsToCompanies :: Kontrakcja m => m ()
+    linkSubaccountsToCompanies = do
+      users <- query $ GetAllUsers
+      mapM_ maybeLinkSubaccountToCompany users
+      return ()
+     
+    {- |
+        If the user is a subaccount then this will link the user
+        to their supervisor's company.
+    -}
+    maybeLinkSubaccountToCompany :: Kontrakcja m => User -> m ()
+    maybeLinkSubaccountToCompany user@User{userid} =
+      case usersupervisor user of
+        Just supervisorid -> do
+          supervisor <- queryOrFail $ GetUserByUserID userid
+          case usercompany supervisor of
+            Nothing -> do
+              Log.debug $ "the supervisor " ++ (show supervisorid) ++ " doesn't have a company - something went wrong with the migration!\nsupervisor=" ++ (show supervisor) ++ "\nsubaccount=" ++ (show user)
+              mzero
+            Just companyid -> do
+              _ <- guardRightM . update $ SetUserCompany userid companyid
+              Log.debug $ "linked subaccount " ++ (toString $ getEmail user) ++ " to their supervisor's company (" ++ (show companyid) ++ ")"
+              return ()
+        Nothing -> return ()
+     
+    {- |
+        This hooks up all the signatory links to the user's companies.
+    -}    
+    linkSignatoryLinksToCompanies :: Kontrakcja m => m ()
+    linkSignatoryLinksToCompanies = do
+      Log.debug $ "populating companies on the document sig links"
+      services <- query $ GetServices
+      mapM_ migrateSigLinksForService $ Nothing : map (Just . serviceid) services
+      return ()
+      where
+        migrateSigLinksForService :: Kontrakcja m => Maybe ServiceID -> m ()
+        migrateSigLinksForService service = do
+          docs <- query $ GetDocuments service
+          mapM_ migrateSigLinksForDocument docs
+        migrateSigLinksForDocument :: Kontrakcja m => Document -> m ()
+        migrateSigLinksForDocument Document{documentid,documentsignatorylinks} = do
+          let siguserids = (catMaybes . map maybesignatory $ documentsignatorylinks)
+                             ++ (catMaybes . map maybesupervisor $ documentsignatorylinks)
+          msigusers <- mapM (query . GetUserByUserID) siguserids
+          _ <- update $ MigrateDocumentSigLinkCompanies documentid (catMaybes msigusers)
+          return ()
 
 {- |
     Piece of migration in response to SKRIVAPADEV-380.  The idea is to populate
