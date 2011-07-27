@@ -36,7 +36,7 @@ window.Cell = Backbone.Model.extend({
         return this.get("width");
     },
     isSpecial: function() {
-        return this.has("special")
+        return this.has("special");
     },
     isLink : function(){
         return this.get("special") != undefined && this.get("special") == "link";
@@ -54,7 +54,7 @@ window.Cell = Backbone.Model.extend({
         return this.get("rendering")(value, mainrow, model);
     }
     
-})
+});
 
 window.Sorting = Backbone.Model.extend({
     defaults : {
@@ -81,7 +81,7 @@ window.Sorting = Backbone.Model.extend({
          return this.get("order") != undefined && this.get("order") == false;
     },
     isSortable: function(field){
-        return _.any(this.fields(), function(f){return f == field; })
+        return _.any(this.fields(), function(f){return f == field; });
     },
     sortOn : function(field){
         if (this.isCurrent(field))
@@ -90,10 +90,10 @@ window.Sorting = Backbone.Model.extend({
             this.set({order : true, current : field});
     },
     sortOnFunction : function(field){
-        var sorting = this
-        return function(){sorting.sortOn(field)}
+        var sorting = this;
+        return function(){sorting.sortOn(field);};
     }
-})
+});
 
 window.Filtering = Backbone.Model.extend({
     disabled : function(){
@@ -108,7 +108,7 @@ window.Filtering = Backbone.Model.extend({
     infotext: function(){
          return this.get("infotext");
     }
-})
+});
 
 window.Paging = Backbone.Model.extend({
     defaults : {
@@ -138,16 +138,16 @@ window.Paging = Backbone.Model.extend({
     },
     changePage : function(i)
     {
-        this.set({"pageCurrent": i})
+        this.set({"pageCurrent": i});
     },
     changePageFunction : function(i){
-        var paging = this
-        return function(){paging.changePage(i)}
+        var paging = this;
+        return function(){paging.changePage(i);};
     },
     updateWithServerResponse : function(resp) {
         this.set(resp);
     }
-})
+});
 
 var PagingView = Backbone.View.extend({
     model : Paging ,
@@ -157,20 +157,20 @@ var PagingView = Backbone.View.extend({
     },
     render: function () {
         var paging = this.model;
-        var main = $("<div class='pages'>")
+        var main = $("<div class='pages'>");
         var items = $("<div/>");
-        items.append($("<strong/>").text((paging.itemMin()+ 1) + " - " + (paging.itemMax()+1) + " "+localization.of+" " + paging.itemTotal()))
+        items.append($("<strong/>").text((paging.itemMin()+ 1) + " - " + (paging.itemMax()+1) + " "+localization.of+" " + paging.itemTotal()));
         var pages = $("<div/>");
         for(var i=0;i<=paging.pageMax();i++)
         {
             if (i == paging.pageCurrent())
             {
-             pages.append($("<span>" + (i + 1)+ "</span>"))
+             pages.append($("<span>" + (i + 1)+ "</span>"));
             }
             else{
-             var a = $("<a>" + (i + 1)+ "</a>")
-             a.click(paging.changePageFunction(i))
-             pages.append(a)
+             var a = $("<a>" + (i + 1)+ "</a>");
+             a.click(paging.changePageFunction(i));
+             pages.append(a);
             }
             
         }
@@ -291,7 +291,7 @@ var ListObject = Backbone.Model.extend({
       return this.get("link");
   },
   isSelected: function() {
-      return this.get("selected") == true
+      return this.get("selected") == true;
   },
   toogleSelect:  function() {
         this.set({"selected":!this.isSelected()});

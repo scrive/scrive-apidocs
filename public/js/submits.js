@@ -14,11 +14,11 @@ window.Submit = Backbone.Model.extend({
     },
     ignored : function(k)
     {
-      return k == "url" || k == "method"
+      return k == "url" || k == "method";
     },
     add: function(k,v)
     {
-        this.set({k : v})
+        this.set({k : v});
     },
     send: function() {
         var form = $("<form style='display:hidden'/>");

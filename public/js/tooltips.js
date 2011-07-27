@@ -20,12 +20,12 @@ window.ToolTip= {
                     left: $(this).offset().left + $(this).width() + 19,
                     top: $(this).offset().top - 20
                 });
-             })
+             });
             $(args.on).mouseleave(function() {
                 container.remove();
              });
         }
     
-}
+};
 
 

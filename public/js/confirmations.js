@@ -56,22 +56,22 @@ var ConfirmationView = Backbone.View.extend({
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").text(this.model.title()));
-       header.append(title)
+       header.append(title);
        header.append("<a class='modal-close close'/a>");
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'>");
        content.html(this.model.content());
        body.append(content);
        var footer = $("<div class='modal-footer'>");
-       var cancel = $("<a class='cancel close float-left'/>")
-       cancel.text(this.model.rejectText())
+       var cancel = $("<a class='cancel close float-left'/>");
+       cancel.text(this.model.rejectText());
        footer.append(cancel);
        var accept = Button.init({color:"green",
                                  size: "small",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
                                  onClick : function() { model.accept(); }
-    })
+        });
        footer.append(accept.input());
        this.el.append(header);
        this.el.append(body);
@@ -99,7 +99,7 @@ window.Confirmation = {
                       content  : args.content
                     });
           var overlay = $("<div/>");
-          var view = new ConfirmationView({model : model, el : overlay})
+          var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);
           overlay.overlay({load: true,
                            target:overlay,
@@ -110,6 +110,6 @@ window.Confirmation = {
                           });
    }
     
-}
+};
 
 });

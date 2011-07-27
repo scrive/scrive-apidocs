@@ -30,7 +30,7 @@ window.SelectOptionModel = Backbone.Model.extend({
   selected : function() {
        this.get("onSelect")();
   }
-})
+});
 
 window.SelectModel = Backbone.Model.extend({
   defaults : {
@@ -40,7 +40,7 @@ window.SelectModel = Backbone.Model.extend({
   },
   initialize: function(args){
       var options = _.map(args.options,function(e) {
-                        return new SelectOptionModel(e)
+                        return new SelectOptionModel(e);
                     });
       this.set({"options" : options});
   },
@@ -54,7 +54,7 @@ window.SelectModel = Backbone.Model.extend({
        return this.get("expanded");
   },
   toggleExpand: function() {
-       this.set({"expanded" : !this.expanded()})    
+       this.set({"expanded" : !this.expanded()});    
   }
 });
 
@@ -91,18 +91,18 @@ var SelectView = Backbone.View.extend({
     },
     render: function () {
         this.el.empty();
-        var options = $("<ul class='tab-dd-opts'/>")
+        var options = $("<ul class='tab-dd-opts'/>");
         var model = this.model;
         var o = this.model.options();
         _.each(model.options(),function(e){
                 var li = $("<li/>");
                 new SelectOptionView({model : e, el : li});
                 options.append(li);
-        })
-        var button = $("<div class='tab-dd-button'><a><p>"+model.name()+"</p></a></div>")
+        });
+        var button = $("<div class='tab-dd-button'><a><p>"+model.name()+"</p></a></div>");
         button.click(function(){
             model.toggleExpand();
-        })
+        });
         if (model.expanded())
             {
               button.addClass("tab-dd-exp");
@@ -130,12 +130,12 @@ window.Select = {
           var input = $("<div/>");
           if (args.cssClass!= undefined)
               input.addClass(args.cssClass);
-          var view = new SelectView({model : model, el : input})
+          var view = new SelectView({model : model, el : input});
           return new Object({
-              input : function() {return input}
+              input : function() {return input;}
             });
         }
     
-}
+};
 
 })(window); 

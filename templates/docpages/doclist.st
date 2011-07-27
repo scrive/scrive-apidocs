@@ -18,6 +18,27 @@ var documentsTable = KontraList.init({
     sorting: new Sorting({ fields: ["title", "status", "time","partner"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
+    cells : [
+        new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
+        new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",
+                 rendering: function(status,mainrow,listobject) {
+                    var icon = jQuery("<div class='icon status "+status+"'></div>")
+                    if (listobject.field("anyinvitationundelivered") == "true" && mainrow == true)
+                       icon.add("<span style='color:#000000;'>!</span>");
+
+                    var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
+                                      localization.statusToolTip[status]+"</p></div>");
+                    ToolTip.set({
+                        on: icon,
+                        tip: tip
+                    })
+                    return icon;
+                 }
+        }),
+        new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
+        new Cell({name: "$_SortParty()$", width:"300px", field:"partner", special: "expandable"}),
+        new Cell({name: "$_SortDoc()$", width:"300px", field:"title",  special: "link"})
+        ],
     options : [{name : "$_SendReminder()$",
                 onSelect: function(docs){
                             allSendOrOpenSelected = _.all(docs, function(doc) {
@@ -85,30 +106,8 @@ var documentsTable = KontraList.init({
                               })
                           }
                 }
-              ],
-    cells : [
-        new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",
-                 rendering: function(status,mainrow,listobject) {
-                    var icon = jQuery("<div class='icon status "+status+"'></div>")
-                    if (listobject.field("anyinvitationundelivered") == "true" && mainrow == true)
-                       icon.add("<span style='color:#000000;'>!</span>");
-
-                    var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
-                                      localization.statusToolTip[status]+"</p></div>");
-                    ToolTip.set({
-                        on: icon,
-                        tip: tip
-                    })
-                    return icon;
-                 }
-        }),
-        new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortParty()$", width:"300px", field:"partner", special: "expandable"}),
-        new Cell({name: "$_SortDoc()$", width:"300px", field:"title",  special: "link"})
-        ]
+              ]
     }),
-    /* headerExtras : Button.init({color:"red", size: "tiny", text: "Kill me"}).input(), */
     bottomExtras : jQuery("<div class='table-statuses'>" +
                     "<div class='icon status draft float-left'></div><div class='float-left'>$_tablestatusesDraft()$&nbsp;</div>" +
                     "<div class='icon status cancelled float-left'></div><div class='float-left'>$_tablestatusesCandelled()$&nbsp;</div>" +

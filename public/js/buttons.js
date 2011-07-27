@@ -31,7 +31,7 @@ var ButtonModel = Backbone.Model.extend({
        return this.get("text");
   },
   clicked : function(){
-       this.get("onClick")()
+       this.get("onClick")();
   }
 });
 
@@ -50,9 +50,9 @@ var ButtonView = Backbone.View.extend({
     render: function () {
         this.el.addClass(this.model.color());
         this.el.addClass("btn-"+this.model.size());
-        this.el.append("<div class='left'/>")
+        this.el.append("<div class='left'/>");
         this.el.append($("<div class='label'/>").text(this.model.text()));
-        this.el.append("<div class='right'/>")
+        this.el.append("<div class='right'/>");
         return this;
     },
     clicked: function(){
@@ -70,15 +70,14 @@ window.Button = {
                        text  : args.text,
                        onClick : args.onClick
                     });
-          var input = $("<a/>")
+          var input = $("<a/>");
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
-          var view = new ButtonView({model : model, el : input})
+          var view = new ButtonView({model : model, el : input});
           return new Object({
-              input : function() {return input}
+              input : function() {return input;}
             });
         }
-    
-}
+};
 
 })(window); 

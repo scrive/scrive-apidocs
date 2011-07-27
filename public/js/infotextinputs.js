@@ -63,13 +63,13 @@ var InfoTextInputView = Backbone.View.extend({
     render: function () {
         if (this.model.isValueSet())
         {
-            this.el.val(this.model.value())
-            this.el.removeClass("grayed")
+            this.el.val(this.model.value());
+            this.el.removeClass("grayed");
         }
         else if (!this.model.hasFocus())
         {
-            this.el.val(this.model.infotext())
-            this.el.addClass("grayed")
+            this.el.val(this.model.infotext());
+            this.el.addClass("grayed");
         }
         else {
             this.el.val("");
@@ -100,16 +100,15 @@ window.InfoTextInput = {
                       infotext: args.infotext,
                       value: args.value
                     });
-          var input = $("<input type='text'/>")
+          var input = $("<input type='text'/>");
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
-          var view = new InfoTextInputView({model : model, el : input})
+          var view = new InfoTextInputView({model : model, el : input});
           return new Object({
-              value : function() {return model.value()},
-              input : function() {return input}
+              value : function() {return model.value();},
+              input : function() {return input;}
             });
         }
-    
-}
+};
 
 })(window); 
