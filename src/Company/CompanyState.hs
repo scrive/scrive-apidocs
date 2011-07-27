@@ -20,6 +20,7 @@ module Company.CompanyState
     , SetCompanyInfo(..)
     , CreateNewCompany(..)
     , GetOrCreateCompanyWithExternalID(..)
+    , ExternalCompanyID(..)
 ) where
 import API.Service.ServiceState
 import Control.Monad.Reader (ask)
