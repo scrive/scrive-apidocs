@@ -18,7 +18,6 @@ module Templates.TemplatesLoader
     , getTemplatesModTime
     , toKontrakcjaTemplates
     , getTemplates
-    , readTemplates
     , readAllLangsTemplates
     , langVersion
     , Lang(..)

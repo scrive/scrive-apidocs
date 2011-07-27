@@ -29,7 +29,7 @@ loginTests = testGroup "Login" [
 testSuccessfulLogin :: Assertion
 testSuccessfulLogin = withTestState $ do
     uid <- createTestUser
-    ctx <- mkContext =<< readTemplates LANG_SE
+    ctx <- mkContext =<<  langVersion LANG_SE <$> readAllLangsTemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     assertBool "Response code is 303" $ rsCode res == 303
@@ -40,7 +40,7 @@ testSuccessfulLogin = withTestState $ do
 testCantLoginWithInvalidUser :: Assertion
 testCantLoginWithInvalidUser = withTestState $ do
     _ <- createTestUser
-    ctx <- mkContext =<< readTemplates LANG_SE
+    ctx <- mkContext =<<  langVersion LANG_SE <$> readAllLangsTemplates
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
@@ -48,7 +48,7 @@ testCantLoginWithInvalidUser = withTestState $ do
 testCantLoginWithInvalidPassword :: Assertion
 testCantLoginWithInvalidPassword = withTestState $ do
     _ <- createTestUser
-    ctx <- mkContext =<< readTemplates LANG_SE
+    ctx <- mkContext =<< langVersion LANG_SE <$> readAllLangsTemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
