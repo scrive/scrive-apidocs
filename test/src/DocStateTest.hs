@@ -202,7 +202,7 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
         Right newdoc -> validTest $ assertEqual "document ids should be equal" (documentid doc) (documentid newdoc)
 
 testDocumentUpdateCanChangeTitle :: Assertion
-testDocumentUpdateCanChangeTitle = do
+testDocumentUpdateCanChangeTitle = doTimes 100 $ do
   -- setup
   mt <- whatTimeIsIt
   author <- addNewRandomUser
@@ -215,8 +215,8 @@ testDocumentUpdateCanChangeTitle = do
       enewdoc <- update $ UpdateDocument mt (documentid doc) "New Title" [] Nothing "" (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) [EmailIdentification] Nothing AdvancedFunctionality 
       --assert
       case enewdoc of
-        Left msg -> assertFailure $ "Could not run UpdateDocument: " ++ msg
-        Right newdoc -> assertEqual "document name should be different" (documenttitle newdoc) "New Title"
+        Left msg -> validTest $ assertFailure $ "Could not run UpdateDocument: " ++ msg
+        Right newdoc -> validTest $ assertEqual "document name should be different" (documenttitle newdoc) "New Title"
     
 testDocumentAttachAlwaysRight :: Assertion
 testDocumentAttachAlwaysRight = do
