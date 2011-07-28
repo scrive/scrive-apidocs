@@ -2,31 +2,29 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module RedirectTest where
 
-import Test.HUnit (assertFailure, Assertion, assertEqual)
+import Test.HUnit (assertFailure, Assertion, assertEqual, assertBool)
 import Test.Framework
 import TestingUtil
 import Redirect
 import Test.Framework.Providers.HUnit (testCase)
 import Control.Monad
 --import Control.Monad.Trans
---import Control.Applicative
---import Data.List
---import DBError
+import Control.Applicative
+import Data.List
+import DBError
 import TestKontra
 import StateHelper
 import Templates.TemplatesLoader
 import Happstack.Server
---import Context
---import TestKontra as T
+import Context
+import TestKontra as T
 
 redirectTests :: Test
 redirectTests = testGroup "RedirectTests" 
                   [testCase "return Right if Right" testGuardRight
                   ,testCase "return mzero if Left" testStringGuardMZeroLeft
-                  --,testCase "finishWith if Left DBNotLoggedIn" (do
-                   --                                                _ <- guardRight $ Left DBNotLoggedIn
-                   --                                                assertFailure "didn't work")
-                     ]
+                  ,testCase "finishWith if Left DBNotLoggedIn" testDBErrorGuardRedirectLeftDBNotLoggedIn
+                  ]
                   
 testGuardRight :: Assertion
 testGuardRight = withTestState $ do
@@ -43,18 +41,19 @@ testStringGuardMZeroLeft = withTestState $ do
                                        (return "hello"))
     assertEqual "should be equal" res "hello"
 
-{- doesn't compile until finishWith is implemented
+
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
 testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
     ctx <- mkContext =<< readTemplates LANG_SE
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res, ctx') <- runTestKontra req ctx (guardRight $ (Left DBNotLoggedIn :: Either DBError String))
+    (res, ctx') <- runTestKontra req ctx (do
+                                          _ <- guardRight $ Left DBNotLoggedIn
+                                          ok $ toResponseBS "stuff" "hello")
     assertBool "Response code is 303" $ rsCode res == 303
     assertBool "Location starts with /?logging" $ (isPrefixOf "/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
     assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
 --    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
                 
--}
 
 assertMZero :: IO t -> IO ()
 assertMZero action = 

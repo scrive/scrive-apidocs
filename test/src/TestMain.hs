@@ -8,6 +8,12 @@ import System.Environment.UTF8
 import System.IO
 import Test.Framework
 
+-- Note: if you add new testsuites here, please add them in a similar
+-- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
+-- flags to kontrakcja.cabal to allow possibility of disabling tests selectively
+-- if e.g. for some reason they stop compiling. Also, please keep them in
+-- alphabetic order.
+
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
@@ -31,6 +37,7 @@ import UserStateTest
 #endif
 
 import DocStateQueryTest
+import RedirectTest
 
 allTests :: [Test]
 allTests = tail tests
@@ -88,6 +95,7 @@ testsToRun (t:ts) =
          "userstate"       -> Right userStateTests : rest
 #endif
          "docstatequery"   -> Right docStateQueryTests : rest
+         "redirect"        -> Right redirectTests : rest
          _                 -> Left t : rest
     where
         rest = testsToRun ts
