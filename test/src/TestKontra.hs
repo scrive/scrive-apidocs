@@ -1,4 +1,5 @@
 {-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-missing-methods #-}
 module TestKontra (
       TestKontra
     , runTestKontra
