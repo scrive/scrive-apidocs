@@ -1517,7 +1517,7 @@ instance Version SignatoryLink10 where
 
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 10 (Proxy :: Proxy SignatoryLink10)
+    mode = extension 11 (Proxy :: Proxy SignatoryLink10)
 
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
