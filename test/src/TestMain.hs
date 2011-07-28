@@ -30,6 +30,8 @@ import TrustWeaverTest
 import UserStateTest
 #endif
 
+import DocStateQueryTest
+
 allTests :: [Test]
 allTests = tail tests
     where
@@ -85,6 +87,7 @@ testsToRun (t:ts) =
 #ifndef NO_USERSTATE
          "userstate"       -> Right userStateTests : rest
 #endif
+         "docstatequery"   -> Right docStateQueryTests : rest
          _                 -> Left t : rest
     where
         rest = testsToRun ts

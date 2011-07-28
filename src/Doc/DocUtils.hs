@@ -11,6 +11,7 @@
 
 module Doc.DocUtils where
 
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
 import API.Service.ServiceState
@@ -20,35 +21,13 @@ import Templates.Templates
 import User.UserState
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Company.CompanyState
 
 import Control.Monad
 import Data.List hiding (insert)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-
--- some docs please? -EN
-type SignatoryAccount = (UserID, Maybe UserID)
-
-class HasSignatoryAccount a where
-  getSignatoryAccount :: a -> SignatoryAccount
-
-instance HasSignatoryAccount User where
-  getSignatoryAccount User{userid, usersupervisor} =
-    (userid, fmap (UserID . unSupervisorID) usersupervisor)
-
-instance HasSignatoryAccount SignatoryAccount where
-  getSignatoryAccount = id
-
-instance HasSignatoryAccount SignatoryLink where
-  getSignatoryAccount sl =
-    let Just userid = maybesignatory sl in
-    (userid, maybesupervisor sl)
-
-copySignatoryAccount :: (HasSignatoryAccount a) => a -> SignatoryLink -> SignatoryLink
-copySignatoryAccount acc siglink =
-  let (userid, msuperid) = getSignatoryAccount acc in
-  siglink { maybesignatory = Just userid, maybesupervisor = msuperid }
 
 {- |
     Checks whether the document is deletable, this is not the case for live documents.
@@ -227,14 +206,14 @@ documentcurrentsignorder doc =
 {- |
    Build a SignatoryDetails from a User with no fields
  -}
-signatoryDetailsFromUser :: User -> SignatoryDetails
-signatoryDetailsFromUser user =
+signatoryDetailsFromUser :: User -> Maybe Company -> SignatoryDetails
+signatoryDetailsFromUser user mcompany =
     SignatoryDetails { signatoryfstname                  = getFirstName      user
                      , signatorysndname                  = getLastName       user
                      , signatoryemail                    = getEmail          user
-                     , signatorycompany                  = getCompanyName    user
+                     , signatorycompany                  = getCompanyName    mcompany
                      , signatorypersonalnumber           = getPersonalNumber user
-                     , signatorycompanynumber            = getCompanyNumber  user
+                     , signatorycompanynumber            = getCompanyNumber  mcompany
                      , signatorysignorder                = SignOrder 1
                      , signatoryfstnameplacements        = []
                      , signatorysndnameplacements        = []
@@ -375,17 +354,6 @@ addTag ((DocumentTag n v):ts) (n',v') = if n == n'
                            then (DocumentTag n v') : ts
                            else (DocumentTag n v)  : (addTag ts (n',v'))
 addTag _ (n,v) = [DocumentTag n v]
-
-{- |
-   The user with id uid is a friend of user.
-   Should be moved to User and imported
- -}
-isFriendOf :: UserID -> User -> Bool
-isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Just (SupervisorID $ unUserID uid) == usersupervisor user)
-
-isFriendOf' :: UserID -> Maybe User -> Bool
-isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
-
 
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd

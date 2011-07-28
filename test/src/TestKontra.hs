@@ -17,6 +17,7 @@ module TestKontra (
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
+import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Maybe
@@ -41,7 +42,7 @@ import Templates.Templates
 import qualified MemCache
 
 -- | Monad that emulates the server
-newtype TestKontra a = TK { unTK :: ReaderT Request (StateT (Context, Response -> Response) IO) a }
+newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
     deriving (Applicative, Functor, Monad, MonadIO, MonadPlus)
 
 instance Kontrakcja TestKontra
@@ -84,19 +85,26 @@ instance FilterMonad Response TestKontra where
         f <- snd <$> get
         unTK m >>= \x -> return (x, f)
 
+instance WebMonad Response TestKontra where
+    finishWith = TK . throwError
+
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
     runTestKontra :: Request -> Context -> TestKontra a -> IO (a, Context)
 
 instance RunnableTestKontra a where
     runTestKontra rq ctx tk = do
-        (res, (ctx', _)) <- runStateT (runReaderT (unTK tk) rq) (ctx, id)
-        return (res, ctx')
+        (mres, (ctx', _)) <- runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
+        case mres of
+             Right res -> return (res, ctx')
+             Left  _   -> error "finishWith called in function that doesn't return Response"
 
 instance RunnableTestKontra Response where
     runTestKontra rq ctx tk = do
-        (res, (ctx', f)) <- runStateT (runReaderT (unTK tk) rq) (ctx, id)
-        return (f res, ctx')
+        (mres, (ctx', f)) <- runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
+        case mres of
+             Right res -> return (f res, ctx')
+             Left  res -> return (f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request
 

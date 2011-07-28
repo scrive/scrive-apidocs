@@ -178,10 +178,12 @@ createAPIDocument _ _ _ _ [] _  =
 createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
     now <- liftIO $ getMinutesTime
     author <- userFromTMP authorTMP
-    doc <- update $ NewDocumentWithMCompany (Just $ companyid company) author title doctype now
+    mdoc <- update $ NewDocument author (Just company) title doctype now --TODO EM this used to use NewDocumentWithMCompany ?!
+    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match"
+    let doc = fromRight mdoc
     sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
     _ <- update $ SetDocumentTags (documentid doc) tags
-    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, getSignatoryAccount author) (map toSignatoryDetails signTMPS)
+    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 
@@ -196,7 +198,7 @@ userFromTMP uTMP = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password Nothing (Just sid) Nothing defaultValue
+                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password False (Just sid) Nothing defaultValue
                 when (isNothing u) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 u' <- update $ AcceptTermsOfService (userid $ fromJust u) (fromSeconds 0)
                 when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
@@ -206,8 +208,8 @@ userFromTMP uTMP = do
               userfstname = fromMaybe (getFirstName user) $ fstname uTMP
             , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
-            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP
-            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP
+--            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP -- TODO EM ??
+--            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP --TODO EM ??
             }
     when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
     return $ fromRight user'

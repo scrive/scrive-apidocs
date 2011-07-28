@@ -98,13 +98,14 @@ module Templates.Templates
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State.Strict
-import Templates.TemplatesLoader hiding (getTemplates)
-import Text.StringTemplate.Base hiding (ToSElem,toSElem)
-import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
+import Text.StringTemplate.Base hiding (ToSElem, toSElem)
+import Text.StringTemplate.Classes hiding (ToSElem, toSElem)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Text.StringTemplate.Classes as HST
+
+import Templates.TemplatesLoader hiding (getTemplates)
 
 class (Functor a, MonadIO a) => TemplatesMonad a where
     getTemplates :: a KontrakcjaTemplates

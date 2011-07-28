@@ -64,7 +64,7 @@ data KontraLink
     | LinkDesignDoc DesignStep
     | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
-    | LinkSubaccount ListParams
+    | LinkCompanyAccounts ListParams
     | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
@@ -122,7 +122,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAjaxTemplates docprocess params) = (++) $ "/templates?" ++ "doctype="++ show docprocess ++"&"++ show params
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
-    showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
+    showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
