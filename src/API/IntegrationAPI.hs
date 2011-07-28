@@ -196,7 +196,7 @@ userFromTMP uTMP = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password Nothing (Just sid) Nothing
+                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password Nothing (Just sid) Nothing defaultValue
                 when (isNothing u) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 u' <- update $ AcceptTermsOfService (userid $ fromJust u) (fromSeconds 0)
                 when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"

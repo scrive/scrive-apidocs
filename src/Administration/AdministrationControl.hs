@@ -361,7 +361,8 @@ getUserSettingsChange =  do
                                  , signeddocstorage
                                  , userpaymentmethod
                                  , preferreddesignmode
-                                 , lang }
+                                 , lang
+                                 , systemserver }
                                        -> UserSettings {
                                             accounttype  = maybe' accounttype  maccounttype
                                           , accountplan = maybe' accountplan maccountplan
@@ -369,6 +370,7 @@ getUserSettingsChange =  do
                                           , userpaymentmethod =  maybe' userpaymentmethod muserpaymentmethod
                                           , preferreddesignmode = preferreddesignmode
                                           , lang = lang
+                                          , systemserver = systemserver
                                           })
 
 {- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}

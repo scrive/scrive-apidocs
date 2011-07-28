@@ -12,15 +12,16 @@
 module Templates.TemplatesLoader
     ( KontrakcjaTemplates
     , KontrakcjaTemplate
-    , KontrakcjaMultilangTemplates
+    , KontrakcjaGlobalTemplates
     , renderTemplateMain
     , templateList
     , getTemplatesModTime
     , toKontrakcjaTemplates
     , getTemplates
-    , readAllLangsTemplates
-    , langVersion
-    , Lang(..)
+    , readGlobalTemplates
+    , localizedVersion
+    , Localization
+    , systemServerFromURL
     ) where
 
 import Text.StringTemplate
@@ -36,23 +37,24 @@ import Templates.TemplatesFiles
 import Misc
 import User.Lang
 import Templates.TextTemplates
-
+--import Templates.SystemTemplates
+import User.SystemServer
 {-Names of template files -}
 
 
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
-type KontrakcjaMultilangTemplates = Map.Map Lang KontrakcjaTemplates
+type KontrakcjaGlobalTemplates = Map.Map Localization KontrakcjaTemplates
+type Localization = (SystemServer,Lang)
+
+localizedVersion::Localization -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
+localizedVersion localization mtemplates = mtemplates ! localization
 
 
-langVersion::Lang -> KontrakcjaMultilangTemplates -> KontrakcjaTemplates
-langVersion lang mtemplates = mtemplates ! lang
-
-
-readAllLangsTemplates :: IO KontrakcjaMultilangTemplates
-readAllLangsTemplates = fmap Map.fromList $ forM allValues $ \lang -> do
-    templates <- readTemplates lang
-    return (lang,templates)
+readGlobalTemplates :: IO KontrakcjaGlobalTemplates
+readGlobalTemplates = fmap Map.fromList $ forM allValues $ \localization -> do
+    templates <- readTemplates $ snd localization
+    return (localization,templates)
 
 
 readTemplates :: Lang -> IO KontrakcjaTemplates

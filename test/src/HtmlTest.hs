@@ -14,7 +14,7 @@ import Control.Monad
 import Misc
 import Templates.TemplatesFiles
 import Templates.Templates (renderTemplate)
-import Templates.TemplatesLoader (KontrakcjaTemplates, readAllLangsTemplates, langVersion)
+import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion)
 import Templates.TextTemplates
 
 htmlTests :: Test
@@ -52,12 +52,12 @@ testNoUnecessaryDoubleDivs = do
 
 testNoNestedP :: Assertion
 testNoNestedP = do
-  langtemplates <- readAllLangsTemplates
+  langtemplates <- readGlobalTemplates
   ts <- mapM getTemplates templatesFilesPath
-  texts <- mapM getTextTemplates allValues
+  texts <- forM allValues getTextTemplates
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM allValues $ \lang -> do
-    let templates = langVersion lang langtemplates
+  _ <- forM allValues $ \localization -> do
+    let templates = localizedVersion localization langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates
   assertSuccess

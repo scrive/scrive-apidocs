@@ -80,6 +80,7 @@ import User.Lang
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines)
 import qualified Data.ByteString.UTF8 as BS
+import User.SystemServer
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -194,6 +195,16 @@ data UserSettings1  = UserSettings1 {
       }
     deriving (Eq, Ord, Typeable)
 
+data UserSettings2  = UserSettings2 {
+               accounttype2 :: UserAccountType
+             , accountplan2 :: UserAccountPlan
+             , signeddocstorage2 :: Maybe TrustWeaverStorage
+             , userpaymentmethod2 :: PaymentMethod
+             , preferreddesignmode2 :: Maybe DesignMode
+             , lang2 :: Lang
+      }
+    deriving (Eq, Ord, Typeable)
+
 data UserSettings  = UserSettings {
                accounttype :: UserAccountType
              , accountplan :: UserAccountPlan
@@ -201,9 +212,10 @@ data UserSettings  = UserSettings {
              , userpaymentmethod :: PaymentMethod
              , preferreddesignmode :: Maybe DesignMode
              , lang :: Lang
+             , systemserver :: SystemServer
       }
     deriving (Eq, Ord, Typeable)
-
+    
 data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
 
@@ -835,20 +847,38 @@ instance Migrate UserSettings0 UserSettings1 where
           , preferreddesignmode1 = Nothing
           }
 
-instance Migrate UserSettings1 UserSettings where
+instance Migrate UserSettings1 UserSettings2 where
     migrate (UserSettings1 {
             accounttype1
           , accountplan1
           , signeddocstorage1
           , userpaymentmethod1
           , preferreddesignmode1
+          }) = UserSettings2 {
+            accounttype2 = accounttype1
+          , accountplan2 = accountplan1
+          , signeddocstorage2 = signeddocstorage1
+          , userpaymentmethod2 = userpaymentmethod1
+          , preferreddesignmode2 = preferreddesignmode1
+          , lang2 = LANG_SE
+          }
+
+instance Migrate UserSettings2 UserSettings where
+    migrate (UserSettings2 {
+            accounttype2
+          , accountplan2
+          , signeddocstorage2
+          , userpaymentmethod2
+          , preferreddesignmode2
+          , lang2
           }) = UserSettings {
-            accounttype = accounttype1
-          , accountplan = accountplan1
-          , signeddocstorage = signeddocstorage1
-          , userpaymentmethod = userpaymentmethod1
-          , preferreddesignmode = preferreddesignmode1
-          , lang = LANG_SE
+            accounttype = accounttype2
+          , accountplan = accountplan2
+          , signeddocstorage = signeddocstorage2
+          , userpaymentmethod = userpaymentmethod2
+          , preferreddesignmode = preferreddesignmode2
+          , lang = lang2
+          , systemserver = SkrivaPa
           }
 
 isAbleToHaveSubaccounts :: User -> Bool
@@ -922,8 +952,11 @@ instance Version UserSettings0
 instance Version UserSettings1 where
     mode = extension 1 (Proxy :: Proxy UserSettings0)
 
-instance Version UserSettings where
+instance Version UserSettings2 where
     mode = extension 2 (Proxy :: Proxy UserSettings1)
+
+instance Version UserSettings where
+    mode = extension 3 (Proxy :: Proxy UserSettings2)
 
 instance Version DesignMode
 
@@ -1070,8 +1103,9 @@ addUser :: (BS.ByteString, BS.ByteString)
         -> Maybe UserID
         -> Maybe ServiceID
         -> Maybe CompanyID
+        -> SystemServer
         -> Update Users (Maybe User)
-addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
+addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany sserver = do
   allusers <- get
   liveusers <- askLive
   if (IxSet.size (liveusers @= mservice @= Email email) /= 0) -- a deleted user can re-register as a new user
@@ -1099,6 +1133,7 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
                                    }
               , userservice = mservice
               , usercompany = mcompany
+              , usersettings = (usersettings blankUser) {systemserver = sserver}
               }
         modify (updateIx userid user)
         return $ Just user
@@ -1134,6 +1169,7 @@ blankUser = User {
                                   , userpaymentmethod = Undefined
                                   , preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
+                                  , systemserver = Misc.defaultValue
                                   }
                 , userpaymentpolicy = Payments.initialPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount
@@ -1416,6 +1452,7 @@ $(deriveSerializeFor [ ''User
                      , ''UserMailAPI
                      , ''UserSettings
                      , ''UserSettings1
+                     , ''UserSettings2
                      , ''UserSettings0
                      , ''DesignMode
                      , ''UserRecordStatus

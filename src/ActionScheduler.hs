@@ -30,8 +30,9 @@ import User.UserView
 import qualified AppLogger as Log
 import System.Time
 import Util.HasSomeUserInfo
+import Misc
 
-type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
+type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
 newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
@@ -114,7 +115,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                templates <- getLangTemplates $ lang $ usersettings user
+                templates <- getLocalizedTemplates $ (systemserver,lang) `pairApply` usersettings user
                 mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
@@ -161,10 +162,10 @@ deleteAction aid = do
     _ <- update $ DeleteAction aid
     return ()
 
-getLangTemplates :: Lang -> ActionScheduler KontrakcjaTemplates
-getLangTemplates lang = do
+getLocalizedTemplates :: Localization -> ActionScheduler KontrakcjaTemplates
+getLocalizedTemplates lang = do
     sd <- ask
-    (_, templates) <- liftIO $ second (langVersion lang) <$> readMVar (sdTemplates sd)
+    (_, templates) <- liftIO $ second (localizedVersion lang) <$> readMVar (sdTemplates sd)
     return templates
 
 -- Old scheduler internal stuff

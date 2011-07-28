@@ -18,6 +18,7 @@ import Templates.TemplatesLoader
 import TestKontra as T
 import User.Password
 import User.UserState
+import Misc
 
 loginTests :: Test
 loginTests = testGroup "Login" [
@@ -29,7 +30,7 @@ loginTests = testGroup "Login" [
 testSuccessfulLogin :: Assertion
 testSuccessfulLogin = withTestState $ do
     uid <- createTestUser
-    ctx <- mkContext =<<  langVersion LANG_SE <$> readAllLangsTemplates
+    ctx <- mkContext =<<  localizedVersion defaultValue <$> readGlobalTemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     assertBool "Response code is 303" $ rsCode res == 303
@@ -40,7 +41,7 @@ testSuccessfulLogin = withTestState $ do
 testCantLoginWithInvalidUser :: Assertion
 testCantLoginWithInvalidUser = withTestState $ do
     _ <- createTestUser
-    ctx <- mkContext =<<  langVersion LANG_SE <$> readAllLangsTemplates
+    ctx <- mkContext =<<  localizedVersion defaultValue <$> readGlobalTemplates
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
@@ -48,7 +49,7 @@ testCantLoginWithInvalidUser = withTestState $ do
 testCantLoginWithInvalidPassword :: Assertion
 testCantLoginWithInvalidPassword = withTestState $ do
     _ <- createTestUser
-    ctx <- mkContext =<< langVersion LANG_SE <$> readAllLangsTemplates
+    ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
@@ -64,5 +65,5 @@ loginFailureChecks res ctx = do
 createTestUser :: IO UserID
 createTestUser = do
     pwd <- createPassword $ BS.pack "admin"
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") pwd Nothing Nothing Nothing
+    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") pwd Nothing Nothing Nothing defaultValue
     return userid

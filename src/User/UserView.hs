@@ -79,6 +79,7 @@ import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 import FlashMessage
 import Util.HasSomeUserInfo
+import User.Lang
 
 showUser :: TemplatesMonad m => User -> m String
 showUser user = renderTemplateFM "showUser" $ do

@@ -45,7 +45,7 @@ import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
-import Templates.Templates (readAllLangsTemplates, getTemplatesModTime)
+import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Kontra
 import Misc
 import qualified MemCache
@@ -121,7 +121,7 @@ initDatabaseEntries = do
       maybeuser <- query $ Kontra.GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing Nothing
+              _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing Nothing defaultValue
               return ()
           Just _ -> return () -- user exist, do not add it
 
@@ -139,7 +139,7 @@ runKontrakcjaServer = Log.withLogger $ do
 
   args <- getArgs
   appConf1 <- readAppConfig
-  templates' <- readAllLangsTemplates
+  templates' <- readGlobalTemplates
   templateModTime <- getTemplatesModTime
   templates <- newMVar (templateModTime, templates')
 

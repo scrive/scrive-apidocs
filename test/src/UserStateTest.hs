@@ -6,7 +6,7 @@ import Test.HUnit hiding (Test)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import qualified Data.ByteString.UTF8 as BS
-
+import Misc
 import StateHelper
 import User.Password
 import User.UserState
@@ -109,5 +109,5 @@ addNewUser = addNewUser' Nothing
 
 addNewUser' :: Maybe Int -> String -> String -> String -> IO (Maybe User)
 addNewUser' msuperid firstname secondname email = do
-    muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname)(BS.fromString email) NoPassword (fmap UserID msuperid) Nothing Nothing
+    muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname)(BS.fromString email) NoPassword (fmap UserID msuperid) Nothing Nothing defaultValue
     return muser

@@ -32,6 +32,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Util.MonadUtils
+import User.SystemServer
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -449,7 +450,7 @@ randomPassword =
 createUser :: TemplatesMonad m => Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Bool -> m (Maybe User)
 createUser ctx hostpart names email maybesupervisor vip = do
     passwdhash <- liftIO $ createPassword =<< randomPassword
-    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor) Nothing Nothing
+    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor) Nothing Nothing (systemServerFromURL $ ctxhostpart ctx)
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -465,8 +466,8 @@ createUser ctx hostpart names email maybesupervisor vip = do
          Nothing -> return muser
 
 createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe (User, ActionID, MagicHash))
-createUserBySigning _ctx _doctitle names email companyname doclinkdata =
-    createInvitedUser names email >>= maybe (return Nothing) (\user -> do
+createUserBySigning ctx _doctitle names email companyname doclinkdata =
+    createInvitedUser names email (systemServerFromURL $ ctxhostpart ctx) >>= maybe (return Nothing) (\user -> do
         _ <- update $ SetUserInfo (userid user) $ (userinfo user) { usercompanyname = companyname }
         (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
         return $ Just (user, actionid, magichash)
@@ -474,7 +475,7 @@ createUserBySigning _ctx _doctitle names email companyname doclinkdata =
 
 createNewUserByAdmin :: TemplatesMonad m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> m (Maybe User)
 createNewUserByAdmin ctx names email _freetill custommessage = do
-    muser <- liftIO $ createInvitedUser names email
+    muser <- liftIO $ createInvitedUser names email (systemServerFromURL $ ctxhostpart ctx)
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -486,10 +487,10 @@ createNewUserByAdmin ctx names email _freetill custommessage = do
              return muser
          Nothing -> return muser
 
-createInvitedUser :: (BS.ByteString, BS.ByteString) -> BS.ByteString -> IO (Maybe User)
-createInvitedUser names email = do
+createInvitedUser :: (BS.ByteString, BS.ByteString) -> BS.ByteString -> SystemServer -> IO (Maybe User)
+createInvitedUser names email sserver = do
     passwdhash <- createPassword =<< randomPassword
-    update $ AddUser names email passwdhash Nothing Nothing Nothing
+    update $ AddUser names email passwdhash Nothing Nothing Nothing sserver
 
 {- |
    Guard against a POST with no logged in user.
@@ -807,7 +808,8 @@ handleAccountSetupPost aid hash = do
                      returnToAccountSetup newuser
 
         getUserForViralInvite _now invitedemail invitationtime inviterid = do
-            muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail
+            ctx <- getContext
+            muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) (unEmail invitedemail) (systemServerFromURL $ ctxhostpart ctx)
             case muser of
                  Just user -> do -- user created, we need to fill in some info
                      minviter <- query $ GetUserByUserID inviterid

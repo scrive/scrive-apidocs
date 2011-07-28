@@ -30,7 +30,7 @@ import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Session
-import Templates.Templates (langVersion, readAllLangsTemplates, KontrakcjaMultilangTemplates, getTemplatesModTime)
+import Templates.Templates
 import User.UserView as UserView
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
@@ -78,7 +78,7 @@ import ForkAction
   Global application data
 -}
 data AppGlobals
-    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaMultilangTemplates)
+    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
                  , docscache       :: MVar (Map.Map FileID JpegPages)
@@ -377,14 +377,14 @@ defaultAWSAction appConf =
            }
 
 
-maybeReadTemplates :: MVar (ClockTime, KontrakcjaMultilangTemplates)
-                      -> IO KontrakcjaMultilangTemplates
+maybeReadTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
+                      -> IO KontrakcjaGlobalTemplates
 maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
             then do
                 Log.debug $ "Reloading templates"
-                templates' <- readAllLangsTemplates
+                templates' <- readGlobalTemplates
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
 
@@ -487,7 +487,8 @@ appHandler appConf appGlobals = do
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
-
+      let language = (fromMaybe browserLang $ lang <$> usersettings <$> muser )
+      let systemServer = systemServerFromURL hostpart    
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
@@ -500,7 +501,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2
+                , ctxtemplates = localizedVersion (systemServer,language) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf

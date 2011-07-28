@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, ForeignFunctionInterface #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just
@@ -323,7 +324,7 @@ caseOf [] d = d
 
 -- | Enumerate all values of a bounded type.
 allValues::(Bounded a, Enum a) => [a]
-allValues = enumFrom minBound
+allValues = enumFromTo minBound maxBound
 
 defaultValue::(Bounded a) => a
 defaultValue = minBound
@@ -584,7 +585,8 @@ splitOver = splitOver' []
 (&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (&&^) f g a =  f a && g a
 
-
+pairApply:: (a -> b, a -> c) -> a -> (b, c)
+pairApply (f,q) a = (f a, q a)
 -- To be extended
 smartZip::[Maybe a] -> [b] -> [(a,b)]
 smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)
@@ -607,4 +609,12 @@ getRecursiveMTime dir = do
           return $ maximum $ mt:mts
 
 jsText :: String -> String
-jsText  = filter (not . isControl) 
+jsText  = filter (not . isControl)
+
+instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
+    toEnum  l = let
+                   block = length (allValues::[a])
+                in (toEnum $ l `div` block,toEnum $ l `mod` block)
+    fromEnum (a,b) = let
+                        block = length (allValues::[a])
+                in (fromEnum a * block) + (fromEnum b)

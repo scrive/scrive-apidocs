@@ -1329,7 +1329,7 @@ addNewUser = addNewUser' Nothing
 
 addNewUser' :: Maybe UserID -> String -> String -> String -> IO (Maybe User)
 addNewUser' msuperid firstname secondname email = 
-  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword msuperid Nothing Nothing
+  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword msuperid Nothing Nothing defaultValue
 
 whatTimeIsIt :: IO (MinutesTime)
 whatTimeIsIt = liftIO $ getMinutesTime
@@ -1416,6 +1416,7 @@ blankUser = User {
                                   , userpaymentmethod = Undefined
                                   , preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
+                                  , systemserver = Misc.defaultValue
                                   }                   
                 , userpaymentpolicy = Payments.initialPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount

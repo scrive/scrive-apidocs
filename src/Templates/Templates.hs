@@ -79,11 +79,11 @@ module Templates.Templates
     ( RenderTemplate(..)
     , renderTemplateF
     , renderTemplateFM
-    , readAllLangsTemplates
+    , readGlobalTemplates
     , templateList
     , KontrakcjaTemplates
-    , KontrakcjaMultilangTemplates
-    , langVersion
+    , KontrakcjaGlobalTemplates
+    , localizedVersion
     , TemplatesMonad(..)
     , Fields
     , field
@@ -91,7 +91,8 @@ module Templates.Templates
     , fieldF
     , fieldFL
     , getTemplatesModTime
-    , Lang(..)
+    , Localization
+    , systemServerFromURL
     ) where
 
 import Control.Applicative
