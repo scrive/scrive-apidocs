@@ -731,9 +731,9 @@ migrateCompanies = onlySuperUser $ do
           user <- queryOrFail $ GetUserByUserID userid
           let newcompanyinfo = makeCompanyInfoFromUserInfo user
           newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
-          Log.debug $ "Setup existing company with admin user " ++ (show $ getEmail user) ++ " : "
-                        ++ "id " ++ (show $ companyid newcompany)
-                        ++ "name " ++ (show $ getCompanyName newcompany)
+          Log.debug $ "Setup existing company with admin user " ++ (show $ getEmail user) ++ " :"
+                        ++ " id " ++ (show $ companyid newcompany)
+                        ++ " name " ++ (show $ getCompanyName newcompany)
           return ()  
         _ -> return ()
           
@@ -782,9 +782,9 @@ migrateCompanies = onlySuperUser $ do
       user <- queryOrFail $ GetUserByUserID userid
       let newcompanyinfo = makeCompanyInfoFromUserInfo user
       newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
-      Log.debug $ "Created new company for " ++ (show $ getEmail user) ++ " : "
-                    ++ "id " ++ (show companyid)
-                    ++ "name " ++ (show $ getCompanyName newcompany)
+      Log.debug $ "Created new company for " ++ (show $ getEmail user) ++ " :"
+                    ++ " id " ++ (show companyid)
+                    ++ " name " ++ (show $ getCompanyName newcompany)
       return ()
     
     makeCompanyInfoFromUserInfo user =
@@ -815,14 +815,14 @@ migrateCompanies = onlySuperUser $ do
     maybeLinkSubaccountToCompany user@User{userid} =
       case usersupervisor user of
         Just supervisorid -> do
-          supervisor <- queryOrFail $ GetUserByUserID userid
+          supervisor <- queryOrFail . GetUserByUserID . UserID $ unSupervisorID supervisorid
           case usercompany supervisor of
             Nothing -> do
               Log.debug $ "the supervisor " ++ (show supervisorid) ++ " doesn't have a company - something went wrong with the migration!\nsupervisor=" ++ (show supervisor) ++ "\nsubaccount=" ++ (show user)
               mzero
             Just companyid -> do
               _ <- guardRightM . update $ SetUserCompany userid companyid
-              Log.debug $ "linked subaccount " ++ (toString $ getEmail user) ++ " to their supervisor's company (" ++ (show companyid) ++ ")"
+              Log.debug $ "linked subaccount " ++ (toString $ getEmail user) ++ " to their supervisor " ++ (toString $ getEmail supervisor) ++ "'s company (" ++ (show companyid) ++ ")"
               return ()
         Nothing -> return ()
      
