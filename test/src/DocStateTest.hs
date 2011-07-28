@@ -133,6 +133,7 @@ testNewDocumentDependencies = doTimes 100 $ do
     Left msg -> validTest $ assertFailure $ "Could not run NewDocument " ++ msg
     Right doc -> validTest $ assertInvariants doc
   
+
   
 testDocumentCanBeCreatedAndFetchedByID :: Assertion
 testDocumentCanBeCreatedAndFetchedByID = doTimes 100 $ do

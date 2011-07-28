@@ -15,7 +15,7 @@ import Control.Monad.Trans
 import Data.Traversable (sequenceA)
 
 import qualified AppLogger as Log
-
+    
 {- |
    Get the value from a Just or mzero if it is Nothing
  -}
@@ -31,17 +31,17 @@ guardJustM action = guardJust =<< action
 {- |
    Get the value from a Right or log an error and mzero if it is Left
  -}
-guardRight :: (MonadPlus m, Monad m, MonadIO m, Show msg) => Either msg a -> m a
-guardRight (Right val) = return val
-guardRight (Left  msg) = do 
+guardRight' :: (MonadPlus m, Monad m, MonadIO m, Show msg) => Either msg a -> m a
+guardRight' (Right val) = return val
+guardRight' (Left  msg) = do 
   Log.debug (show msg)
   mzero
   
 {- |
    Get the value from a Right or log an error and mzero if it is a left
  -}
-guardRightM :: (MonadPlus m, MonadIO m, Show msg) => m (Either msg b) -> m b
-guardRightM action = guardRight =<< action
+guardRightM' :: (MonadPlus m, MonadIO m, Show msg) => m (Either msg b) -> m b
+guardRightM' action = guardRight' =<< action
 
 -- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation
 -- that gives a then we can get real computation that may fail m

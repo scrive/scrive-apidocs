@@ -8,6 +8,7 @@ modules.
 Keep this one as unorganized dump.
 -}
 module Misc where
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad.Reader (asks)
@@ -24,11 +25,14 @@ import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import Numeric -- use new module
+import System.Directory
 import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
 import System.Random
+import System.Time
+import qualified AppLogger as Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
 import qualified Data.ByteString as BS
@@ -36,9 +40,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
-import qualified AppLogger as Log
-import System.Directory
-import System.Time
 
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
