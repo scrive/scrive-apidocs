@@ -24,7 +24,7 @@ redirectTests = testGroup "RedirectTests"
                   [testCase "return Right if Right" testGuardRight
                   ,testCase "return mzero if Left" testStringGuardMZeroLeft
                   ,testCase "finishWith if Left DBNotLoggedIn" testDBErrorGuardRedirectLeftDBNotLoggedIn
-                     ]
+                  ]
                   
 testGuardRight :: Assertion
 testGuardRight = withTestState $ do

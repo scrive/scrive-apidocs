@@ -31,6 +31,7 @@ import UserStateTest
 #endif
 
 import DocStateQueryTest
+import RedirectTest
 
 allTests :: [Test]
 allTests = tail tests
@@ -88,6 +89,7 @@ testsToRun (t:ts) =
          "userstate"       -> Right userStateTests : rest
 #endif
          "docstatequery"   -> Right docStateQueryTests : rest
+         "redirect"        -> Right redirectTests : rest
          _                 -> Left t : rest
     where
         rest = testsToRun ts
