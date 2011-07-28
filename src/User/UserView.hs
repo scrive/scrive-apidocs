@@ -337,7 +337,6 @@ flashMessageLoginRedirectReason reason =
     render msg = Just . toFlashMsg OperationFailed <$>
       (renderTemplateFM "flashMessageLoginPageRedirectReason" $ field msg True)
 
-
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserDetailsSaved" ()
