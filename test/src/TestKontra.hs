@@ -49,6 +49,8 @@ instance Kontrakcja TestKontra
 instance TemplatesMonad TestKontra where
     getTemplates = ctxtemplates <$> getContext
 
+instance WebMonad Response TestKontra
+
 instance KontraMonad TestKontra where
     getContext    = TK $ fst <$> get
     modifyContext = TK . modify . first
