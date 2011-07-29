@@ -331,13 +331,8 @@ class SafeEnum a where
 for :: [a] -> (a -> b) -> [b]
 for = flip map
 
-
-maybe' :: a -> Maybe a -> a
-maybe' a ma = maybe a id ma
-
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = isJust <$> getField name
-
 
 getFields :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m [String]
 getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInputList name)

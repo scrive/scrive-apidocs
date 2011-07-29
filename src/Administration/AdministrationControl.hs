@@ -335,12 +335,12 @@ getCompanyInfoChange = do
                                   , companycity
                                   , companycountry
                                   } ->  CompanyInfo {
-                                            companyname =  maybe' companyname mcompanyname
-                                          , companynumber  =  maybe' companynumber mcompanynumber
-                                          , companyaddress =  maybe' companyaddress mcompanyaddress
-                                          , companyzip = maybe' companyzip mcompanyzip
-                                          , companycity  = maybe' companycity mcompanycity
-                                          , companycountry = maybe' companycountry mcompanycountry
+                                            companyname =  fromMaybe companyname mcompanyname
+                                          , companynumber  =  fromMaybe companynumber mcompanynumber
+                                          , companyaddress =  fromMaybe companyaddress mcompanyaddress
+                                          , companyzip = fromMaybe companyzip mcompanyzip
+                                          , companycity  = fromMaybe companycity mcompanycity
+                                          , companycountry = fromMaybe companycountry mcompanycountry
                                         })
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
@@ -374,19 +374,19 @@ getUserInfoChange = do
                                   , usermobile
                                   , useremail
                                   } ->  UserInfo {
-                                            userfstname = maybe' userfstname muserfstname
-                                          , usersndname = maybe' usersndname musersndname
-                                          , userpersonalnumber = maybe' userpersonalnumber muserpersonalnumber
-                                          , usercompanyname =  maybe' usercompanyname musercompanyname
-                                          , usercompanynumber  =  maybe' usercompanynumber musercompanynumber
-                                          , usercompanyposition = maybe' usercompanyposition musercompanyposition
-                                          , useraddress =  maybe' useraddress museraddress
-                                          , userzip = maybe' userzip muserzip
-                                          , usercity  = maybe' usercity musercity
-                                          , usercountry = maybe' usercountry musercountry
-                                          , userphone = maybe' userphone muserphone
-                                          , usermobile = maybe' usermobile musermobile
-                                          , useremail =  maybe' useremail museremail
+                                            userfstname = fromMaybe userfstname muserfstname
+                                          , usersndname = fromMaybe usersndname musersndname
+                                          , userpersonalnumber = fromMaybe userpersonalnumber muserpersonalnumber
+                                          , usercompanyname =  fromMaybe usercompanyname musercompanyname
+                                          , usercompanynumber  =  fromMaybe usercompanynumber musercompanynumber
+                                          , usercompanyposition = fromMaybe usercompanyposition musercompanyposition
+                                          , useraddress =  fromMaybe useraddress museraddress
+                                          , userzip = fromMaybe userzip muserzip
+                                          , usercity  = fromMaybe usercity musercity
+                                          , usercountry = fromMaybe usercountry musercountry
+                                          , userphone = fromMaybe userphone muserphone
+                                          , usermobile = fromMaybe usermobile musermobile
+                                          , useremail =  fromMaybe useremail museremail
                                         })
 
 {- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
@@ -405,9 +405,9 @@ getUserSettingsChange =  do
                                  , systemserver }
                                        -> UserSettings {
                                             accounttype  = accounttype
-                                          , accountplan = maybe' accountplan maccountplan
-                                          , signeddocstorage  = maybe' signeddocstorage  msigneddocstorage
-                                          , userpaymentmethod =  maybe' userpaymentmethod muserpaymentmethod
+                                          , accountplan = fromMaybe accountplan maccountplan
+                                          , signeddocstorage  = fromMaybe signeddocstorage  msigneddocstorage
+                                          , userpaymentmethod =  fromMaybe userpaymentmethod muserpaymentmethod
                                           , preferreddesignmode = preferreddesignmode
                                           , lang = lang
                                           , systemserver = systemserver
@@ -423,7 +423,7 @@ getUserPaymentAccountChange =  do
                                   }
                                     -> UserPaymentAccount  {
                                             paymentAgreementRef  = paymentAgreementRef
-                                          , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
+                                          , paymentaccountfreesignatures = fromMaybe paymentaccountfreesignatures mpaymentaccountfreesignatures
                                         })
 
 
@@ -440,7 +440,7 @@ getUserPaymentPolicyChange =  do
                                   , temppaymentchange
                                   }
                                     -> UserPaymentPolicy  {
-                                            paymentaccounttype   = maybe' paymentaccounttype   mpaymentaccounttype
+                                            paymentaccounttype   = fromMaybe paymentaccounttype   mpaymentaccounttype
                                           , custompaymentchange = customPaymentChange custompaymentchange
                                           , temppaymentchange = case  mtmppaymentchangeenddate of
                                                                  Nothing ->  Nothing
