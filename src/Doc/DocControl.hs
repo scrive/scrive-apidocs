@@ -550,11 +550,14 @@ handleIssueShowGet docid =
     case (mdstep, documentfunctionality document) of
       (Just (DesignStep3 _ _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
       _ -> do
-        -- authors get a view with buttons
-        case (isAuthor (document, ctxmaybeuser), isAttachment document, documentstatus document) of
-          (True, True, Preparation) -> Right <$> pageAttachmentDesign document
-          (_, True, _) -> Right <$> pageAttachmentView document
-          (True, _, _) -> do
+        -- authors & signatories get a view with buttons
+        case (isAuthor (document, ctxmaybeuser),
+              ctxmaybeuser >>= maybeInvitedLink document,
+              isAttachment document,
+              documentstatus document) of
+          (True, _, True, Preparation) -> Right <$> pageAttachmentDesign document
+          (_, _, True, _) -> Right <$> pageAttachmentView document
+          (True, _, _, _) -> do
             let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
             when (isCanceled document && isJust mMismatchMessage) $
               addFlash (OperationFailed, fromJust mMismatchMessage)
@@ -567,8 +570,16 @@ handleIssueShowGet docid =
                   Left _ -> Right <$> pageDocumentDesign ctx2 document step []
                   Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments)
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
+          (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- friends can just look (but not touch)
-          (False, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
+          (False, _, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
+     where
+       maybeInvitedLink :: Document -> User -> Maybe SignatoryLink
+       maybeInvitedLink doc user =
+         (find (isSigLinkFor $ userid user) $ documentsignatorylinks doc) >>=
+           (\sl -> if SignatoryPartner `elem` signatoryroles sl && isNothing (maybesigninfo sl)
+                     then Just sl
+                     else Nothing)
 
 getDesignStep :: Kontrakcja m => DocumentID -> m (Maybe DesignStep)
 getDesignStep docid = do
