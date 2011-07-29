@@ -5,7 +5,7 @@ $loadingdialog()$
 <form method="post" action="$currentlink$" enctype="multipart/form-data" class="listForm">
     <div id="tab-viewer">
         <div class="tab-header">
-
+        $docListRubbishBinLink()$
         </div>
         $docListTabs()$
         <div class="tab-container">

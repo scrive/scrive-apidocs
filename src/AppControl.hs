@@ -164,6 +164,11 @@ handleRoutes = msum [
      , dir "or" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
      , dir "or" $ hPost0 $ toK0 $ DocControl.handleOrdersReload
+     
+     , dir "r" $ hGet0 $ toK0 $ DocControl.showRubbishBinList
+     , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
+     , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
+     , dir "r" $ hPost0 $ toK0 $ DocControl.handleRubbishBinReload
 
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor
      , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList

@@ -61,6 +61,20 @@ a img
     color: #848484;
 }
 
+.rubbishbin
+{
+    background-image: url(images/rubbish-bin-icon-grey.png);
+    background-repeat: no-repeat;
+    height:16px;
+    width:16px;
+    display: block;
+}
+
+.rubbishbin.highlight
+{
+    background-image: url(images/rubbish-bin-icon-white.png);
+}
+
 /*input[name=final] */
 .cross-button
 {

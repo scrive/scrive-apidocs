@@ -51,6 +51,7 @@ data KontraLink
     | LinkOffers ListParams
     | LinkOrders ListParams
     | LinkAttachments ListParams
+    | LinkRubbishBin ListParams
     | LinkMain
     | LinkNew (Maybe DocumentProcess) ListParams Bool
     | LinkAjaxTemplates DocumentProcess ListParams
@@ -117,6 +118,7 @@ instance Show KontraLink where
     showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
     showsPrec _ (LinkOrders params) = (++) $ "/or" ++ "?" ++ show params
     showsPrec _ (LinkAttachments params) = (++) $ "/a" ++ "?" ++ show params
+    showsPrec _ (LinkRubbishBin params) = (++) $ "/r" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ (LinkNew mdocprocess params templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess) ++"&"++ show params
     showsPrec _ (LinkAjaxTemplates docprocess params) = (++) $ "/templates?" ++ "doctype="++ show docprocess ++"&"++ show params

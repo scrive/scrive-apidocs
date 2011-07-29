@@ -11,6 +11,8 @@ module Doc.DocView (
   , flashMessageAccountActivatedFromSign
   , flashMessageAccountRemovedFromSign
   , flashMessageAttachmentArchiveDone
+  , flashMessageRubbishRestoreDone
+  , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
   , flashMessageCSVHasTooManyRows
   , flashMessageCSVSent
@@ -61,6 +63,7 @@ module Doc.DocView (
   , pageOffersList
   , pageOrdersList
   , pageTemplatesList
+  , pageRubbishBinList
   , showFilesImages2
   , signatoryDetailsFromUser
   , templatesForAjax
@@ -232,6 +235,14 @@ flashMessageTemplateArchiveDone =
 flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
+  
+flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
+flashMessageRubbishRestoreDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishRestoreDone" ()
+  
+flashMessageRubbishHardDeleteDone :: TemplatesMonad m => m FlashMessage
+flashMessageRubbishHardDeleteDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishHardDeleteDone" ()
 
 flashMessageInvalidCSV :: TemplatesMonad m => m FlashMessage
 flashMessageInvalidCSV =
@@ -367,6 +378,7 @@ documentBasicViewFields crtime user doc = do
     field "timeoutdate" $ fromTimeout show
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
+    field "istemplate" $ isTemplate doc
     field "isauthor" $ isAuthor (doc, user)
     field "isviewer" $ (not $ isAuthor (doc, user)) && isViewer (doc, user)
     field "isshared" $ (documentsharing doc)==Shared
@@ -466,6 +478,9 @@ pageOffersList = pageList' "pageOffersList" LinkOffers
 pageOrdersList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
 pageOrdersList = pageList' "pageOrdersList" LinkOrders
 
+pageRubbishBinList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
+
 {- |
     Helper function for list pages
 -}
@@ -491,6 +506,8 @@ pageList' templatename makeCurrentLink ctime user documents =
     field "templateactive" $ templateactive
     field "linkattachmentlist" $ show $ LinkAttachments emptyListParams
     field "attachmentactive" $ attachmentactive
+    field "linkrubbishbinlist" $ show $ LinkRubbishBin emptyListParams
+    field "rubbishbinactive" $ rubbishbinactive
   where
     currentlink = makeCurrentLink $ params documents
     documentactive = case currentlink of
@@ -508,6 +525,9 @@ pageList' templatename makeCurrentLink ctime user documents =
     attachmentactive = case currentlink of
                        (LinkAttachments _) -> True
                        _ -> False
+    rubbishbinactive = case currentlink of
+                         (LinkRubbishBin _) -> True
+                         _ -> False
 
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =

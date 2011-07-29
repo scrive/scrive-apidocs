@@ -1373,6 +1373,14 @@ showAttachmentList =
         mydocuments <- query $ GetDocumentsByAuthor (userid user)
         return $ filter ((==) Attachment . documenttype) mydocuments in
   showItemList' pageAttachmentList getAttachments
+  
+showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
+showRubbishBinList =
+  let getRubbish user =
+        if useriscompanyadmin user
+          then query $ GetDeletedDocumentsByCompany user
+          else query $ GetDeletedDocumentsByUser user in
+  showItemList' pageRubbishBinList getRubbish
 
 {- |
     Helper function for showing lists of documents.
@@ -1577,6 +1585,23 @@ handleIssueArchive = do
         Log.debug $ "Failed to delete docs " ++ (show docids) ++ " : " ++ msg
         mzero
       Right _ -> return ()
+      
+handleRubbishRestore :: Kontrakcja m => m KontraLink
+handleRubbishRestore = do
+  Context { ctxmaybeuser = Just user } <- getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  _ <- guardRightM . update . RestoreArchivedDocuments user $ map DocumentID docids
+  addFlashM flashMessageRubbishRestoreDone
+  return $ LinkRubbishBin emptyListParams
+ 
+handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
+handleRubbishReallyDelete = do
+  Context { ctxmaybeuser = Just user } <- getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  idsAndUsers <- mapM (lookupUsersRelevantToDoc . DocumentID) docids
+  _ <- guardRightM . update . ReallyDeleteDocuments user $ idsAndUsers
+  addFlashM flashMessageRubbishHardDeleteDone
+  return $ LinkRubbishBin emptyListParams
 
 handleTemplateShare :: Kontrakcja m => m KontraLink
 handleTemplateShare = withUserPost $ do
@@ -1664,6 +1689,9 @@ handleOffersReload = fmap LinkOffers getListParamsForSearch
 
 handleOrdersReload :: Kontrakcja m => m KontraLink
 handleOrdersReload = fmap LinkOrders getListParamsForSearch
+
+handleRubbishBinReload :: Kontrakcja m => m KontraLink
+handleRubbishBinReload = fmap LinkRubbishBin getListParamsForSearch
 
 {- |
    Get some html to display the images of the files
