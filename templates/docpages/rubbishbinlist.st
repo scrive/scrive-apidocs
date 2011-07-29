@@ -17,7 +17,7 @@ $loadingdialog()$
                         </div>
                         <ul class="tab-dd-opts">
                             <li><a href="javascript:;" rel="#dialog-list-restore-confirm" class="listAction">$_restore()$</a></li>
-                            <li><a href="javascript:;" rel="#dialog-list-really-delete-confirm" class="listAction">$_delete()$</a></li>
+                            $if(canReallyDeleteDocs)$<li><a href="javascript:;" rel="#dialog-list-really-delete-confirm" class="listAction">$_delete()$</a></li>$endif$
                         </ul>
                     </div>
                 </div>

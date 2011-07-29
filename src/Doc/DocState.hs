@@ -1034,6 +1034,8 @@ restoreArchivedDocuments user docids = forEachDocument restoreDocument docids
     You must pass through the documentid alongside a list of relevant users, the reason being that it
     will check to see if those users still exist.  If they don't exist, then the doc link is counted
     as being deleted.
+    This will only delete where a user is a single user who isn't in a company, or the user is a company admin.
+    Standard company users without permissions won't be able to really delete anything.
     A Left is returned when there are problems, such as a document not existing.
 -}
 reallyDeleteDocuments :: User -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
@@ -1051,7 +1053,9 @@ reallyDeleteDocuments deletinguser docidsAndUsers = forEachDocument deleteDocume
         return $ doc { documentsignatorylinks = map maybeDeleteSigLink $ documentsignatorylinks doc }
     maybeDeleteSigLink :: SignatoryLink -> SignatoryLink
     maybeDeleteSigLink sl@SignatoryLink{signatorylinkdeleted} =
-      if isSigLinkSavedFor deletinguser sl && signatorylinkdeleted
+      let isSavedForSingleUser = isNothing (usercompany deletinguser) && isSigLinkFor (userid deletinguser) sl
+          isSavedForCompanyAdmin = useriscompanyadmin deletinguser && isSigLinkFor (usercompany deletinguser) sl
+      in if (isSavedForSingleUser || isSavedForCompanyAdmin) && signatorylinkdeleted
         then sl { signatorylinkreallydeleted = True }
         else sl
 

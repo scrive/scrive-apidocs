@@ -495,6 +495,7 @@ pageList' templatename makeCurrentLink ctime user documents =
   renderTemplateFM templatename $ do
     fieldFL "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
     pagedListFields documents
+    field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
     field "currentlink" $ show $ currentlink
     field "linkdoclist" $ show $ LinkContracts emptyListParams
     field "documentactive" $ documentactive
