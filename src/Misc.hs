@@ -11,6 +11,7 @@ Keep this one as unorganized dump.
 module Misc where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader (asks)
 import Control.Monad.State
@@ -539,17 +540,11 @@ joinB _ = False
 mapJust :: (a -> Maybe b) -> [a] -> [b]
 mapJust f l = catMaybes $ map f l
 
-onFst ::  (a -> c) -> (a,b) -> (c,b)
-onFst f (a,b) = (f a,b)
-
-onSnd :: (b -> c) -> (a,b) -> (a,c)
-onSnd f (a,b) = (a, f b)
-
 mapFst::(Functor f) => (a -> c) -> f (a,b)  -> f (c,b)
-mapFst f = fmap (onFst f)
+mapFst = fmap . first
 
 mapSnd::(Functor f) => (b -> c)  -> f (a,b) -> f (a,c)
-mapSnd f = fmap (onSnd f)
+mapSnd = fmap . second
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
