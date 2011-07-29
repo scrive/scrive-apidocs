@@ -158,14 +158,6 @@ toIO astate = mapServerPartT f
   where
     f m = evalStateT m astate
 
-
--- | Oh boy, invent something better.
---
--- FIXME: this is so wrong on so many different levels
-safehead :: [Char] -> [t] -> t
-safehead s [] = error s
-safehead _ (x:_) = x
-
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
 getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a

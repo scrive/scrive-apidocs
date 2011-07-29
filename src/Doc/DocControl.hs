@@ -994,10 +994,11 @@ handleIssueShowTitleGet' :: Kontrakcja m => DocumentID -> String -> m Response
 handleIssueShowTitleGet' docid _title = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
-    let file = safehead "handleIssueShow" (case documentstatus document of
-                                                Closed -> documentsealedfiles document
-                                                _      -> documentfiles document)
-    contents <- liftIO $ getFileContents ctx file
+    let files = case documentstatus document of
+          Closed -> documentsealedfiles document
+          _      -> documentfiles document
+    when (null files) mzero
+    contents <- liftIO $ getFileContents ctx $ head files
     let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
         res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
     return res2
