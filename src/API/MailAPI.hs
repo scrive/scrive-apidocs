@@ -186,12 +186,15 @@ handleMailCommand = do
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
-    mcompany <- case usercompany user of --TODO EM maybe make signatoryDetailsFromUser figure out the company
+    mcompany <- case usercompany user of
                   Just companyid -> query $ GetCompany companyid
                   Nothing -> return Nothing
     let userDetails = signatoryDetailsFromUser user mcompany
 
-    (Right doc :: Either String Document) <- liftIO $ update $ NewDocument user mcompany title doctype ctxtime --TODO EM this is wrong
+    (eitherdoc :: Either String Document) <- liftIO $ update $ NewDocument user mcompany title doctype ctxtime
+    (doc :: Document) <- case eitherdoc of
+                           Left errmsg -> return (error errmsg)
+                           Right document -> return document
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
     (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
