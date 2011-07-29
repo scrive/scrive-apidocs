@@ -568,8 +568,6 @@ splitOver = splitOver' []
 (&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (&&^) f g a =  f a && g a
 
-pairApply:: (a -> b, a -> c) -> a -> (b, c)
-pairApply (f,q) a = (f a, q a)
 -- To be extended
 smartZip::[Maybe a] -> [b] -> [(a,b)]
 smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)
