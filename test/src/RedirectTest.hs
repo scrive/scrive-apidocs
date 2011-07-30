@@ -18,7 +18,6 @@ import Templates.TemplatesLoader
 import Happstack.Server
 import Context
 import TestKontra as T
-import Misc
 
 redirectTests :: Test
 redirectTests = testGroup "RedirectTests" 
