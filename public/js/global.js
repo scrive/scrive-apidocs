@@ -209,7 +209,7 @@ safeReady(function() {
  * For share confirmation on lists.
  */
 safeReady(function() {
-    $(".listShare").overlay({
+    $(".listAction").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
         onBeforeLoad: function() {

@@ -11,6 +11,7 @@ Keep this one as unorganized dump.
 module Misc where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader (asks)
 import Control.Monad.State
@@ -157,14 +158,6 @@ toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPar
 toIO astate = mapServerPartT f
   where
     f m = evalStateT m astate
-
-
--- | Oh boy, invent something better.
---
--- FIXME: this is so wrong on so many different levels
-safehead :: [Char] -> [t] -> t
-safehead s [] = error s
-safehead _ (x:_) = x
 
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
@@ -339,13 +332,8 @@ class SafeEnum a where
 for :: [a] -> (a -> b) -> [b]
 for = flip map
 
-
-maybe' :: a -> Maybe a -> a
-maybe' a ma = maybe a id ma
-
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = isJust <$> getField name
-
 
 getFields :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m [String]
 getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInputList name)
@@ -552,17 +540,11 @@ joinB _ = False
 mapJust :: (a -> Maybe b) -> [a] -> [b]
 mapJust f l = catMaybes $ map f l
 
-onFst ::  (a -> c) -> (a,b) -> (c,b)
-onFst f (a,b) = (f a,b)
-
-onSnd :: (b -> c) -> (a,b) -> (a,c)
-onSnd f (a,b) = (a, f b)
-
 mapFst::(Functor f) => (a -> c) -> f (a,b)  -> f (c,b)
-mapFst f = fmap (onFst f)
+mapFst = fmap . first
 
 mapSnd::(Functor f) => (b -> c)  -> f (a,b) -> f (a,c)
-mapSnd f = fmap (onSnd f)
+mapSnd = fmap . second
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
@@ -586,8 +568,6 @@ splitOver = splitOver' []
 (&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (&&^) f g a =  f a && g a
 
-pairApply:: (a -> b, a -> c) -> a -> (b, c)
-pairApply (f,q) a = (f a, q a)
 -- To be extended
 smartZip::[Maybe a] -> [b] -> [(a,b)]
 smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)

@@ -1,5 +1,5 @@
 ####		
-pageTemplatesList=
+pageRubbishBinList=
 $loadingdialog()$
 <div> 
 <form method="post" action="$currentlink$" enctype="multipart/form-data" class="listForm">
@@ -16,19 +16,10 @@ $loadingdialog()$
                           <a href="javascript:;"><p>$_options()$</p></a>
                         </div>
                         <ul class="tab-dd-opts">
-                            <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listAction">$_share()$</a></li>
-                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-restore-confirm" class="listAction">$_restore()$</a></li>
+                            $if(canReallyDeleteDocs)$<li><a href="javascript:;" rel="#dialog-list-really-delete-confirm" class="listAction">$_delete()$</a></li>$endif$
                         </ul>
                     </div>
-
-                    <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:120px;margin-left: 20px;" >
-                        <div class="left"> </div>
-                        <div class="label" style="min-width:105px;text-align:center;"> $_createNew()$</div>
-                        <div class="right"> </div>
-                        <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
-                    </a>
-                    <div class="filelist" style="padding-left:10px;display:none"></div> 
-
                 </div>
 
                 <div class="col float-right">
@@ -50,17 +41,6 @@ $loadingdialog()$
                                 <a href="$currentlink$&amp;sorting=time">$_SortTime()$</a>
                                $endif$
                             </th>
-                            <!--
-                            <th style="width: 200px;">
-                               $if(params.sorting.partnerREV)$
-                                <a href="$currentlink$&amp;sorting=partner">Parter <em> ▲</em></a>
-                               $elseif(params.sorting.partner)$
-                                <a href="$currentlink$&amp;sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=partner">Parter </a>
-                               $endif$
-                            </th>
-                            -->
                             <th style="width: 120px;">
                               $if(params.sorting.typeREV)$
                                 <a href="$currentlink$&amp;sorting=type">$_SortType()$<em> ▲</em></a>
@@ -72,14 +52,13 @@ $loadingdialog()$
                             </th>
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$<em> ▲</em></a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortDoc()$<em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&amp;sorting=titleREV">$_SortTemplate()$<em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&amp;sorting=titleREV">$_SortDoc()$<em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&amp;sorting=title">$_SortTemplate()$</a>
+                                <a href="$currentlink$&amp;sorting=title">$_SortDoc()$</a>
                                $endif$
                             </th>
-                            <th style="width: 100px;"></th>
                             <th></th>
                         </tr>
                     </thead>
@@ -87,27 +66,20 @@ $loadingdialog()$
                     <tbody id="selectable">
                       $documents:{document |
                         <tr $if(document.odd)$class="odd"$endif$>
-                            <td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"/> $endif$</td>
+                            <td><input type="checkbox" name="doccheck" value="$document.documentid$" class="check"/></td>
                             <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
                             </td>
-                            <!--
-                            <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
-                            -->
                             <td>
-                                <span>$document.processname$</span>
-                            </td>  
+                                <span>$document.processname$ $if(document.istemplate)$ $_TemplateLabel()$ $endif$</span>
+                            </td>
                             <td>
                                 <a href="$document.doclink$" class="listname">$document.documenttitle$</a>
                                 $if(document.davelink)$ 
                                 <a href="$document.davelink$">*</a>     
                                 $endif$
                             </td>
-                            <td>
-                                $if(document.isshared)$ $_shared()$ $endif$
-                            </td>
                             <td class="right">
-                               <!--  <em>▼</em> -->
                             </td>
                         </tr>
                       }$
@@ -118,7 +90,62 @@ $loadingdialog()$
         </div>
     </div>
   </form>
-  $listLocalDialogs()$
-  $listShareDialog()$
+  
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-restore-confirm" rel=".listForm" style="display:none;">
+    <input type="hidden" name="restore" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>$_listRestoreDialogHead()$</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>$_listRestoreDialogBody()$</p>
+        </div>
+      </div>
+      <div class="modal-footer">        
+        <a class="cancel close float-left" style="height:40px;">  
+          <div class="label">$_cancel()$</div>
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>$_ok()$</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+  
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-really-delete-confirm" rel=".listForm" style="display:none;">
+    <input type="hidden" name="reallydelete" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>$_listReallyDeleteDialogHead()$</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>$_listReallyDeleteDialogBody()$</p>
+        </div>
+      </div>
+      <div class="modal-footer">        
+        <a class="cancel close float-left" style="height:40px;">  
+          <div class="label">$_cancel()$</div>
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>$_ok()$</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+  
 </div>
      

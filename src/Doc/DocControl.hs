@@ -550,11 +550,14 @@ handleIssueShowGet docid =
     case (mdstep, documentfunctionality document) of
       (Just (DesignStep3 _ _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
       _ -> do
-        -- authors get a view with buttons
-        case (isAuthor (document, ctxmaybeuser), isAttachment document, documentstatus document) of
-          (True, True, Preparation) -> Right <$> pageAttachmentDesign document
-          (_, True, _) -> Right <$> pageAttachmentView document
-          (True, _, _) -> do
+        -- authors & signatories get a view with buttons
+        case (isAuthor (document, ctxmaybeuser),
+              ctxmaybeuser >>= maybeInvitedLink document,
+              isAttachment document,
+              documentstatus document) of
+          (True, _, True, Preparation) -> Right <$> pageAttachmentDesign document
+          (_, _, True, _) -> Right <$> pageAttachmentView document
+          (True, _, _, _) -> do
             let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
             when (isCanceled document && isJust mMismatchMessage) $
               addFlash (OperationFailed, fromJust mMismatchMessage)
@@ -567,8 +570,16 @@ handleIssueShowGet docid =
                   Left _ -> Right <$> pageDocumentDesign ctx2 document step []
                   Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments)
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
+          (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- friends can just look (but not touch)
-          (False, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
+          (False, _, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
+     where
+       maybeInvitedLink :: Document -> User -> Maybe SignatoryLink
+       maybeInvitedLink doc user =
+         (find (isSigLinkFor $ userid user) $ documentsignatorylinks doc) >>=
+           (\sl -> if SignatoryPartner `elem` signatoryroles sl && isNothing (maybesigninfo sl)
+                     then Just sl
+                     else Nothing)
 
 getDesignStep :: Kontrakcja m => DocumentID -> m (Maybe DesignStep)
 getDesignStep docid = do
@@ -983,10 +994,11 @@ handleIssueShowTitleGet' :: Kontrakcja m => DocumentID -> String -> m Response
 handleIssueShowTitleGet' docid _title = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
-    let file = safehead "handleIssueShow" (case documentstatus document of
-                                                Closed -> documentsealedfiles document
-                                                _      -> documentfiles document)
-    contents <- liftIO $ getFileContents ctx file
+    let files = case documentstatus document of
+          Closed -> documentsealedfiles document
+          _      -> documentfiles document
+    when (null files) mzero
+    contents <- liftIO $ getFileContents ctx $ head files
     let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
         res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
     return res2
@@ -1373,6 +1385,14 @@ showAttachmentList =
         mydocuments <- query $ GetDocumentsByAuthor (userid user)
         return $ filter ((==) Attachment . documenttype) mydocuments in
   showItemList' pageAttachmentList getAttachments
+  
+showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
+showRubbishBinList =
+  let getRubbish user =
+        if useriscompanyadmin user
+          then query $ GetDeletedDocumentsByCompany user
+          else query $ GetDeletedDocumentsByUser user in
+  showItemList' pageRubbishBinList getRubbish
 
 {- |
     Helper function for showing lists of documents.
@@ -1577,6 +1597,23 @@ handleIssueArchive = do
         Log.debug $ "Failed to delete docs " ++ (show docids) ++ " : " ++ msg
         mzero
       Right _ -> return ()
+      
+handleRubbishRestore :: Kontrakcja m => m KontraLink
+handleRubbishRestore = do
+  Context { ctxmaybeuser = Just user } <- getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  _ <- guardRightM . update . RestoreArchivedDocuments user $ map DocumentID docids
+  addFlashM flashMessageRubbishRestoreDone
+  return $ LinkRubbishBin emptyListParams
+ 
+handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
+handleRubbishReallyDelete = do
+  Context { ctxmaybeuser = Just user } <- getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  idsAndUsers <- mapM (lookupUsersRelevantToDoc . DocumentID) docids
+  _ <- guardRightM . update . ReallyDeleteDocuments user $ idsAndUsers
+  addFlashM flashMessageRubbishHardDeleteDone
+  return $ LinkRubbishBin emptyListParams
 
 handleTemplateShare :: Kontrakcja m => m KontraLink
 handleTemplateShare = withUserPost $ do
@@ -1664,6 +1701,9 @@ handleOffersReload = fmap LinkOffers getListParamsForSearch
 
 handleOrdersReload :: Kontrakcja m => m KontraLink
 handleOrdersReload = fmap LinkOrders getListParamsForSearch
+
+handleRubbishBinReload :: Kontrakcja m => m KontraLink
+handleRubbishBinReload = fmap LinkRubbishBin getListParamsForSearch
 
 {- |
    Get some html to display the images of the files

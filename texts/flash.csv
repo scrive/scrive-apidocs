@@ -14,6 +14,8 @@
  ""Glömt lösenord"" för att generera en ny länk.","We are sorry. This link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
 "_flashMessageAttachmentArchiveDone","Valda bilagor har blivit raderade.","The selected attachments have been deleted."
+"_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive."
+"_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted."
 "_flashMessageBadOldPassword","Du har skrivit in fel nuvarande lösenord","Current password incorrect."
 "_flashMessageBulkContractRemindsSent","Påminnelse har skickats till alla parter som ännu inte signerat.","Reminders have been sent to all recipients who have not yet signed."
 "_flashMessageBulkOfferRemindsSent","Påminnelse har skickats till alla mottagare som ännu inte accepterat.","Reminders have been sent to all recipients who have not yet accepted."
