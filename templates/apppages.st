@@ -199,7 +199,7 @@ pageFooter=
         <li><a href="/allmana-villkor">$_pageFooterTOS()$</a></li>
       </ul>
       <br />
-      <strong>$_pageFooterSkrivapa()$</strong>
+      <strong style='text-transform:uppercase'>$ourServiceName()$</strong>
       <ul>
         <li><a href="/">$_pageFooterHome()$</a></li>
         <li><a href="/om-skrivapa">$_pageFooterAbout()$</a></li>
@@ -284,7 +284,7 @@ loginBox=
 header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
-                                <a href="/" class="logo"></a>
+                                <a href="/" class="$ourLogoClass()$"></a>
                                 $if(logged)$
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">

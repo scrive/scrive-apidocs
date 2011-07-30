@@ -10,13 +10,10 @@
 "_name","Namn","Name"
 "_pageFooterAbout","Om SkrivaPå","About Scrive"
 "_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>","<strong>Contact us for feedback, questions &amp; requests </strong>"
-"_pageFooterContact2","<strong>Telefon</strong>          010-195 99 15","<strong>Phone</strong>          +46 (0)10-195 99 15"
+"_pageFooterContact2","<strong>Telefon</strong>      $ourServicePhone()$","<strong>Phone</strong>         $ourServicePhone()$"
 "_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17","<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
-"_pageFooterContact4","<strong>Maila SkrivaPå</strong>          <a href=""mailto:info@skrivapa.se"">info@skrivapa.se</a>","<strong>Send email to Scrive</strong>          <a href=""mailto:info@skrivapa.se"">info@skrivapa.se</a>"
-"_pageFooterContact5","<strong>Adress</strong>          SkrivaPå CM AB<br />       
-   Saltmätargatan 19<br />          113 59 Stockholm","<strong>Address</strong>          SkrivaPå CM AB<br />      
-    Saltmätargatan 19<br />          113 59 Stockholm<br /> 
-         Sweden"
+"_pageFooterContact4","<strong>Maila $ourServiceName()$</strong>          <a href=""mailto:$ourServiceMail()$"">$ourServiceMail()$</a>","<strong>Send email to $ourServiceName()$</strong>          <a href=""mailto:$ourServiceMail()$"">$ourServiceMail()$</a>"
+"_pageFooterContact5","<strong>Adress</strong>     $ourServiceAdress()$","<strong>Address</strong>       $ourServiceAdress()$"
 "_pageFooterCustomers","Kunder","Customers"
 "_pageFooterHome","Hem","Home"
 "_pageFooterLaw","Juridik","Legal"
@@ -24,7 +21,6 @@
 "_pageFooterPrices","Priser","Prices"
 "_pageFooterPrivacy","Sekretesspolicy","Privacy Policy"
 "_pageFooterSecurity","Säkerhet","Security"
-"_pageFooterSkrivapa","SKRIVAPÅ","SCRIVE"
 "_pageFooterSupportFeedback","Support &amp; Feedback","Support &amp; Feedback"
 "_pageFooterTOS","Allmäna Villkor","Terms of Service"
 "_pageFooterTerms","TRYGGHET OCH VILLKOR","SECURITY AND TERMS"

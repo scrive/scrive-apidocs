@@ -1,8 +1,15 @@
 .skrivapa-logo {
-	background: url(../img/logo-small.png) no-repeat;
+	background: url(../img/logo-skrivapa-small.png) no-repeat;
 	height: 34px;
 	width: 137px; 
 }
+
+.scrive-logo {
+    background: url(../img/logo-scrive-small.png) no-repeat;
+    height: 34px;
+    width: 137px;
+}
+
 
 .tweet_text {
         color: #666;

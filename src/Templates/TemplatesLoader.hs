@@ -37,8 +37,9 @@ import Templates.TemplatesFiles
 import Misc
 import User.Lang
 import Templates.TextTemplates
---import Templates.SystemTemplates
+import Templates.SystemTemplates
 import User.SystemServer
+
 {-Names of template files -}
 
 
@@ -50,18 +51,18 @@ type Localization = (SystemServer,Lang)
 localizedVersion::Localization -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion localization mtemplates = mtemplates ! localization
 
-
+-- Fixme: Make this do only one read of all files !!
 readGlobalTemplates :: IO KontrakcjaGlobalTemplates
 readGlobalTemplates = fmap Map.fromList $ forM allValues $ \localization -> do
-    templates <- readTemplates $ snd localization
+    templates <- readTemplates $ localization
     return (localization,templates)
 
-
-readTemplates :: Lang -> IO KontrakcjaTemplates
-readTemplates lang = do
+readTemplates :: Localization -> IO KontrakcjaTemplates
+readTemplates localization = do
     ts <- mapM getTemplates templatesFilesPath
-    texts <- getTextTemplates lang
-    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
+    texts <- getTextTemplates $ snd localization
+    stemplates <- getSystemTemplates $ fst localization
+    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ stemplates ++ (concat ts) ++ texts
 
 --This is avaible only for special cases
 renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]

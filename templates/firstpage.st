@@ -44,7 +44,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
-                                <img src="/img/logo.png" alt="SkrivaPå" class="logo" />
+                                <img src="$ourFirstPageLogo()$" alt="$ourServiceName()$" class="logo" />
                                 <div class="leftMain">
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>

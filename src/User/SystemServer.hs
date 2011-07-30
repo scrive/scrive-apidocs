@@ -15,7 +15,7 @@ data SystemServer = SkrivaPa | Scrive
 instance Version SystemServer
 
 systemServerFromURL :: String -> SystemServer
-systemServerFromURL url = if ("scrive.com" `isInfixOf` url)
+systemServerFromURL url = if ("localhost" `isInfixOf` url)
                             then Scrive
                             else SkrivaPa
 

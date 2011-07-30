@@ -73,5 +73,6 @@ javascriptLocalisation =
              }
              , select : "$_options()$"
              , of : "$_of()$"
+             , outLogoClass : "$ourLogoClass()$"
    }
 ####
