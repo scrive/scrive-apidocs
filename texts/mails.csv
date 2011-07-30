@@ -1,6 +1,7 @@
 "!Template name","LANG_SE","LANG_EN"
 "_appendixListAttachment","Bilagor:","Attachments:"
 "_contracthassignedformailtext","Har undertecknat","Has signed"
+"_from","från","from"
 "_hi","Hej","Hi"
 "_invitationMailDeferredContentBodyFirst","Vi skickar detta meddelande för att meddela att vårt system har
  identifierat ett problem med mottagarens e-postserver. Antingen
@@ -22,7 +23,7 @@
  <strong>$documenttitle$</strong>. Det beror antingen på problem
  med mottagarens e-post server eller mer troligt på att adressen
  $email$ inte existerar.       Processen har därmed avbrutits.
- Gör så här om du vill börja om:","We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been cancelled, to restart it:"
+ Gör så här om du vill börja om:","We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been canceled, to restart it:"
 "_invitationMailUndeliveredContentInstruction","Kontrollera vilken som är mottagarens korrekta adress<br/>  
      2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
@@ -89,17 +90,16 @@
  dokumentet är färdigställt.","The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
 "_mailDocumentAwaitingForAuthorTitle","Vänligen underteckna $documenttitle$","Please sign $documenttitle$"
 "_mailDocumentClosedTitle","Bekräftelse: $documenttitle$","Confirmation: $documenttitle$"
-"_mailDocumentErrorContentBodyFirst","We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
-      There are probably very good reasons for this, but they
- might be hard to explain.","We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
+"_mailDocumentErrorContentBodyFirst","Vi är ledsna, men vi kunde inte hantera dokumentet <strong>$documenttitle$</strong>.
+      Problem uppstod relaterade till formatet på PDF-filen.","We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
   There were problems related to the format of the document contents."
 "_mailDocumentErrorContentBodyFourth","We are sorry for the inconvenience","We are sorry for the inconvenience"
 "_mailDocumentErrorContentBodySecond","ur technicians were notified about this issue. We will (probably)
  contact you when fix is available.","Our technicians were notified about this issue. We will contact you when a fix is available."
-"_mailDocumentErrorContentBodyThird","Processen har därmed avbrutits.","The process has therefore been cancelled"
+"_mailDocumentErrorContentBodyThird","Processen har därmed avbrutits.","The process has therefore been canceled"
 "_mailDocumentErrorTitle","SkrivaPå could no handle $documenttitle$","Scrive could not handle $documenttitle$"
-"_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har endast behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:","You only have permission to view this document    Click to view:"
+"_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
+ nedan för att se dokumentet:","You are authorised to view this document    Click to view:"
 "_mailInvitationToSignContractContentIfSignatoryInstruction","      <i>Så här går du vidare</i><br/>      1. Klicka på länken
  <br/>      <a href=""$link$"">$link$</a><br/>      2. Granska
  online<br/>      3. Underteckna (eller avvisa)<br/>       4.
@@ -109,8 +109,8 @@
 "_mailInvitationToSignContractContentSender","Avsändare: ","Sender:"
 "_mailInvitationToSignContractDefaultHeaderBody1"," har bjudit in dig att underteckna dokumentet "," has invited you to sign the document "
 "_mailInvitationToSignContractDefaultHeaderBody2"," online via tjänsten SkrivaPå.    "," online via Scrive.    "
-"_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har endast behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:","You only have permission to view this document    Click to view:"
+"_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
+ nedan för att se dokumentet:","You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOfferContentIfSignatoryInstruction","      1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
       2. Granska online<br/>      3. Acceptera offert (eller
  avvisa)<br/>       4. Färdig    ","1. Click the link <br/>      <a href=""$link$"">$link$</a><br/>
@@ -120,10 +120,10 @@
 "_mailInvitationToSignOfferContentPartys","Parter:","Parties:"
 "_mailInvitationToSignOfferContentSender","Avsändare: ","Sender:"
 "_mailInvitationToSignOfferDefaultHeaderBody1"," har skickat offerten "," has sent the offer "
-"_mailInvitationToSignOfferDefaultHeaderBody2","  till dig och önskar din accept.      Acceptera offerten genom
- att följa instruktionerna nedan.    ","  to you and wants you to accept it.     To accept the offer:   "
-"_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har endast behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:","You only have permission to view this document    Click to view:"
+"_mailInvitationToSignOfferDefaultHeaderBody2","  till dig och önskar din accept.      Acceptera eller avvisa offerten genom
+ att följa instruktionerna nedan.    ","  to you and wants you to accept it.     To accept or reject the offer:   "
+"_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
+ Nedan för att se dokumentet:","You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOrderContentIfSignatoryInstruction","      1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
       2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>
        4. Färdig   ","      1. Click the link <br/>      <a href=""$link$"">$link$</a><br/>
@@ -133,8 +133,8 @@
 "_mailInvitationToSignOrderContentPartys","Parter:","Parties:"
 "_mailInvitationToSignOrderContentSender","Avsändare: ","Sender: "
 "_mailInvitationToSignOrderDefaultHeaderBody1"," har skickat orderbekräftelsen "," has sent the order confirmation "
-"_mailInvitationToSignOrderDefaultHeaderBody2"," till dig och önskar din bekräftelse. Bekräfta ordern genom att
- följa instruktionerna nedan.     ","to you and wants your confirmation. To confirm the order:"
+"_mailInvitationToSignOrderDefaultHeaderBody2"," till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
+ följa instruktionerna nedan.     ","to you and wants your confirmation. To confirm or reject the order:"
 "_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$","Invite from $creatorname$ for $documenttitle$"
 "_mailInvitationToViewDefaultHeaderBody1","har bjudit in dig att se dokumentet ","has invited you to view the document "
 "_mailInvitationToViewDefaultHeaderBody2"," online via tjänsten SkrivaPå.    "," online via Scrive.    "
@@ -157,7 +157,7 @@
  <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
  <li>Acceptera</li> <li>Ditt konto är nu underkonto</li> ","<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now  a subaccount</li> "
 "_mailInviteUserAsCompanyAccountContentLink","Detta är länken nedan","This is the link below"
-"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till underkonto","Subaccount enquiry"
+"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till underkonto","Subaccount inquiry"
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar","Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
@@ -206,7 +206,7 @@
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
  är därmed avbruten.      ","        <strong>$rejectorName$</strong> has  rejected
 the document <strong>$documenttitle$</strong>. The agreement
- process is therefore cancelled."
+ process is therefore canceled."
 "_mailRejectMailTitle","Avvisat: $documenttitle$","Rejected: $documenttitle$"
 "_mailRejectOfferMailContentOfferRejected","        <strong>$rejectorName$</strong> har avvisat offerten
  <strong>$documenttitle$</strong>.      ","        <strong>$rejectorName$</strong> has rejected the offer
@@ -245,7 +245,6 @@ for creating an account with us. When you have activated your account you will b
 "_newUserMailContentBodyThird","  Du aktiverar ditt konto genom att klicka på länken nedan. Länken
  är  giltig i 12 timmar.<br/>    ","Click to activate, the link is valid for 12 hours:<br/>    "
 "_newUserMailContentBodyUserName","  Användarnamn:<br/>  ","Username:<br/>  "
-"******_newUserMailContentHi","Hej,","Hello,"
 "_newUserMailTitle","Nytt konto","New account"
 "_noonehadsignedtext","    Ingen har undertecknat dokumentet ännu","No one has signed the document yet"
 "_offerhassignedformailtext","Har accepterat","Has accepted"
@@ -260,7 +259,7 @@ for creating an account with us. When you have activated your account you will b
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
          4. Färdig      ","        <i>To continue</i><br/>        1. Click the link<br/>         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done"
 "_remindMailNotSignedContractContentPartys","Parter:","Parties:"
-"_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat
+"_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.","<strong>$author$</strong> wants to remind you that you haven't
 Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information","General information"
@@ -272,8 +271,8 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentPartys","Parter:","Parties:"
 "_remindMailNotSignedOfferContentSender","Avsändare:","Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
- offerten <strong>$documenttitle$</strong> ännu.        Acceptera
- offerten genom att följa instruktionerna nedan.      ","<strong>$author$</strong>  wants to remind you that you haven't  confirmed the order  <strong>$documenttitle$</strong> yet. To do so:"
+ offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
+ offerten genom att följa instruktionerna nedan.      ","<strong>$author$</strong>  wants to remind you that you haven't  confirmed or rejected the order  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information","General information"
 "_remindMailNotSignedOrderContentInstruction","        1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
@@ -282,8 +281,8 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  reject)<br/>         4. Done   "
 "_remindMailNotSignedOrderContentPartys","Parter:","Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
- ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern
- genom att följa instruktionerna nedan.      ","<strong>$author$</strong> wants to remind you that you haven't  confirmed the order <strong>$documenttitle$</strong> yet. To do so:"
+ ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
+ genom att följa instruktionerna nedan.      ","<strong>$author$</strong> wants to remind you that you haven't  confirmed or rejected the order <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedTitle","Påminnelse att underteckna  $documenttitle$","Reminder to sign  $documenttitle$"
 "_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
  <strong>$documenttitle$</strong>        till dig. Dokumentet
@@ -292,11 +291,11 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig via tjänsten SkrivaPå. Den accepterade
- offerten bifogas med detta mail.","<strong>$author$</strong> has requested that we send the order confrmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using Scrive. Please find it attached.        "
+ offerten bifogas med detta mail.","<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using Scrive. Please find it attached.        "
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  bekräftat via tjänsten SkrivaPå. Orderbekräftelsen bifogas med
- detta mail.","<strong>$author$</strong>requested that we send the orderconfrmation<strong>$documenttitle$</strong>  .  You have confirmed it using Scrive.  Please find it attached."
+ detta mail.","<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using Scrive.  Please find it attached."
 "_sigattachlistRequestedAttachment","Begärda bilagor:","Requested attachments:"
 "_signupLinkEmailPartClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    <br/>
     ","Click to activate:<br/>    <br/>     "
@@ -308,4 +307,4 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_whohadsignedofferinfoformailIfConfirmed","    Har bekräftat: ","Has confirmed: "
 "_whohadsignedofferinfoformailIfNotConfirmed","    Har bekräftat: ","Has signed:"
 "_whohadsignedorderinfoformailIfAccepted","    Har accepterat: ","Has accepted: "
-"_whohadsignedorderinfoformailIfNotAccepted","    Har accepterat: ","Has acceptedt: "
+"_whohadsignedorderinfoformailIfNotAccepted","    Har accepterat: ","Has accepted: "

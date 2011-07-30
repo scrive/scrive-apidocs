@@ -20,8 +20,8 @@
  dokument nummer $documentid$ har undertecknats","This verification was issued by Scrive and supports that the
  document $documentid$ has been signed"
 "_contractsealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
- är säkert verifierad genom vår tjänst.","by the parites, and is legally binding. Itallic data is safely
- verifyed by our service."
+ är säkert verifierad genom vår tjänst.","by the parties, and is legally binding. Italic data is safely
+ verified by our service."
 "_contractsealingtextsverificationFooterRow3","Kontrollera dokumentet mot vår databas genom följande länk:","Verify the order confirmation against our database by following
  the link:"
 "_offerInvitationSentEntry"," skickar offerten till"," sends the offer to"
@@ -42,15 +42,15 @@
  offertnummer $documentid$ har accepterats","This verification was issued by Scrive and supports that the
  offer $documentid$ has been accepted"
 "_offersealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
- är verifierad genom vår tjänst.","by the parties, and is legally binding. Itallic data is safely
- verifyed by our service."
+ är verifierad genom vår tjänst.","by the parties, and is legally binding. Italic data is safely
+ verified by our service."
 "_offersealingtextsverificationFooterRow3","Du kan kontrollera offerten mot vår databas genom följande länk:","Verify the offer against our database by following the link:"
 "_offersealingtextsverificationTitle","Acceptverifikat","Acceptance verification"
-"_orderInvitationSentEntry"," skickar orderbekräftelsen till"," sends the orderconfirmations to"
+"_orderInvitationSentEntry"," skickar orderbekräftelsen till"," sends the order-confirmations to"
 "_orderInvitationSentEntryIfElse","parterna","the parties"
 "_orderInvitationSentEntryIfoneSignatory","parten","the party"
 "_orderLastHistEntry","    Samligta parter har bekräftat ordern.","    All parties have confirmed the order."
-"_orderSeenHistEntry","granskar orderbekräftelsen online ","reviews the orderconfirmation online"
+"_orderSeenHistEntry","granskar orderbekräftelsen online ","reviews the order-confirmation online"
 "_orderSignHistEntry","bekräftar ordern online med ","confirms the order online with"
 "_ordersealingtextsdateText","Datum","Date"
 "_ordersealingtextsdocPrefix","Orderbekräftelsenummer","Order confirmation number"
@@ -64,8 +64,8 @@
  orderbekräftelsenummer $documentid$ har bekräftats","This verification was issued by Scrive and supports that the
  order confirmation $documentid$ has been confirmed"
 "_ordersealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
- är säkert verifierad genom vår tjänst.","by the parites, and is legally binding. Itallic data is safely
- verifyed by our service."
+ är säkert verifierad genom vår tjänst.","by the parties, and is legally binding. Italic data is safely
+ Verified by our service."
 "_ordersealingtextsverificationFooterRow3","Kontrollera orderbekräftelsen mot vår databas genom följande
  länk: ","Verify the order confirmation against our database by following
  the link:"
@@ -74,4 +74,4 @@
 "_signMethodElegBankID","BankID","BankID"
 "_signMethodElegNordea","Nordea e-legitimation","Nordea e-ID"
 "_signMethodElegTelia","Telia e-legitimation","Telia e-ID"
-"_signMethodEmail","e-post","e-mail"
+"_signMethodEmail","e-post","email"

@@ -3,8 +3,7 @@
 "_headerAccount","Konto","Account"
 "_headerArchive","Arkiv","Archive"
 "_headerInvite","Bjud in","Invite"
-"_headerInviteFriend"," Bjud en vän på 1 månad fri användning. Skriv deras e-post här!","Invite a friend to one month free usage. Fill in their e-mail
- here!"
+"_headerInviteFriend"," Bjud en vän på 1 månad fri användning. Skriv deras e-post här!","Enter email and invite a friend to one month free usage!"
 "_headerLogOut","Logga ut","Log Out"
 "_headerSend","Skicka","Send"
 "_message","Meddelande","Message"
@@ -13,7 +12,7 @@
 "_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>","<strong>Contact us for feedback, questions &amp; requests </strong>"
 "_pageFooterContact2","<strong>Telefon</strong>          010-195 99 15","<strong>Phone</strong>          +46 (0)10-195 99 15"
 "_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17","<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
-"_pageFooterContact4","<strong>Maila SkrivaPå</strong>          <a href=""mailto:info@skrivapa.se"">info@skrivapa.se</a>","<strong>Send e-mail to Scrive</strong>          <a href=""mailto:info@skrivapa.se"">info@skrivapa.se</a>"
+"_pageFooterContact4","<strong>Maila SkrivaPå</strong>          <a href=""mailto:info@skrivapa.se"">info@skrivapa.se</a>","<strong>Send email to Scrive</strong>          <a href=""mailto:info@skrivapa.se"">info@skrivapa.se</a>"
 "_pageFooterContact5","<strong>Adress</strong>          SkrivaPå CM AB<br />       
    Saltmätargatan 19<br />          113 59 Stockholm","<strong>Address</strong>          SkrivaPå CM AB<br />      
     Saltmätargatan 19<br />          113 59 Stockholm<br /> 
@@ -36,7 +35,7 @@
  Our customers and their customers just love the simplicity."
 "_queryColumnBody2","Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga
  förpliktelser.","We give you 14 days full functionality free of charge. No obligations."
-"_queryColumnEmail","E-post: info@skrivapa.se","E-mail: info@skrivapa.se"
+"_queryColumnEmail","E-post: info@skrivapa.se","Email: info@skrivapa.se"
 "_queryColumnHead","Avtala redan idag!","Sign documents today!"
 "_queryColumnPhone","Telefon: 010-195 99 15","Phone: +46 (0)10-195 99 15"
 "_queryColumnQuestions","Frågor? Kontakta oss!","Questions? Contact us!"

@@ -9,7 +9,7 @@
 "_contractexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
  inbjudan innan datumet förfallit. Detta regleras av avtalslagen.","OBSERVE: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
- the Swedish Law of Contrats. BUT IS THIS TRUE IN UK? LJSGHKUEHGUEKGBEG"
+ the Swedish Law of Contracts."
 "_contractname","Avtal","Contract"
 "_contractsendtext","Skicka","Send"
 "_contractstep1text","Välj dokument","Select document"
@@ -21,7 +21,7 @@
  process tillhör betalplanerna Business och Enterprise, även
  vid fri testperiod.","Change to advanced process to enjoy more advanced features such
  as expiration date, templates, multi send etc. You can use the
- advanced process if you have payplan Business or Enterprise,
+ advanced process if you have price plan Business or Enterprise,
  or if you are in a trial period."
 "_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt process","Change process"
 "_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad process?","Do you want to change to advanced process?"
@@ -30,26 +30,26 @@
  kan du givetvis byta tillbaks när du vill, även vid fri testperiod.
            ","Change to simplified process to make the process even smoother.
  You can of course change back whenever you want to if you have
- payplan Business or Enterprise, or if you are in a trial period.
+ price plan Business or Enterprise, or if you are in a trial period.
            "
 "_dialogConfirmBasicChangeToBody2","När du byter kommer alla ändringar du gjort förutom de för part
  1 och part 2 att försvinna.             Är du säker att du vill
- byta process          ","When you change process, all data you have filled in, exept that
+ byta process          ","When you change process, all data you have filled in, except that
  for party 1 and party 2, will disappear.             Are you
  sure you want to change process?"
 "_dialogConfirmBasicChangeToChangeProcess","Byt process","Change process"
 "_dialogConfirmBasicChangeToHead","Vill du byta till förenklad process?","Do you want to change to simplified process?"
 "_dialogConfirmSendinviteBody","Du har valt en sekreterarroll och kommer själv inte att underteckna.
  Är du säker på att du vill skicka en inbjudan att underteckna
- dokumentet ","You have choosen a secretary role, and will not sign. Are you
+ dokumentet ","You have chosen a non-signatory role, and will not sign. Are you
  sure you want to sent an invitation to sign the document"
 "_dialogConfirmSendinviteBody2To"," till "," to"
 "_dialogConfirmSendinviteBody3","Du har skapat fält för parterna att fylla i innan de undertecknar.
  Efter att alla har undertecknat kommer du att              
  få ett mail med en länk till en sida på SkrivaPå där du kan
  granska parternas uppgifter och underteckna dokumentet. ","You have created fields for the parties to fill in before they
- sign. When all counterparties have signed,               you
- will recive an e-mail with a link to a Scrive page where you
+ sign. When all counterparts have signed,               you
+ will receive an e-mail with a link to a Scrive page where you
  can sign the document."
 "_dialogConfirmSendinviteBody4"," Vill du skicka inbjudan att fylla i och underteckna dokumentet","Do you want to send an invitation to fill in and sign the document"
 "_dialogConfirmSendinviteBody5"," till "," to"
@@ -62,7 +62,7 @@
 "_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en            
   e-legitimation från din internetbank eller från           
    Telia. ","No e-ID? You can download an e-ID from you online           
-   bank or from Telia.Har du ingen e-legitimation?"
+   bank or from Telia."
 "_dialogConfirmSigninviteSubBody2ClickHere","Klicka här","Click here"
 "_dialogConfirmSigninviteSubBody3"," för att läsa mer."," to read more."
 "_dialogConfirmSigninviteSubHead","Välj typ av e-legitimation","Choose type of e-legitimation"
@@ -70,14 +70,14 @@
 "_dialogConfirmTextSendNormalBody1","Vill du skicka en inbjudan att underteckna dokumentet till ","Do you want to send an invitation to sign the document to "
 "_dialogConfirmTextSendNormalBody2","?               Efter att de har undertecknat kommer du att få
  ett mail med en länk till en sida på SkrivaPå där du kan underteckna
- dokumentet.","?               After they have signed, you will recive an e-mail
+ dokumentet.","?               After they have signed, you will receive an e-mail
  with a link to a Scrive page where you can sign the document."
 "_dialogCsvupload1Body","            Du har valt att göra ett massutskick, för att genomföra
  detta krävs att du laddar upp ett dokument med formatet .csv
           ","            You have chosen to multi send. To complete this you
  are required to upload a document with format .csv         
  "
-"_dialogCsvupload1CSVOnly","OBS! Endast .CSV","OBSERVE! .CSV only!"
+"_dialogCsvupload1CSVOnly","OBS! Endast .CSV",".CSV only!"
 "_dialogCsvupload1ChooseFile","Välj fil ","Select file"
 "_dialogCsvupload1ChooseFileToUpLoad","Välj fil att ladda upp","Select file to upload"
 "_dialogCsvupload1Head","Massutskick","Multi send"
@@ -91,7 +91,7 @@
 "_editInviteTextDialogHead","Hälsningsmeddelande","Invitation message"
 "_editinvitetextlink","JUSTERA HÄLSNINGSMEDDELANDE","ADJUST INVITATION MESSAGE"
 "_editinvitetextlinkInviteText","HÄLSNINGSMEDDELANDE","INVITATION MESSAGE"
-"_eleg","E-legitimation","E-legitimation"
+"_eleg","E-legitimation","E-ID"
 "_invitetextSaveTemplate","Spara mall","Save template"
 "_offerconfirmsendtext","Är du säker på att du vill skicka offerten","Are you sure you want to send the offer"
 "_offerconfirmsendtitle","Skicka offert","Send offer"
@@ -99,7 +99,7 @@
 "_offerexpirywarntext","Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum.
  Detta regleras av avtalslagen.","OBSERVE: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
- the Swedish Law of Contrats. BUT IS THIS TRUE IN UK? LJSGHKUEHGUEKGBEG"
+ the Swedish Law of Contracts."
 "_offername","Offert","Offer"
 "_offersendtext","Skicka offert","Send offer"
 "_offerstep1text","Välj offert","Select offer"
@@ -110,7 +110,7 @@
 "_orderexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
  inbjudan innan datumet förfallit. Detta regleras av avtalslagen.","OBSERVE: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
- the Swedish Law of Contrats. BUT IS THIS TRUE IN UK? LJSGHKUEHGUEKGBEG"
+ the Swedish Law of Contracts."
 "_ordername","Orderbekräftelse","Order confirmation"
 "_ordersendtext","Skicka order","Send order confirmation"
 "_orderstep1text","Välj orderbekräftelse","Select order confirmation"
@@ -126,19 +126,19 @@
 "_signStep2ContentPersons","PERSONER","PERSONS"
 "_signStep2ContentSignOrder","SIGNERINGSORDNING","SIGNING ORDER"
 "_signStepsBodyDaysLeftToSign"," dagar"," days"
-"_signStepsBodyFunctionsAddPerson","LÄGG TILL PERSON","ADD PERSON"
+"_signStepsBodyFunctionsAddPerson","LÄGG TILL PART","ADD PERSON"
 "_signStepsBodyFunctionsBoxChooseVerification","Välj verifieringsmetod","Select verification method"
 "_signStepsBodyFunctionsNextStep","Nästa steg","Next step"
-"_signStepsBodyFunctionsRemovePerson","TA BORT PERSON","REMOVE PERSON"
+"_signStepsBodyFunctionsRemovePerson","TA BORT PART","REMOVE PERSON"
 "_signStepsBodyFunctionssaveTemplate","Spara mall","Save template"
 "_signStepsFunctionalityChangeToAdvanced","BYT TILL AVANCERAD PROCESS","CHANGE TO ADVANCED PROCESS"
 "_signStepsFunctionalityChangeToSimplified","BYT TILL FÖRENKLAD PROCES","CHANGE TO SIMPLIFIED PROCESS"
 "_signStepsMenuEmptyStepSaveAsTemplate","SPARA SOM MALL","SAVE AS TEMPLATE"
 "_signStepsTitleRowTextContainerIfTemplate","MALL:","TEMPLATE:"
 "_step1selectIfTemplate","Välj mall","Select template"
-"_step2selectIfElse","Fyll i uppgifter","Fill in data"
+"_step2selectIfElse","Lägg till motparter","Add counterparts"
 "_step2selectIfTemplate","Utforma mall","Design template"
-"_step2selectIfisbasic","Fyll i uppgifter &amp; Skicka!","Fill in data &amp; Send!"
+"_step2selectIfisbasic","Lägg till motpart &amp; Skicka!","Add counterpart &amp; Send!"
 "_step3selectIfNotTemplate","Underteckna och skicka!","Sign and send!"
 "_step3selectIfTemplate","Färdigställ och spara","Finish and save"
 "_switchercheckboxNotSignatory","Ej undertecknande part","Non-signing party"

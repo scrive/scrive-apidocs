@@ -515,5 +515,5 @@ mailCompanyAccountAcceptedContent=
 ####
 appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $a$ };separator=", "$ <br />$endif$
 ###
-sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ från $sa.sigs:noescape()$};separator="; "$ <br />$endif$
+sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ $_from()$ $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###

@@ -6,7 +6,7 @@
  vårt verifikat. Med andra ord, vi tar bara betalt när du gör
  affär.</p>","                    <h2>We only charge you when you make money</h2>
                     <p>We charge you per signature. Though we
- belive in only charging when we add value. Therefore, we only
+ Believe in only charging when we add value. Therefore, we only
  count and charge signatures in completed documents. In other
  words, we charge only when you deal.</p>"
 "_priceplanPageBelowTable2","                    <h2>Gratis för privatpersoner och enmansföretagare</h2>
@@ -18,8 +18,8 @@
  per månad och 50 dokument i lagring.</p>","                    <h2>Free for private persons and proprietors</h2>
                     <p>There are a thousand reasons for everyone
  to start singing their documents electronically. Our ambition
- is to work closely and cooperate with our customers. Unfortunently,
- we are not able to help all our target groups activley. Therefore,
+ is to work closely and cooperate with our customers. Unfortunately,
+ we are not able to help all our target groups actively Therefore,
  we offer a support-free account for small users. 1 user, 5 free
  signatures per month and storage of 50 documents.</p>"
 "_priceplanPageBelowTable3","                    <h2>Rabatter till ej vinstdrivande organisationer</h2>
@@ -34,7 +34,7 @@
 "_priceplanPageH1Body2","Registrera dig på under minuten och testa 14 dagar redan idag.","Register takes less than a minute, try it out for 14 days starting
  today!"
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
- dina behov – Free, Small, Business eller Enterprise.","Sign and store your contracts online. Select a priceplan that
+ dina behov – Free, Small, Business eller Enterprise.","Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
 "_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>  
                               <th>                          
@@ -48,7 +48,7 @@
  kr/signatur</p>                                </th>       
                          <th>                               
      <h3>Enterprise</h3>                                    <p>Offert</p></th>
-                                ","<th><h2>Priceplan</h2>                                </th> 
+                                ","<th><h2>Price plan</h2>                                </th>
                                <th>                         
            <h3>Small</h3>                                   
  <p>3.50 £/signature</p>                                </th>
@@ -89,7 +89,7 @@
      <p>3.00 £/signature</p>                            </li>
                             <li>50</li>                     
        <li class=""odd"">2 000</li>                           
- <li>Unimited</li>                            <li class=""odd"">Offer</li>
+ <li>Unlimited</li>                            <li class=""odd"">Offer</li>
                             <li>2 x 1h</li>                 
            <li class=""odd"">4h</li>                          
   <li>Phone</li>                            <li class=""odd"">✓</li>
@@ -115,7 +115,7 @@
                                 <td>Offert</td>","                                <td>Number of users</td>    
                             <td>5</td>                      
           <td>15</td>                                <td>50</td>
-                                <td>Offert</td>"
+                                <td>Offer</td>"
 "_priceplanPageTableRow10","                                <td>E-signering</td>        
                         <td>✓</td>                          
       <td>✓</td>                                <td>✓</td>  
@@ -161,7 +161,7 @@
 "_priceplanPageTableRow16","                                <td>Välj förfallodatum</td> 
                                <td>✓</td>                   
              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>","                                <td>Select expiary date</td>
+                                <td>✓</td>","                                <td>Select expiry date</td>
                                 <td>✓</td>                  
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
@@ -321,4 +321,4 @@
                                 <td>✓</td>                  
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTitle","| Prisplan","| Priceplan"
+"_priceplanPageTitle","| Prisplan","| Price plan"

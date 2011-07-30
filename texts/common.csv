@@ -1,6 +1,6 @@
 "!Template name","LANG_SE","LANG_EN"
 "_CompanyAccounts","Underkonton","Subaccounts"
-"_FillInEmail","Fyll i din e-postadress","Fill in your e-mail address"
+"_FillInEmail","Fyll i din e-postadress","Fill in your email address"
 "_HeadAccountSettings","Kontoinställningar","Account settings"
 "_HeadMailApi","Mail API","Mail API"
 "_HeadUserInfo","Användaruppgifter","User info"
@@ -10,7 +10,7 @@
  tycker jag.”","""The overview of signed contracts is much better. That's the
  thing according to me."""
 "_Quote2By","Alexis Barnekow, Försäljningschef, Green Hat People, Teambuilding
- Events","Alexis Barnekow, Sales Manager, Green Hat People, Teambuilding
+ Events","Alexis Barnekow, Sales Manager, Green Hat People, Team building
  Events"
 "_Quote3","”Smart lösning.”","”Smart sloution.”"
 "_Quote3By","Christoffer Lindquist, VD, Eventbook, Eventpartner","Christoffer Lindquist, CEO, Eventbook, Eventpartner"
@@ -41,11 +41,14 @@
 "_company","Företag","Company"
 "_companyposition","Befattning","Position"
 "_delete","Radera","Delete"
-"_email","E-post","E-mail"
+"_docListTabsDocs",,
+"_email","E-post","Email"
 "_firstname","Förnamn","First name"
 "_forgotpassword","Glömt lösenord","Forgot password"
 "_lastname","Efternamn","Last name"
+"_listLocalDialogsBody",,
 "_login","Logga in","Log in"
+"_of",,
 "_ok","OK","OK"
 "_options","Alternativ","Options"
 "_orgnumber","Org. nr","Corporate ID"
@@ -56,18 +59,20 @@
 "_send","Skicka","Send"
 "_sharing","Delning","Sharing"
 "_skrivapa","SkrivaPå","Scrive"
-"_tablestatusesCancelled","Avbrutet","Cancelled"
+"******_tablestatusesCancelled","Avbrutet","Canceled"
+"_tablestatusesCandelled",,
+"_tablestatusesConfirmed",,
 "_tablestatusesDelivered","Levererat","Delivered"
 "_tablestatusesDraft","Utkast","Draft"
-"_tablestatusesEmailOpened","Läst e-post","E-mail read"
+"_tablestatusesEmailOpened","Läst e-post","Email read"
 "_tablestatusesSent","Skickat","Sent"
-"_tablestatusesSigned","Signerat","Signed"
+"******_tablestatusesSigned","Signerat","Signed"
 "_tablestatusesViewedOnline","Granskat online","Reviewed online"
-"_tooltipcancelled","Status: Avbrutet","Status: Cancelled"
+"_tooltipcancelled","Status: Avbrutet","Status: Canceled"
 "_tooltipdelivered","Status: Levererat","Status: Delivered"
 "_tooltipdraft","Status: Utkast","Status: Draft"
 "_tooltipopened","Status: Granskat online","Status: Reviewed online"
-"_tooltipread","Status: Läst e-post","Status: E-mail read"
+"_tooltipread","Status: Läst e-post","Status: Email read"
 "_tooltipreviewed","Status: Granskat online","Status: Reviewed online"
 "_tooltipsent","Status: Skickat","Status: Sent"
 "_tooltipsigned","Status: Signerat","Status: Signed"
