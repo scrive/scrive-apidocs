@@ -13,5 +13,4 @@
 "_SortCompany","Företag ","Company"
 "_SortReciever","Mottagare ","Recipient"
 "_SortSender","Avsändare ","Sender"
-"******_tablestatusesCandelled","Avbrutet","Canceled"
-"******_tablestatusesConfirmed","Bekräftat","Confirmed"
+"_tablestatusesConfirmed","Bekräftat","Confirmed"

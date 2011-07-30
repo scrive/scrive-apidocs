@@ -1,8 +1,6 @@
 "!Template name","LANG_SE","LANG_EN"
-"******_contractcanceledinfoheader","Dokument återkallat","Document withdrawn"
-"******_contractcanceledinfotext","har återkallat sin inbjudan att underteckna dokumentet.","has withdrawn the invitation to sign the document."
-"_contractcancelledinfoheader",,
-"_contractcancelledinfotext",,
+"_contractcancelledinfoheader","Dokument återkallat","Document withdrawn"
+"_contractcancelledinfotext","har återkallat sin inbjudan att underteckna dokumentet.","has withdrawn the invitation to sign the document."
 "_contractpendingauthorinfoheader","Väntar","Waiting"
 "_contractpendingauthorinfotextIfElse","Du har endast behörighet att se detta                       
     dokumentet. Dokumentet har ännu inte                    
@@ -77,10 +75,8 @@
  har passerat och därför har dokumentet avbrutits.","All parties did not sign the document in time. The expiration
  date has passed and the document process is therefore canceled."
 "_documentInfoTextTimedoutSignedbymeImauthorHead","Förfallodatum har passerat","Expiration date has passed"
-"******_offercanceledinfoheader","Offert återkallad","Offer withdrawn"
-"******_offercanceledinfotext","har återkallat offerten. Den går således inte att acceptera.","has withdrawn the offer. You can no longer accept it."
-"_offercancelledinfoheader",,
-"_offercancelledinfotext",,
+"_offercancelledinfoheader","Offert återkallad","Offer withdrawn"
+"_offercancelledinfotext","har återkallat offerten. Den går således inte att acceptera.","has withdrawn the offer. You can no longer accept it."
 "_offerpendingauthorinfoheader","Väntar på accept","Waiting for acceptance"
 "_offerpendingauthorinfotext","Du har skickat offerten. Offerten har ännu inte accepterats av
  mottagaren.","You have sent the offer. It has not yet been accepted by the
@@ -93,10 +89,8 @@
 "_offerstatusinfotext","Du har skickat en inbjudan att acceptera offerten. Vänligen inväntan
  accepten.","You have sent an invitation to accept the offer. Please wait
  for the acceptance."
-"******_ordercanceledinfoheader","Order återkallad","Order withdrawn"
-"******_ordercanceledinfotext","har återkallat ordern. Den går således in att bekräfta.","has withdrawn the order. You can no longer confirm it."
-"_ordercancelledinfoheader",,
-"_ordercancelledinfotext",,
+"_ordercancelledinfoheader","Order återkallad","Order withdrawn"
+"_ordercancelledinfotext","har återkallat ordern. Den går således in att bekräfta.","has withdrawn the order. You can no longer confirm it."
 "_orderpendingauthorinfoheader","Väntar på bekräftelse","Waiting for confirmation"
 "_orderpendingauthorinfotext","Du har skickat orderbekräftelsen. Orderbekräftelsen har ännu
  inte bekräftats av din mottagare.","You have sent the order confirmation. It has not yet been confirmed

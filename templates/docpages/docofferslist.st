@@ -132,7 +132,7 @@ $loadingdialog()$
 					<div class="icon status template"></div>Mall&nbsp;</div>
                     -->
 					<div class="icon status draft float-left"></div><div class="float-left">$_tablestatusesDraft()$&nbsp;</div>
-					<div class="icon status cancelled float-left"></div><div class="float-left">$_tablestatusesCandelled()$&nbsp;</div>
+					<div class="icon status cancelled float-left"></div><div class="float-left">$_tablestatusesCancelled()$&nbsp;</div>
 					<div class="icon status sent float-left"></div><div class="float-left">$_tablestatusesSent()$&nbsp;</div>
 					<div class="icon status delivered float-left"></div><div class="float-left">$_tablestatusesDelivered()$&nbsp;</div>
 					<!--

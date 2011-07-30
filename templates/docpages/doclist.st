@@ -110,12 +110,12 @@ var documentsTable = KontraList.init({
     }),
     bottomExtras : jQuery("<div class='table-statuses'>" +
                     "<div class='icon status draft float-left'></div><div class='float-left'>$_tablestatusesDraft()$&nbsp;</div>" +
-                    "<div class='icon status cancelled float-left'></div><div class='float-left'>$_tablestatusesCandelled()$&nbsp;</div>" +
+                    "<div class='icon status cancelled float-left'></div><div class='float-left'>$_tablestatusesCancelled()$&nbsp;</div>" +
                     "<div class='icon status sent float-left'></div><div class='float-left'>$_tablestatusesSent()$&nbsp;</div>" +
                     "<div class='icon status delivered float-left'></div><div class='float-left'>$_tablestatusesDelivered()$&nbsp;</div>" +
                     "<div class='icon status read float-left'></div><div class='float-left'>$_tablestatusesEmailOpened()$&nbsp;</div>" +
                     "<div class='icon status opened float-left'></div><div class='float-left'>$_tablestatusesViewedOnline()$&nbsp;</div>" +
-                    "<div class='icon status signed float-left'></div><div class='float-left'>$_tablestatusesConfirmed()$&nbsp;</div>" +
+                    "<div class='icon status signed float-left'></div><div class='float-left'>$_tablestatusesSigned()$&nbsp;</div>" +
                     "</div>")
 });
 
