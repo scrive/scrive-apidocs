@@ -118,17 +118,11 @@ testNewDocumentDependencies :: Assertion
 testNewDocumentDependencies = doTimes 100 $ do
   -- setup
   author <- addNewRandomUser
-  stdgn <- newStdGen
-  let a = unGen arbitrary stdgn 100
-      b = unGen arbitrary stdgn 10
-      c = unGen arbitrary stdgn 100
-      
   mcompany <- case usercompany author of  
     Nothing -> return Nothing
     Just cid -> query $ GetCompany cid
-
   -- execute
-  edoc <- update $ NewDocument author mcompany a b c
+  edoc <- randomUpdate $ NewDocument author mcompany 
   case edoc of 
     Left msg -> validTest $ assertFailure $ "Could not run NewDocument " ++ msg
     Right doc -> validTest $ assertInvariants doc
@@ -139,16 +133,11 @@ testDocumentCanBeCreatedAndFetchedByID :: Assertion
 testDocumentCanBeCreatedAndFetchedByID = doTimes 100 $ do
   -- setup
   author <- addNewRandomUser
-  stdgn <- newStdGen
-  let a = unGen arbitrary stdgn 100
-      b = unGen arbitrary stdgn 10
-      c = unGen arbitrary stdgn 100
       
   mcompany <- case usercompany author of  
     Nothing -> return Nothing
     Just cid -> query $ GetCompany cid
-
-  Right doc <- update $ NewDocument author mcompany a b c
+  Right doc <- randomUpdate $ NewDocument author mcompany
   -- execute
   mdoc <- query $ GetDocumentByDocumentID (documentid doc)
   -- assert
@@ -160,17 +149,12 @@ testDocumentCanBeCreatedAndFetchedByAllDocs :: Assertion
 testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 100 $ do
   -- setup
   author <- addNewRandomUser
-  stdgn <- newStdGen
-  let a = unGen arbitrary stdgn 100
-      b = unGen arbitrary stdgn 10
-      c = unGen arbitrary stdgn 100
 
   mcompany <- case usercompany author of  
     Nothing -> return Nothing
     Just cid -> query $ GetCompany cid
-
   -- execute
-  Right doc <- update $ NewDocument author mcompany a b c
+  Right doc <- randomUpdate $ NewDocument author mcompany
   docs <- query $ GetDocuments Nothing
   -- assert
   case find (sameDocID doc) docs of
@@ -181,22 +165,13 @@ testDocumentUpdateDoesNotChangeID :: Assertion
 testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  stdgn <- newStdGen
-  let mt = unGen arbitrary stdgn 100
-      a  = unGen arbitrary stdgn 100
-      b  = unGen arbitrary stdgn 100      
-      c  = unGen arbitrary stdgn 100      
-      d  = unGen arbitrary stdgn 100      
-      e  = unGen arbitrary stdgn 100
-      f  = unGen arbitrary stdgn 100      
-      g  = unGen arbitrary stdgn 100      
   doc <-  addRandomDocumentWithAuthor' author
   if not $ isPreparation doc
     then invalidateTest
     else do
       --execute
       let sd = signatoryDetailsFromUser author Nothing
-      enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f g
+      enewdoc <- randomUpdate $ \mt a b c d -> UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing)
       --assert
       case enewdoc of
         Left msg -> validTest $ assertFailure $ "Could not run UpdateDocument: " ++ msg
@@ -234,13 +209,9 @@ testDocumentAttachAlwaysRight = do
 testNoDocumentAttachAlwaysLeft :: Assertion
 testNoDocumentAttachAlwaysLeft = doTimes 100 $ do
   -- setup
-  stdgn <- newStdGen
-  let a = unGen arbitrary stdgn 100
-      b = unGen arbitrary stdgn 10
-      c = unGen arbitrary stdgn 100
   --execute
   -- non-existent docid
-  edoc <- update $ AttachFile a b c
+  edoc <- randomUpdate $ AttachFile
   --assert
   case edoc of
     Left _msg     -> return $ Just $ assertSuccess
@@ -253,9 +224,8 @@ testDocumentAttachHasAttachment = doTimes 100 $ do
   doc <- addRandomDocumentWithAuthor' author
   stdgn <- newStdGen  
   let a = unGen arbitrary stdgn 10
-      b = unGen arbitrary stdgn 100
   --execute
-  edoc <- update $ AttachFile (documentid doc) a b
+  edoc <- randomUpdate $ AttachFile (documentid doc) a
   --assert
   case edoc of
     Left msg -> return $ Just $ assertFailure $ "Could not run AttachFile: " ++ msg
@@ -893,6 +863,7 @@ testAuthorSignDocumentSignablePreparationRight = do
         case etdoc of
           Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
           Right _ -> return $ Just $ return ()
+
 
 testRejectDocumentNotSignableLeft :: Assertion
 testRejectDocumentNotSignableLeft = do

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -24,6 +24,7 @@ import User.UserState
 import Misc
 import Payments.PaymentsState as Payments
 import API.Service.ServiceState
+import Data.Typeable
 
 instance Arbitrary Company where
   arbitrary = do
@@ -483,4 +484,51 @@ invalidateTest = return Nothing
 
 validTest :: Assertion -> IO (Maybe Assertion)
 validTest = return . Just
+
+
+
+-- Random gen
+
+--Random query
+class RandomQuery a b where
+  randomQuery :: a -> IO b
+  
+instance (QueryEvent ev res) => RandomQuery ev res where
+  randomQuery = query
+
+instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
+  randomQuery f = do
+    stdgn <- newStdGen
+    let a = unGen arbitrary stdgn 10
+    randomQuery $ f a
+
+--Random update
+class RandomUpdate a b where
+  randomUpdate :: a -> IO b
+
+instance (UpdateEvent ev res) => RandomUpdate ev res where
+  randomUpdate = update
+
+instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
+  randomUpdate f = do
+    stdgn <- newStdGen
+    let a = unGen arbitrary stdgn 10
+    randomUpdate $ f a
+
+-- Other functions
+class RandomCallable a b where
+  randomCall :: a -> IO b
+
+instance RandomCallable (IO res) res where
+  randomCall = id
+
+instance (Typeable res) => RandomCallable res res where
+  randomCall = return 
+
+
+instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
+  randomCall f = do
+    stdgn <- newStdGen
+    let a = unGen arbitrary stdgn 10
+    randomCall $ f a
 
