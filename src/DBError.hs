@@ -11,6 +11,7 @@
 
 module DBError
     ( DBError (..)
+    , transActionNotAvailable
     ) where
 
 {- |
@@ -29,3 +30,7 @@ data DBError = DBResourceNotAvailable -- ^ The queried for resource does not exi
              | DBDatabaseNotAvailable String -- ^ A generalized error for any problem with the database itself
              | DBActionNotAvailable String -- ^ An error when an action is not available on a given record
              deriving (Show, Eq)
+
+transActionNotAvailable :: Either String b -> Either DBError b
+transActionNotAvailable (Left s) = Left $ DBActionNotAvailable s
+transActionNotAvailable (Right d) = Right d

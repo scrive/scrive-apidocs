@@ -25,6 +25,7 @@ import Misc
 import Redirect
 import User.UserControl
 import Util.HasSomeUserInfo
+import Util.StringUtil
 import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
@@ -40,7 +41,6 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 import Data.CSV
-import Data.Char
 import Data.Either
 import Data.List
 import Data.Maybe
@@ -187,7 +187,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
       muser <- query $ GetUserByEmail documentservice (Email sigemail)
       case muser of
         Nothing -> return $ Right doc'
-        (Just user) -> do
+        Just user -> do
           udoc <- update $ SaveDocumentForUser documentid user signatorylinkid
           return udoc
 
@@ -663,7 +663,7 @@ handleIssueSign document = do
         Left _ -> mzero
     where
       forIndividual ctxtime ctxipnumber udoc doc = do
-        mndoc <- update $ AuthorSignDocument (documentid doc) ctxtime ctxipnumber Nothing
+        mndoc <- authorSignDocument (documentid doc) Nothing
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
@@ -700,7 +700,7 @@ handleIssueSend document = do
         Left _ -> mzero
     where
       forIndividual ctxtime ctxipnumber udoc doc = do
-        mndoc <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
+        mndoc <- authorSendDocument (documentid doc) Nothing
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
@@ -803,15 +803,6 @@ makeSigAttachment name desc email =
                       , signatoryattachmentdescription = desc
                       }
 
-trim :: String -> String
-trim = f . f
-  where f = reverse . dropWhile isSpace
-
-splitOn :: Char -> String -> [String]
-splitOn c s = case dropWhile (== c) s of
-  "" -> []
-  s' -> w : splitOn c s''
-    where (w, s'') = break (== c) s'
 
 zipSigAttachments :: BS.ByteString -> BS.ByteString -> BS.ByteString -> [SignatoryAttachment]
 zipSigAttachments name desc emailsstring =
@@ -832,7 +823,7 @@ handleIssueUpdateSigAttachments doc = do
   signlast <- isFieldSet "signlast"
 
   let sigattachments = concat $ zipWith3 zipSigAttachments sigattachmentnames sigattachmentdescs sigattachmentemails
-  ndoc <- guardRightM $ update $ UpdateSigAttachments (documentid udoc) sigattachments
+  ndoc <- guardRightM $ updateSigAttachments (documentid udoc) sigattachments
   return (LinkDesignDoc (DesignStep3 (documentid ndoc) signlast))
 
 handleIssueUpdateAttachments :: Kontrakcja m => Document -> m KontraLink
@@ -965,15 +956,11 @@ handleIssueSave document = do
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor document = do
-    Context{ctxtime, ctxipnumber} <- getContext
     unless (document `allowsIdentification` EmailIdentification) mzero
-    doc2 <- update $ CloseDocument (documentid document) ctxtime ctxipnumber  Nothing
-    case doc2 of
-        Nothing -> return $ LinkIssueDoc (documentid document)
-        Just d -> do
-            postDocumentChangeAction d document Nothing
-            addFlashM flashAuthorSigned
-            return $ LinkIssueDoc (documentid document)
+    doc <- guardRightM $ closeDocument (documentid document) Nothing
+    postDocumentChangeAction doc document Nothing
+    addFlashM flashAuthorSigned
+    return $ LinkIssueDoc (documentid document)
 
 {- |
    Show the document with title in the url
@@ -1773,7 +1760,7 @@ handleRestart docid = withUserPost $ do
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
   ctx@Context { ctxmaybeuser = Just user } <- getContext
-  doc <- guardRightM $  getDocByDocID docid
+  doc <- guardRightM $ getDocByDocID docid
   guard (isAuthor (doc, user)) -- only author can resend
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getCustomTextField "customtext"
@@ -1935,10 +1922,8 @@ handleAttachmentDownloadForAuthor did fid = do
  -}
 handleAttachmentDownloadForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m Response
 handleAttachmentDownloadForViewer did sid mh fid = do
-  edoc <- getDocByDocIDSigLinkIDAndMagicHash did sid mh
-  case edoc of
-    Left _ -> mzero
-    Right doc -> case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
+  doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+  case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
       Just AuthorAttachment{ authorattachmentfile } -> do
         ctx <- getContext
         contents <- liftIO $ getFileContents ctx authorattachmentfile

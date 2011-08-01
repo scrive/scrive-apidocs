@@ -26,7 +26,8 @@ docStateTests = testGroup "DocState" [
   
   testThat "CloseDocument fails when doc is not signable" testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" testCloseDocumentNotNothing,
-  testThat "CloseDocument succeeds when doc is signable" testCloseDocumentSignableJust,
+  testThat "CloseDocument succeeds when doc is signable and awaiting author" testCloseDocumentSignableAwaitingAuthorJust,
+  testThat "CloseDocument fails when doc is signable and awaiting author" testCloseDocumentSignableNotAwaitingAuthorNothing,
   
   testThat "SetDocumentTags fails when does not exist" testSetDocumentTagsNotLeft,
   testThat "SetDocumentTags succeeds" testSetDocumentTagsRight,
@@ -697,13 +698,20 @@ testSetDocumentUIRight = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentUI (documentid doc)
   validTest $ assertRight etdoc
           
-testCloseDocumentSignableJust :: Assertion
-testCloseDocumentSignableJust = doTimes 10 $ do
+testCloseDocumentSignableAwaitingAuthorJust :: Assertion
+testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isSignable
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isAwaitingAuthor)
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertJust etdoc
     
+testCloseDocumentSignableNotAwaitingAuthorNothing :: Assertion
+testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isAwaitingAuthor))
+  etdoc <- randomUpdate $ CloseDocument (documentid doc)
+  validTest $ assertNothing etdoc
+
 testCloseDocumentNotSignableNothing :: Assertion
 testCloseDocumentNotSignableNothing = doTimes 10 $ do
   author <- addNewRandomUser
