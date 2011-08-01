@@ -1152,7 +1152,7 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
         var input = $(error.input);
         input.parents('.inputWrapper').addClass("redborder");
         if (!input.hasClass("noflash")) {
-            addFlashMessage(invalidEmailErrMsg, "red");
+            FlashMessages.add({content: input.val().length > 0?invalidEmailErrMsg:emptyEmailErrMsg, color: "red"});
             input.addClass("noflash");
         }
     });
