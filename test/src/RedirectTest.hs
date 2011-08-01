@@ -24,6 +24,7 @@ redirectTests = testGroup "RedirectTests"
                   [testCase "return Right if Right" testGuardRight
                   ,testCase "return mzero if Left" testStringGuardMZeroLeft
                   ,testCase "finishWith if Left DBNotLoggedIn" testDBErrorGuardRedirectLeftDBNotLoggedIn
+                  ,testCase "mzero if Left DBResourceNotAvailable" testDBErrorGuardMZeroLeft
                   ]
                   
 testGuardRight :: Assertion
@@ -44,17 +45,24 @@ testStringGuardMZeroLeft = withTestState $ do
 
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
 testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
-    ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
-    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res, ctx') <- runTestKontra req ctx (do
-                                          _ <- guardRight $ Left DBNotLoggedIn
-                                          ok $ toResponseBS "stuff" "hello")
-    assertBool "Response code is 303" $ rsCode res == 303
-    assertBool "Location starts with /?logging" $ (isPrefixOf "/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
-    assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
+  ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+  req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
+  (res, ctx') <- runTestKontra req ctx (do
+                                           _ <- guardRight $ Left DBNotLoggedIn
+                                           ok $ toResponseBS "stuff" "hello")
+  assertBool "Response code is 303" $ rsCode res == 303
+  assertBool "Location starts with /?logging" $ (isPrefixOf "/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
+  assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
 --    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
                 
-
+testDBErrorGuardMZeroLeft :: Assertion
+testDBErrorGuardMZeroLeft = withTestState $ do
+  ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+  req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
+  (res, _ctx') <- runTestKontra req ctx (mplus (guardRight $ (Left DBResourceNotAvailable))
+                                       (return ("hello" :: String)))
+  assertEqual "Should be equal" "hello" res
+  
 assertMZero :: IO t -> IO ()
 assertMZero action = 
   mplus 
