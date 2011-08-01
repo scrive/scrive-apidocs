@@ -3,6 +3,10 @@ module Doc.DocStateUpdate
     , markDocumentSeen
     , signDocumentWithEmail
     , rejectDocumentWithChecks
+    , authorSignDocument
+    , authorSendDocument
+    , updateSigAttachments
+    , closeDocument
     ) where
 
 import DBError
@@ -16,6 +20,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
 import Doc.DocUtils
+import Control.Applicative
 
 {- |
    Mark document seen securely.
@@ -81,3 +86,51 @@ rejectDocumentWithChecks did slid mh customtext = do
         Left msg -> return $ Left (DBActionNotAvailable msg)
         Right document -> return $ Right (document, olddocument)
 
+{- |
+  The Author signs a document with security checks.
+ -}
+authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
+authorSignDocument did msigninfo = onlyAuthor did $ do
+  ctx <- getContext
+  transActionNotAvailable <$> update (AuthorSignDocument did (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+
+{- |
+  The Author sends a document with security checks.
+ -}
+authorSendDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
+authorSendDocument did msigninfo = onlyAuthor did $ do
+  ctx <- getContext
+  transActionNotAvailable <$> update (AuthorSendDocument did (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+
+{- |
+  The Author can add new SigAttachments.
+ -}
+updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
+updateSigAttachments did sigatts = onlyAuthor did $ do
+  transActionNotAvailable <$> update (UpdateSigAttachments did sigatts)
+    
+    
+eitherFromMaybe :: a -> Maybe b -> Either a b
+eitherFromMaybe _ (Just b) = Right b
+eitherFromMaybe a Nothing  = Left a
+    
+{- |
+   Only the author can Close a document when its in AwaitingAuthor status.
+ -}
+closeDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
+closeDocument did msigninfo = onlyAuthor did $ do
+  ctx <- getContext
+  eitherFromMaybe DBResourceNotAvailable <$> update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+
+-- | Make sure we're logged in as the author before taking action.
+onlyAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError a) -> m (Either DBError a)
+onlyAuthor did action = do
+  edoc <- getDocByDocID did -- this makes sure we're the author or his friend
+  case edoc of
+    Left e -> return $ Left e -- this checks if we're logged in
+    Right doc -> do
+      ctx <- getContext
+      let Just user = ctxmaybeuser ctx
+      if not $ isAuthor (doc, user) -- only the author should be allowed in
+        then return $ Left DBResourceNotAvailable
+        else action
