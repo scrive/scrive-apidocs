@@ -2,9 +2,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Test.HUnit (assertFailure, Assertion, assertBool)
+import Test.HUnit (assertFailure, Assertion, assertBool, assert)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
+import Data.Maybe
 
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
@@ -25,6 +26,11 @@ import Misc
 import Payments.PaymentsState as Payments
 import API.Service.ServiceState
 import Data.Typeable
+
+instance Arbitrary UserID where
+  arbitrary = do
+    a <- arbitrary
+    return $ UserID a
 
 instance Arbitrary Company where
   arbitrary = do
@@ -451,8 +457,8 @@ addRandomDocumentWithAuthor user = do
                  }
   update $ StoreDocumentForTesting adoc
 
-addRandomDocumentWithAuthor' :: User -> IO Document
-addRandomDocumentWithAuthor' user = do
+addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> IO Document
+addRandomDocumentWithAuthorAndCondition user p =  do
   stdgen <- newStdGen
   let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
               stdgen 10000
@@ -471,14 +477,30 @@ addRandomDocumentWithAuthor' user = do
   let adoc = doc { documentsignatorylinks = slinks ++ 
                                             [asl { maybesignatory = Just (userid user) }]
                  }
-  docid <- update $ StoreDocumentForTesting adoc
-  mdoc <- query $ GetDocumentByDocumentID docid
-  case mdoc of
-    Nothing -> do
-      assertFailure "Could not store document."
-      return doc
-    Just doc' -> return doc'
+  if p adoc
+    then do
+      docid <- update $ StoreDocumentForTesting adoc
+      mdoc <- query $ GetDocumentByDocumentID docid
+      case mdoc of
+        Nothing -> do
+          assertFailure "Could not store document."
+          return doc
+        Just doc' -> return doc'
+    else addRandomDocumentWithAuthorAndCondition user p
 
+rand :: Int -> Gen a -> IO a
+rand i a = do
+  stdgn <- newStdGen
+  return $ unGen a stdgn i
+
+untilCondition :: (Monad m) => (b -> Bool) -> m b -> m b
+untilCondition cond gen = do
+  v <- gen
+  if cond v then return v else untilCondition cond gen
+
+addRandomDocumentWithAuthor' :: User -> IO Document
+addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
+  
 invalidateTest :: IO (Maybe Assertion)
 invalidateTest = return Nothing
 
@@ -532,3 +554,41 @@ instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
     let a = unGen arbitrary stdgn 10
     randomCall $ f a
 
+assertJust :: Maybe a -> Assertion
+assertJust = assert . isJust
+
+assertRight :: Either a b -> Assertion
+assertRight = assert . isRight
+
+assertLeft :: Either a b -> Assertion
+assertLeft = assert . isLeft
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
+         => Arbitrary (a, b, c, d, e, f, g, h) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary
+    g <- arbitrary
+    h <- arbitrary
+    return (a, b, c, d, e, f, g, h)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i, Arbitrary j) 
+         => Arbitrary (a, b, c, d, e, f, g, h, i, j) where
+  arbitrary = do
+    (a, b, c, d, e, f, g, h) <- arbitrary
+    (i, j) <- arbitrary
+    return (a, b, c, d, e, f, g, h, i, j)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i) 
+         => Arbitrary (a, b, c, d, e, f, g, h, i) where
+  arbitrary = do
+    (a, b, c, d, e, f, g, h) <- arbitrary
+    i <- arbitrary
+    return (a, b, c, d, e, f, g, h, i)
+
+instance Arbitrary FileID where
+  arbitrary = fmap FileID arbitrary
