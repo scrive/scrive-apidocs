@@ -123,7 +123,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   edoc <- randomUpdate $ NewDocument author mcompany 
   -- assert
   validTest $ do 
-    assertBool "Could not run NewDocument" $ isRight edoc
+    assertRight edoc
     assertInvariants $ fromRight edoc
   
 testDocumentCanBeCreatedAndFetchedByID :: Assertion
@@ -224,13 +224,12 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
 testNoDocumentAttachSealedAlwaysLeft :: Assertion
 testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
   -- setup
-  (a, b, c) <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  edoc <- update $ AttachSealedFile a b c
+  edoc <- randomUpdate $ AttachSealedFile
   --assert
   validTest $ assertLeft edoc
-
+  
 testDocumentAttachSealedAlwaysRight :: Assertion
 testDocumentAttachSealedAlwaysRight = doTimes 10 $ do
   -- setup
@@ -533,8 +532,8 @@ testAuthorSignDocumentSignableNotPreparationLeft = doTimes 10 $ do
 
 testAuthorSignDocumentNotLeft :: Assertion
 testAuthorSignDocumentNotLeft = doTimes 10 $ do
-  etdoc <- randomUpdate $ AuthorSignDocument
-  validTest $ assertLeft etdoc
+  edoc <- randomUpdate AuthorSignDocument
+  validTest $ assertLeft edoc
   
 testAuthorSignDocumentSignablePreparationRight :: Assertion
 testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
@@ -565,10 +564,10 @@ testRejectDocumentNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate RejectDocument
   validTest $ assertLeft etdoc
   
-_testNotLeft :: (RandomUpdate a b, UpdateEvent a b) => a -> Assertion
-_testNotLeft u = doTimes 10 $ do
-  _etdoc <- randomUpdate u
-  validTest $ assertSuccess
+testNotLeft :: (RandomUpdate a b, UpdateEvent a b) => a -> Assertion
+testNotLeft u = doTimes 10 $ do
+  etdoc <- randomUpdate u
+  validTest $ assertLeft etdoc
   
 testRejectDocumentSignablePendingRight :: Assertion
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
