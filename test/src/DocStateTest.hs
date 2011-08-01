@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module DocStateTest (docStateTests) where
 
-import Test.HUnit (assert, assertFailure, Assertion, assertBool)
+import Test.HUnit (assert, assertFailure, Assertion)
 import Test.Framework
 
 import User.UserState
@@ -16,12 +16,9 @@ import Company.CompanyState
 
 import Happstack.State
 import Data.Maybe
-import Control.Applicative
 import Control.Monad
 import Data.List
 import Test.QuickCheck
-import Test.QuickCheck.Gen
-import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
@@ -123,7 +120,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   edoc <- randomUpdate $ NewDocument author mcompany 
   -- assert
   validTest $ do 
-    assertBool "Could not run NewDocument" $ isRight edoc
+    assertRight edoc
     assertInvariants $ fromRight edoc
   
 testDocumentCanBeCreatedAndFetchedByID :: Assertion
@@ -224,13 +221,12 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
 testNoDocumentAttachSealedAlwaysLeft :: Assertion
 testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
   -- setup
-  (a, b, c) <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  edoc <- update $ AttachSealedFile a b c
+  edoc <- randomUpdate $ AttachSealedFile
   --assert
   validTest $ assertLeft edoc
-
+  
 testDocumentAttachSealedAlwaysRight :: Assertion
 testDocumentAttachSealedAlwaysRight = doTimes 10 $ do
   -- setup
@@ -340,7 +336,7 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  csvupload <- rand 100 arbitrary
+  csvupload <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
   --execute                     
   edoc <- update $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
@@ -355,7 +351,7 @@ authorIndex sls = case catMaybes $ zipWith (\sl i -> if isAuthor sl then Just i 
 testPreparationAttachCSVUploadIndexNeg :: Assertion
 testPreparationAttachCSVUploadIndexNeg = doTimes 10 $ do
   -- setup
-  csvupload <- untilCondition (\c -> (csvsignatoryindex c) < 0) $ rand 100 arbitrary
+  csvupload <- untilCondition (\c -> (csvsignatoryindex c) < 0) $ rand 10 arbitrary
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute                     
@@ -368,12 +364,15 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc)) 
-                  $ rand 100 arbitrary
-  --execute                     
-  edoc <- update $ AttachCSVUpload (documentid doc) csvupload
-  --assert
-  validTest $ assertLeft edoc
+  if length (documentsignatorylinks doc) > 10
+    then invalidateTest
+    else do
+    csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc)) 
+                  $ rand 10 arbitrary
+    --execute                     
+    edoc <- update $ AttachCSVUpload (documentid doc) csvupload
+    --assert
+    validTest $ assertLeft edoc
 
 testCreateFromSharedTemplate::Assertion
 testCreateFromSharedTemplate = do
@@ -533,8 +532,8 @@ testAuthorSignDocumentSignableNotPreparationLeft = doTimes 10 $ do
 
 testAuthorSignDocumentNotLeft :: Assertion
 testAuthorSignDocumentNotLeft = doTimes 10 $ do
-  etdoc <- randomUpdate $ AuthorSignDocument
-  validTest $ assertLeft etdoc
+  edoc <- randomUpdate AuthorSignDocument
+  validTest $ assertLeft edoc
   
 testAuthorSignDocumentSignablePreparationRight :: Assertion
 testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
@@ -565,11 +564,6 @@ testRejectDocumentNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate RejectDocument
   validTest $ assertLeft etdoc
   
-_testNotLeft :: (RandomUpdate a b, UpdateEvent a b) => a -> Assertion
-_testNotLeft u = doTimes 10 $ do
-  _etdoc <- randomUpdate u
-  validTest $ assertSuccess
-  
 testRejectDocumentSignablePendingRight :: Assertion
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
@@ -595,308 +589,137 @@ testMarkDocumentSeenNotSignableLeft :: Assertion
 testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
-  let f [] = return ()
-      f (sl:sls) = do
-            when (isNothing $ maybeseeninfo sl) $ do
-              etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-              assertRight etdoc
-            f sls
-  validTest (f (documentsignatorylinks doc))
+  validTest (forEachSignatoryLink doc $ \sl ->             
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+                assertLeft etdoc)
   
 testMarkDocumentSeenClosedOrPreparationLeft :: Assertion
-testMarkDocumentSeenClosedOrPreparationLeft = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt    
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just doc | not (isClosed doc || isPreparation doc) -> return Nothing
-      Just doc -> do
-        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
-          if isNothing $ maybeseeninfo sl 
-          then do
-            stdgn <- newStdGen
-            let a = unGen arbitrary stdgn 10
-            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
-            case etdoc of
-              Left _ -> return ()
-              Right _ -> assertFailure "Should succeed if document is signable and closed or preparation"
-          else return ()
+testMarkDocumentSeenClosedOrPreparationLeft = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isClosed ||^ isPreparation))
+  validTest (forEachSignatoryLink doc $ \sl -> 
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+                assertLeft etdoc)
 
 testMarkDocumentSeenNotLeft :: Assertion
-testMarkDocumentSeenNotLeft = do
-  doTimes 100 $ do
-    mt <- whatTimeIsIt
-    stdgn <- newStdGen    
-    let did = unGen arbitrary stdgn 1000
-    let a = unGen arbitrary stdgn 10
-        b = unGen arbitrary stdgn 10
-        c = unGen arbitrary stdgn 10
-    etdoc <- update $ MarkDocumentSeen did a b mt c
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
-  
+testMarkDocumentSeenNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ MarkDocumentSeen
+  validTest $ assertLeft etdoc
+    
+forEachSignatoryLink :: Document -> (SignatoryLink -> Assertion) -> Assertion
+forEachSignatoryLink doc fn =
+  let f [] = return ()
+      f (sl:sls) = do
+        fn sl
+        f sls 
+  in f (documentsignatorylinks doc)
+
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Assertion
-testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt    
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just doc | isClosed doc || isPreparation doc -> return Nothing      
-      Just doc -> do
-        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
-          if isNothing $ maybeseeninfo sl 
-          then do
-            stdgn <- newStdGen
-            let a = unGen arbitrary stdgn 10
-            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
-            case etdoc of
-              Left _ -> assertFailure "Should succeed if document exists, is Signable, and is Pending"
-              Right _ -> return ()
-          else return ()
+testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
+  validTest (forEachSignatoryLink doc $ \sl ->
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+                assertRight etdoc)
         
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: Assertion
-testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt    
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just doc | isClosed doc || isPreparation doc -> return Nothing      
-      Just doc -> do
-        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
-          if isNothing $ maybeseeninfo sl 
-          then do
-            stdgn <- newStdGen
-            let a = unGen arbitrary stdgn 10
-                b = unGen arbitrary stdgn 10
-            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) b mt a
-            case etdoc of
-              Left _ -> return ()
-              Right _ -> assertFailure "Should fail if the magich hash is incorrect"
-          else return ()
+testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
+  validTest (forEachSignatoryLink doc $ \sl ->
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl)
+                assertLeft etdoc)
 
 testSetInvitationDeliveryStatusNotSignableLeft :: Assertion
-testSetInvitationDeliveryStatusNotSignableLeft = do
-  doTimes 10 $ do
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | isSignable doc -> return Nothing
-      Just _ -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-            b = unGen arbitrary stdgn 10
-        edoc <- update $ SetInvitationDeliveryStatus docid a b
-        case edoc of
-          Left _ -> return $ Just $ return ()
-          Right _ -> return $ Just $ assertFailure "Not signable should fail"
+testSetInvitationDeliveryStatusNotSignableLeft = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  edoc <- randomUpdate $ SetInvitationDeliveryStatus (documentid doc)
+  validTest $ assertLeft edoc
         
   
 testSetInvitationDeliveryStatusNotLeft :: Assertion
-testSetInvitationDeliveryStatusNotLeft = do
-  doTimes 100 $ do
-    stdgn <- newStdGen    
-    let did = unGen arbitrary stdgn 1000
-    let a = unGen arbitrary stdgn 10
-        b = unGen arbitrary stdgn 10
-    etdoc <- update $ SetInvitationDeliveryStatus did a b
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+testSetInvitationDeliveryStatusNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetInvitationDeliveryStatus
+  validTest $ assertLeft etdoc
   
-
 testSetInvitationDeliveryStatusSignableRight :: Assertion
-testSetInvitationDeliveryStatusSignableRight = do
-  doTimes 10 $ do
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-            b = unGen arbitrary stdgn 10
-        etdoc <- update $ SetInvitationDeliveryStatus docid a b
-        case etdoc of
-          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
-          Right _ -> return $ Just $ return ()
+testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isSignable
+  etdoc <- randomUpdate $ SetInvitationDeliveryStatus (documentid doc)
+  validTest $ assertRight etdoc
   
 testSetDocumentTimeoutTimeNotSignableLeft :: Assertion
-testSetDocumentTimeoutTimeNotSignableLeft = do
-  doTimes 10 $ do
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | isSignable doc -> return Nothing
-      Just _ -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-        edoc <- update $ SetDocumentTimeoutTime docid a
-        case edoc of
-          Left _ -> return $ Just $ return ()
-          Right _ -> return $ Just $ assertFailure "Not signable should fail"
+testSetDocumentTimeoutTimeNotSignableLeft = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  edoc <- randomUpdate $ SetDocumentTimeoutTime (documentid doc)
+  validTest $ assertLeft edoc
         
 testSetDocumentTimeoutTimeSignableRight :: Assertion
-testSetDocumentTimeoutTimeSignableRight = do
-  doTimes 10 $ do
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-        etdoc <- update $ SetDocumentTimeoutTime docid a
-        case etdoc of
-          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
-          Right _ -> return $ Just $ return ()
+testSetDocumentTimeoutTimeSignableRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isSignable
+  etdoc <- randomUpdate $ SetDocumentTimeoutTime (documentid doc)
+  validTest $ assertRight etdoc
 
 testSetDocumentTimeoutTimeNotLeft :: Assertion
-testSetDocumentTimeoutTimeNotLeft = do
-  doTimes 100 $ do
-    stdgn <- newStdGen    
-    let did = unGen arbitrary stdgn 1000
-    let a = unGen arbitrary stdgn 10
-    etdoc <- update $ SetDocumentTimeoutTime did a
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
-
+testSetDocumentTimeoutTimeNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDocumentTimeoutTime
+  validTest $ assertLeft etdoc
+  
 testSetDocumentTagsNotLeft :: Assertion
-testSetDocumentTagsNotLeft = do
-  doTimes 100 $ do
-    stdgn <- newStdGen    
-    let did = unGen arbitrary stdgn 1000
-    let a = unGen arbitrary stdgn 10
-    etdoc <- update $ SetDocumentTags did a
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+testSetDocumentTagsNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDocumentTags
+  validTest $ assertLeft etdoc
 
 testSetDocumentTagsRight :: Assertion
-testSetDocumentTagsRight = do
-  doTimes 10 $ do
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-        etdoc <- update $ SetDocumentTags docid a
-        case etdoc of
-          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
-          Right _ -> return $ Just $ return ()
+testSetDocumentTagsRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthor' author
+  edoc <- randomUpdate $ SetDocumentTags (documentid doc)
+  validTest $ assertRight edoc
 
 testSetDocumentUINotLeft :: Assertion
-testSetDocumentUINotLeft = do
-  doTimes 100 $ do
-    stdgn <- newStdGen    
-    let did = unGen arbitrary stdgn 1000
-    let a = unGen arbitrary stdgn 10
-    etdoc <- update $ SetDocumentUI did a
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
+testSetDocumentUINotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDocumentUI
+  validTest $ assertLeft etdoc
 
 testSetDocumentUIRight :: Assertion
-testSetDocumentUIRight = do
-  doTimes 10 $ do
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-        etdoc <- update $ SetDocumentUI docid a
-        case etdoc of
-          Left _ -> return $ Just $ assertFailure "Should succeed if document exists, is Signable, and is Pending"
-          Right _ -> return $ Just $ return ()
+testSetDocumentUIRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthor' author
+  etdoc <- randomUpdate $ SetDocumentUI (documentid doc)
+  validTest $ assertRight etdoc
           
 testCloseDocumentSignableJust :: Assertion
-testCloseDocumentSignableJust = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-            b = unGen arbitrary stdgn 10
-        etdoc <- update $ CloseDocument docid mt a b
-        case etdoc of
-          Nothing -> return $ Just $ assertFailure "Should succeed if signable"
-          Just _ -> return $ Just $ return ()
+testCloseDocumentSignableJust = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isSignable
+  etdoc <- randomUpdate $ CloseDocument (documentid doc)
+  validTest $ assertJust etdoc
     
 testCloseDocumentNotSignableNothing :: Assertion
-testCloseDocumentNotSignableNothing = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | isSignable doc -> return Nothing
-      Just _doc -> do
-        stdgn <- newStdGen
-        let a = unGen arbitrary stdgn 10
-            b = unGen arbitrary stdgn 10
-        etdoc <- update $ CloseDocument docid mt a b
-        case etdoc of
-          Nothing -> return $ Just $ return ()
-          Just _ -> return $ Just $ assertFailure "Should fail if not signable"
+testCloseDocumentNotSignableNothing = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  etdoc <- randomUpdate $ CloseDocument (documentid doc)
+  validTest $ assertNothing etdoc
     
 testCloseDocumentNotNothing :: Assertion
-testCloseDocumentNotNothing = do
-  doTimes 10 $ do
-    stdgn <- newStdGen
-    let a = unGen arbitrary stdgn 10
-        b = unGen arbitrary stdgn 10
-        docid = unGen arbitrary stdgn 10
-        mt = unGen arbitrary stdgn 10
-    etdoc <- update $ CloseDocument docid mt a b
-    case etdoc of
-      Nothing -> return $ Just $ return ()
-      Just _ -> return $ Just $ assertFailure "Should fail if not existing"
-
+testCloseDocumentNotNothing = doTimes 10 $ do
+  etdoc <- randomUpdate $ CloseDocument
+  validTest $ assertNothing etdoc
+  
 testSetDocumentTitleNotLeft :: Assertion
-testSetDocumentTitleNotLeft = do
-  doTimes 10 $ do
-    stdgn <- newStdGen
-    let a = unGen arbitrary stdgn 10
-        docid = unGen arbitrary stdgn 10
-    etdoc <- update $ SetDocumentTitle docid a
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if not existing"
+testSetDocumentTitleNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDocumentTitle
+  validTest $ assertLeft etdoc
 
 apply :: a -> (a -> b) -> b
 apply a f = f a

@@ -563,6 +563,9 @@ assertRight = assert . isRight
 assertLeft :: Either a b -> Assertion
 assertLeft = assert . isLeft
 
+assertNothing :: Maybe a -> Assertion
+assertNothing = assert . isNothing
+
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
          => Arbitrary (a, b, c, d, e, f, g, h) where
   arbitrary = do
