@@ -39,7 +39,7 @@
  sure you want to change process?"
 "_dialogConfirmBasicChangeToChangeProcess","Byt process","Change process"
 "_dialogConfirmBasicChangeToHead","Vill du byta till förenklad process?","Do you want to change to simplified process?"
-"_dialogConfirmSendinviteBody","Du har valt en sekreterarroll och kommer själv inte att underteckna.
+"_dialogConfirmSendinviteBody","Du har valt att vara Ej undertecknande part och kommer själv inte att underteckna.
  Är du säker på att du vill skicka en inbjudan att underteckna
  dokumentet ","You have choosen a secretary role, and will not sign. Are you
  sure you want to sent an invitation to sign the document"
