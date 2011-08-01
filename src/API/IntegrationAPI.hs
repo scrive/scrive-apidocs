@@ -8,7 +8,18 @@
 -- Integration API is advanced way to integrate with our service using mix of
 -- request and iframes
 -----------------------------------------------------------------------------
-module API.IntegrationAPI (integrationAPI) where
+module API.IntegrationAPI (
+    -- For main server we export only this
+      integrationAPI
+    -- For tests (and only for tests)
+    , IntegrationAPIFunction
+    , embeddDocumentFrame
+    , createDocument     
+    , getDocuments       
+    , getDocument        
+    , setDocumentTag     
+    , removeDocument
+    ) where
 
 import Control.Monad.State
 import Data.Functor
