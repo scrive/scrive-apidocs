@@ -50,6 +50,14 @@ Flag test-userstate
   Description: Build userstate testsuite
   Default: True
 
+Flag test-redirect
+  Description: Build redirect testsuite
+  Default: True
+
+Flag test-docstatequery
+  Description: Build DocStateQuery testsuite
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
   Default: False
@@ -195,6 +203,10 @@ Executable kontrakcja-test
     cpp-options: -DNO_TRUSTWEAVER
   if !flag(test-userstate)
     cpp-options: -DNO_USERSTATE
+  if !flag(test-redirect)
+    cpp-options: -DNO_REDIRECT
+  if !flag(test-docstatequery)
+    cpp-options: -DNO_DOCSTATEQUERY
 
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs

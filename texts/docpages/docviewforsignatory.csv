@@ -23,7 +23,7 @@
  offerten ","Accept the offer "
 "_offersignatorysignmodalcontent2",". När du accepterat offerten skickas en bekräftelse till din
  och avsändarens inkorg.","by clicking ""Accept offer"". When you have accepted the offer,
- the finished document will be sent to you and your counterparties."
+ the finished document will be sent to you and your counterparts."
 "_offersignatorysignmodaltitle","Är du säker att du vill acceptera offerten?","Are you sure you want to accept the offer?"
 "_offersignbuttontext","Acceptera offert","Accept offer"
 "_offersignguardwarntext","För att acceptera måste du först klicka i kryssrutan","You must fill in the check box to be able to accept."
@@ -38,7 +38,7 @@
  ","Confirm the order "
 "_ordersignatorysignmodalcontent2",". När du har bekräftat order skickas ett slutgiltigt dokument
  till din och avsändarens inkorg.","by clicking ""Confirm order"". When you have confirmed the order,
- the finished document will be sent to you and your counterparties."
+ the finished document will be sent to you and your counterparts."
 "_ordersignatorysignmodaltitle","Är du säker att du vill bekräfta ordern?","Are you sure you want to confirm the order?"
 "_ordersignbuttontext","Bekräfta order","Confirm order"
 "_ordersignguardwarntext","För att bekräfta måste du först klicka i kryssrutan","You must fill in the check box to be able to confirm."

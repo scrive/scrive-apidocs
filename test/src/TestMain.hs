@@ -35,9 +35,12 @@ import TrustWeaverTest
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
-
+#ifndef NO_DOCSTATEQUERY
 import DocStateQueryTest
+#endif
+#ifndef NO_REDIRECT
 import RedirectTest
+#endif
 
 allTests :: [Test]
 allTests = tail tests
@@ -65,6 +68,12 @@ allTests = tail tests
 #endif
 #ifndef NO_USERSTATE
           , userStateTests
+#endif
+#ifndef NO_DOCSTATEQUERY
+          , docStateQueryTests
+#endif
+#ifndef NO_REDIRECT
+          , redirectTests
 #endif
           ]
 
@@ -94,8 +103,12 @@ testsToRun (t:ts) =
 #ifndef NO_USERSTATE
          "userstate"       -> Right userStateTests : rest
 #endif
+#ifndef NO_DOCSTATEQUERY
          "docstatequery"   -> Right docStateQueryTests : rest
+#endif
+#ifndef NO_REDIRECT
          "redirect"        -> Right redirectTests : rest
+#endif
          _                 -> Left t : rest
     where
         rest = testsToRun ts
