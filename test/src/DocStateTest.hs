@@ -14,6 +14,7 @@ import Doc.DocInfo
 import TestingUtil
 import Company.CompanyState
 
+import Control.Monad.Trans
 import Happstack.State
 import Data.Maybe
 import Control.Applicative
@@ -339,10 +340,12 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  csvupload <- rand 100 arbitrary
+  csvupload <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
   --execute                     
+  liftIO $ print ("before"::String)
   edoc <- update $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
+  liftIO $ print ("after"::String)
   --assert
   validTest $ assertLeft edoc
 
@@ -354,7 +357,7 @@ authorIndex sls = case catMaybes $ zipWith (\sl i -> if isAuthor sl then Just i 
 testPreparationAttachCSVUploadIndexNeg :: Assertion
 testPreparationAttachCSVUploadIndexNeg = doTimes 10 $ do
   -- setup
-  csvupload <- untilCondition (\c -> (csvsignatoryindex c) < 0) $ rand 100 arbitrary
+  csvupload <- untilCondition (\c -> (csvsignatoryindex c) < 0) $ rand 10 arbitrary
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute                     
@@ -594,73 +597,41 @@ testMarkDocumentSeenNotSignableLeft :: Assertion
 testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
-  let f [] = return ()
-      f (sl:sls) = do
-            when (isNothing $ maybeseeninfo sl) $ do
-              etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-              assertLeft etdoc
-            f sls
-  validTest (f (documentsignatorylinks doc))
+  validTest (forEachSignatoryLink doc $ \sl ->             
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+                assertLeft etdoc)
   
 testMarkDocumentSeenClosedOrPreparationLeft :: Assertion
-testMarkDocumentSeenClosedOrPreparationLeft = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt    
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just doc | not (isClosed doc || isPreparation doc) -> return Nothing
-      Just doc -> do
-        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
-          if isNothing $ maybeseeninfo sl 
-          then do
-            stdgn <- newStdGen
-            let a = unGen arbitrary stdgn 10
-            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
-            case etdoc of
-              Left _ -> return ()
-              Right _ -> assertFailure "Should succeed if document is signable and closed or preparation"
-          else return ()
+testMarkDocumentSeenClosedOrPreparationLeft = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isClosed ||^ isPreparation))
+  validTest (forEachSignatoryLink doc $ \sl -> 
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+                assertLeft etdoc)
 
 testMarkDocumentSeenNotLeft :: Assertion
-testMarkDocumentSeenNotLeft = do
-  doTimes 100 $ do
-    mt <- whatTimeIsIt
-    stdgn <- newStdGen    
-    let did = unGen arbitrary stdgn 1000
-    let a = unGen arbitrary stdgn 10
-        b = unGen arbitrary stdgn 10
-        c = unGen arbitrary stdgn 10
-    etdoc <- update $ MarkDocumentSeen did a b mt c
-    case etdoc of
-      Left _ -> return $ Just $ return ()
-      Right _ -> return $ Just $ assertFailure "Should fail if it doesn't exist."
-  
+testMarkDocumentSeenNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ MarkDocumentSeen
+  validTest $ assertLeft etdoc
+    
+forEachSignatoryLink :: Document -> (SignatoryLink -> Assertion) -> Assertion
+forEachSignatoryLink doc fn =
+  let f [] = return ()
+      f (sl:sls) = do
+        fn sl
+        f sls 
+  in f (documentsignatorylinks doc)
+
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Assertion
-testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = do
-  doTimes 10 $ do
-    mt <- whatTimeIsIt    
-    author <- addNewRandomUser
-    docid <- addRandomDocumentWithAuthor author
-    mdoc <- query $ GetDocumentByDocumentID docid
-    case mdoc of
-      Nothing -> return $ Just $ assertFailure "Could not stored document."
-      Just doc | not $ isSignable doc -> return Nothing
-      Just doc | isClosed doc || isPreparation doc -> return Nothing      
-      Just doc -> do
-        return $ Just <$> msum $ for (documentsignatorylinks doc) $ \sl ->
-          if isNothing $ maybeseeninfo sl 
-          then do
-            stdgn <- newStdGen
-            let a = unGen arbitrary stdgn 10
-            etdoc <- update $ MarkDocumentSeen docid (signatorylinkid sl) (signatorymagichash sl) mt a
-            case etdoc of
-              Left _ -> assertFailure "Should succeed if document exists, is Signable, and is Pending"
-              Right _ -> return ()
-          else return ()
+testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable ||^ (not . (isClosed ||^ isPreparation)))
+  validTest (forEachSignatoryLink doc $ \sl ->
+              when (isNothing $ maybeseeninfo sl) $ do
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+                assertRight etdoc)
         
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: Assertion
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = do
