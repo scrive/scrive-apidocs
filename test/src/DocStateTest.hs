@@ -20,8 +20,6 @@ import Data.Maybe
 import Control.Monad
 import Data.List
 import Test.QuickCheck
-import Test.QuickCheck.Gen
-import System.Random
 
 docStateTests :: Test
 docStateTests = testGroup "DocState" [
@@ -676,7 +674,7 @@ testSetDocumentTimeoutTimeNotLeft = doTimes 10 $ do
   validTest $ assertLeft etdoc
   
 testSetDocumentTagsNotLeft :: Assertion
-testSetDocumentTagsNotLeft = toTimes 10 $ do
+testSetDocumentTagsNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentTags
   validTest $ assertLeft etdoc
 
@@ -684,7 +682,7 @@ testSetDocumentTagsRight :: Assertion
 testSetDocumentTagsRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
-  edoc <- randomUpdate SetDocumentTags
+  edoc <- randomUpdate $ SetDocumentTags (documentid doc)
   validTest $ assertRight edoc
 
 testSetDocumentUINotLeft :: Assertion
@@ -696,7 +694,7 @@ testSetDocumentUIRight :: Assertion
 testSetDocumentUIRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
-  etdoc <- randomUpdate SetDocumentUI
+  etdoc <- randomUpdate $ SetDocumentUI (documentid doc)
   validTest $ assertRight etdoc
           
 testCloseDocumentSignableJust :: Assertion
@@ -704,19 +702,19 @@ testCloseDocumentSignableJust = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isSignable
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
-  validTest $ assertRight etdoc
+  validTest $ assertJust etdoc
     
 testCloseDocumentNotSignableNothing :: Assertion
 testCloseDocumentNotSignableNothing = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
-  validTest $ assertLeft etdoc
+  validTest $ assertNothing etdoc
     
 testCloseDocumentNotNothing :: Assertion
 testCloseDocumentNotNothing = doTimes 10 $ do
   etdoc <- randomUpdate $ CloseDocument
-  validTest $ assertLeft etdoc
+  validTest $ assertNothing etdoc
   
 testSetDocumentTitleNotLeft :: Assertion
 testSetDocumentTitleNotLeft = doTimes 10 $ do
