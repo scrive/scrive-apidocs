@@ -222,7 +222,9 @@ userFromTMP uTMP company = do
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
             }
     when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
-    return $ fromRight user'
+    user'' <- update $ SetUserCompany (userid user) (companyid company)
+    when (isLeft user'') $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
+    return $ fromRight user''
 
 setCompanyInfoFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m Company
 setCompanyInfoFromTMP uTMP company = do
