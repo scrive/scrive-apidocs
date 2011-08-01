@@ -14,7 +14,6 @@ import Doc.DocInfo
 import TestingUtil
 import Company.CompanyState
 
-import Control.Monad.Trans
 import Happstack.State
 import Data.Maybe
 import Control.Monad
@@ -620,7 +619,7 @@ forEachSignatoryLink doc fn =
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Assertion
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable ||^ (not . (isClosed ||^ isPreparation)))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
               when (isNothing $ maybeseeninfo sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
