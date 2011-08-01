@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module DocStateTest (docStateTests) where
 
-import Test.HUnit (assert, assertFailure, Assertion, assertBool)
+import Test.HUnit (assert, assertFailure, Assertion)
 import Test.Framework
 
 import User.UserState
@@ -564,10 +564,10 @@ testRejectDocumentNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate RejectDocument
   validTest $ assertLeft etdoc
   
-testNotLeft :: (RandomUpdate a b, UpdateEvent a b) => a -> Assertion
-testNotLeft u = doTimes 10 $ do
-  etdoc <- randomUpdate u
-  validTest $ assertLeft etdoc
+--testNotLeft :: (RandomUpdate a b, UpdateEvent a b) => a -> Assertion
+--testNotLeft u = doTimes 10 $ do
+--  etdoc <- randomUpdate u
+--  validTest $ assertLeft etdoc
   
 testRejectDocumentSignablePendingRight :: Assertion
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
