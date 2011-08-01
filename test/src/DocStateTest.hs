@@ -340,9 +340,7 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   csvupload <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
   --execute                     
-  liftIO $ print ("before"::String)
   edoc <- update $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
-  liftIO $ print ("after"::String)
   --assert
   validTest $ assertLeft edoc
 
@@ -367,12 +365,15 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc)) 
+  if length (documentsignatorylinks doc) > 10
+    then invalidateTest
+    else do
+    csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc)) 
                   $ rand 10 arbitrary
-  --execute                     
-  edoc <- update $ AttachCSVUpload (documentid doc) csvupload
-  --assert
-  validTest $ assertLeft edoc
+    --execute                     
+    edoc <- update $ AttachCSVUpload (documentid doc) csvupload
+    --assert
+    validTest $ assertLeft edoc
 
 testCreateFromSharedTemplate::Assertion
 testCreateFromSharedTemplate = do
