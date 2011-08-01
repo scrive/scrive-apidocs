@@ -599,7 +599,7 @@ testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
       f (sl:sls) = do
             when (isNothing $ maybeseeninfo sl) $ do
               etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-              assertRight etdoc
+              assertLeft etdoc
             f sls
   validTest (f (documentsignatorylinks doc))
   
