@@ -23,7 +23,7 @@
  <br/> Please contact our support if you need more than this."
 "_flashMessageCSVSent","Dokumentet är skickat till $doccount$ parter.","The document has been sent to $doccount$ parties."
 "_flashMessageCannotCancel","Motparten har redan undertecknat dokumentet. Du kan inte återkalla
- inbjudan. ","The counterparty has already signed the document. You can no
+ inbjudan. ","The counterpart has already signed the document. You can no
  longer withdraw the invitation."
 "_flashMessageChangePasswordEmailSend","Ett nytt lösenord har blivit skickat till din e-post.","A new password has been sent to your email address."
 "_flashMessageContractArchiveDone","Valda dokument har blivit raderade.","The selected documents have been deleted."
@@ -87,8 +87,8 @@
  to sign."
 "_flashMessageRowGreaterThanMaxColCount","Raden kan inte ha mer än $maxcols$ kolumner.","The row must not have more than $maxcols$ columns."
 "_flashMessageRowLessThanMinColCount","Raden behöver åtminstone $mincols$ kolumner.","The row must have at least $mincols$ columns."
-"_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted."
-"_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive."
+"_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted.",
+"_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive.",
 "_flashMessageSecondNameIsRequired","Efternamn krävs.","Last name required."
 "_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.","$docname$ has been shared with your organisation."
 "_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.","$docname$ has been shared with your organisation."

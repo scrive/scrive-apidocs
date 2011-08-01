@@ -650,9 +650,9 @@
  och definierar fält i dokumentet som eventuellt ska fyllas i
  av mottagaren. I sista steget kan avsändaren underteckna dokumentet
  genom att klicka på knappen ”Underteckna”.</td>	","		<td>4</td>		<td>Sener</td>		<td>When the sender is inviting
- a counterparty, it follows a three step process. First, a document
- is uploaded. Second, information about the counterparty is
- filled in and fields are that the counterparty is supposed to
+ a counterpart, it follows a three step process. First, a document
+ is uploaded. Second, information about the counterpart is
+ filled in and fields are that the counterpart is supposed to
  fill in are defined. In the last step, the sender signs the
  document by clicking ""Sign"".</td>	"
 "_legalPageH2SignProcessH31Body2Table5","		<td>5</td>		<td>Avsändare</td>		<td>Då avsändaren trycker på
@@ -665,7 +665,7 @@
  button ""Sign"", a pop-up shows where the sender is asked if it
  s really sure that it wants to sign the document. When ""Sign""
  is clicked, an invitation is sent by e-mail to the involved
- counterparties, and the sender is informed that the document
+ Counterparts, and the sender is informed that the document
  has been signed and sent.</td>	"
 "_legalPageH2SignProcessH31Body2Table6","		<td>6</td>		<td>Mottagare</td>		<td>Mottagaren tar emot meddelandet
  i vilket denne informeras om att den är inbjuden att skriva

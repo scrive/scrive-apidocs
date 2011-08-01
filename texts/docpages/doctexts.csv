@@ -1,4 +1,3 @@
-"!Template name","LANG_SE","LANG_EN"
 "_contractcancelledinfoheader","Dokument återkallat","Document withdrawn"
 "_contractcancelledinfotext","har återkallat sin inbjudan att underteckna dokumentet.","has withdrawn the invitation to sign the document."
 "_contractpendingauthorinfoheader","Väntar","Waiting"
@@ -62,7 +61,7 @@
 "_documentInfoTextRejectedSignedbymeImauthorBody","Dokumentet har avvisats av en motpart.","The document has been rejected by a counterpart."
 "_documentInfoTextRejectedSignedbymeImauthorHead","Avvisat","Rejected"
 "_documentInfoTextSignedbymeAwaitingauthorBody","Du har undertecknat och vi inväntar övriga parter.","You have signed and are waiting for the other parties."
-"_documentInfoTextSignedbymeAwaitingauthorHead","Väntar på motpart","Waiting for counterparty"
+"_documentInfoTextSignedbymeAwaitingauthorHead","Väntar på motpart","Waiting for counterpart"
 "_documentInfoTextTimedoutElseImauthorBody","Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum
  har passerat och därför har dokumentet avbrutits.","All parties did not sign the document in time. The expiration
  date has passed and the document process is therefore canceled."
@@ -103,3 +102,4 @@
 "_orderstatusinfotext","Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta
  bekräftelsen.","You have sent an invitation to confirm the order. Please wait
  for the confirmation."
+"******f","LANG_SE","LANG_EN"
