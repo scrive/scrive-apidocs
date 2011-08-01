@@ -729,7 +729,7 @@ migrateCompanies = onlySuperUser $ do
       mcompany <- getCompanyForUser user'
       case (mcompany, userShouldBeAdmin user') of
         (Just company, True) -> do
-          _ <- guardRightM . update $ MakeUserACompanyAdmin userid
+--          _ <- guardRightM . update $ MakeUserACompanyAdmin userid  --  don't need this line, user doesn't need to be an admin
           user <- queryOrFail $ GetUserByUserID userid
           let newcompanyinfo = makeCompanyInfoFromUserInfo user
           newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
