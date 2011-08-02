@@ -2007,8 +2007,9 @@ jsonDocumentsList = do
     
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlySuperUser $ do
+  Context{ ctxtime } <- getContext
   docs <- query $ GetDocuments Nothing
-  let probs = listInvariantProblems docs
+  let probs = listInvariantProblems ctxtime docs
       res = case probs of
         [] -> "No problems!"
         _  -> intercalate "\n" probs

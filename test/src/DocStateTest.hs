@@ -14,6 +14,7 @@ import Doc.DocInfo
 import TestingUtil
 import Company.CompanyState
 import Doc.Invariants
+import MinutesTime
 
 import Happstack.State
 import Data.Maybe
@@ -730,12 +731,10 @@ testSetDocumentTitleNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentTitle
   validTest $ assertLeft etdoc
 
-apply :: a -> (a -> b) -> b
-apply a f = f a
-
 assertInvariants :: Document -> Assertion
-assertInvariants document =
-  case catMaybes $ map (apply document) documentInvariants of
+assertInvariants document = do
+  now <- getMinutesTime
+  case catMaybes $ map (\f -> f now document) documentInvariants of
     [] -> assertSuccess
     a  -> assertFailure $ (show $ documentid document) ++ ": " ++ intercalate ";" a
 
