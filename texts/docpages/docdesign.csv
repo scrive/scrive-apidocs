@@ -53,11 +53,11 @@
  can sign the document."
 "_dialogConfirmSendinviteBody4"," Vill du skicka inbjudan att fylla i och underteckna dokumentet","Do you want to send an invitation to fill in and sign the document"
 "_dialogConfirmSendinviteBody5"," till "," to"
-"_dialogConfirmSigninviteBody","Är du säker att du vill underteckna dokumentet ","Are you sure you want to sign the document"
+"_dialogConfirmSigninviteBody","Är du säker att du vill underteckna dokumentet ","Are you sure you want to sign the document "
 "_dialogConfirmSigninviteBody2","När du undertecknat kommer en automatisk inbjudan att skickas
  till             ","When you have signed, an invitation will be automatically sent
  to             "
-"_dialogConfirmSigninviteBody3"," med e-post.","with e-mail."
+"_dialogConfirmSigninviteBody3"," med e-post."," with e-mail."
 "_dialogConfirmSigninviteHead","Underteckna","Sign"
 "_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en            
   e-legitimation från din internetbank eller från           

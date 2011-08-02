@@ -299,7 +299,10 @@ docFieldsListForJSON crtime doc =  [
     ("id", show $ documentid doc),
     ("title", BS.toString $ documenttitle doc),
     ("status", show $ documentStatusClass doc),
-    ("partner", intercalate ", " $ map (BS.toString . getSmartName) (documentsignatorylinks doc)),
+    ("party", intercalate ", " $ map (BS.toString . getSmartName) (documentsignatorylinks doc)),
+    ("partner", intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
+    ("partnercomp", intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
+    ("author", intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
     ("time", showDateAbbrev crtime (documentmtime doc))
     ]
 
@@ -413,6 +416,8 @@ docSortFunc "title" = viewComparing documenttitle
 docSortFunc "titleREV" = viewComparingRev documenttitle
 docSortFunc "time" = viewComparing documentmtime
 docSortFunc "timeREV" = viewComparingRev documentmtime
+docSortFunc "party" = comparePartners
+docSortFunc "partyREV" = revComparePartners
 docSortFunc "partner" = comparePartners
 docSortFunc "partnerREV" = revComparePartners
 docSortFunc "partnercomp" = viewComparing partnerComps

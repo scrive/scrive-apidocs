@@ -34,6 +34,7 @@ import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
+import Doc.Invariants
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -51,6 +52,7 @@ import Text.ParserCombinators.Parsec
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON (JSValue(..), toJSObject)
@@ -1983,10 +1985,31 @@ handleSigAttach docid siglinkid mh = do
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
     Just user <- ctxmaybeuser <$> getContext
-    allDocs <- getDocumentsForUserByType (Signable Contract) user
+    doctype <- getFieldWithDefault "" "documentType"
+    allDocs <- case (doctype) of
+        "Contract" -> getDocumentsForUserByType (Signable Contract) user
+        "Offer" -> getDocumentsForUserByType (Signable Offer) user
+        "Order" -> getDocumentsForUserByType (Signable Order) user
+        "Template" -> do
+            mydocuments <- query $ GetDocumentsByAuthor (userid user)
+            return $ filter isTemplate mydocuments 
+        "Attachment" -> do
+            mydocuments <- query $ GetDocumentsByAuthor (userid user)
+            return $ filter ((==) Attachment . documenttype) mydocuments
+        _ -> do
+            Log.error "Documents list : No valid document type provided"
+            return []
     params <- getListParamsNew
     let docs = docSortSearchPage params allDocs
     cttime <- liftIO $ getMinutesTime
     return $ JSObject $ toJSObject [("list",(JSArray $ map (JSObject . docForListJSON cttime) $ list docs)),
                                     ("paging", pagingParamsJSON docs)]
     
+handleInvariantViolations :: Kontrakcja m => m Response
+handleInvariantViolations = onlySuperUser $ do
+  docs <- query $ GetDocuments Nothing
+  let probs = listInvariantProblems docs
+      res = case probs of
+        [] -> "No problems!"
+        _  -> intercalate "\n" probs
+  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing

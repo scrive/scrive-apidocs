@@ -13,6 +13,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
 import Company.CompanyState
+import Doc.Invariants
 
 import Happstack.State
 import Data.Maybe
@@ -738,16 +739,4 @@ assertInvariants document =
     [] -> assertSuccess
     a  -> assertFailure $ (show $ documentid document) ++ ": " ++ intercalate ";" a
 
-documentInvariants :: [Document -> Maybe String]
-documentInvariants = [
-  documentHasOneAuthor
-                     ]
 
-{- |
-   Test the invariant that a document must have exactly one author.
--}
-documentHasOneAuthor :: Document -> Maybe String
-documentHasOneAuthor document =
-  case filter isAuthor $ documentsignatorylinks document of
-    [_] -> Nothing
-    a -> Just $ "document must have one author (has " ++ show (length a) ++ ")"

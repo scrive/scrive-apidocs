@@ -253,6 +253,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
+       
+     , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
