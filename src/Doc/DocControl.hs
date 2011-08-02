@@ -1983,7 +1983,20 @@ handleSigAttach docid siglinkid mh = do
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
     Just user <- ctxmaybeuser <$> getContext
-    allDocs <- getDocumentsForUserByType (Signable Contract) user
+    doctype <- getFieldWithDefault "" "documentType"
+    allDocs <- case (doctype) of
+        "Contract" -> getDocumentsForUserByType (Signable Contract) user
+        "Offer" -> getDocumentsForUserByType (Signable Offer) user
+        "Order" -> getDocumentsForUserByType (Signable Order) user
+        "Template" -> do
+            mydocuments <- query $ GetDocumentsByAuthor (userid user)
+            return $ filter isTemplate mydocuments 
+        "Attachment" -> do
+            mydocuments <- query $ GetDocumentsByAuthor (userid user)
+            return $ filter ((==) Attachment . documenttype) mydocuments
+        _ -> do
+            Log.error "Documents list : No valid document type provided"
+            return []
     params <- getListParamsNew
     let docs = docSortSearchPage params allDocs
     cttime <- liftIO $ getMinutesTime

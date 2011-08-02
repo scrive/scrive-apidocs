@@ -15,7 +15,7 @@ var documentsTable = KontraList.init({
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Contract" },
-    sorting: new Sorting({ fields: ["title", "status", "time","partner"]}),
+    sorting: new Sorting({ fields: ["title", "status", "time","party"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
@@ -36,7 +36,7 @@ var documentsTable = KontraList.init({
                  }
         }),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortParty()$", width:"300px", field:"partner", special: "expandable"}),
+        new Cell({name: "$_SortParty()$", width:"300px", field:"party", special: "expandable"}),
         new Cell({name: "$_SortDoc()$", width:"300px", field:"title",  special: "link"})
         ],
     options : [{name : "$_SendReminder()$",
