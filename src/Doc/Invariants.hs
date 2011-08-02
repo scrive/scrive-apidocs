@@ -19,6 +19,8 @@ invariantProblems now document =
 {- |
    The invariants we want to test. Each returns Nothing if there is no problem,
    and Just message to describe a problem.
+
+   MinutesTime is the current time, in case an invariant depends on age.
  -} 
 documentInvariants :: [MinutesTime -> Document -> Maybe String]
 documentInvariants = [ documentHasOneAuthor
