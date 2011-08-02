@@ -4,7 +4,6 @@ gem "selenium-client"
 require "selenium/client"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require "fileutils" 
 
 module EmailHelper
 
