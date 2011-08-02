@@ -64,13 +64,13 @@ instance HasRqData TestKontra where
         mbi <- liftIO $ if rqMethod rq == POST || rqMethod rq == PUT
                            then readInputsBody rq
                            else return $ Just []
-        return (rqInputsQuery rq, fromMaybe [] mbi, rqCookies rq)
+        return (rqInputsQuery rq, mbi, rqCookies rq)
     rqDataError (Errors msgs) = fail $ intercalate " || " msgs
     localRqEnv f m = do
         rq <- askRq
-        b <- fromMaybe [] <$> (liftIO $ readInputsBody rq)
+        b <- liftIO $ readInputsBody rq
         let (q', b', c') = f (rqInputsQuery rq, b, rqCookies rq)
-        bv <- liftIO $ newMVar b'
+        bv <- liftIO $ newMVar $ fromMaybe [] b'
         let rq' = rq {
               rqInputsQuery = q'
             , rqInputsBody = bv

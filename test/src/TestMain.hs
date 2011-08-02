@@ -41,6 +41,9 @@ import DocStateQueryTest
 #ifndef NO_REDIRECT
 import RedirectTest
 #endif
+#ifndef NO_INTEGRATIONAPI
+import IntegrationAPITest
+#endif
 
 allTests :: [Test]
 allTests = tail tests
@@ -75,6 +78,9 @@ allTests = tail tests
 #ifndef NO_REDIRECT
           , redirectTests
 #endif
+#ifndef NO_INTEGRATIONAPI
+          , integrationAPITests
+#endif
           ]
 
 testsToRun :: [String] -> [Either String Test]
@@ -108,6 +114,9 @@ testsToRun (t:ts) =
 #endif
 #ifndef NO_REDIRECT
          "redirect"        -> Right redirectTests : rest
+#endif
+#ifndef NO_INTEGRATIONAPI
+         "integrationapi"        -> Right integrationAPITests : rest
 #endif
          _                 -> Left t : rest
     where

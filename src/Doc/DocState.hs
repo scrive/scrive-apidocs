@@ -1161,7 +1161,7 @@ setDocumentTitle docid doctitle =
     then Right $ doc { documenttitle = doctitle }
     else Left $ "Can't update title unless the status is in preparation"
 
---This is only for Eric functionality with awayting author
+--This is only for awaiting author
 --We should add current state checkers here (not co cancel closed documents etc.)
 closeDocument :: DocumentID
               -> MinutesTime
@@ -1169,19 +1169,21 @@ closeDocument :: DocumentID
               -> Maybe SignatureInfo
               -> Update Documents (Maybe Document)
 closeDocument docid time ipnumber msiginfo = do
-  doc <- modifySignable docid $
-          \document -> let timeout = do
-                                      days <- documentdaystosign document
-                                      return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                           Just authorsiglink = getAuthorSigLink document
-                           Just authorid = maybesignatory authorsiglink
-                           sinfo = Just (SignInfo time ipnumber)
-                           newdocument = document { documenttimeouttime = timeout
-                                           , documentmtime = time
-                                           , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
-                                           , documentstatus = Closed
-                                           } `appendHistory` [DocumentHistoryClosed time ipnumber]
-                       in Right $ newdocument
+  doc <- modifySignable docid $ \document -> 
+    case documentstatus document of
+      AwaitingAuthor -> let timeout = do
+                              days <- documentdaystosign document
+                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
+                            Just authorsiglink = getAuthorSigLink document
+                            Just authorid = maybesignatory authorsiglink
+                            sinfo = Just (SignInfo time ipnumber)
+                            newdocument = document { documenttimeouttime = timeout
+                                                   , documentmtime = time
+                                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
+                                                   , documentstatus = Closed
+                                                   } `appendHistory` [DocumentHistoryClosed time ipnumber]
+                        in Right $ newdocument
+      _ -> Left "Only documents in AwaitingAuthor can be closed like this"
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d
