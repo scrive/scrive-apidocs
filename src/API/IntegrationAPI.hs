@@ -120,13 +120,16 @@ embeddDocumentFrame = do
     location <- fold <$> apiAskString "location"
     doc <- documentFromParam
     mcompany <- lift_M (update . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
+    when (isNothing mcompany) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
+    let company = fromJust mcompany
+    when (not $ isAuthoredByCompany (companyid company) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     msiglink <- liftMM (return . getSigLinkFor doc) (apiAskBS "email")
-    case (mcompany,msiglink) of
-         (Just company,Nothing) -> do
+    case msiglink of
+         Nothing -> do
              when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
              ssid <- createServiceSession (Left $ companyid $ company) location
              returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         (Just company, Just siglink) -> do
+         Just siglink -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
                      muser <- query $ GetUserByUserID $ fromJust $ maybesignatory siglink
@@ -137,7 +140,7 @@ embeddDocumentFrame = do
                      when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
                      ssid <- createServiceSession (Left $ companyid $ company) location
                      returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
+      
 
 
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -167,7 +170,6 @@ createDocument = do
             Nothing -> do
                         d <- createAPIDocument company doctype title files involved tags
                         updateDocumentWithDocumentUI d
-   liftIO $ putStrLn $ show $ doc
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 
@@ -255,9 +257,7 @@ getDocuments = do
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
     api_docs <- sequence $  map (api_document False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
-    where
-      isAuthoredByCompany :: CompanyID -> Document -> Bool
-      isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
+    
 
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse

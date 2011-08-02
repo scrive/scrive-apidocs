@@ -29,6 +29,8 @@ integrationAPITests = testGroup "Integration API" [
     , testCase "Accessing documents in embedded frame" testDocumentAccessEmbeddedPage
     ]
 
+-- Main tests
+
 testDocumentCreation :: Assertion
 testDocumentCreation = withTestState $ do 
     createTestService
@@ -42,8 +44,38 @@ testDocumentCreation = withTestState $ do
     apiRes3 <- makeAPIRequest createDocument $ apiReq3
     assertBool ("Failed to create third document" ++ show apiRes3) $ not (isError apiRes3)
 
+testDocumentsAccess :: Assertion
+testDocumentsAccess = withTestState $ do
+    createTestService
+    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se"
+    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se"
+    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se"
+    apiReqDocs1 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
+    apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
+    assertBool ("Two document was created by  this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
+    apiReqDocs2 <- getDocumentsJSON "test_company2" "mariusz@skrivapa.se"
+    apiRespDocs2 <- makeAPIRequest getDocuments $ apiReqDocs2
+    assertBool ("One document was created by  this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
+    apiReqDocs3 <- getDocumentsJSON "test_company3" "mariusz+1@skrivapa.se"
+    apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
+    assertBool ("No document was created for this company but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 0
 
 
+testDocumentAccessEmbeddedPage :: Assertion
+testDocumentAccessEmbeddedPage = withTestState $ do
+    createTestService
+    docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
+    docid2 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se")
+    docid3 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se")
+    apiRespDocs1 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid1 "test_company1" "mariusz@skrivapa.se"
+    assertBool ("User from right company could not access his document") $ containsUserEmbedLink apiRespDocs1
+    apiRespDocs2 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid2 "test_company1" "mariusz@skrivapa.se"
+    assertBool ("Company could access other company documents") $ isError apiRespDocs2
+    apiRespDocs3 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid3 "test_company1" "mariusz@skrivapa.se"
+    assertBool ("Company could not access its documents, with nonauthor") $ containsCompanyEmbedLink apiRespDocs3
+
+
+-- Requests body 
 createDocumentJSON :: String -> String -> IO JSValue
 createDocumentJSON company author =  randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
@@ -64,6 +96,42 @@ getDocumentsJSON company email =  randomCall $ JSObject $ toJSObject $
          ,("email" , JSString $ toJSString  email)
         ]
 
+
+
+getEmbedDocumentaJSON :: String -> String -> String -> IO JSValue
+getEmbedDocumentaJSON  documentid company email =  randomCall $ JSObject $ toJSObject $
+        [ ("document_id", JSString $ toJSString documentid)
+         ,("company_id", JSString $ toJSString company)
+         ,("email" , JSString $ toJSString  email)
+        ]
+
+
+
+-- Making requests
+makeAPIRequest:: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> IO APIResponse
+makeAPIRequest handler req = do
+    ctx <- mkContext =<<  localizedVersion defaultValue <$> readGlobalTemplates
+    rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
+    fmap fst $ runTestKontra rq ctx $ do
+        mcontext <- apiContext
+        case mcontext  of
+             Right apictx -> do
+                 res <- either (uncurry apiError) id <$> runApiFunction handler apictx
+                 return res
+             Left emsg -> return $ uncurry apiError emsg
+
+
+-- A service to be used with API. We need one to use it.
+createTestService :: IO ()
+createTestService = do
+    pwd <- createPassword $ BS.pack "test_password"
+    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") pwd False Nothing Nothing defaultValue
+    _ <- update $ CreateService (ServiceID $ BS.pack "test_service") pwd (ServiceAdmin $ unUserID userid)
+    return ()
+
+
+
+-- Utils
 isError :: JSObject JSValue -> Bool
 isError = any (== "error") . map fst .fromJSObject
 
@@ -88,61 +156,4 @@ getJSONStringField name obj =
         _ -> ""
 
 
-getEmbedDocumentaJSON :: String -> String -> String -> IO JSValue
-getEmbedDocumentaJSON  documentid company email =  randomCall $ JSObject $ toJSObject $
-        [ ("document_id", JSString $ toJSString documentid)
-         ,("company_id", JSString $ toJSString company)
-         ,("email" , JSString $ toJSString  email)
-        ]
 
-testDocumentsAccess :: Assertion
-testDocumentsAccess = withTestState $ do 
-    createTestService
-    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se"
-    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se"
-    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se"
-    apiReqDocs1 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
-    apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
-    assertBool ("Two document was created by  this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
-    apiReqDocs2 <- getDocumentsJSON "test_company2" "mariusz@skrivapa.se"
-    apiRespDocs2 <- makeAPIRequest getDocuments $ apiReqDocs2
-    assertBool ("One document was created by  this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
-    apiReqDocs3 <- getDocumentsJSON "test_company3" "mariusz+1@skrivapa.se"
-    apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
-    assertBool ("No document was created for this company but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 0
-
-    
-testDocumentAccessEmbeddedPage :: Assertion
-testDocumentAccessEmbeddedPage = withTestState $ do
-    createTestService
-    docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
-    docid2 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se")
-    docid3 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se")
-    apiRespDocs1 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid1 "test_company1" "mariusz@skrivapa.se"
-    assertBool ("User from right company could not access his document") $ containsUserEmbedLink apiRespDocs1
-    apiRespDocs2 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid2 "test_company1" "mariusz@skrivapa.se"
-    assertBool ("Company could access other company documents") $ isError apiRespDocs2
-    apiRespDocs3 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid3 "test_company1" "mariusz@skrivapa.se"
-    assertBool ("Company could not access its documents, with nonauthor") $ containsCompanyEmbedLink apiRespDocs3
-
-makeAPIRequest:: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> IO APIResponse
-makeAPIRequest handler req = do
-    ctx <- mkContext =<<  localizedVersion defaultValue <$> readGlobalTemplates
-    rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
-    fmap fst $ runTestKontra rq ctx $ do
-        mcontext <- apiContext
-        case mcontext  of
-             Right apictx -> do
-                 res <- either (uncurry apiError) id <$> runApiFunction handler apictx
-                 return res
-             Left emsg -> return $ uncurry apiError emsg
-    
-    
-        
-createTestService :: IO ()
-createTestService = do
-    pwd <- createPassword $ BS.pack "test_password"
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") pwd False Nothing Nothing defaultValue
-    _ <- update $ CreateService (ServiceID $ BS.pack "test_service") pwd (ServiceAdmin $ unUserID userid)
-    return ()
-    
