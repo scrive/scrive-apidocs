@@ -1,4 +1,5 @@
 module AppLogger ( amazon
+                 , eleg
                  , debug
                  , error
                  , forkIOLogWhenError
@@ -42,14 +43,15 @@ setupLogger = do
 
     let fmt = tfLogFormatter "%F %T" "$time $msg"
         
-    appLog <- fileHandler' "log/app.log" INFO
-    accessLog <- fileHandler' "log/access.log" INFO
-    mailLog <- fileHandler' "log/mail.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    debugLog <- fileHandler' "log/debug.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    errorLog <- fileHandler' "log/error.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    amazonLog <- fileHandler' "log/amazon.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    appLog         <- fileHandler' "log/app.log"         INFO
+    accessLog      <- fileHandler' "log/access.log"      INFO
+    mailLog        <- fileHandler' "log/mail.log"        INFO >>= \lh -> return $ setFormatter lh fmt
+    debugLog       <- fileHandler' "log/debug.log"       INFO >>= \lh -> return $ setFormatter lh fmt
+    errorLog       <- fileHandler' "log/error.log"       INFO >>= \lh -> return $ setFormatter lh fmt
+    amazonLog      <- fileHandler' "log/amazon.log"      INFO >>= \lh -> return $ setFormatter lh fmt
     trustWeaverLog <- fileHandler' "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    securityLog <- fileHandler' "log/security.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    securityLog    <- fileHandler' "log/security.log"    INFO >>= \lh -> return $ setFormatter lh fmt
+    elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
 
     stdoutLog <- streamHandler stdout NOTICE
 
@@ -62,6 +64,7 @@ setupLogger = do
                      , trustWeaverLog
                      , amazonLog
                      , securityLog
+                     , elegLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -117,6 +120,11 @@ setupLogger = do
     updateGlobalLogger
         "Happstack.Server"
         (setLevel NOTICE . setHandlers [stdoutLog])
+        
+    -- ELeg Log
+    updateGlobalLogger
+        "Kontrakcja.Eleg"
+        (setLevel NOTICE . setHandlers [stdoutLog])
 
     return $ LoggerHandle allLoggers
 
@@ -152,6 +160,8 @@ security msg = liftIO $ noticeM "Kontrakcja.Security" msg
 server :: (MonadIO m) => String -> m ()
 server msg = liftIO $ noticeM "Happstack.Server" msg
 
+eleg :: (MonadIO m) => String -> m ()
+eleg msg = liftIO $ noticeM "Kontrakcja.Eleg" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
