@@ -2,29 +2,47 @@ module Doc.Invariants where
 
 import Doc.DocStateData
 import Util.SignatoryLinkUtils
+import MinutesTime
 
 import Data.List
 import Data.Maybe
 
-listInvariantProblems :: [Document] -> [String]
-listInvariantProblems docs = catMaybes $ map invariantProblems docs
+listInvariantProblems :: MinutesTime -> [Document] -> [String]
+listInvariantProblems now docs = catMaybes $ map (invariantProblems now) docs
 
-invariantProblems :: Document -> Maybe String
-invariantProblems document =
-  case catMaybes $ map (flip ($) document) documentInvariants of
+invariantProblems :: MinutesTime -> Document -> Maybe String
+invariantProblems now document =
+  case catMaybes $ map (\f -> f now document) documentInvariants of
     [] -> Nothing
     a  -> Just $ (show $ documentid document) ++ ": " ++ intercalate ";" a
 
-documentInvariants :: [Document -> Maybe String]
-documentInvariants = [
-  documentHasOneAuthor
+{- |
+   The invariants we want to test. Each returns Nothing if there is no problem,
+   and Just message to describe a problem.
+ -} 
+documentInvariants :: [MinutesTime -> Document -> Maybe String]
+documentInvariants = [ documentHasOneAuthor
+                     , oldishDocumentHasFiles
                      ]
 
 {- |
    Test the invariant that a document must have exactly one author.
 -}
-documentHasOneAuthor :: Document -> Maybe String
-documentHasOneAuthor document =
+documentHasOneAuthor :: MinutesTime -> Document -> Maybe String
+documentHasOneAuthor _ document =
   case filter isAuthor $ documentsignatorylinks document of
     [_] -> Nothing
     a -> Just $ "document must have one author (has " ++ show (length a) ++ ")"
+
+{- |
+   Any document older than one hour that does not have any files is a problem.
+   We must wait some time because we don't do NewDocument and AttachFile atomically. There could be some
+   in between.
+ -}
+oldishDocumentHasFiles :: MinutesTime -> Document -> Maybe String
+oldishDocumentHasFiles now document 
+  | toMinutes now - toMinutes (documentctime document) < 60 = Nothing
+  | documentfiles document == [] = Just "document must have files if older than one hour"
+  | otherwise = Nothing
+
+
