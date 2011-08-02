@@ -8,22 +8,8 @@ require "fileutils"
 
 module EmailHelper
 
-  def clear_all
-    FileUtils.rm Dir.glob(Dir.tmpdir + "/Email-*.eml"), :force => true
-  end
-
-  def is_email_for(address)
-    path = get_mail_path(address)
-    return File.file? path  
-  end
-
-  def is_link_in_mail_for(address)
-    match = get_link_in_mail_for address
-    return match!=nil
-  end
-
-  def get_link_in_mail_for(address)
-    path = get_mail_path(address)
+  def get_link_in_latest_mail_for email
+    path = get_latest_mail_for email
     file = File.new(path, "r")
     file.each_line do |line|
       match = find_link_in line
@@ -33,11 +19,10 @@ module EmailHelper
     end
     return nil
   end
-
-  private
-
-  def get_mail_path(for_email)
-    return Dir.tmpdir + "/Email-" + for_email + ".eml"
+  
+  def get_latest_mail_for email
+    all_emails = Dir.glob(Dir.tmpdir + "/Email-" + email + "*.eml")
+    all_emails.max { |a,b| File.mtime(a)<=>File.mtime(b) }
   end
 
   def find_link_in(line)

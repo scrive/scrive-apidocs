@@ -1,1 +1,0 @@
-ruby src/runAll.rb
