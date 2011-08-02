@@ -75,7 +75,7 @@ describe "sign view" do
     (@driver.find_element :css => ".modal-container a.close").click
   end
   
-  it "allows users to sign basic contracts" do
+  it "allows users to sign basic contracts if they've checked the sign guard" do
   
     login_as(@ctx.props.tester_email, @ctx.props.tester_password)
     begin
@@ -90,9 +90,50 @@ describe "sign view" do
     signlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.first_counterpart_email
     
     @driver.get signlink
+    
+    #make sure it's got the opened icon displayed
+    @driver.find_element :css => "div.status.opened"
+    
+    #try and sign the doc without checking the sign guard
+    (@driver.find_element :id => "sign").click
+    #make sure we get a red flash message
+    @wait.until { @driver.find_element :css => ".flash-container.red" }
+    
+    #sign the doc
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :id => "sign").click
     @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
     (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
+    
+    #make sure there are two signed icons
+    @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==2 }
+  end
+  
+  it "allows users to reject basic contracts" do
+  
+    login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    begin
+      uploadContract      
+      useBasicMode
+      enterCounterpart(@ctx.props.first_counterpart_fstname, @ctx.props.first_counterpart_sndname, @ctx.props.first_counterpart_email)
+      signAndSendInBasicMode
+    ensure
+      logout
+    end
+    
+    signlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.first_counterpart_email
+    
+    @driver.get signlink
+    
+    #make sure it's got the opened icon displayed
+    @driver.find_element :css => "div.icon.status.opened"
+    
+    #reject the document
+    (@driver.find_element :id => "cancel").click
+    @wait.until { @driver.find_element :id => "dialog-confirm-cancel" }
+    (@driver.find_element :css => "#dialog-confirm-cancel a.submiter").click
+    
+    #make sure there are two cancelled icons
+    @wait.until { (@driver.find_elements :css => "div.icon.status.cancelled").length==2 }
   end
 end
