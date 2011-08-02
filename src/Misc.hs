@@ -13,7 +13,6 @@ module Misc where
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
-import Control.Monad.Reader (asks)
 import Control.Monad.State
 import Data.Char
 import Data.Data
@@ -199,7 +198,7 @@ getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do
-         inputs <- asks (\(a, b, _c) -> a ++ b)
+         inputs <- (\(a, b, _) -> a ++ fromMaybe [] b) <$> askRqEnv
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]

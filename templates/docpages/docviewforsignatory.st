@@ -311,7 +311,7 @@ pageDocumentForSignContent=
       </div>
       $endif$
       <div id="signViewBottomBoxContainerRight">
-        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign" style="display:inline-block;">
           <div class="left"></div>
           <div class="label" style="$if(process.requiressignguard)$width:120px$else$padding-left:20px;padding-right:20px;$endif$">
             <span>$process.signbuttontext$</span>

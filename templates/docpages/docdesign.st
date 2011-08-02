@@ -275,7 +275,7 @@ pageDocumentDesign=
                 $elseif(process.isauthorsend)$
                 <input type="hidden" value="email" name="validationmethod" />
                 <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
+                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"class="btn-small green center">
                     <div class="left"></div>
                     <div class="label" style="">
                       <span>$process.sendbuttontext$</span>
@@ -286,7 +286,7 @@ pageDocumentDesign=
                 </div>
                 $else$
                 <div class="signbutton" style="display:inline-block;">
-                  <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-small blue center">
+                  <a type="button" id="signinvite" rel="#dialog-confirm-signinvite"  style="display:inline-block" class="btn-small blue center">
                     <div class="left"></div>
                     <div class="label" style="width:134px;">
                        <span style="padding-left:9px;padding-right:9px">$_skrivapa()$</span>
