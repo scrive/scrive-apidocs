@@ -14,14 +14,14 @@ showUserMailAPI =
    <div class="tab-container">
      <div class="tab-content account">
        <div class="col">
-         <div class="account-header"><h2>Settings</h2></div>
+         <div class="account-header"><h2>$_MailAPISettings()$</h2></div>
          <div class="account-body">
            <div class="mailapi">
              <input type="checkbox" id="enableapicbox" name="api_enabled" $if(mailapienabled)$checked="checked"$endif$ />
-             <label for="enableapicbox" style="margin-left: 5px">Enable Mail API</label>
+             <label for="enableapicbox" style="margin-left: 5px">$_MailAPIEnable()$</label>
              $if(mailapienabled)$
                <div style="margin-top: 10px">
-                 Active e-mail addresses:
+                 $_MailAPIActiveEmail()$
                  <ul id="mailapiemailslist">
                   <li><a href="mailto:contract+$mailapikey$@api.skrivapa.se">
                     contract+$mailapikey$@api.skrivapa.se
@@ -34,29 +34,29 @@ showUserMailAPI =
                    </a></li>
                  </ul>
                  <input type="checkbox" id="resetapikeycbox" name="reset_key" />
-                 <label for="resetapikeycbox" style="margin-left: 5px">Reset API key</label>
+                 <label for="resetapikeycbox" style="margin-left: 5px">$_MailAPIResetKey()$</label>
                </div>
              $endif$
            </div>
          </div>
        </div>
        <div class="col">
-         <div class="account-header"><h2>Limits</h2></div>
+         <div class="account-header"><h2>$_MailAPILimitHead()$</h2></div>
          <div class="account-body">
            <table class="mailapitable">
             <tr>
-               <td>Daily limit of processed e-mails</td>
+               <td>$_MailAPILimitsDaily()$</td>
                <td><input type="text" name="daily_limit" $if(mailapienabled)$ value="$mapidailylimit$" $else$ value="N/A" disabled="disabled" $endif$ /></td>
             </tr>
             <tr>
-              <td>E-mails processed today:</td>
+              <td>$_MailAPILimitsProcessedToday()$</td>
               <td><input type="text" value="$if(mailapienabled)$$mapisenttoday$$else$N/A$endif$" disabled="disabled" /></td>
             </tr>
           </table>
           $if(mailapienabled)$
             <div class="mailapi">
               <input type="checkbox" id="resetsenttodaycbox" name="reset_senttoday" />
-              <label for="resetsenttodaycbox" style="margin-left: 5px">Reset counter of e-mails processed today</label>
+              <label for="resetsenttodaycbox" style="margin-left: 5px">$_MailAPILimitsResetToday()$</label>
             </div>
           $endif$
          </div>

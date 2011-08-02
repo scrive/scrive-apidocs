@@ -2,205 +2,129 @@
 pageOffersList=
 $loadingdialog()$
 <div>
-  <form method="post" action="$currentlink$" class="listForm"  enctype="multipart/form-data" >
 	<div id="tab-viewer">
 		<div class="tab-header">
     $docListRubbishBinLink()$
 		</div>
 		$docListTabs()$
-		<div class="tab-container">
-			<div class="tab-content">
-				<div class="col float-left">
-					<div class="tab-dd">
-                                                <div class="tab-dd-button">
-						        <a href="javascript:;"><p>$_options()$</p></a>
-						</div>
-                                                <ul class="tab-dd-opts">
-                                                        <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">$_SendReminder()$</a></li>
-							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a>
-				          <div class="cantdeleteopenflashmsgtxt" style="display:none;">$_CantRemoveActiveOffers()$</div></li>
-						</ul>
-					</div>
-				</div>
-				<div class="col float-right">
-                      $searchBox(infotext=_SearchDoc())$
-                </div>
-
-     
-
-				<div class="clearfix"></div>
-			</div>
-			<div class="tab-table">
-				<table>
-					<thead>
-						<tr>
-							<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 65px;">
-                               $if(params.sorting.statusREV)$
-                                <a href="$currentlink$&amp;sorting=status">$_SortStatus()$<em> ▲</em></a>
-                               $elseif(params.sorting.status)$
-                                <a href="$currentlink$&amp;sorting=statusREV">$_SortStatus()$<em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=status">$_SortStatus()$</a>
-                               $endif$
-                             </th>
-							<th style="width: 130px;">
-                               $if(params.sorting.timeREV)$
-                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$<em> ▲</em></a>
-                               $elseif(params.sorting.time)$
-                                <a href="$currentlink$&amp;sorting=timeREV">$_SortTime()$<em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=time">$_SortTime()$</a>
-                               $endif$
-                            </th>
-							<th style="width: 130px;">
-                               $if(params.sorting.partnerREV)$
-                                <a href="$currentlink$&amp;sorting=partner">$_SortReciever()$<em> ▲</em></a>
-                               $elseif(params.sorting.partner)$
-                                <a href="$currentlink$&amp;sorting=partnerREV">$_SortReciever()$<em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=partner">$_SortReciever()$</a>
-                               $endif$
-                            </th>
-							<th style="width: 130px;">
-                               $if(params.sorting.partnercompREV)$
-                                <a href="$currentlink$&amp;sorting=partnercomp">$_SortCompany()$<em> ▲</em></a>
-                               $elseif(params.sorting.partnercomp)$
-                                <a href="$currentlink$&amp;sorting=partnercompREV">$_SortCompany()$<em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=partnercomp">$_SortCompany()$</a>
-                               $endif$
-                            </th>
-							<th style="width: 130px;">
-                               $if(params.sorting.authorREV)$
-                                <a href="$currentlink$&amp;sorting=author">$_SortSender()$<em> ▲</em></a>
-                               $elseif(params.sorting.author)$
-                                <a href="$currentlink$&amp;sorting=authorREV">$_SortSender()$<em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=author">$_SortSender()$</a>
-                               $endif$
-                            </th>
-							<th style="width: 227px;">
-                               $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&amp;sorting=title">$_SortDoc()$<em> ▲</em></a>
-                               $elseif(params.sorting.title)$
-                                <a href="$currentlink$&amp;sorting=titleREV">$_SortDoc()$<em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&amp;sorting=title">$_SortDoc()$</a>
-                               $endif$
-                            </th>
-							<th></th>
-						</tr>
-					</thead>
-					
-    				<tbody id="selectable">
-				      $documents:{document |
-      					<tr $if(document.odd)$class="odd"$endif$>
-							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"/> $endif$</td>
-							<td>
-                              <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-$document.status$"></div>
-                              $if(document.anyinvitationundelivered)$  <span style="color:#000000;">!</span>$endif$
-                           </td>
-							<td>
-								<span title="$document.mtime$">$document.mtime$</span>
-								$if(document.timeoutdaysleft)$  
-						          <span title="Förfallodatum: $document.timeoutdate$">
-						            <a href="$document.doclink$">
-						              ($document.timeoutdaysleft$)
-						            </a>
-						          </span> 
-						          $endif$
-							</td>
-							<td><a href="$document.doclink$">$document.signatories:{sig | $if(!sig.author)$ $sig.name$ $endif$}$</a></td>
-                            <td><a href="$document.doclink$">$document.signatories:{sig | $if(!sig.author)$ $sig.company$ $endif$}$</a></td>
-                            <td><a href="$document.doclink$">$document.authorname$</a></td> 
-							<td>
-								<a href="$document.doclink$" class="listname">$document.documenttitle$</a>
-								$if(document.davelink)$ 
-					          	<a href="$document.davelink$">*</a>     
-					          	$endif$
-							</td>
-							<td class="right">
-								<!-- <em>▼</em> -->
-							</td>
-						</tr>
-				      }$
-				    </tbody>
-  				</table>
-				<div class="table-statuses">
-                    <!--
-					<div class="icon status template"></div>Mall&nbsp;</div>
-                    -->
-					<div class="icon status draft float-left"></div><div class="float-left">$_tablestatusesDraft()$&nbsp;</div>
-					<div class="icon status cancelled float-left"></div><div class="float-left">$_tablestatusesCancelled()$&nbsp;</div>
-					<div class="icon status sent float-left"></div><div class="float-left">$_tablestatusesSent()$&nbsp;</div>
-					<div class="icon status delivered float-left"></div><div class="float-left">$_tablestatusesDelivered()$&nbsp;</div>
-					<!--
-					<div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
-					-->
-                                        <div class="icon status read float-left"></div><div class="float-left">$_tablestatusesEmailOpened()$&nbsp;</div>
-					<div class="icon status opened float-left"></div><div class="float-left">$_tablestatusesViewedOnline()$&nbsp;</div>
-					<div class="icon status signed float-left"></div><div class="float-left">$_tablestatusesConfirmed()$&nbsp;</div>
-				</div>
-                $pagingFooter()$
-			</div>
-		</div>
-	</div>
-	<div id="tooltip-draft" class="hidden">
-		<div class="icon status draft"></div><p>$_tooltipdraft()$</p>
-	</div>
-    <div id="tooltip-cancelled" class="hidden">
-        <div class="icon status cancelled"></div><p>$_tooltipcancelled()$</p>
-    </div>
-    <div id="tooltip-sent" class="hidden">
-      <div class="icon status sent"></div><p>$_tooltipsent()$</p>
-    </div>
-    <div id="tooltip-delivered" class="hidden">
-      <div class="icon status delivered"></div><p>$_tooltipdelivered()$</p>
-    </div>
-    <div id="tooltip-reviewed" class="hidden">
-        <div class="icon status reviewed"></div><p>$_tooltipreviewed()$</p>
-    </div>
-    <div id="tooltip-read" class="hidden">
-      <div class="icon status read"></div><p>$_tooltipread()$</p>
-    </div>
-    <div id="tooltip-opened" class="hidden">
-        <div class="icon status opened"></div><p>$_tooltipopened()$</p>
-    </div>
-    <div id="tooltip-signed" class="hidden">
-        <div class="icon status signed"></div><p>$_tooltipsigned()$</p>
-    </div>
-  </form>
-$listLocalDialogs()$
-<form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-remind-confirm" rel=".listForm" style="display:none;">
-    <input type="hidden" name="remind" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2>$_OfferReminderHead()$</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div class="singleremindmsg">$_OfferReminderBodySingel()$<span class="docname"></span>.
-          </div>
-          <div class="multipleremindmsg">$_OfferReminderBodyMulti()$<span class="doccount"></span>$_OfferReminderBodyMulti2()$</div>
-        </div>
-      </div>
-      <div class="modal-footer">        
-        <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_cancel()$</div>
-        </a>
-        <a class="btn-small green float-right submiter" href="#">
-          <div class="left"></div>
-          <div class="label"><p>$_ok()$</p></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-
+     </div>
 </div>
+
+<script>
+var documentsTable = KontraList.init({
+    schema: new Schema({
+    url: "/docs",
+    extraParams : { documentType : "Offer" },
+    sorting: new Sorting({ fields: ["title", "status", "time","partner", "partnercomp", "author"]}),
+    paging: new Paging({}),
+    filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
+    cells : [
+        new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
+        new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",
+                 rendering: function(status,mainrow,listobject) {
+                    var icon = jQuery("<div class='icon status "+status+"'></div>")
+                    if (listobject.field("anyinvitationundelivered") == "true" && mainrow == true)
+                       icon.add("<span style='color:#000000;'>!</span>");
+
+                    var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
+                                      localization.statusToolTip[status]+"</p></div>");
+                    ToolTip.set({
+                        on: icon,
+                        tip: tip
+                    })
+                    return icon;
+                 }
+        }),
+        new Cell({name: "$_SortTime()$", width:"130px", field:"time"}),
+        new Cell({name: "$_SortReciever()$", width:"130px", field:"partner"}),
+        new Cell({name: "$_SortCompany()$", width:"130px", field:"partnercomp",  special: "link"}),
+        new Cell({name: "$_SortSender()$", width:"130px", field:"author",  special: "link"}),
+        new Cell({name: "$_SortDoc()$", width:"227px", field:"title",  special: "link"})
+        ],
+    options : [{name : "$_SendReminder()$",
+                onSelect: function(docs){
+                            allSendOrOpenSelected = _.all(docs, function(doc) {
+                                                return doc.field("status") == "sent"      ||
+                                                       doc.field("status") == "delivered" ||
+                                                       doc.field("status") == "read"      ||
+                                                       doc.field("status") == "opened"
+                                            })
+                             if (!allSendOrOpenSelected) {
+                                FlashMessages.add({content: localization.cantSendReminder('$_docListTabsOffers()$'.toLowerCase()), color: "red"});
+                                return;
+                             }
+                             var submit = new Submit({
+                                                url: "$currentlink$",
+                                                method: "POST",
+                                                remind: "true",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
+                                          });
+                             var text;
+                             if (docs.length == 1)
+                               text = "$_OfferReminderBodySingel()$ "+ docs[0].field("title") + "."
+                             else
+                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" _docListTabsOffers().").toLowerCase() + " $_OfferReminderBodyMulti2()$";
+                             var content = jQuery("<p/>").text(text);
+                             Confirmation.popup({
+                                submit: submit,
+                                acceptText: "$_ok()$",
+                                rejectText: "$_cancel()$",
+                                title: "$_OfferReminderHead()$",
+                                content: content
+                              })
+                          }                         
+               },
+               {name : "$_delete()$",
+                onSelect: function(docs){
+                            anySendOrOpenSelected = _.any(docs, function(doc) {
+                                                return doc.field("status") == "sent"      ||
+                                                       doc.field("status") == "delivered" ||
+                                                       doc.field("status") == "read"      ||
+                                                       doc.field("status") == "opened"
+                                            })
+                             if (anySendOrOpenSelected) {
+                                FlashMessages.add({content: "$_CantRemoveActiveOffers()$", color: "red"});
+                                return;
+                             }
+                             var submit = new Submit({
+                                                url: "$currentlink$",
+                                                method: "POST",
+                                                remove: "true",
+                                                archive: "true",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
+                                          });
+                             var text = "$_listLocalDialogsBody()$"
+                             if (docs.length == 1)
+                               text += docs[0].field("title") + "."
+                             else
+                               text += docs.length + (" _docListTabsOffers().").toLowerCase();
+                             var content = jQuery("<p/>").text(text);
+                             Confirmation.popup({
+                                submit: submit,
+                                acceptText: "$_ok()$",
+                                rejectText: "$_cancel()$",
+                                title: "$_delete()$",
+                                content: content
+                              })
+                          }
+                }
+              ]
+    }),
+    bottomExtras : jQuery("<div class='table-statuses'>" +
+                    "<div class='icon status draft float-left'></div><div class='float-left'>$_tablestatusesDraft()$&nbsp;</div>" +
+                    "<div class='icon status cancelled float-left'></div><div class='float-left'>$_tablestatusesCancelled()$&nbsp;</div>" +
+                    "<div class='icon status sent float-left'></div><div class='float-left'>$_tablestatusesSent()$&nbsp;</div>" +
+                    "<div class='icon status delivered float-left'></div><div class='float-left'>$_tablestatusesDelivered()$&nbsp;</div>" +
+                    "<div class='icon status read float-left'></div><div class='float-left'>$_tablestatusesEmailOpened()$&nbsp;</div>" +
+                    "<div class='icon status opened float-left'></div><div class='float-left'>$_tablestatusesViewedOnline()$&nbsp;</div>" +
+                    "<div class='icon status signed float-left'></div><div class='float-left'>$_tablestatusesConfirmed()$nbsp;</div>" +
+                    "</div>")
+});
+
+
+jQuery(function(){
+    jQuery("#tab-viewer").append(documentsTable.view.el)
+});
+</script>
+
 ####

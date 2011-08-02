@@ -1,3 +1,4 @@
+"!Template name","LANG_SE","LANG_EN"
 "_contractcancelledinfoheader","Dokument återkallat","Document withdrawn"
 "_contractcancelledinfotext","har återkallat sin inbjudan att underteckna dokumentet.","has withdrawn the invitation to sign the document."
 "_contractpendingauthorinfoheader","Väntar","Waiting"
@@ -102,4 +103,3 @@
 "_orderstatusinfotext","Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta
  bekräftelsen.","You have sent an invitation to confirm the order. Please wait
  for the confirmation."
-"******f","LANG_SE","LANG_EN"
