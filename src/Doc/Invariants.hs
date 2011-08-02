@@ -1,8 +1,11 @@
-module Doc.Invariants where
+module Doc.Invariants (listInvariantProblems, invariantProblems, documentInvariants) where
 
 import Doc.DocStateData
 import Util.SignatoryLinkUtils
 import MinutesTime
+import Doc.DocInfo
+import Doc.DocUtils
+import Misc
 
 import Data.List
 import Data.Maybe
@@ -25,6 +28,9 @@ invariantProblems now document =
 documentInvariants :: [MinutesTime -> Document -> Maybe String]
 documentInvariants = [ documentHasOneAuthor
                      , oldishDocumentHasFiles
+                     , noDeletedSigLinksForSigning
+                     , noSigningOrSeeingInPrep
+                     , connectedSigLinkOnTemplateOrPreparation
                      ]
 
 {- |
@@ -47,4 +53,26 @@ oldishDocumentHasFiles now document
   | documentfiles document == [] = Just "document must have files if older than one hour"
   | otherwise = Nothing
 
+{- |
+   We don't expect to find any documents in Pending or AwaitingAuthor
+   Basically, you can't delete what needs to be signed.
+ -}
+noDeletedSigLinksForSigning :: MinutesTime -> Document -> Maybe String
+noDeletedSigLinksForSigning _ document
+  | documentstatus document `elem` [Pending, AwaitingAuthor] &&
+    any isDeletedFor (documentsignatorylinks document)          = Just "document has a deleted siglink when it is due to be signed"
+  | otherwise = Nothing
 
+noSigningOrSeeingInPrep :: MinutesTime -> Document -> Maybe String
+noSigningOrSeeingInPrep _ document
+  | not $ isPreparation document = Nothing
+  | any (hasSigned ||^ hasSeen) (documentsignatorylinks document) 
+      = Just "document has seen and/or signed siglinks when still in Preparation"
+  | otherwise = Nothing
+
+connectedSigLinkOnTemplateOrPreparation :: MinutesTime -> Document -> Maybe String
+connectedSigLinkOnTemplateOrPreparation _ document
+  | not (isTemplate document || isPreparation document) = Nothing
+  | any (hasUser ||^ hasCompany) (filter (not . isAuthor) (documentsignatorylinks document))
+      = Just "document has siglinks (besides author) with User or Company when in Preparation or it's a Template"
+  | otherwise = Nothing

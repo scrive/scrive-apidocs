@@ -734,8 +734,8 @@ testSetDocumentTitleNotLeft = doTimes 10 $ do
 assertInvariants :: Document -> Assertion
 assertInvariants document = do
   now <- getMinutesTime
-  case catMaybes $ map (\f -> f now document) documentInvariants of
-    [] -> assertSuccess
-    a  -> assertFailure $ (show $ documentid document) ++ ": " ++ intercalate ";" a
+  case invariantProblems now document of
+    Nothing -> assertSuccess
+    Just a  -> assertFailure a
 
 

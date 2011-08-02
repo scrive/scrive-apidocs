@@ -489,7 +489,7 @@ addRandomDocumentWithAuthorAndCondition user p =  do
     else addRandomDocumentWithAuthorAndCondition user p
 
 rand :: Int -> Gen a -> IO a
-rand i a = do
+rand i a = do  
   stdgn <- newStdGen
   return $ unGen a stdgn i
 
