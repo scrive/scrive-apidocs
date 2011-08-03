@@ -17,7 +17,6 @@ import API.API
 import API.Service.ServiceState
 import API.IntegrationAPI 
 import Text.JSON
-import Kontra
 import TestingUtil
 import Data.Ratio
 import Data.List
