@@ -192,7 +192,7 @@ var FilteringView = Backbone.View.extend({
     },
     render: function () {
         var filtering = this.model;
-        var searchBox = InfoTextInput.init({infotext : filtering.infotext(), value:filtering.text(), cssClass: "tab-search"});
+        var searchBox = InfoTextInput.init({infotext : filtering.infotext(), value:filtering.text(), cssClass: "tab-search float-right"});
         searchBox.input().keypress(function(event){
             var keycode = (event.keyCode ? event.keyCode : event.which);
             if(keycode == '13'){
@@ -200,7 +200,7 @@ var FilteringView = Backbone.View.extend({
             }});
         var button = Button.init({color: "black",
                                   size:"tiny",
-                                  text: "Search",
+                                  text: localization.searchBoxButtonText,
                                   cssClass : "float-right",
                                   onClick: function(){
                                       filtering.searchText(searchBox.value())

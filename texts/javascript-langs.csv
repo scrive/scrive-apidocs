@@ -53,3 +53,4 @@
 "_youCanNotInviteSameEmail","Du kan inte bjuda in underkonton vars e-post inte har samma URL som du har i din e-post.","You cannot invite subaccounts that do not have the same URL as you have in your email address."
 "_youMustSetParnerEmail","Du måste ange e-post till motpart.","You must enter an email address to your counterpart."
 "_yourSigningPluginFailed","Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. ","You sign plug-in failed to sign the document. Please contact your e-ID provider."
+"_searchBoxButtonText","Sök","Search"
