@@ -40,6 +40,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
+import Doc.DocStateQuery
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -52,35 +53,23 @@ handleSignBankID provider docid signid magic = do
     let seconds = toSeconds ctxtime 
 
     -- sanity check
-    document <- queryOrFail $ GetDocumentByDocumentID docid
-    checkLinkIDAndMagicHash document signid magic
+    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
     providerCode <- providerStringToNumber provider
     nonceresponse <- generateChallenge providerCode
-    --nonce1@MagicHash {} <- liftIO $ randomIO
-    --tid@MagicHash { } <- liftIO $ randomIO
-    --nonceresponse <- return $ Right (show nonce1, show tid)
-    liftIO $ print "after first request"
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
-            liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.eleg $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
-            liftIO $ print "before"
             tbs <- getTBS document
-            liftIO $ print tbs
-            liftIO $ print "after"
             encodetbsresponse <- encodeTBS providerCode tbs transactionid
-            --encodetbsresponse <- return $ Right "hello"
-            liftIO $ print "after second request"
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
-                    liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.eleg $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
                 Right txt -> do
                     -- store in session
@@ -94,12 +83,14 @@ handleSignBankID provider docid signid magic = do
                                             , transactionmagichash = Just magic
                                             , transactionnonce = nonce
                                             }
-                    Log.debug $ "encoding successful: " ++
+                    Log.eleg $ "encoding successful: " ++
                         toJSON [("status", JInt 0)
                             ,("servertime", JString $ show seconds)
                             ,("nonce", JString nonce)
                             ,("tbs", JString txt)
-                            ,("transactionid", JString transactionid)]
+                            ,("transactionid", JString transactionid)
+                            ,("docid", JString $ show $ unDocumentID docid)
+                            ,("siglinkid", JString $ show $ unSignatoryLinkID signid)]
                     return $ toResponse $ toJSON [("status", JInt 0)
                                                  ,("servertime", JString $ show seconds)
                                                  ,("nonce", JString nonce)
@@ -122,7 +113,6 @@ handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
             , ctxipnumber } <- getContext
-    liftIO $ print "eleg sign post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
@@ -130,14 +120,11 @@ handleSignPostBankID docid signid magic = do
     fieldnames    <- getAndConcat "fieldname"
     fieldvalues   <- getAndConcat "fieldvalue"
 
-
     -- request validation
-    document <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-    checkLinkIDAndMagicHash document signid magic
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
-    let Just siglink@SignatoryLink
-            { signatorydetails = details } = getSigLinkFor document signid
+    siglink <- guardJust $ getSigLinkFor document signid
 
     -- valid transaction?
     ELegTransaction { transactionsignatorylinkid = mtsignid
@@ -148,11 +135,11 @@ handleSignPostBankID docid signid magic = do
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (tdocid   /= docid      ) mzero
-    when (mtsignid /= Just signid) mzero
-    when (mtmagic  /= Just magic ) mzero
+    guard (tdocid   == docid      )
+    guard (mtsignid == Just signid)
+    guard (mtmagic  == Just magic )
     -- end validation
-
+    Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
     providerCode <- providerStringToNumber provider
     -- send signature to ELeg
     res <- verifySignature providerCode
@@ -162,29 +149,25 @@ handleSignPostBankID docid signid magic = do
                     then Just transactionnonce
                     else Nothing)
                 transactionid
-    --res <- return $ Right ("abca", [(BS.fromString "lastname", BS.fromString "Andersson"), (BS.fromString "firstname", BS.fromString "Agda"), (BS.fromString "personnumber", BS.fromString "111111")])
-
     case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
-            liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
+            Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
             addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
-            liftIO $ print attrs
-            Log.debug $ show attrs
+            Log.eleg $ "Successfully identified using eleg. (Omitting private information)."
             providerType <- providerStringToType provider
             let fields = zip fieldnames fieldvalues
             -- compare information from document (and fields) to that obtained from BankID
-            let contractFirst  = signatoryfstname details
-                contractLast   = signatorysndname details
-                contractNumber = signatorypersonalnumber details
+            let contractFirst  = getFirstName siglink
+                contractLast   = getLastName siglink
+                contractNumber = getPersonalNumber siglink
 
-                elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName") attrs
-                elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")  attrs
-                elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber")     attrs
+                elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
+                elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
+                elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
 
                 mfinal = mergeInfo
                             (contractFirst, contractLast, contractNumber)
@@ -195,8 +178,7 @@ handleSignPostBankID docid signid magic = do
                     let Just authorsiglink = getAuthorSigLink document
                         authorname = getSmartName authorsiglink
                         authoremail = getEmail authorsiglink
-                    liftIO $ print msg
-                    Log.debug msg
+                    Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
                     txt <- renderTemplateFM "signCanceledDataMismatchModal" $ do
                         field "authorname"  authorname
                         field "authoremail" authoremail
@@ -209,6 +191,7 @@ handleSignPostBankID docid signid magic = do
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
+                    Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
                                                     , signatureinfosignature = signature
                                                     , signatureinfocertificate = cert
@@ -227,7 +210,7 @@ handleSignPostBankID docid signid magic = do
                     case newdocument of
                         -- signature failed
                         Left message -> do
-                            Log.debug $ "SignDocument failed: " ++ message
+                            Log.eleg $ "SignDocument failed: " ++ message
                             addFlash (OperationFailed, message)
                             return LinkMain -- where should we go?
                         Right document2 -> do
@@ -248,21 +231,20 @@ handleIssueBankID provider docid = withUserGet $ do
     Context { ctxtime, ctxmaybeuser = Just author } <- getContext
     let seconds = toSeconds ctxtime
 
-    document <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- guardRightM $ getDocByDocID docid
 
     tbs <- case documentstatus document of
-        Preparation    -> getDataFnM $ look "tbs"
-        AwaitingAuthor -> getTBS document
+        Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
+        AwaitingAuthor -> getTBS document         -- tbs is stored in document
         _              -> mzero
 
-    failIfNotAuthor document author
+    guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
 
     providerCode <- providerStringToNumber provider
     nonceresponse <- generateChallenge providerCode
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
-            Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.eleg $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
@@ -270,8 +252,7 @@ handleIssueBankID provider docid = withUserGet $ do
             encodetbsresponse <- encodeTBS providerCode tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
-                    Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.eleg $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
                 Right txt -> do
                     -- store in session
@@ -319,9 +300,9 @@ handleIssuePostBankID docid = withUserPost $ do
     signature     <- getDataFnM $ look "signature"
     transactionid <- getDataFnM $ look "transactionid"
     signlast <- isFieldSet "signlast"
-    document <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- guardRightM $ getDocByDocID docid
 
-    guard $ isAuthor (document, author)
+    guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
 
     -- valid transaction?
     ELegTransaction { transactiondocumentid
@@ -332,15 +313,13 @@ handleIssuePostBankID docid = withUserPost $ do
 
     guard $ transactiondocumentid == docid
     -- end validation
-    Log.debug $ "document status on post: " ++ show (documentstatus document)
     eudoc <- case documentstatus document of
                 Preparation -> updateDocument ctx document
                 AwaitingAuthor -> return $ Right document
                 s -> return $ Left $ "Wrong status: " ++ show s
     case eudoc of
         Left msg -> do
-            Log.debug $ "updateDocument failed: " ++ msg
-            liftIO $ print $ "updateDocument failed: " ++ msg
+            Log.eleg $ "updateDocument failed: " ++ msg
             addFlash (OperationFailed, "Could not save document.")
             return LinkMain
         Right udoc -> do
@@ -356,8 +335,7 @@ handleIssuePostBankID docid = withUserPost $ do
 
             case res of
                 Left (ImplStatus _a _b code msg) -> do
-                    liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
                     -- change me! I should return back to the same page
                     return $ LinkDesignDoc $ DesignStep3 docid signlast
@@ -380,13 +358,12 @@ handleIssuePostBankID docid = withUserPost $ do
                     Log.debug $ show (elegFirst,     elegLast,     elegNumber)
                     case mfinal of
                         Left (msg, _, _, _) -> do
-                            liftIO $ print $ "merge failed: " ++ msg
-                            Log.debug $ "merge failed: " ++ msg
+                            Log.eleg $ "merge failed: " ++ msg
                             addFlash (OperationFailed, "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg)
                             return $ LinkDesignDoc $ DesignStep3 docid signlast
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
-                            Log.debug $ show mfinal
+                            Log.eleg $ "author merge succeeded. (details omitted)"
                             let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                             , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
@@ -406,8 +383,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                                 _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
                                         Left msg -> do
-                                            liftIO $ print $ "AuthorSignDocument failed: " ++ msg
-                                            Log.debug $ "AuthorSignDocument failed: " ++ msg
+                                            Log.eleg $ "AuthorSignDocument failed: " ++ msg
                                             return ()
                                         Right newdocument -> do
                                             postDocumentChangeAction newdocument udoc Nothing

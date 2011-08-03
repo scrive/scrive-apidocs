@@ -34,6 +34,7 @@ import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
+import Doc.Invariants
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -51,6 +52,7 @@ import Text.ParserCombinators.Parsec
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON (JSValue(..), toJSObject)
@@ -2004,3 +2006,12 @@ jsonDocumentsList = do
     return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
                                     ("paging", pagingParamsJSON docs)]
     
+handleInvariantViolations :: Kontrakcja m => m Response
+handleInvariantViolations = onlySuperUser $ do
+  Context{ ctxtime } <- getContext
+  docs <- query $ GetDocuments Nothing
+  let probs = listInvariantProblems ctxtime docs
+      res = case probs of
+        [] -> "No problems!"
+        _  -> intercalate "\n" probs
+  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing

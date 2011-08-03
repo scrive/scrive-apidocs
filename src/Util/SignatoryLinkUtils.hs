@@ -23,7 +23,9 @@ module Util.SignatoryLinkUtils (
   isViewer,
   isDeletedFor,
   getSigLinkFor,
-  
+  hasSeen,  
+  hasUser,
+  hasCompany,
   SignatoryLinkIdentity
        ) where
 
@@ -157,6 +159,12 @@ hasSigned :: (MaybeSignatoryLink msl) => msl -> Bool
 hasSigned msl = maybe False (isJust . maybesigninfo) (getMaybeSignatoryLink msl)
 
 {- |
+   Does the given SignatoryLink have a maybeseeninfo (is has been seen)?
+ -}
+hasSeen :: (MaybeSignatoryLink msl) => msl -> Bool
+hasSeen msl = maybe False (isJust . maybeseeninfo) (getMaybeSignatoryLink msl)
+
+{- |
    Is this SignatoryLink an author?
  -}
 isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
@@ -186,3 +194,14 @@ isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
 
+{- |
+  Does this siglink have a user (maybesignatory)?
+ -}
+hasUser :: (MaybeSignatoryLink a) => a -> Bool
+hasUser msl = maybe False (isJust . maybesignatory) (getMaybeSignatoryLink msl)
+
+{- |
+  Does this siglink have a company?
+ -}
+hasCompany :: (MaybeSignatoryLink a) => a -> Bool
+hasCompany msl = maybe False (isJust . maybecompany) (getMaybeSignatoryLink msl)

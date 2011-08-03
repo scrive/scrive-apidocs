@@ -286,7 +286,7 @@ pageDocumentForSignContent=
     
     <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
-        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel" style="display:inline-block;">
           <div class="left"></div>
           <div class="label">$process.rejectbuttontext$</div>
           <div class="right"></div>

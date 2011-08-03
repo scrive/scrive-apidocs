@@ -13,6 +13,8 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
 import Company.CompanyState
+import Doc.Invariants
+import MinutesTime
 
 import Happstack.State
 import Data.Maybe
@@ -729,25 +731,11 @@ testSetDocumentTitleNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentTitle
   validTest $ assertLeft etdoc
 
-apply :: a -> (a -> b) -> b
-apply a f = f a
-
 assertInvariants :: Document -> Assertion
-assertInvariants document =
-  case catMaybes $ map (apply document) documentInvariants of
-    [] -> assertSuccess
-    a  -> assertFailure $ (show $ documentid document) ++ ": " ++ intercalate ";" a
+assertInvariants document = do
+  now <- getMinutesTime
+  case invariantProblems now document of
+    Nothing -> assertSuccess
+    Just a  -> assertFailure a
 
-documentInvariants :: [Document -> Maybe String]
-documentInvariants = [
-  documentHasOneAuthor
-                     ]
 
-{- |
-   Test the invariant that a document must have exactly one author.
--}
-documentHasOneAuthor :: Document -> Maybe String
-documentHasOneAuthor document =
-  case filter isAuthor $ documentsignatorylinks document of
-    [_] -> Nothing
-    a -> Just $ "document must have one author (has " ++ show (length a) ++ ")"
