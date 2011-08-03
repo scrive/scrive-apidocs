@@ -31,6 +31,7 @@ documentInvariants = [ documentHasOneAuthor
                      , noDeletedSigLinksForSigning
                      , noSigningOrSeeingInPrep
                      , connectedSigLinkOnTemplateOrPreparation
+                     , authorHasUser
                      ]
 
 {- |
@@ -54,7 +55,7 @@ oldishDocumentHasFiles now document
   | otherwise = Nothing
 
 {- |
-   We don't expect to find any documents in Pending or AwaitingAuthor
+   We don't expect to find any deleted documents in Pending or AwaitingAuthor
    Basically, you can't delete what needs to be signed.
  -}
 noDeletedSigLinksForSigning :: MinutesTime -> Document -> Maybe String
@@ -76,3 +77,8 @@ connectedSigLinkOnTemplateOrPreparation _ document
   | any (hasUser ||^ hasCompany) (filter (not . isAuthor) (documentsignatorylinks document))
       = Just "document has siglinks (besides author) with User or Company when in Preparation or it's a Template"
   | otherwise = Nothing
+
+authorHasUser :: MinutesTime -> Document -> Maybe String
+authorHasUser _ document = case getAuthorSigLink document of
+  Just sl | not $ hasUser sl -> Just "author does not have a user connected."
+  _ -> Nothing
