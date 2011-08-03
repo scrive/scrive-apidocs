@@ -737,5 +737,3 @@ assertInvariants document = do
   case invariantProblems now document of
     Nothing -> assertSuccess
     Just a  -> assertFailure a
-
-
