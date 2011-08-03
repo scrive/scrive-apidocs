@@ -1,4 +1,6 @@
 "!Template name","LANG_SE","LANG_EN"
+"_InfoSelectTemplate"," Klicka på den mall du vill använda för att starta processen","  Click a template you want to use to start the process"
+"_SearchTemplate","Sök  mall","Search template"
 "_contractuploadname","AVTAL","CONTRACT"
 "_contractuploadprompttext","Välj det dokument som du vill skicka till din motpart för påskrift.","Select a document you want to send to your counterpart."
 "_offeruploadname","OFFERT","OFFER"
