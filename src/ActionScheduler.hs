@@ -4,6 +4,7 @@ module ActionScheduler (
     , runEnforceableScheduler
     , actionScheduler
     , oldScheduler
+    , runDocumentProblemsCheck
     ) where
 
 import Control.Applicative
@@ -70,6 +71,8 @@ actionScheduler imp = do
         catchEverything :: Action -> E.SomeException -> IO ()
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
+            
+
 
 -- | Old scheduler (used as main one before action scheduler was implemented)
 oldScheduler :: ActionScheduler ()
@@ -159,8 +162,8 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
 evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
     deleteAction actionID
     
-evaluateAction Action{actionID, actionType = DocumentProblemsCheck{}} = do
-  deleteAction actionID
+runDocumentProblemsCheck :: ActionScheduler ()
+runDocumentProblemsCheck = do
   now <- liftIO getMinutesTime
   docs <- query $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
@@ -168,7 +171,6 @@ evaluateAction Action{actionID, actionType = DocumentProblemsCheck{}} = do
         [] -> "No problems!"
         _  -> intercalate "\n" probs
   mailDocumentProblemsCheck res
-  liftIO $ addDocumentProblemsCheck $ (60 * 4) `minutesAfter` now
   return ()
 
 -- | Send an email out to all registered emails about document problems.

@@ -34,6 +34,7 @@ import Doc.DocStateData
 import Mails.MailsUtil
 import User.UserState
 import Util.HasSomeUserInfo
+import Misc
 
 import Data.List
 import Data.Maybe
@@ -41,60 +42,50 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 
 {- |
-    This is counts a user as being for the signatory link
-    if the userid is mentioned on the sig link, or if the user
-    is an admin for a company that is mentioned on the sig link.
-    The idea of this function is to be used when we need to be a bit
-    more strict that just isSigLinkFor, as in particular isSigLinkFor
-    would link by email.
--}
-isSigLinkSavedFor :: User -> SignatoryLink -> Bool
-isSigLinkSavedFor User{userid, useriscompanyadmin, usercompany} sl =
-  isSigLinkFor userid sl || 
-    (useriscompanyadmin && maybe False (flip isSigLinkFor sl) usercompany)
-
-{- |
    Anything that could identify a SignatoryLink
  -}
 class SignatoryLinkIdentity a where
-  isSigLinkFor :: a -> SignatoryLink -> Bool
+  isJustSigLinkFor :: a -> SignatoryLink -> Bool
 
 instance SignatoryLinkIdentity BS.ByteString where
-  isSigLinkFor email sl = email == getEmail sl
+  isJustSigLinkFor email sl = email == getEmail sl
 
 instance SignatoryLinkIdentity Email where
-  isSigLinkFor (Email email) sl = email == getEmail sl
+  isJustSigLinkFor (Email email) sl = email == getEmail sl
 
 instance SignatoryLinkIdentity UserID where
-  isSigLinkFor uid sl = Just uid == maybesignatory sl
+  isJustSigLinkFor uid sl = Just uid == maybesignatory sl
 
 instance SignatoryLinkIdentity Signatory where
-  isSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
+  isJustSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
 
 {- |
    Identify a SignatoryLink based on a; if that does not match, identify based on b.
  -}
 instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
-  isSigLinkFor (a, b) sl = isSigLinkFor a sl || isSigLinkFor b sl
+  isJustSigLinkFor (a, b) sl = isSigLinkFor a sl || isSigLinkFor b sl
 
 instance SignatoryLinkIdentity SignatoryLinkID where
-  isSigLinkFor slid sl = slid == signatorylinkid sl
+  isJustSigLinkFor slid sl = slid == signatorylinkid sl
 
 {- |
    Identify a User based on UserID or Email (if UserID fails).
  -}
 instance SignatoryLinkIdentity User where
-  isSigLinkFor u sl = isSigLinkFor (userid u, getEmail u) sl
+  isJustSigLinkFor u sl = isSigLinkFor (userid u, getEmail u) sl
 
 instance SignatoryLinkIdentity Author where
-  isSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl
+  isJustSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl
 
 instance SignatoryLinkIdentity CompanyID where
-  isSigLinkFor cid sl = Just cid == maybecompany sl
+  isJustSigLinkFor cid sl = Just cid == maybecompany sl
 
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
-  isSigLinkFor (Just a) sl = isSigLinkFor a sl
-  isSigLinkFor Nothing  _  = False
+  isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
+  isJustSigLinkFor Nothing  _  = False
+  
+instance SignatoryLinkIdentity MagicHash where
+  isJustSigLinkFor mh sl = mh == signatorymagichash sl
 
 {- |
    Anything that could resolve to a SignatoryLink.
@@ -205,3 +196,22 @@ hasUser msl = maybe False (isJust . maybesignatory) (getMaybeSignatoryLink msl)
  -}
 hasCompany :: (MaybeSignatoryLink a) => a -> Bool
 hasCompany msl = maybe False (isJust . maybecompany) (getMaybeSignatoryLink msl)
+
+{- |
+    This is counts a user as being for the signatory link
+    if the userid is mentioned on the sig link, or if the user
+    is an admin for a company that is mentioned on the sig link.
+    The idea of this function is to be used when we need to be a bit
+    more strict that just isSigLinkFor, as in particular isSigLinkFor
+    would link by email.
+-}
+isSigLinkSavedFor :: User -> SignatoryLink -> Bool
+isSigLinkSavedFor User{userid, useriscompanyadmin, usercompany} sl =
+  isSigLinkFor userid sl || 
+    (useriscompanyadmin && isSigLinkFor usercompany sl)
+
+{- |
+   Does i identify sl?
+ -}
+isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i) => i -> sl -> Bool
+isSigLinkFor i sl = maybe False (isJustSigLinkFor i) (getMaybeSignatoryLink sl)

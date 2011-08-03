@@ -24,8 +24,6 @@ module ActionSchedulerState (
     , newAccountCreated
     , newAccountCreatedBySigning
     , newEmailSendoutAction
-    , startDocumentProblemsCheck
-    , addDocumentProblemsCheck
     ) where
 
 import Control.Applicative
@@ -101,7 +99,6 @@ data ActionType = TrustWeaverUpload {
                     , seiEventType        :: SendGridEventType
                     , seiLastModification :: MinutesTime
                 }
-                | DocumentProblemsCheck
                   deriving (Eq, Ord, Show, Typeable)
 
 data InactiveAccountState = NothingSent
@@ -117,7 +114,6 @@ data ActionTypeID = TrustWeaverUploadID
                   | AccountCreatedBySigningID
                   | EmailSendoutID
                   | SentEmailInfoID
-                  | DocumentProblemsCheckID
                     deriving (Eq, Ord, Show, Typeable)
 
 -- | Convert ActionType to its type identifier
@@ -130,7 +126,6 @@ actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
 actionTypeID (EmailSendout _) = EmailSendoutID
 actionTypeID (SentEmailInfo _ _ _ _) = SentEmailInfoID
-actionTypeID DocumentProblemsCheck = DocumentProblemsCheckID
 
 -- | Determines how often we should check if there's an action to evaluate
 data ActionImportance = UrgentAction
@@ -147,7 +142,6 @@ actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
 actionImportance (EmailSendout _) = EmailSendoutAction
 actionImportance (SentEmailInfo _ _ _ _) = LeisureAction
-actionImportance DocumentProblemsCheck = LeisureAction
 
 data Action = Action {
       actionID       :: ActionID
@@ -342,17 +336,6 @@ newEmailSendoutAction mail = do
     }
     _ <- update $ NewAction action $ now
     return ()
-
-startDocumentProblemsCheck :: IO ()
-startDocumentProblemsCheck = do
-  now <- getMinutesTime
-  addDocumentProblemsCheck now
-  
--- | Create a new 
-addDocumentProblemsCheck :: MinutesTime -> IO ()
-addDocumentProblemsCheck time = do
-  _ <- update $ NewAction DocumentProblemsCheck time
-  return ()
 
 -- Migrations and old stuff --
 
