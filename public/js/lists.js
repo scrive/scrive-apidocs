@@ -294,7 +294,8 @@ var ListObject = Backbone.Model.extend({
       return this.get("selected") == true;
   },
   toogleSelect:  function() {
-        this.set({"selected":!this.isSelected()});
+        this.set({"selected":!this.isSelected()}, {silent: true});
+        this.trigger("selected:change");
   },
   isExpanded: function() {
      return this.get("expanded") == true;
@@ -328,9 +329,10 @@ var ListObjectView = Backbone.View.extend({
         'click .expand': 'toogleExpand'
     },
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'renderSelection');
         this.model.bind('change', this.render);
-        this.schema = args.schema
+        this.model.bind('selected:change', this.renderSelection);
+        this.schema = args.schema;
         this.model.view = this;
         this.render();
     },
@@ -347,12 +349,8 @@ var ListObjectView = Backbone.View.extend({
             var value = this.model.field(cell.field());
             if (cell.isSpecial()) {
                 if (cell.isSelect()) {
-                    var checkbox = $("<input type='checkbox' class='selectme'/>");
-                    if (this.model.isSelected())
-                        checkbox.attr("checked","true")
-                    else
-                        checkbox.removeAttr("checked")
-                    td.append(checkbox);    
+                    this.checkbox = $("<input type='checkbox' class='selectme'/>");
+                    td.append(this.checkbox);    
                     
                 }
                 else if (cell.isRendered() && value != undefined){
@@ -396,11 +394,20 @@ var ListObjectView = Backbone.View.extend({
            else
                subrow.css("display","none");
         }
-        if (this.model.isSelected())
-            this.el.addClass("ui-selected");
-        else
-            this.el.removeClass("ui-selected");
+        this.renderSelection();
         return this
+    },
+    renderSelection : function(){
+      if (this.model.isSelected()){
+       this.el.addClass("ui-selected");
+       if (this.checkbox != undefined)
+          this.checkbox.attr("checked","true");
+      }else{
+       this.el.removeClass("ui-selected");
+       if (this.checkbox != undefined)
+          this.checkbox.removeAttr("checked");
+      }
+                        
     },
     toogleSelect: function(){
        this.model.toogleSelect()
