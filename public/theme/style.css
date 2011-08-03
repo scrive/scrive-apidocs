@@ -2861,9 +2861,12 @@ width: 340px;
 }
 
 .templatedDialogContainer{
-    display:none;
     margin-top: 16px;
     
+}
+.templatedDialogContainer .searchBox{
+    margin-top: 40px;
+    margin-right:30px;
 }
 
 a#cancel {

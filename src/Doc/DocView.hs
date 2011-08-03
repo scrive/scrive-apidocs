@@ -66,7 +66,6 @@ module Doc.DocView (
   , pageRubbishBinList
   , showFilesImages2
   , signatoryDetailsFromUser
-  , templatesForAjax
   , documentsToFixView
   , uploadPage
   , docForListJSON
@@ -1208,6 +1207,7 @@ uploadPage params mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
     field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdocprocess
     field "showTemplates" showTemplates
     fieldFL "processes" $ map processFields [Contract,Offer,Order]
+    field "processid" $ show <$> mdocprocess
     case mdocprocess of
       Just selecteprocess -> do
         fieldF "selectedprocess" $ processFields selecteprocess
@@ -1219,15 +1219,6 @@ uploadPage params mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         fieldM "name" $ renderTextForProcess (Signable process) processuploadname
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
 
-
-
-templatesForAjax :: TemplatesMonad m => MinutesTime -> User -> DocumentProcess -> PagedList Document -> m String
-templatesForAjax ctime user docprocess doctemplates =
-    renderTemplateFM "templatesForAjax" $ do
-        fieldFL "documents" $ markParity $ map (documentBasicViewFields ctime user) (list doctemplates)
-        field "currentlink" $ show $ LinkNew (Just docprocess) (params doctemplates)  True
-        field "processid" $ show docprocess
-        pagedListFields doctemplates
 
 -- We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]

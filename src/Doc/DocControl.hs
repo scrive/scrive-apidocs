@@ -1844,22 +1844,6 @@ idmethodFromString idmethod
   | idmethod == "eleg"  = Just ELegitimationIdentification
   | otherwise           = Nothing
 
-getTemplatesForAjax :: Kontrakcja m => m Response
-getTemplatesForAjax = do
-    ctx <- getContext
-    params <- getListParams
-    mdocprocess <- getDocProcess
-    case (ctxmaybeuser ctx,mdocprocess) of
-            (Just user, Just docprocess) -> do
-                let tfilter doc = (Template docprocess == documenttype doc)
-                userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
-                shareddocs <- liftIO $ query $ GetDocumentsSharedInCompany user
-                let templates = nub . filter tfilter $ userdocs ++ shareddocs
-                content <- templatesForAjax (ctxtime ctx) user docprocess $ docSortSearchPage params templates
-                simpleResponse content
-            (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
-            _ -> mzero
-
 handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
   Context { ctxmaybeuser } <- getContext
@@ -1996,6 +1980,25 @@ jsonDocumentsList = do
         "Attachment" -> do
             mydocuments <- query $ GetDocumentsByAuthor (userid user)
             return $ filter ((==) Attachment . documenttype) mydocuments
+        "Rubbish" -> do
+            if useriscompanyadmin user
+                then query $ GetDeletedDocumentsByCompany user
+                else query $ GetDeletedDocumentsByUser user
+        "Template|Contract" -> do
+            let tfilter doc = (Template Contract == documenttype doc)
+            userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
+            shareddocs <- liftIO $ query $ GetDocumentsSharedInCompany user
+            return $ nub . filter tfilter $ userdocs ++ shareddocs
+        "Template|Offer" -> do
+            let tfilter doc = (Template Offer == documenttype doc)
+            userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
+            shareddocs <- liftIO $ query $ GetDocumentsSharedInCompany user
+            return $ nub . filter tfilter $ userdocs ++ shareddocs
+        "Template|Order" -> do
+            let tfilter doc = (Template Order == documenttype doc)
+            userdocs <- liftIO $ query $ GetDocumentsByAuthor (userid user)
+            shareddocs <- liftIO $ query $ GetDocumentsSharedInCompany user
+            return $ nub . filter tfilter $ userdocs ++ shareddocs
         _ -> do
             Log.error "Documents list : No valid document type provided"
             return []
