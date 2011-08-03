@@ -634,7 +634,7 @@ handleIssueShowPost docid = withUserPost $ do
     Preparation | sigattachments    -> handleIssueUpdateSigAttachments document
     Preparation                     -> handleIssueSave                 document
     AwaitingAuthor                  -> handleIssueSignByAuthor         document
-    _ -> return $ LinkContracts emptyListParams
+    _ -> return $ LinkContracts
 
 handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
@@ -656,9 +656,9 @@ handleIssueSign document = do
                     addFlashM $ flashMessageCSVSent $ length ds
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
-                      Signable Contract -> return $ LinkContracts emptyListParams
-                      Signable Offer    -> return $ LinkOffers emptyListParams                      
-                      Signable Order    -> return $ LinkOrders emptyListParams
+                      Signable Contract -> return $ LinkContracts
+                      Signable Offer    -> return $ LinkOffers                    
+                      Signable Order    -> return $ LinkOrders
                       _                 -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
@@ -693,9 +693,9 @@ handleIssueSend document = do
                     addFlashM $ flashMessageCSVSent $ length ds
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
-                      Signable Contract -> return $ LinkContracts emptyListParams
-                      Signable Offer    -> return $ LinkOffers emptyListParams                      
-                      Signable Order    -> return $ LinkOrders emptyListParams
+                      Signable Contract -> return $ LinkContracts
+                      Signable Offer    -> return $ LinkOffers                  
+                      Signable Order    -> return $ LinkOrders 
                       _ -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
@@ -725,7 +725,7 @@ handleIssueSaveAsTemplate document = do
   udoc <- guardRightM $ updateDocument ctx document
   _ndoc <- guardRightM $ update $ TemplateFromDocument $ documentid udoc
   addFlashM flashDocumentTemplateSaved
-  return $ LinkTemplates emptyListParams
+  return $ LinkTemplates
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
@@ -951,10 +951,10 @@ handleIssueSave document = do
     if (isTemplate document)
      then do
           addFlashM flashDocumentTemplateSaved
-          return $ LinkTemplates emptyListParams
+          return $ LinkTemplates 
      else do
           addFlashM flashDocumentDraftSaved
-          return $ LinkContracts emptyListParams
+          return $ LinkContracts 
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor document = do
@@ -1345,57 +1345,33 @@ getDocumentsForUserByType doctype user = do
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
-   The list contains all documents the user is an author on or
-   is a friend of the author.
-   Duplicates are removed.
  -}
 showContractsList :: Kontrakcja m => m (Either KontraLink String)
-showContractsList =
-  showItemList' pageContractsList $ getDocumentsForUserByType (Signable Contract)
+showContractsList = someArchivePage pageContractsList 
 
 showOfferList :: Kontrakcja m => m (Either KontraLink String)
-showOfferList =
-  showItemList' pageOffersList $ getDocumentsForUserByType (Signable Offer)
+showOfferList = someArchivePage pageOffersList 
 
 showOrdersList :: Kontrakcja m => m (Either KontraLink String)
-showOrdersList =
-  showItemList' pageOrdersList $ getDocumentsForUserByType (Signable Order)
+showOrdersList = someArchivePage pageOrdersList 
 
 showTemplatesList :: Kontrakcja m => m (Either KontraLink String)
-showTemplatesList =
-  let userTemplates user = do
-        mydocuments <- query $ GetDocumentsByAuthor (userid user)
-        return $ filter isTemplate mydocuments in
-  showItemList' pageTemplatesList userTemplates
+showTemplatesList = someArchivePage pageTemplatesList 
 
 showAttachmentList :: Kontrakcja m => m (Either KontraLink String)
-showAttachmentList =
-  let getAttachments user = do
-        mydocuments <- query $ GetDocumentsByAuthor (userid user)
-        return $ filter ((==) Attachment . documenttype) mydocuments in
-  showItemList' pageAttachmentList getAttachments
+showAttachmentList = someArchivePage pageAttachmentList
   
 showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
-showRubbishBinList =
-  let getRubbish user =
-        if useriscompanyadmin user
-          then query $ GetDeletedDocumentsByCompany user
-          else query $ GetDeletedDocumentsByUser user in
-  showItemList' pageRubbishBinList getRubbish
+showRubbishBinList = someArchivePage pageRubbishBinList 
 
 {- |
     Helper function for showing lists of documents.
 -}
-showItemList' :: Kontrakcja m
-    => (TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String)
-    -> (User -> m [Document])
-    -> m (Either KontraLink String)
-showItemList' viewPage getDocs = checkUserTOSGet $ do
-  Context {ctxmaybeuser = Just user, ctxtime} <- getContext
-  docs <- getDocs user
-  params <- getListParams
-  viewPage ctxtime user (docSortSearchPage params $ prepareDocsForList docs)
-
+someArchivePage :: (Kontrakcja m, TemplatesMonad m) => (User -> m String) -> m (Either KontraLink String)
+someArchivePage page = checkUserTOSGet $ do
+    user <- fromJust <$> ctxmaybeuser <$> getContext
+    page user 
+    
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
@@ -1515,14 +1491,14 @@ handleCreateNewTemplate = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
   mdoc <- makeDocumentFromFile (Template Contract) input
   case mdoc of
-    Nothing -> handleTemplateReload
+    Nothing -> return $ LinkTemplates
     (Just doc) -> return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewAttachment:: Kontrakcja m => m KontraLink
 handleCreateNewAttachment = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
   _ <- makeDocumentFromFile Attachment input
-  handleAttachmentReload
+  return LinkAttachments
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = do
@@ -1546,17 +1522,17 @@ makeDocumentFromFile _ _ = mzero -- to complete the patterns
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
     _ <- handleSignableArchive (Signable Contract)
-    return $ LinkContracts emptyListParams
+    return $ LinkContracts 
 
 handleOffersArchive :: Kontrakcja m => m KontraLink
 handleOffersArchive =  do
     _ <- handleSignableArchive (Signable Offer)
-    return $ LinkOffers emptyListParams
+    return $ LinkOffers 
 
 handleOrdersArchive :: Kontrakcja m => m KontraLink
 handleOrdersArchive =  do
     _ <- handleSignableArchive (Signable Order)
-    return $ LinkOrders emptyListParams
+    return $ LinkOrders 
 
 handleSignableArchive :: Kontrakcja m => DocumentType -> m ()
 handleSignableArchive doctype =  do
@@ -1568,13 +1544,13 @@ handleTemplateArchive :: Kontrakcja m => m KontraLink
 handleTemplateArchive = do
     handleIssueArchive
     addFlashM flashMessageTemplateArchiveDone
-    return $ LinkTemplates emptyListParams
+    return $ LinkTemplates 
 
 handleAttachmentArchive :: Kontrakcja m => m KontraLink
 handleAttachmentArchive = do
     handleIssueArchive
     addFlashM flashMessageAttachmentArchiveDone
-    return $ LinkAttachments emptyListParams
+    return $ LinkAttachments 
 
 handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
@@ -1593,7 +1569,7 @@ handleRubbishRestore = do
   docids <- getCriticalFieldList asValidDocID "doccheck"
   _ <- guardRightM . update . RestoreArchivedDocuments user $ map DocumentID docids
   addFlashM flashMessageRubbishRestoreDone
-  return $ LinkRubbishBin emptyListParams
+  return $ LinkRubbishBin 
  
 handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
 handleRubbishReallyDelete = do
@@ -1602,7 +1578,7 @@ handleRubbishReallyDelete = do
   idsAndUsers <- mapM (lookupUsersRelevantToDoc . DocumentID) docids
   _ <- guardRightM . update . ReallyDeleteDocuments user $ idsAndUsers
   addFlashM flashMessageRubbishHardDeleteDone
-  return $ LinkRubbishBin emptyListParams
+  return $ LinkRubbishBin 
 
 handleTemplateShare :: Kontrakcja m => m KontraLink
 handleTemplateShare = withUserPost $ do
@@ -1610,7 +1586,7 @@ handleTemplateShare = withUserPost $ do
     case docs of
       (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
       _ -> addFlashM flashMessageMultipleTemplateShareDone
-    return $ LinkTemplates emptyListParams
+    return $ LinkTemplates 
 
 handleAttachmentShare :: Kontrakcja m => m KontraLink
 handleAttachmentShare = withUserPost $ do
@@ -1618,7 +1594,7 @@ handleAttachmentShare = withUserPost $ do
     case docs of
       (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
       _ -> addFlashM  flashMessageMultipleAttachmentShareDone
-    return $ LinkAttachments emptyListParams
+    return $ LinkAttachments
 
 handleIssueShare :: Kontrakcja m => m [Document]
 handleIssueShare = do
@@ -1636,17 +1612,17 @@ handleAttachmentRename docid = withUserPost $ do
 handleBulkContractRemind :: Kontrakcja m => m KontraLink
 handleBulkContractRemind = withUserPost $ do
     _ <- handleIssueBulkRemind (Signable Contract)
-    return $ LinkContracts emptyListParams
+    return $ LinkContracts 
 
 handleBulkOfferRemind :: Kontrakcja m => m KontraLink
 handleBulkOfferRemind = withUserPost $ do
     _ <- handleIssueBulkRemind (Signable Offer)
-    return $ LinkOffers emptyListParams
+    return $ LinkOffers 
 
 handleBulkOrderRemind :: Kontrakcja m => m KontraLink
 handleBulkOrderRemind = withUserPost $ do
     _ <- handleIssueBulkRemind (Signable Order)
-    return $ LinkOrders emptyListParams
+    return $ LinkOrders 
 
 {- |
     This sends out bulk reminders.  The functionality is offered in the document
@@ -1675,24 +1651,6 @@ handleIssueBulkRemind doctype = do
                 unsignedsiglinks = filter isElegible $ documentsignatorylinks doc
             sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
           _ -> return []
-
-handleContractsReload :: Kontrakcja m => m KontraLink
-handleContractsReload  = fmap LinkContracts getListParamsForSearch
-
-handleTemplateReload :: Kontrakcja m => m KontraLink
-handleTemplateReload = fmap LinkTemplates getListParamsForSearch
-
-handleAttachmentReload :: Kontrakcja m => m KontraLink
-handleAttachmentReload = fmap LinkAttachments getListParamsForSearch
-
-handleOffersReload :: Kontrakcja m => m KontraLink
-handleOffersReload = fmap LinkOffers getListParamsForSearch
-
-handleOrdersReload :: Kontrakcja m => m KontraLink
-handleOrdersReload = fmap LinkOrders getListParamsForSearch
-
-handleRubbishBinReload :: Kontrakcja m => m KontraLink
-handleRubbishBinReload = fmap LinkRubbishBin getListParamsForSearch
 
 {- |
    Get some html to display the images of the files
@@ -1821,12 +1779,11 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
 
 mainPage :: Kontrakcja m => m String
 mainPage =  do
-    params <- getListParams
     showTemplates <- isFieldSet "showTemplates"
     tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess
     when tooLarge $ addFlashM modalPdfTooLarge
-    uploadPage params mdocprocess showTemplates
+    uploadPage mdocprocess showTemplates
 
 getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)
 getDocProcess = getOptionalField asDocType "doctype"

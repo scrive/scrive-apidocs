@@ -7,7 +7,6 @@ module ELegitimation.BankID
     )
     where
 
-import ListUtil
 import Redirect
 import AppView
 import qualified AppLogger as Log
@@ -400,7 +399,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                                 Closed  -> addFlashM modalSignAwaitingAuthorLast
                                                 _ -> mzero -- should not be possible but necessary for compiling
                                             return $ LinkIssueDoc (documentid d)
-                                        ([], _) -> return $ LinkContracts emptyListParams
+                                        ([], _) -> return $ LinkContracts 
                                         _ -> mzero
                                 Left link -> return link
 

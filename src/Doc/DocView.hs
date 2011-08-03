@@ -85,7 +85,6 @@ import Mails.MailsUtil
 import MinutesTime
 import Misc
 import Templates.Templates
-import Templates.TemplatesUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -329,16 +328,6 @@ signatoryFieldsListForJSON crtime doc sl = propagateMonad [
 
   
 
--- All doc view
-singlnkFields :: MonadIO m => Document -> (MinutesTime -> String) -> SignatoryLink -> Fields m
-singlnkFields document dateformatter sl = do
-  field "id" $ show $ signatorylinkid sl
-  field "name" $ getSmartName sl
-  field "email" $  ""
-  field "company" $ getCompanyName sl
-  field "author" $ isAuthor sl
-  signatoryStatusFields document sl dateformatter
-
 {- |
     We want the documents to be ordered like the icons in the bottom
     of the document list.  So this means:
@@ -368,40 +357,6 @@ documentStatusClass doc =
   case (map (signatoryStatusClass doc) $ filter isSignatory $ documentsignatorylinks doc) of
     [] -> SCDraft
     xs -> minimum xs
-
-documentBasicViewFields :: TemplatesMonad m => MinutesTime -> User -> Document -> Fields m
-documentBasicViewFields crtime user doc = do
-    documentInfoFields doc
-    field "status" $ show (documentStatusClass doc)
-    field "authorname" $ getAuthorName doc
-    fieldFL "signatories" $ map (singlnkFields doc (showDateAbbrev crtime)) $ filter isSignatory $ documentsignatorylinks doc
-    field "anyinvitationundelivered" $ anyInvitationUndelivered doc
-    field "doclink"  $ if isAuthor (doc, user) || null signatorylinklist
-                        then show . LinkIssueDoc $ documentid doc
-                        else show $ LinkSignDoc doc (head signatorylinklist)
-    {- FIXME: to know if a user is superuser we need to consult Context... we do not have it here
-    field "davelink" $ if issuperuser
-                        then Just $ "/dave/document/" ++ (show $ documentid doc)
-                        else Nothing
-    -}
-    field "timeoutdate" $ fromTimeout show
-    field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
-    field "mtime" $ showDateAbbrev crtime (documentmtime doc)
-    field "istemplate" $ isTemplate doc
-    field "isauthor" $ isAuthor (doc, user)
-    field "isviewer" $ (not $ isAuthor (doc, user)) && isViewer (doc, user)
-    field "isshared" $ (documentsharing doc)==Shared
-    fieldM "processname" $ renderTextForProcess doc processname
-  where
-    signatorylinklist =
-      filter (isSigLinkFor user) $ documentsignatorylinks doc
-
-    fromTimeout f =
-      case (documenttimeouttime doc, documentstatus doc) of
-           (Just (TimeoutTime x), Pending) -> Just $ f x
-           _                               -> Nothing
-
-
 
 -- Searching, sorting and paging
 docSortSearchPage :: ListParams -> [Document] -> PagedList Document
@@ -474,22 +429,22 @@ docsPageSize = 100
 
 --
 
-pageContractsList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageContractsList :: TemplatesMonad m => User -> m String
 pageContractsList = pageList' "pageContractsList" LinkContracts
 
-pageTemplatesList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageTemplatesList :: TemplatesMonad m => User -> m String
 pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates
 
-pageAttachmentList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageAttachmentList :: TemplatesMonad m =>  User -> m String
 pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
 
-pageOffersList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageOffersList :: TemplatesMonad m => User -> m String
 pageOffersList = pageList' "pageOffersList" LinkOffers
 
-pageOrdersList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageOrdersList :: TemplatesMonad m => User -> m String
 pageOrdersList = pageList' "pageOrdersList" LinkOrders
 
-pageRubbishBinList :: TemplatesMonad m => MinutesTime -> User -> PagedList Document -> m String
+pageRubbishBinList :: TemplatesMonad m => User ->  m String
 pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
 
 {- |
@@ -497,49 +452,25 @@ pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
 -}
 pageList' :: TemplatesMonad m
           => String
-          -> (ListParams -> KontraLink)
-          -> MinutesTime
+          -> KontraLink
           -> User
-          -> PagedList Document
           -> m String
-pageList' templatename makeCurrentLink ctime user documents =
+pageList' templatename currentlink user  =
   renderTemplateFM templatename $ do
-    fieldFL "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
-    pagedListFields documents
     field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
     field "currentlink" $ show $ currentlink
-    field "linkdoclist" $ show $ LinkContracts emptyListParams
-    field "documentactive" $ documentactive
-    field "linkofferlist" $ show $ LinkOffers emptyListParams
-    field "offeractive" $ offeractive
-    field "linkorderlist" $ show $ LinkOrders emptyListParams
-    field "orderactive" $ orderactive
-    field "linktemplatelist" $ show $ LinkTemplates emptyListParams
-    field "templateactive" $ templateactive
-    field "linkattachmentlist" $ show $ LinkAttachments emptyListParams
-    field "attachmentactive" $ attachmentactive
-    field "linkrubbishbinlist" $ show $ LinkRubbishBin emptyListParams
-    field "rubbishbinactive" $ rubbishbinactive
-  where
-    currentlink = makeCurrentLink $ params documents
-    documentactive = case currentlink of
-                       (LinkContracts _) -> True
-                       _ -> False
-    offeractive = case currentlink of
-                       (LinkOffers _) -> True
-                       _ -> False
-    orderactive = case currentlink of
-                       (LinkOrders _) -> True
-                       _ -> False
-    templateactive = case currentlink of
-                       (LinkTemplates _) -> True
-                       _ -> False
-    attachmentactive = case currentlink of
-                       (LinkAttachments _) -> True
-                       _ -> False
-    rubbishbinactive = case currentlink of
-                         (LinkRubbishBin _) -> True
-                         _ -> False
+    field "linkdoclist" $ show $ LinkContracts 
+    field "documentactive" $ (LinkContracts == currentlink)
+    field "linkofferlist" $ show $ LinkOffers 
+    field "offeractive" $ (LinkOffers == currentlink)
+    field "linkorderlist" $ show $ LinkOrders
+    field "orderactive" $ (LinkOrders == currentlink)
+    field "linktemplatelist" $ show $ LinkTemplates
+    field "templateactive" $ (LinkTemplates == currentlink)
+    field "linkattachmentlist" $ show $ LinkAttachments 
+    field "attachmentactive" $ (LinkAttachments == currentlink)
+    field "linkrubbishbinlist" $ show $ LinkRubbishBin
+    field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
 
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
@@ -1201,10 +1132,9 @@ designViewFields step = do
         _ -> False
 
 
-uploadPage :: TemplatesMonad m => ListParams -> (Maybe DocumentProcess) -> Bool -> m String
-uploadPage params mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
+uploadPage :: TemplatesMonad m => (Maybe DocumentProcess) -> Bool -> m String
+uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
     field "isprocessselected" $ isJust mdocprocess
-    field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdocprocess
     field "showTemplates" showTemplates
     fieldFL "processes" $ map processFields [Contract,Offer,Order]
     field "processid" $ show <$> mdocprocess

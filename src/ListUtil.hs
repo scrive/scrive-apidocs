@@ -70,6 +70,7 @@ data ListParams = ListParams {
       sorting      :: [String]
     , search       :: Maybe String
     , page         :: Int }
+    deriving (Eq)
 
 instance Show ListParams where
     show params = intercalate "&" $ pg ++ srch ++ srt

@@ -54,7 +54,6 @@ import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
 import Happstack.State (query, update)
-import ListUtil
 import Network.Socket
 import System.Directory
 import System.Time
@@ -103,7 +102,6 @@ data AppGlobals
 handleRoutes :: Kontra Response
 handleRoutes = msum [
        hGetAllowHttp0 $ handleHomepage
-     , hPost0 $ handleMainReaload
 
      -- static pages
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -127,7 +125,7 @@ handleRoutes = msum [
      , dir "d" $ hGet2                        $ toK2 $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost1        $ toK1 $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts emptyListParams
+     , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
      , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ toK3 $ DocControl.signDocument
@@ -158,17 +156,14 @@ handleRoutes = msum [
      , dir "o" $ hGet0 $ toK0 $ DocControl.showOfferList
      , dir "o" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOffersArchive
      , dir "o" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOfferRemind
-     , dir "o" $ hPost0 $ toK0 $ DocControl.handleOffersReload
 
      , dir "or" $ hGet0  $ toK0 $ DocControl.showOrdersList
      , dir "or" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
-     , dir "or" $ hPost0 $ toK0 $ DocControl.handleOrdersReload
      
      , dir "r" $ hGet0 $ toK0 $ DocControl.showRubbishBinList
      , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
-     , dir "r" $ hPost0 $ toK0 $ DocControl.handleRubbishBinReload
 
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor
      , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
@@ -178,7 +173,6 @@ handleRoutes = msum [
      , dir "d" $ {- param "doc" $ -} hPost0 $ toK0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
-     , dir "d"                     $ hPost0 $ toK0 $ DocControl.handleContractsReload
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
 
@@ -360,10 +354,6 @@ handleError = do
             addFlashM V.modalError
             sendRedirect LinkMain
          Just _ -> embeddedErrorPage
-
-handleMainReaload :: Kontra KontraLink
-handleMainReaload = do
-    liftM3 LinkNew DocControl.getDocProcess getListParamsForSearch (isFieldSet "showTemplates")
 
 {- |
    Creates a default amazon configuration based on the
