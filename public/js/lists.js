@@ -294,7 +294,8 @@ var ListObject = Backbone.Model.extend({
       return this.get("selected") == true;
   },
   toogleSelect:  function() {
-        this.set({"selected":!this.isSelected()});
+        this.set({"selected":!this.isSelected()}, {silent: true});
+        this.trigger("selected:change");
   },
   isExpanded: function() {
      return this.get("expanded") == true;
@@ -328,9 +329,10 @@ var ListObjectView = Backbone.View.extend({
         'click .expand': 'toogleExpand'
     },
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'renderSelection');
         this.model.bind('change', this.render);
-        this.schema = args.schema
+        this.model.bind('selected:change', this.renderSelection);
+        this.schema = args.schema;
         this.model.view = this;
         this.render();
     },
@@ -396,11 +398,14 @@ var ListObjectView = Backbone.View.extend({
            else
                subrow.css("display","none");
         }
-        if (this.model.isSelected())
+        this.renderSelection();
+        return this
+    },
+    renderSelection : function(){
+      if (this.model.isSelected())
             this.el.addClass("ui-selected");
         else
             this.el.removeClass("ui-selected");
-        return this
     },
     toogleSelect: function(){
        this.model.toogleSelect()
