@@ -518,9 +518,10 @@
 }
 
 #tab-viewer .tab-dd {
-        font: 12px/24px "Lucida Grande";
+    font: 12px/24px "Lucida Grande";
 	text-indent: 9px;
 	position: relative;
+    margin-right: 15px;
 }
 
 #tab-viewer .tab-dd-button {

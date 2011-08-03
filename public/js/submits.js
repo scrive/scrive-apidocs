@@ -10,20 +10,27 @@
 window.Submit = Backbone.Model.extend({
     defaults : {
         url : "",
-        method : "GET"    
+        method : "GET",
+        inputs : jQuery()
     },
     ignored : function(k)
     {
-      return k == "url" || k == "method";
+      return k == "url" || k == "method" || k == "inputs";
     },
     add: function(k,v)
     {
         this.set({k : v});
     },
+    addInputs : function(v)
+    {
+        this.set({inputs : this.get("inputs").add(v)});
+    },
     send: function() {
         var form = $("<form style='display:hidden'/>");
         form.attr("action", this.get("url"));
         form.attr("method", this.get("method"));
+        if (this.get("method") == "POST")
+           form.attr("enctype","multipart/form-data");
         for (var k in this.attributes) {
         var val = this.get(k)
         if (this.ignored(k))
@@ -44,7 +51,7 @@ window.Submit = Backbone.Model.extend({
             }
         
         }
-
+        form.append(this.get("inputs"));
         $("body").append(form);
         form.submit();
     }})

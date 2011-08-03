@@ -26,7 +26,8 @@ var UploadButtonModel = Backbone.Model.extend({
       text : "",
       width: 200,
       maxlength : 1,
-      submitOnUpload : false
+      submitOnUpload : false,
+      size : "small" 
   },
   width : function(){
        return this.get("width");
@@ -45,6 +46,23 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   list : function() {
         return this.get("list");
+  },
+  size : function() {
+        return this.get("size");
+  },
+  submit : function(){
+        return this.get("submit");
+  },
+  hasSubmit : function(){
+        return this.submit() != undefined;
+  },
+  borderWidth : function(){
+    if (this.size() == "small")
+        return 16;
+    else if (this.size() == "tiny")
+        return 6;
+    else if (this.size() == "big")
+        return 22;    
   }
 });
 
@@ -62,9 +80,9 @@ var UploadButtonView = Backbone.View.extend({
     render: function () {
         var button = $("<a/>");
         var model = this.model;
-        button .addClass("green").addClass("btn-small").css("overflow", "hidden").css("width",model.width() + "px");
+        button .addClass("green").addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
         var left  = $("<div class='left'/>");
-        var label = $("<div class='label'/>").text(model.text()).css("width",(model.width() - 2* 16) + "px");
+        var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * model.borderWidth()) + "px");
         var right = $("<div class='right'/>");
         button .append(left);
         button .append(label);
@@ -83,7 +101,17 @@ var UploadButtonView = Backbone.View.extend({
             onFileAppend: function() {
                 if (model.submitOnUpload()) {
                     displayLoadingOverlay(localization.loadingFile);
-                     button.parents("form").submit();
+                    if (model.hasSubmit())
+                    {
+                        model.submit().addInputs(list);
+                        model.submit().addInputs(fileinput);
+                        model.submit().send();
+                    }    
+                    else
+                    {
+                        button.parents("form").submit();
+                    }    
+                
                 }
             }
         });

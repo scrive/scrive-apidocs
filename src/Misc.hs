@@ -550,6 +550,16 @@ propagateFst (a,bs) = for bs (\b -> (a,b))
 
 mapPair::(Functor f) => (a -> b) -> f (a,a)  -> f (b,b)
 mapPair f = fmap (\(a1,a2) -> (f a1, f a2))
+
+propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
+propagateMonad ((a,mb):rest) = do
+    b <- mb
+    rest' <- propagateMonad rest
+    return $ (a,b): rest'
+
+propagateMonad _ = return []
+
+
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []

@@ -60,6 +60,8 @@ standardHeaderContents=
         
         <script src="$prefix$/js/buttons.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/uploadbuttons.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/tooltips.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/submits.js"
