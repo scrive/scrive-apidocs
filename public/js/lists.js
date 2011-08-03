@@ -349,12 +349,8 @@ var ListObjectView = Backbone.View.extend({
             var value = this.model.field(cell.field());
             if (cell.isSpecial()) {
                 if (cell.isSelect()) {
-                    var checkbox = $("<input type='checkbox' class='selectme'/>");
-                    if (this.model.isSelected())
-                        checkbox.attr("checked","true")
-                    else
-                        checkbox.removeAttr("checked")
-                    td.append(checkbox);    
+                    this.checkbox = $("<input type='checkbox' class='selectme'/>");
+                    td.append(this.checkbox);    
                     
                 }
                 else if (cell.isRendered() && value != undefined){
@@ -402,10 +398,16 @@ var ListObjectView = Backbone.View.extend({
         return this
     },
     renderSelection : function(){
-      if (this.model.isSelected())
-            this.el.addClass("ui-selected");
-        else
-            this.el.removeClass("ui-selected");
+      if (this.model.isSelected()){
+       this.el.addClass("ui-selected");
+       if (this.checkbox != undefined)
+          this.checkbox.attr("checked","true");
+      }else{
+       this.el.removeClass("ui-selected");
+       if (this.checkbox != undefined)
+          this.checkbox.removeAttr("checked");
+      }
+                        
     },
     toogleSelect: function(){
        this.model.toogleSelect()
