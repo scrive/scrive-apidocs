@@ -465,3 +465,4 @@ makeFullLink ctx doc link = do
     case join $ servicelocation <$> servicesettings <$> mservice of
          Just (ServiceLocation location) -> return $ BS.toString location ++ link
          Nothing -> return $ ctxhostpart ctx ++ link
+

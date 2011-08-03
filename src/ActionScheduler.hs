@@ -10,10 +10,12 @@ import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader
+import Data.List
 import Data.Maybe
 import Happstack.State
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
@@ -30,6 +32,7 @@ import User.UserView
 import qualified AppLogger as Log
 import System.Time
 import Util.HasSomeUserInfo
+import Doc.Invariants
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
@@ -155,6 +158,34 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
 
 evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
     deleteAction actionID
+    
+evaluateAction Action{actionID, actionType = DocumentProblemsCheck{}} = do
+  deleteAction actionID
+  now <- liftIO getMinutesTime
+  docs <- query $ GetDocuments Nothing
+  let probs = listInvariantProblems now docs
+      res = case probs of
+        [] -> "No problems!"
+        _  -> intercalate "\n" probs
+  mailDocumentProblemsCheck res
+  liftIO $ addDocumentProblemsCheck $ (60 * 4) `minutesAfter` now
+  return ()
+
+-- | Send an email out to all registered emails about document problems.
+mailDocumentProblemsCheck :: String -> ActionScheduler ()
+mailDocumentProblemsCheck msg = do
+  sd <- ask
+  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
+                                                  , title = BS.fromString $ "Document problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = BS.fromString msg
+                                                  , attachments = []
+                                                  , from = Nothing
+                                                  , mailInfo = None
+                                                  }
+
+-- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
+documentProblemsCheckEmails :: [BS.ByteString]
+documentProblemsCheckEmails = map BS.fromString ["eric@skrivapa.se"]
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
