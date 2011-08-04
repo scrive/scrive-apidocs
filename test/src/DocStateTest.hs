@@ -480,8 +480,9 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
 testSignDocumentSignablePendingRight :: Assertion
 testSignDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  etdoc <- randomUpdate $ SignDocument (documentid doc)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ (any (isSignatory &&^ (not . hasSigned) &&^ hasSeen) . documentsignatorylinks))
+  let Just sl = find (isSignatory &&^ (not . hasSigned) &&^ hasSeen) (documentsignatorylinks doc)
+  etdoc <- randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl)
   validTest $ do
     assertRight etdoc
     assertInvariants $ fromRight etdoc
@@ -541,7 +542,8 @@ testAuthorSignDocumentNotLeft = doTimes 10 $ do
 testAuthorSignDocumentSignablePreparationRight :: Assertion
 testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author
+         (isSignable &&^ isPreparation &&^ (not . hasSigned . getAuthorSigLink))
   etdoc <- randomUpdate $ AuthorSignDocument (documentid doc)
   validTest $ do
     assertRight etdoc
@@ -703,14 +705,16 @@ testSetDocumentUIRight = doTimes 10 $ do
 testCloseDocumentSignableAwaitingAuthorJust :: Assertion
 testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isAwaitingAuthor)
+  doc <- addRandomDocumentWithAuthorAndCondition author 
+           (isSignable &&^ isAwaitingAuthor &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertJust etdoc
     
 testCloseDocumentSignableNotAwaitingAuthorNothing :: Assertion
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isAwaitingAuthor))
+  doc <- addRandomDocumentWithAuthorAndCondition author 
+         (isSignable &&^ (not . isAwaitingAuthor) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . filter (not . isAuthor) . documentsignatorylinks))
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertNothing etdoc
 

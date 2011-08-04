@@ -608,3 +608,14 @@ instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
     fromEnum (a,b) = let
                         block = length (allValues::[a])
                 in (fromEnum a * block) + (fromEnum b)
+
+none :: (a -> Bool) -> [a] -> Bool
+none f l = not $ any f l
+
+-- | Simple logical inference operator (arrow)
+(=>>) :: Bool -> Bool -> Bool
+(=>>) a b = not a || b
+
+-- | Higher order inference
+(=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(=>>^) a b = \x -> a x =>> b x
