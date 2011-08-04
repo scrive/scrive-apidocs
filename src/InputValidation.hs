@@ -45,7 +45,8 @@ module InputValidation
     , asValidFieldValue
     , asValidPlace
     , asValidInviteText
-    , sanitize) where
+    , sanitize
+    , flashMessageMissingRequiredField) where
 
 import Control.Applicative
 import Control.Monad()
