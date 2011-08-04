@@ -40,6 +40,7 @@ documentInvariants = [ documentHasOneAuthor
                      , maxLengthOnFields
                      , maxNumberOfPlacements
                      , awaitingAuthorAuthorNotSigned
+                     , atLeastOneSignatory
                      ]
 
 {- |
@@ -166,6 +167,15 @@ awaitingAuthorAuthorNotSigned :: MinutesTime -> Document -> Maybe String
 awaitingAuthorAuthorNotSigned _ document =
   assertInvariant "Author has signed but still in AwaitingAuthor" $
     (isAwaitingAuthor document =>> (not $ hasSigned $ getAuthorSigLink document))
+    
+{- |
+   At least one signatory in Pending AwaitingAuthor or Closed
+ -}
+atLeastOneSignatory :: MinutesTime -> Document -> Maybe String
+atLeastOneSignatory _ document =
+  assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
+    (isPending document || isAwaitingAuthor document || isClosed document) =>>
+    (any isSignatory (documentsignatorylinks document))
 
 -- some helpers  
        

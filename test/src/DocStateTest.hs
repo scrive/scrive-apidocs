@@ -514,7 +514,8 @@ testAuthorSendDocumentNotLeft = doTimes 100 $ do
 testAuthorSendDocumentSignablePreparationRight :: Assertion
 testAuthorSendDocumentSignablePreparationRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author
+         (isSignable &&^ isPreparation &&^ (any isSignatory . documentsignatorylinks))
   etdoc <- randomUpdate $ AuthorSendDocument (documentid doc)
   validTest $ do
     assertRight etdoc
@@ -543,7 +544,7 @@ testAuthorSignDocumentSignablePreparationRight :: Assertion
 testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author
-         (isSignable &&^ isPreparation &&^ (not . hasSigned . getAuthorSigLink))
+         (isSignable &&^ isPreparation &&^ (not . hasSigned . getAuthorSigLink) &&^ (isSignatory . getAuthorSigLink))
   etdoc <- randomUpdate $ AuthorSignDocument (documentid doc)
   validTest $ do
     assertRight etdoc
@@ -626,7 +627,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTi
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
-              when (isNothing $ maybeseeninfo sl) $ do
+              when (not $ hasSeen sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
                 assertRight etdoc)
         
@@ -635,8 +636,9 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
-              when (isNothing $ maybeseeninfo sl) $ do
-                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl)
+              when (not $ hasSeen sl) $ do
+                mh <- untilCondition (\a -> a /= (signatorymagichash sl)) $ rand 1000 arbitrary
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh
                 assertLeft etdoc)
 
 testSetInvitationDeliveryStatusNotSignableLeft :: Assertion
