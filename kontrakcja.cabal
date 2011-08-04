@@ -86,7 +86,7 @@ Executable kontrakcja-server
   Build-depends: zlib
   Build-depends: cryptocipher==0.2.*
   Build-depends: happstack==6.*
-  Build-depends: happstack-server==6.*
+  Build-depends: happstack-server==6.0.*
   Build-depends: happstack-state==6.*
   Build-depends: happstack-ixset==6.*
   Build-depends: happstack-data==6.*
