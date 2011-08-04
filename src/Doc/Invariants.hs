@@ -9,6 +9,8 @@ import Misc
 
 import Data.List
 import Data.Maybe
+import qualified Data.ByteString as BS
+
 
 listInvariantProblems :: MinutesTime -> [Document] -> [String]
 listInvariantProblems now docs = catMaybes $ map (invariantProblems now) docs
@@ -35,6 +37,12 @@ documentInvariants = [ documentHasOneAuthor
                      , signatoryLimit
                      , seenWhenSigned
                      , allSignedWhenClosed
+                     , maxLengthOnFields
+                     , maxNumberOfPlacements
+                     , awaitingAuthorAuthorNotSigned
+                     , atLeastOneSignatory
+                     , notSignatoryNotSigned
+                     , maxCustomFields
                      ]
 
 {- |
@@ -115,23 +123,86 @@ seenWhenSigned :: MinutesTime -> Document -> Maybe String
 seenWhenSigned _ document =
   assertInvariant "some signatories have signed but not seen" $
     all (hasSigned =>>^ hasSeen) (documentsignatorylinks document)
+    
+{- |
+   max length of fields
+ -}
+maxLengthOnFields :: MinutesTime -> Document -> Maybe String
+maxLengthOnFields _ document =
+  let maxlength = 50 
+      assertMaxLength s = BS.length s <= maxlength in
+  assertInvariant ("some fields were too long. max is " ++ show maxlength) $
+    all (\sl -> let sd = signatorydetails sl in
+          assertMaxLength (signatoryfstname sd) &&
+          assertMaxLength (signatorysndname sd) &&
+          assertMaxLength (signatorycompany sd) &&
+          assertMaxLength (signatorypersonalnumber sd) &&
+          assertMaxLength (signatorycompanynumber sd) &&
+          assertMaxLength (signatoryemail sd) &&
+          all (\fd -> assertMaxLength (fieldlabel fd) &&
+                      assertMaxLength (fieldvalue fd))
+              (signatoryotherfields sd))
+        (documentsignatorylinks document)
+    
+{- |
+   max number of placements per field
+ -}
+maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
+maxNumberOfPlacements _ document =
+  let maxlength = 20 
+      assertMaxLength l = length l <= maxlength in
+  assertInvariant ("some signatory had too many placements. max is " ++ show maxlength ++ " per field") $
+    all (\sl -> let sd = signatorydetails sl in
+          assertMaxLength (signatoryfstnameplacements sd) &&
+          assertMaxLength (signatorysndnameplacements sd) &&
+          assertMaxLength (signatorycompanyplacements sd) &&
+          assertMaxLength (signatoryemailplacements sd) &&
+          assertMaxLength (signatorypersonalnumberplacements sd) &&
+          assertMaxLength (signatorycompanynumberplacements sd) &&
+          all (assertMaxLength . fieldplacements) (signatoryotherfields sd))
+        (documentsignatorylinks document)
+    
+{- |
+   AwaitingAuthor implies Author has not signed
+ -}
+awaitingAuthorAuthorNotSigned :: MinutesTime -> Document -> Maybe String
+awaitingAuthorAuthorNotSigned _ document =
+  assertInvariant "Author has signed but still in AwaitingAuthor" $
+    (isAwaitingAuthor document =>> (not $ hasSigned $ getAuthorSigLink document))
+    
+{- |
+   At least one signatory in Pending AwaitingAuthor or Closed
+ -}
+atLeastOneSignatory :: MinutesTime -> Document -> Maybe String
+atLeastOneSignatory _ document =
+  assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
+    (isPending document || isAwaitingAuthor document || isClosed document) =>>
+    (any isSignatory (documentsignatorylinks document))
+    
+{- |
+   If you're not a signatory, you shouldn't be signed
+ -}
+notSignatoryNotSigned :: MinutesTime -> Document -> Maybe String
+notSignatoryNotSigned _ document =
+  assertInvariant "there are non-signatories who have signed" $
+    (all ((not . isSignatory) =>>^ (not . hasSigned)) (documentsignatorylinks document))
+    
+{- |
+   Maximum number of custom fields
+ -}
+maxCustomFields :: MinutesTime -> Document -> Maybe String
+maxCustomFields _ document =
+  let maxfields = 20 
+      assertMaximum sl = length (signatoryotherfields $ signatorydetails sl) <= maxfields in
+  assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
+    all assertMaximum (documentsignatorylinks document)
 
 -- some helpers  
        
 assertInvariant :: String -> Bool -> Maybe String
-assertInvariant _ False = Nothing
-assertInvariant s True  = Just s
+assertInvariant _ True = Nothing
+assertInvariant s False  = Just s
 
-none :: (a -> Bool) -> [a] -> Bool
-none f l = not $ any f l
-
--- | Simple logical inference operator (arrow)
-(=>>) :: Bool -> Bool -> Bool
-(=>>) a b = not a || b
-
--- | Higher order inference
-(=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-(=>>^) a b = \x -> a x =>> b x
 
 -- | Given the time now, is doc older than minutes.
 olderThan :: MinutesTime -> Document -> Int -> Bool

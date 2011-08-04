@@ -2,10 +2,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Test.HUnit (assertFailure, Assertion, assertBool, assert)
+import Test.HUnit (assertFailure, Assertion, assertBool)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
-import Data.Maybe
 
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
@@ -14,6 +13,7 @@ import Test.QuickCheck
 import Happstack.State
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
+import Data.Maybe
 
 import Company.CompanyState
 import qualified AppLogger as Log
@@ -26,6 +26,8 @@ import Misc
 import Payments.PaymentsState as Payments
 import API.Service.ServiceState
 import Data.Typeable
+import Doc.Invariants
+import Doc.DocInfo
 
 instance Arbitrary UserID where
   arbitrary = do
@@ -134,6 +136,28 @@ instance Arbitrary SignatoryLinkID where
   arbitrary = do
     si <- arbitrary
     return $ SignatoryLinkID si
+    
+instance Arbitrary SignatoryLink where
+  arbitrary = do
+    (slid, sd, mh) <- arbitrary
+    (signinfo) <- arbitrary
+    seeninfo <- arbitrary
+    return $  SignatoryLink { signatorylinkid            = slid
+                            , signatorydetails           = sd
+                            , signatorymagichash         = mh
+                            , maybesignatory             = Nothing
+                            , maybesupervisor            = Nothing
+                            , maybecompany               = Nothing
+                            , maybesigninfo              = signinfo
+                                                           -- we don't want seeninfo if we don't have signinfo
+                            , maybeseeninfo              = maybe Nothing (\_ -> Just seeninfo) signinfo
+                            , maybereadinvite            = Nothing
+                            , invitationdeliverystatus   = Unknown
+                            , signatorysignatureinfo     = Nothing
+                            , signatoryroles             = []
+                            , signatorylinkdeleted       = False
+                            , signatorylinkreallydeleted = False
+                            }
 
 instance Arbitrary SignatureProvider where
   arbitrary = elements [ BankIDProvider
@@ -206,8 +230,12 @@ instance Arbitrary Document where
   arbitrary = do
     ds <- arbitrary
     dt <- arbitrary
+    sls <- arbitrary
+    f <- arbitrary
     return $ blankDocument { documentstatus = ds 
                            , documenttype = dt
+                           , documentsignatorylinks = sls
+                           , documentfiles = [f]
                            }
 
 instance Arbitrary DocumentStatus where
@@ -463,30 +491,46 @@ addRandomDocumentWithAuthorAndCondition user p =  do
   let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
               stdgen 10000
   let doc = unGen arbitrary stdgen 10
-      sls = 1 + (abs $ unGen arbitrary stdgen 10)
-      sldets = unGen (vectorOf sls arbitrary) stdgen 10
-      slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
-  slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
     Just cid -> query $ GetCompany cid
+    
+  now <- getMinutesTime
   
+  let (signinfo, seeninfo) = unGen arbitrary stdgen 10
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
-  let adoc = doc { documentsignatorylinks = slinks ++ 
-                                            [asl { maybesignatory = Just (userid user) }]
+  let asl' = asl { maybeseeninfo = seeninfo
+                 , maybesigninfo = signinfo
+                 }
+             
+  let siglinks = documentsignatorylinks doc ++ [asl' { maybesignatory = Just (userid user) }]
+  let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
+                                          maybeseeninfo = Nothing }) siglinks
+  let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
+  let adoc = doc { documentsignatorylinks = siglinksandauthor
                  }
   if p adoc
     then do
-      docid <- update $ StoreDocumentForTesting adoc
-      mdoc <- query $ GetDocumentByDocumentID docid
-      case mdoc of
-        Nothing -> do
-          assertFailure "Could not store document."
-          return doc
-        Just doc' -> return doc'
-    else addRandomDocumentWithAuthorAndCondition user p
+    let d = (invariantProblems now adoc)
+    if isNothing d
+      then do
+        docid <- update $ StoreDocumentForTesting adoc
+        mdoc <- query $ GetDocumentByDocumentID docid
+        case mdoc of
+          Nothing -> do
+            assertFailure "Could not store document."
+            return doc
+          Just doc' -> do
+            return doc'
+        else do
+          --uncomment this to find out why the doc was rejected
+          --print $ "rejecting doc: " ++ fromJust d
+          addRandomDocumentWithAuthorAndCondition user p
+    else do
+      --print adoc   
+      addRandomDocumentWithAuthorAndCondition user p
 
 rand :: Int -> Gen a -> IO a
 rand i a = do  
@@ -555,16 +599,20 @@ instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
     randomCall $ f a
 
 assertJust :: Maybe a -> Assertion
-assertJust = assert . isJust
+assertJust (Just _) = assertSuccess
+assertJust Nothing = assertFailure "Should have returned Just but returned Nothing"
 
-assertRight :: Either a b -> Assertion
-assertRight = assert . isRight
+assertRight :: (Show a) => Either a b -> Assertion
+assertRight (Right _) = assertSuccess
+assertRight (Left a) = assertFailure $ "Should have return Right but returned Left " ++ show a
 
 assertLeft :: Either a b -> Assertion
-assertLeft = assert . isLeft
+assertLeft (Left _) = assertSuccess
+assertLeft _ = assertFailure "Should have returned Left but returned Right"
 
 assertNothing :: Maybe a -> Assertion
-assertNothing = assert . isNothing
+assertNothing Nothing = assertSuccess
+assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
          => Arbitrary (a, b, c, d, e, f, g, h) where
@@ -595,3 +643,16 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
 
 instance Arbitrary FileID where
   arbitrary = fmap FileID arbitrary
+  
+instance Arbitrary File where
+  arbitrary = do
+    (a, b, c) <- arbitrary
+    return $ File { fileid = a
+                  , filename = b
+                  , filestorage = FileStorageMemory c
+                  }
+
+instance Arbitrary SignInfo where
+  arbitrary = do
+    (a, b) <- arbitrary
+    return $ SignInfo a b
