@@ -41,6 +41,7 @@ documentInvariants = [ documentHasOneAuthor
                      , maxNumberOfPlacements
                      , awaitingAuthorAuthorNotSigned
                      , atLeastOneSignatory
+                     , notSignatoryNotSigned
                      ]
 
 {- |
@@ -176,6 +177,14 @@ atLeastOneSignatory _ document =
   assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
     (isPending document || isAwaitingAuthor document || isClosed document) =>>
     (any isSignatory (documentsignatorylinks document))
+    
+{- |
+   If you're not a signatory, you shouldn't be signed
+ -}
+notSignatoryNotSigned :: MinutesTime -> Document -> Maybe String
+notSignatoryNotSigned _ document =
+  assertInvariant "there are non-signatories who have signed" $
+    (all ((not . isSignatory) =>>^ (not . hasSigned)) (documentsignatorylinks document))
 
 -- some helpers  
        
