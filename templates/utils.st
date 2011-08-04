@@ -4,11 +4,14 @@ strong=
     <strong>$it$</strong>
 ###
 morethenonelist=
-    $list:strong(); separator=", "$ och $last:strong()$
+    $list:strong(); separator=", "$ $_listand()$ $last:strong()$
 ###
 ###
 nomorethanonelist=
     $list:strong()$
+###
+listyou=
+    $_listyou()$
 ###
 customFooter= <span/>
 ###

@@ -921,11 +921,12 @@ pageDocumentForSignatory :: TemplatesMonad m
                          -> m String
 pageDocumentForSignatory action document ctx invitedlink  = do
   csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
+  listyou <- renderTemplateM "listyou" ()
   renderTemplateFM "pageDocumentForSignContent" $ do
-    mainFields csvstring
-    fieldF "process" $ processFields csvstring
+    mainFields csvstring listyou
+    fieldF "process" $ processFields csvstring listyou
     where
-    mainFields csvstring =
+    mainFields csvstring listyou =
       let authorsiglink = fromJust $ getAuthorSigLink document
           localscripts =
             "var docstate = "
@@ -933,17 +934,22 @@ pageDocumentForSignatory action document ctx invitedlink  = do
             ++ "; docstate['useremail'] = '"
             ++ (BS.toString $ getEmail invitedlink)
             ++ "';"
-          magichash = signatorymagichash invitedlink
           allowedtypes = documentallowedidtypes document
           requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
+          invitedemail = getEmail invitedlink
           sigattachments = [a | a <- documentsignatoryattachments document
-                              , signatoryattachmentemail a == getEmail invitedlink]
+                              , signatoryattachmentemail a == invitedemail]
           hassigattachments = length sigattachments > 0
+          otherunsignedpartynames = map (BS.toString . getSmartName) . filter ((/=) invitedemail . getEmail) $ partyUnsignedList document
+          unsignedpartynames = 
+            if hasSigned invitedlink
+              then otherunsignedpartynames
+              else listyou : otherunsignedpartynames --refer to yourself in the list, like "you, bob and jim" or "du, bob och jim"
       in do
         field "localscripts" localscripts
         fieldFL "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
         fieldM "rejectMessage" $  mailRejectMailContent Nothing ctx (getSmartName authorsiglink) document invitedlink
-        fieldM "partyUnsigned" $ renderListTemplate $ map (BS.toString . getSmartName) $ partyUnsignedMeAndList magichash document
+        fieldM "partyUnsigned" $ renderListTemplate unsignedpartynames
         field "action" $ show action
         field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
         fieldM "documentinfotext" $ documentInfoText ctx document (Just invitedlink)
@@ -958,13 +964,13 @@ pageDocumentForSignatory action document ctx invitedlink  = do
         documentSigAttachmentViewFields csvstring (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
         documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
         field "hasmysigattachments" hassigattachments
-    getProcessTextWithFields f csvstring = renderTemplateForProcess document f (mainFields csvstring)
+    getProcessTextWithFields f csvstring listyou = renderTemplateForProcess document f (mainFields csvstring listyou)
     getProcessText = renderTextForProcess document
-    processFields csvstring = do
+    processFields csvstring listyou = do
       fieldM "signatorysignmodaltitle" $ getProcessText processsignatorysignmodaltitle
-      fieldM "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent csvstring
+      fieldM "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent csvstring listyou
       fieldM "signbuttontext" $ getProcessText processsignbuttontext
-      fieldM "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle csvstring
+      fieldM "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle csvstring listyou
       fieldM "rejectbuttontext" $ getProcessText processrejectbuttontext
       fieldM "title" $ getProcessText processtitle
       field "requiressignguard" $ getValueForProcess document processrequiressignguard
