@@ -3,7 +3,7 @@ pageRubbishBinList=
 $loadingdialog()$
 <div> 
     <div id="tab-viewer">
-        <div class="tab-header"">
+        <div class="tab-header">
         <a class="backicon float-left" href="$linkdoclist$" style="margin-left:-10px;"></a>
         $docListRubbishBinLink()$
         </div>
