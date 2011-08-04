@@ -42,6 +42,7 @@ documentInvariants = [ documentHasOneAuthor
                      , awaitingAuthorAuthorNotSigned
                      , atLeastOneSignatory
                      , notSignatoryNotSigned
+                     , maxCustomFields
                      ]
 
 {- |
@@ -185,6 +186,16 @@ notSignatoryNotSigned :: MinutesTime -> Document -> Maybe String
 notSignatoryNotSigned _ document =
   assertInvariant "there are non-signatories who have signed" $
     (all ((not . isSignatory) =>>^ (not . hasSigned)) (documentsignatorylinks document))
+    
+{- |
+   Maximum number of custom fields
+ -}
+maxCustomFields :: MinutesTime -> Document -> Maybe String
+maxCustomFields _ document =
+  let maxfields = 20 
+      assertMaximum sl = length (signatoryotherfields $ signatorydetails sl) <= maxfields in
+  assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
+    all assertMaximum (documentsignatorylinks document)
 
 -- some helpers  
        
