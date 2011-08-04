@@ -82,3 +82,4 @@ authorHasUser :: MinutesTime -> Document -> Maybe String
 authorHasUser _ document = case getAuthorSigLink document of
   Just sl | not $ hasUser sl -> Just "author does not have a user connected."
   _ -> Nothing
+
