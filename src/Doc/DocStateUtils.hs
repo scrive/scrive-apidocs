@@ -36,7 +36,7 @@ import Happstack.State
 import MinutesTime
 import Misc
 import Util.SignatoryLinkUtils
-import Doc.Invariants
+
 
 queryDocs :: (Documents -> a) -> Query Documents a
 queryDocs queryFunc = do
@@ -114,11 +114,8 @@ modifyDocumentWithActionTime touchtime condition docid action = do
                               if touchtime
                               then (dropUnsupportedFeatures newdocument) { documentmtime = now }
                               else (dropUnsupportedFeatures newdocument)
-                        case invariantProblems now newdocumentNoUnsupportedFutures of
-                          Just msg -> return $ Left $ "document did not pass invariant checks: " ++ msg
-                          Nothing -> do
-                            modify (updateIx docid $ newdocumentNoUnsupportedFutures )
-                            return $ Right newdocument
+                        modify (updateIx docid $ newdocumentNoUnsupportedFutures )
+                        return $ Right newdocument
        else return $ Left "Document didn't match condition required for this action"
 
 
