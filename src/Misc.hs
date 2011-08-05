@@ -619,3 +619,17 @@ none f l = not $ any f l
 -- | Higher order inference
 (=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (=>>^) a b = \x -> a x =>> b x
+
+-- | Conditional choice operator
+-- Use it like this: a <| condition |> b  is equivalent to if condition then a else b
+-- http://zenzike.com/posts/2011-08-01-the-conditional-choice-operator
+(|>) :: Bool -> a -> Maybe a
+True  |> _ = Nothing
+False |> y = Just y
+
+(<|) :: a -> Maybe a -> a
+x <| Nothing = x
+_ <| Just y  = y
+
+infixr 0 <|
+infixr 0 |>
