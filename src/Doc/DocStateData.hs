@@ -48,6 +48,7 @@ import Data.Data (Data)
 import Data.Int
 import Data.Maybe
 import Data.Word
+import DB.Types
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP

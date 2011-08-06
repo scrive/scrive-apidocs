@@ -13,6 +13,7 @@ import qualified AppLogger as Log
 import Control.Monad.State
 import Data.List
 import Data.Maybe
+import DB.Types
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocUtils

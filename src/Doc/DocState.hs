@@ -81,6 +81,7 @@ import Control.Monad.Reader (ask)
 import Data.List (find)
 import Data.Maybe
 import Data.Word
+import DB.Types
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils

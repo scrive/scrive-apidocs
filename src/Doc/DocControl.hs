@@ -5,6 +5,7 @@ module Doc.DocControl where
 
 import ActionSchedulerState
 import AppView
+import DB.Types
 import DBError
 import Doc.CSVUtils
 import Doc.DocSeal

@@ -67,10 +67,10 @@ import Control.Monad.Reader
 import Data.Maybe
 import ActionSchedulerState
 import Company.CompanyState
+import DB.Types
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
-import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
@@ -80,7 +80,7 @@ import ListUtil
 import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import User.Lang
+import User.OldLang
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> m String
 showUser user mcompany = renderTemplateFM "showUser" $ do

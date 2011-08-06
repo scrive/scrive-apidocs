@@ -35,6 +35,9 @@ import System.IO
 import Control.Concurrent.MVar
 
 import Crypto
+import DB.Classes
+import DB.Migrations
+import Database.HDBC.PostgreSQL
 import Network.BSD
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
 import qualified Control.Exception as Exception
@@ -42,6 +45,7 @@ import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import Doc.DocState
+import User.UserState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
@@ -156,13 +160,6 @@ runKontrakcjaServer = Log.withLogger $ do
   -- variable for enforcing emails sendout
   es_enforcer <- newEmptyMVar
 
-  let appGlobals = AppGlobals { templates = templates
-                              , filecache = filecache'
-                              , mailer = mailer'
-                              , docscache = docs
-                              , esenforcer = es_enforcer
-                              }
-
   appConf <- case parseConfig args of
     (Left e) -> do Log.server (unlines e)
                    exitFailure
@@ -173,8 +170,20 @@ runKontrakcjaServer = Log.withLogger $ do
      then return ()
      else createDirectoryIfMissing True $ docstore appConf
 
-
-  Exception.bracket
+  withPostgreSQL (dbConfig appConf) $ \conn -> do
+    res <- ioRunDB conn checkDBConsistency
+    case res of
+      Left e  -> Log.error $ "Error while checking DB consistency: " ++ e
+      Right _ -> do
+        let appGlobals = AppGlobals {
+            templates = templates
+          , filecache = filecache'
+          , mailer = mailer'
+          , docscache = docs
+          , esenforcer = es_enforcer
+          , dbconn = conn
+        }
+        Exception.bracket
                  -- start the state system
               (do
                   Log.server $ "Using store " ++ store appConf
@@ -189,6 +198,12 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   Exception.bracket
                            (do
+                              -- populate db with entries from happstack-state
+                              pres <- ioRunDB conn populateDBWithUsersIfEmpty
+                              let ppres = case pres of
+                                   Right () -> "OK."
+                                   Left e -> "Error: " ++ e
+                              Log.debug $ "pgSQL population result: " ++ ppres
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
@@ -227,6 +242,7 @@ defaultConf progName
               , docstore           = "_local/documents"
               , static             = "public"
               , amazonConfig       = Nothing
+              , dbConfig           = "user='user' password='password' dbname='kontrakcja'"
               , gsCmd              = "gs"
               , production         = False
               , trustWeaverSign    = Nothing

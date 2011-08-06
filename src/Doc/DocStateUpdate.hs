@@ -9,10 +9,10 @@ module Doc.DocStateUpdate
     , closeDocument
     ) where
 
+import DB.Types
 import DBError
 import Doc.DocState
 import Kontra
-import Misc
 import Happstack.State     (update)
 import MinutesTime
 import GHC.Word

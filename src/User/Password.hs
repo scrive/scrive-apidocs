@@ -1,43 +1,33 @@
-module User.Password
-    ( Password(..)
-    , createPassword
-    , verifyPassword
+module User.Password where
 
-) where
-import Codec.Utils (Octet)
-import Data.Data
-import Data.Digest.SHA256 (hash)
-import Happstack.Data
 import System.Random
 import qualified Data.ByteString as BS
+import qualified Data.Digest.SHA256 as D
 
-data Password = Password [Octet] [Octet] | NoPassword
-    deriving (Eq, Ord, Typeable)
+import DB.Types
 
-deriving instance Show Password
-instance Version Password
+data Password = Password {
+    pwdHash :: Binary
+  , pwdSalt :: Binary
+  } deriving (Eq, Ord, Show)
 
 createPassword :: BS.ByteString -> IO Password
 createPassword password = do
   salt <- makeSalt
-  return $ Password salt (hashPassword password salt)
+  return Password {
+      pwdHash = hashPassword password salt
+    , pwdSalt = salt
+  }
+  where
+    makeSalt = do
+      rng <- newStdGen
+      return . Binary . BS.pack . take 10 $ map fromIntegral (randoms rng :: [Int])
 
-randomOctets :: Int -> IO [Octet]
-randomOctets n = do
-  randomGen <- newStdGen
-  return $ take n $ map fromIntegral (randoms randomGen :: [Int])
-
-makeSalt :: IO [Octet]
-makeSalt = randomOctets 10
-
-hashPassword :: BS.ByteString -> [Octet] -> [Octet]
+hashPassword :: BS.ByteString -> Binary -> Binary
 hashPassword password salt =
-  hash (salt ++ (BS.unpack password))
+  Binary . BS.pack . D.hash . BS.unpack $ unBinary salt `BS.append` password
 
-verifyPassword :: Password -> BS.ByteString -> Bool
-verifyPassword (Password salt hash1) password = hash1 == (hashPassword password salt)
-verifyPassword _ _ = False
-
-$(deriveSerializeFor [ ''Password  ])
-
-
+verifyPassword :: Maybe Password -> BS.ByteString -> Bool
+verifyPassword Nothing _ = False
+verifyPassword (Just Password{pwdHash, pwdSalt}) password =
+  pwdHash == hashPassword password pwdSalt

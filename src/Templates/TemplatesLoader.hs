@@ -35,10 +35,10 @@ import System.Directory
 import System.Time
 import Templates.TemplatesFiles
 import Misc
-import User.Lang
+import User.OldLang
 import Templates.TextTemplates
 import Templates.SystemTemplates
-import User.SystemServer
+import User.OldSystemServer
 
 {-Names of template files -}
 

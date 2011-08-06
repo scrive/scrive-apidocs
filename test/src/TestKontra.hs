@@ -35,6 +35,7 @@ import qualified Network.HTTP as HTTP
 
 import API.API
 import Context
+import DB.Classes
 import FlashMessage
 import KontraMonad
 import MinutesTime
@@ -46,6 +47,9 @@ newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Co
     deriving (Applicative, Functor, Monad, MonadIO, MonadPlus)
 
 instance Kontrakcja TestKontra
+
+instance DBMonad TestKontra where
+  getConnection = ctxdbconn <$> getContext
 
 instance TemplatesMonad TestKontra where
     getTemplates = ctxtemplates <$> getContext
@@ -195,6 +199,7 @@ mkContext templates = do
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = 0
+        , ctxdbconn = error "db connection is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""

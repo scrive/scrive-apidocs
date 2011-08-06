@@ -36,12 +36,13 @@ import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random
 import Happstack.Util.Common ( readM)
-import Misc (MagicHash(MagicHash), mkTypeOf, isSecure, isHTTPS)
+import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELeg
 import Data.Typeable
 import API.Service.ServiceState
 import Cookies
 import Company.CompanyState
+import DB.Types
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer

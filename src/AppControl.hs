@@ -50,6 +50,7 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
+import Database.HDBC.PostgreSQL
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
@@ -68,7 +69,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import InspectXMLInstances ()
 import InspectXML
-import User.Lang
+import User.OldLang
 import Util.MonadUtils
 import ForkAction
 
@@ -82,6 +83,7 @@ data AppGlobals
                  , mailer          :: Mailer
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  , esenforcer      :: MVar ()
+                 , dbconn          :: Connection
                  }
 
 {- |
@@ -494,6 +496,7 @@ appHandler appConf appGlobals = do
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
+                , ctxdbconn = dbconn appGlobals
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf

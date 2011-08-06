@@ -23,6 +23,7 @@ data AppConf
               , docstore           :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
               , static             :: FilePath                     -- ^ static files directory
               , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
+              , dbConfig           :: String                       -- ^ postgresql configuration
               , gsCmd              :: String
               , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
               , trustWeaverSign    :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)

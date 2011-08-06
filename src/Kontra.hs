@@ -1,6 +1,5 @@
 module Kontra
     ( module User.UserState
-    , module User.Password
     , Context(..)
     , Kontrakcja
     , KontraMonad(..)
@@ -31,6 +30,8 @@ import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Monad.Reader
 import Control.Monad.State
+import DB.Classes
+import DB.Types
 import Doc.DocState
 import ELegitimation.ELeg
 import Happstack.Server
@@ -40,7 +41,6 @@ import KontraMonad
 import Mails.SendMail
 import Misc
 import Templates.Templates
-import User.Password hiding (Password, NoPassword)
 import User.UserState
 import Util.HasSomeUserInfo
 import qualified Data.ByteString.UTF8 as BS
@@ -50,6 +50,9 @@ newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
 
 instance Kontrakcja Kontra
+
+instance DBMonad Kontra where
+  getConnection = ctxdbconn <$> getContext
 
 instance KontraMonad Kontra where
     getContext    = Kontra get

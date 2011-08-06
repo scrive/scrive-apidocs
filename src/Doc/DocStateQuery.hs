@@ -30,12 +30,12 @@ module Doc.DocStateQuery
     , canUserViewDoc
     ) where
 
+import DB.Types
 import DBError
 import Doc.DocState
 import Doc.DocUtils
 import Company.CompanyState
 import Kontra
-import Misc
 import Happstack.State     (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log

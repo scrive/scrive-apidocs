@@ -72,6 +72,7 @@ module Doc.DocView (
   ) where
 
 import ActionSchedulerState (ActionID)
+import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocState

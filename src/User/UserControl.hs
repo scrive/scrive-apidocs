@@ -14,6 +14,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import ActionSchedulerState
 import AppView
+import DB.Types
 import Doc.DocState
 import Company.CompanyState
 import InputValidation
@@ -33,7 +34,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Util.MonadUtils
-import User.SystemServer
+import User.OldSystemServer
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =

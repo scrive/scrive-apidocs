@@ -38,6 +38,7 @@ import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
+import DB.Types
 import Doc.DocState
 import Misc
 import MinutesTime

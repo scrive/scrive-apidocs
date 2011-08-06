@@ -12,8 +12,8 @@ module InspectXMLInstances() where
 import API.Service.ServiceState (ServiceID(..))
 import Doc.DocState
 import Company.CompanyState
+import DB.Types
 import Kontra
-import Misc
 import MinutesTime
 import InspectXML
 import Payments.PaymentsState

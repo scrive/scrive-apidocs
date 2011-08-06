@@ -21,12 +21,17 @@ module Company.CompanyState
     , CreateNewCompany(..)
     , GetOrCreateCompanyWithExternalID(..)
     , ExternalCompanyID(..)
+    , insertCompaniesIntoPG
 ) where
 import API.Service.ServiceState
+import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Data.Data
 import Data.Maybe (isJust, fromJust, catMaybes)
+import Database.HDBC
+import DB.Derive
+import DB.Classes
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
@@ -38,11 +43,13 @@ import qualified Data.ByteString.UTF8 as BS
 
 newtype CompanyID = CompanyID { unCompanyID :: Int }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''CompanyID)
 
 deriving instance Data CompanyID
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''ExternalCompanyID)
 
 deriving instance Data ExternalCompanyID
 
@@ -221,6 +228,8 @@ getCompanies sid = do
   companies <- ask
   return $ toList (companies @= sid)
 
+getAllCompanies :: Query Companies [Company]
+getAllCompanies = ask >>= return . toList
 
 $(mkMethods ''Companies [
                        'getCompany
@@ -229,6 +238,7 @@ $(mkMethods ''Companies [
                      , 'getCompanies
                      , 'createNewCompany
                      , 'getOrCreateCompanyWithExternalID
+                     , 'getAllCompanies
                         ])
 
 $(deriveSerializeFor [ ''CompanyID
@@ -242,3 +252,33 @@ $(deriveSerializeFor [ ''CompanyID
 instance Component Companies where
   type Dependencies Companies = End
   initialValue = IxSet.empty
+
+insertCompaniesIntoPG :: DB ()
+insertCompaniesIntoPG = wrapDB $ \conn -> do
+  companies <- query GetAllCompanies
+  forM_ companies $ \c -> do
+    _ <- run conn ("INSERT INTO companies ("
+      ++ "  id"
+      ++ ", external_id"
+      ++ ", service_id) VALUES (?, ?, ?)") [
+        toSql $ companyid c
+      , toSql $ companyexternalid c
+      , toSql $ companyservice c
+      ]
+    _ <- run conn ("INSERT INTO company_infos ("
+      ++ "  company_id"
+      ++ ", name"
+      ++ ", number"
+      ++ ", address"
+      ++ ", zip"
+      ++ ", city"
+      ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?)") [
+        toSql $ companyid c
+      , toSql $ companyname $ companyinfo c
+      , toSql $ companynumber $ companyinfo c
+      , toSql $ companyaddress $ companyinfo c
+      , toSql $ companyzip $ companyinfo c
+      , toSql $ companycity $ companyinfo c
+      , toSql $ companycountry $ companyinfo c
+      ]
+    return ()

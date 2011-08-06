@@ -15,6 +15,7 @@ import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
 
+import DB.Types
 import Company.CompanyState
 import qualified AppLogger as Log
 import StateHelper

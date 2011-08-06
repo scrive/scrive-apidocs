@@ -13,7 +13,7 @@ module Templates.SystemTemplates
         getSystemTemplates
     ) where
 
-import User.SystemServer
+import User.OldSystemServer
 
 getSystemTemplates :: SystemServer -> IO [(String,String)]
 getSystemTemplates s = return $ map (\(n,f) -> (n,f s)) [
