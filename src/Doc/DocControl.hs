@@ -15,6 +15,7 @@ import Doc.DocStorage
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.DocProcess
 import InputValidation
 import Kontra
 import KontraLink
@@ -1320,9 +1321,14 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   if docfunctionality == BasicFunctionality
     then do
      --if they are switching to basic we want to lose information
-     let basicauthordetails = ((removeFieldsAndPlacements authordetails), [SignatoryPartner, SignatoryAuthor], authorid, authorcompany)
+     let basicauthorroles =
+           if getValueForProcess document processauthorsend == Just True
+             then [SignatoryAuthor]
+             else [SignatoryPartner, SignatoryAuthor]
+         basicauthordetails = ((removeFieldsAndPlacements authordetails), basicauthorroles, authorid, authorcompany)
          basicsignatories = zip
                              (take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
+     Log.debug $ "basic functionality so author roles are " ++ (show basicauthorroles)
      update $ UpdateDocument ctxtime documentid docname
                 basicsignatories Nothing invitetext basicauthordetails docallowedidtypes Nothing docfunctionality
     else do

@@ -118,6 +118,8 @@ modifyDocumentWithActionTime touchtime condition docid action = do
        else return $ Left "Document didn't match condition required for this action"
 
 
+--TODO move this to invariants instead, and make it so it just checks and not corrects - em
+
 -- Feature checking
 
 {- |
@@ -130,7 +132,6 @@ modifyDocumentWithActionTime touchtime condition docid action = do
 data Feature = CSVUse
                | DaysToSignUse
                | MultiplePartiesUse
-               | SecretaryUse
                | SpecialRoleUse
                | AuthorCustomFieldUse
                | AuthorPlacementUse
@@ -155,11 +156,6 @@ dropFeature:: Feature -> Document -> Document
 dropFeature CSVUse doc = doc {documentcsvupload = Nothing}
 dropFeature DaysToSignUse doc = doc {documentdaystosign = Nothing}
 dropFeature MultiplePartiesUse doc = doc {documentsignatorylinks = take 2 $ documentsignatorylinks doc}
-dropFeature SecretaryUse doc = doc {documentsignatorylinks = map makeAuthorSignatory $ documentsignatorylinks doc}
-    where makeAuthorSignatory sl =
-            if (isAuthor sl && not (isSignatory sl))
-              then sl {signatoryroles = SignatoryPartner : (signatoryroles sl) }
-              else sl
 dropFeature SpecialRoleUse doc = doc {documentsignatorylinks = map standarizeRoles $ documentsignatorylinks doc}
    where
         standarizeRoles :: SignatoryLink -> SignatoryLink
