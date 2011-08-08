@@ -55,7 +55,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
-import Text.JSON (JSValue(..), toJSObject)
+import Text.JSON hiding (Result)
 
 import ForkAction
 
@@ -1405,6 +1405,27 @@ handleAttachmentViewForAuthor docid = do
         else do
         pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
         simpleResponse pages
+
+
+{- We return pending message if file is still pending, else we return JSON with number of pages-}
+handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
+handleFilePages did fid = do
+  doc <- guardRightM $ getDocByDocID did
+  ctx <- getContext
+  liftIO $ putStrLn $ show $ map authorattachmentfile (documentauthorattachments doc)
+  case (find (\f -> fid == fileid f) $ documentfiles doc) of
+    Nothing -> return $ JSObject $ toJSObject [("Error",JSString $ toJSString "No file found")]
+    Just file  -> do
+      jpages <- liftIO $ maybeScheduleRendering ctx file did
+      case jpages of
+       JpegPagesPending -> return $ JSObject $ toJSObject [("Wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
+       JpegPagesError _ -> return $ JSObject $ toJSObject [("Error",JSString $ toJSString "rendering failed")]
+       JpegPages pages  -> return $ JSObject $ toJSObject [("pages",JSArray $ map pageinfo pages)]
+  where
+      pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
+                                                         ("height",JSRational True $ toRational height)
+                                                        ]
+
 
 -- get rid of duplicates
 -- FIXME: nub is very slow

@@ -191,6 +191,7 @@ handleRoutes = msum [
      , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
      , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
+     , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages
      , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax3 $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 

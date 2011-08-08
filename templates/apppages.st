@@ -71,6 +71,8 @@ standardHeaderContents=
         <script src="$prefix$/js/selects.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/lists.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/docpages.js"
                 type="text/javascript"></script> 
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
