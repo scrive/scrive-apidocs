@@ -6,6 +6,7 @@ import MinutesTime
 import Doc.DocInfo
 import Doc.DocUtils
 import Misc
+import Util.HasSomeUserInfo
 
 import Data.List
 import Data.Maybe
@@ -43,6 +44,8 @@ documentInvariants = [ documentHasOneAuthor
                      , atLeastOneSignatory
                      , notSignatoryNotSigned
                      , maxCustomFields
+                     , closedWhenAllSigned
+                     , hasSignedAttachments
                      ]
 
 {- |
@@ -115,6 +118,23 @@ allSignedWhenClosed :: MinutesTime -> Document -> Maybe String
 allSignedWhenClosed _ document =
   assertInvariant "some signatories are not signed when it is closed" $ 
   isClosed document =>> all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
+  
+{- | All signed implies all closed
+ -}
+closedWhenAllSigned :: MinutesTime -> Document -> Maybe String
+closedWhenAllSigned _ document =
+  assertInvariant "all signatories signed but doc is not closed" $
+  all (isSignatory =>>^ hasSigned) (documentsignatorylinks document) =>> isClosed document
+  
+{- | If a sig has signed, all his attachments are uploaded
+ -}
+hasSignedAttachments :: MinutesTime -> Document -> Maybe String
+hasSignedAttachments _ document =
+  assertInvariant "a signatory has signed without attaching his requested attachment" $
+  all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (sigAttachmentsForEmail document . getEmail))) (documentsignatorylinks document)
+       
+sigAttachmentsForEmail :: Document -> BS.ByteString -> [SignatoryAttachment]
+sigAttachmentsForEmail doc email = filter ((== email) . signatoryattachmentemail) (documentsignatoryattachments doc)
        
 {- |
    Has signed implies has seen.
