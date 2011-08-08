@@ -72,8 +72,12 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/lists.js"
                 type="text/javascript"></script>
-        <script src="$prefix$/js/docpages.js"
+        <script src="$prefix$/js/files.js"
                 type="text/javascript"></script> 
+        <script src="$prefix$/js/documents.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/docview.js"
+                type="text/javascript"></script>  
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
                 type="text/javascript"></script>

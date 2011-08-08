@@ -1420,12 +1420,12 @@ handleFilePages did fid = do
   ctx <- getContext
   liftIO $ putStrLn $ show $ map authorattachmentfile (documentauthorattachments doc)
   case (find (\f -> fid == fileid f) $ documentfiles doc) of
-    Nothing -> return $ JSObject $ toJSObject [("Error",JSString $ toJSString "No file found")]
+    Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No file found")]
     Just file  -> do
       jpages <- liftIO $ maybeScheduleRendering ctx file did
       case jpages of
-       JpegPagesPending -> return $ JSObject $ toJSObject [("Wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
-       JpegPagesError _ -> return $ JSObject $ toJSObject [("Error",JSString $ toJSString "rendering failed")]
+       JpegPagesPending -> return $ JSObject $ toJSObject [("wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
+       JpegPagesError _ -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "rendering failed")]
        JpegPages pages  -> return $ JSObject $ toJSObject [("pages",JSArray $ map pageinfo pages)]
   where
       pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
@@ -1992,7 +1992,28 @@ jsonDocumentsList = do
     docsJSONs <- mapM (fmap JSObject . docForListJSON cttime) $ list docs
     return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
                                     ("paging", pagingParamsJSON docs)]
+
+
+jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
+jsonDocument did = do
+    forWho <- readField "for" 
+    mdoc <- case forWho of
+                 Nothing -> toMaybe <$> getDocByDocID did
+                 Just (slid,mh) -> do
+                   mdoc <- query $ GetDocumentByDocumentID did
+                   if (validSigLink slid mh mdoc)
+                     then return mdoc
+                     else return Nothing
+    cttime <- liftIO $ getMinutesTime
+    case mdoc of
+         Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
+         Just doc -> JSObject <$> documentJSON cttime doc
     
+                      
+
+
+
+
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlySuperUser $ do
   Context{ ctxtime } <- getContext

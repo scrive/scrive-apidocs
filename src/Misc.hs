@@ -532,6 +532,10 @@ fromRight (Right b) = b
 fromRight _ = error "Reading Right for Left"
 
 
+toMaybe :: Either a b -> Maybe b
+toMaybe (Right a) = Just a
+toMaybe _ = Nothing
+
 joinB:: Maybe Bool -> Bool
 joinB (Just b) = b
 joinB _ = False

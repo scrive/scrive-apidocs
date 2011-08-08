@@ -69,6 +69,7 @@ module Doc.DocView (
   , documentsToFixView
   , uploadPage
   , docForListJSON
+  , documentJSON
   ) where
 
 import ActionSchedulerState (ActionID)
@@ -286,12 +287,19 @@ flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
 
+
+documentJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
+documentJSON _crttime doc = (fmap toJSObject) $ propagateMonad  $
+    [  ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc)
+    ]
+
+    
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 docForListJSON crtime doc = (fmap toJSObject) $ propagateMonad  $
-                [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
-                  ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
-                  ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
-                ]
+    [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
+      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
+      ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
+    ]
 
 
 jsonPack :: [(String,String)] -> JSValue
