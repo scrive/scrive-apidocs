@@ -1893,21 +1893,20 @@ handleAttachmentDownloadForAuthor did fid = do
 handleAttachmentDownloadForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m Response
 handleAttachmentDownloadForViewer did sid mh fid = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+  ctx <- getContext
   case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
-      Just AuthorAttachment{ authorattachmentfile } -> do
-        ctx <- getContext
-        contents <- liftIO $ getFileContents ctx authorattachmentfile
-        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-        return res2
+      Just AuthorAttachment{ authorattachmentfile } ->
+        respondWithPDF =<< liftIO (getFileContents ctx authorattachmentfile)
       Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
-        Just SignatoryAttachment{ signatoryattachmentfile = Just file } -> do
-          ctx <- getContext
-          contents <- liftIO $ getFileContents ctx file
-          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-              res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-          return res2
+        Just SignatoryAttachment{ signatoryattachmentfile = Just file } ->
+          respondWithPDF =<< liftIO (getFileContents ctx file)
         _ -> mzero -- attachment with this file ID does not exist
+        
+respondWithPDF :: Kontrakcja m => BS.ByteString -> m Response
+respondWithPDF contents = do
+  let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+      res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+  return res2
 
 -- Fix for broken production | To be removed after fixing is done
 isBroken :: Document -> Bool
@@ -1929,6 +1928,16 @@ showDocumentsToFix :: Kontrakcja m => m String
 showDocumentsToFix = onlySuperUser $ do
     docs <- query $ GetDocuments Nothing
     documentsToFixView $ filter isBroken docs
+
+handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+handleDeleteSigAttach docid siglinkid mh = do
+  doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  siglink <- guardJust $ getSigLinkFor doc siglinkid
+  fid <- (read . BS.toString) <$> getCriticalField asValidID "deletesigattachment"
+  let email = getEmail siglink
+  Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ (BS.toString email)
+  _ <- update $ DeleteSigAttachment docid email fid
+  return $ LinkSignDoc doc siglink  
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSigAttach docid siglinkid mh = do

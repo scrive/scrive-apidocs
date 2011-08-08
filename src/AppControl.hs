@@ -133,6 +133,7 @@ handleRoutes = msum [
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ toK5 $ DocControl.handleDeclineAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ toK3 $ DocControl.handleSigAttach
+     , dir "s" $ param "deletesigattachment" $ hPostNoXToken3 $ toK3 $ DocControl.handleDeleteSigAttach
 
      , dir "sv" $ hGet3 $ toK3 $ DocControl.handleAttachmentViewForViewer
 
