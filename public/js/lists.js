@@ -50,10 +50,9 @@ window.Cell = Backbone.Model.extend({
     isRendered: function() {
         return this.get("special") != undefined && this.get("special") == "rendered";
     },
-    rendering: function(value, mainrow,  model) {
+    rendering: function(value, mainrow, model) {
         return this.get("rendering")(value, mainrow, model);
     }
-    
 });
 
 window.Sorting = Backbone.Model.extend({
@@ -63,7 +62,7 @@ window.Sorting = Backbone.Model.extend({
         order: true
     },
     disabled : function(){
-         return this.get("disabled")!= undefined && this.get("disabled") == true;
+         return this.get("disabled") != undefined && this.get("disabled") == true;
     },
     fields : function(){
          return this.get("fields");
@@ -158,9 +157,9 @@ var PagingView = Backbone.View.extend({
     render: function () {
         var paging = this.model;
         var main = $("<div class='pages'>");
-        var items = $("<div/>");
-        items.append($("<strong/>").text((paging.itemMin()+ 1) + " - " + (paging.itemMax()+1) + " "+localization.of+" " + paging.itemTotal()));
-        var pages = $("<div/>");
+        var items = $("<div />");
+        items.append($("<strong />").text((paging.itemMin()+ 1) + " - " + (paging.itemMax()+1) + " "+localization.of+" " + paging.itemTotal()));
+        var pages = $("<div />");
         for(var i=0;i<=paging.pageMax();i++)
         {
             if (i == paging.pageCurrent())
@@ -276,13 +275,13 @@ var ListObject = Backbone.Model.extend({
         expanded : false
    },
   field: function(name) {
-       return this.get("fields")[name]
+       return this.get("fields")[name];
   },
   subfield: function(idx,name)  {
-       return this.get("subfields")[idx][name]
+       return this.get("subfields")[idx][name];
   },
   subfieldsSize: function(){
-      return this.get("subfields").length
+      return this.get("subfields").length;
   },
   hasLink: function(){
       return this.get("link") != undefined;
@@ -372,7 +371,7 @@ var ListObjectView = Backbone.View.extend({
                 var span = $("<span >"+value+"</span>")
                 td.html(span)
             }    
-            mainrow.append(td)
+            mainrow.append(td);
         }
         for(var j=0;j<this.model.subfieldsSize();j++) {
             var subrow = this.el.eq(j+1)
@@ -410,10 +409,10 @@ var ListObjectView = Backbone.View.extend({
                         
     },
     toogleSelect: function(){
-       this.model.toogleSelect()
+       this.model.toogleSelect();
     },
     toogleExpand: function(){
-       this.model.toogleExpand()
+       this.model.toogleExpand();
     }
 });
 
@@ -437,8 +436,8 @@ var ListView = Backbone.View.extend({
             new ListObjectView({
                 model: ms.at(i),
                 schema : this.schema,
-                el: $("<tr/>")
-            })
+                el: $("<tr />")
+            });
         this.render();
     },
     prerender: function() {
@@ -446,11 +445,11 @@ var ListView = Backbone.View.extend({
         this.pretableboxleft = $("<div class='col float-left'/>");
         this.pretableboxright = $("<div class='col float-right'/>");
         this.pretablebox = $("<div class='tab-content'/>");
-        this.tablebox=$("<div class='tab-table'/>")
-        this.table = $("<table/>")
-        this.theader = this.prerenderheader()
+        this.tablebox=$("<div class='tab-table'/>");
+        this.table = $("<table/>");
+        this.theader = this.prerenderheader();
         this.tbody = $("<tbody>");
-        this.tableboxfooter = $("<div/>")
+        this.tableboxfooter = $("<div/>");
         this.table.append(this.theader).append(this.tbody);
         this.tablebox.append(this.table).append(this.tableboxfooter);
         this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
@@ -467,7 +466,7 @@ var ListView = Backbone.View.extend({
             this.pretableboxright.append(searchBox);
         }
         if (this.schema.allowSelect())
-            this.tbody.addClass("selectable")
+            this.tbody.addClass("selectable");
         if (this.bottomExtras != undefined)
             this.tableboxfooter.append(this.bottomExtras);
         if (!this.schema.paging().disabled())
@@ -567,7 +566,7 @@ window.KontraList = {
                     })
         this.schema.bind('change', this.recall);
         this.recall();
-        return this
+        return this;
     },
    recall : function()
    {

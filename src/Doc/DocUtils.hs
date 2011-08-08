@@ -16,7 +16,6 @@ import Util.HasSomeUserInfo
 import Doc.DocStateData
 import API.Service.ServiceState
 import Mails.MailsUtil
-import Misc
 import Templates.Templates
 import User.UserState
 import Util.SignatoryLinkUtils
@@ -60,31 +59,6 @@ partySignedList :: Document -> [SignatoryDetails]
 partySignedList document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                 , isSignatory sl
                                                 ,  hasSigned sl]
-
--- ?? What is this? -EN
-partyUnsignedMeAndList :: MagicHash -> Document -> [SignatoryDetails]
-partyUnsignedMeAndList magichash document =
-    let signalinks = filter isSignatory $ documentsignatorylinks document
-        cond signlink = signatorymagichash signlink /= magichash &&
-                        maybesigninfo signlink == Nothing
-        unsignalinks = filter cond signalinks
-        me = SignatoryDetails { signatoryfstname = BS.fromString "du"
-                              , signatorysndname = BS.empty
-                              , signatorycompany = BS.empty
-                              , signatorypersonalnumber = BS.empty
-                              , signatorycompanynumber = BS.empty
-                              , signatoryemail = BS.empty
-                              , signatorysignorder = SignOrder 1
-                              , signatoryfstnameplacements = []
-                              , signatorysndnameplacements = []
-                              , signatorycompanyplacements = []
-                              , signatorypersonalnumberplacements = []
-                              , signatorycompanynumberplacements = []
-                              , signatoryemailplacements = []
-                              , signatoryotherfields = []
-                              }
-        signas = map signatorydetails unsignalinks
-    in me : signas
 
 {- |
    Given a Document, return all signatories except the author.

@@ -62,3 +62,9 @@ isDocumentError :: Document -> Bool
 isDocumentError doc = case documentstatus doc of
   DocumentError _ -> True
   _               -> False
+
+{- |
+   Is document shared?
+ -}
+isDocumentShared :: Document -> Bool
+isDocumentShared doc = Shared == documentsharing doc

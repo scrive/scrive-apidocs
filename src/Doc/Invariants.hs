@@ -9,6 +9,8 @@ import Misc
 
 import Data.List
 import Data.Maybe
+import qualified Data.ByteString as BS
+
 
 listInvariantProblems :: MinutesTime -> [Document] -> [String]
 listInvariantProblems now docs = catMaybes $ map (invariantProblems now) docs
@@ -32,6 +34,15 @@ documentInvariants = [ documentHasOneAuthor
                      , noSigningOrSeeingInPrep
                      , connectedSigLinkOnTemplateOrPreparation
                      , authorHasUser
+                     , signatoryLimit
+                     , seenWhenSigned
+                     , allSignedWhenClosed
+                     , maxLengthOnFields
+                     , maxNumberOfPlacements
+                     , awaitingAuthorAuthorNotSigned
+                     , atLeastOneSignatory
+                     , notSignatoryNotSigned
+                     , maxCustomFields
                      ]
 
 {- |
@@ -39,46 +50,160 @@ documentInvariants = [ documentHasOneAuthor
 -}
 documentHasOneAuthor :: MinutesTime -> Document -> Maybe String
 documentHasOneAuthor _ document =
-  case filter isAuthor $ documentsignatorylinks document of
-    [_] -> Nothing
-    a -> Just $ "document must have one author (has " ++ show (length a) ++ ")"
+  let authors = (filter isAuthor $ documentsignatorylinks document) in
+  assertInvariant ("document must have one author (has " ++ show (length authors) ++ ")") $
+    length authors == 1
 
 {- |
-   Any document older than one hour that does not have any files is a problem.
+   A document older than one hour implies it has at least one file.
    We must wait some time because we don't do NewDocument and AttachFile atomically. There could be some
    in between.
  -}
 oldishDocumentHasFiles :: MinutesTime -> Document -> Maybe String
-oldishDocumentHasFiles now document 
-  | toMinutes now - toMinutes (documentctime document) < 60 = Nothing
-  | documentfiles document == [] = Just "document must have files if older than one hour"
-  | otherwise = Nothing
+oldishDocumentHasFiles now document =
+  assertInvariant "document must have files if older than one hour" $
+    olderThan now document 60 =>> (length (documentfiles document) > 0)
 
 {- |
    We don't expect to find any deleted documents in Pending or AwaitingAuthor
    Basically, you can't delete what needs to be signed.
  -}
 noDeletedSigLinksForSigning :: MinutesTime -> Document -> Maybe String
-noDeletedSigLinksForSigning _ document
-  | documentstatus document `elem` [Pending, AwaitingAuthor] &&
-    any isDeletedFor (documentsignatorylinks document)          = Just "document has a deleted siglink when it is due to be signed"
-  | otherwise = Nothing
+noDeletedSigLinksForSigning _ document =
+  assertInvariant "document has a deleted siglink when it is due to be signed" $
+    (isPending document || isAwaitingAuthor document) =>>
+    none isDeletedFor (documentsignatorylinks document)
 
+{- |
+  Preparation implies that no one has seen or signed the document
+ -}
 noSigningOrSeeingInPrep :: MinutesTime -> Document -> Maybe String
-noSigningOrSeeingInPrep _ document
-  | not $ isPreparation document = Nothing
-  | any (hasSigned ||^ hasSeen) (documentsignatorylinks document) 
-      = Just "document has seen and/or signed siglinks when still in Preparation"
-  | otherwise = Nothing
+noSigningOrSeeingInPrep _ document =
+  assertInvariant "document has seen and/or signed siglinks when still in Preparation" $
+    isPreparation document =>> 
+    none (hasSigned ||^ hasSeen) (documentsignatorylinks document)
 
+{- |
+   Template or Preparation implies only Author has user or company connected
+ -}
 connectedSigLinkOnTemplateOrPreparation :: MinutesTime -> Document -> Maybe String
-connectedSigLinkOnTemplateOrPreparation _ document
-  | not (isTemplate document || isPreparation document) = Nothing
-  | any (hasUser ||^ hasCompany) (filter (not . isAuthor) (documentsignatorylinks document))
-      = Just "document has siglinks (besides author) with User or Company when in Preparation or it's a Template"
-  | otherwise = Nothing
+connectedSigLinkOnTemplateOrPreparation _ document =
+  assertInvariant "document has siglinks (besides author) with User or Company when in Preparation or it's a Template" $
+    (isTemplate document || isPreparation document) =>>
+    (none (hasUser ||^ hasCompany) (filter (not . isAuthor) (documentsignatorylinks document)))
 
+{- |
+   Author must have a user
+ -}
 authorHasUser :: MinutesTime -> Document -> Maybe String
-authorHasUser _ document = case getAuthorSigLink document of
-  Just sl | not $ hasUser sl -> Just "author does not have a user connected."
-  _ -> Nothing
+authorHasUser _ document = 
+  assertInvariant "author does not have a user connected." $
+    hasUser (getAuthorSigLink document)
+
+{- |
+  Assert an upper bound on number of signatories.
+ -}
+signatoryLimit :: MinutesTime -> Document -> Maybe String
+signatoryLimit _ document = 
+  let maxsigs = 150 in
+  assertInvariant (show (length (documentsignatorylinks document)) ++ " signatorylinks--max is " ++ show maxsigs) $
+    length (documentsignatorylinks document) <= maxsigs
+
+{- | Closed implies all signatories have signed
+ -}
+allSignedWhenClosed :: MinutesTime -> Document -> Maybe String
+allSignedWhenClosed _ document =
+  assertInvariant "some signatories are not signed when it is closed" $ 
+  isClosed document =>> all hasSigned (filter isSignatory (documentsignatorylinks document))
+       
+{- |
+   Has signed implies has seen.
+ -}
+seenWhenSigned :: MinutesTime -> Document -> Maybe String
+seenWhenSigned _ document =
+  assertInvariant "some signatories have signed but not seen" $
+    all (hasSigned =>>^ hasSeen) (documentsignatorylinks document)
+    
+{- |
+   max length of fields
+ -}
+maxLengthOnFields :: MinutesTime -> Document -> Maybe String
+maxLengthOnFields _ document =
+  let maxlength = 50 
+      assertMaxLength s = BS.length s <= maxlength in
+  assertInvariant ("some fields were too long. max is " ++ show maxlength) $
+    all (\sl -> let sd = signatorydetails sl in
+          assertMaxLength (signatoryfstname sd) &&
+          assertMaxLength (signatorysndname sd) &&
+          assertMaxLength (signatorycompany sd) &&
+          assertMaxLength (signatorypersonalnumber sd) &&
+          assertMaxLength (signatorycompanynumber sd) &&
+          assertMaxLength (signatoryemail sd) &&
+          all (\fd -> assertMaxLength (fieldlabel fd) &&
+                      assertMaxLength (fieldvalue fd))
+              (signatoryotherfields sd))
+        (documentsignatorylinks document)
+    
+{- |
+   max number of placements per field
+ -}
+maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
+maxNumberOfPlacements _ document =
+  let maxlength = 20 
+      assertMaxLength l = length l <= maxlength in
+  assertInvariant ("some signatory had too many placements. max is " ++ show maxlength ++ " per field") $
+    all (\sl -> let sd = signatorydetails sl in
+          assertMaxLength (signatoryfstnameplacements sd) &&
+          assertMaxLength (signatorysndnameplacements sd) &&
+          assertMaxLength (signatorycompanyplacements sd) &&
+          assertMaxLength (signatoryemailplacements sd) &&
+          assertMaxLength (signatorypersonalnumberplacements sd) &&
+          assertMaxLength (signatorycompanynumberplacements sd) &&
+          all (assertMaxLength . fieldplacements) (signatoryotherfields sd))
+        (documentsignatorylinks document)
+    
+{- |
+   AwaitingAuthor implies Author has not signed
+ -}
+awaitingAuthorAuthorNotSigned :: MinutesTime -> Document -> Maybe String
+awaitingAuthorAuthorNotSigned _ document =
+  assertInvariant "Author has signed but still in AwaitingAuthor" $
+    (isAwaitingAuthor document =>> (not $ hasSigned $ getAuthorSigLink document))
+    
+{- |
+   At least one signatory in Pending AwaitingAuthor or Closed
+ -}
+atLeastOneSignatory :: MinutesTime -> Document -> Maybe String
+atLeastOneSignatory _ document =
+  assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
+    (isPending document || isAwaitingAuthor document || isClosed document) =>>
+    (any isSignatory (documentsignatorylinks document))
+    
+{- |
+   If you're not a signatory, you shouldn't be signed
+ -}
+notSignatoryNotSigned :: MinutesTime -> Document -> Maybe String
+notSignatoryNotSigned _ document =
+  assertInvariant "there are non-signatories who have signed" $
+    (all ((not . isSignatory) =>>^ (not . hasSigned)) (documentsignatorylinks document))
+    
+{- |
+   Maximum number of custom fields
+ -}
+maxCustomFields :: MinutesTime -> Document -> Maybe String
+maxCustomFields _ document =
+  let maxfields = 20 
+      assertMaximum sl = length (signatoryotherfields $ signatorydetails sl) <= maxfields in
+  assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
+    all assertMaximum (documentsignatorylinks document)
+
+-- some helpers  
+       
+assertInvariant :: String -> Bool -> Maybe String
+assertInvariant _ True = Nothing
+assertInvariant s False  = Just s
+
+
+-- | Given the time now, is doc older than minutes.
+olderThan :: MinutesTime -> Document -> Int -> Bool
+olderThan now doc minutes = toMinutes now - toMinutes (documentctime doc) >= minutes

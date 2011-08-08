@@ -40,6 +40,7 @@ import Happstack.State     (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Control.Monad.State
+import Doc.DocInfo
 
 {- |
    Assuming user is the logged in user, can he view the Document?
@@ -59,12 +60,8 @@ canUserViewDoc user doc
   where
     docIsSavedFor u =
       any (isSigLinkSavedFor u) $ documentsignatorylinks doc
-    isSharedWithinCompany = Shared == documentsharing doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = 
-      case usercompany user of
-        Nothing -> False
-        Just companyid ->
-          any (\sl -> SignatoryAuthor `elem` signatoryroles sl && isSigLinkFor companyid sl) $ documentsignatorylinks doc
+    isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
+    isAuthoredWithinCompany = isSigLinkFor (usercompany user) (getAuthorSigLink doc)
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -86,8 +83,8 @@ getDocByDocID docid = do
         Just doc -> do
           canAccess <- liftIO $ canUserViewDoc user doc              
           case canAccess of
-            True  -> return $ Right doc
             False -> return $ Left DBResourceNotAvailable
+            True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
       mdoc <- query $ GetDocumentByDocumentID docid
@@ -101,6 +98,7 @@ getDocByDocID docid = do
    Get all of the documents a user can view.
    User must be logged in.
    Logged in user is in the documentsignatorylinks or a friend of someone with the documentsignatorylinks
+   What about companies?
  -}
 getDocsByLoggedInUser :: Kontrakcja m => m (Either DBError [Document])
 getDocsByLoggedInUser = do
@@ -128,9 +126,6 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
-    Nothing  -> return $ Left DBResourceNotAvailable
-    Just doc ->
-      case getSigLinkFor doc sigid of
-        Just siglink | signatorymagichash siglink == mh -> return $ Right doc
-        _ -> return $ Left DBResourceNotAvailable
+    Just doc | isSigLinkFor mh (getSigLinkFor doc sigid) -> return $ Right doc
+    _ -> return $ Left DBResourceNotAvailable
 

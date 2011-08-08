@@ -192,9 +192,9 @@ handlePostUserSecurity = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
     Just user -> do
-      moldpassword <- getRequiredField asDirtyPassword "oldpassword"
-      mpassword <- getRequiredField asValidPassword "password"
-      mpassword2 <- getRequiredField asDirtyPassword "password2"
+      moldpassword <- getOptionalField asDirtyPassword "oldpassword"
+      mpassword <- getOptionalField asValidPassword "password"
+      mpassword2 <- getOptionalField asDirtyPassword "password2"
       case (moldpassword, mpassword, mpassword2) of
         (Just oldpassword, Just password, Just password2) ->
           case (verifyPassword (userpassword user) oldpassword,
@@ -207,6 +207,8 @@ handlePostUserSecurity = do
               passwordhash <- liftIO $ createPassword password
               _ <- update $ SetUserPassword (userid user) passwordhash
               addFlashM flashMessageUserDetailsSaved
+        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
+              addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mlang <- readField "lang"
       case (mlang) of

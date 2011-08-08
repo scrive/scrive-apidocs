@@ -6,10 +6,20 @@ import re
 from StringIO import StringIO
 import sys
 
-username = "ericwnormand@gmail.com"
-password = "admin"
+if len(sys.argv) < 4:
+    print "Usage: docinvariants.py <username> <password> <baseurl> [cafile]"
+    print "Example: docinvariants.py ericwnormand@gmail.com admin http://localhost:8000"
+    sys.exit(1)
 
-baseurl = "http://localhost:8000"
+username = sys.argv[1]
+password = sys.argv[2]
+
+baseurl = sys.argv[3]
+
+#if len(sys.argv) > 4:
+#    cafile = sys.argv[4]
+#else:
+#    cafile = Nothing
 
 def null(s):
     None
@@ -20,6 +30,8 @@ cu = pycurl.Curl()
 cu.setopt(pycurl.FOLLOWLOCATION, True)
 cu.setopt(pycurl.WRITEFUNCTION, null)
 cu.setopt(pycurl.VERBOSE, 0)
+cu.setopt(pycurl.SSLCERT, "/etc/ssl/certs/ca-certificates.crt")
+cu.setopt(pycurl.SSL_VERIFYPEER, 0)
 def login(cf, uname, passwd):
     postparams = [("email", uname),
                   ("password", passwd)]
@@ -45,6 +57,7 @@ code = cu.getinfo(cu.HTTP_CODE)
 
 if not code == 200:
     print "Oh, no! Code should be 200 but %s returned for %s" %(code, url)
+    sys.exit(1)
 else:
     ps = response.getvalue()
     if ps == "No problems!":

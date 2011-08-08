@@ -480,8 +480,9 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
 testSignDocumentSignablePendingRight :: Assertion
 testSignDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  etdoc <- randomUpdate $ SignDocument (documentid doc)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ (any (isSignatory &&^ (not . hasSigned) &&^ hasSeen) . documentsignatorylinks))
+  let Just sl = find (isSignatory &&^ (not . hasSigned) &&^ hasSeen) (documentsignatorylinks doc)
+  etdoc <- randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl)
   validTest $ do
     assertRight etdoc
     assertInvariants $ fromRight etdoc
@@ -513,7 +514,8 @@ testAuthorSendDocumentNotLeft = doTimes 100 $ do
 testAuthorSendDocumentSignablePreparationRight :: Assertion
 testAuthorSendDocumentSignablePreparationRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author
+         (isSignable &&^ isPreparation &&^ (any isSignatory . documentsignatorylinks))
   etdoc <- randomUpdate $ AuthorSendDocument (documentid doc)
   validTest $ do
     assertRight etdoc
@@ -541,7 +543,8 @@ testAuthorSignDocumentNotLeft = doTimes 10 $ do
 testAuthorSignDocumentSignablePreparationRight :: Assertion
 testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author
+         (isSignable &&^ isPreparation &&^ (not . hasSigned . getAuthorSigLink) &&^ (isSignatory . getAuthorSigLink))
   etdoc <- randomUpdate $ AuthorSignDocument (documentid doc)
   validTest $ do
     assertRight etdoc
@@ -624,7 +627,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTi
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
-              when (isNothing $ maybeseeninfo sl) $ do
+              when (not $ hasSeen sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
                 assertRight etdoc)
         
@@ -633,8 +636,9 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
-              when (isNothing $ maybeseeninfo sl) $ do
-                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl)
+              when (not $ hasSeen sl) $ do
+                mh <- untilCondition (\a -> a /= (signatorymagichash sl)) $ rand 1000 arbitrary
+                etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh
                 assertLeft etdoc)
 
 testSetInvitationDeliveryStatusNotSignableLeft :: Assertion
@@ -703,14 +707,16 @@ testSetDocumentUIRight = doTimes 10 $ do
 testCloseDocumentSignableAwaitingAuthorJust :: Assertion
 testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isAwaitingAuthor)
+  doc <- addRandomDocumentWithAuthorAndCondition author 
+           (isSignable &&^ isAwaitingAuthor &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertJust etdoc
     
 testCloseDocumentSignableNotAwaitingAuthorNothing :: Assertion
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isAwaitingAuthor))
+  doc <- addRandomDocumentWithAuthorAndCondition author 
+         (isSignable &&^ (not . isAwaitingAuthor) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . filter (not . isAuthor) . documentsignatorylinks))
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertNothing etdoc
 
@@ -737,5 +743,3 @@ assertInvariants document = do
   case invariantProblems now document of
     Nothing -> assertSuccess
     Just a  -> assertFailure a
-
-

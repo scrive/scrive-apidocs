@@ -197,7 +197,8 @@ runKontrakcjaServer = Log.withLogger $ do
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
-                              return [t1, t2, t3, t4]
+                              t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
+                              return [t1, t2, t3, t4, t5]
                            )
                            (mapM_ killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day
