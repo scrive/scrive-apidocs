@@ -314,7 +314,7 @@ docFieldsListForJSON crtime doc =  propagateMonad [
 signatoryFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
 signatoryFieldsListForJSON crtime doc sl = propagateMonad [
     ("status", return $ show $ signatoryStatusClass doc sl ),
-    ("partner", return $ BS.toString $ getSmartName sl ),
+    ("name", return $ BS.toString $ getSmartName sl ),
     ("time", return $ fromMaybe "" $ (showDateAbbrev crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
     ]
     where
