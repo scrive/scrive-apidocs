@@ -71,6 +71,7 @@ module Doc.DocState
     , MigrateDocumentSigLinkCompanies(..)
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
+    , DeleteSigAttachment(..)
     )
 where
 
@@ -1535,7 +1536,7 @@ saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteStri
 saveSigAttachment docid name email content = do
   documents <- ask
   fileid <- getUnique documents FileID
-  modifySignableOrTemplate docid $ \doc -> --use modifySignable here?  I don't think you can do on a template
+  modifySignable docid $ \doc ->
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
       False -> Left "Only attach when the document is signable."
       True -> Right doc { documentsignatoryattachments = newsigatts }
@@ -1549,6 +1550,25 @@ saveSigAttachment docid name email content = do
                                }
               }
           addfile a = a
+
+{- |
+    Deletes a signatory attachment to a document.
+    If there's a problem such as the document isn't in a pending or awaiting author state,
+    or the document does not exist a Left is returned.
+-}
+deleteSigAttachment :: DocumentID -> BS.ByteString -> FileID -> Update Documents (Either String Document)
+deleteSigAttachment docid email fid =
+  modifySignable docid $ \doc -> do
+    let newsigatts = map removefile $ documentsignatoryattachments doc
+        removefile a | email == signatoryattachmentemail a && 
+                       isJust (signatoryattachmentfile a) &&
+                       (fileid $ fromJust $ signatoryattachmentfile a) == fid = a { signatoryattachmentfile = Nothing }
+        removefile a = a
+
+
+    case documentstatus doc `elem` [Pending, AwaitingAuthor] of
+      False -> Left "Only attach when the document is signable."
+      True -> Right doc { documentsignatoryattachments = newsigatts }
 
 storeDocumentForTesting :: Document -> Update Documents DocumentID
 storeDocumentForTesting doc = do
@@ -1604,6 +1624,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'cancelDocument
                         , 'fileMovedToAWS
                         , 'fileMovedToDisk
+                        , 'deleteSigAttachment
                           -- admin only area follows
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument

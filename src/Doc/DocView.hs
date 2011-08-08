@@ -926,6 +926,7 @@ documentSingleSignatoryAttachmentsFields docid sid mh atts =
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
       field "filename" $ fmap filename $ signatoryattachmentfile a
+      field "fileid" $ fmap (unFileID . fileid) $ signatoryattachmentfile a
       field "viewerlink" $ fmap (show . LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
   )
 

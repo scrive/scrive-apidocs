@@ -114,7 +114,7 @@ signatoryLimit _ document =
 allSignedWhenClosed :: MinutesTime -> Document -> Maybe String
 allSignedWhenClosed _ document =
   assertInvariant "some signatories are not signed when it is closed" $ 
-  isClosed document =>> all hasSigned (filter isSignatory (documentsignatorylinks document))
+  isClosed document =>> all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
        
 {- |
    Has signed implies has seen.

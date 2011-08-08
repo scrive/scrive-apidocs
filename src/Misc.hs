@@ -618,7 +618,15 @@ none f l = not $ any f l
 
 -- | Higher order inference
 (=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-(=>>^) a b = \x -> a x =>> b x
+(=>>^) a b x = a x =>> b x
+
+-- | Double Inference
+(<<=>>) :: Bool -> Bool -> Bool
+(<<=>>) = (==)
+
+-- | Higher order double inference
+(<<==>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(<<==>>^) a b x = a x == b x
 
 -- | Conditional choice operator
 -- Use it like this: a <| condition |> b  is equivalent to if condition then a else b

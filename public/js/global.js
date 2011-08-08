@@ -1677,3 +1677,10 @@ safeReady(function() {
     });
 });
 
+safeReady(function () {
+    $(".deleteSigAttachment").click(function() {
+        console.log("doing it");
+        $(this).closest("td").find("form").submit();
+        return false;
+    });
+});
