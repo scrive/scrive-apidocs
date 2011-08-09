@@ -167,7 +167,7 @@ runDocumentProblemsCheck = do
   now <- liftIO getMinutesTime
   docs <- query $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
-  when (probs /= []) $ mailDocumentProblemsCheck $ intercalate "\n" probs
+  when (probs /= []) $ mailDocumentProblemsCheck $ "<p>" ++ intercalate "</p>\n\n<p>" probs ++ "</p>"
   return ()
 
 -- | Send an email out to all registered emails about document problems.
