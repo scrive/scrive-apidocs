@@ -18,8 +18,7 @@ import Happstack.State
   , shutdownSystem
   , createCheckpoint
   , waitForTermination
-  , update
-  , query  
+  , query
   )
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
@@ -40,12 +39,13 @@ import DB.Migrations
 import Database.HDBC.PostgreSQL
 import Network.BSD
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
-import qualified Control.Exception as Exception
+import qualified Control.Exception as E
 import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import Doc.DocState
-import User.UserState
+import User.Model
+import qualified User.UserState as U
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
@@ -86,7 +86,7 @@ startTestSystemState' proxy = do
 
 runTest :: IO () -> IO ()
 runTest test = do
-  Exception.bracket
+  E.bracket
                -- start the state system
               (startTestSystemState' stateProxy)
               (\control -> do
@@ -107,7 +107,7 @@ stateProxy = Proxy
 listenOn :: HostAddress -> PortNumber -> IO Socket
 listenOn iface port = do
     proto <- getProtocolNumber "tcp"
-    Exception.bracketOnError
+    E.bracketOnError
         (socket AF_INET Stream proto)
         (sClose)
         (\sock -> do
@@ -117,15 +117,15 @@ listenOn iface port = do
             return sock
         )
 
-initDatabaseEntries :: IO ()
-initDatabaseEntries = do
+initDatabaseEntries :: Connection -> IO ()
+initDatabaseEntries conn = do
   -- create initial database entries
-  passwdhash <- Kontra.createPassword (BS.pack "admin")
+  passwd <- createPassword (BS.pack "admin")
   flip mapM_ Kontra.initialUsers $ \email -> do
-      maybeuser <- query $ Kontra.GetUserByEmail Nothing email
+      maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash False Nothing Nothing defaultValue
+              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue
               return ()
           Just _ -> return () -- user exist, do not add it
 
@@ -171,9 +171,10 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQL (dbConfig appConf) $ \conn -> do
-    res <- ioRunDB conn checkDBConsistency
+    res <- ioRunDB conn $ tryDB checkDBConsistency
     case res of
-      Left e  -> Log.error $ "Error while checking DB consistency: " ++ e
+      Left (e::E.SomeException) -> do
+        Log.error $ "Error while checking DB consistency: " ++ show e
       Right _ -> do
         let appGlobals = AppGlobals {
             templates = templates
@@ -181,9 +182,8 @@ runKontrakcjaServer = Log.withLogger $ do
           , mailer = mailer'
           , docscache = docs
           , esenforcer = es_enforcer
-          , dbconn = conn
         }
-        Exception.bracket
+        E.bracket
                  -- start the state system
               (do
                   Log.server $ "Using store " ++ store appConf
@@ -196,31 +196,27 @@ runKontrakcjaServer = Log.withLogger $ do
               (\control -> do
 
                   -- start the http server
-                  Exception.bracket
+                  E.bracket
                            (do
                               -- populate db with entries from happstack-state
-                              pres <- ioRunDB conn populateDBWithUsersIfEmpty
-                              let ppres = case pres of
-                                   Right () -> "OK."
-                                   Left e -> "Error: " ++ e
-                              Log.debug $ "pgSQL population result: " ++ ppres
+                              ioRunDB conn U.populateDBWithUsersIfEmpty
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler appConf appGlobals)
-                              let scheddata = SchedulerData appConf mailer' templates es_enforcer
+                              let scheddata = SchedulerData appConf mailer' templates es_enforcer conn
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
                               t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
                               return [t1, t2, t3, t4, t5]
                            )
-                           (mapM_ killThread) $ \_ -> Exception.bracket
+                           (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day
                                         -- FIXME: make it checkpoint always at the same time
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
-                                          initDatabaseEntries
+                                          initDatabaseEntries conn
                                           _ <- forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination

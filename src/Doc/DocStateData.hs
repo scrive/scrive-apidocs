@@ -40,8 +40,8 @@ module Doc.DocStateData
     , emptyDocumentUI
     ) where
 
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 import Control.Monad
 import Data.Bits
 import Data.Data (Data)
@@ -57,7 +57,7 @@ import Happstack.Util.Common
 import Mails.MailsUtil
 import MinutesTime
 import Misc
-import User.UserState
+import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 

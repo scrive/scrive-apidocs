@@ -36,16 +36,16 @@ import Data.Char
 import Data.Typeable
 import Data.Data
 import Data.Maybe
-import Payments.PaymentsView
-import Payments.PaymentsState
+import Database.HDBC.PostgreSQL
+import DB.Classes
+import Payments.Model
 import Misc
 import MinutesTime
 import User.UserView
-import User.UserState
+import User.Model
 import Doc.DocState
-import Company.CompanyState
-import API.Service.ServiceState
-import Happstack.State (query)
+import Company.Model
+import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 
@@ -102,13 +102,13 @@ adminUsersPageForPayments users params =
         field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
-adminUserPage :: TemplatesMonad m => User -> Maybe Company -> PaymentAccountModel -> m String
-adminUserPage user mcompany paymentModel =
+adminUserPage :: TemplatesMonad m => User -> Maybe Company -> m String
+adminUserPage user mcompany =
     renderTemplateFM "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
         fieldF "user" $ userFields user
         fieldF "company" $ companyFields mcompany
-        field "paymentmodel" $ getModelView paymentModel
+        --field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
@@ -141,13 +141,13 @@ statsPage stats sysinfo =
         field "sysinfo" $ sysinfo
         field "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage :: TemplatesMonad m => [Service] -> m String
-servicesAdminPage services = do
+servicesAdminPage :: TemplatesMonad m => Connection -> [Service] -> m String
+servicesAdminPage conn services = do
     renderTemplateFM "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly
         fieldFL "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldM "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
+            fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
 adminTranslationsPage::TemplatesMonad m => m String
@@ -240,6 +240,7 @@ userFields u =  do
         field "email" $ getEmail u
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin" $ useriscompanyadmin u
+{-
         field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
@@ -247,15 +248,16 @@ userFields u =  do
         field "paymentmethod" $ for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
+-}
         field "paymentaccounttype" $ for (allValues::[PaymentAccountType])
-                                                                         (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
+                                                                         (\x -> if (x == userpaymentaccounttype u)
                                                                                  then soption show show x
                                                                                  else option show show x)
         field "freetrialexpirationdate" $ showDateOnly <$> userfreetrialexpirationdate u
-        field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
-        field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
-        field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
-        field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
+        --field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
+        --field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
+        --field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
+        --field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
         field "id" $ show (userid u)
 
 

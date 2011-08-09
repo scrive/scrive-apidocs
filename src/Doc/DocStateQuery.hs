@@ -31,16 +31,17 @@ module Doc.DocStateQuery
     ) where
 
 import DB.Types
+import DB.Classes
 import DBError
 import Doc.DocState
 import Doc.DocUtils
-import Company.CompanyState
+import Company.Model
 import Kontra
-import Happstack.State     (query)
+import Happstack.State (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
-import Control.Monad.State
 import Doc.DocInfo
+import User.Model
 
 {- |
    Assuming user is the logged in user, can he view the Document?
@@ -50,12 +51,12 @@ import Doc.DocInfo
      the document is authored within the user's company and shared
      the document is saved for one of the user's friends, or saved for their friend's company if their friend is a company admin
  -}
-canUserViewDoc :: User -> Document -> IO Bool
+canUserViewDoc :: Kontrakcja m => User -> Document -> m Bool
 canUserViewDoc user doc 
   | docIsSavedFor user = return True --the doc is saved for the user (or the user's company if they are an admin)
   | isSharedWithinCompany = return True --the doc is shared within the user's company
   | otherwise = do --the doc is saved for one of the user's friends (or the user's friend's company if their friend is an admin)
-      friends <- query $ GetUsersByFriendUserID (userid user)
+      friends <- runDBQuery $ GetUsersByFriendUserID (userid user)
       return $ any docIsSavedFor friends
   where
     docIsSavedFor u =
@@ -81,7 +82,7 @@ getDocByDocID docid = do
           Log.debug "Does not exist"
           return $ Left DBResourceNotAvailable
         Just doc -> do
-          canAccess <- liftIO $ canUserViewDoc user doc              
+          canAccess <- canUserViewDoc user doc
           case canAccess of
             False -> return $ Left DBResourceNotAvailable
             True  -> return $ Right doc
@@ -107,7 +108,7 @@ getDocsByLoggedInUser = do
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
       docs <- query $ GetDocuments (currentServiceID ctx)
-      usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
+      usersImFriendsWith <- runDBQuery $ GetUsersByFriendUserID (userid user)
       return $ Right [ doc | doc <- docs
                            , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]
 

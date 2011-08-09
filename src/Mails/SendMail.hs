@@ -33,6 +33,8 @@ import qualified Data.ByteString.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Control.Applicative
 import Control.Arrow (first)
+import Control.Monad
+import Control.Monad.IO.Class
 import Data.Char (isSpace, toLower)
 import ActionSchedulerState (ActionID)
 import Mails.MailsConfig
@@ -42,9 +44,8 @@ import Misc
 import qualified AppLogger as Log
 import Data.ByteString.Internal (c2w,w2c)
 import Data.List
-import API.Service.ServiceState
-import Happstack.State (query)
-import Control.Monad
+import API.Service.Model
+import DB.Classes
 import Util.MonadUtils
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
@@ -85,7 +86,7 @@ unsendable :: Mail -> Bool
 unsendable mail = all BS.null (email <$> to mail)
 
 --
-newtype Mailer = Mailer { sendMail :: ActionID -> Mail -> IO Bool }
+newtype Mailer = Mailer { sendMail :: DBMonad m => ActionID -> Mail -> m Bool }
 
 createSendgridMailer :: MailsConfig -> Mailer
 createSendgridMailer config = Mailer{sendMail = reallySend}
@@ -106,14 +107,15 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
                     ] ++ concatMap mailRcpt to
 
             Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
-            (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
-            case code of
-                 ExitFailure retcode -> do
-                     Log.mail $ "Cannot execute ./curl to send emails, code " ++ show retcode ++ " stderr: " ++ BSL.toString bsstderr
-                     return False
-                 ExitSuccess -> do
-                     Log.mail $ "Curl successfully executed with mail: " ++ (show $ mail {attachments = map (\(x,a) -> (x, BS.fromString ("length " ++ show (BS.length a)))) attachments})
-                     return True
+            liftIO $ do
+              (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
+              case code of
+                ExitFailure retcode -> do
+                  Log.mail $ "Cannot execute ./curl to send emails, code " ++ show retcode ++ " stderr: " ++ BSL.toString bsstderr
+                  return False
+                ExitSuccess -> do
+                  Log.mail $ "Curl successfully executed with mail: " ++ (show $ mail {attachments = map (\(x,a) -> (x, BS.fromString ("length " ++ show (BS.length a)))) attachments})
+                  return True
 
 createSendmailMailer :: MailsConfig -> Mailer
 createSendmailMailer config = Mailer{sendMail = reallySend}
@@ -127,29 +129,31 @@ createSendmailMailer config = Mailer{sendMail = reallySend}
                     , "-i" -- ignore single dots in input
                     ]
             Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
-            (code, _, bsstderr) <- readProcessWithExitCode' "sendmail" sendmailargs wholeContent
-            case code of
-                 ExitFailure retcode -> do
-                     Log.mail $ "Cannot execute sendmail to send emails, code " ++ show retcode ++ " stderr: " ++ BSL.toString bsstderr
-                     return False
-                 ExitSuccess -> do
-                     Log.mail $ "Successfully executed sendmail with mail: " ++ (show $ mail {attachments = map (\(x,a) -> (x,BS.fromString ("length " ++ show (BS.length a)))) attachments})
-                     return True
+            liftIO $ do
+              (code, _, bsstderr) <- readProcessWithExitCode' "sendmail" sendmailargs wholeContent
+              case code of
+                ExitFailure retcode -> do
+                  Log.mail $ "Cannot execute sendmail to send emails, code " ++ show retcode ++ " stderr: " ++ BSL.toString bsstderr
+                  return False
+                ExitSuccess -> do
+                  Log.mail $ "Successfully executed sendmail with mail: " ++ (show $ mail {attachments = map (\(x,a) -> (x,BS.fromString ("length " ++ show (BS.length a)))) attachments})
+                  return True
 
 createLocalOpenMailer :: String -> String -> Mailer
 createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = sendToTempFile}
     where
         sendToTempFile aid mail@Mail{to} = do
             let email' = email $ head to
-            tmp <- getTemporaryDirectory
+            tmp <- liftIO getTemporaryDirectory
             boundaries <- createBoundaries
             wholeContent <- createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName aid mail
             let mailtos = createMailTos mail
                 filename = tmp ++ "/Email-" ++ BS.toString email' ++ "-" ++ show aid ++ ".eml"
             Log.mail $ show aid ++ " " ++ mailtos ++ "  [staging: saved to file " ++ filename ++ "]"
-            BSL.writeFile filename wholeContent
-            openDocument filename
-            return True
+            liftIO $ do
+              BSL.writeFile filename wholeContent
+              openDocument filename
+              return True
 
 createMailTos :: Mail -> String
 createMailTos (Mail {to}) =
@@ -159,18 +163,19 @@ createMailTos' :: MailAddress -> String
 createMailTos' (MailAddress {fullname, email}) =
     mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
-createBoundaries :: IO (String, String)
-createBoundaries = (,) <$> f <*> f
+createBoundaries :: DBMonad m => m (String, String)
+createBoundaries = liftIO $ (,) <$> f <*> f
     where
         f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
 
-createWholeContent :: (String, String) -> String -> String -> ActionID -> Mail -> IO BSLC.ByteString
+createWholeContent :: DBMonad m => (String, String) -> String -> String -> ActionID -> Mail -> m BSLC.ByteString
 createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) = do
   fromHeader <- do
-      otheraddres <- (fmap (servicemailfromaddress . servicesettings)) <$> liftMM  (query . GetService) (return from)
-      case (join otheraddres) of
+      otheraddres <- (fmap (servicemailfromaddress . servicesettings))
+        <$> liftMM (runDBQuery . GetService) (return from)
+      case join otheraddres of
          Nothing -> return $ "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
-         Just address ->  return $ "From: <"++ BS.toString address++ ">\r\n"
+         Just address ->  return $ "From: <"++ BS.toString address ++ ">\r\n"
   let mailtos = createMailTos mail
       -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =

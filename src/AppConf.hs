@@ -6,7 +6,7 @@ module AppConf
     ) where
 
 import Crypto
-import User.UserState (Email(..))
+import User.Model
 import Mails.MailsConfig
 import Data.Word
 

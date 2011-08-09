@@ -89,6 +89,7 @@ import Templates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import User.Model
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader

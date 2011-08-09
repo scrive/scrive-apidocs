@@ -15,8 +15,10 @@ module API.Service.Model (
   ) where
 
 import Control.Applicative
+import Data.Data
 import Database.HDBC
 import Happstack.Server
+import Happstack.State
 import qualified Codec.Binary.Base16 as B16
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -30,14 +32,17 @@ import User.Password
 import User.UserID
 
 newtype ServiceID = ServiceID { unServiceID :: BS.ByteString }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''ServiceID)
 $(newtypeDeriveUnderlyingReadShow ''ServiceID)
 
+$(deriveSerialize ''ServiceID)
+instance Version ServiceID
+
 instance URLAble ServiceID where
-    encodeForURL = B16.encode . BS.unpack . unServiceID
+  encodeForURL = B16.encode . BS.unpack . unServiceID
 instance FromReqURI ServiceID  where
-   fromReqURI = fmap (ServiceID . BS.pack) . B16.decode
+  fromReqURI = fmap (ServiceID . BS.pack) . B16.decode
 
 newtype ServiceLocation = ServiceLocation { unServiceLocation :: BS.ByteString }
   deriving (Eq, Ord)
@@ -74,7 +79,7 @@ data ServiceUI = ServiceUI {
   } deriving (Eq, Ord, Show)
 
 data GetServiceByLocation = GetServiceByLocation ServiceLocation
-instance DBQuery GetServiceByLocation Service where
+instance DBQuery GetServiceByLocation (Maybe Service) where
   dbQuery (GetServiceByLocation loc) = do
     ss <- wrapDB $ \conn -> do
       st <- prepare conn $ selectServicesSQL ++ "WHERE s.location = ?"
@@ -83,7 +88,7 @@ instance DBQuery GetServiceByLocation Service where
     oneObjectReturnedGuard ss
 
 data GetService = GetService ServiceID
-instance DBQuery GetService Service where
+instance DBQuery GetService (Maybe Service) where
   dbQuery (GetService sid) = do
     ss <- wrapDB $ \conn -> do
       st <- prepare conn $ selectServicesSQL ++ "WHERE s.id = ?"
@@ -106,25 +111,29 @@ instance DBQuery GetServices [Service] where
     fetchServices st []
 
 data CreateService = CreateService ServiceID (Maybe Password) UserID
-instance DBUpdate CreateService Service where
+instance DBUpdate CreateService (Maybe Service) where
   dbUpdate (CreateService sid pwd aid) = do
-    wrapDB $ \conn -> do
-      _ <- run conn ("INSERT INTO services ("
-        ++ "  id"
-        ++ ", password"
-        ++ ", salt"
-        ++ ", admin_id) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?)") [
-            toSql sid
-          , toSql $ pwdSalt <$> pwd
-          , toSql $ pwdHash <$> pwd
-          , toSql aid
-          ]
-      _ <- run conn "INSERT INTO service_uis (service_id) VALUES (?)" [toSql sid]
-      return ()
-    dbQuery $ GetService sid
+    exists <- checkIfServiceExists sid
+    if exists
+      then return Nothing
+      else do
+        wrapDB $ \conn -> do
+          _ <- run conn ("INSERT INTO services ("
+            ++ "  id"
+            ++ ", password"
+            ++ ", salt"
+            ++ ", admin_id) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?)") [
+                toSql sid
+              , toSql $ pwdSalt <$> pwd
+              , toSql $ pwdHash <$> pwd
+              , toSql aid
+              ]
+          _ <- run conn "INSERT INTO service_uis (service_id) VALUES (?)" [toSql sid]
+          return ()
+        dbQuery $ GetService sid
 
 data UpdateServiceUI = UpdateServiceUI ServiceID ServiceUI
-instance DBUpdate UpdateServiceUI () where
+instance DBUpdate UpdateServiceUI Bool where
   dbUpdate (UpdateServiceUI sid sui) = do
     r <- wrapDB $ \conn -> do
       run conn ("UPDATE service_uis SET"
@@ -150,7 +159,7 @@ instance DBUpdate UpdateServiceUI () where
     oneRowAffectedGuard r
 
 data UpdateServiceSettings = UpdateServiceSettings ServiceID ServiceSettings
-instance DBUpdate UpdateServiceSettings () where
+instance DBUpdate UpdateServiceSettings Bool where
   dbUpdate (UpdateServiceSettings sid ss) = do
     r <- wrapDB $ \conn -> do
       run conn ("UPDATE services SET"
@@ -170,6 +179,12 @@ instance DBUpdate UpdateServiceSettings () where
     oneRowAffectedGuard r
 
 -- helpers
+
+checkIfServiceExists :: ServiceID -> DB Bool
+checkIfServiceExists uid = wrapDB $ \conn -> do
+  st <- prepare conn "SELECT 1 FROM services WHERE id = ?"
+  _ <- execute st [toSql uid]
+  fetchAllRows' st >>= checkIfOneObjectReturned
 
 selectServicesSQL :: String
 selectServicesSQL = "SELECT s.id, encode(s.password, 'base64'), encode(s.salt, 'base64'), s.admin_id, s.location, s.email_from_address, su.mail_footer, encode(su.button1, 'base64'), encode(su.button2, 'base64'), su.buttons_text_color, su.background, su.overlay_background, su.bars_background, encode(su.logo, 'base64') FROM services s JOIN service_uis su ON (s.id = su.service_id) "

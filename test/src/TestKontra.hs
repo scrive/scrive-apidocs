@@ -50,6 +50,7 @@ instance Kontrakcja TestKontra
 
 instance DBMonad TestKontra where
   getConnection = ctxdbconn <$> getContext
+  handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
 
 instance TemplatesMonad TestKontra where
     getTemplates = ctxtemplates <$> getContext

@@ -11,13 +11,14 @@ module AppControl
 
 import AppConf
 import API.IntegrationAPI
-import API.Service.ServiceState
+import API.Service.Model
 import API.Service.ServiceControl
 import API.UserAPI
 import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
+import DB.Classes
 import Doc.DocState
 import InputValidation
 import Kontra
@@ -26,11 +27,12 @@ import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
 import Misc
-import PayEx.PayExInterface ()-- Import so at least we check if it compiles
+--import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Session
 import Templates.Templates
+import User.Model
 import User.UserView as UserView
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
@@ -69,7 +71,6 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import InspectXMLInstances ()
 import InspectXML
-import User.OldLang
 import Util.MonadUtils
 import ForkAction
 
@@ -83,7 +84,6 @@ data AppGlobals
                  , mailer          :: Mailer
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  , esenforcer      :: MVar ()
-                 , dbconn          :: Connection
                  }
 
 {- |
@@ -226,7 +226,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
+     --, dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
 
@@ -242,8 +242,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "translations" $ hGet0 $ toK0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
-     , dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
-     , dir "adminonly" $ dir "migratecompanies" $ hGet0 $ toK0 $ Administration.migrateCompanies
+     --, dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
+     --, dir "adminonly" $ dir "migratecompanies" $ hGet0 $ toK0 $ Administration.migrateCompanies
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
@@ -471,11 +471,13 @@ appHandler appConf appGlobals = do
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
       let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-      minutestime <- liftIO $ getMinutesTime
-      muser <- getUserFromSession session
-      mcompany <- getCompanyFromSession session
+
+      conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
+      minutestime <- liftIO getMinutesTime
+      muser <- getUserFromSession conn session
+      mcompany <- getCompanyFromSession conn session
       location <- getLocationFromSession session
-      mservice <- query . GetServiceByLocation . toServiceLocation =<< currentLink
+      mservice <- ioRunDB conn . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -496,7 +498,7 @@ appHandler appConf appGlobals = do
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
-                , ctxdbconn = dbconn appGlobals
+                , ctxdbconn = conn
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
@@ -530,7 +532,7 @@ forgotPasswordPagePost = do
   case memail of
     Nothing -> return LoopBack
     Just email -> do
-      muser <- query $ GetUserByEmail Nothing $ Email email
+      muser <- runDBQuery $ GetUserByEmail Nothing $ Email email
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
@@ -597,7 +599,7 @@ signup vip _freetill =  do
   case memail of
     Nothing -> return LoopBack
     Just email -> do
-      muser <- query $ GetUserByEmail Nothing $ Email $ email
+      muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
       case  muser of
         Just user ->
           if isNothing $ userhasacceptedtermsofservice user
@@ -656,19 +658,19 @@ handleLoginPost = do
         (Just email, Just passwd) -> do
             -- check the user things here
             Log.debug $ "Logging " ++ show email
-            maybeuser <- query $ GetUserByEmail Nothing (Email email)
+            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just User{ userid, userpassword }
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "Logging: User logged in"
                         logUserToContext maybeuser
                         time <- liftIO getMinutesTime
-                        _ <- update $ RecordSuccessfulLogin userid time
+                        _ <- runDBUpdate $ RecordSuccessfulLogin userid time
                         return BackToReferer
                 Just User{userid } -> do
                         Log.debug $ "Logging: User found, Not verified password"
                         time <- liftIO getMinutesTime
-                        _ <- update $ RecordFailedLogin userid time
+                        _ <- runDBUpdate $ RecordFailedLogin userid time
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "Logging: No user matching the email found"  
@@ -718,7 +720,7 @@ daveDocument documentid = onlySuperUserGet $ do
 -}
 daveUser :: Kontrakcja m => UserID -> m Response
 daveUser userid = onlySuperUserGet $ do
-    user <- queryOrFail $ GetUserByUserID userid
+    user <- runDBOrFail $ dbQuery $ GetUserByID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 
 sysdump :: Kontrakcja m => m Response

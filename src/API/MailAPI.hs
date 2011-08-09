@@ -3,11 +3,12 @@ module API.MailAPI (
     , mailAPI
     ) where
 
+import DB.Classes
 import Doc.DocState
-import Company.CompanyState
+import Company.Model
+import User.Model
 import Kontra
 import Misc
-import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import qualified AppLogger as Log (debug)
 import qualified Doc.DocControl as DocControl
 import Control.Monad.Reader
@@ -17,7 +18,7 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host)
-import Happstack.State (query, update)
+import Happstack.State (update)
 import Text.JSON
 import Text.JSON.String
 import qualified Codec.MIME.Parse as MIME
@@ -134,12 +135,13 @@ handleMailCommand = do
     let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
 
     Context { ctxtime, ctxipnumber } <- getContext
-    (maybeUser :: Maybe User) <- liftIO $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-    (user :: User) <- maybeFail ("User '" ++ username ++ "' not found") maybeUser
+    user <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString username))
+      >>= maybeFail ("User '" ++ username ++ "' not found")
 
-    when (isNothing $ usermailapi user) $
+    mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
+    when (isNothing mmailapi) $
         fail $ "User '" ++ username ++ "' hasn't enabled mail api"
-    let Just mailapi = usermailapi user
+    let Just mailapi = mmailapi
 
     title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
 
@@ -165,18 +167,18 @@ handleMailCommand = do
              , (True,                         Signable Contract)
              ]
 
-    today <- asInt <$> liftIO getMinutesTime
+    today <- fromIntegral . asInt <$> liftIO getMinutesTime
     if today == umapiLastSentDate mailapi
        then do
            when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
                fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
            let senttoday = umapiSentToday mailapi + 1
-           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
+           _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
                umapiSentToday = senttoday
            }
            return ()
        else do
-           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
+           _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
                  umapiLastSentDate = today
                , umapiSentToday = 1
            }
@@ -187,7 +189,7 @@ handleMailCommand = do
 
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
     mcompany <- case usercompany user of
-                  Just companyid -> query $ GetCompany companyid
+                  Just companyid -> runDBQuery $ GetCompany companyid
                   Nothing -> return Nothing
     let userDetails = signatoryDetailsFromUser user mcompany
 

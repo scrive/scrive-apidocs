@@ -31,7 +31,7 @@ import System.Time
 import Data.Map ((!))
 import qualified Data.Map as Map
 import Data.CSV
-import User.OldLang
+import User.Lang
 import Text.ParserCombinators.Parsec
 import System.IO
 

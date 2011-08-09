@@ -20,6 +20,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
+import DB.Classes
 import Doc.DocState
 import Kontra
 import KontraLink
@@ -29,6 +30,7 @@ import Mails.SendMail
 import Session
 import Templates.LocalTemplates
 import Templates.Templates
+import User.Model
 import User.UserView
 import qualified AppLogger as Log
 import System.Time
@@ -39,6 +41,10 @@ type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaG
 
 newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
+
+instance DBMonad ActionScheduler where
+    getConnection = sdDBConnection <$> ask
+    handleDBError = E.throw
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
 -- LocalTemplates instead. Reason? We don't have access to currently used
@@ -71,8 +77,6 @@ actionScheduler imp = do
         catchEverything :: Action -> E.SomeException -> IO ()
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
-            
-
 
 -- | Old scheduler (used as main one before action scheduler was implemented)
 oldScheduler :: ActionScheduler ()
@@ -113,7 +117,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             sd <- ask
             mdoc <- query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
-            (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
+            (runDBQuery $ GetUserByID uid) >>= maybe (return ()) (\user -> do
                 let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
                     mailfunc = case documenttype <$> mdoc of
                       Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
@@ -140,7 +144,7 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
       Log.error $ "Email was removed from the queue"
   else do
     mailer <- sdMailer <$> ask
-    success <- liftIO $ sendMail mailer actionID mail
+    success <- sendMail mailer actionID mail
     if success
        then do
            -- morph action type into SentEmailInfo

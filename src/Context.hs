@@ -7,7 +7,7 @@ import Data.Word
 import Database.HDBC.PostgreSQL
 import Doc.DocState
 import MinutesTime
-import User.UserState
+import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
@@ -16,8 +16,8 @@ import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import qualified MemCache
 import FlashMessage
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 import DB.Types
 
 data Context = Context {

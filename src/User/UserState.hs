@@ -1699,7 +1699,7 @@ finalizeInsertUsersIntoPG = wrapDB $ \conn -> do
 populateDBWithUsersIfEmpty :: DB ()
 populateDBWithUsersIfEmpty = do
   n <- wrapDB $ \conn -> do
-    st <- prepare conn "SELECT COUNT(*) FROM users"
+    st <- prepare conn "SELECT COUNT(*) FROM user_infos"
     _ <- executeRaw st
     [n] <- fetchAllRows' st >>= return . map fromSql . join
     return (n::Int)

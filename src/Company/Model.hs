@@ -12,8 +12,12 @@ module Company.Model (
   ) where
 
 import Control.Applicative
+import Data.Data
 import Data.Int
 import Database.HDBC
+import Happstack.State
+import Happstack.Server
+import Happstack.Util.Common
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -22,11 +26,15 @@ import DB.Classes
 import DB.Derive
 import DB.Utils
 import API.Service.Model
+import Company.Tables
 
 newtype CompanyID = CompanyID { unCompanyID :: Int64 }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Data, Typeable)
 $(newtypeDeriveConvertible ''CompanyID)
 $(newtypeDeriveUnderlyingReadShow ''CompanyID)
+
+instance FromReqURI CompanyID where
+  fromReqURI = readM
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
   deriving (Eq, Ord)
@@ -62,7 +70,7 @@ instance DBQuery GetCompanies [Company] where
     fetchCompanies st []
 
 data GetCompany = GetCompany CompanyID
-instance DBQuery GetCompany Company where
+instance DBQuery GetCompany (Maybe Company) where
   dbQuery (GetCompany cid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectCompaniesSQL ++ "WHERE c.id = ?"
     _ <- execute st [toSql cid]
@@ -70,7 +78,7 @@ instance DBQuery GetCompany Company where
     oneObjectReturnedGuard cs
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
-instance DBQuery GetCompanyByExternalID Company where
+instance DBQuery GetCompanyByExternalID (Maybe Company) where
   dbQuery (GetCompanyByExternalID msid ecid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectCompaniesSQL
       ++ "WHERE ((?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ?) AND c.external_id = ?"
@@ -81,7 +89,7 @@ instance DBQuery GetCompanyByExternalID Company where
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
-    cid <- CompanyID <$> getUniqueID "companies"
+    cid <- CompanyID <$> getUniqueID tableCompanies
     wrapDB $ \conn -> do
       _ <- run conn ("INSERT INTO companies ("
         ++ "  id"
@@ -101,10 +109,10 @@ instance DBUpdate CreateCompany Company where
         ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?)")
           $ toSql cid : replicate 6 (toSql "")
       return ()
-    dbQuery $ GetCompany cid
+    dbQuery (GetCompany cid) >>= maybe (E.throw NoObject) return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
-instance DBUpdate SetCompanyInfo () where
+instance DBUpdate SetCompanyInfo Bool where
   dbUpdate (SetCompanyInfo cid ci) = wrapDB $ \conn -> do
     r <- run conn ("UPDATE company_infos SET"
       ++ "  name = ?"
@@ -126,12 +134,11 @@ instance DBUpdate SetCompanyInfo () where
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where
-  dbUpdate (GetOrCreateCompanyWithExternalID msid ecid) =
-    dbQuery (GetCompanyByExternalID msid ecid) `catchDB` handle
-    where
-      handle e = case e of
-        NoObject -> dbUpdate $ CreateCompany msid $ Just ecid
-        _ -> E.throw e
+  dbUpdate (GetOrCreateCompanyWithExternalID msid ecid) = do
+    mc <- dbQuery $ GetCompanyByExternalID msid ecid
+    case mc of
+      Just c  -> return c
+      Nothing -> dbUpdate $ CreateCompany msid $ Just ecid
 
 -- helpers
 
@@ -154,3 +161,34 @@ fetchCompanies st acc = fetchRow st >>= maybe (return acc)
        , companycountry = fromSql country
      }
    } : acc)
+
+-- this will not be needed when we move documents to pgsql. for now it's needed
+-- for document handlers - it seems that types of arguments that handlers take
+-- need to be serializable. I don't know wtf, but I'll gladly dispose of these
+-- instances when we're done with the migration.
+
+newtype CompanyID_0 = CompanyID_0 Int
+  deriving (Eq, Ord, Typeable)
+
+deriving instance Typeable Company
+deriving instance Typeable CompanyInfo
+deriving instance Typeable ExternalCompanyID
+
+instance Version CompanyID where
+  mode = extension 2 (Proxy :: Proxy CompanyID_0)
+
+instance Version CompanyID_0
+instance Version Company
+instance Version CompanyInfo
+instance Version ExternalCompanyID
+
+instance Migrate CompanyID_0 CompanyID where
+  migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
+
+$(deriveSerializeFor [
+    ''CompanyID
+  , ''CompanyID_0
+  , ''Company
+  , ''CompanyInfo
+  , ''ExternalCompanyID
+  ])

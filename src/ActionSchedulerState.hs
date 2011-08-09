@@ -31,6 +31,7 @@ import Control.Concurrent.MVar
 import Control.Monad.State
 import Control.Monad.Reader
 import Data.Typeable
+import Database.HDBC.PostgreSQL
 import Happstack.Data.IxSet
 import Happstack.State
 import System.Random
@@ -43,13 +44,14 @@ import Doc.DocState
 import Misc
 import MinutesTime
 import Mails.MailsData
-import User.UserState
+import User.Model
 
 data SchedulerData a b c = SchedulerData {
       sdAppConf      :: a
     , sdMailer       :: b
     , sdTemplates    :: c
     , sdMailEnforcer :: MVar ()
+    , sdDBConnection :: Connection
 }
 
 newtype ActionID = ActionID Integer

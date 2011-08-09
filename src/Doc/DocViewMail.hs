@@ -16,7 +16,7 @@ module Doc.DocViewMail (
     , mailRejectMailContent
     ) where
 
-import API.Service.ServiceState
+import API.Service.Model
 import Doc.DocProcess
 import Doc.DocState
 import Doc.DocUtils
@@ -29,11 +29,11 @@ import Templates.TemplatesUtils
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
+import DB.Classes
 
 import Control.Monad
 import Data.Functor
 import Data.Maybe
-import Happstack.State (query)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
@@ -454,14 +454,14 @@ replaceOnEdit this with =
 
 mailFooter :: TemplatesMonad m => Context -> Document -> m String
 mailFooter ctx doc = do
-    mservice <- liftMM (query . GetService) (return $ documentservice doc)
+    mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
     case (documentmailfooter $ documentui doc) `mplus` (join $ servicemailfooter <$> serviceui <$> mservice) of
          Just footer -> return $ BS.toString footer
          Nothing -> renderTemplateFM "poweredBySkrivaPaPara" $ field "ctxhostpart" $ ctxhostpart ctx
 
 makeFullLink :: TemplatesMonad m => Context -> Document -> String -> m String
 makeFullLink ctx doc link = do
-    mservice <- liftMM (query . GetService) (return $ documentservice doc)
+    mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
     case join $ servicelocation <$> servicesettings <$> mservice of
          Just (ServiceLocation location) -> return $ BS.toString location ++ link
          Nothing -> return $ ctxhostpart ctx ++ link

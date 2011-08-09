@@ -9,15 +9,15 @@
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
-import API.Service.ServiceState (ServiceID(..))
+import API.Service.Model
 import Doc.DocState
-import Company.CompanyState
+import Company.Model
 import DB.Types
-import Kontra
 import MinutesTime
 import InspectXML
-import Payments.PaymentsState
+import Payments.Model
 import Mails.MailsUtil
+import User.Model
 import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
@@ -62,10 +62,7 @@ instance InspectXML BS.ByteString where
 instance InspectXML Bool where
 instance InspectXML Int where
 instance InspectXML Author where
-instance InspectXML Friend where
-instance InspectXML Inviter where
 instance InspectXML ServiceID where
-instance InspectXML DefaultMainSignatory where
 instance InspectXML Integer where
 instance InspectXML SignOrder where
 instance InspectXML SignatoryRole where
@@ -82,8 +79,8 @@ instance InspectXML DocumentHistoryEntry where
 instance InspectXML MagicHash where
 instance InspectXML Signatory where
 instance InspectXML MinutesTime where
-instance InspectXML SupervisorID where
 instance InspectXML Password where
+instance InspectXML PaymentAccountType where
 instance InspectXML FlashMessage where
 instance InspectXML Email where
 instance InspectXML SignupMethod where
@@ -91,8 +88,6 @@ instance InspectXML MailsDeliveryStatus where
 instance InspectXML UserInfo where
 instance InspectXML UserMailAPI where
 instance InspectXML UserSettings where
-instance InspectXML UserPaymentPolicy where
-instance InspectXML UserPaymentAccount where
 instance InspectXML IdentificationType where
 instance InspectXML CancelationReason where
 instance InspectXML SignatureProvider where

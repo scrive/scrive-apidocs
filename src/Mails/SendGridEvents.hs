@@ -34,6 +34,7 @@ import MinutesTime
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
+import User.Model
 
 data SendgridEvent =
     SendgridEvent {

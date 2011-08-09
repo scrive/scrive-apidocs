@@ -5,6 +5,7 @@ module Doc.DocControl where
 
 import ActionSchedulerState
 import AppView
+import DB.Classes
 import DB.Types
 import DBError
 import Doc.CSVUtils
@@ -25,6 +26,7 @@ import Mails.SendMail
 import MinutesTime
 import Misc
 import Redirect
+import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 import Util.StringUtil
@@ -188,7 +190,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
     saveDocumentForSignatory doc'@Document{documentid,documentservice}
                              SignatoryLink{signatorylinkid,signatorydetails} = do
       let sigemail = signatoryemail signatorydetails
-      muser <- query $ GetUserByEmail documentservice (Email sigemail)
+      muser <- runDBQuery $ GetUserByEmail documentservice (Email sigemail)
       case muser of
         Nothing -> return $ Right doc'
         Just user -> do
@@ -446,13 +448,13 @@ handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m KontraLin
 handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
   ctx <- getContext
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
+  maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
   case maybeuser of
     Nothing -> do
       let details = signatorydetails signatorylink
           fullname = (signatoryfstname details, signatorysndname details)
           email = signatoryemail details
-      muser <- liftIO $ createUserBySigning ctx documenttitle fullname email (documentid, signatorylinkid)
+      muser <- createUserBySigning ctx documenttitle fullname email (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
           _ <- update $ SaveDocumentForUser documentid user signatorylinkid
@@ -867,11 +869,11 @@ handleIssueChangeFunctionality document = do
   udoc <- guardRightM $ updateDocument ctx document
   signlast <- isFieldSet "signlast"
   SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
-  _user <- guardRightM $ handlePreferenceChange authorid
-  return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
-
+  updated <- handlePreferenceChange authorid
+  if updated
+     then return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
+     else mzero
   where
-    handlePreferenceChange :: Kontrakcja m => UserID -> m (Either String User)
     handlePreferenceChange userid = do
       toBasic <- isFieldSet "tobasic"
       toAdvanced <- isFieldSet "toadvanced"
@@ -880,8 +882,8 @@ handleIssueChangeFunctionality document = do
         (_, True) -> setPreferredMode $ Just AdvancedMode
         _ -> setPreferredMode Nothing
       where
-        setPreferredMode :: Kontrakcja m => Maybe DesignMode -> m (Either String User)
-        setPreferredMode designmode = update $ SetPreferredDesignMode userid designmode
+        setPreferredMode designmode =
+          runDBUpdate $ SetPreferredDesignMode userid designmode
 
 {- |
     This will get and parse a csv file.  It
@@ -1263,7 +1265,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
 
   authorrole <- getFieldWithDefault "" "authorrole"
-  authorsignorder <- (SignOrder . fromIntegral . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
+  authorsignorder <- (SignOrder . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
 
   currentuser <- maybe mzero return $ ctxmaybeuser ctx
   docfunctionality <- getCriticalField (asValidDocumentFunctionality currentuser documentfunctionality) "docfunctionality"
@@ -1344,7 +1346,7 @@ getDocumentsForUserByType doctype user = do
                    then query $ GetDocumentsByCompany user
                    else query $ GetDocumentsBySignatory user
   
-  usersICanView <- query $ GetUsersByFriendUserID $ userid user
+  usersICanView <- runDBQuery $ GetUsersByFriendUserID $ userid user
   friends'Documents <- mapM (query . GetDocumentsBySignatory) usersICanView
   
   return . filter ((\d -> documenttype d == doctype)) $ nub $
@@ -1759,7 +1761,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Left _ -> return LinkMain
         Right doc -> do
           guard $ isAuthor (doc, user)
-          muser <- query $ GetUserByEmail (documentservice doc) (Email email)
+          muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
           mnewdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid muser email
           case mnewdoc of
             Right newdoc -> do

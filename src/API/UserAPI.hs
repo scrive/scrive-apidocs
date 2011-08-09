@@ -14,9 +14,11 @@ module API.UserAPI (userAPI) where
 
 import API.API
 import API.APICommons hiding (SignatoryTMP(..))
+import DB.Classes
 import Doc.DocControl
 import Doc.DocState
-import Company.CompanyState
+import Company.Model
+import User.Model
 import Kontra
 import Misc
 import Doc.DocViewMail
@@ -52,7 +54,7 @@ instance APIContext UserAPIContext where
 apiUser :: Kontrakcja m => m (Maybe User)
 apiUser = do
     email <- getFieldUTFWithDefault BS.empty "email"
-    muser <- query $ GetUserByEmail Nothing (Email email)
+    muser <- runDBQuery $ GetUserByEmail Nothing (Email email)
     case muser of
         Nothing -> return Nothing
         Just user -> do
@@ -154,7 +156,7 @@ sendNewDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 sendNewDocument = do
   author <- user <$> ask
   mcompany <- case usercompany author of
-                Just companyid -> query $ GetCompany companyid
+                Just companyid -> runDBQuery $ GetCompany companyid
                 Nothing -> return Nothing
   mtitle <- apiAskBS "title"
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""

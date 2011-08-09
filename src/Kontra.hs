@@ -1,6 +1,5 @@
 module Kontra
-    ( module User.UserState
-    , Context(..)
+    ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
     , isSuperUser
@@ -23,7 +22,7 @@ module Kontra
     )
     where
 
-import API.Service.ServiceState
+import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
@@ -41,7 +40,7 @@ import KontraMonad
 import Mails.SendMail
 import Misc
 import Templates.Templates
-import User.UserState
+import User.Model
 import Util.HasSomeUserInfo
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
@@ -53,6 +52,7 @@ instance Kontrakcja Kontra
 
 instance DBMonad Kontra where
   getConnection = ctxdbconn <$> getContext
+  handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
 
 instance KontraMonad Kontra where
     getContext    = Kontra get

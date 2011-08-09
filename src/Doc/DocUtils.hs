@@ -14,13 +14,12 @@ module Doc.DocUtils where
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
-import API.Service.ServiceState
 import Mails.MailsUtil
 import Templates.Templates
-import User.UserState
+import User.Model
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
-import Company.CompanyState
+import Company.Model
 
 import Control.Monad
 import Data.List hiding (insert)
@@ -108,9 +107,6 @@ instance MaybeUser UserID where
 
 instance (MaybeUser u) => MaybeUser (Maybe u) where
   getUserID  = join . fmap getUserID
-
-instance MaybeUser ServiceAdmin where
-  getUserID = Just . UserID . unServiceAdmin
 
 {- |  And this is a function for comparison -}
 sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool
