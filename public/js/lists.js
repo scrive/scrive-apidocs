@@ -36,7 +36,7 @@ window.Cell = Backbone.Model.extend({
         if (this.get("subfield") != undefined)
             return this.get("subfield");
         else
-            return this.get("field")
+            return this.get("field");
     },
    
     width : function(){
