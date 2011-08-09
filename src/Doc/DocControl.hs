@@ -1455,7 +1455,7 @@ handleDocumentUpload docid content1 filename = do
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
-      Log.debug ("Got an error: " ++ show err)
+      liftIO $ print ("Got an error: " ++ show err)
       return ()
     Right document -> do
         _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
