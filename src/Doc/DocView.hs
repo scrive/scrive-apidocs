@@ -1113,8 +1113,8 @@ signedByMeFields _document siglnk = do
 
 
 documentViewFields :: MonadIO m => Document -> Fields m
-documentViewFields document = do
-  field "addSignatoryScript" $ documentstatus document == Pending  || documentstatus document == AwaitingAuthor
+documentViewFields Document{documentstatus} = do
+  field "addSignatoryScript" $ documentstatus /= Closed
 
 
 designViewFields :: MonadIO m => Maybe DesignStep -> Fields m
