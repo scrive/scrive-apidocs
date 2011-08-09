@@ -678,7 +678,7 @@ safeReady(function() {
             if (!sigFieldsValidation()) {
                 return false;
             }
-            var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
+            var trs = $("table#signViewSigAttachmentBoxList tr").has("form.sigattachmentupload");
             if (trs.length > 0) {
                 trs.addClass("redborder");
                 FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
