@@ -730,14 +730,12 @@ handleIssueSaveAsTemplate document = do
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
+-- This is not dead! Look on or around line 631. -- Eric
 handleIssueChangeToContract :: Kontrakcja m => Document -> m KontraLink
 handleIssueChangeToContract document = do
   ctx <- getContext
   signlast <- isFieldSet "signlast"
-  guard (isJust $ ctxmaybeuser ctx)
-  let user = fromJust $ ctxmaybeuser ctx
-  mcompany <- getCompanyForUser user
-  contract <- guardRightM $ update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany (documentid document)
+  contract <- guardRightM $ signableFromTemplateWithUpdatedAuthor (documentid document)
   ncontract <- guardRightM $ updateDocument ctx contract
   return $ LinkDesignDoc $ DesignStep3 (documentid ncontract) signlast
 
@@ -852,7 +850,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
                                                                     , not r]
                          , not $ fid `elem` existingattachments]
                     ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
-    ndoc <- guardRightM $ update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
+    ndoc <- guardRightM $ updateDocAuthorAttachments (documentid udoc) idsforadd idsforremoval
     return $ LinkDesignDoc $ DesignStep3 (documentid ndoc) signlast
 
 {- |
@@ -862,25 +860,18 @@ handleIssueUpdateAttachments doc = withUserPost $ do
 -}
 handleIssueChangeFunctionality :: Kontrakcja m => Document -> m KontraLink
 handleIssueChangeFunctionality document = do
+  guardLoggedIn
   ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx document
   signlast <- isFieldSet "signlast"
+  toBasic <- isFieldSet "tobasic"
+  toAdvanced <- isFieldSet "toadvanced"
+  let newmode = caseOf [(toBasic, Just BasicMode)
+                       ,(toAdvanced, Just AdvancedMode)
+                       ] Nothing
   SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
-  _user <- guardRightM $ handlePreferenceChange authorid
+  _ <- update $ SetPreferredDesignMode authorid newmode
   return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
-
-  where
-    handlePreferenceChange :: Kontrakcja m => UserID -> m (Either String User)
-    handlePreferenceChange userid = do
-      toBasic <- isFieldSet "tobasic"
-      toAdvanced <- isFieldSet "toadvanced"
-      case (toBasic, toAdvanced) of
-        (True, _) -> setPreferredMode $ Just BasicMode
-        (_, True) -> setPreferredMode $ Just AdvancedMode
-        _ -> setPreferredMode Nothing
-      where
-        setPreferredMode :: Kontrakcja m => Maybe DesignMode -> m (Either String User)
-        setPreferredMode designmode = update $ SetPreferredDesignMode userid designmode
 
 {- |
     This will get and parse a csv file.  It
@@ -1460,15 +1451,11 @@ handlePageOfDocument' documentid mtokens = do
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug "Uploading doc"
-  ctx@Context{ctxdocstore, ctxs3action} <- getContext
-  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
-  -- we use gs to do that of course
-  content <- liftIO $ preprocessPDF ctx content1 docid
-
-  fileresult <- update $ AttachFile docid filename content
+  Context{ctxdocstore, ctxs3action} <- getContext
+  fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
-      liftIO $ print ("Got an error: " ++ show err)
+      Log.debug ("Got an error: " ++ show err)
       return ()
     Right document -> do
         _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
@@ -1508,7 +1495,7 @@ handleCreateNewAttachment = withUserPost $ do
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = do
-    Context { ctxmaybeuser = Just user, ctxtime } <- getContext
+    guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
@@ -1519,8 +1506,7 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = 
       else do
           Log.debug "Got the content, creating document"
           let title = BS.fromString (basename filename)
-          mcompany <- getCompanyForUser user
-          doc <- guardRightM $ update $ NewDocument user mcompany title doctype ctxtime
+          doc <- guardRightM $ newDocument title doctype
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
 makeDocumentFromFile _ _ = mzero -- to complete the patterns
@@ -1604,10 +1590,9 @@ handleAttachmentShare = withUserPost $ do
 
 handleIssueShare :: Kontrakcja m => m [Document]
 handleIssueShare = do
-    Context { ctxmaybeuser = Just user } <- getContext
-    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-    let ids = map DocumentID idnumbers
-    guardRightM $ update $ ShareDocuments user ids
+  idnumbers <- getCriticalFieldList asValidDocID "doccheck"
+  let ids = map DocumentID idnumbers
+  guardRightM $ shareDocuments ids
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
@@ -2036,3 +2021,4 @@ handleInvariantViolations = onlySuperUser $ do
         [] -> "No problems!"
         _  -> intercalate "\n" probs
   return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
+

@@ -1,4 +1,4 @@
-module Redirect (sendRedirect,sendSecureLoopBack,guardRight,guardRightM) where
+module Redirect (sendRedirect,sendSecureLoopBack,guardRight,guardRightM,guardLoggedIn) where
 
 
 import Control.Applicative ((<$>))
@@ -63,14 +63,23 @@ instance GuardRight String where
     mzero
     
 instance GuardRight DBError where
-  guardRight (Right b) = return b
+  guardRight (Right b)            = return b
   guardRight (Left DBNotLoggedIn) = do
     r <- sendRedirect $ LinkLogin NotLogged
     finishWith r
-  guardRight _ = mzero
+  guardRight _                    = mzero
   
 {- |
    Get the value from a Right or log an error and mzero if it is a left
  -}
 guardRightM :: (Kontrakcja m, GuardRight msg) => m (Either msg b) -> m b
 guardRightM action = guardRight =<< action
+
+guardLoggedIn :: (Kontrakcja m) => m ()
+guardLoggedIn = do
+  Context{ ctxmaybeuser } <- getContext
+  case ctxmaybeuser of
+    Nothing -> do
+      r <- sendRedirect $ LinkLogin NotLogged
+      finishWith r
+    Just _ -> return ()
