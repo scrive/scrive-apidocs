@@ -43,7 +43,7 @@ module Doc.DocState
     , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
     , SetDocumentTrustWeaverReference(..)
-    , ShareDocuments(..)
+    , ShareDocument(..)
     , SetDocumentTitle(..)
     , SignDocument(..)
     , TimeoutDocument(..)
@@ -1139,16 +1139,10 @@ setupForDeletion doc = blankDocument {
     such as the user trying to share isn't the document author, or if the document
     doesn't exist.
 -}
-shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
-shareDocuments user docids = 
-  forEachDocument shareDocument docids
-  where
-    shareDocument :: DocumentID -> Update Documents (Either String Document)
-    shareDocument docid =
-      modifySignableOrTemplate docid $ \doc ->
-        if isAuthor (doc, user)
-          then Right $ doc { documentsharing = Shared }
-          else Left $ "Can't share document unless you are the author"
+shareDocument :: DocumentID -> Update Documents (Either String Document)
+shareDocument docid = 
+  modifySignableOrTemplate docid $ \doc ->
+  Right $ doc { documentsharing = Shared }
 
 {- |
     Sets the document title for the indicated document.
@@ -1617,7 +1611,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'restoreArchivedDocuments
                         , 'reallyDeleteDocuments
                         , 'deleteDocumentRecordIfRequired
-                        , 'shareDocuments
+                        , 'shareDocument
                         , 'setDocumentTitle
                         , 'timeoutDocument
                         , 'closeDocument
