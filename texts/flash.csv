@@ -79,7 +79,7 @@
 "_flashMessagePasswordChangeLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>     Vänligen
  använd ""Glömt lösenord"" för att generera en ny länk.","We are sorry, this link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
-"_flashMessagePasswordsDontMatch","""Nytt lösenord"" matchar inte med ""Upprepa lösenord""","""New password"" does not match ""Repeat password"""
+"_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>","<strong>New password</strong> does not match <strong>Repeat password</strong>"
 "_flashMessagePleaseSignContract","Underteckna dokumentet längst ned på sidan.","Sign the document at the bottom of the page."
 "_flashMessagePleaseSignOffer","Du kan acceptera offerten längst ned på sidan.","Accept the offer at the bottom of the page."
 "_flashMessagePleaseSignWithEleg","Du undertecknar dokumentet längst ned. Det krävs e-legitimation
