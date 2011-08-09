@@ -263,7 +263,7 @@ pageDocumentForSignContent=
                 value="$attachment.fileid$" />
               </form>
               $else$
-              <form method="post" enctype="multipart/form-data">
+              <form method="post" enctype="multipart/form-data" class="sigattachmentupload">
                 <input type="hidden" name="sigattachment" value="yes" />
                 <input type="hidden" name="attachname"
                        value="$attachment.name$" />
