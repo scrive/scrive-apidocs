@@ -119,7 +119,7 @@ allSignedWhenClosed _ document =
   assertInvariant "some signatories are not signed when it is closed" $ 
   isClosed document =>> all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
   
-{- | All signed implies all closed (or preparation -- some new documents in basic mode don't have any signatories)
+{- | All signed implies all closed or preparation (since a new document with basic functionality won't have a sig)
  -}
 closedWhenAllSigned :: MinutesTime -> Document -> Maybe String
 closedWhenAllSigned _ document =
