@@ -169,6 +169,11 @@ safeReady(function() {
                 $("#dialog-list-delete-confirm").find(".deletionDetails").text(deletionDetails);
                 return true;
             }
+        },
+        onLoad : function() {
+           var offset = this.getOverlay().offset()
+           this.getOverlay().css("position","absolute");
+           this.getOverlay().offset(offset);
         }
     });
 });
@@ -201,6 +206,11 @@ safeReady(function() {
                 }
                 return true;
             }
+        },
+        onLoad : function() {
+           var offset = this.getOverlay().offset()
+           this.getOverlay().css("position","absolute");
+           this.getOverlay().offset(offset);
         }
     });
 });
@@ -219,6 +229,11 @@ safeReady(function() {
             } else {
                 return true;
             }
+        },
+        onLoad : function() {
+           var offset = this.getOverlay().offset()
+           this.getOverlay().css("position","absolute");
+           this.getOverlay().offset(offset);
         }
     });
 });
@@ -430,6 +445,11 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
+        },
+        onLoad : function() {
+           var offset = this.getOverlay().offset()
+           this.getOverlay().css("position","absolute");
+           this.getOverlay().offset(offset);
         }
     });
 
@@ -454,6 +474,11 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
+        },
+        onLoad : function() {
+           var offset = this.getOverlay().offset()
+           this.getOverlay().css("position","absolute");
+           this.getOverlay().offset(offset);
         }
     });
 });
