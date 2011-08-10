@@ -612,8 +612,10 @@ signup vip _freetill =  do
           else do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
-        Nothing -> do
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip
+        Nothing -> do         
+          rq <- askRq
+          let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip browserLang
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone

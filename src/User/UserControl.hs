@@ -34,6 +34,7 @@ import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Util.MonadUtils
 import User.SystemServer
+import User.Lang
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -394,7 +395,7 @@ handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
     case memail of
       Just email -> do
         mcompany <- getCompanyForUser user
-        muser <- createUser ctx (ctxhostpart ctx) fullname email (Just user) mcompany False
+        muser <- createUser ctx (ctxhostpart ctx) fullname email (Just user) mcompany False defaultValue
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
@@ -458,8 +459,9 @@ createUser :: TemplatesMonad m => Context
                                   -> Maybe User
                                   -> Maybe Company
                                   -> Bool
+                                  -> Lang
                                   -> m (Maybe User)
-createUser ctx hostpart names email madminuser mcompany' vip = do
+createUser ctx hostpart names email madminuser mcompany' vip lang = do
   passwdhash <- liftIO $ createPassword =<< randomPassword
   -- make sure we don't count the company unless the admin user actually is a company admin user
   let mcompany = case (fmap useriscompanyadmin madminuser,
@@ -471,6 +473,7 @@ createUser ctx hostpart names email madminuser mcompany' vip = do
   muser <- update $ AddUser names email passwdhash False Nothing (fmap companyid mcompany) (systemServerFromURL $ ctxhostpart ctx)
   case muser of
     Just user -> do
+      _ <- update $ SetUserSettings (userid user) (usersettings user) {lang = lang}
       let fullname = composeFullName names
       mail <- case (madminuser, mcompany) of
                 (Just adminuser, Just company) -> do
