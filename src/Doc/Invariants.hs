@@ -124,7 +124,7 @@ allSignedWhenClosed _ document =
 closedWhenAllSigned :: MinutesTime -> Document -> Maybe String
 closedWhenAllSigned _ document =
   assertInvariant "all signatories signed but doc is not closed" $
-  (some isSignatory (documentsignatorylinks document) && 
+  (any isSignatory (documentsignatorylinks document) && 
    all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)) =>> 
   (isClosed document || isPreparation document)
   
