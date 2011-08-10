@@ -21,15 +21,15 @@ showUserSecurity =
                    <table>
                        <tr>
                            <td>$_PresentPassword()$</td>
-                           <td><input type="password" name="oldpassword" /></td>
+                           <td><input autocomplete="off" type="password" name="oldpassword" /></td>
                        </tr>
                        <tr>
                            <td>$_NewPassword()$</td>
-                           <td><input type="password" name="password" /></td>
+                           <td><input autocomplete="off" type="password" name="password" /></td>
                        </tr>
                        <tr>
                            <td>$_RepeatNewPassword()$</td>
-                           <td><input type="password" name="password2" /></td>
+                           <td><input autocomplete="off" type="password" name="password2" /></td>
                        </tr>
                    </table>
                </div>
@@ -51,6 +51,7 @@ showUserSecurity =
                        </tr>
                    </table>
                </div> 
+
              <div class="account-footer">
                 <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">
