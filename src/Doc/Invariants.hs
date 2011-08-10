@@ -6,6 +6,7 @@ import MinutesTime
 import Doc.DocInfo
 import Doc.DocUtils
 import Misc
+import Util.HasSomeUserInfo
 
 import Data.List
 import Data.Maybe
@@ -19,7 +20,7 @@ invariantProblems :: MinutesTime -> Document -> Maybe String
 invariantProblems now document =
   case catMaybes $ map (\f -> f now document) documentInvariants of
     [] -> Nothing
-    a  -> Just $ (show $ documentid document) ++ ": " ++ intercalate ";" a
+    a  -> Just $ (show $ documentid document) ++ " : " ++ intercalate ";" a
 
 {- |
    The invariants we want to test. Each returns Nothing if there is no problem,
@@ -43,6 +44,8 @@ documentInvariants = [ documentHasOneAuthor
                      , atLeastOneSignatory
                      , notSignatoryNotSigned
                      , maxCustomFields
+                     , closedWhenAllSigned
+                     , hasSignedAttachments
                      ]
 
 {- |
@@ -114,7 +117,27 @@ signatoryLimit _ document =
 allSignedWhenClosed :: MinutesTime -> Document -> Maybe String
 allSignedWhenClosed _ document =
   assertInvariant "some signatories are not signed when it is closed" $ 
-  isClosed document =>> all hasSigned (filter isSignatory (documentsignatorylinks document))
+  isClosed document =>> all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
+  
+{- | All signed implies all closed
+ -}
+closedWhenAllSigned :: MinutesTime -> Document -> Maybe String
+closedWhenAllSigned _ document =
+  assertInvariant "all signatories signed but doc is not closed" $
+  (any isSignatory (documentsignatorylinks document) && 
+   all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)) =>> 
+  (isClosed document || isPreparation document)
+
+  
+{- | If a sig has signed, all his attachments are uploaded
+ -}
+hasSignedAttachments :: MinutesTime -> Document -> Maybe String
+hasSignedAttachments _ document =
+  assertInvariant "a signatory has signed without attaching his requested attachment" $
+  all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (sigAttachmentsForEmail document . getEmail))) (documentsignatorylinks document)
+       
+sigAttachmentsForEmail :: Document -> BS.ByteString -> [SignatoryAttachment]
+sigAttachmentsForEmail doc email = filter ((== email) . signatoryattachmentemail) (documentsignatoryattachments doc)
        
 {- |
    Has signed implies has seen.

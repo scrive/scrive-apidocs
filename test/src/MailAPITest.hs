@@ -12,6 +12,7 @@ import Text.JSON.Generic
 import Text.Regex.TDFA ((=~))
 import System.IO.Temp
 import qualified Data.ByteString.Char8 as BS
+import Control.Monad.Trans
 
 import API.MailAPI
 import MinutesTime
@@ -23,6 +24,7 @@ import Templates.TemplatesLoader
 import TestKontra as T
 import Misc
 
+
 mailApiTests :: Test
 mailApiTests = testGroup "MailAPI" [
       testCase "create proper document with one signatory" testSuccessfulDocCreation
@@ -32,8 +34,11 @@ mailApiTests = testGroup "MailAPI" [
 testSuccessfulDocCreation :: Assertion
 testSuccessfulDocCreation = withTestEnvironment $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
-    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
     uid <- createTestUser
+    muser <- query $ GetUserByUserID uid
+    ctx <- (\c -> c { ctxdocstore = tmpdir 
+                    , ctxmaybeuser = muser
+                    }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
     _ <- update $ SetUserMailAPI uid $ Just UserMailAPI {
           umapiKey = read "ef545848bcd3f7d8"
         , umapiDailyLimit = 1
@@ -41,6 +46,7 @@ testSuccessfulDocCreation = withTestEnvironment $ \tmpdir -> do
         , umapiLastSentDate = asInt $ ctxtime ctx
     }
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
+    liftIO $ print "after mail command"
     successChecks $ jsonToStringList res
 
 testFailureNoSuchUser :: Assertion

@@ -169,7 +169,8 @@ safeReady(function() {
                 $("#dialog-list-delete-confirm").find(".deletionDetails").text(deletionDetails);
                 return true;
             }
-        }
+        },
+        fixed: false
     });
 });
 
@@ -201,7 +202,8 @@ safeReady(function() {
                 }
                 return true;
             }
-        }
+        },
+        fixed:false
     });
 });
 
@@ -219,7 +221,8 @@ safeReady(function() {
             } else {
                 return true;
             }
-        }
+        },
+        fixed:false
     });
 });
 
@@ -430,7 +433,8 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
-        }
+        },
+        fixed:false
     });
 
     $("#signinvite").overlay({
@@ -454,19 +458,22 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
-        }
+        },
+        fixed:false
     });
 });
 
 safeReady(function() {
     $("#tobasic").overlay({
         mask: standardDialogMask,
-        top: standardDialogTop
+        top: standardDialogTop,
+        fixed:false
     });
 
     $("#toadvanced").overlay({
         mask: standardDialogMask,
-        top: standardDialogTop
+        top: standardDialogTop,
+        fixed:false
     });
 
     $("#dialog-confirm-basic .tobasic").click(function() {
@@ -544,7 +551,8 @@ safeReady(function() {
         onBeforeLoad: function() {
             // remove all attachments that were added but not confirmed
             $("#tobeattached div").remove();
-        }
+        },
+        fixed:false
     });
 });
 
@@ -568,7 +576,8 @@ safeReady(function() {
             var select = $("select.signatoryselector");
             select.append($("<option selected>" + localization.offerSignatory + "</option>"));
             select.append(sigoptions);
-        }
+        },
+        fixed:false
     });
 });
 
@@ -624,11 +633,7 @@ safeReady(function() {
             });
             $(".partylistupdate").html(swedishList(partners));
         },
-        onLoad : function() {
-           var offset = this.getOverlay().offset()
-           this.getOverlay().css("position","absolute");
-           this.getOverlay().offset(offset);
-        }
+        fixed:false
     });
 });
 
@@ -665,6 +670,7 @@ safeReady(function() {
     saveOverlay("#sign", {
         mask: standardDialogMask,
         load: true,
+        fixed:false,
         // after finished loading
         onLoad: function () {
             if(navigator.platform === 'iPad' || navigator.platform === 'iPhone' || navigator.platform === 'iPod') {
@@ -678,7 +684,7 @@ safeReady(function() {
             if (!sigFieldsValidation()) {
                 return false;
             }
-            var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
+            var trs = $("table#signViewSigAttachmentBoxList tr").has("form.sigattachmentupload");
             if (trs.length > 0) {
                 trs.addClass("redborder");
                 FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
@@ -699,13 +705,15 @@ safeReady(function() {
 
 safeReady(function() {
     saveOverlay("#signbankid", {
-        mask: standardDialogMask
+        mask: standardDialogMask,
+        fixed:false
     });
 });
 
 safeReady(function() {
     saveOverlay("#cancel", {
-        mask: standardDialogMask
+        mask: standardDialogMask,
+        fixed:false
     });
 });
 
@@ -713,6 +721,7 @@ safeReady(function() {
     $("#signByAuthor").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
+        fixed:false,
         onBeforeLoad: function() {
             if (!sigFieldsValidation())
                 return false;
@@ -731,7 +740,8 @@ safeReady(function() {
 safeReady(function() {
     $("#toscontainer").overlay({
         mask: standardDialogMask,
-        load: true
+        load: true,
+        fixed:false
     });
 });
 
@@ -1079,7 +1089,8 @@ safeReady(function() {
     $(".prepareToSendReminderMail").each(function() {
         $(this).overlay({
             mask: standardDialogMask,
-            top: standardDialogTop
+            top: standardDialogTop,
+            fixed:false
         });
     });
 });
@@ -1114,7 +1125,8 @@ function showModal() {
             loadSpeed: 0,
             opacity: 0.9
         },
-        speed: 0
+        speed: 0,
+        fixed: false
     });
     if (modalbox.size() > 0) {
         modalbox.first().data("overlay").load();
@@ -1461,13 +1473,16 @@ safeReady(function() {
         //    onClose: function(e){ return false; },
         closeOnClick: false,
         closeOnEsc: false,
-        load: false
+        load: false,
+        fixed:false
     });
 });
 
 function displayLoadingOverlay(message) {
     $("#loadingmessage").html(message);
-    $("#loadingdialog").overlay().load();
+    $("#loadingdialog").overlay({
+        fixed:false
+    }).load();
 }
 
 function closeLoadingOverlay() {
@@ -1617,6 +1632,7 @@ function saveOverlay(d, o) {
                 o.top = $(this).offset().top - $(document).scrollTop() - 400;
             }   
             o.load = true;
+            o.fixed = false;
             $(this).overlay(o);
         }
     });
@@ -1677,3 +1693,10 @@ safeReady(function() {
     });
 });
 
+safeReady(function () {
+    $(".deleteSigAttachment").click(function() {
+        console.log("doing it");
+        $(this).closest("td").find("form").submit();
+        return false;
+    });
+});

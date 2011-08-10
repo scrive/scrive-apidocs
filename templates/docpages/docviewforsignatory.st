@@ -256,8 +256,14 @@ pageDocumentForSignContent=
               $if(attachment.filename)$
               <a href="$attachment.viewerlink$"
                  target="_blank">$attachment.filename$</a>
+              <a href="#" class="deleteSigAttachment"
+              style="padding-left: 2em">x</a>
+              <form method="post">
+                <input type="hidden" name="deletesigattachment"
+                value="$attachment.fileid$" />
+              </form>
               $else$
-              <form method="post" enctype="multipart/form-data">
+              <form method="post" enctype="multipart/form-data" class="sigattachmentupload">
                 <input type="hidden" name="sigattachment" value="yes" />
                 <input type="hidden" name="attachname"
                        value="$attachment.name$" />

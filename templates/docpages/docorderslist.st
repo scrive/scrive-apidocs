@@ -39,7 +39,7 @@ var documentsTable = KontraList.init({
                  }
         }),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortParty()$", width:"300px", field:"partner", special: "expandable"}),
+        new Cell({name: "$_SortParty()$", width:"300px", field:"partner", special: "expandable" , subfield:"name"}),
         new Cell({name: "$_SortDoc()$", width:"300px", field:"title",  special: "link"})
         ],
     options : [{name : "$_SendReminder()$",

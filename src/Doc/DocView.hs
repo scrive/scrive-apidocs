@@ -304,7 +304,7 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $  BS.toString $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
-    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) (documentsignatorylinks doc)),
+    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) . filter isSignatory $ documentsignatorylinks doc),
     ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
     ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
@@ -316,7 +316,7 @@ docFieldsListForJSON crtime doc =  propagateMonad [
 signatoryFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
 signatoryFieldsListForJSON crtime doc sl = propagateMonad [
     ("status", return $ show $ signatoryStatusClass doc sl ),
-    ("partner", return $ BS.toString $ getSmartName sl ),
+    ("name", return $ BS.toString $ getSmartName sl ),
     ("time", return $ fromMaybe "" $ (showDateAbbrev crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
     ]
     where
@@ -928,6 +928,7 @@ documentSingleSignatoryAttachmentsFields docid sid mh atts =
       field "name" $ signatoryattachmentname a
       field "desc" $ signatoryattachmentdescription a
       field "filename" $ fmap filename $ signatoryattachmentfile a
+      field "fileid" $ fmap (unFileID . fileid) $ signatoryattachmentfile a
       field "viewerlink" $ fmap (show . LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
   )
 
@@ -1114,8 +1115,8 @@ signedByMeFields _document siglnk = do
 
 
 documentViewFields :: MonadIO m => Document -> Fields m
-documentViewFields document = do
-  field "addSignatoryScript" $ documentstatus document == Pending  || documentstatus document == AwaitingAuthor
+documentViewFields Document{documentstatus} = do
+  field "addSignatoryScript" $ documentstatus /= Closed
 
 
 designViewFields :: MonadIO m => Maybe DesignStep -> Fields m

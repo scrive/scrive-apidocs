@@ -32,6 +32,13 @@ window.Cell = Backbone.Model.extend({
     field : function(){
         return this.get("field");
     },
+    subfield : function(){
+        if (this.get("subfield") != undefined)
+            return this.get("subfield");
+        else
+            return this.get("field");
+    },
+   
     width : function(){
         return this.get("width");
     },
@@ -378,7 +385,7 @@ var ListObjectView = Backbone.View.extend({
                  for(var i=0;i<this.schema.size();i++)
                         {   var div = $("<div style='margin-left:10px;' />")
                             var td = $("<td></td>").append(div);
-                            var value = this.model.subfield(j,(this.schema.cell(i).field()));
+                            var value = this.model.subfield(j,(this.schema.cell(i).subfield()));
                             if (value != undefined) {
                                 if (this.schema.cell(i).isRendered())
                                     div.append(this.schema.cell(i).rendering(value,false,this.model));
@@ -413,6 +420,7 @@ var ListObjectView = Backbone.View.extend({
     },
     toogleExpand: function(){
        this.model.toogleExpand();
+       return false;
     }
 });
 

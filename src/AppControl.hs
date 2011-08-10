@@ -135,6 +135,7 @@ handleRoutes = msum [
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ toK5 $ DocControl.handleDeclineAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ toK3 $ DocControl.handleSigAttach
+     , dir "s" $ param "deletesigattachment" $ hPostNoXToken3 $ toK3 $ DocControl.handleDeleteSigAttach
 
      , dir "sv" $ hGet3 $ toK3 $ DocControl.handleAttachmentViewForViewer
 
@@ -250,6 +251,10 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
        
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
+
+     -- this stuff is for a fix
+     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ DocControl.handleLogBrokenByBug510
+     , dir "adminonly" $ dir "510bugfix" $ hGet1 $ toK1 $ DocControl.handleFixForBug510
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
