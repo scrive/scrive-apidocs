@@ -316,7 +316,7 @@ adminuser=
 		    $if(user.iscompanyaccount)$
 		    $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
 		    $else$
-		    Private Account</br>
+		    Private Account<br/>
 		    <input type="checkbox" name="upgradetocompany"/> Upgrade to Company
 		    $endif$
 		  </td>
