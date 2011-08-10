@@ -1152,13 +1152,22 @@ div.price-plan-details {
 	min-width: 940px;
 }
 
-#top-slim-container .logo {
-	background: url(../img/logo-small.png);
+#top-slim-container .skrivapa-logo {
+	background: url(../img/logo-skrivapa-small.png);
 	display: block;
 	float: left;
 	height: 35px;
 	margin-top: 9px;
 	width: 137px;
+    margin-left: -8px;
+}
+#top-slim-container .scrive-logo {
+    background: url(../img/logo-scrive-small.png);
+    display: block;
+    float: left;
+    height: 35px;
+    margin-top: 9px;
+    width: 137px;
     margin-left: -8px;
 }
 

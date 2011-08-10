@@ -10,6 +10,7 @@
 -----------------------------------------------------------------------------
 module Payments.PaymentsControl(handlePaymentsModelForViewView, handlePaymentsModelForEditView ,handleAccountModelsChange,readMoneyField,getPaymentChangeChange) where
 import Control.Monad.State
+import Data.Maybe
 import AppView
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
@@ -91,23 +92,23 @@ getAccountModelChange accountType =
                                                                           }
                                                } ->  PaymentAccountModel {modelAccountType = accountType,
                                                modelPaymentForAccounts = PaymentForAccounts {
-                                                                                  forAccount=maybe' forAccount mforaccount,
-                                                                                  forSubaccount=maybe' forSubaccount mforsubaccount
+                                                                                  forAccount=fromMaybe forAccount mforaccount,
+                                                                                  forSubaccount=fromMaybe forSubaccount mforsubaccount
                                                                           },
                                                modelPaymentForSignature = PaymentForSignature {
-                                                                                  forEmailSignature=maybe' forEmailSignature mforemailsignature,
-                                                                                  forElegSignature=maybe' forElegSignature mforelegsignature,
-                                                                                  forMobileSignature= maybe' forMobileSignature  mformobiledignature,
-                                                                                  forCreditCardSignature= maybe' forCreditCardSignature mforcrediteardsignature,
-                                                                                  forIPadSignature=maybe' forIPadSignature mforipadsignature
+                                                                                  forEmailSignature=fromMaybe forEmailSignature mforemailsignature,
+                                                                                  forElegSignature=fromMaybe forElegSignature mforelegsignature,
+                                                                                  forMobileSignature= fromMaybe forMobileSignature  mformobiledignature,
+                                                                                  forCreditCardSignature= fromMaybe forCreditCardSignature mforcrediteardsignature,
+                                                                                  forIPadSignature=fromMaybe forIPadSignature mforipadsignature
                                                                           },
                                                modelPaymentForSignedStorage = PaymentForSignedStorage {
-                                                                                  forAmazon=maybe' forAmazon mforamazon,
-                                                                                  forTrustWeaver=maybe' forTrustWeaver mfortrustweaver
+                                                                                  forAmazon=fromMaybe forAmazon mforamazon,
+                                                                                  forTrustWeaver=fromMaybe forTrustWeaver mfortrustweaver
                                                                           },
                                                modelPaymentForOtherStorage = PaymentForOtherStorage {
-                                                                                  forTemplate=maybe' forTemplate mfortemplate,
-                                                                                  forDraft=maybe' forDraft mfordraft
+                                                                                  forTemplate=fromMaybe forTemplate mfortemplate,
+                                                                                  forDraft=fromMaybe forDraft mfordraft
                                                                           }
                                                }
                                 )

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, ForeignFunctionInterface #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just
@@ -8,9 +9,10 @@ modules.
 Keep this one as unorganized dump.
 -}
 module Misc where
+
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
-import Control.Monad.Reader (asks)
 import Control.Monad.State
 import Data.Char
 import Data.Data
@@ -24,11 +26,14 @@ import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import Numeric -- use new module
+import System.Directory
 import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
 import System.Random
+import System.Time
+import qualified AppLogger as Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
 import qualified Data.ByteString as BS
@@ -36,9 +41,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
-import qualified AppLogger as Log
-import System.Directory
-import System.Time
 
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
@@ -156,14 +158,6 @@ toIO astate = mapServerPartT f
   where
     f m = evalStateT m astate
 
-
--- | Oh boy, invent something better.
---
--- FIXME: this is so wrong on so many different levels
-safehead :: [Char] -> [t] -> t
-safehead s [] = error s
-safehead _ (x:_) = x
-
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
 getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a
@@ -204,7 +198,7 @@ getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do
-         inputs <- asks (\(a, b, _c) -> a ++ b)
+         inputs <- (\(a, b, _) -> a ++ fromMaybe [] b) <$> askRqEnv
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
@@ -323,7 +317,7 @@ caseOf [] d = d
 
 -- | Enumerate all values of a bounded type.
 allValues::(Bounded a, Enum a) => [a]
-allValues = enumFrom minBound
+allValues = enumFromTo minBound maxBound
 
 defaultValue::(Bounded a) => a
 defaultValue = minBound
@@ -337,13 +331,8 @@ class SafeEnum a where
 for :: [a] -> (a -> b) -> [b]
 for = flip map
 
-
-maybe' :: a -> Maybe a -> a
-maybe' a ma = maybe a id ma
-
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = isJust <$> getField name
-
 
 getFields :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m [String]
 getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInputList name)
@@ -550,23 +539,27 @@ joinB _ = False
 mapJust :: (a -> Maybe b) -> [a] -> [b]
 mapJust f l = catMaybes $ map f l
 
-onFst ::  (a -> c) -> (a,b) -> (c,b)
-onFst f (a,b) = (f a,b)
-
-onSnd :: (b -> c) -> (a,b) -> (a,c)
-onSnd f (a,b) = (a, f b)
-
 mapFst::(Functor f) => (a -> c) -> f (a,b)  -> f (c,b)
-mapFst f = fmap (onFst f)
+mapFst = fmap . first
 
 mapSnd::(Functor f) => (b -> c)  -> f (a,b) -> f (a,c)
-mapSnd f = fmap (onSnd f)
+mapSnd = fmap . second
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
 mapPair::(Functor f) => (a -> b) -> f (a,a)  -> f (b,b)
 mapPair f = fmap (\(a1,a2) -> (f a1, f a2))
+
+propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
+propagateMonad ((a,mb):rest) = do
+    b <- mb
+    rest' <- propagateMonad rest
+    return $ (a,b): rest'
+
+propagateMonad _ = return []
+
+
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []
@@ -583,7 +576,6 @@ splitOver = splitOver' []
 
 (&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (&&^) f g a =  f a && g a
-
 
 -- To be extended
 smartZip::[Maybe a] -> [b] -> [(a,b)]
@@ -607,4 +599,45 @@ getRecursiveMTime dir = do
           return $ maximum $ mt:mts
 
 jsText :: String -> String
-jsText  = filter (not . isControl) 
+jsText  = filter (not . isControl)
+
+instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
+    toEnum  l = let
+                   block = length (allValues::[a])
+                in (toEnum $ l `div` block,toEnum $ l `mod` block)
+    fromEnum (a,b) = let
+                        block = length (allValues::[a])
+                in (fromEnum a * block) + (fromEnum b)
+
+none :: (a -> Bool) -> [a] -> Bool
+none f l = not $ any f l
+
+-- | Simple logical inference operator (arrow)
+(=>>) :: Bool -> Bool -> Bool
+(=>>) a b = not a || b
+
+-- | Higher order inference
+(=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(=>>^) a b x = a x =>> b x
+
+-- | Double Inference
+(<<=>>) :: Bool -> Bool -> Bool
+(<<=>>) = (==)
+
+-- | Higher order double inference
+(<<==>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(<<==>>^) a b x = a x == b x
+
+-- | Conditional choice operator
+-- Use it like this: a <| condition |> b  is equivalent to if condition then a else b
+-- http://zenzike.com/posts/2011-08-01-the-conditional-choice-operator
+(|>) :: Bool -> a -> Maybe a
+True  |> _ = Nothing
+False |> y = Just y
+
+(<|) :: a -> Maybe a -> a
+x <| Nothing = x
+_ <| Just y  = y
+
+infixr 0 <|
+infixr 0 |>

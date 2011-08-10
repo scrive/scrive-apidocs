@@ -256,8 +256,14 @@ pageDocumentForSignContent=
               $if(attachment.filename)$
               <a href="$attachment.viewerlink$"
                  target="_blank">$attachment.filename$</a>
+              <a href="#" class="deleteSigAttachment"
+              style="padding-left: 2em">x</a>
+              <form method="post">
+                <input type="hidden" name="deletesigattachment"
+                value="$attachment.fileid$" />
+              </form>
               $else$
-              <form method="post" enctype="multipart/form-data">
+              <form method="post" enctype="multipart/form-data" class="sigattachmentupload">
                 <input type="hidden" name="sigattachment" value="yes" />
                 <input type="hidden" name="attachname"
                        value="$attachment.name$" />
@@ -286,7 +292,7 @@ pageDocumentForSignContent=
     
     <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
-        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel" style="display:inline-block;">
           <div class="left"></div>
           <div class="label">$process.rejectbuttontext$</div>
           <div class="right"></div>
@@ -311,7 +317,7 @@ pageDocumentForSignContent=
       </div>
       $endif$
       <div id="signViewBottomBoxContainerRight">
-        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign" style="display:inline-block;">
           <div class="left"></div>
           <div class="label" style="$if(process.requiressignguard)$width:120px$else$padding-left:20px;padding-right:20px;$endif$">
             <span>$process.signbuttontext$</span>

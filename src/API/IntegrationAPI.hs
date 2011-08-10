@@ -8,7 +8,18 @@
 -- Integration API is advanced way to integrate with our service using mix of
 -- request and iframes
 -----------------------------------------------------------------------------
-module API.IntegrationAPI (integrationAPI) where
+module API.IntegrationAPI (
+    -- For main server we export only this
+      integrationAPI
+    -- For tests (and only for tests)
+    , IntegrationAPIFunction
+    , embeddDocumentFrame
+    , createDocument     
+    , getDocuments       
+    , getDocument        
+    , setDocumentTag     
+    , removeDocument
+    ) where
 
 import Control.Monad.State
 import Data.Functor
@@ -36,6 +47,7 @@ import Company.CompanyState
 import Data.Foldable (fold)
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.ServiceUtils
 import Util.MonadUtils
@@ -49,7 +61,7 @@ import qualified AppLogger as Log (debug)
 data IntegrationAPIContext = IntegrationAPIContext {ibody :: APIRequestBody , service :: Service}
 type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
 
-instance Kontrakcja m => APIContext m IntegrationAPIContext where
+instance APIContext IntegrationAPIContext where
     body= ibody
     newBody b ctx = ctx {ibody = b}
     apiContext  = do
@@ -108,13 +120,16 @@ embeddDocumentFrame = do
     location <- fold <$> apiAskString "location"
     doc <- documentFromParam
     mcompany <- lift_M (update . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
+    when (isNothing mcompany) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
+    let company = fromJust mcompany
+    when (not $ isAuthoredByCompany (companyid company) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     msiglink <- liftMM (return . getSigLinkFor doc) (apiAskBS "email")
-    case (mcompany,msiglink) of
-         (Just company,Nothing) -> do
+    case msiglink of
+         Nothing -> do
              when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
              ssid <- createServiceSession (Left $ companyid $ company) location
              returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         (Just company, Just siglink) -> do
+         Just siglink -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
                      muser <- query $ GetUserByUserID $ fromJust $ maybesignatory siglink
@@ -125,7 +140,7 @@ embeddDocumentFrame = do
                      when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
                      ssid <- createServiceSession (Left $ companyid $ company) location
                      returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-         _ -> throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
+      
 
 
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -155,7 +170,6 @@ createDocument = do
             Nothing -> do
                         d <- createAPIDocument company doctype title files involved tags
                         updateDocumentWithDocumentUI d
-   liftIO $ putStrLn $ show $ doc
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 
@@ -175,19 +189,21 @@ createAPIDocument :: Kontrakcja m
                   -> IntegrationAPIFunction m Document
 createAPIDocument _ _ _ _ [] _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
-createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
+createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
     now <- liftIO $ getMinutesTime
-    author <- userFromTMP authorTMP
-    doc <- update $ NewDocumentWithMCompany (Just $ companyid company) author title doctype now
+    company <- setCompanyInfoFromTMP authorTMP company' --TODO EM i added this line to update the company info
+    author <- userFromTMP authorTMP company --TODO EM i added company as an arg here
+    mdoc <- update $ NewDocument author (Just company) title doctype now
+    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match" --TODO EM can the user and company not match?!
+    let doc = fromRight mdoc
     sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
     _ <- update $ SetDocumentTags (documentid doc) tags
-    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, getSignatoryAccount author) (map toSignatoryDetails signTMPS)
+    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 
-
-userFromTMP :: Kontrakcja m => SignatoryTMP -> IntegrationAPIFunction m User
-userFromTMP uTMP = do
+userFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m User
+userFromTMP uTMP company = do
     sid <- serviceid <$> service <$> ask
     let remail = fold $ asValidEmail . BS.toString <$> email uTMP
     when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"
@@ -196,7 +212,7 @@ userFromTMP uTMP = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password Nothing (Just sid) Nothing
+                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password False (Just sid) (Just $ companyid company) defaultValue --TODO EM is this a user for the company?  if so should they be a company admin?  will users from the past migrate okay?
                 when (isNothing u) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 u' <- update $ AcceptTermsOfService (userid $ fromJust u) (fromSeconds 0)
                 when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
@@ -206,12 +222,22 @@ userFromTMP uTMP = do
               userfstname = fromMaybe (getFirstName user) $ fstname uTMP
             , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
-            , usercompanyname  = fromMaybe (getCompanyName user) $ company  uTMP
-            , usercompanynumber  = fromMaybe (getCompanyNumber user) $ companynumber uTMP
             }
     when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
-    return $ fromRight user'
+    user'' <- update $ SetUserCompany (userid user) (companyid company)
+    when (isLeft user'') $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
+    return $ fromRight user''
 
+setCompanyInfoFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m Company
+setCompanyInfoFromTMP uTMP company = do
+    --TODO EM is this okay?  also users from the past, will they migrate okay
+    company' <- update $ SetCompanyInfo company (companyinfo company)
+                {
+                  companyname = fromMaybe (getCompanyName company) $ API.APICommons.company uTMP
+                , Company.CompanyState.companynumber = fromMaybe (getCompanyNumber company) $ API.APICommons.companynumber uTMP
+                }
+    when (isLeft company') $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
+    return $ fromRight company'
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
@@ -224,12 +250,14 @@ getDocuments = do
                     v <- apiAskBS "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
-    documents <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
+    linkeddocuments <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
+    let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments -- TODO EM is this okay?  it picks out the docs authored by company, rather than just linked to the company (for example those it's been invited to sign)
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
     -- We support only offers and contracts by API calls    
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
     api_docs <- sequence $  map (api_document False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
+    
 
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse

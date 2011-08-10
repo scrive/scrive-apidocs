@@ -1,6 +1,6 @@
 "!Template name","LANG_SE","LANG_EN"
 "_securityPageH1","SÄKERHET","SECURITY"
-"_securityPageH2Chalmers","Partnerskap med Chalmers datasäkerhetsgrupp","Partnership with data security group at Chalmers Technical Univeristy"
+"_securityPageH2Chalmers","Partnerskap med Chalmers datasäkerhetsgrupp","Partnership with data security group at Chalmers Technical University"
 "_securityPageH2ChalmersBody","Tillsammans med Google, Intel och Klarna har vi blivit utvalda
  av Chalmers datasäkerhetsgrupp för att vara del av deras webbsäkerhetsforskningsprogram.
  De arbetar för närvarande på att utveckla andra generationens
@@ -10,8 +10,8 @@
  system i nära samarbete med ovan nämnda forskningsteam.","Together with Google, Intel and Klarna, the data security group
  at Chalmers Technical University has selected us to bre part
  of their web security research program. They are, at the moment,
- working on the next generation of secure dataflow programs.
- This second generation is the very first one in wich it is possible
+ working on the next generation of secure data flow programs.
+ This second generation is the very first one in which it is possible
  to mathematically prove that some things can not happen. We
  also develop our system in close cooperation with the security
  team mentioned above."
@@ -22,13 +22,13 @@
  kärnan i systemet från oönskade systemmodifieringar. Skyddet
  är aktivt i multipla nivåer; i stadier av systemdesign, implementering,
  ändringar och underhåll. Vi lagrar all historisk data och kan
- spåra alla ändringar enda tillbaks till företagets start.","Our internal processes requires several different layers of approvel
+ spåra alla ändringar enda tillbaks till företagets start.","Our internal processes requires several different layers of approval
  when being changed. Each change is carefully validated, checked,
- approved, logged and defined. An automatical mechanism protects
+ approved, logged and defined. An automatic mechanism protects
  the core of the system from unwanted system changes. the protection
  is active in several layers; when designing, implementing, changing
  and maintaining the system. We store all historical data and
- are therefore allways able to trace changes back to the very
+ are therefore always able to trace changes back to the very
  birth of the company."
 "_securityPageH2Haskell","Haskell","Haskell"
 "_securityPageH2HaskellBody","Systemet bakom tjänsten SkrivaPå är baserat på Haskell. Haskell
@@ -45,13 +45,13 @@
  technology that was developed by some of the best mathematical
  programmers in the world. Two key properties of the technology
  is the high system stability and reliability that comes with
- it. This results in lower probability of the occurance of security
+ it. This results in lower probability of the occurrence of security
  holes than that of traditionally used systems. The stability
  and reliability of Haskell is the main reason why it is used
- in some of the most security consious organisations in the world.
- The usage of Haskell in US government web based platforms handeling
+ in some of the most security conscious organisations in the world.
+ The usage of Haskell in US government web based platforms handling
  secret information is just one example of this."
-"_securityPageH2Internal","2048 bit kryptering för intern datatransfer","2048 bit encrypted internal datatransfer"
+"_securityPageH2Internal","2048 bit kryptering för intern datatransfer","2048 bit encrypted internal data transfer"
 "_securityPageH2InternalBody","Vi använder starkast möjliga kryptering, 2048 bitar, i all kommunikation
  med våra säkerhetspartners. Uppkopplingen är även säkrad med
  AES-certifikat. Egna RSA nycklar används för autentisering och
@@ -61,7 +61,7 @@
  i domstol för att stärka bevisföring.","We use the strongest encryption available , 2048 bit, in all
  communication with our security partners. The connection is
  secured with an AES certificate. We use our own RSA keys for
- authentication and authorization to further gurantee the highest
+ authentication and authorization to further guarantee the highest
  reliability possible in our transactions, storage, user administration,
  and document validation in case they would be requested in a
  court trial as evidence."
@@ -77,22 +77,22 @@
  vår tjänst till lagring av sina mest känsliga företagsdata.
  Att skydda dessa data tillräckligt bra är inte bra nog. Material
  och dokument måste vara 100 % skyddade och säkra.</li>","<li>Our customers must be able to trust us as a provider of a
- premium service handeling and protecting thier legal documents,
+ premium service handling and protecting their legal documents,
  that does not expose the integrity and the trustworthiness of
  the documents to any risk. The intention is that documents treated
  by the service shall have the highest trustworthiness possible
  in a possible dispute. Because of this, Scrive needs to maintain
  a high security standard to meet the expectations of our customers.</li>	<li>Our
- customer use our service for storage of their most sensetive
+ customer use our service for storage of their most sensitive
  company data. When protecting this kind of data, sufficiently
  good is not good enough. Materials and documents has to be 100
- % proteted and secured.</li>"
+ % protected and secured.</li>"
 "_securityPageH2IntroBody3","Vi strävar efter att alltid tillämpa den senaste tekniken i vår
  tjänst för att på så sätt kunna ligga i framkant och vara marknadsledande
  på säkerhet. Följande är några av våra viktigaste säkerhetsåtgärder
- idag:","We allways strive for using the latest technology in our service
+ idag:","We always strive for using the latest technology in our service
  and being the market leader in security. These are some of the
- most important security action taken by us today:"
+ Most important security action taken by us today:"
 "_securityPageH2IntroBody4","<li>	Haskell utgör själva grunden för vårt system</li>	<li>	TrustWeaver
  säkerhetsklassad premiumlagring</li>	<li>	Högsta möjliga SSL
  256 bit kryptering för kommunikation med användare via webb
@@ -102,7 +102,7 @@
  för all SkrivaPå personal</li>	<li>	Del i ledande säkerhetsforskning
  via partnerskap med Chalmers datasäkerhetsgrupp</li>","<li>	Haskell forms the base of our system</li>	<li>	TrustWeaver
  secure premium storage</li>	<li>	Most powerful SSL 256 bit encryption
- for communication with our users through webb and e-mail</li>	<li>	2048
+ for communication with our users through webb and email</li>	<li>	2048
  bit encryption, AES certificate and RSA-keys for internal data
  transfer between us and our partners.</li>	<li>	Change management
  processes with several steps of approval</li>	<li>	Strict staff
@@ -114,7 +114,7 @@
  och e-mail använder vi 256 bits kryptering. Detta är den kraftigaste
  standardkryptering som finns att tillgå och i praktiken dubbelt
  så kraftig som den kryptering de största svenska bankerna använder
- för sina IT-banktjänster.","To ensure the security of all comminucation with our customers
+ för sina IT-banktjänster.","To ensure the security of all communication with our customers
  via the website and via e-mail, we use 256 bit encryption. This
  is the most powerful type of standard encryption available,
  and is practically twice as powerful as the encryption used
@@ -148,19 +148,19 @@
  säkerhetstejp.","Scrive stores all legal data (read more under ""Legal"") at TrustWeaver
  and we offer our customers to also save their documents in their
  storage. The TrustWeaver service, TrustWeaver On Demand, is
- installed in two data centers, geographically seperated from
- eachother at a distans larger than 30 km. The atom bomb proof
+ installed in two data centers, geographically separated from
+ each other at a distans larger than 30 km. The atom bomb proof
  server halls where the TrustWeaver On Demand servers are kept
  maintains the highest security standards available. They are
- located in caverns previosly used by the Swedish military, and
+ located in caverns previously used by the Swedish military, and
  the main data center is classified as secured object according
  to the Swedish law (1990:217) concerning the protection of critical
  functions in society. The facilities are guarded by access card
- controlls, closed circut servailance camera systems, alarm with
+ controls, closed circuit surveillance camera systems, alarm with
  motion detectors, fire protection systems, UPS power system
- with disel back-up generators, and locked and sealed server
- rackets wich can only be opened with copy protected keys. All
- ICC-cards are sealed in a ICC-card racket by specially desigend
+ with diesel back-up generators, and locked and sealed server
+ rackets which can only be opened with copy protected keys. All
+ ICC-cards are sealed in a ICC-card racket by specially designed
  adhesive security tape."
 "_securityPageMetaDescription","Signera och arkivera dina avtal elektroniskt. SkrivaPå bevarar
  din säkerhet och integritet så att du kan koncentrera dig på

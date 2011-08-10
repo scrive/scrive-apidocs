@@ -1,8 +1,15 @@
 .skrivapa-logo {
-	background: url(../img/logo-small.png) no-repeat;
+	background: url(../img/logo-skrivapa-small.png) no-repeat;
 	height: 34px;
 	width: 137px; 
 }
+
+.scrive-logo {
+    background: url(../img/logo-scrive-small.png) no-repeat;
+    height: 34px;
+    width: 137px;
+}
+
 
 .tweet_text {
         color: #666;
@@ -462,6 +469,10 @@
 	-webkit-border-radius: 0 0 5px 5px;	
 }
 
+.tab-container a{
+    cursor : pointer
+}
+
 #tab-viewer .tab-content {
 
 }
@@ -507,9 +518,10 @@
 }
 
 #tab-viewer .tab-dd {
-        font: 12px/24px "Lucida Grande";
+    font: 12px/24px "Lucida Grande";
 	text-indent: 9px;
 	position: relative;
+    margin-right: 15px;
 }
 
 #tab-viewer .tab-dd-button {

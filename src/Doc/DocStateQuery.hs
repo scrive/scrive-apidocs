@@ -40,27 +40,28 @@ import Happstack.State     (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Control.Monad.State
+import Doc.DocInfo
 
 {- |
    Assuming user is the logged in user, can he view the Document?
 
-   Checks author's friends.
-   Checks author.
-   Checks author's supervisors.
-   Checks author's supervisors friends.
-   Checks if sharing is enabled and author is related to user.
+   They can if:
+     the document is saved for them or their company if they are a company admin
+     the document is authored within the user's company and shared
+     the document is saved for one of the user's friends, or saved for their friend's company if their friend is a company admin
  -}
 canUserViewDoc :: User -> Document -> IO Bool
 canUserViewDoc user doc 
-  | isAuthor (doc, user) = return True
-  | otherwise = do
-    usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
-    usersFriendsAreSupervising <- fmap concat $ sequence $ map (query . GetUserSubaccounts . userid) usersImFriendsWith
-    usersImSupervising <- query $ GetUserSubaccounts     (userid user)
-    related            <- query $ GetUserRelatedAccounts (userid user)
-    return $ (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith ++ usersFriendsAreSupervising)))
-      || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
-  
+  | docIsSavedFor user = return True --the doc is saved for the user (or the user's company if they are an admin)
+  | isSharedWithinCompany = return True --the doc is shared within the user's company
+  | otherwise = do --the doc is saved for one of the user's friends (or the user's friend's company if their friend is an admin)
+      friends <- query $ GetUsersByFriendUserID (userid user)
+      return $ any docIsSavedFor friends
+  where
+    docIsSavedFor u =
+      any (isSigLinkSavedFor u) $ documentsignatorylinks doc
+    isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
+    isAuthoredWithinCompany = isSigLinkFor (usercompany user) (getAuthorSigLink doc)
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -82,14 +83,14 @@ getDocByDocID docid = do
         Just doc -> do
           canAccess <- liftIO $ canUserViewDoc user doc              
           case canAccess of
-            True  -> return $ Right doc
             False -> return $ Left DBResourceNotAvailable
+            True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if (documentoriginalcompany doc == Just (companyid company))
+        Just doc -> if any ((== (Just . companyid $ company)) . maybecompany) (documentsignatorylinks doc)
                      then return $ Right doc
                      else return $ Left DBResourceNotAvailable
 
@@ -97,6 +98,7 @@ getDocByDocID docid = do
    Get all of the documents a user can view.
    User must be logged in.
    Logged in user is in the documentsignatorylinks or a friend of someone with the documentsignatorylinks
+   What about companies?
  -}
 getDocsByLoggedInUser :: Kontrakcja m => m (Either DBError [Document])
 getDocsByLoggedInUser = do
@@ -124,9 +126,6 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
-    Nothing  -> return $ Left DBResourceNotAvailable
-    Just doc ->
-      case getSigLinkFor doc sigid of
-        Just siglink | signatorymagichash siglink == mh -> return $ Right doc
-        _ -> return $ Left DBResourceNotAvailable
+    Just doc | isSigLinkFor mh (getSigLinkFor doc sigid) -> return $ Right doc
+    _ -> return $ Left DBResourceNotAvailable
 

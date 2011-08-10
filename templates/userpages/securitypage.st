@@ -7,7 +7,7 @@ showUserSecurity =
    <ul class="tabs">
        <li><a href="/account">$_HeadUserInfo()$</a></li>
        <li class="active"><a href="/account/security">$_HeadAccountSettings()$</a></li>
-       $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
+       $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li><a href="/account/sharing">$_sharing()$</a></li>
        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
    </ul>
@@ -51,7 +51,8 @@ showUserSecurity =
                             </td>
                        </tr>
                    </table>
-               </div> -->
+               </div> 
+            -->
              <div class="account-footer">
                 <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">

@@ -1,17 +1,22 @@
-module Redirect (sendRedirect,sendSecureLoopBack) where
+module Redirect (sendRedirect,sendSecureLoopBack,guardRight,guardRightM) where
+
 
 import Control.Applicative ((<$>))
+import Control.Monad
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
-import Kontra
-import KontraLink
-import Misc
-import User.UserView
-import Util.FlashUtil
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+
+import Kontra
+import KontraLink
+import qualified AppLogger as Log
+import Misc
+import Util.FlashUtil
+import DBError
+import User.UserView
 
 seeOtherXML :: String -> Response
 seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString $ "<a href='"++url++"' alt='303 see other'>"++ url ++ "</a>"
@@ -45,3 +50,27 @@ sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
     link <- getSecureLink
     seeOther link =<< setRsCode 303 (seeOtherXML link)
+
+-- moved here because of dependency problems
+
+class GuardRight a where
+  guardRight :: (Kontrakcja m) => Either a b -> m b
+  
+instance GuardRight String where
+  guardRight (Right b) = return b
+  guardRight (Left  a) = do
+    Log.debug a
+    mzero
+    
+instance GuardRight DBError where
+  guardRight (Right b) = return b
+  guardRight (Left DBNotLoggedIn) = do
+    r <- sendRedirect $ LinkLogin NotLogged
+    finishWith r
+  guardRight _ = mzero
+  
+{- |
+   Get the value from a Right or log an error and mzero if it is a left
+ -}
+guardRightM :: (Kontrakcja m, GuardRight msg) => m (Either msg b) -> m b
+guardRightM action = guardRight =<< action

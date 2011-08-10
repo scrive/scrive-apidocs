@@ -2,13 +2,14 @@
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
 module AppControl
-    ( appHandler
-    , AppConf(..)
+    ( module AppConf
+    , appHandler
     , AppGlobals(..)
     , defaultAWSAction
     , handleLoginPost
     ) where
 
+import AppConf
 import API.IntegrationAPI
 import API.Service.ServiceState
 import API.Service.ServiceControl
@@ -17,12 +18,10 @@ import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
-import Crypto
 import Doc.DocState
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
@@ -31,7 +30,7 @@ import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Session
-import Templates.Templates (langVersion, readAllLangsTemplates, KontrakcjaMultilangTemplates, getTemplatesModTime)
+import Templates.Templates
 import User.UserView as UserView
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
@@ -51,12 +50,10 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Word
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
 import Happstack.State (query, update)
-import ListUtil
 import Network.Socket
 import System.Directory
 import System.Time
@@ -75,37 +72,12 @@ import User.Lang
 import Util.MonadUtils
 import ForkAction
 
-{- |
-  Defines the application's configuration.  This includes amongst other things
-  the http port number, amazon, trust weaver and email configuraton,
-  as well as a handy boolean indicating whether this is a production or
-  development instance.
--}
-data AppConf
-    = AppConf { httpBindAddress :: (Word32, Word16)  -- ^ tcp address to bind to and port to listen on
-                                                  -- (0x0100007f, 8000) localhost:8000 (default)
-                                                  -- (0, 80)   all interfaces port 80
-              , hostpart        :: String                       -- ^ hostname as it should looklike in emails for example
-              , store           :: FilePath                     -- ^ where to put database files
-              , docstore        :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
-              , static          :: FilePath                     -- ^ static files directory
-              , amazonConfig    :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-              , gsCmd           :: String
-              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development
-              , trustWeaverSign :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
-              , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
-              , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
-              , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
-              , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
-              , admins          :: [Email]                    -- ^ email addresses of people regarded as admins
-              }
-      deriving (Show,Read,Eq,Ord)
 
 {- |
   Global application data
 -}
 data AppGlobals
-    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaMultilangTemplates)
+    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
                  , docscache       :: MVar (Map.Map FileID JpegPages)
@@ -130,7 +102,6 @@ data AppGlobals
 handleRoutes :: Kontra Response
 handleRoutes = msum [
        hGetAllowHttp0 $ handleHomepage
-     , hPost0 $ handleMainReaload
 
      -- static pages
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -154,7 +125,7 @@ handleRoutes = msum [
      , dir "d" $ hGet2                        $ toK2 $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost1        $ toK1 $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts emptyListParams
+     , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
      , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ toK3 $ DocControl.signDocument
@@ -162,6 +133,7 @@ handleRoutes = msum [
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken5 $ toK5 $ DocControl.handleDeclineAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken3 $ toK3 $ DocControl.handleSigAttach
+     , dir "s" $ param "deletesigattachment" $ hPostNoXToken3 $ toK3 $ DocControl.handleDeleteSigAttach
 
      , dir "sv" $ hGet3 $ toK3 $ DocControl.handleAttachmentViewForViewer
 
@@ -185,12 +157,14 @@ handleRoutes = msum [
      , dir "o" $ hGet0 $ toK0 $ DocControl.showOfferList
      , dir "o" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOffersArchive
      , dir "o" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOfferRemind
-     , dir "o" $ hPost0 $ toK0 $ DocControl.handleOffersReload
 
      , dir "or" $ hGet0  $ toK0 $ DocControl.showOrdersList
      , dir "or" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
-     , dir "or" $ hPost0 $ toK0 $ DocControl.handleOrdersReload
+     
+     , dir "r" $ hGet0 $ toK0 $ DocControl.showRubbishBinList
+     , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
+     , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
 
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor
      , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
@@ -200,8 +174,8 @@ handleRoutes = msum [
      , dir "d" $ {- param "doc" $ -} hPost0 $ toK0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
-     , dir "d"                     $ hPost0 $ toK0 $ DocControl.handleContractsReload
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
+     , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
 
 
      , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet
@@ -216,7 +190,6 @@ handleRoutes = msum [
 
      , dir "pages"  $ hGetAjax3 $ toK3 $ DocControl.showPage
      , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
-     , dir "templates" $ hGetAjax0 $ toK0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
      , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
@@ -225,16 +198,16 @@ handleRoutes = msum [
      -- UserControl
      , dir "account"                    $ hGet0  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost0 $ toK0 $ UserControl.handleUserPost
-     , dir "account" $ dir "subaccount" $ hGet0  $ toK0 $ UserControl.handleGetSubaccount
-     , dir "account" $ dir "subaccount" $ hPost0 $ toK0 $ UserControl.handlePostSubaccount
+     , dir "account" $ dir "companyaccounts" $ hGet0  $ toK0 $ UserControl.handleGetCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ hPost0 $ toK0 $ UserControl.handlePostCompanyAccounts
      , dir "account" $ dir "sharing" $ hGet0 $ toK0 $ UserControl.handleGetSharing
      , dir "account" $ dir "sharing" $ hPost0 $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet0 $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost0 $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet0 $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost0 $ toK0 $ UserControl.handlePostUserMailAPI
-     , dir "account" $ dir "bsa" $ hGet1 $ toK1 $ UserControl.handleGetBecomeSubaccountOf
-     , dir "account" $ dir "bsa" $ hPost1 $ toK1 $ UserControl.handlePostBecomeSubaccountOf
+     , dir "account" $ dir "bsa" $ hGet1 $ toK1 $ UserControl.handleGetBecomeCompanyAccount
+     , dir "account" $ dir "bsa" $ hPost1 $ toK1 $ UserControl.handlePostBecomeCompanyAccount
      , dir "contacts"  $ hGet0  $ toK0 $ Contacts.showContacts
      , dir "contacts"  $ hPost0 $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet0  $ toK0 $ UserControl.handleAcceptTOSGet
@@ -255,8 +228,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-     , dir "adminonly" $ dir "quarantine" $ hGet0  $ toK0 $ Administration.handleShowQuarantine
-     , dir "adminonly" $ dir "quarantine" $ hPost0 $ toK0 $ Administration.handleQuarantinePost
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Administration.handleStatistics
@@ -270,18 +241,18 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "translations" $ hGet0 $ toK0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
-
-     , dir "adminonly" $ dir "deletemigrate" $ hGet0 $ toK0 $ Administration.handleMigrateForDeletion
-     , dir "adminonly" $ dir "migrateattachments" $ hGet0 $ toK0 $ DocControl.handleMigrateDocumentAuthorAttachments
-     , dir "adminonly" $ dir "makesigauthor" $ hGet0 $ toK0 $ Administration.migrateDocsNoAuthor
-
---     , dir "adminonly" $ dir "migrateauthor" $ hGet0 $ DocControl.migrateDocSigLinks
-     , dir "adminonly" $ dir "unquarantineall" $ hGet0 $ toK0 $ Administration.handleUnquarantineAll
      , dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
+     , dir "adminonly" $ dir "migratecompanies" $ hGet0 $ toK0 $ Administration.migrateCompanies
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
+       
+     , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
+
+     -- this stuff is for a fix
+     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ DocControl.handleLogBrokenByBug510
+     , dir "adminonly" $ dir "510bugfix" $ hGet1 $ toK1 $ DocControl.handleFixForBug510
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
@@ -389,10 +360,6 @@ handleError = do
             sendRedirect LinkMain
          Just _ -> embeddedErrorPage
 
-handleMainReaload :: Kontra KontraLink
-handleMainReaload = do
-    liftM3 LinkNew DocControl.getDocProcess getListParamsForSearch (isFieldSet "showTemplates")
-
 {- |
    Creates a default amazon configuration based on the
    given AppConf
@@ -412,14 +379,14 @@ defaultAWSAction appConf =
            }
 
 
-maybeReadTemplates :: MVar (ClockTime, KontrakcjaMultilangTemplates)
-                      -> IO KontrakcjaMultilangTemplates
+maybeReadTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
+                      -> IO KontrakcjaGlobalTemplates
 maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
             then do
                 Log.debug $ "Reloading templates"
-                templates' <- readAllLangsTemplates
+                templates' <- readGlobalTemplates
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
 
@@ -522,7 +489,8 @@ appHandler appConf appGlobals = do
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
-
+      let language = (fromMaybe browserLang $ lang <$> usersettings <$> muser )
+      let systemServer = systemServerFromURL hostpart    
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
@@ -535,7 +503,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxtemplates = langVersion (fromMaybe browserLang $ lang <$> usersettings <$> muser ) templates2
+                , ctxtemplates = localizedVersion (systemServer,language) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -645,7 +613,7 @@ signup vip _freetill =  do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
         Nothing -> do
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
+          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone
@@ -744,7 +712,7 @@ onlySuperUserGet action = do
 -}
 daveDocument :: Kontrakcja m => DocumentID -> m Response
 daveDocument documentid = onlySuperUserGet $ do
-    document <- queryOrFail $ GetDocumentByDocumentIDAllEvenQuarantinedDocuments documentid
+    document <- queryOrFail $ GetDocumentByDocumentID documentid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
 
 {- |

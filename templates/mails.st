@@ -285,17 +285,17 @@ newUserMailContent=
 
 $poweredBySkrivaPaPara()$
 ####
-inviteSubaccountMailTitle=$_inviteSubaccountMailTitle()$
+inviteCompanyAccountMailTitle=$_inviteCompanyAccountMailTitle()$
 ####
-inviteSubaccountMailContent=
+inviteCompanyAccountMailContent=
     <p>$_hi()$ <strong>$personname$</strong>,</p>
 
-    <p>$_inviteSubaccountMailContentBodyFirst()$</p>
+    <p>$_inviteCompanyAccountMailContentBodyFirst()$</p>
 
-    <p>$_inviteSubaccountMailContentBodyUserName()$<br/>
+    <p>$_inviteCompanyAccountMailContentBodyUserName()$<br/>
     $email$</p>
     
-    <p>$_inviteSubaccountMailContentClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_inviteCompanyAccountMailContentClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 ####
@@ -490,30 +490,30 @@ $messages:noescape()$
 <p>$_mailMismatchAuthorContentBestRegards()$</p>
 <p>$_skrivapa()$</p>
 ####
-mailInviteUserAsSubaccountTitle=$_mailInviteUserAsSubaccountTitle()$
+mailInviteUserAsCompanyAccountTitle=$_mailInviteUserAsCompanyAccountTitle()$
 ###
-mailInviteUserAsSubaccountContent=
+mailInviteUserAsCompanyAccountContent=
   <p>$_hi()$ $invited.fullnameOrEmail$,</p>
-  <p>$_mailInviteUserAsSubaccountContentBodyFirst()$</p>
+  <p>$_mailInviteUserAsCompanyAccountContentBodyFirst()$</p>
 
- <p>$_mailInviteUserAsSubaccountContentBodySecond()$</p>
+ <p>$_mailInviteUserAsCompanyAccountContentBodySecond()$</p>
 
- <p>$_mailInviteUserAsSubaccountContentInstructionFirst()$</p>
- <ul>$_mailInviteUserAsSubaccountContentInstructionSecond()$
+ <p>$_mailInviteUserAsCompanyAccountContentInstructionFirst()$</p>
+ <ul>$_mailInviteUserAsCompanyAccountContentInstructionSecond()$
 </ul>
 
- <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsSubaccountContentLink()$</a></p>
+ <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsCompanyAccountContentLink()$</a></p>
   $poweredBySkrivaPaPara()$
 ####
 ####
-mailSubaccountAcceptedTitle=$_mailSubaccountAcceptedTitle()$
+mailCompanyAccountAcceptedTitle=$_mailCompanyAccountAcceptedTitle()$
 ###
-mailSubaccountAcceptedContent=
+mailCompanyAccountAcceptedContent=
   <p>$_hi()$ $user.fullnameOrEmail$,</p>
-  <p>$_mailSubaccountAcceptedContentBody()$</p>
+  <p>$_mailCompanyAccountAcceptedContentBody()$</p>
   $poweredBySkrivaPaPara()$
 ####
 appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $a$ };separator=", "$ <br />$endif$
 ###
-sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ från $sa.sigs:noescape()$};separator="; "$ <br />$endif$
+sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ $_from()$ $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###

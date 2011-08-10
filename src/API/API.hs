@@ -1,4 +1,3 @@
-{-# LANGUAGE FunctionalDependencies #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.API
@@ -95,7 +94,7 @@ apiResponse action = action >>= simpleResponse . encode
 
 -}
 
-apiCall :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c APIResponse -> m Response
+apiCall :: (APIContext c, Kontrakcja m) => String -> APIFunction m c APIResponse -> m Response
 apiCall s f = dir s $ do
     methodM POST
     Log.debug $ "API call " ++ s ++ " matched"
@@ -120,8 +119,8 @@ apiUnknownCall = apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad requ
    But each context has to be able get read from HTTP params and should have JSON object inside.
 -}
 
-class APIContext m a | a -> m where
-    apiContext :: m (Either (API_ERROR,String) a)
+class APIContext a where
+    apiContext :: Kontrakcja m => m (Either (API_ERROR,String) a)
     body       :: a -> APIRequestBody
     newBody    :: APIRequestBody -> a -> a
 
@@ -129,22 +128,22 @@ class APIContext m a | a -> m where
 -- When building API calls you wan't to dig into JSON object with params
 -- Here are some helper functions for that. Some can be localized (like in ReaderMonad) to subcontext.
 
-apiAskBS :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
+apiAskBS :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
 apiAskBS = fmap (fmap BS.fromString) . apiAskString
 
-apiAskString :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c (Maybe String)
+apiAskString :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe String)
 apiAskString s = apiLocal s (fromString <$> askBody)
     where
         fromString (JSString string) = Just $ fromJSString string
         fromString _ = Nothing
 
-apiAskInteger :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c (Maybe Integer)
+apiAskInteger :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe Integer)
 apiAskInteger s = apiLocal s (fromNumerator <$> askBody)
     where
         fromNumerator (JSRational _ r) = Just $ numerator r
         fromNumerator _ = Nothing
 
-apiAskBase64 :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
+apiAskBase64 :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
 apiAskBase64 s =  do
     coded <- (fmap $ BASE64.decode)  <$> apiAskBS s
     case coded of
@@ -152,32 +151,32 @@ apiAskBase64 s =  do
          _ -> return Nothing
 
 
-apiAskStringMap :: (APIContext m c, Kontrakcja m) => APIFunction m c (Maybe [(String,String)])
+apiAskStringMap :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [(String,String)])
 apiAskStringMap = join <$> fmap (foldl getStr (Just [])) <$> apiAskMap
     where
         getStr (Just l) (key,JSString string) = Just $ (key,fromJSString string):l
         getStr _ _ = Nothing
 
-apiAskMap :: (APIContext m c, Kontrakcja m) => APIFunction m c (Maybe [(String,JSValue)])
+apiAskMap :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [(String,JSValue)])
 apiAskMap = fromObject <$> askBody
     where
         fromObject (JSObject object) = Just $ fromJSObject object
         fromObject _ = Nothing
 
-apiAskList :: (APIContext m c, Kontrakcja m) => APIFunction m c (Maybe [JSValue])
+apiAskList :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [JSValue])
 apiAskList = fromList <$> askBody
     where
         fromList (JSArray list) = Just $ list
         fromList _ = Nothing
 
-apiLocal :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c (Maybe a) -> APIFunction m c (Maybe a)
+apiLocal :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe a) -> APIFunction m c (Maybe a)
 apiLocal s digger = do
     mobj <- apiAskField s
     case mobj of
          Just obj -> AF $ withReaderT (newBody obj) (unAF digger)
          Nothing -> return Nothing
 
-apiMapLocal :: (APIContext m c, Kontrakcja m) => APIFunction m c (Maybe a) -> APIFunction m c (Maybe [a])
+apiMapLocal :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe a) -> APIFunction m c (Maybe [a])
 apiMapLocal digger = do
     mdiggers <- (fmap $ map (\nbody -> AF $ withReaderT (newBody nbody) (unAF digger))) <$> apiAskList
     case mdiggers of
@@ -195,13 +194,13 @@ apiMapLocal digger = do
                  _ -> return Nothing
          runDiggers _ = return $ Just []
 
-apiAskField :: (APIContext m c, Kontrakcja m) => String -> APIFunction m c (Maybe JSValue)
+apiAskField :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe JSValue)
 apiAskField s = fromObject <$> askBody
     where
       fromObject (JSObject object) = lookup s $ fromJSObject object
       fromObject _ = Nothing
 
-askBody :: (APIContext m c, Kontrakcja m) => APIFunction m c APIRequestBody
+askBody :: (APIContext c, Kontrakcja m) => APIFunction m c APIRequestBody
 askBody = body <$> ask
 
 --- This will read JSON object from some HTTP request body parameter
@@ -221,7 +220,7 @@ instance Error (API_ERROR,String) where
     strMsg s = (API_ERROR_OTHER,s)
 
 --This will break the execution and send error message to the user
-throwApiError :: (APIContext m c, Kontrakcja m) => API_ERROR -> String -> APIFunction m c a
+throwApiError :: (APIContext c, Kontrakcja m) => API_ERROR -> String -> APIFunction m c a
 throwApiError = curry throwError
 
 

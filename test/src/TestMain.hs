@@ -8,6 +8,12 @@ import System.Environment.UTF8
 import System.IO
 import Test.Framework
 
+-- Note: if you add new testsuites here, please add them in a similar
+-- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
+-- flags to kontrakcja.cabal to allow possibility of disabling tests selectively
+-- if e.g. for some reason they stop compiling. Also, please keep them in
+-- alphabetic order.
+
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
@@ -28,6 +34,15 @@ import TrustWeaverTest
 #endif
 #ifndef NO_USERSTATE
 import UserStateTest
+#endif
+#ifndef NO_DOCSTATEQUERY
+import DocStateQueryTest
+#endif
+#ifndef NO_REDIRECT
+import RedirectTest
+#endif
+#ifndef NO_INTEGRATIONAPI
+import IntegrationAPITest
 #endif
 
 allTests :: [Test]
@@ -57,6 +72,15 @@ allTests = tail tests
 #ifndef NO_USERSTATE
           , userStateTests
 #endif
+#ifndef NO_DOCSTATEQUERY
+          , docStateQueryTests
+#endif
+#ifndef NO_REDIRECT
+          , redirectTests
+#endif
+#ifndef NO_INTEGRATIONAPI
+          , integrationAPITests
+#endif
           ]
 
 testsToRun :: [String] -> [Either String Test]
@@ -84,6 +108,15 @@ testsToRun (t:ts) =
 #endif
 #ifndef NO_USERSTATE
          "userstate"       -> Right userStateTests : rest
+#endif
+#ifndef NO_DOCSTATEQUERY
+         "docstatequery"   -> Right docStateQueryTests : rest
+#endif
+#ifndef NO_REDIRECT
+         "redirect"        -> Right redirectTests : rest
+#endif
+#ifndef NO_INTEGRATIONAPI
+         "integrationapi"        -> Right integrationAPITests : rest
 #endif
          _                 -> Left t : rest
     where

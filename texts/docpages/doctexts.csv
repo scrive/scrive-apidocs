@@ -22,26 +22,26 @@
 "_documentInfoTextDatamismatchElseImauthorBody","Avtalsprocessen är avbruten på grund av                     
          felaktig matchning mellan en                       
        undertecknande part och dennes                       
-       e-legitimation.","The signing process was cancelled because the personal data of
+       e-legitimation.","The signing process was canceled because the personal data of
  a signatory did not match the data in his or her e-ID."
-"_documentInfoTextDatamismatchElseImauthorHead","Avtalsprocessen avbruten","Signing process cancelled"
+"_documentInfoTextDatamismatchElseImauthorHead","Avtalsprocessen avbruten","Signing process canceled"
 "_documentInfoTextDatamismatchNotsignedbymeImauthorBody","Avtalsprocessen är avbruten på grund                        
         av felaktig matchning mellan en                     
            undertecknande part och dennes                   
-             e-legitimation.","The signing process was cancelled because the personal data of
+             e-legitimation.","The signing process was canceled because the personal data of
  a signatory did not match the data in his or her e-ID."
-"_documentInfoTextDatamismatchNotsignedbymeImauthorHead","Avtalsprocessen avbruten","Signing process cancelled"
+"_documentInfoTextDatamismatchNotsignedbymeImauthorHead","Avtalsprocessen avbruten","Signing process canceled"
 "_documentInfoTextDatamismatchSignedbymeImauthorBody","Avtalsprocessen är avbruten på grund av                     
          felaktig matchning mellan en                       
        undertecknande part och dennes                       
-       e-legitimation.","The signing process was cancelled because the personal data of
+       e-legitimation.","The signing process was canceled because the personal data of
  a signatory did not match the data in his or her e-ID."
-"_documentInfoTextDatamismatchSignedbymeImauthorHead","Avtalsprocessen avbruten","Signing process cancelled"
+"_documentInfoTextDatamismatchSignedbymeImauthorHead","Avtalsprocessen avbruten","Signing process canceled"
 "_documentInfoTextElseAwaitingauthorBody","Dokumentet väntar på att undertecknas av inbjudande part.","The document is waiting to be signed by the inviting party."
 "_documentInfoTextElseAwaitingauthorHead","Väntar","Waiting"
-"_documentInfoTextElseBody","Problem Ledsen, det har uppstått ett problem att rendera sigillet
+"_documentInfoTextElseBody","Ledsen, det har uppstått ett problem att rendera sigillet
  på PDF:en. Vänliga ladda upp dokumentet igen. Om problemet upprepar
- sig var vänlig kontakta ","We are sorry, a problem occured when rendering the seal on the
+ sig var vänlig kontakta ","We are sorry, a problem occurred when rendering the seal on the
  PDF. Please upload the document again. If the problem reoccurs,
  please contact"
 "_documentInfoTextElseBodyMailSupport","support@skrivapa.se","support@scrive.com"
@@ -62,10 +62,10 @@
 "_documentInfoTextRejectedSignedbymeImauthorBody","Dokumentet har avvisats av en motpart.","The document has been rejected by a counterpart."
 "_documentInfoTextRejectedSignedbymeImauthorHead","Avvisat","Rejected"
 "_documentInfoTextSignedbymeAwaitingauthorBody","Du har undertecknat och vi inväntar övriga parter.","You have signed and are waiting for the other parties."
-"_documentInfoTextSignedbymeAwaitingauthorHead","Väntar på motpart","Waiting for counterparty"
+"_documentInfoTextSignedbymeAwaitingauthorHead","Väntar på motpart","Waiting for counterpart"
 "_documentInfoTextTimedoutElseImauthorBody","Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum
  har passerat och därför har dokumentet avbrutits.","All parties did not sign the document in time. The expiration
- date has passed and the document process is therefore cancelled."
+ date has passed and the document process is therefore canceled."
 "_documentInfoTextTimedoutElseImauthorHead","Förfallodatum har passerat","Expiration date has passed"
 "_documentInfoTextTimedoutNotsignedbymeImauthorBody","Du kan inte längre underteckna dokumentet eftersom sista datum
  för att underteckna passerat.","You can no longer sign the document since the expiration date
@@ -73,7 +73,7 @@
 "_documentInfoTextTimedoutNotsignedbymeImauthorHead","Förfallodatum har passerat","Expiration date has passed"
 "_documentInfoTextTimedoutSignedbymeImauthorBody","Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum
  har passerat och därför har dokumentet avbrutits.","All parties did not sign the document in time. The expiration
- date has passed and the document process is therefore cancelled."
+ date has passed and the document process is therefore canceled."
 "_documentInfoTextTimedoutSignedbymeImauthorHead","Förfallodatum har passerat","Expiration date has passed"
 "_offercancelledinfoheader","Offert återkallad","Offer withdrawn"
 "_offercancelledinfotext","har återkallat offerten. Den går således inte att acceptera.","has withdrawn the offer. You can no longer accept it."
@@ -99,7 +99,7 @@
 "_orderpendingauthornotsignedinfotext","Vänligen var noga med att granska ordern innan du bekräftar.","Please review the order thoroughly before you confirm it."
 "_ordersignedinfoheader","Ordern bekräftad","Order confirmed"
 "_ordersignedinfotextFrom","från","from"
-"_ordersignedinfotextHasConfirmed","har bekräftat ordern","has confrmed the order"
+"_ordersignedinfotextHasConfirmed","har bekräftat ordern","has confirmed the order"
 "_orderstatusinfotext","Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta
  bekräftelsen.","You have sent an invitation to confirm the order. Please wait
  for the confirmation."

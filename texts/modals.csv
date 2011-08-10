@@ -33,14 +33,14 @@
 "_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du underkonto till huvudkontot	       
    $supervisor.fullnamePlusEmail$ och huvudkontot tar över	 
          ägarskapet över samtliga dokument i ditt konto.  Är
- du	          säker att du vill acceptera?	        ","If you accept to become sub-accoount to the main account	   
+ du	          säker att du vill acceptera?	        ","If you accept to become subaccoount to the main account
         $supervisor.fullnamePlusEmail$, the ownership of all
  your	           documents will be transferred to the main account.
  Are	          you sure you want to accept?	        "
 "_modalDoYouWantToBeSubaccountFooterAccept","Acceptera","Accept"
 "_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli underkonto?","Do you want to accept to become subaccount?"
 "_modalErrorBody","Oroa dig inte, vi tittar på problemet","Don't worry, we are looking at the problem"
-"_modalErrorHeader","Oops, ett fel har uppstått","Oops, an error has occured"
+"_modalErrorHeader","Oops, ett fel har uppstått","Oops, an error has occurred"
 "_modalInviteUserAsSubaccountBodySendRequest","Skicka en förfrågan till användaren att bli ett underkonto	 
          under ditt konto. Det betyder att du blir	         
  huvudkonto och kommer att ta över ägarskapet över samtliga underkontots
@@ -79,8 +79,8 @@
  till <strong>$signatory$</strong>. ","The order confirmation <strong>$documenttitle$</strong> has been
  sent to <strong>$signatory$</strong>. "
 "_modalOrderCreatedHeader","Orderbekräftelsen skickad!","The order confirmation has been sent!"
-"_modalPdfTooBigBody"
-"_modalPdfTooBigTitle"
+"_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.","You have tried to upload a PDF over 2 MB. Please try again with a smaller document."
+"_modalPdfTooBigTitle","För stora fil ","Cannot store file"
 "_modalRejectedViewBody","Ett meddelande har skickats till $partyList:noescape()$.","A message has been sent to $partyList:noescape()$."
 "_modalRejectedViewHeader","Du har avvisat dokumentet $documenttitle$","You have rejected the document $documenttitle$"
 "_modalSendInviteViewBody","En inbjudan att underteckna har nu skickats        till $partyListButAuthor:noescape()$.","An invitation to sign has been sent to $partyListButAuthor:noescape()$."
@@ -149,7 +149,7 @@
 "_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte  
       bekräftat.      ","        $partyUnsignedListString:noescape()$ has not yet confirmed.
    "
-"_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ","        The order confirmationhas been saved to your account.
+"_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ","        The order confirmation has been saved to your account.
    "
 "_modalSignedViewOrderNotClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$","You have confirmed the order $documenttitle$"
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed","          $partyUnsignedListString:noescape()$ har ännu inte
@@ -181,12 +181,10 @@
 "_signAwaitingAuthorLastBody","Alla parter har nu undertecknat och dokumentet är bindande.","All parties have  signed, and the document is now legally binding."
 "_signAwaitingAuthorLastHeader","Dokumentet har undertecknats","The document has been signed"
 "_signCanceledDataMismatchModalBodyAborted","Avtalsprocessen är därför bruten, var vänliga invänta <br/> 
-        en ny inbjudan eller kontakta <a href=""mailto:$authoremail$"">$authorname$</a>.","The signing process was therefore cancelled, please <br/>   
+        en ny inbjudan eller kontakta <a href=""mailto:$authoremail$"">$authorname$</a>.","The signing process was therefore canceled, please <br/>
       wait for a new invitation or contact <a href=""mailto:$authoremail$"">$authorname$</a>."
 "_signCanceledDataMismatchModalBodySorry","Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina
  personuppgifter.","We are sorry. The data in your e-ID does not match your personal
  data."
 "_signCanceledDataMismatchModalErrorReport","Felrapport:","Error report:"
 "_signCanceledDataMismatchModalHeader","Felaktiga personuppgifter","Incorrect personal data"
-"_modalPdfTooBigTitle","För stora fil ","Cannot store file"
-"_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.","You have tried to upload a PDF over 2 MB. Please try again with a smaller document."

@@ -32,7 +32,7 @@ mailApiTests = testGroup "MailAPI" [
 testSuccessfulDocCreation :: Assertion
 testSuccessfulDocCreation = withTestEnvironment $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
-    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< readTemplates LANG_EN)
+    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
     uid <- createTestUser
     _ <- update $ SetUserMailAPI uid $ Just UserMailAPI {
           umapiKey = read "ef545848bcd3f7d8"
@@ -46,7 +46,7 @@ testSuccessfulDocCreation = withTestEnvironment $ \tmpdir -> do
 testFailureNoSuchUser :: Assertion
 testFailureNoSuchUser = withTestEnvironment $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
-    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<< readTemplates LANG_EN)
+    ctx <- (\c -> c { ctxdocstore = tmpdir }) <$> (mkContext =<<  localizedVersion defaultValue <$> readGlobalTemplates)
     (res, _) <- first jsonToStringList <$> runTestKontra req ctx (testAPI handleMailCommand)
     assertBool "error occured" $ isJust $ lookup "error" res
     assertBool "message matches regex 'User .* not found'" $
@@ -79,5 +79,5 @@ withTestEnvironment = withTestState . withSystemTempDirectory "mailapi-test-"
 
 createTestUser :: IO UserID
 createTestUser = do
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") NoPassword Nothing Nothing Nothing
+    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") NoPassword False Nothing Nothing defaultValue
     return userid

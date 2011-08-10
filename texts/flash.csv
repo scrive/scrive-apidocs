@@ -1,6 +1,6 @@
 "!Template name","LANG_SE","LANG_EN"
 "_addressFieldName","adress","address"
-"_checkBoxFieldName","check box","checkbox"
+"_checkBoxFieldName","check box","check box"
 "_daysToSignFieldName","days to sign","days to sign"
 "_fieldNameFieldName","namn på fält","field name"
 "_fieldValueFieldName","värde på fält","field value"
@@ -23,7 +23,7 @@
  <br/> Please contact our support if you need more than this."
 "_flashMessageCSVSent","Dokumentet är skickat till $doccount$ parter.","The document has been sent to $doccount$ parties."
 "_flashMessageCannotCancel","Motparten har redan undertecknat dokumentet. Du kan inte återkalla
- inbjudan. ","The counterparty has already signed the document. You can no
+ inbjudan. ","The counterpart has already signed the document. You can no
  longer withdraw the invitation."
 "_flashMessageChangePasswordEmailSend","Ett nytt lösenord har blivit skickat till din e-post.","A new password has been sent to your email address."
 "_flashMessageContractArchiveDone","Valda dokument har blivit raderade.","The selected documents have been deleted."
@@ -44,7 +44,7 @@
 "_flashMessageInvalidUnprintableCharsInInput","$fieldnametitlecase$ innehåller ej tillåtna tecken.","$fieldnametitlecase$ contains invalid characters."
 "_flashMessageLoginPageRedirectReasonNotAdmin","Du har inte rätt behörighet att se denna sida.","You are not authorised to see this page."
 "_flashMessageLoginPageRedirectReasonNotLoggedIn","Du är inte inloggad.","You are not logged in."
-"_flashMessageLoginPageRedirectReasonWrongMailOrPassword","Felaktig e-post eller lösenord.","Incorrect e-mail or password."
+"_flashMessageLoginPageRedirectReasonWrongMailOrPassword","Felaktig e-post eller lösenord.","Incorrect email or password."
 "_flashMessageMissingRequiredField","Du har missat att fylla i ett obligatoriskt fält.","You missed some mandatory fields."
 "_flashMessageMultipleAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.","The selected attachments have been shared with your organisation."
 "_flashMessageMultipleTemplateShareDone","Valda mallar har blivit delade inom din organisation.","The selected templates have been shared with your organisation."
@@ -64,7 +64,7 @@
 "_flashMessageNoDataInCSVApartFromHeader","Kunde inte hitta några data i filen, kunde bara hitta titlar.","Scrive could not find any data in the file apart from column
  headers."
 "_flashMessageNoRemainedInvitationEmails","Du har redan skickat 10 inbjudningar till denna e-post. Vänligen
- försök senare.","You have sent 10 invitations to this e-mail address. Please try
+ försök senare.","You have sent 10 invitations to this email address. Please try
  again later."
 "_flashMessageNoRemainedPasswordReminderEmails","Du har redan begärt lösenordsbyte 10 gånger i rad. Vänligen försök
  igen senare.","You have requested a password change 10 times in a row. Please
@@ -79,7 +79,7 @@
 "_flashMessagePasswordChangeLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>     Vänligen
  använd ""Glömt lösenord"" för att generera en ny länk.","We are sorry, this link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
-"_flashMessagePasswordsDontMatch","""Nytt lösenord"" matchar inte med ""Upprepa lösenord""","""New password"" does not match ""Repeat password"""
+"_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>","<strong>New password</strong> does not match <strong>Repeat password</strong>"
 "_flashMessagePleaseSignContract","Underteckna dokumentet längst ned på sidan.","Sign the document at the bottom of the page."
 "_flashMessagePleaseSignOffer","Du kan acceptera offerten längst ned på sidan.","Accept the offer at the bottom of the page."
 "_flashMessagePleaseSignWithEleg","Du undertecknar dokumentet längst ned. Det krävs e-legitimation
@@ -87,8 +87,10 @@
  to sign."
 "_flashMessageRowGreaterThanMaxColCount","Raden kan inte ha mer än $maxcols$ kolumner.","The row must not have more than $maxcols$ columns."
 "_flashMessageRowLessThanMinColCount","Raden behöver åtminstone $mincols$ kolumner.","The row must have at least $mincols$ columns."
+"_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted.",
+"_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive.",
 "_flashMessageSecondNameIsRequired","Efternamn krävs.","Last name required."
-"_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.","$docname$ has been shared whith your organisation."
+"_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.","$docname$ has been shared with your organisation."
 "_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.","$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.","The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.","Your message has been sent! We will get back to you within 24

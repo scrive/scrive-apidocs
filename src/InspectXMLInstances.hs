@@ -72,8 +72,6 @@ instance InspectXML SignatoryRole where
 instance InspectXML DocumentStatus where
 instance InspectXML CSVUpload where
 instance InspectXML DocumentType where
-instance InspectXML DocumentRecordStatus where
-instance InspectXML UserRecordStatus where
 instance InspectXML DocumentFunctionality where
 instance InspectXML ChargeMode where
 instance InspectXML DocumentTag where

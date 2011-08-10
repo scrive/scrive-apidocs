@@ -16,6 +16,7 @@ import API.API
 import API.APICommons hiding (SignatoryTMP(..))
 import Doc.DocControl
 import Doc.DocState
+import Company.CompanyState
 import Kontra
 import Misc
 import Doc.DocViewMail
@@ -37,7 +38,7 @@ import Util.MonadUtils
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a
 
-instance Kontrakcja m => APIContext m UserAPIContext where
+instance APIContext UserAPIContext where
     body= wsbody
     newBody b ctx = ctx {wsbody = b}
     apiContext  = do
@@ -110,7 +111,6 @@ sendFromTemplate = do
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
   let Just authorsiglink = mauthorsiglink
-  let saccount = getSignatoryAccount author
   medoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx)
@@ -119,7 +119,7 @@ sendFromTemplate = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext doc)
-          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, saccount)
+          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality
@@ -150,10 +150,12 @@ getTemplate = do
   when (not $ isTemplate temp) $ throwApiError API_ERROR_OTHER "This document is not a template"
   return temp
 
-
 sendNewDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 sendNewDocument = do
   author <- user <$> ask
+  mcompany <- case usercompany author of
+                Just companyid -> query $ GetCompany companyid
+                Nothing -> return Nothing
   mtitle <- apiAskBS "title"
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""
   let title = fromJust mtitle
@@ -168,10 +170,11 @@ sendNewDocument = do
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
   ctx <- getContext
-  newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
+  mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx) --TODO EM i don't know about this
+  when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
+  let newdoc = fromRight mnewdoc
   liftIO $ print newdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  let saccount = getSignatoryAccount author
   edoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx)
@@ -180,7 +183,7 @@ sendNewDocument = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext newdoc)
-          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], saccount)
+          ((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality

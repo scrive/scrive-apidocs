@@ -45,7 +45,7 @@ import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
-import Templates.Templates (readAllLangsTemplates, getTemplatesModTime)
+import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Kontra
 import Misc
 import qualified MemCache
@@ -121,7 +121,7 @@ initDatabaseEntries = do
       maybeuser <- query $ Kontra.GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing Nothing
+              _ <- update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash False Nothing Nothing defaultValue
               return ()
           Just _ -> return () -- user exist, do not add it
 
@@ -139,7 +139,7 @@ runKontrakcjaServer = Log.withLogger $ do
 
   args <- getArgs
   appConf1 <- readAppConfig
-  templates' <- readAllLangsTemplates
+  templates' <- readGlobalTemplates
   templateModTime <- getTemplatesModTime
   templates <- newMVar (templateModTime, templates')
 
@@ -197,7 +197,8 @@ runKontrakcjaServer = Log.withLogger $ do
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
-                              return [t1, t2, t3, t4]
+                              t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
+                              return [t1, t2, t3, t4, t5]
                            )
                            (mapM_ killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day

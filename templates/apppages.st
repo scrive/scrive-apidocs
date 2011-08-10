@@ -50,8 +50,27 @@ standardHeaderContents=
         <script src="$prefix$/js/underscore.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/backbone.js"
-                type="text/javascript"></script> 
+                type="text/javascript"></script>
+
         <script src="$prefix$/js/flashmessages.js"
+                type="text/javascript"></script>
+
+        <script src="$prefix$/js/infotextinputs.js"
+                type="text/javascript"></script>
+        
+        <script src="$prefix$/js/buttons.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/uploadbuttons.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/tooltips.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/submits.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/confirmations.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/selects.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/lists.js"
                 type="text/javascript"></script> 
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
@@ -182,7 +201,7 @@ pageFooter=
         <li><a href="/allmana-villkor">$_pageFooterTOS()$</a></li>
       </ul>
       <br />
-      <strong>$_pageFooterSkrivapa()$</strong>
+      <strong style='text-transform:uppercase'>$ourServiceName()$</strong>
       <ul>
         <li><a href="/">$_pageFooterHome()$</a></li>
         <li><a href="/om-skrivapa">$_pageFooterAbout()$</a></li>
@@ -267,7 +286,7 @@ loginBox=
 header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
-                                <a href="/" class="logo"></a>
+                                <a href="/" class="$ourLogoClass()$"></a>
                                 $if(logged)$
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">

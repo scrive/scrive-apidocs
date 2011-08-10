@@ -61,6 +61,20 @@ a img
     color: #848484;
 }
 
+.rubbishbin
+{
+    background-image: url(images/rubbish-bin-icon-grey.png);
+    background-repeat: no-repeat;
+    height:16px;
+    width:16px;
+    display: block;
+}
+
+.rubbishbin.highlight
+{
+    background-image: url(images/rubbish-bin-icon-white.png);
+}
+
 /*input[name=final] */
 .cross-button
 {
@@ -233,7 +247,8 @@ a img
     background: #e6e6e6; 
 }
 
-#selectable tr.ui-selected, #selectable tr.ui-selected td
+#selectable tr.ui-selected, #selectable tr.ui-selected td,
+table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 {
     background: #e0e0e0;
 }
@@ -1408,7 +1423,6 @@ input.multiFileInput {
 .signViewBodyRight 
 {
     float: right;
-    position: relative;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
@@ -2846,9 +2860,12 @@ width: 340px;
 }
 
 .templatedDialogContainer{
-    display:none;
     margin-top: 16px;
     
+}
+.templatedDialogContainer .searchBox{
+    margin-top: 40px;
+    margin-right:30px;
 }
 
 a#cancel {

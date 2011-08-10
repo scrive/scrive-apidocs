@@ -3,7 +3,7 @@
                              <p>Det finns tusen skäl varför alla
  bör signera sina dokument elektroniskt. Vår ambition är att
  alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
- möhlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
+ möjlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
  vi ett supportfritt konto för alla mindre användare. 1 användare,
  5 fria signaturer per månad och 50 dokument i lagring.</p>","                    <h3>Free for private persons and proprietors</h3>
                     <p>There are a thousand reasons for everyone
@@ -16,7 +16,7 @@
 "_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är
  ett skräddarsytt redskap som optimerar dina processer. Spara
  50-250kr/dokument. ","Document handling is time consuming. Time is money. Scrive is
- a tailored tool that optimises your processes. Save £5-25 per document."
+ a tailored tool that optimizes your processes. Save £5-25 per document."
 "_Bemefit2","Snabbare avslut","Faster closures"
 "_Bemefit2Body","Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
  din omsättning.","More rapid closures lead to more closures. We help you boost
@@ -40,7 +40,7 @@
  eases your and your customer's administrative burden."
 "_Bemefit7","Spara på miljön","Save the environment"
 "_Bemefit7Body","Visa att ni tar ansvar. Skippa pappersavtalandet och minska din
- miljöpåverkan.","Show that you take responsability. Ditch the paper contract and
+ miljöpåverkan.","Show that you take responsibility Ditch the paper contract and
  reduce your affect on the environment."
 "_Bemefit8","Image branding","Image branding"
 "_Bemefit8Body","Visa era kunder att ni är i framkant och gillar att tänka i nya
@@ -148,27 +148,30 @@
                                                         </td>","<td>                                                        
         <h4>£3.50/signature</h4>
                                     <a href=""/priser"">Detailed
- priceplan</a>                                              
+ price plan</a>
           </td>                                             
            <td>                                             
                    <h4>£3.25/signature</h4>
                                                   <a href=""/priser"">Detailed
- priceplan</a>                                              
+ price plan</a>
           </td>                                             
            <td>                                             
                    <h4>£3/signature</h4>
                                                <a href=""/priser"">Detailed
- priceplan</a>                                              
+ price plan</a>
                                                             
  </td>                                                      
   <td>                                                      
           <h4>Offer</h4>                                    
-                            <a href=""/priser"">Detailed priceplan</a>
+                            <a href=""/priser"">Detailed price plan</a>
                                                         </td>"
 "_PriceTableRow1","<td>5 användare</td>                                        
                 <td>15 användare</td>                       
                                  <td>50 användare</td>      
-                                                  <td>Offert</td>",
+                                                  <td>Offert</td>","<td>5 users</td>
+                <td>15 users</td>
+                                 <td>50 users</td>
+                                                  <td>Offer</td>"
 "_PriceTableRow2","<td>500 signaturer/år</td>                                  
                       <td>1000 signaturer/år</td>           
                                              <td>2000 signaturer/år</td>
@@ -204,7 +207,7 @@
 "_firstPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Spara tid, pengar
  och frustration – både åt dig och dina kunder.","Sign and store your contracts online. Save time, and money.  Reduce frustration.
  – both for yourself and your customers."
-"_h1","Varför krångla? - Signera med SkrivaPå!","Why struggle? - Sign with Scrive!"
+"_h1","Varför krångla? - Signera med $ourServiceName()$!","Why struggle? - Sign with $ourServiceName()$!"
 "_h1Body","Signera avtal och andra dokument elektroniskt med SkrivaPå. <br
  />                                                Våra kunder
  och våra kunders kunder älskar enkelheten.                 

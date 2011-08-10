@@ -73,7 +73,7 @@ var FlashMessageView = Backbone.View.extend({
     render: function () {
         this.el = $("<div class='flash-container " + this.model.get("color") + "'/>")
                     .append($("<div class='flash-content'> </div>")
-                            .append("<div class='skrivapa-logo float-left'></div>")
+                            .append("<div class='"+localization.outLogoClass+" float-left'></div>")
                             .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )                                
                             .append($("<div class='flash-body'></div>").append(this.model.get("content")))
                             .append("<div class='flash-close modal-close'></div>")

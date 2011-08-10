@@ -27,7 +27,6 @@ import API.Service.ServiceState
 import FlashMessage
 import Kontra
 import KontraLink
-import ListUtil
 import Misc
 
 import Control.Applicative
@@ -243,7 +242,7 @@ mainLinksFields = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
-    field "linkissue"            $ show (LinkContracts emptyListParams)
+    field "linkissue"            $ show LinkContracts
     field "linklogin"            $ show (LinkLogin LoginTry)
     field "linklogout"           $ show LinkLogout
     field "linkmain"             $ show LinkMain
