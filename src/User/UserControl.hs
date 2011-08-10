@@ -797,7 +797,9 @@ handleActivate aid hash signupmethod actvuser = do
     finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
     finalizeCompanyActivation user company = do
       muserf <- getUserInfoUpdateFunc user
-      mcompanyf <- getCompanyInfoUpdateFunc company
+      mcompanyf <- if useriscompanyadmin user
+                     then getCompanyInfoUpdateFunc company
+                     else return $ Just id
       case (muserf, mcompanyf) of
         (Just userf, Just companyf) ->
           finalizeActivation user (Just company) userf companyf
