@@ -302,7 +302,7 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $  BS.toString $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
-    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) (documentsignatorylinks doc)),
+    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) . filter isSignatory $ documentsignatorylinks doc),
     ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
     ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
