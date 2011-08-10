@@ -613,7 +613,7 @@ pageDocumentDesign ctx
        documentInfoFields document
        documentViewFields document
        designViewFields step
-       documentAttachmentDesignFields (documentauthorattachments document)
+       documentAttachmentDesignFields documentid (documentauthorattachments document)
        documentAuthorAttachments attachments
        documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
        fieldF "process" processFields
@@ -635,8 +635,8 @@ pageDocumentDesign ctx
        fieldM "expirytext" $ getProcessText processexpirytext
 
 
-documentAttachmentDesignFields :: (Functor m, MonadIO m) => [AuthorAttachment] -> Fields m
-documentAttachmentDesignFields atts = do
+documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> Fields m
+documentAttachmentDesignFields docid atts = do
   field "isattachments" $ not $ null atts
   field "attachmentcount" $ length atts
   fieldFL "attachments" $ map attachmentFields atts
@@ -644,6 +644,7 @@ documentAttachmentDesignFields atts = do
     attachmentFields AuthorAttachment{authorattachmentfile = File {fileid, filename}} = do
       field "attachmentid" $ show fileid
       field "attachmentname" $ filename
+      field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
 
 documentFunctionalityFields :: MonadIO m => Document -> Fields m
 documentFunctionalityFields Document{documentfunctionality} = do
