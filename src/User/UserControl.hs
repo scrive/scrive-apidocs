@@ -797,7 +797,9 @@ handleActivate aid hash signupmethod actvuser = do
     finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
     finalizeCompanyActivation user company = do
       muserf <- getUserInfoUpdateFunc user
-      mcompanyf <- getCompanyInfoUpdateFunc company
+      mcompanyf <- if useriscompanyadmin user
+                     then getCompanyInfoUpdateFunc company
+                     else return $ Just id
       case (muserf, mcompanyf) of
         (Just userf, Just companyf) ->
           finalizeActivation user (Just company) userf companyf
@@ -823,10 +825,10 @@ handleActivate aid hash signupmethod actvuser = do
 
     getUserInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (UserInfo -> UserInfo))
     getUserInfoUpdateFunc user = do
-      mfname <- getUserInfoField userfstname asValidName "fname"
-      mlname <- getUserInfoField usersndname asValidName "lname"
-      mcompanyposition <- getUserInfoField usercompanyposition asValidPosition "companyposition"
-      mphone <- getUserInfoField userphone (Good . BS.fromString) "phone"
+      mfname <- getRequiredField asValidName "fname"
+      mlname <- getRequiredField asValidName "lname"
+      mcompanyposition <- getDefaultedUserInfoField usercompanyposition asValidPosition "companyposition"
+      mphone <- getDefaultedUserInfoField userphone (Good . BS.fromString) "phone"
       return $ 
         case (mfname, mlname, mcompanyposition, mphone) of
           (Just fname, Just lname, Just companytitle, Just phone) -> Just $ 
@@ -836,16 +838,16 @@ handleActivate aid hash signupmethod actvuser = do
                           , userphone = phone
                           }
           _ -> Nothing
-      where getUserInfoField f = getDefaultedField (f $ userinfo user)
+      where
+        getDefaultedUserInfoField f = getDefaultedField (f $ userinfo user)
  
     getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
-    getCompanyInfoUpdateFunc company = do
-      mcompanyname <- getCompanyInfoField companyname asValidCompanyName "companyname"
+    getCompanyInfoUpdateFunc _company = do
+      mcompanyname <- getRequiredField asValidCompanyName "companyname"
       return $ 
         case mcompanyname of
           (Just companyname') -> Just $ \info -> info { companyname = companyname' }
           _ -> Nothing
-      where getCompanyInfoField f = getDefaultedField (f $ companyinfo company)
     
     performActivation :: Kontrakcja n => User
                                          -> Maybe Company
