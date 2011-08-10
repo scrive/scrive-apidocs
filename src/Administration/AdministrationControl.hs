@@ -211,6 +211,7 @@ handleUserChange a = onlySuperUser $
                      do
                      let (muserId::Maybe UserID) = readM a
                      _ <- getAsStrictBS "change"
+                     mupgradetocompany  <- getFieldUTF "upgradetocompany"
                      case muserId of
                        Nothing -> mzero
                        Just userId ->
@@ -218,7 +219,17 @@ handleUserChange a = onlySuperUser $
                           muser <- query $ GetUserByUserID userId
                           case muser of
                              Nothing -> mzero
-                             Just user -> do
+                             Just userbeforeupgrade -> do
+                                           -- if the "upgrade to company" box was checked, and this is
+                                           -- a single user then create a new company, and make this person
+                                           -- the admin of it
+                                           user <- case (mupgradetocompany, usercompany userbeforeupgrade) of
+                                                     (Just upgradeval, Nothing) | (toString upgradeval) == "on" -> do
+                                                       company <- update $ CreateNewCompany
+                                                       Right upgradeduser' <- update $ SetUserCompany (userid userbeforeupgrade) (companyid company)
+                                                       Right upgradeduser <- update $ MakeUserACompanyAdmin (userid upgradeduser')
+                                                       return upgradeduser
+                                                     _ -> return userbeforeupgrade
                                            --Reading changes from params using dedicated functions for each user part
                                            freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"
                                            infoChange <- getUserInfoChange
