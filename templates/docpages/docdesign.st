@@ -63,20 +63,18 @@ pageDocumentDesign=
       $endif$
       <div id="signStepsMenuEmptyStep">
         $if(!template)$
-        $if(featureenabled)$
+        $if(!isbasic)$
         <div class="signStepsBodySave extraLink">
           <small><a class="submit" form=".stepForm" rel="template">$_signStepsMenuEmptyStepSaveAsTemplate()$</a></small>
         </div>
         $endif$
         $endif$
 
-        $if(!isorder)$
+        $if(process.isbasicavailable)$
         $if(isbasic)$
-        $if(process.hasadvancedview)$
         <div class="signStepsFunctionalityChange  extraLink">
           <small><a id="toadvanced" class="switchIcon" rel="#dialog-confirm-advanced" style="padding-right:19px;">$_signStepsFunctionalityChangeToAdvanced()$</a></small>
         </div>
-        $endif$
         $else$
         <div class="signStepsFunctionalityChange extraLink">
           <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">$_signStepsFunctionalityChangeToSimplified()$</a></small>
@@ -134,13 +132,13 @@ pageDocumentDesign=
                     <option value=""></option>
                   </select>
                   $endif$
-                  $if(featureenabled)$
+                  $if(!isbasic)$
                   <a class="plus" href="#"></a>
                   $endif$
                 </div>
                 
                 <!-- 013 changed -->
-                <div class="sigentry signStepsBodyForms $if(!featureenabled)$dragDisabled$endif$" id="peopleDetails">
+                <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
                   <span class="fields">
                     $if(authorfstname)$
                     <span class='dragtext authorfstname inputWrapper'>
@@ -277,7 +275,7 @@ pageDocumentDesign=
                 $elseif(process.isauthorsend)$
                 <input type="hidden" value="email" name="validationmethod" />
                 <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
+                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"class="btn-small green center">
                     <div class="left"></div>
                     <div class="label" style="">
                       <span>$process.sendbuttontext$</span>
@@ -288,7 +286,7 @@ pageDocumentDesign=
                 </div>
                 $else$
                 <div class="signbutton" style="display:inline-block;">
-                  <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-small blue center">
+                  <a type="button" id="signinvite" rel="#dialog-confirm-signinvite"  style="display:inline-block" class="btn-small blue center">
                     <div class="left"></div>
                     <div class="label" style="width:134px;">
                        <span style="padding-left:9px;padding-right:9px">$_skrivapa()$</span>
@@ -460,6 +458,7 @@ pageDocumentDesign=
     var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
     var issendonly = $if(process.isauthorsend)$true$else$false$endif$;
+    $if(step3)$ safeReady(function(){showStep3()});$endif$
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
   <div class="waiting4page"></div>
@@ -489,52 +488,52 @@ pageDocumentDesign=
       <a href="#" class="signingOrder"></a>
       <select class="signorder float-right" name="signatorysignorder"></select>
       $endif$
-      $if(featureenabled)$
+      $if(!isbasic)$
       <a href="#" class="plus"></a>
       $endif$
     </div>
     
     <!-- 013 changed -->
-    <div class="sigentry signStepsBodyForms $if(!featureenabled)$dragDisabled$endif$" id="peopleDetails">
+    <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
 
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
         <span class='dragfield sigfstname inputWrapper'>
           <span style="display:none;" class="fieldid">fstname</span>
           <span style="display:none;" class="type">author</span>
-          <input type="text" infotext="Förnamn"
+          <input type="text" infotext="$_firstname()$"
                  name="signatoryfstname" autocomplete="off" value="" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigsndname inputWrapper'>
           <span style="display:none;" class="fieldid">sndname</span>
           <span style="display:none;" class="type">author</span>
-          <input type="text" infotext="Efternamn"
+          <input type="text" infotext="$_lastname()$"
                  name="signatorysndname" autocomplete="off" value="" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigemail inputWrapper'>
           <span style="display:none;" class="fieldid">email</span>
           <span style="display:none;" class="type">author</span>
-          <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
+          <input type="email" infotext="$_email()$" name="signatoryemail" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigcomp inputWrapper'>
           <span style="display:none;" class="fieldid">company</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
+          <input type="text" infotext="$_company()$" name="signatorycompany" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigpersnum inputWrapper'>
           <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Pers. nr" name="signatorypersonalnumber" autocomplete="off" />
+          <input type="text" infotext="$_personnumber()$" name="signatorypersonalnumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
         <span class='dragfield sigcompnum inputWrapper'>
           <span style="display:none;" class="fieldid">companynumber</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Org. nr" name="signatorycompanynumber" autocomplete="off" />
+          <input type="text" infotext="$_orgnumber()$" name="signatorycompanynumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
       </span>
@@ -543,9 +542,9 @@ pageDocumentDesign=
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
         <input type="hidden" name="signatoryrole" value="signatory"/>
-        <input type="radio" class="sigrole_signatory" value="signatory"><label class="radiolabel">Undertecknande part</label></input>
+        <input type="radio" class="sigrole_signatory" value="signatory" checked="checked"><label class="radiolabel">$_authorsignatoryradioSenderSign()$</label></input>
         <br/>
-        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
+        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">$_authorsignatoryradioSenderNotSign()$</label></input>
       </div>
     </div>
   </span>
@@ -554,7 +553,7 @@ pageDocumentDesign=
 docname=
 <span class="docname">
   <span class="docname-display">
-    $if(featureenabled)$
+    $if(!isbasic)$
     <a href="#" class="icon edit" style="margin-right: 2px"></a>
     $endif$
     <span class="visible-docname">$documenttitle$</span>
@@ -566,7 +565,7 @@ docname=
 </span>
 ####
 dragndropIcon=
-$if(featureenabled)$
+$if(!isbasic)$
 <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
 $endif$
 #####
@@ -603,14 +602,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div style="padding-bottom:10px;">     
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
+          <div class="sigattachmentlist">
           <table id="sigattachmenttable">
             <thead>
               <tr>
-                <th class="minusbutton">   $_pageDocumentForAuthorHelpersLocalDialogsMinusbutton()$</th>
+                <th class="minusbutton"></th>
                 <th class="attachmentname">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$</th>
                 <th class="attachmentdesc">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc()$</th>
                 <th class="attachmentsigs">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$</th>
-                <th class="attachmentsels">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsels()$</th>
+                <th class="attachmentsels"></th>
               </tr>
             </thead>
             <tbody>
@@ -647,6 +647,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               }$
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -669,7 +670,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-attachments-dialog" rel=".stepForm">
     <input type="hidden" name="updateattachments" value="true" />
-    <div class="modal-container" style="width: 780px;">
+    <div class="modal-container" style="width: 800px;left: -80px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -683,8 +684,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-content">
           <a href="#" id="attachmentback" style="display:none;"> </a>
           <div>$_updateAttachmentsDialogChooseAttachment()$</div>
-          <div id="possibleAttachmentsList">
-          <span id="attachmentbuttons">
+          <div id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
@@ -716,7 +716,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
-          </span>
+          </div>
+          <div id="possibleAttachmentsList">
           <span id="attachmentselectlist" style="display:none">
             <div class="existingattachments">
               <ul>
@@ -765,7 +766,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container" style="width: 780px;">
+    <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
@@ -776,7 +777,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-body" style="height:180px;">
         <div class="modal-content">
           <div>$_dialogCsvupload1Body()$</div>
-          <div class="signStepsBodyUploadBox">
+          <div class="signStepsBodyUploadBox" style="right: 0px; left: 0px; float: none; margin-left: auto; margin-right: auto;">
             <div>
               <span id="signStepsBodyUploadTextContainer"> 
                 <span class="header">$_dialogCsvupload1ChooseFileToUpLoad()$</span><br/>
@@ -796,7 +797,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <a  class="close cancel float-left">Avbryt</a>
+        <a  class="close cancel float-left">$_cancel()$</a>
       </div>
     </div>
   </form>

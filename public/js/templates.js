@@ -183,7 +183,7 @@ function getValue(field) {
     if (isDraggableField(field)) {
         var s = $(field).find("input[type='text'], input[type='email']");
         if (s.size()) {
-            if (s.attr("value") == s.attr("infotext")) {
+            if (s.attr("value") === s.attr("infotext") && s.hasClass("grayed")) {
                 return "";
             } else {
                 return s.attr("value");
@@ -349,6 +349,7 @@ function docstateToHTML() {
         updateStatus(this);
     });
     $("#signStepsWrapper").show();
+    $("input").blur();
     stayontop($('#signStepsContainer.follow'));
 }
 
@@ -735,7 +736,7 @@ function addSigningOrderPosition() {
 }
 
 function newSignOrderListElement(value) {
-    var signorderlist = $("<span class='signorderlist'>").text(value);
+    var signorderlist = $("<span class='signorderlist'></span>").text(value);
     if (!signingOrderEnabled && signorderlist.length > 0)
         signorderlist.hide();
     return signorderlist;
@@ -750,7 +751,7 @@ function initSigningOrder() {
     for (var i = authorSignatory ? 1: 0, j = 1; i < siglen;++i) {
         console.log(docstate.signatories[i].role);
         if (docstate.signatories[i].role == "signatory") {
-            signorder.append($("<option>").attr("value", j).text(j));++j;
+            signorder.append($("<option/>").attr("value", j).text(j));++j;
         }
     }
     // only author, in such case another signatory is added "for free",
@@ -806,7 +807,10 @@ safeReady(function() {
 
     $("#personpane .signorder").live("change", updatePeopleListSignOrder);
 
-    $("#personpane .sigrole_nonsignatory").live("change", function() {
+    $("#personpane .sigrole_nonsignatory").live("click", function() {
+        /** IE7 is stupid, it doesn't like dynamically added radio inputs so won't do the checking itself */
+        $('input[name="' + $(this).name + '"]').removeAttr("checked");
+        $(this).attr("checked", "checked");
         var signorder = $(this).parents(".persondetails").find(".signorder");
         signorder.hide();
         makeNonSignatory(signorder);
@@ -814,7 +818,10 @@ safeReady(function() {
         updatePeopleListSignOrder();
     });
 
-    $("#personpane .sigrole_signatory").live("change", function() {
+    $("#personpane .sigrole_signatory").live("click", function() {
+        /** IE7 is stupid, it doesn't like dynamically added radio inputs so won't do the checking itself */
+        $('input[name="' + $(this).name + '"]').removeAttr("checked");
+        $(this).attr("checked", "checked");
         var signorder = $(this).parents(".persondetails").find(".signorder");
         makeSignatory(signorder);
         if (signingOrderEnabled)
@@ -1132,13 +1139,15 @@ function signatoryToHTML(isMultiple, sig) {
 
     var signorder = sigentry.find(".signorder");
     if (sig.role == "signatory") {
-        partyrole.find(".sigrole_signatory").attr("checked", true);
+        partyrole.find(".sigrole_nonsignatory").removeAttr("checked");
+        partyrole.find(".sigrole_signatory").attr("checked", "checked");
         partyrole.find("input[name=signatoryrole]").val("signatory");
         signorder.val(sig.signorder);
         if (signingOrderEnabled)
             signorder.show();
     } else {
-        partyrole.find(".sigrole_nonsignatory").attr("checked", true);
+        partyrole.find(".sigrole_signatory").removeAttr("checked");
+        partyrole.find(".sigrole_nonsignatory").attr("checked", "checked");
         partyrole.find("input[name=signatoryrole]").val("nonsignatory");
         signorder.hide();
         makeNonSignatory(signorder);
@@ -1193,9 +1202,9 @@ function signatoryToHTML(isMultiple, sig) {
     var n = "Unnamed";
 
     if (isMultiple) {
-        n = "Massutskick";
+        n =  localization.multipleSignatory
     } else if (sig.fstname == "" && sig.sndname == "") {
-        n = "(Namnlös)";
+        n = "("+ localization.noNamePerson +")";
     } else {
         n = sig.fstname + " " + sig.sndname;
     }
@@ -1211,6 +1220,7 @@ function signatoryToHTML(isMultiple, sig) {
     sigentry.find(".csv.single").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
+        fixed:false,
         onBeforeLoad: function() {
             csvsigindex = $("form.stepForm input[type='hidden'][name='csvsigindex']").attr("value");
             if (! (csvsigindex && csvsigindex.length > 0)) {
@@ -1228,7 +1238,8 @@ function signatoryToHTML(isMultiple, sig) {
 
     sigentry.find(".csv.multi").overlay({
         mask: standardDialogMask,
-        top: standardDialogTop
+        top: standardDialogTop,
+        fixed: false
     });
 }
 
@@ -1555,12 +1566,12 @@ safeReady(function() {
         var em = emfield.val();
         sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
       } else if(csvindex === ("" + (i + 1))) {
-        sigoptions = sigoptions.add($('<option value="csv">Massutskick</option>'));
+        sigoptions = sigoptions.add($('<option value="csv">'+localization.multipleSignatory+'</option>'));
       }
         });
 
         console.log(sigoptions);
-        $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" >'))).append($("<td />").append($('<textarea name="sigattachdesc" >'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
+        $("#update-sigattachments-dialog table").append($("<tr />").append($("<td class=\"centralised\" />").append($('<a href="#" class="minus">  </a>'))).append($("<td />").append($('<input type="text" name="sigattachname" />'))).append($("<td />").append($('<textarea name="sigattachdesc" />'))).append($("<td />").append($('<select class="signatoryselector"><option selected>' + localization.offerSignatory + '</option></select>').append(sigoptions))).append($("<td class=\"centralised\" />").append($("<span class='selectedsigspan' />").append($('<ul class="selectedsigs" />')).append($('<input type="hidden" name="sigattachemails" />')))));
 
             
         return false;

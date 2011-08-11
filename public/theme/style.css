@@ -61,6 +61,20 @@ a img
     color: #848484;
 }
 
+.rubbishbin
+{
+    background-image: url(images/rubbish-bin-icon-grey.png);
+    background-repeat: no-repeat;
+    height:16px;
+    width:16px;
+    display: block;
+}
+
+.rubbishbin.highlight
+{
+    background-image: url(images/rubbish-bin-icon-white.png);
+}
+
 /*input[name=final] */
 .cross-button
 {
@@ -233,7 +247,8 @@ a img
     background: #e6e6e6; 
 }
 
-#selectable tr.ui-selected, #selectable tr.ui-selected td
+#selectable tr.ui-selected, #selectable tr.ui-selected td,
+table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 {
     background: #e0e0e0;
 }
@@ -1087,6 +1102,8 @@ input[type=submit].hidden
 #signStepsTitleRowTextContainer
 {
     min-height: 19px;
+    max-height: 22px;
+    float: left;
 }
 
 #signStepsTitleRow .title
@@ -1148,7 +1165,7 @@ input[type=submit].hidden
     font-size:16px;
     font-weight:bold;
     color:#FFFFFF;
-    width: 710px;
+    width: 450px;
     font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
@@ -1343,10 +1360,19 @@ input[type=submit].hidden
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
-    margin-left: 55px;
+    margin-left:auto;
+    margin-right:auto;
+    width:134px;
 }
+
+.signStepsButtonContainer a {
+    overflow:hidden;
+    height:34px;
+    width:134px;
+}
+
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
-input.multiFileInput { 
+input.multiFileInput {
     position:relative;
     z-index:10;
     cursor:pointer;
@@ -1359,6 +1385,8 @@ input.multiFileInput {
     -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
     filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
     opacity: 0;
+    /* only IE will use this, it's necessary because it ignores the maxlength att <IE7 */
+    #width:0px;
 }
 
 /* 007 code below added in 007 */
@@ -1395,7 +1423,6 @@ input.multiFileInput {
 .signViewBodyRight 
 {
     float: right;
-    position: relative;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
@@ -1464,15 +1491,15 @@ input.multiFileInput {
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .subheader
+#signViewBodyLeft .subheader, .subheader
 {
     font-weight: bold;
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .attachmentListContainer
+.attachmentListContainer
 {
-    padding: 10px 0px;
+    padding: 16px 0px;
 }
 
 .signViewBodyRight .header
@@ -2833,9 +2860,12 @@ width: 340px;
 }
 
 .templatedDialogContainer{
-    display:none;
     margin-top: 16px;
     
+}
+.templatedDialogContainer .searchBox{
+    margin-top: 40px;
+    margin-right:30px;
 }
 
 a#cancel {
@@ -2921,6 +2951,11 @@ table#sigattachmenttable {
     width: 100%;
 }
 
+.sigattachmentlist {
+    max-height: 230px;
+    overflow: auto;
+}
+
 input.attachmentname {
 
 }
@@ -2937,14 +2972,9 @@ table#signViewSigAttachmentBoxList td {
     width: 33%;
 }
 
-table#signViewSigAttachmentBoxList input.multiFileInput {
-    width: 112px;
-    float: left;
-    left: -112px;
-    top: 0px;
-    height: 33px;
+table#signViewSigAttachmentBoxList .btn-small {
+    margin-top: 5px;
 }
-
 table#signViewSigAttachmentBoxList .btn-small .label {
     text-align: center;
 }

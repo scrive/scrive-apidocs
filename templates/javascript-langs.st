@@ -20,7 +20,7 @@ javascriptLocalisation =
              , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
-             , author : "Avsändare"
+             , author : "$_sender()$"
              , youMustSetParnerEmail : "$_youMustSetParnerEmail()$"
              , emptyOrNotValidEmail :  "$_emptyOrNotValidEmail()$"
              , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
@@ -51,5 +51,29 @@ javascriptLocalisation =
              , companyNumber : "$_orgnumber()$"
              , loadingTweets : "$_loadingTweets()$"
              , fieldName : "$_fieldName()$"
+             , multiPartPartner : "$_multiPartPartner()$"
+             , noNamePerson : "$_noNamePerson()$"
+             , senderName : "$_senderName()$"
+             , senderTitle : "$_senderTitle()$"
+             , senderNumber :  "$_senderNumber()$"
+             , senderEmail :  "$_senderEmail()$"
+             , partnerName : "$_partnerName()$"
+             , partnerTitle : "$_partnerTitle()$"
+             , partnerNumber : "$_partnerNumber()$"
+             , partnerEmail : "$_partnerEmail()$"
+             , statusToolTip: {
+                   draft: "$_tooltipdraft()$"
+                 , cancelled : "$_tooltipcancelled()$"
+                 , sent : "$_tooltipsent()$"
+                 , delivered : "$_tooltipdelivered()$"
+                 , reviewed : "$_tooltipreviewed()$"
+                 , read : "$_tooltipread()$"
+                 , opened : "$_tooltipopened()$"
+                 , signed : "$_tooltipsigned()$"
+             }
+             , select : "$_options()$"
+             , of : "$_of()$"
+             , outLogoClass : "$ourLogoClass()$"
+             , searchBoxButtonText : "$_searchBoxButtonText()$"
    }
 ####

@@ -26,6 +26,7 @@ import Misc
 import System.Directory
 import System.Exit
 import Kontra
+import Templates.LocalTemplates
 import Templates.Templates
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
@@ -56,8 +57,8 @@ personFromSignatoryDetails details =
                 , Seal.emailverified = True
                 }
 
-personFields::(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields
-personFields  (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+personFields :: MonadIO m => (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
+personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -135,8 +136,8 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
-sealSpecFromDocument :: KontrakcjaTemplates -> String -> Document -> String -> String -> IO Seal.SealSpec
-sealSpecFromDocument templates hostpart document inputpath outputpath =
+sealSpecFromDocument :: TemplatesMonad m => String -> Document -> String -> String -> m Seal.SealSpec
+sealSpecFromDocument hostpart document inputpath outputpath =
   let docid = unDocumentID (documentid document)
       Just authorsiglink = getAuthorSigLink document
       authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
@@ -152,13 +153,13 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
 
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
-          seenDesc <- renderTemplateForProcess templates document processseenhistentry $ do
+          seenDesc <- renderTemplateForProcess document processseenhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
-          signDesc <- renderTemplateForProcess templates document processsignhistentry $ do
+          signDesc <- renderTemplateForProcess document processsignhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
@@ -170,7 +171,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       invitationSentEntry = case documentinvitetime document of
                                 Nothing -> return []
                                 Just (SignInfo time ipnumber) -> do
-                                   desc <-  renderTemplateForProcess templates document processinvitationsententry $ do
+                                   desc <-  renderTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
@@ -185,7 +186,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       concatComma = concat . intersperse ", "
 
       lastHistEntry = do
-                       desc <- renderTemplateForProcess templates document processlasthisentry (documentInfoFields document)
+                       desc <- renderTemplateForProcess document processlasthisentry (documentInfoFields document)
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
                                 then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
@@ -206,7 +207,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
       Log.debug ("about to render staticTexts")
-      staticTexts <- renderTemplateForProcess templates document processsealingtext $ do
+      staticTexts <- renderTemplateForProcess document processsealingtext $ do
                         documentInfoFields document
                         field "hostpart" hostpart
       Log.debug ("finished staticTexts: " ++ show staticTexts)
@@ -225,9 +226,10 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
             , Seal.staticTexts    = readtexts
             }
 
-sealDocument :: Context
+sealDocument :: MonadIO m
+             => Context
              -> Document
-             -> IO (Either String Document)
+             -> m (Either String Document)
 sealDocument ctx@Context{ctxdocstore, ctxs3action}
              document = do
   let files = documentfiles document
@@ -257,14 +259,15 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action}
  -}
 
 
-sealDocumentFile :: Context
+sealDocumentFile :: MonadIO m
+                 => Context
                  -> Document
                  -> File
-                 -> IO (Either String Document)
+                 -> m (Either String Document)
 sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
-  withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+  liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
@@ -272,7 +275,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
     Log.debug ("got file contents: " ++ show (BS.length content))
     BS.writeFile tmpin content
     Log.debug ("wrote file : " ++ tmppath)
-    config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
+    config <- runLocalTemplates ctxtemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
     Log.debug (show config)
     Log.debug $ show config
     (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))

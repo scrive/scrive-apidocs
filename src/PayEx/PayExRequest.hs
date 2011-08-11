@@ -15,6 +15,7 @@ import PayEx.PayExConfig
 import Text.XML.HaXml.XmlContent.Parser  hiding (content)
 import Happstack.Server
 import Control.Category hiding ((.))
+import Control.Monad.IO.Class
 import Data.Monoid
 import KontraLink
 -- import Data.Encoding
@@ -186,10 +187,10 @@ instance XmlContent (PC PayExCancel) where
 
 
 -- | Wrapping from content
-toPC::a -> IO (PC a)
+toPC :: MonadIO m => a -> m (PC a)
 toPC a = do
-          pc <-getPayExConfig
-          return $ PC (pc,a)
+    pc <- getPayExConfig
+    return $ PC (pc, a)
 
 
 

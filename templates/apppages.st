@@ -47,9 +47,37 @@ standardHeaderContents=
                 $javascriptLocalisation()$</script>
         <script src="$prefix$/js/global.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/underscore.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/backbone.js"
+                type="text/javascript"></script>
+
+        <script src="$prefix$/js/flashmessages.js"
+                type="text/javascript"></script>
+
+        <script src="$prefix$/js/infotextinputs.js"
+                type="text/javascript"></script>
+        
+        <script src="$prefix$/js/buttons.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/uploadbuttons.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/tooltips.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/submits.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/confirmations.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/selects.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/lists.js"
+                type="text/javascript"></script> 
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
                 type="text/javascript"></script>
+            $if(production)$
+                <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+            $endif$
        $endif$
        <script src="/js/main.js" 
                 type="text/javascript"></script>
@@ -95,7 +123,8 @@ standardBodyWrapper=
                                             <form method="post" action="$linksignup$" class="requestAccount">
                                               <input class="shiny float-left"
                                                      name="email" type="email"
-                                                     infotext="Fyll i din e-postadress"
+                                                     infotext="$_FillInEmail()$"
+                                                     autocomplete="off"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
                                                                            float-right"><p>$_createaccount()$!</p></a>
@@ -122,7 +151,8 @@ queryColumn=
                                                 action="$linksignup$" class="requestAccount">
                                                         <input type="email"
                                                         name="email"
-                                                        infotext="E-post"
+                                                        infotext="$_email()$"
+                                                        autocomplete="off"
                                                         /><br /><br />
 
                                                         <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
@@ -140,10 +170,10 @@ queryColumn=
                                                 <br />
                                                 <form method="post"
                                                       action="$linkquestion$">
-                                                        <input type="text" name="name" infotext="Namn" /><br />
-                                                        <input type="email" name="email" infotext="E-post" /><br />
-                                                        <input type="tel" name="phone" infotext="Telefonnummer" /><br />
-                                                        <textarea name="message" infotext="Meddelande" style="height:42px;"></textarea>
+                                                        <input type="text" name="name" infotext="$_name()$" autocomplete="off" /><br />
+                                                        <input type="email" name="email" infotext="$_email()$" autocomplete="off"/><br />
+                                                        <input type="tel" name="phone" infotext="$_phone()$" autocomplete="off"/><br />
+                                                        <textarea name="message" infotext="$_message()$" style="height:42px;" autocomplete="off"></textarea>
                                                         <a class="submit new-btn-small green2 center"><p>$_send()$!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
@@ -171,7 +201,7 @@ pageFooter=
         <li><a href="/allmana-villkor">$_pageFooterTOS()$</a></li>
       </ul>
       <br />
-      <strong>$_pageFooterSkrivapa()$</strong>
+      <strong style='text-transform:uppercase'>$ourServiceName()$</strong>
       <ul>
         <li><a href="/">$_pageFooterHome()$</a></li>
         <li><a href="/om-skrivapa">$_pageFooterAbout()$</a></li>
@@ -225,17 +255,7 @@ safeReady(function() {
   }
 })
 </script>
-$preloadImages()$
-#####
-##### Preload images. Added by Eric Normand from http://dev.iceburg.net/jquery/jqModal/
-preloadImages=
-<style type="text/css">
-@media projection, screen {
-     div.imgCache { position: absolute; left: -8000px; top: -8000px; }
-     div.imgCache img { display:block; }
-}
-@media print { div.imgCache { display: none; } }
-</style>
+
 <div class="imgCache">
   <img src="/theme/../img/spr-flash-bg.png" />
   <img src="/img/spr-flash-bg.png" />
@@ -266,13 +286,13 @@ loginBox=
 header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
-                                <a href="/" class="logo"></a>
+                                <a href="/" class="$ourLogoClass()$"></a>
                                 $if(logged)$
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
                                   <div>
-                                       <input type="email" class="float-left" autocomplete="off" name="invitedemail" infotext=" Bjud en vän på 1 månad fri användning. Skriv deras e-post här!"/>
+                                       <input type="email" class="float-left" autocomplete="off" name="invitedemail" infotext="$_headerInviteFriend()$"/>
                                        <a class="btn-tiny green float-right submit" href="#">
                                             <div class="left"></div>
                                             <div class="label"><p>$_headerInvite()$</p></div>

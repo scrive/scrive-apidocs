@@ -7,7 +7,7 @@ showUserSecurity =
    <ul class="tabs">
        <li><a href="/account">$_HeadUserInfo()$</a></li>
        <li class="active"><a href="/account/security">$_HeadAccountSettings()$</a></li>
-       $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
+       $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li><a href="/account/sharing">$_sharing()$</a></li>
        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
    </ul>
@@ -21,18 +21,37 @@ showUserSecurity =
                    <table>
                        <tr>
                            <td>$_PresentPassword()$</td>
-                           <td><input type="password" name="oldpassword" /></td>
+                           <td><input autocomplete="off" type="password" name="oldpassword" /></td>
                        </tr>
                        <tr>
                            <td>$_NewPassword()$</td>
-                           <td><input type="password" name="password" /></td>
+                           <td><input autocomplete="off" type="password" name="password" /></td>
                        </tr>
                        <tr>
                            <td>$_RepeatNewPassword()$</td>
-                           <td><input type="password" name="password2" /></td>
+                           <td><input autocomplete="off" type="password" name="password2" /></td>
                        </tr>
                    </table>
                </div>
+
+           </div>
+
+           <div class="col">
+               <div class="account-header">
+                  <h2>$_LanguageSettings()$</h2>
+               </div>
+               <div class="account-body">
+                   <table>
+                       <tr>
+                           <td>$_UserLanguage()$</td>
+                           <td><select name="lang">
+                                     <option $if(lang.se)$ selected="" $endif$ value="LANG_SE">$_Swedish()$</option>
+                                     <option $if(lang.en)$ selected="" $endif$ value="LANG_EN">$_English()$</option>
+                               </select>
+                            </td>
+                       </tr>
+                   </table>
+               </div> 
 
              <div class="account-footer">
                 <input type="submit" class="hidden"/>

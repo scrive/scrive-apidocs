@@ -8,7 +8,7 @@ viewFriends =
 		<ul class="tabs">
 		   <li><a href="/account">$_HeadUserInfo()$</a></li>
                    <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
-                   $if(issubaccounts)$<li><a href="/account/subaccount">$_Subaccounts()$</a></li>$endif$
+                   $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
                    <li class="active"><a href="/account/sharing">$_sharing()$</a></li>
                    <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
 		</ul>
@@ -27,7 +27,7 @@ viewFriends =
 				</div>
                                 <div class="col float-right">
                                   <div class="float-right">
-                                    <input type="email" name="email" class="tab-input float-left" infotext="Skriv e-post för att lägga till fler" />
+                                    <input type="email" name="email" class="tab-input float-left" infotext="$_InviteBox()$" />
                                     <a class="btn-tiny blue submit float-right" href="#">
                                       <div class="left"></div>
                                       <div class="label">

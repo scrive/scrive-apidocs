@@ -1,0 +1,190 @@
+"!Template name","LANG_SE","LANG_EN"
+"_accountFromSignFooterNoThx","Nej tack","No thanks"
+"_accountFromSignFooterYesArchive","Ja, arkivera","Yes please, store"
+"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""/allmana-villkor"">SkrivaPå
+ Allmänna Villkor</a>","I have read and I accept <a target=""_blank"" href=""/allmana-villkor"">Scrive
+ Terms of Service</a>"
+"_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? SkrivaPå kan även arkivera
+ ett original för din säkerhet. Det kostar ingenting.       
+ ","          Do you want to secure your original? Scrive can store
+ it for your safety, free of charge.        "
+"_accountFromSignInputsConfirmPassword","Bekräfta lösenord","Confirm password"
+"_accountFromSignInputsPrivateAccount","Privatperson","Private person"
+"_close","Stäng","Close"
+"_loginModalForgotPasswordSendNewPassword","Skicka nytt lösenord","Send new password"
+"_modalAccountRemovalActivateAccount","Aktivera konto","Activate account"
+"_modalAccountRemovalBody","Är du säker på att du vill radera dokumentet ""Non Disclosure
+ and Immaterial Rights Agreement"" och ditt konto från SkrivaPå","Are you sure you want to delete the document ""Non Disclosure
+ and Immaterial Rights Agreement"" and your account from Scrive"
+"_modalAccountRemovalFooter","Radera konto","Delete account"
+"_modalAccountRemovalHeader","Är du säker?","Are you sure?"
+"_modalAccountRemovedBestRegards","Med vänliga hälsningar<br/>        Team SkrivaPå","Best regards<br/>        Team Scrive"
+"_modalAccountRemovedBody","Din kopia av dokumentet ""$documenttitle$"" är nu raderat tillsammans
+ från SkrivaPå tillsammans med ditt konto.","Your duplicate for the document ""$documenttitle$"" is now deleted
+ from Scrive together with your account."
+"_modalAccountRemovedHeader","Raderat","Deleted"
+"_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar SkrivaPå Allmänna Villkor","I have read and I accept Scrive Terms of Service"
+"_modalAccountSetupChoosePassword","Välj lösenord:","Choose password:"
+"_modalAccountSetupFooter","Skapa konto!","Create account!"
+"_modalAccountSetupHeaderAcceptTOS","Vänligen acceptera användarvillkoren","Please accept the Terms of Service"
+"_modalAccountSetupIfPrivateAccount","Privatperson","Private person"
+"_modalAccountSetupPosition","Position:","Position:"
+"_modalAccountSetupRepeatPassword","Upprepa lösenord:","Repeat password:"
+"_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du underkonto till huvudkontot	       
+   $supervisor.fullnamePlusEmail$ och huvudkontot tar över	 
+         ägarskapet över samtliga dokument i ditt konto.  Är
+ du	          säker att du vill acceptera?	        ","If you accept to become subaccoount to the main account
+        $supervisor.fullnamePlusEmail$, the ownership of all
+ your	           documents will be transferred to the main account.
+ Are	          you sure you want to accept?	        "
+"_modalDoYouWantToBeSubaccountFooterAccept","Acceptera","Accept"
+"_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli underkonto?","Do you want to accept to become subaccount?"
+"_modalErrorBody","Oroa dig inte, vi tittar på problemet","Don't worry, we are looking at the problem"
+"_modalErrorHeader","Oops, ett fel har uppstått","Oops, an error has occurred"
+"_modalInviteUserAsSubaccountBodySendRequest","Skicka en förfrågan till användaren att bli ett underkonto	 
+         under ditt konto. Det betyder att du blir	         
+ huvudkonto och kommer att ta över ägarskapet över samtliga underkontots
+ dokument. 	        ","Send a request to the user to become subaccount to your	    
+      account. This means that you will become	           main
+ account, and the ownership of all the documents in the subaccount
+ will be transferred to you.	          "
+"_modalInviteUserAsSubaccountBodySendSure","	          Är du säker att du vill skicka förfrågan till användaren
+ att bli	          underkonto?	        ","	          Are you sure you want to send a request to become	
+          subaccount?	        "
+"_modalInviteUserAsSubaccountFooterSendRequest","Skicka förfrågan","Send request"
+"_modalInviteUserAsSubaccountHeaderSendRequest","Skicka förfrågan?","Send request?"
+"_modalLoginForSaveViewBody","Ditt konto har skapats. En aktiveringslänk har skickats till
+ din inkorg.","Your account has been created. An activation link has been sent
+ to your e-mail address."
+"_modalLoginForSaveViewHeader","Konto har skapats","The account has been created"
+"_modalNewPasswordViewFooterSave","Spara","Save"
+"_modalNewPasswordViewHeader","Nytt Lösenord","New password"
+"_modalNewPasswordViewNewPassword","Nytt lösenord:","New password:"
+"_modalNewPasswordViewRepeatPassword","Upprepa lösenord:","Repeat password:"
+"_modalOfferCreatedBody"," Offerten <strong>$documenttitle$</strong> har nu skickats till
+ <strong>$signatory$</strong>."," The offer <strong>$documenttitle$</strong> Has been sent to
+ <strong>$signatory$</strong>."
+"_modalOfferCreatedHeader","Offerten skickad!","The offer has been sent!"
+"_modalOfferSignedHasAccountBody"," Offerten har sparats till ditt konto med användarnamn <span
+ style=""color:#007CAC"">$signatory$</span>.","The offer has been saved to your account with user name <span
+ style=""color:#007CAC"">$signatory$</span>."
+"_modalOfferSignedHasAccountHeader","Du har accepterat offerten!","You have accepted the offer!"
+"_modalOfferSignedNoAccountBody","        Offerten är nu bindande. SkrivaPå har verifierat accepten
+ och utfärdat ett verifikat. Ett original av den färdiga accepten
+ har skickats till din inkorg.      ","       The offer is now binding. Scrive has verified the acceptance
+ and generated a verification. An original has been sent to your
+ e-mail address."
+"_modalOfferSignedNoAccountHeader","Du har accepterat offerten!","You have accepted the offer!"
+"_modalOrderCreatedBody"," Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats
+ till <strong>$signatory$</strong>. ","The order confirmation <strong>$documenttitle$</strong> has been
+ sent to <strong>$signatory$</strong>. "
+"_modalOrderCreatedHeader","Orderbekräftelsen skickad!","The order confirmation has been sent!"
+"_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.","You have tried to upload a PDF over 2 MB. Please try again with a smaller document."
+"_modalPdfTooBigTitle","För stora fil ","Cannot store file"
+"_modalRejectedViewBody","Ett meddelande har skickats till $partyList:noescape()$.","A message has been sent to $partyList:noescape()$."
+"_modalRejectedViewHeader","Du har avvisat dokumentet $documenttitle$","You have rejected the document $documenttitle$"
+"_modalSendInviteViewBody","En inbjudan att underteckna har nu skickats        till $partyListButAuthor:noescape()$.","An invitation to sign has been sent to $partyListButAuthor:noescape()$."
+"_modalSendInviteViewHeader","Dokumentet <strong>$documenttitle$</strong> skickat!","The document <strong>$documenttitle$</strong> has been sent!"
+"_modalSignInviteViewBodyIfElse","En inbjudan att underteckna har nu skickats till        $partyListButAuthor:noescape()$.","An invitation to sign has been sent to $partyListButAuthor:noescape()$."
+"_modalSignInviteViewBodyIfSigned","Du har undertecknat dokumentet $documenttitle$ och dokumentet
+ har färdigställts.","You have signed the document $documenttitle$ and the document
+ has been completed."
+"_modalSignInviteViewHeaderIfElse","Du har undertecknat!","You have signed!"
+"_modalSignInviteViewHeaderIfSigned","Du har undertecknat dokumentet <strong>$documenttitle$</strong>!","You have signed the document <strong>$documenttitle$</strong>!"
+"_modalSignedViewClosedHasAccountLoggedInBodySaved","        Dokumentet har sparats till ditt konto.      ","          The document has been saved to your account.      
+  "
+"_modalSignedViewClosedHasAccountLoggedInBodySigned","        $partyListString:noescape()$ har nu undertecknat och
+        dokumentet är bindande.     ","        $partyListString:noescape()$ has signed, and the document
+         is now legally binding.        "
+"_modalSignedViewClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$","You have signed the document $documenttitle$"
+"_modalSignedViewClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ","          The document has been saved to your account.      
+  "
+"_modalSignedViewClosedHasAccountNotLoggedInBodySigned","          $partyListString:noescape()$ har nu undertecknat och
+          dokumentet är bindande.        ","          $partyListString:noescape()$ has signed, and the document
+         is now legally binding.        "
+"_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord","Forgot password"
+"_modalSignedViewClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$","You have signed the document $documenttitle$"
+"_modalSignedViewClosedNoAccountBody","        Dokumentet är nu bindande. SkrivaPå har verifierat denna
+ transaktion och utfärdat ett verifikat. Vi har skickat ett original
+ av dokumentet till din inkorg.      ","        The document is now binding. Scrive has verified this
+ transaction and generated a verification. An original document
+ has been sent to your e-mail address.     "
+"_modalSignedViewClosedNoAccountHeader","Du har undertecknat!","You have signed!"
+"_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte  
+      undertecknat. När alla undertecknat blir dokumentet bindande
+        och en kopia skickas till din e-post.      ","        $partyUnsignedListString:noescape()$ has not yet    
+      signed. When everyone involved has signed, the document
+          becomes legally binding and a duplicate is sent to
+ your e-mail address.      "
+"_modalSignedViewNotClosedHasAccountLoggedInBodySaved","        Dokumentet har sparats till ditt konto.      ","        The document has been saved to your account.        "
+"_modalSignedViewNotClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$","You have signed the document $documenttitle$"
+"_modalSignedViewNotClosedHasAccountNotLoggedInBodyNotSigned","          $partyUnsignedListString:noescape()$ har ännu inte
+          undertecknat. När alla undertecknat blir dokumentet
+ bindande          och en kopia skickas till din e-post.    
+    ","          $partyUnsignedListString:noescape()$ has not yet  
+        signed. When everyone involved has signed, the document
+          becomes legally binding and a duplicate is sent to
+ your e-mail address."
+"_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ","          The document has been saved to your account.      
+  "
+"_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord","Forgot password"
+"_modalSignedViewNotClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$","You have signed the document $documenttitle$"
+"_modalSignedViewOrderClosedHasAccountLoggedInBodyConfirmed","        $partyListString:noescape()$ har nu bekräftat ordern.
+      ","        $partyListString:noescape()$ has now confirmed the order.
+    "
+"_modalSignedViewOrderClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ","        The order confirmation has been saved to your account.
+   "
+"_modalSignedViewOrderClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$","You have confirmed the order $documenttitle$"
+"_modalSignedViewOrderClosedHasAccountNotLoggedInBodyConfirmed","          $partyListString:noescape()$ har nu bekräftat ordern.
+        ","          $partyListString:noescape()$ has now confirmed the
+ order.    "
+"_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.    
+    ","          The order confirmation has been saved to your account.
+   "
+"_modalSignedViewOrderClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$","You have confirmed the order $documenttitle$"
+"_modalSignedViewOrderClosedNoAccountBody","        Vi har skickat ett original orderbekräftelse till din
+ inkorg.      ","        We have sent an original order confirmation to your e-mail
+ address.   "
+"_modalSignedViewOrderClosedNoAccountHeader","	Du har bekräftat ordern!","	You have confirmed the order!"
+"_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte  
+      bekräftat.      ","        $partyUnsignedListString:noescape()$ has not yet confirmed.
+   "
+"_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ","        The order confirmation has been saved to your account.
+   "
+"_modalSignedViewOrderNotClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$","You have confirmed the order $documenttitle$"
+"_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed","          $partyUnsignedListString:noescape()$ har ännu inte
+          bekräftat.        ","          $partyUnsignedListString:noescape()$ has not yet confirmed.
+   "
+"_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.    
+    ","          The order confirmation has been saved to your account."
+"_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord","Forgot password"
+"_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$","You have confirmed the order $documenttitle$"
+"_modalSignedViewOrderNotClosedNoAccountBody","        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
+      ","        $partyUnsignedListString:noescape()$ has not yet confirmed."
+"_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!","You have confirmed the order!"
+"_modalWelcomeToSkrivaPaBodyBestRegards","Med vänliga hälsningar<br/>        Team SkrivaPå","Best regards<br/>        Team Scrive"
+"_modalWelcomeToSkrivaPaBodyHint","Tips: Testa med dig själv först.","Tip: Try signing a document with yourself to start with."
+"_modalWelcomeToSkrivaPaBodyInstructions","1. Ladda upp ett dokument<br/>        2. Fyll i motpartens uppgifter<br/>
+        3. Underteckna och skicka iväg","1. Upload a document<br/>        2. Enter data about the counterpart<br/>
+        3. Sign and send"
+"_modalWelcomeToSkrivaPaBodyMain","Med SkrivaPå kan du skriva på och arkivera dokument elektroniskt.
+ Tjänsten går att använda för avtal, offerter och även andra
+ typer av dokument. Givetvis kommer det inte att kosta någonting
+ efter den fria månaden om du väljer att inte fortsätta. Det
+ är superenkelt att komma igång, gör så här:","With Scrive, you can sign and store documents electronically.
+ The service is suitable for contracts and offers, but also other
+ types of documents. Of course this will not cost you anything
+ if you choose not to continue using Scrive when the free trial
+ period is over. It is super easy to get started:"
+"_modalWelcomeToSkrivaPaFooter","Välkommen!","Welcome!"
+"_modalWelcomeToSkrivaPaHeader","Vi bjuder på 1 fri månad med SkrivaPå!","We give you one month free usage in Scrive!"
+"_signAwaitingAuthorLastBody","Alla parter har nu undertecknat och dokumentet är bindande.","All parties have  signed, and the document is now legally binding."
+"_signAwaitingAuthorLastHeader","Dokumentet har undertecknats","The document has been signed"
+"_signCanceledDataMismatchModalBodyAborted","Avtalsprocessen är därför bruten, var vänliga invänta <br/> 
+        en ny inbjudan eller kontakta <a href=""mailto:$authoremail$"">$authorname$</a>.","The signing process was therefore canceled, please <br/>
+      wait for a new invitation or contact <a href=""mailto:$authoremail$"">$authorname$</a>."
+"_signCanceledDataMismatchModalBodySorry","Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina
+ personuppgifter.","We are sorry. The data in your e-ID does not match your personal
+ data."
+"_signCanceledDataMismatchModalErrorReport","Felrapport:","Error report:"
+"_signCanceledDataMismatchModalHeader","Felaktiga personuppgifter","Incorrect personal data"

@@ -27,6 +27,7 @@ module Doc.DocStateQuery
     ( getDocByDocID
     , getDocsByLoggedInUser
     , getDocByDocIDSigLinkIDAndMagicHash
+    , canUserViewDoc
     ) where
 
 import DBError
@@ -38,6 +39,29 @@ import Misc
 import Happstack.State     (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
+import Control.Monad.State
+import Doc.DocInfo
+
+{- |
+   Assuming user is the logged in user, can he view the Document?
+
+   They can if:
+     the document is saved for them or their company if they are a company admin
+     the document is authored within the user's company and shared
+     the document is saved for one of the user's friends, or saved for their friend's company if their friend is a company admin
+ -}
+canUserViewDoc :: User -> Document -> IO Bool
+canUserViewDoc user doc 
+  | docIsSavedFor user = return True --the doc is saved for the user (or the user's company if they are an admin)
+  | isSharedWithinCompany = return True --the doc is shared within the user's company
+  | otherwise = do --the doc is saved for one of the user's friends (or the user's friend's company if their friend is an admin)
+      friends <- query $ GetUsersByFriendUserID (userid user)
+      return $ any docIsSavedFor friends
+  where
+    docIsSavedFor u =
+      any (isSigLinkSavedFor u) $ documentsignatorylinks doc
+    isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
+    isAuthoredWithinCompany = isSigLinkFor (usercompany user) (getAuthorSigLink doc)
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -45,7 +69,7 @@ import qualified AppLogger as Log
    Document must exist (otherwise Left DBNotAvailable).
    Logged in user is author OR logged in user is friend of author (otherwise LeftDBNotAvailable).
  -}
-getDocByDocID :: DocumentID -> Kontra (Either DBError Document)
+getDocByDocID :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocID docid = do
   Context { ctxmaybeuser, ctxcompany } <- getContext
   case (ctxmaybeuser, ctxcompany) of
@@ -56,27 +80,17 @@ getDocByDocID docid = do
         Nothing  -> do
           Log.debug "Does not exist"
           return $ Left DBResourceNotAvailable
-        Just doc ->
-          case isAuthor (doc, user) of
-            True  -> do
-              Log.debug "Is author"
-              return $ Right doc
-            False -> do
-              Log.debug "Is not author"
-              usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
-              usersImSupervising <- query $ GetUserSubaccounts     (userid user)
-              related            <- query $ GetUserRelatedAccounts (userid user)
-              let canAcces = (any isAuthor (zip (repeat doc) (usersImSupervising ++ usersImFriendsWith)))
-                              || (any isAuthor (zip (repeat doc) related) && Shared == documentsharing doc)
-              case canAcces of
-                True  -> return $ Right doc
-                False -> return $ Left DBResourceNotAvailable
+        Just doc -> do
+          canAccess <- liftIO $ canUserViewDoc user doc              
+          case canAccess of
+            False -> return $ Left DBResourceNotAvailable
+            True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if (documentoriginalcompany doc == Just (companyid company))
+        Just doc -> if any ((== (Just . companyid $ company)) . maybecompany) (documentsignatorylinks doc)
                      then return $ Right doc
                      else return $ Left DBResourceNotAvailable
 
@@ -84,8 +98,9 @@ getDocByDocID docid = do
    Get all of the documents a user can view.
    User must be logged in.
    Logged in user is in the documentsignatorylinks or a friend of someone with the documentsignatorylinks
+   What about companies?
  -}
-getDocsByLoggedInUser :: Kontra (Either DBError [Document])
+getDocsByLoggedInUser :: Kontrakcja m => m (Either DBError [Document])
 getDocsByLoggedInUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
@@ -103,16 +118,14 @@ getDocsByLoggedInUser = do
    SignatoryLinkID must correspond to a siglink in document.
    MagicHash must match.
  -}
-getDocByDocIDSigLinkIDAndMagicHash :: DocumentID
+getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
+                                   => DocumentID
                                    -> SignatoryLinkID
                                    -> MagicHash
-                                   -> Kontra (Either DBError Document)
+                                   -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
-    Nothing  -> return $ Left DBResourceNotAvailable
-    Just doc ->
-      case getSigLinkFor doc sigid of
-        Just siglink | signatorymagichash siglink == mh -> return $ Right doc
-        _ -> return $ Left DBResourceNotAvailable
+    Just doc | isSigLinkFor mh (getSigLinkFor doc sigid) -> return $ Right doc
+    _ -> return $ Left DBResourceNotAvailable
 

@@ -29,11 +29,13 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import Control.Applicative
+import Control.Monad.IO.Class
 import Data.ByteString.UTF8 (toString)
 import Data.List (isPrefixOf, isInfixOf)
 import Data.Char
 import Data.Typeable
 import Data.Data
+import Data.Maybe
 import Payments.PaymentsView
 import Payments.PaymentsState
 import Misc
@@ -41,19 +43,21 @@ import MinutesTime
 import User.UserView
 import User.UserState
 import Doc.DocState
+import Company.CompanyState
 import API.Service.ServiceState
 import Happstack.State (query)
-import Templates.Langs
 import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
+
 {-| Main admin page - can go from here to other pages -}
-adminMainPage::KontrakcjaTemplates ->  IO String
-adminMainPage templates =  renderTemplate templates "adminsmain" ()
+adminMainPage :: TemplatesMonad m => m String
+adminMainPage = renderTemplateM "adminsmain" ()
 
 {-| Manage users page  - advanced, will be changed-}
-adminUsersAdvancedPage::KontrakcjaTemplates -> [User] -> AdminUsersPageParams -> IO String
-adminUsersAdvancedPage templates users params =
-    renderTemplate templates "adminsmanageall" $ do
-        field "users" $ map userBasicFields $ visibleUsers params users
+adminUsersAdvancedPage :: TemplatesMonad m => [(User,Maybe Company)] -> AdminUsersPageParams -> m String
+adminUsersAdvancedPage users params =
+    renderTemplateFM "adminsmanageall" $ do
+        fieldFL "users" $ map (uncurry userBasicFields) $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -62,11 +66,11 @@ adminUsersAdvancedPage templates users params =
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage users page - can find user here -}
-adminUsersPage::KontrakcjaTemplates ->[(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPage templates users params =
-    renderTemplate templates "adminusers" $ do
+adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPage users params =
+    renderTemplateFM "adminusers" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "users" $ map mkUserInfoView $ visibleUsers params users
+        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -74,11 +78,11 @@ adminUsersPage templates users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPageForSales templates users params =
-    renderTemplate templates "adminUsersForSales" $ do
+adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForSales users params =
+    renderTemplateFM "adminUsersForSales" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "users" $ map mkUserInfoView $ visibleUsers params users
+        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -86,11 +90,11 @@ adminUsersPageForSales templates users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForPayments :: KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPageForPayments templates users params =
-    renderTemplate templates "adminUsersForPayments" $ do
+adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForPayments users params =
+    renderTemplateFM "adminUsersForPayments" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "users" $ map mkUserInfoView $ visibleUsers params users
+        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters
         field "adminuserlink" $ show $ LinkUserAdmin Nothing
         field "intervals" $ intervals $ avaibleUsers params users
@@ -98,70 +102,64 @@ adminUsersPageForPayments templates users params =
         field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
-adminUserPage::KontrakcjaTemplates ->User -> PaymentAccountModel -> IO String
-adminUserPage templates user paymentModel =
-    renderTemplate templates "adminuser" $ do
+adminUserPage :: TemplatesMonad m => User -> Maybe Company -> PaymentAccountModel -> m String
+adminUserPage user mcompany paymentModel =
+    renderTemplateFM "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "user" $ userFields user
+        fieldF "user" $ userFields user
+        fieldF "company" $ companyFields mcompany
         field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
-adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> Fields -> IO String
-adminUserUsageStatsPage templates user morefields =
-    renderTemplate templates "userusagestats" $ do
+adminUserUsageStatsPage :: TemplatesMonad m => User -> Maybe Company -> Fields m -> m String
+adminUserUsageStatsPage user mcompany morefields =
+    renderTemplateFM "userusagestats" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "user" $ userFields user
+        fieldF "user" $ userFields user
+        fieldF "company" $ companyFields mcompany
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
-allUsersTable::KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> IO String
-allUsersTable templates users =
-    renderTemplate templates "allUsersTable" $ do
-        field "users" $ map mkUserInfoView $ users
+allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> m String
+allUsersTable users =
+    renderTemplateFM "allUsersTable" $ do
+        fieldFL "users" $ map mkUserInfoView $ users
         field "adminlink" $ show $ LinkAdminOnly
 
-databaseContent ::KontrakcjaTemplates -> [String] -> IO String
-databaseContent templates filenames =
-    renderTemplate templates "databaseContents" $ do
+databaseContent :: TemplatesMonad m => [String] -> m String
+databaseContent filenames =
+    renderTemplateFM "databaseContents" $ do
         field "files" $ filenames
         field "adminlink" $ show $ LinkAdminOnly
 
-statsPage::KontrakcjaTemplates -> StatsView -> String -> IO String
-statsPage templates stats sysinfo =
-    renderTemplate templates "pageStats" $ do
+statsPage :: TemplatesMonad m => StatsView -> String -> m String
+statsPage stats sysinfo =
+    renderTemplateFM "pageStats" $ do
         field "stats" $ stats
         field "sysinfo" $ sysinfo
         field "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage::KontrakcjaTemplates -> [Service] -> IO String
-servicesAdminPage templates services= do
-    renderTemplate templates "servicesAdmin" $ do
+servicesAdminPage :: TemplatesMonad m => [Service] -> m String
+servicesAdminPage services = do
+    renderTemplateFM "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly
-        field "services" $ for services $ \ service -> do
+        fieldFL "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldIO "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
+            fieldM "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
-adminTranslationsPage::KontrakcjaTemplates -> [(Lang,TranslationStats)] ->  IO String
-adminTranslationsPage templates stats =
-    renderTemplate templates "adminTranslations" $
-        field "langs" $ for stats $ \(lang, stat) -> do
-            field "name" $ show lang
-            field "missingFiles" $ missingFiles stat
-            field "extraFiles" $ extraFiles stat
-            field "notSynchronisedFiles" $ notSynchronisedFiles stat
-            field "emptyTranslations" $ for (emptyTranslations stat) $ \(file,name) -> do
-                field "file" file
-                field "name" name
+adminTranslationsPage::TemplatesMonad m => m String
+adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
 
-mkUserInfoView :: (User, DocStats, UserStats) -> Fields
-mkUserInfoView (userdetails', docstats', userstats') = do
-  field "userdetails" $ userBasicFields userdetails'
-  field "docstats" $ docstats'
-  field "userstats" $ userstats'
-  field "adminview" $ userFields userdetails'
+mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats, UserStats) -> Fields m
+mkUserInfoView (user, mcompany, docstats, userstats) = do
+  fieldF "userdetails" $ userBasicFields user mcompany
+  field "docstats" $ docstats
+  field "userstats" $ userstats
+  fieldF "adminview" $ do userFields user
+                          companyFields mcompany
 
 
 data StatsView = StatsView
@@ -187,9 +185,12 @@ class UserBased a where
 
 instance UserBased User where
   getUser = id
+  
+instance UserBased (User,Maybe Company) where
+  getUser (user,_) = user
 
-instance UserBased (User,DocStats,UserStats) where
-  getUser (user,_,_) = user
+instance UserBased (User,Maybe Company,DocStats,UserStats) where
+  getUser (user,_,_,_) = user
 
 {-| Users on current page-}
 visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]
@@ -217,26 +218,28 @@ data AdminUsersPageParams = AdminUsersPageParams {
                              startletter::Maybe String,
                              page::Int
                             }
+                            
+companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields mc = do
+        field "companyname" $  getCompanyName mc
+        field "companynumber" $ getCompanyNumber mc
+        field "companyaddress" $ maybe "" (toString . companyaddress . companyinfo) mc
+        field "companyzip" $  maybe "" (toString . companyzip . companyinfo)  mc
+        field "companycity" $  maybe "" (toString . companycity . companyinfo) mc
+        field "companycountry" $ maybe "" (toString . companycountry . companyinfo) mc
 
 {-| Full fields set about user -}
-userFields ::User -> Fields
+userFields :: MonadIO m => User -> Fields m
 userFields u =  do
         field "fstname" $ getFirstName u
         field "sndname" $ getLastName u
         field "personalnumber" $ getPersonalNumber u
-        field "companyname" $  getCompanyName u
         field "companyposition" $ usercompanyposition $ userinfo u
-        field "companynumber" $ getCompanyNumber u
-        field "address" $ toString $ useraddress $ userinfo u
-        field "zip" $  toString $ userzip  $ userinfo u
-        field "city" $  toString $ usercity $ userinfo u
-        field "country" $ toString $ usercountry $ userinfo u
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u
-        field "accounttype" $  for (allValues::[UserAccountType]) (\x -> if (x == (accounttype $ usersettings u))
-                                                                                 then soption show show x
-                                                                                 else option show show x)
+        field "iscompanyaccount" $ isJust $ usercompany u
+        field "iscompanyadmin" $ useriscompanyadmin u
         field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
@@ -256,5 +259,5 @@ userFields u =  do
         field "id" $ show (userid u)
 
 
-letters::[String]
+letters :: [String]
 letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]

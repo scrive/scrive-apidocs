@@ -17,7 +17,8 @@ module Codec.MIME.Decode where
 import Data.Char
 
 import Codec.MIME.QuotedPrintable as QP
-import Codec.MIME.Base64 as Base64
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Char8 as BS
 
 -- | @decodeBody enc str@ decodes @str@ according to the scheme
 -- specified by @enc@. Currently, @base64@ and @quoted-printable@ are
@@ -27,7 +28,7 @@ import Codec.MIME.Base64 as Base64
 decodeBody :: String -> String -> String
 decodeBody enc body =
  case map toLower enc of
-   "base64"           -> map (chr.fromIntegral) $ Base64.decode body
+   "base64"           -> BS.unpack . Base64.decodeLenient . BS.pack $ body    -- map (chr.fromIntegral) $ Base64.decode body
    "quoted-printable" -> QP.decode body
    _ -> body
 
@@ -59,7 +60,7 @@ decodeWord str =
   decodeQ _ _ = Nothing
 
   decodeB cset (fs,'?':'=':rs) =
-    Just (fromCharset cset (Base64.decodeToString fs),rs)
+    Just (fromCharset cset (BS.unpack . Base64.decodeLenient . BS.pack $ fs),rs)
   decodeB _ _ = Nothing
 
   fromCharset _cset cs = cs

@@ -26,14 +26,11 @@ module Administration.AdministrationControl(
           , handleDatabaseCleanup
           , handleCreateUser
           , handleUserEnableTrustWeaverStorage
-          , handleMigrate0
           , handleCreateService
           , handleStatistics
-          , handleShowQuarantine
-          , handleQuarantinePost
-          , handleMigrateForDeletion
-          , handleUnquarantineAll
-          , migrateDocsNoAuthor
+          , migrateSigAccounts
+          , migrateCompanies
+          , resealFile
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -49,10 +46,10 @@ import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy  as L
+import Company.CompanyState
 import KontraLink
 import Payments.PaymentsControl(getPaymentChangeChange)
 import MinutesTime
-import FlashMessage
 import System.Directory
 import User.UserControl
 import User.UserView
@@ -67,103 +64,102 @@ import API.Service.ServiceState
 import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
-import InputValidation
-import Templates.Langs
 import Text.Printf
-import Util.SignatoryLinkUtils
+import Util.FlashUtil
 import Data.List
+import Templates.TextTemplates
+import Util.MonadUtils
+import qualified AppLogger as Log
+import Doc.DocSeal (sealDocument)
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
 
-eitherFlash :: Kontra (Either String b) -> Kontra b
+eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do
   x <- action
   case x of
     Left errmsg -> do
-           addFlashMsg $ toFlashMsg OperationFailed errmsg
+           addFlash (OperationFailed, errmsg)
            mzero
     Right value -> return value
 
 
 {- | Main page. Redirects users to other admin panels -}
-showAdminMainPage :: Kontra Response
+showAdminMainPage :: Kontrakcja m => m Response
 showAdminMainPage = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
-  content <- liftIO $ adminMainPage ctxtemplates
+  content <- adminMainPage
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for advanced user administration -}
-showAdminUserAdvanced :: Kontra Response
+showAdminUserAdvanced :: Kontrakcja m => m Response
 showAdminUserAdvanced = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- query $ GetAllUsers
+  mcompanies <- mapM getCompanyForUser users
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
+  content <- adminUsersAdvancedPage (zip users mcompanies) params
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param
 it allows to edit user details -}
-showAdminUsers :: Maybe UserID -> Kontra Response
+showAdminUsers :: Kontrakcja m => Maybe UserID -> m Response
 showAdminUsers Nothing = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersPage ctxtemplates users params
+  content <- adminUsersPage users params
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsers (Just userId) = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   muser <- query $ GetUserByUserID userId
   case muser of
     Nothing -> mzero
     Just user -> do
       paymentmodel <- query $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
-      content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
+      mcompany <- getCompanyForUser user
+      content <- adminUserPage user mcompany paymentmodel
       renderFromBody TopEmpty kontrakcja content
 
-showAdminUsersForSales :: Kontra Response
+showAdminUsersForSales :: Kontrakcja m => m Response
 showAdminUsersForSales = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersPageForSales ctxtemplates users params
+  content <- adminUsersPageForSales users params
   renderFromBody TopEmpty kontrakcja content
 
-showAdminUsersForPayments :: Kontra Response
+showAdminUsersForPayments :: Kontrakcja m => m Response
 showAdminUsersForPayments = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
-  content <- liftIO $ adminUsersPageForPayments ctxtemplates users params
+  content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
-getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
+getUsersAndStats :: Kontrakcja m => m [(User,Maybe Company, DocStats,UserStats)]
 getUsersAndStats = do
     Context{ctxtime} <- getContext
     users <- query $ GetAllUsers
     let queryStats user = do
+          mcompany <- getCompanyForUser user
           docstats <- query $ GetDocumentStatsByUser user ctxtime
           userstats <- query $ GetUserStatsByUser user
-          return (user, docstats, userstats)
+          return (user, mcompany, docstats, userstats)
     users2 <- mapM queryStats users
     return users2
 
-showAdminUserUsageStats :: UserID -> Kontra Response
+showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   documents <- query $ GetDocumentsByAuthor userid
   Just user <- query $ GetUserByUserID userid
-  content <- liftIO $ adminUserUsageStatsPage ctxtemplates user $ do
+  mcompany <- getCompanyForUser user
+  content <- adminUserUsageStatsPage user mcompany $ do
     fieldsFromStats [user] documents
   renderFromBody TopEmpty kontrakcja content
 
 
 {- Shows table of all users-}
-showAllUsersTable :: Kontra Response
+showAllUsersTable :: Kontrakcja m => m Response
 showAllUsersTable = onlySuperUser $ do
-    Context {ctxtemplates} <- getContext
     users <- getUsersAndStats
-    content <- liftIO $ allUsersTable ctxtemplates users
+    content <- allUsersTable users
     renderFromBody TopEmpty kontrakcja content
-
 
 
 #ifndef WINDOWS
@@ -178,7 +174,7 @@ read_df = do
 #endif
 
 
-showStats :: Kontra Response
+showStats :: Kontrakcja m => m Response
 showStats = onlySuperUser $ do
     docstats <- query $ GetDocumentStats
     userstats <- query $ GetUserStats
@@ -187,23 +183,21 @@ showStats = onlySuperUser $ do
 #else
     let df = empty
 #endif
-    Context {ctxtemplates} <- getContext
     let stats = StatsView { svDoccount = doccount docstats,
                             svSignaturecount = signaturecount docstats,
                             svUsercount = usercount userstats,
                             svViralinvitecount = viralinvitecount userstats,
                             svAdmininvitecount = admininvitecount userstats }
-    content <- liftIO $ statsPage ctxtemplates stats (toString df)
+    content <- statsPage stats $ toString df
     renderFromBody TopEmpty kontrakcja content
 
-indexDB :: Kontra Response
+indexDB :: Kontrakcja m => m Response
 indexDB = onlySuperUser $ do
-    Context {ctxtemplates} <- getContext
     files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-    content <- liftIO $ databaseContent ctxtemplates (sort files)
+    content <- databaseContent $ sort files
     renderFromBody TopEmpty kontrakcja content
 
-getUsersDetailsToCSV :: Kontra Response
+getUsersDetailsToCSV :: Kontrakcja m => m Response
 getUsersDetailsToCSV = onlySuperUser $ do
       x <- query $ ExportUsersDetailsToCSV
       let response = toResponseBS (fromString "text/csv")   (L.fromChunks [x])
@@ -212,7 +206,7 @@ getUsersDetailsToCSV = onlySuperUser $ do
 
 
 {- | Handling user details change. It reads user info change, user settings change , paymentpolicy and payment account change -}
-handleUserChange :: String -> Kontra KontraLink
+handleUserChange :: Kontrakcja m => String -> m KontraLink
 handleUserChange a = onlySuperUser $
                      do
                      let (muserId::Maybe UserID) = readM a
@@ -228,6 +222,7 @@ handleUserChange a = onlySuperUser $
                                            --Reading changes from params using dedicated functions for each user part
                                            freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"
                                            infoChange <- getUserInfoChange
+                                           companyInfoChange <- getCompanyInfoChange
                                            settingsChange <- getUserSettingsChange
                                            paymentAccountChange <- getUserPaymentAccountChange
                                            paymentPaymentPolicy <- getUserPaymentPolicyChange
@@ -237,9 +232,16 @@ handleUserChange a = onlySuperUser $
                                            _ <- update $ SetUserSettings userId $ settingsChange $ usersettings user
                                            _ <- update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
                                            _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
+                                           mcompany <- getCompanyForUser user
+                                           case mcompany of
+                                             Just company -> do
+                                               _ <- update $ SetCompanyInfo company (companyInfoChange $ companyinfo company)
+                                               return ()
+                                             Nothing -> do
+                                               return ()
                                            return $ LinkUserAdmin $ Just userId
 
-handleUserEnableTrustWeaverStorage :: String -> Kontra KontraLink
+handleUserEnableTrustWeaverStorage :: Kontrakcja m => String -> m KontraLink
 handleUserEnableTrustWeaverStorage a =
     onlySuperUser $
                   do
@@ -280,7 +282,7 @@ handleUserEnableTrustWeaverStorage a =
                                             `mplus` (return $ LinkUserAdmin $ Just userId)
 
 {-| Cleaning the database -}
-handleDatabaseCleanup :: Kontra KontraLink
+handleDatabaseCleanup :: Kontrakcja m => m KontraLink
 handleDatabaseCleanup = onlySuperUser $  do
     -- dangerous, cleanup all old files, where old means chechpoints but the last one
     -- and all events that have numbers less than last checkpoint
@@ -300,7 +302,7 @@ databaseCleanupWorker = do
   getDirectoryContents "_local/kontrakcja_state" --This can be dropped
 
 
-handleCreateUser :: Kontra KontraLink
+handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySuperUser $ do
     ctx <- getContext
     email' <- getAsStrictBS "email"
@@ -309,14 +311,40 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
-    when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
+    when (isNothing muser) $
+        addFlashM flashMessageUserWithSameEmailExists
 
     -- FIXME: where to redirect?
     return LinkStats
+    
+{- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
+getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
+getCompanyInfoChange = do
+                     mcompanyname    <- getFieldUTF "companyname"
+                     mcompanynumber  <- getFieldUTF "companynumber"
+                     mcompanyaddress        <- getFieldUTF "companyaddress"
+                     mcompanyzip            <- getFieldUTF "companyzip"
+                     mcompanycity           <- getFieldUTF "companycity"
+                     mcompanycountry        <- getFieldUTF "companycountry"
+                     return (\CompanyInfo {
+                                    companyname
+                                  , companynumber
+                                  , companyaddress
+                                  , companyzip
+                                  , companycity
+                                  , companycountry
+                                  } ->  CompanyInfo {
+                                            companyname =  fromMaybe companyname mcompanyname
+                                          , companynumber  =  fromMaybe companynumber mcompanynumber
+                                          , companyaddress =  fromMaybe companyaddress mcompanyaddress
+                                          , companyzip = fromMaybe companyzip mcompanyzip
+                                          , companycity  = fromMaybe companycity mcompanycity
+                                          , companycountry = fromMaybe companycountry mcompanycountry
+                                        })
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
-getUserInfoChange :: Kontra (UserInfo -> UserInfo)
+getUserInfoChange :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoChange = do
                      muserfstname        <- getFieldUTF "userfstname"
                      musersndname        <- getFieldUTF "usersndname"
@@ -346,25 +374,24 @@ getUserInfoChange = do
                                   , usermobile
                                   , useremail
                                   } ->  UserInfo {
-                                            userfstname = maybe' userfstname muserfstname
-                                          , usersndname = maybe' usersndname musersndname
-                                          , userpersonalnumber = maybe' userpersonalnumber muserpersonalnumber
-                                          , usercompanyname =  maybe' usercompanyname musercompanyname
-                                          , usercompanynumber  =  maybe' usercompanynumber musercompanynumber
-                                          , usercompanyposition = maybe' usercompanyposition musercompanyposition
-                                          , useraddress =  maybe' useraddress museraddress
-                                          , userzip = maybe' userzip muserzip
-                                          , usercity  = maybe' usercity musercity
-                                          , usercountry = maybe' usercountry musercountry
-                                          , userphone = maybe' userphone muserphone
-                                          , usermobile = maybe' usermobile musermobile
-                                          , useremail =  maybe' useremail museremail
+                                            userfstname = fromMaybe userfstname muserfstname
+                                          , usersndname = fromMaybe usersndname musersndname
+                                          , userpersonalnumber = fromMaybe userpersonalnumber muserpersonalnumber
+                                          , usercompanyname =  fromMaybe usercompanyname musercompanyname
+                                          , usercompanynumber  =  fromMaybe usercompanynumber musercompanynumber
+                                          , usercompanyposition = fromMaybe usercompanyposition musercompanyposition
+                                          , useraddress =  fromMaybe useraddress museraddress
+                                          , userzip = fromMaybe userzip muserzip
+                                          , usercity  = fromMaybe usercity musercity
+                                          , usercountry = fromMaybe usercountry musercountry
+                                          , userphone = fromMaybe userphone muserphone
+                                          , usermobile = fromMaybe usermobile musermobile
+                                          , useremail =  fromMaybe useremail museremail
                                         })
 
 {- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
-getUserSettingsChange :: Kontra (UserSettings -> UserSettings)
+getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange =  do
-                          maccounttype          <- readField "accounttype"
                           maccountplan          <- readField "accountplan"
                           msigneddocstorage     <- readField "signeddocstorage"
                           muserpaymentmethod    <- readField "userpaymentmethod"
@@ -374,18 +401,20 @@ getUserSettingsChange =  do
                                  , signeddocstorage
                                  , userpaymentmethod
                                  , preferreddesignmode
-                                 , lang }
+                                 , lang
+                                 , systemserver }
                                        -> UserSettings {
-                                            accounttype  = maybe' accounttype  maccounttype
-                                          , accountplan = maybe' accountplan maccountplan
-                                          , signeddocstorage  = maybe' signeddocstorage  msigneddocstorage
-                                          , userpaymentmethod =  maybe' userpaymentmethod muserpaymentmethod
+                                            accounttype  = accounttype
+                                          , accountplan = fromMaybe accountplan maccountplan
+                                          , signeddocstorage  = fromMaybe signeddocstorage  msigneddocstorage
+                                          , userpaymentmethod =  fromMaybe userpaymentmethod muserpaymentmethod
                                           , preferreddesignmode = preferreddesignmode
                                           , lang = lang
+                                          , systemserver = systemserver
                                           })
 
 {- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}
-getUserPaymentAccountChange :: Kontra (UserPaymentAccount -> UserPaymentAccount)
+getUserPaymentAccountChange :: Kontrakcja m => m (UserPaymentAccount -> UserPaymentAccount)
 getUserPaymentAccountChange =  do
                           mpaymentaccountfreesignatures        <- readField "paymentaccountfreesignatures"
                           return (\UserPaymentAccount {
@@ -394,51 +423,12 @@ getUserPaymentAccountChange =  do
                                   }
                                     -> UserPaymentAccount  {
                                             paymentAgreementRef  = paymentAgreementRef
-                                          , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
+                                          , paymentaccountfreesignatures = fromMaybe paymentaccountfreesignatures mpaymentaccountfreesignatures
                                         })
 
-replace0SignatoryLinkID :: SignatoryLink -> Kontra SignatoryLink
-replace0SignatoryLinkID l
-    | (signatorylinkid l == SignatoryLinkID 0) = do
-                                                  liftIO $ print "changed 0 linkid"
-                                                  linkid <- update $ GetUniqueSignatoryLinkID
-                                                  return l { signatorylinkid = linkid}
-    | otherwise = return l
-
-replace0MagicHash :: SignatoryLink -> Kontra SignatoryLink
-replace0MagicHash l
-    | (signatorymagichash l == MagicHash 0) = do
-                                               liftIO $ print "changed 0 magichash"
-                                               magichash <- update $ GetMagicHash
-                                               return l { signatorymagichash = magichash }
-    | otherwise = return l
-
-migrate0SignatoryLinks :: [SignatoryLink] -> Kontra [SignatoryLink]
-migrate0SignatoryLinks links = do
-    l1 <- sequence $ map replace0SignatoryLinkID links
-    l2 <- sequence $ map replace0MagicHash l1
-    return l2
-
-{- |
-   A temporary service to fix the migration; 0 MagicHash and 0 SignatoryLinkID is replaced with new
-   random one.
-
-  I'm removing this! -EN
- -}
-handleMigrate0 :: Kontra Response
-handleMigrate0 = onlySuperUser $ do
- ctx <- getContext
- documents <- query $ GetDocuments $ currentServiceID ctx
- d2 <- sequence $ map (\d -> do
-                               links <- migrate0SignatoryLinks $ documentsignatorylinks d
-                               d2 <- update $ SetSignatoryLinks (documentid d) links
-                               return d2)
-                      documents
- liftIO $ print d2 -- force the value
- sendRedirect LinkAdminOnly
 
 {- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!! -}
-getUserPaymentPolicyChange :: Kontra (UserPaymentPolicy -> UserPaymentPolicy)
+getUserPaymentPolicyChange :: Kontrakcja m => m (UserPaymentPolicy -> UserPaymentPolicy)
 getUserPaymentPolicyChange =  do
                           mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "tmppaymentchangeenddate"
                           mpaymentaccounttype        <- readField "paymentaccounttype"
@@ -450,7 +440,7 @@ getUserPaymentPolicyChange =  do
                                   , temppaymentchange
                                   }
                                     -> UserPaymentPolicy  {
-                                            paymentaccounttype   = maybe' paymentaccounttype   mpaymentaccounttype
+                                            paymentaccounttype   = fromMaybe paymentaccounttype   mpaymentaccounttype
                                           , custompaymentchange = customPaymentChange custompaymentchange
                                           , temppaymentchange = case  mtmppaymentchangeenddate of
                                                                  Nothing ->  Nothing
@@ -461,7 +451,7 @@ getUserPaymentPolicyChange =  do
                                         })
 
 {- | Reads params and returns structured params for user managment pages. -}
-getAdminUsersPageParams :: Kontra AdminUsersPageParams
+getAdminUsersPageParams :: Kontrakcja m => m AdminUsersPageParams
 getAdminUsersPageParams = do
   search <- getDataFn' (look "search")
   startletter <-  getDataFn' (look "startletter")
@@ -471,7 +461,7 @@ getAdminUsersPageParams = do
 
 
 {- Create service-}
-handleCreateService :: Kontra KontraLink
+handleCreateService :: Kontrakcja m => m KontraLink
 handleCreateService = onlySuperUser $ do
     mname<- getFieldUTF "name"
     madmin <- liftMM  (query . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
@@ -490,11 +480,10 @@ handleCreateService = onlySuperUser $ do
          _ -> mzero
 
 {- Services page-}
-showServicesPage :: Kontra Response
+showServicesPage :: Kontrakcja m => m Response
 showServicesPage = onlySuperUser $ do
-  Context {ctxtemplates} <- getContext
   services <- query GetServices
-  content <- liftIO $ servicesAdminPage ctxtemplates services
+  content <- servicesAdminPage services
   renderFromBody TopEmpty kontrakcja content
 
 
@@ -646,72 +635,7 @@ calculateStatsFromUsers users =
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
 
-fieldsForQuarantine :: [Document] -> Fields
-fieldsForQuarantine documents = do
-  field "linkquarantine" $ show LinkAdminQuarantine
-  field "documents" $ map fieldsForDoc documents
-  where
-    fieldsForDoc Document{documentid, documenttitle, documentquarantineexpiry, documentsignatorylinks} = do
-      field "docid" $ show documentid
-      field "name" $ documenttitle
-      field "expiry" $ fmap showDateYMD documentquarantineexpiry
-      field "signatories" $ map fieldsForSignatory documentsignatorylinks
-    fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails, signatorylinkdeleted} = do
-      field "siglinkid" $ show signatorylinkid
-      field "email" $ signatoryemail signatorydetails
-      field "isrevivable" $ signatorylinkdeleted
-
-handleShowQuarantine :: Kontra Response
-handleShowQuarantine =
-  onlySuperUser $ do
-    ctx <- getContext
-    documents <- query $ GetQuarantinedDocuments $ currentServiceID ctx
-    content <- renderTemplateM "quarantinePage" $ do
-      fieldsForQuarantine documents
-    renderFromBody TopEmpty kontrakcja content
-
-handleQuarantinePost :: Kontra KontraLink
-handleQuarantinePost = onlySuperUser $ do
-  revive <- isFieldSet "revive"
-  extend <- isFieldSet "extend"
-  _ <- case (revive, extend) of
-    (True, _) -> handleQuarantineRevive
-    (_, True) -> handleQuarantineExtend
-    _ -> mzero
-  return LinkAdminQuarantine
-
-handleQuarantineRevive :: Kontra KontraLink
-handleQuarantineRevive = onlySuperUser $ do
-  docid <- getCriticalField asValidDocID "docid"
-  sigid <- getCriticalField asValidNumber "siglinkid"
-  _ <- update $ ReviveQuarantinedDocument (DocumentID docid) (SignatoryLinkID sigid)
-  return LinkAdminQuarantine
-
-handleQuarantineExtend :: Kontra KontraLink
-handleQuarantineExtend = onlySuperUser $ do
-  docid <- getCriticalField asValidDocID "docid"
-  _ <- update $ ExtendDocumentQuarantine (DocumentID docid)
-  return LinkAdminQuarantine
-
-{- |
-    Another temporary migration thing! Em
--}
-handleMigrateForDeletion :: Kontra Response
-handleMigrateForDeletion = onlySuperUser $ do
-  users <- query $ GetAllUsers
-  _ <- update $ MigrateForDeletion users
-  liftIO $ putStrLn $ "Migration Done"
-  handleShowQuarantine
-
-handleUnquarantineAll :: Kontra KontraLink
-handleUnquarantineAll = onlySuperUser $ do
-  res <- update $ UnquarantineAll
-  mapM_ (\r -> case r of
-            Left msg -> liftIO $ putStrLn msg
-            Right _msg -> return ()) res
-  return LinkMain
-
-fieldsFromStats :: [User] -> [Document] -> Fields
+fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
@@ -724,7 +648,7 @@ fieldsFromStats users documents = do
         allMonthsStats = reverse $ IntMap.toList $ IntMap.fromListWith addStats (map ( \(k,v) -> (k `div` 100 * 100, v)) stats')
     let fieldify showDate (date,stat) = do
           field "date" $ showDate date
-          field "documents" $ do
+          fieldF "documents" $ do
             field "all" $ dsAllDocuments stat
             field "preparation" $ dsPreparationDocuments stat
             field "pending" $ dsPendingDocuments stat
@@ -736,42 +660,256 @@ fieldsFromStats users documents = do
             field "canceled" $ dsCanceledDocuments stat
             field "signatures" $ dsAllSignatures stat
             field "signaturesInClosed" $ dsSignaturesInClosed stat
-          field "users" $ do
+          fieldF "users" $ do
             field "all" $ dsAllUsers stat
             field "viralInvites" $ dsViralInvites stat
             field "adminInvites" $ dsAdminInvites stat
 
-    field "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
-    field "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
+    fieldFL "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
+    fieldFL "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
 
-handleStatistics :: Kontra Response
+handleStatistics :: Kontrakcja m => m Response
 handleStatistics =
   onlySuperUser $ do
     ctx <- getContext
     documents <- query $ GetDocuments $ currentServiceID ctx
     users <- query $ GetAllUsers
-    content <- renderTemplateM "statisticsPage" $ do
+    content <- renderTemplateFM "statisticsPage" $ do
       fieldsFromStats users documents
     renderFromBody TopEmpty kontrakcja content
 
-
-showAdminTranslations :: Kontra String
+showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do
-     ctx <- getContext
-     tstats <- liftIO $ getTranslationStats
-     liftIO $ adminTranslationsPage (ctxtemplates ctx) tstats
-
-migrateDocsNoAuthor :: Kontra Response
-migrateDocsNoAuthor = do
-  ctx <- getContext
-  guard (isJust (ctxmaybeuser ctx))
-  let Just user = ctxmaybeuser ctx
-  guard (useremail (userinfo user) == Email (fromString "ericwnormand@gmail.com"))
-  udocs <- query $ GetDocuments Nothing
-  qdocs <- query $ GetQuarantinedDocuments Nothing
-  let docswithnoauthor = [d | d <- udocs ++ qdocs
-                             , isNothing $ getAuthorSigLink d]
-  res <- forM docswithnoauthor (update . MakeFirstSignatoryAuthor . documentid)
-  liftIO $ print (intercalate "\n" $ [r | Left r <- res])
-  liftIO $ print ("successful: " ++ show (length [r | Right r <- res]))
+    liftIO $ updateCSV
+    adminTranslationsPage
+    
+{- |
+    Migrate companies.  This takes the following steps
+    
+    * setup things for the companies which are already stored on the users' usercompany field,
+      by making the user an admin if they're not a subaccount, and by copying the relevant company info from the user
+      onto the company
+    * creating new companies for individual users with company name or company number set, or for supervisors.
+      the user is made a company admin and the relevant company info is copied from them onto the company
+    * link each subaccount to their supervisor's company, by making their companyuser field the same
+    * link each signatory link to the relevant company by finding a user which is their maybesignatory or maybesupervisor
+      and copying the usercompany information onto the new siglink field maybecompany.
+      
+    After migration there will be a whole load of fields that are currently deprecated, but we will be able to remove from
+    the codebase.
+    
+    Don't run this more than once!  Because of the setupInfoForExistingCompanies step it'll make all the subaccounts
+    into admins if you do.
+-}
+migrateCompanies :: Kontrakcja m => m Response
+migrateCompanies = onlySuperUser $ do
+  setupInfoForExistingCompanies --sets things up for companies already stored on usercompany
+  createNewCompaniesThatAreRequired --sets up new companies where needed, for example for supervisors
+  linkSubaccountsToCompanies --links subaccounts to their supervisor's company
+  linkSignatoryLinksToCompanies --links signatorylinks to their supervisor's company
+  Log.debug "company migration complete"
   sendRedirect LinkMain
+  where
+    {- |
+        Where we have users with a usercompany already
+        we want to copy over the company info onto that company.
+    -}
+    setupInfoForExistingCompanies :: Kontrakcja m => m ()
+    setupInfoForExistingCompanies = do
+      users <- query $ GetAllUsers
+      mapM_ maybeSetupInfoForUsersCompany users
+      return ()
+    
+    {- |
+        If a user has a company and is either a supervisor or a single user
+        then we make them an admin, and copy their company info over onto the company.
+    -}
+    maybeSetupInfoForUsersCompany :: Kontrakcja m => User -> m ()
+    maybeSetupInfoForUsersCompany user'@User{userid} = do
+      mcompany <- getCompanyForUser user'
+      case (mcompany, userShouldBeAdmin user') of
+        (Just company, True) -> do
+--          _ <- guardRightM . update $ MakeUserACompanyAdmin userid  --  don't need this line, user doesn't need to be an admin
+          user <- queryOrFail $ GetUserByUserID userid
+          let newcompanyinfo = makeCompanyInfoFromUserInfo user
+          newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
+          Log.debug $ "Setup existing company with admin user " ++ (show $ getEmail user) ++ " :"
+                        ++ " id " ++ (show $ companyid newcompany)
+                        ++ " name " ++ (show $ getCompanyName newcompany)
+          return ()  
+        _ -> return ()
+          
+    {- |
+        Checks to see if the user should be made a company admin.
+        To qualify for this they need:
+          * to be live
+          * have a company
+          * be either a single user or a supervisor (same as not being a subaccount)
+    -}
+    userShouldBeAdmin :: User -> Bool
+    userShouldBeAdmin user =
+      let islive = not $ userdeleted user
+          hascompany = isJust $ usercompany user
+          issubaccount = isJust $ usersupervisor user
+      in islive && hascompany && (not issubaccount)
+  
+    {- |
+        This creates any new companies that are required.
+    -}
+    createNewCompaniesThatAreRequired :: Kontrakcja m => m ()
+    createNewCompaniesThatAreRequired = do
+      users <- query $ GetAllUsers
+      mapM_ maybeSetupCompanyForUser users
+      return ()
+  
+    {- |
+        If the user is a single user with company info, or a supervisor
+        then we should setup a company for them, copy their data over,
+        and make them the admin of it.
+    -}
+    maybeSetupCompanyForUser :: Kontrakcja m => User -> m ()
+    maybeSetupCompanyForUser user@User{userid} = do
+      companyrequired <- query $ RequiresCompanyForMigration userid
+      when companyrequired (setupCompanyForUser user)
+    
+    {- |
+        This sets up a brand new company based on the given
+        user, including copying their user info over to be company info.
+    -}
+    setupCompanyForUser :: Kontrakcja m => User -> m ()
+    setupCompanyForUser User{userid} = do
+      company@Company{companyid} <- update $ CreateNewCompany
+      _ <- guardRightM . update $ SetUserCompany userid companyid
+      _ <- guardRightM . update $ MakeUserACompanyAdmin userid
+      user <- queryOrFail $ GetUserByUserID userid
+      let newcompanyinfo = makeCompanyInfoFromUserInfo user
+      newcompany <- guardRightM . update $ SetCompanyInfo company newcompanyinfo
+      Log.debug $ "Created new company for " ++ (show $ getEmail user) ++ " :"
+                    ++ " id " ++ (show companyid)
+                    ++ " name " ++ (show $ getCompanyName newcompany)
+      return ()
+    
+    makeCompanyInfoFromUserInfo user =
+      CompanyInfo {
+          companyname = usercompanyname $ userinfo user
+        , companynumber = usercompanynumber $ userinfo user
+        , companyaddress = useraddress $ userinfo user
+        , companyzip = userzip $ userinfo user
+        , companycity = usercity $ userinfo user
+        , companycountry = usercountry $ userinfo user 
+      }
+    
+    {- |
+        This will go through and set the company on each subaccount
+        by looking it up from their supervisor.
+    -}
+    linkSubaccountsToCompanies :: Kontrakcja m => m ()
+    linkSubaccountsToCompanies = do
+      users <- query $ GetAllUsers
+      mapM_ maybeLinkSubaccountToCompany users
+      return ()
+     
+    {- |
+        If the user is a subaccount then this will link the user
+        to their supervisor's company.
+    -}
+    maybeLinkSubaccountToCompany :: Kontrakcja m => User -> m ()
+    maybeLinkSubaccountToCompany user@User{userid} =
+      case usersupervisor user of
+        Just supervisorid -> do
+          supervisor <- queryOrFail . GetUserByUserID . UserID $ unSupervisorID supervisorid
+          case usercompany supervisor of
+            Nothing -> do
+              Log.debug $ "the supervisor " ++ (show supervisorid) ++ " doesn't have a company - something went wrong with the migration!\nsupervisor=" ++ (show supervisor) ++ "\nsubaccount=" ++ (show user)
+              mzero
+            Just companyid -> do
+              _ <- guardRightM . update $ SetUserCompany userid companyid
+              Log.debug $ "linked subaccount " ++ (toString $ getEmail user) ++ " to their supervisor " ++ (toString $ getEmail supervisor) ++ "'s company (" ++ (show companyid) ++ ")"
+              return ()
+        Nothing -> return ()
+     
+    {- |
+        This hooks up all the signatory links to the user's companies.
+    -}    
+    linkSignatoryLinksToCompanies :: Kontrakcja m => m ()
+    linkSignatoryLinksToCompanies = do
+      Log.debug $ "populating companies on the document sig links"
+      services <- query $ GetServices
+      mapM_ migrateSigLinksForService $ Nothing : map (Just . serviceid) services
+      return ()
+      where
+        migrateSigLinksForService :: Kontrakcja m => Maybe ServiceID -> m ()
+        migrateSigLinksForService service = do
+          docs <- query $ GetDocuments service
+          mapM_ migrateSigLinksForDocument docs
+        migrateSigLinksForDocument :: Kontrakcja m => Document -> m ()
+        migrateSigLinksForDocument Document{documentid,documentsignatorylinks} = do
+          let siguserids = (catMaybes . map maybesignatory $ documentsignatorylinks)
+                             ++ (catMaybes . map maybesupervisor $ documentsignatorylinks)
+          msigusers <- mapM (query . GetUserByUserID) siguserids
+          _ <- update $ MigrateDocumentSigLinkCompanies documentid (catMaybes msigusers)
+          return ()
+
+{- |
+    Piece of migration in response to SKRIVAPADEV-380.  The idea is to populate
+    maybesignatory and maybesupervisor on the siglinks.  Want it so that:
+    
+    * they are correctly populated for every author siglink 
+      - this should already be the case, unless an earlier migration went really wrong!
+    * they are correctly populated for every non-author siglink
+      - they should be populated where a doc is signable or an attachment and not in preparation mode
+      - they shouldn't be populated for templates or template attachments or docs in preparation mode
+      
+    I'm scared that previous migrations may have put this data in the wrong place (so for those in preparation mode).
+    Also, we have some documents that certainly need this populating.
+    
+    From now on we're populate these values whenever a doc is signed or sent, or when a user signs up
+    for an account after signing a document.
+    
+    Some things that'll happen which I think make good sense:
+      * people who sign up in the future, and have previous not saved a document won't be able to see that document
+      * people who haved signed up in the past can currently see documents that they may have refused to save.  they
+        will still be able to see them after migration.
+      * At the moment we don't offer an account creation, document saving thing, for those viewing a document rather than
+    signing it.  This means that if they subsequently sign up they won't see those documents they viewed in the past.
+    
+    Because of the niggles above, ideally this migration should just be ran once.  Otherwise people may see documents they
+    asked not to save appearing in their archive (although thankfully it's perfectly possible there is no-one like this
+    using our service).
+-}
+migrateSigAccounts :: Kontrakcja m => m Response
+migrateSigAccounts = onlySuperUser $ do
+  services <- query $ GetServices
+  mapM_ migrateSigAccountsForService $ Nothing : map (Just . serviceid) services
+  sendRedirect LinkMain
+  where
+    migrateSigAccountsForService :: Kontrakcja m => Maybe ServiceID -> m ()
+    migrateSigAccountsForService service = do
+      docs <- query $ GetDocuments service
+      mapM_ migrateSigAccountsForDocument docs
+      return ()
+    migrateSigAccountsForDocument :: Kontrakcja m => Document -> m (Either String Document)
+    migrateSigAccountsForDocument Document{documentid,documentservice,documentsignatorylinks} = do
+      musers <- mapM (query . GetUserByEmail documentservice . Email . signatoryemail . signatorydetails) documentsignatorylinks
+      update $ MigrateDocumentSigAccounts documentid (catMaybes musers) 
+
+-- This method can be used do reseal a document 
+resealFile :: Kontrakcja m => DocumentID -> m KontraLink
+resealFile docid = onlySuperUser $ do
+  Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> mzero
+    Just doc -> case (documentfiles doc,documentsealedfiles doc, documentstatus doc) of  
+                     ((_:_),[], Closed) -> do
+                         ctx <- getContext
+                         Log.debug "Document is valid for resealing sealing"
+                         res <- sealDocument ctx doc
+                         case res of
+                           Left  _ -> Log.debug "We failed to reseal the document"
+                           Right _ -> Log.debug "Ok, so the document has been resealed"
+                         return LoopBack
+                     _ -> do
+                         Log.debug "Document is not valid for resealing sealing"
+                         mzero
+

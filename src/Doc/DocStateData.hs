@@ -15,7 +15,6 @@ module Doc.DocStateData
     , DocumentUI(..)
     , DocumentType(..)
     , DocumentProcess(..)
-    , DocumentRecordStatus(..)
     , Documents
     , FieldDefinition(..)
     , FieldPlacement(..)
@@ -326,19 +325,54 @@ data SignatoryLink8 = SignatoryLink8
     }
     deriving (Eq, Ord, Typeable)
 
+data SignatoryLink9 = SignatoryLink9
+    { signatorylinkid9          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails9         :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash9       :: MagicHash           -- ^ authentication code
+    , maybesignatory9           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesupervisor9          :: Maybe UserID        -- ^ if this document has been saved to an account with a supervisor, this is the userid
+    , maybesigninfo9            :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo9            :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , maybereadinvite9          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
+    , invitationdeliverystatus9 :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo9   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles9           :: [SignatoryRole]
+    , signatorylinkdeleted9     :: Bool
+    }
+    deriving (Eq, Ord, Typeable)
+
+data SignatoryLink10 = SignatoryLink10
+    { signatorylinkid10            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails10           :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash10         :: MagicHash           -- ^ authentication code
+    , maybesignatory10             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesupervisor10            :: Maybe UserID        -- ^ if this document has been saved to an account with a supervisor, this is the userid
+    , maybesigninfo10              :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo10              :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , maybereadinvite10            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
+    , invitationdeliverystatus10   :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo10     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles10             :: [SignatoryRole]
+    , signatorylinkdeleted10       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
+    , signatorylinkreallydeleted10 :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
+    }
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryLink = SignatoryLink
-    { signatorylinkid          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
-    , signatorydetails         :: SignatoryDetails    -- ^ details of this person as filled in invitation
-    , signatorymagichash       :: MagicHash           -- ^ authentication code
-    , maybesignatory           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
-    , maybesupervisor          :: Maybe UserID        -- ^ if this document has been saved to an account with a supervisor, this is the userid
-    , maybesigninfo            :: Maybe SignInfo      -- ^ when a person has signed this document
-    , maybeseeninfo            :: Maybe SignInfo      -- ^ when a person has first seen this document
-    , maybereadinvite          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
-    , invitationdeliverystatus :: MailsDeliveryStatus -- ^ status of email delivery
-    , signatorysignatureinfo   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
-    , signatoryroles           :: [SignatoryRole]
-    , signatorylinkdeleted     :: Bool
+    { signatorylinkid            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash         :: MagicHash           -- ^ authentication code
+    , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesupervisor            :: Maybe UserID        -- ^ THIS IS NOW DEPRECATED - use maybecompany instead
+    , maybecompany               :: Maybe CompanyID     -- ^ if this document has been saved to a company account this is the companyid
+    , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
+    , invitationdeliverystatus   :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles             :: [SignatoryRole]
+    , signatorylinkdeleted       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
+    , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
     }
     deriving (Eq, Ord, Typeable)
 
@@ -424,6 +458,10 @@ data DocumentProcess = Contract | Offer | Order
 data DocumentType = Signable DocumentProcess | Template DocumentProcess | Attachment | AttachmentTemplate
     deriving (Eq, Ord, Typeable)
 
+{- |
+    This is no longer used because there's no quarantine anymore, it's been replaced
+    with a flag called documentdeleted
+-}
 data DocumentRecordStatus = LiveDocument | QuarantinedDocument | DeletedDocument
     deriving (Eq, Ord, Typeable, Show)
 
@@ -1056,6 +1094,71 @@ data Document26 = Document26
     , documentsignatoryattachments26   :: [SignatoryAttachment]
     }  deriving Typeable
 
+data Document27 = Document27
+    { documentid27                     :: DocumentID
+    , documenttitle27                  :: BS.ByteString
+    , documentsignatorylinks27         :: [SignatoryLink]
+    , documentfiles27                  :: [File]
+    , documentsealedfiles27            :: [File]
+    , documentstatus27                 :: DocumentStatus
+    , documenttype27                   :: DocumentType
+    , documentfunctionality27          :: DocumentFunctionality
+    , documentctime27                  :: MinutesTime
+    , documentmtime27                  :: MinutesTime
+    , documentdaystosign27             :: Maybe Int
+    , documenttimeouttime27            :: Maybe TimeoutTime
+    , documentinvitetime27             :: Maybe SignInfo
+    , documentlog27                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext27             :: BS.ByteString
+    , documenttrustweaverreference27   :: Maybe BS.ByteString
+    , documentallowedidtypes27         :: [IdentificationType]
+    , documentcsvupload27              :: Maybe CSVUpload
+    , documentcancelationreason27      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing27                :: DocumentSharing
+    , documentrejectioninfo27          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags27                   :: [DocumentTag]
+    , documentservice27                :: Maybe ServiceID
+    , documentattachments27            :: [DocumentID] -- this needs to go away in next migration
+    , documentoriginalcompany27        :: Maybe CompanyID
+    , documentrecordstatus27           :: DocumentRecordStatus
+    , documentquarantineexpiry27       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
+    , documentauthorattachments27      :: [AuthorAttachment]
+    , documentsignatoryattachments27   :: [SignatoryAttachment]
+    , documentui27                     :: DocumentUI
+    } deriving Typeable
+
+data Document28 = Document28
+    { documentid28                     :: DocumentID
+    , documenttitle28                  :: BS.ByteString
+    , documentsignatorylinks28         :: [SignatoryLink]
+    , documentfiles28                  :: [File]
+    , documentsealedfiles28            :: [File]
+    , documentstatus28                 :: DocumentStatus
+    , documenttype28                   :: DocumentType
+    , documentfunctionality28          :: DocumentFunctionality
+    , documentctime28                  :: MinutesTime
+    , documentmtime28                  :: MinutesTime
+    , documentdaystosign28             :: Maybe Int
+    , documenttimeouttime28            :: Maybe TimeoutTime
+    , documentinvitetime28             :: Maybe SignInfo
+    , documentlog28                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext28             :: BS.ByteString
+    , documenttrustweaverreference28   :: Maybe BS.ByteString
+    , documentallowedidtypes28         :: [IdentificationType]
+    , documentcsvupload28              :: Maybe CSVUpload
+    , documentcancelationreason28      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing28                :: DocumentSharing
+    , documentrejectioninfo28          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags28                   :: [DocumentTag]
+    , documentservice28                :: Maybe ServiceID
+    , documentattachments28            :: [DocumentID] -- this needs to go away in next migration
+    , documentoriginalcompany28        :: Maybe CompanyID
+    , documentdeleted28                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
+    , documentauthorattachments28      :: [AuthorAttachment]
+    , documentsignatoryattachments28   :: [SignatoryAttachment]
+    , documentui28                     :: DocumentUI
+    } deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -1081,9 +1184,7 @@ data Document = Document
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
     , documentattachments            :: [DocumentID] -- this needs to go away in next migration
-    , documentoriginalcompany        :: Maybe CompanyID
-    , documentrecordstatus           :: DocumentRecordStatus
-    , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
+    , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
     , documentauthorattachments      :: [AuthorAttachment]
     , documentsignatoryattachments   :: [SignatoryAttachment]
     , documentui                     :: DocumentUI
@@ -1406,9 +1507,17 @@ $(deriveSerialize ''SignatoryLink8)
 instance Version SignatoryLink8 where
     mode = extension 8 (Proxy :: Proxy SignatoryLink7)
 
+$(deriveSerialize ''SignatoryLink9)
+instance Version SignatoryLink9 where
+    mode = extension 9 (Proxy :: Proxy SignatoryLink8)
+
+$(deriveSerialize ''SignatoryLink10)
+instance Version SignatoryLink10 where
+    mode = extension 10 (Proxy :: Proxy SignatoryLink9)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 9 (Proxy :: Proxy SignatoryLink8)
+    mode = extension 11 (Proxy :: Proxy SignatoryLink10)
 
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
@@ -1719,7 +1828,7 @@ instance Migrate SignatoryLink7 SignatoryLink8 where
                 , signatoryroles8            = signatoryroles7
                 }
 
-instance Migrate SignatoryLink8 SignatoryLink where
+instance Migrate SignatoryLink8 SignatoryLink9 where
     migrate (SignatoryLink8
              { signatorylinkid8
              , signatorydetails8
@@ -1732,19 +1841,81 @@ instance Migrate SignatoryLink8 SignatoryLink where
              , signatorysignatureinfo8
              , signatorylinkdeleted8
              , signatoryroles8
+             }) = SignatoryLink9
+                { signatorylinkid9           = signatorylinkid8
+                , signatorydetails9          = signatorydetails8
+                , signatorymagichash9        = signatorymagichash8
+                , maybesignatory9            = maybesignatory8
+                , maybesupervisor9           = Nothing
+                , maybesigninfo9             = maybesigninfo8
+                , maybeseeninfo9             = maybeseeninfo8
+                , maybereadinvite9           = maybereadinvite8
+                , invitationdeliverystatus9  = invitationdeliverystatus8
+                , signatorysignatureinfo9    = signatorysignatureinfo8
+                , signatorylinkdeleted9      = signatorylinkdeleted8
+                , signatoryroles9            = signatoryroles8
+                }
+
+instance Migrate SignatoryLink9 SignatoryLink10 where
+    migrate (SignatoryLink9
+             { signatorylinkid9
+             , signatorydetails9
+             , signatorymagichash9
+             , maybesignatory9
+             , maybesupervisor9
+             , maybesigninfo9
+             , maybeseeninfo9
+             , maybereadinvite9
+             , invitationdeliverystatus9
+             , signatorysignatureinfo9
+             , signatorylinkdeleted9
+             , signatoryroles9
+             }) = SignatoryLink10
+                { signatorylinkid10            = signatorylinkid9
+                , signatorydetails10           = signatorydetails9
+                , signatorymagichash10         = signatorymagichash9
+                , maybesignatory10             = maybesignatory9
+                , maybesupervisor10            = maybesupervisor9
+                , maybesigninfo10              = maybesigninfo9
+                , maybeseeninfo10              = maybeseeninfo9
+                , maybereadinvite10            = maybereadinvite9
+                , invitationdeliverystatus10   = invitationdeliverystatus9
+                , signatorysignatureinfo10     = signatorysignatureinfo9
+                , signatorylinkdeleted10       = signatorylinkdeleted9
+                , signatorylinkreallydeleted10 = False
+                , signatoryroles10             = signatoryroles9
+                }
+
+instance Migrate SignatoryLink10 SignatoryLink where
+    migrate (SignatoryLink10
+             { signatorylinkid10
+             , signatorydetails10
+             , signatorymagichash10
+             , maybesignatory10
+             , maybesupervisor10
+             , maybesigninfo10
+             , maybeseeninfo10
+             , maybereadinvite10
+             , invitationdeliverystatus10
+             , signatorysignatureinfo10
+             , signatorylinkdeleted10
+             , signatorylinkreallydeleted10
+             , signatoryroles10
              }) = SignatoryLink
-                { signatorylinkid           = signatorylinkid8
-                , signatorydetails          = signatorydetails8
-                , signatorymagichash        = signatorymagichash8
-                , maybesignatory            = maybesignatory8
-                , maybesupervisor           = Nothing
-                , maybesigninfo             = maybesigninfo8
-                , maybeseeninfo             = maybeseeninfo8
-                , maybereadinvite           = maybereadinvite8
-                , invitationdeliverystatus  = invitationdeliverystatus8
-                , signatorysignatureinfo    = signatorysignatureinfo8
-                , signatorylinkdeleted      = signatorylinkdeleted8
-                , signatoryroles            = signatoryroles8
+                { signatorylinkid            = signatorylinkid10
+                , signatorydetails           = signatorydetails10
+                , signatorymagichash         = signatorymagichash10
+                , maybesignatory             = maybesignatory10
+                , maybesupervisor            = maybesupervisor10
+                , maybecompany               = Nothing
+                , maybesigninfo              = maybesigninfo10
+                , maybeseeninfo              = maybeseeninfo10
+                , maybereadinvite            = maybereadinvite10
+                , invitationdeliverystatus   = invitationdeliverystatus10
+                , signatorysignatureinfo     = signatorysignatureinfo10
+                , signatorylinkdeleted       = signatorylinkdeleted10
+                , signatorylinkreallydeleted = signatorylinkreallydeleted10
+                , signatoryroles             = signatoryroles10
                 }
 
 $(deriveSerialize ''SignatoryLinkID)
@@ -1841,9 +2012,18 @@ $(deriveSerialize ''Document26)
 instance Version Document26 where
     mode = extension 26 (Proxy :: Proxy Document25)
 
+$(deriveSerialize ''Document27)
+instance Version Document27 where
+    mode = extension 27 (Proxy :: Proxy Document26)
+
+$(deriveSerialize ''Document28)
+instance Version Document28 where
+    mode = extension 28 (Proxy :: Proxy Document27)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 27 (Proxy :: Proxy Document26)
+    mode = extension 29 (Proxy :: Proxy Document28)
+
 
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
@@ -2759,7 +2939,7 @@ instance Migrate Document25 Document26 where
                 , documentsignatoryattachments26   = []
                 }
 
-instance Migrate Document26 Document where
+instance Migrate Document26 Document27 where
     migrate ( Document26
                 { documentid26                 
                 , documenttitle26             
@@ -2790,38 +2970,175 @@ instance Migrate Document26 Document where
                 , documentquarantineexpiry26   
                 , documentauthorattachments26 
                 , documentsignatoryattachments26  
-                }) = Document
-                { documentid                     = documentid26
-                , documenttitle                  = documenttitle26
-                , documentsignatorylinks         = documentsignatorylinks26
-                , documentfiles                  = documentfiles26
-                , documentsealedfiles            = documentsealedfiles26
-                , documentstatus                 = documentstatus26
-                , documenttype                   = documenttype26
-                , documentfunctionality          = documentfunctionality26
-                , documentctime                  = documentctime26
-                , documentmtime                  = documentmtime26
-                , documentdaystosign             = documentdaystosign26
-                , documenttimeouttime            = documenttimeouttime26
-                , documentinvitetime             = documentinvitetime26
-                , documentlog                    = documentlog26
-                , documentinvitetext             = documentinvitetext26
-                , documenttrustweaverreference   = documenttrustweaverreference26
-                , documentallowedidtypes         = documentallowedidtypes26
-                , documentcsvupload              = documentcsvupload26
-                , documentcancelationreason      = documentcancelationreason26
-                , documentsharing                = documentsharing26
-                , documentrejectioninfo          = documentrejectioninfo26
-                , documenttags                   = documenttags26
-                , documentservice                = documentservice26
-                , documentoriginalcompany        = documentoriginalcompany26
-                , documentattachments            = documentattachments26
-                , documentrecordstatus           = documentrecordstatus26
-                , documentquarantineexpiry       = documentquarantineexpiry26
-                , documentauthorattachments      = documentauthorattachments26
-                , documentsignatoryattachments   = documentsignatoryattachments26
-                , documentui                     = emptyDocumentUI
+                }) = Document27
+                { documentid27                     = documentid26
+                , documenttitle27                  = documenttitle26
+                , documentsignatorylinks27         = documentsignatorylinks26
+                , documentfiles27                  = documentfiles26
+                , documentsealedfiles27            = documentsealedfiles26
+                , documentstatus27                 = documentstatus26
+                , documenttype27                   = documenttype26
+                , documentfunctionality27          = documentfunctionality26
+                , documentctime27                  = documentctime26
+                , documentmtime27                  = documentmtime26
+                , documentdaystosign27             = documentdaystosign26
+                , documenttimeouttime27            = documenttimeouttime26
+                , documentinvitetime27             = documentinvitetime26
+                , documentlog27                    = documentlog26
+                , documentinvitetext27             = documentinvitetext26
+                , documenttrustweaverreference27   = documenttrustweaverreference26
+                , documentallowedidtypes27         = documentallowedidtypes26
+                , documentcsvupload27              = documentcsvupload26
+                , documentcancelationreason27      = documentcancelationreason26
+                , documentsharing27                = documentsharing26
+                , documentrejectioninfo27          = documentrejectioninfo26
+                , documenttags27                   = documenttags26
+                , documentservice27                = documentservice26
+                , documentoriginalcompany27        = documentoriginalcompany26
+                , documentattachments27            = documentattachments26
+                , documentrecordstatus27           = documentrecordstatus26
+                , documentquarantineexpiry27       = documentquarantineexpiry26
+                , documentauthorattachments27      = documentauthorattachments26
+                , documentsignatoryattachments27   = documentsignatoryattachments26
+                , documentui27                     = emptyDocumentUI
                 }
+
+instance Migrate Document27 Document28 where
+    migrate ( Document27
+                { documentid27                 
+                , documenttitle27             
+                , documentsignatorylinks27    
+                , documentfiles27            
+                , documentsealedfiles27    
+                , documentstatus27       
+                , documenttype27          
+                , documentfunctionality27  
+                , documentctime27         
+                , documentmtime27         
+                , documentdaystosign27     
+                , documenttimeouttime27    
+                , documentinvitetime27    
+                , documentlog27           
+                , documentinvitetext27       
+                , documenttrustweaverreference27  
+                , documentallowedidtypes27    
+                , documentcsvupload27       
+                , documentcancelationreason27  
+                , documentsharing27        
+                , documentrejectioninfo27    
+                , documenttags27          
+                , documentservice27           
+                , documentoriginalcompany27    
+                , documentattachments27       
+                , documentrecordstatus27   
+                , documentauthorattachments27 
+                , documentsignatoryattachments27
+                , documentui27  
+                }) = Document28
+                { documentid28                     = documentid27
+                , documenttitle28                  = documenttitle27
+                , documentsignatorylinks28         = documentsignatorylinks27
+                , documentfiles28                  = documentfiles27
+                , documentsealedfiles28            = documentsealedfiles27
+                , documentstatus28                 = documentstatus27
+                , documenttype28                   = documenttype27
+                , documentfunctionality28          = documentfunctionality27
+                , documentctime28                  = documentctime27
+                , documentmtime28                  = documentmtime27
+                , documentdaystosign28             = documentdaystosign27
+                , documenttimeouttime28            = documenttimeouttime27
+                , documentinvitetime28             = documentinvitetime27
+                , documentlog28                    = documentlog27
+                , documentinvitetext28             = documentinvitetext27
+                , documenttrustweaverreference28   = documenttrustweaverreference27
+                , documentallowedidtypes28         = documentallowedidtypes27
+                , documentcsvupload28              = documentcsvupload27
+                , documentcancelationreason28      = documentcancelationreason27
+                , documentsharing28                = documentsharing27
+                , documentrejectioninfo28          = documentrejectioninfo27
+                , documenttags28                   = documenttags27
+                , documentservice28                = documentservice27
+                , documentoriginalcompany28        = documentoriginalcompany27
+                , documentattachments28            = documentattachments27
+                , documentdeleted28                = documentrecordstatus27 == DeletedDocument
+                , documentauthorattachments28      = documentauthorattachments27
+                , documentsignatoryattachments28   = documentsignatoryattachments27
+                , documentui28                     = documentui27
+                }
+
+instance Migrate Document28 Document where
+    migrate ( Document28
+                { documentid28                 
+                , documenttitle28             
+                , documentsignatorylinks28    
+                , documentfiles28            
+                , documentsealedfiles28    
+                , documentstatus28       
+                , documenttype28          
+                , documentfunctionality28  
+                , documentctime28         
+                , documentmtime28         
+                , documentdaystosign28     
+                , documenttimeouttime28    
+                , documentinvitetime28    
+                , documentlog28           
+                , documentinvitetext28       
+                , documenttrustweaverreference28  
+                , documentallowedidtypes28    
+                , documentcsvupload28       
+                , documentcancelationreason28  
+                , documentsharing28        
+                , documentrejectioninfo28    
+                , documenttags28          
+                , documentservice28           
+                , documentoriginalcompany28    
+                , documentattachments28       
+                , documentdeleted28   
+                , documentauthorattachments28 
+                , documentsignatoryattachments28
+                , documentui28  
+                }) = Document
+                { documentid                     = documentid28
+                , documenttitle                  = documenttitle28
+                , documentsignatorylinks         = map setOriginalCompanyIfAuthor documentsignatorylinks28
+                , documentfiles                  = documentfiles28
+                , documentsealedfiles            = documentsealedfiles28
+                , documentstatus                 = documentstatus28
+                , documenttype                   = documenttype28
+                , documentfunctionality          = documentfunctionality28
+                , documentctime                  = documentctime28
+                , documentmtime                  = documentmtime28
+                , documentdaystosign             = documentdaystosign28
+                , documenttimeouttime            = documenttimeouttime28
+                , documentinvitetime             = documentinvitetime28
+                , documentlog                    = documentlog28
+                , documentinvitetext             = documentinvitetext28
+                , documenttrustweaverreference   = documenttrustweaverreference28
+                , documentallowedidtypes         = documentallowedidtypes28
+                , documentcsvupload              = documentcsvupload28
+                , documentcancelationreason      = documentcancelationreason28
+                , documentsharing                = documentsharing28
+                , documentrejectioninfo          = documentrejectioninfo28
+                , documenttags                   = documenttags28
+                , documentservice                = documentservice28
+                , documentattachments            = documentattachments28
+                , documentdeleted                = documentdeleted28
+                , documentauthorattachments      = documentauthorattachments28
+                , documentsignatoryattachments   = documentsignatoryattachments28
+                , documentui                     = documentui28
+                }
+                where
+                  {- |
+                      Instead of storing the company on the document we want to store
+                      it on the individual signatory links.  So each signatory link
+                      has a maybesignatory storing the user, and maybecompany storing
+                      the company the user is acting for.
+                  -}
+                  setOriginalCompanyIfAuthor :: SignatoryLink -> SignatoryLink
+                  setOriginalCompanyIfAuthor sl@SignatoryLink{signatoryroles} =
+                    if SignatoryAuthor `elem` signatoryroles
+                      then sl { maybecompany = documentoriginalcompany28 }
+                      else sl
 
 
 $(deriveSerialize ''DocumentStatus)
@@ -2939,45 +3256,43 @@ type Documents = IxSet Document
 
 
 instance Indexable Document where
-        empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
-                      , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory
-                                                                (filter (not . signatorylinkdeleted)
-                                                                 (documentsignatorylinks x))))) :: [Signatory])
-                      , ixFun (\x -> (map Supervisor (catMaybes (map maybesupervisor
-                                                                (filter (not . signatorylinkdeleted)
-                                                                 (documentsignatorylinks x))))) :: [Supervisor])
-                      -- shouldn't be using emails really, need to start savings docs for users earlier
-                      , ixFun (\x -> map (Email . signatoryemail . signatorydetails)
-                                     (filter (not . signatorylinkdeleted)
-                                       (documentsignatorylinks x)) :: [Email])
-
-                      -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
-                      -- the scope of a single document! FIXME
-                      , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])
-                      , ixFun (\x -> map fileid (documentfiles x
-                                                 ++ documentsealedfiles x
-                                                 ++ map authorattachmentfile (documentauthorattachments x)
-                                                 ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
-                      , ixFun (\x -> (case documenttimeouttime x of
-                                         Just time -> [time]
-                                         Nothing -> []) :: [TimeoutTime])
-                      , ixFun (\x -> [documenttype x] :: [DocumentType])
-                      , ixFun (\x -> [documentrecordstatus x] :: [DocumentRecordStatus])
-                      , ixFun (\x -> documenttags x :: [DocumentTag])
-                      , ixFun (\x -> [documentservice x] :: [Maybe ServiceID])
-                      , ixFun (\x -> [documentoriginalcompany x] :: [Maybe CompanyID])
-                      , ixFun (\x -> [userid | siglink <- documentsignatorylinks x
-                                             , not (signatorylinkdeleted siglink)
-                                             , Just userid <- [maybesignatory siglink]
-                                             ] :: [UserID])
-                      , ixFun (\x -> [ Author uid | sl@SignatoryLink{ maybesignatory = Just uid } <- documentsignatorylinks x
-                                                  , SignatoryAuthor `elem` signatoryroles sl])
-                      ]
+  empty = 
+    ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
+            -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
+            -- the scope of a single document! FIXME
+          , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])           
+          , ixFun (\x -> map fileid (documentfiles x
+                                       ++ documentsealedfiles x
+                                       ++ map authorattachmentfile (documentauthorattachments x)
+                                       ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
+          
+          , ixFun $ ifDocumentNotDeleted (maybeToList . documenttimeouttime)
+          , ixFun $ ifDocumentNotDeleted (\x -> [documenttype x] :: [DocumentType])
+          , ixFun $ ifDocumentNotDeleted (\x -> documenttags x :: [DocumentTag])
+          , ixFun $ ifDocumentNotDeleted (\x -> [documentservice x] :: [Maybe ServiceID])
+          , ixFun $ ifDocumentNotDeleted (\x -> [documentstatus x] :: [DocumentStatus])
+          
+          , ixFun $ ifDocumentNotDeleted (\x ->
+                      (map Signatory . catMaybes . map maybesignatory $ undeletedSigLinks x) :: [Signatory])
+          , ixFun $ ifDocumentNotDeleted (\x ->
+                      (catMaybes . map maybecompany $ undeletedSigLinks x) :: [CompanyID])
+          , ixFun $ ifDocumentNotDeleted (\x ->
+                      (catMaybes . map maybesignatory $ undeletedSigLinks x) :: [UserID])
+          , ixFun $ ifDocumentNotDeleted (\x ->
+                      (map Author . catMaybes . map maybesignatory .
+                         filter (\sl -> (SignatoryAuthor `elem` signatoryroles sl)) $ undeletedSigLinks x) :: [Author])
+          ]
+          where
+            ifDocumentNotDeleted :: (Document -> [a]) -> Document -> [a]
+            ifDocumentNotDeleted f doc
+              | documentdeleted doc = []
+              | otherwise = f doc
+            undeletedSigLinks doc =
+              filter (not . signatorylinkreallydeleted) $ documentsignatorylinks doc
 
 instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty
 
 $(deriveSerialize ''SignatoryRole)
-
 

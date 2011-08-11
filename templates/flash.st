@@ -212,6 +212,10 @@ flashMessageTemplateArchiveDone=	$_flashMessageTemplateArchiveDone()$
 ###
 flashMessageAttachmentArchiveDone=	$_flashMessageAttachmentArchiveDone()$
 ###
+flashMessageRubbishRestoreDone= $_flashMessageRubbishRestoreDone()$
+###
+flashMessageRubbishHardDeleteDone= $_flashMessageRubbishHardDeleteDone()$
+###
 flashMessageThanksForTheQuestion=	$_flashMessageThanksForTheQuestion()$
 ###
 flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$

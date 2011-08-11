@@ -46,9 +46,6 @@ adminsmain=
         </tr>
         <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-          <td style="height:50px;width:200px"><a href="/adminonly/quarantine"><button style="width:150px"> Quarantine </button></a></td>
-        </tr>
-        <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> </td>
         </tr>
     </tbody></table>
@@ -191,8 +188,7 @@ adminUsersForPayments=
         <thead>
           <td style="width:200px">Username</td>
           <td style="width:200px">Email</td>
-	  <td style="width:200px">Superuser Company name</td>
-	  <td style="width:200px">Superuser email</td>
+	  <td style="width:200px">Company name</td>
 	  <td style="width:200px">Payment plan</td>
 	  <td style="width:200px">Next billing date</td>
 	  <td style="width:200px">Last billing date</td>
@@ -206,7 +202,6 @@ adminUsersForPayments=
           <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$
           </td>
-	  <td>-</td>
 	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
 	  <td>?</td>
 	  <td>?</td>
@@ -253,43 +248,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.personalnumber$"  name="userpersonalnumber" />
 		  </td>
 		</tr>
-		<tr> <td>Company:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyname$"  name="usercompanyname" />
-		  </td>
-		</tr>
-		<tr> <td>Company position:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
-		  </td>
-		</tr>
-		<tr> <td>Company nr:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companynumber$"  name="usercompanynumber" />
-		  </td>
-		</tr>
-		<tr> <td style="padding-top:10px"><strong>Location</strong></td>
-		  <td> </td>
-		</tr>
-		<tr> <td>Adress:</td>
-		  <td> <input type="text" style="width:200px;margin:0" value="$user.address$"  name="useraddress" />
-		  </td>
-		</tr>
-		<tr> <td>ZIP:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.zip$"  name="userzip" />
-		  </td>
-		</tr>
-		<tr> <td>City:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.city$"  name="usercity" />
-		  </td>
-		</tr>
-		<tr> <td>Country:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.country$" name="usercountry" />
-		  </td>
-		</tr>
 		<tr> <td style="padding-top:10px" ><strong>Contact</strong></td>
 		  <td>
 		  </td>
@@ -309,13 +267,57 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
 		  </td>
 		</tr>
+		<tr> <td>Company position:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
+		  </td>
+		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company data</strong></td>
+		  <td> </td>
+		</tr>
+		<tr> <td>Company:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyname$"  name="companyname" />
+		  </td>
+		</tr>
+		<tr> <td>Company nr:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companynumber$"  name="companynumber" />
+		  </td>
+		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company Location</strong></td>
+		  <td> </td>
+		</tr>
+		<tr> <td>Adress:</td>
+		  <td> <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyaddress$"  name="companyaddress" />
+		  </td>
+		</tr>
+		<tr> <td>ZIP:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyzip$"  name="companyzip" />
+		  </td>
+		</tr>
+		<tr> <td>City:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companycity$"  name="companycity" />
+		  </td>
+		</tr>
+		<tr> <td>Country:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companycountry$" name="companycountry" />
+		  </td>
+		</tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>
 		</tr>
 		<tr> <td>Account type:</td>
 		  <td>
-		    <select autocomplete="off" name="accounttype">$user.accounttype:options()$</select>
+		    $if(user.iscompanyaccount)$
+		    $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
+		    $else$
+		    Private Account
+		    $endif$
 		  </td>
 		</tr>
 		<tr> <td>Account plan:</td>
@@ -536,7 +538,7 @@ userusagestats=
               <td style="width:200px">Viral invites</td>
               <td style="width:200px">Admin invites</td>
 	    </thead>
-            $stats:{stat|<tr>
+            $allMonthsStats:{stat|<tr>
               <td>$stat.date$</td>
               <td>$stat.documents.signatures$ </td>
               <td>$stat.documents.signaturesInClosed$ </td>
@@ -638,54 +640,6 @@ statisticsPage=
       </table>
     </div>
 ###
-###
-quarantinePage=
-    $backtoadminmainlink()$
-    <div>
-      <h1>Document Quarantine</h1>
-      <table>
-        <thead>
-          <td style="width:200px">Doc Name</td>
-          <td style="width:200px">Quarantine Expiry</td>
-          <td style="width:200px">Signatories</td>
-          <td style="width:200px"></td>
-          <td style="width:200px"></td>
-       </thead>
-        $documents:{doc|
-          <tr>
-            <td>$doc.name$</td>
-            <td>$doc.expiry$</td>
-            <td></td>
-            <td></td>
-            <td>
-              <form action="$linkquarantine$" method="post">
-                <input type="hidden" name="extend" value="true"/>
-                <input type="hidden" name="docid" value="$doc.docid$"/>
-                <input type="submit" value="Extend Quarantine"/>
-              </form>
-            </td>
-          </tr>
-          $doc.signatories:{sig|
-          <tr>
-            <td></td>
-            <td></td>
-            <td>$sig.email$</td>
-            <td>
-              $if(sig.isrevivable)$
-              <form action="$linkquarantine$" method="post">
-                <input type="hidden" name="revive" value="true"/>
-                <input type="hidden" name="docid" value="$doc.docid$"/>
-                <input type="hidden" name="siglinkid" value="$sig.siglinkid$"/>
-                <input type="submit" value="Undo Delete"/>
-              </form>
-              $endif$
-            </td>
-            <td></td>
-          </tr>
-          }$
-        }$
-      </table>
-    </div>
 ###
 databaseContents=
     $backtoadminmainlink()$
@@ -812,103 +766,10 @@ adminTranslations =
 
 <center><h2> Translation stats </h2>
 
-<div style="width: 500px;padding:20px; "> If you see this page then .pot files have just been generated.
-      .pot files are for you to see what texts are avaible in the system and to generate .po files. 
-      You can use .pot files, but never write anything to them.
+<div style="width: 500px;padding:20px; ">
+    If you see this page then all csv files have been updated.
+    All not used any more texts will be marked with *****.
 </div>
 </center>
-
-$langs:{lang | 
-<br/>
-<div style="border: 1px solid black;margin:5px;padding:5px;">
-<center><h3> $lang.name$ </h3></center>
-
-<table>
-<thead>
- <th style="width:300px">
- </th>
- <th style="width:200px">
-
- </th>
-  <th style="width:200px">
- </th>
-</thead>
-<tbody>
-<tr>
-  <td>
-    <strong> Missing files, they have not been created</strong> 
-  </td>
-</tr>
-
-$lang.missingFiles:{file | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $file$.po
-  </td>
-</tr>
-}$
-
-<tr>
-  <td>
-    <strong> Not ussed files, they should not exist </strong> 
-  </td>
-</tr>
-
-$lang.extraFiles:{file | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $file$.po
-  </td>
-</tr>
-}$
-
-
-<tr>
-  <td>
-    <strong> Not synchronised files</strong> 
-  </td>
-</tr>
-
-$lang.notSynchronisedFiles:{file | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $file$.po
-  </td>
-</tr>
-}$
-
-
-<tr>
-  <td>
-    <strong> Empty texts </strong> 
-  </td>
-</tr>
-
-$lang.emptyTranslations :{t | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $t.file$.po
-  </td>
-  <td>
-    $t.name$
-  </td>
-</tr>
-}$
-
-
-
-</tbody>
-</table>
-</div>
-<br/>
-}$
 
 ####

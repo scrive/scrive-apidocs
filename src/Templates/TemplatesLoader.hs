@@ -12,16 +12,16 @@
 module Templates.TemplatesLoader
     ( KontrakcjaTemplates
     , KontrakcjaTemplate
-    , KontrakcjaMultilangTemplates
+    , KontrakcjaGlobalTemplates
     , renderTemplateMain
     , templateList
     , getTemplatesModTime
     , toKontrakcjaTemplates
     , getTemplates
-    , readTemplates
-    , readAllLangsTemplates
-    , langVersion
-    , Lang(..)
+    , readGlobalTemplates
+    , localizedVersion
+    , Localization
+    , systemServerFromURL
     ) where
 
 import Text.StringTemplate
@@ -34,32 +34,35 @@ import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
 import Templates.TemplatesFiles
-import Templates.Langs
 import Misc
+import User.Lang
+import Templates.TextTemplates
+import Templates.SystemTemplates
+import User.SystemServer
 
 {-Names of template files -}
 
 
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
-type KontrakcjaMultilangTemplates = Map.Map Lang KontrakcjaTemplates
+type KontrakcjaGlobalTemplates = Map.Map Localization KontrakcjaTemplates
+type Localization = (SystemServer,Lang)
 
+localizedVersion::Localization -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
+localizedVersion localization mtemplates = mtemplates ! localization
 
-langVersion::Lang -> KontrakcjaMultilangTemplates -> KontrakcjaTemplates
-langVersion lang mtemplates = mtemplates ! lang
+-- Fixme: Make this do only one read of all files !!
+readGlobalTemplates :: IO KontrakcjaGlobalTemplates
+readGlobalTemplates = fmap Map.fromList $ forM allValues $ \localization -> do
+    templates <- readTemplates $ localization
+    return (localization,templates)
 
-
-readAllLangsTemplates :: IO KontrakcjaMultilangTemplates
-readAllLangsTemplates = fmap Map.fromList $ forM allValues $ \lang -> do
-    templates <- readTemplates lang
-    return (lang,templates)
-
-
-readTemplates :: Lang -> IO KontrakcjaTemplates
-readTemplates lang = do
+readTemplates :: Localization -> IO KontrakcjaTemplates
+readTemplates localization = do
     ts <- mapM getTemplates templatesFilesPath
-    texts <- getTextTemplates lang
-    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
+    texts <- getTextTemplates $ snd localization
+    stemplates <- getSystemTemplates $ fst localization
+    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ stemplates ++ (concat ts) ++ texts
 
 --This is avaible only for special cases
 renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]

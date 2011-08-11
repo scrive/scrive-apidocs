@@ -1,0 +1,717 @@
+"!Template name","LANG_SE","LANG_EN"
+"_legalPageH1","JURIDIK","LEGAL"
+"_legalPageH2DocHandeling","Hantering av signerade dokument","Handling of signed documents"
+"_legalPageH2DocHandelingH31","Stämpling","Stamping"
+"_legalPageH2DocHandelingH31Body1","Då alla parter skrivit på ett dokument skickar vi dokumentet
+ (kraftigt krypterat) till TrustWeaver där det förses med en
+ kvalificerad signatur. Den kvalificerade signaturen går inte
+ att förvanska och därmed säkerställer den att dokumentet inte
+ förvanskats efter stämpling. Den kvalificerade signaturen går
+ att kontrollera i bland annat Adobe Reader.","When all parties have signed a document we encrypt it and send
+ it to TrustWeaver where it is supplied with a qualified signature.
+ The qualified signature is impossible to impair, and the document
+ is thereby protected against distortion after stamping. The qualified
+ signature is controllable when using, amongst others, Adobe
+ Reader."
+"_legalPageH2DocHandelingH32","Lagring","Storage"
+"_legalPageH2DocHandelingH32Body1","Utan tillgång till originaldokumentet är det svårt att bevisa
+ dokumentets innehåll. Av erfarenhet från våra kunder och kundprospekt
+ vet vi att det finns många olika situationer som kan göra att
+ dokument kommer bort. Man skulle kunna tro att detta inte är
+ fallet för viktigare dokument som till exempel rör gjorda investeringar
+ på många miljoner. Så är dock inte fallet, det slarvas med dokument
+ av såväl mindre som större värde. Därmed rekommenderar vi våra
+ kunder starkt att använda en lämplig lagringsplats för sina
+ dokument. Vi erbjuder två noggrant valda typer av lagring med
+ olika säkerhetsnivå:","Without access to the original document, it is hard to prove
+ the content of the document. Through experiences shared by our
+ customers, we know that there are many different situations
+ that can result in lost documents. One could believe that this
+ is not the case when dealing with more important documents,
+ such as investment contracts worth millions, but our studies
+ have shown that more important documents are lost almost as
+ often as less importunate ones. Because of this, we recommend
+ our customers to select an appropriate storage for their documents.
+ We offer two carefully selected types of storage with different
+ levels of security:"
+"_legalPageH2DocHandelingH32Body2","<h4>TrustWeaver:</h4> Som beskrivet i säkerhetsdelen av detta
+ dokument är TrustWeaver vår högsäkerhetslösning för lagring.
+ Bortsett från det tekniska som är beskrivet under rubriken säkerhet
+ skiljer sig TrustWeaver från andra lagringslösningar framförallt
+ vad gäller hur dokumenten lagras:","<h4>TrustWeaver:</h4> As described in the security part of this
+ document, TrustWeaver is our top security solution for storage.
+ Except for the technical aspects described under Security, TrustWeaver
+ differs from other storage solutions mostly in the way the documents
+ are stored:"
+"_legalPageH2DocHandelingH32Body21","<li>För att få lagra material på TrustWeaver måste man genomgå
+ rigorösa kontroller för att hindra användare från att äventyra
+ andra användares datasäkerhet.</li>			<li>Tjänsten är utformad
+ på sådant sätt att dokument inte kan tas ut och stoppas in igen.
+ Därmed garanteras dokumentens integritet i ytterligare ett steg
+ efter stämplingen med den kvalificerade signaturen.</li>","<li>To qualify as a TrustWeaver user, one has to go through rigorous
+ controls to prevent users from endangering other user's data
+ security.</li>			<li>The service was created in a way that makes
+ it impossible to remove a document and then put it back in.
+ Thereby, the integrity of the document is further secured in
+ another layer on top of the stamping with the qualified signature.</li>"
+"_legalPageH2DocHandelingH32Body3","<h4>Amazon:</h4> Denna typ av lagring sker hos den världsledande
+ molnbaserade lagringslösningen Amazon S3. Precis som TrustWeaver
+ är Amazon S3 säkerhetscertifierad enligt SAS 70 II och följer
+ en strikt policy kring datasäkerhet. Trots detta saknar den
+ TrustWeavers rigorösa användarkontroller och garantier av dataintegritet.","<h4>Amazon:</h4> This storage alternative is hosted by the world
+ leading cloud based storage solution, Amazon S3. As TrustWeaver,
+ Amazon S3 is certified according to the SAS 70 II standards,
+ and follows a strict data security policy. Despite this, Amazon
+ is not able to provide the rigorous user controls and guaranties
+ supplied by TrustWeaver."
+"_legalPageH2Intro","Inledning","Introduction"
+"_legalPageH2IntroBody","SkrivaPå är en tjänst för att underteckna och arkivera avtal
+ elektroniskt. Vi hjälper våra kunder att minska sina kostnader,
+ öka omsättningen och spara frustration. Nedanstående material
+ ska endast ses som en beskrivning av SkrivaPå som företag och
+ som tjänst. Materialet är under inga omständigheter avsett som
+ juridisk rådgivning.","Scrive is a service for signing and storing contracts electronically.
+ We help our customers to reduce their costs, increase their
+ turnover and save frustration. The following mateial shall only
+ be seen as a description of Scrive as a company and as a service.
+ The material is under no circumstances intended as legal advice."
+"_legalPageH2IntroH31","Juridiskt syfte","Legal objective"
+"_legalPageH2IntroH31Body1","SkrivaPå´s juridiska syfte är att tillhandahålla bästa möjliga
+ juridiska ramverk för att maximera den juridiska säkerheten,
+ minimera riskexponeringen samt minimera antalet obehagliga överraskningar
+ för våra användare.","Scrive's legal objective is to provide the best possible framework
+ to maximize legal security, minimize risk exposure, and minimize
+ the number of unpleasant surprises for our users."
+"_legalPageH2IntroH31Body2","När det uppstår en tvist kring huruvida ett dokument har skrivits
+ på eller inte är det viktigt att kunna påvisa oberoende bevismaterial
+ som styrker att dokumentet undertecknats av parterna. Detta
+ kan vara knepigt eftersom avtal ofta ingås i ett ”bevisvakuum”
+ där det enda sparade bevismaterialet är det signerade dokumentet.
+ I värsta fall har man kanske inte ens det signerade dokumentet
+ utan endast en e-post- eller sms-konversation att utgå ifrån.
+ Om då ena parten hävdar att den inte har tillgång till något
+ bevismaterial kan det vara svårt för andra parten att påvisa
+ att det bevismaterial som den visar upp är äkta historisk dokumentation
+ och inte har fabricerats i efterhand. Denna situation kan lätt
+ leda till brustna affärsrelationer och i värsta fall kan det
+ krävas att en domstolsprocess inleds för att avgöra konflikten.
+ När konflikten tas upp i domstol ligger bevisbördan i första
+ hand hos parten som hävdar att dokumentet skrivits på av samtliga
+ parter. När denna part uppfyllt sin bevisbörda åligger det bestridande
+ part att bevisa motsatsen och så vidare fram och tillbaks tills
+ domstolen baserat på framlagt bevismaterial slutligen fäller
+ ett avgörande huruvida dokumentet är giltigt eller inte.","When a conflict occurs about whether a document has been signed
+ os not, it is important to be able to show independent proof
+ material that strengthens that the document has been signed
+ by the involved parties. This is often tricky, since a  proof
+ vacuum often is created when a contract is signed, and the only
+ proof is the signed document itself. In worst case, the only
+ proof is only a e-mail or SMS conversation to work from. If
+ one party claims that it does not have access to any proof material,
+ problems will occur for the other party to show that the proof
+ material put forward is genuine, and has not been created retrospectively.
+ This situation could easily lead to a broken business relationship,
+ and in worst case to a trial in court. When such a conflict
+ is brought to court, the burden of proof usually falls on the
+ party claiming that the contract has been signed by other parties.
+ When that party fulfills its burden of proof, it is the other
+ party's burden to prove the opposite, and so the trial goes
+ on until the court finally judge upon the presented evidence
+ Whether the document is valid or not."
+"_legalPageH2IntroH31Body3","SkrivaPå´s syfte är att vara ett användbart redskap för båda
+ parter i alla steg av processen. Genom att SkrivaPå som oberoende
+ tredje part bevittnat och lagrar bevismaterialet kan parterna
+ använda SkrivaPå som ett effektivt och trovärdigt redskap för
+ att kunna påvisa vad som egentligen gäller och komma överens
+ utan att konflikten ska behöva utvecklas allt för långt. På
+ så sätt hjälper SkrivaPå att i tidiga stadier av osämja minimera
+ friktionen.  I de sällsynta fall en tvist går hela vägen till
+ domstol har SkrivaPå som syfte att kunna tillhandahålla hävdande
+ part (den part som hävdar att dokumentet undertecknats av parterna)
+ bästa möjliga bevismaterial för att denna framgångsrikt ska
+ kunna påvisa sin ståndpunkt i domstol.","Scrive's aim is to be a useful tool for both parties in all steps
+ of the process. By witnessing the transaction, collecting proof
+ material and storing it, Scrive serves as an independent third
+ party that easily shows all important actions commited by the
+ involved parties, and thereby functions as a tool for preventing
+ conflicts from evolving further than necessary. In this way,
+ Scrive helps minimizing the friction between parties at an early
+ stage of a conflict. In the rare cases where conflicts are tried
+ in court, Scrive aims to provide the party claiming that a document
+ was signed the best proof material possible to strenghten the
+ party's position in court."
+"_legalPageH2IntroH32","Oberoende ställning","Independent position"
+"_legalPageH2IntroH32Body","För att upprätthålla trovärdigheten i tjänsten är SkrivaPå alltid
+ oberoende. SkrivaPå tar och kommer aldrig att ta ställning för
+ någondera undertecknande part oavsett vem som är betalande kund
+ till SkrivaPå. Vårt syfte är uteslutande att generera bästa
+ möjliga bevismaterial som kan vara användbart för att styrka
+ att ett dokument undertecknats av parterna. Vi gör allt för
+ att skydda integriteten och kvaliteten i det bevismaterial som
+ genereras genom SkrivaPå och för att göra det så användbart
+ som möjligt för våra slutanvändare.","To maintain the credibility of the service, Scrive is always
+ Independent. Scrive never takes, and will never take the position
+ of one side of signing parties regardless of who is a paying
+ customer of Scrive's. Our purpose is exclusively to generate
+ the best proof material possible to strengthen that a document
+ has been signed by the parties. We do everything we can to protect
+ the integrity and quality of the proof material generated by
+ Scrive, and making it as useful as possible for the end customers."
+"_legalPageH2IntroH33","Användarfilosofi","User philosophy"
+"_legalPageH2IntroH33Body1","Dokument undertecknas i många olika former i många olika situationer.
+ Därför kan våra användares behov se väldigt olika ut, framförallt
+ inom spektrat användarvänlighet-säkerhet. Vi tror inte på att
+ begränsa användarens möjligheter utan är övertygade om att användaren
+ vill ha en bred lösning som fungerar i de flesta situationer
+ där det behövs dokumentsignering. Därför väljer vi att inte
+ ta ställning för en enda metod vad gäller signering och lagring,
+ utan vi väljer istället att tillhandahålla användaren ett väl
+ genomtänkt urval som passar hela spektrat användarvänlighet-säkerhet.","Documents are signed in many different ways and different situations.
+ Therefore, our customer's needs are very different from one
+ customer to another, especially in the spectra usability-security.
+ We do not believe in limiting the user's possibilities, but that
+ the user wants a comprehensive solution that works in most situations
+ where document signing is needed. Because of this, we choose
+ not to commit to a single method for signing and storage, but
+ to provide a carefully selected set of tools to fill the whole
+ spectra usability-security."
+"_legalPageH2IntroH33Body2","Vi medger att denna flexibilitet i viss utsträckning kan anses
+ öka användarens risk i situationer då användaren har möjlighet
+ att välja ett signeringsverktyg som ur ett riskperspektiv möjligen
+ inte är optimalt för situationen. Vi tror dock att vi genom
+ tjänstens enkelhet över lag sänker den individuella risken då
+ vi:","We admit that this flexibility of choice to some extension may
+ increase the risk for the user as the user is able to select
+ a signing tool that for the situation is not optimal from a
+ risk point of view. We believe, though, that the simplicity of
+ the service generally reduces the individual risk as we:"
+"_legalPageH2IntroH33Body3","<li>Gör det enklare över lag att skriva på dokument vilket gör
+ att andelen osäkra överenskommelser minskar (som till exempel
+ rent muntliga överenskommelser).</li><li>Genererar och säkrar
+ högkvalitativt bevismaterial på förhand istället för som generellt
+ är fallet idag: att man letar efter historiska bevis då konflikten
+ 		    redan är ett faktum och mycket material kan ha försvunnit
+ eller blivit oanvändbart.</li><li>Försöker göra vårt bästa för
+ att informera användaren om vad som gäller och därmed främja
+ välinformerat beslutsfattande.</li>","<li>Generally make it easier to sign documents and thus reduce
+ the number of insecure agreements (e.g verbal agreements).</li><li>Generate
+ and secure high-quality proof material in advance, instead of
+ the most common case today: That historical evidence is found
+ retrospectively, when the conflict already has emerged and large
+ parts of the evidence material may have been destroyed or become
+ useless.</li><li>Do our best to inform the user in every step
+ of the process to promote well-informed decision-making.</li>"
+"_legalPageH2KeyLegal","Centrala Juridiska överväganden","Key legal considerations"
+"_legalPageH2KeyLegalBody1","I svensk rätt råder fri bevisprövning. Det betyder att tvistande
+ parter i domstol kan presentera valfritt bevismaterial för att
+ styrka sin talan och att de framlagda bevismaterial som stödjer
+ olika ståndpunkter sedan vägs mot varandra. Detta gäller även
+ vid tvister gällande undertecknade dokument, exempelvis i avtalstvister.
+ I SkrivaPå´s fall betyder det att inte endast de undertecknande
+ parternas handlingar genom tjänsten SkrivaPå kan inräknas som
+ bevismaterial, utan även parternas handlingar utanför tjänsten
+ som exempelvis telefonsamtal, sms och e-mailkonversationer.
+ SkrivaPå kan givetvis endast utöva sitt juridiska uppdrag inom
+ ramarna för tjänsten och tar aldrig, varken explicit eller implicit,
+ något ansvar för vad användarna gör utanför ramarna för tjänsten.
+ Följande är de viktigaste faktorerna inom SkrivaPå´s kontrollområde
+ som påverkar styrkan hos bevismaterial genererade vid användning
+ av tjänsten SkrivaPå:","Swedish law prevails free assessment of evidence. This means
+ that litigants may present any evidence to support his claim,
+ and that the presented evidence that supports the different
+ positions are considered  against each other This applies in
+ trials concerning signed documents. In cases where Scrive is
+ used, this means that not only evidence generated through Scrive
+ could be used as proof, but also evidence produced by the parties
+ outside of the service e.g. phone conversations, text-message
+ conversations and e-mail conversations. Scrive can obviously
+ only increase its legal mission within the context of the service,
+ and will never, explicitly nor implicitly, take any responsibility
+ for the user's actions outside of the context of the service.
+ The following factors are the most important ones within Scrive's
+ area of control affecting the strength of the evidence generated
+ when using Scrive:"
+"_legalPageH2KeyLegalBody2","<li>Verifikation av identitet</li>	<li>Dokumentsigneringsprocess</li>	<li>Generering
+ av data</li>	<li>Dokumentförvaring</li>","<li>Verification of identity</li>	<li>Document signing process</li>	<li>Data
+ generation</li>	<li>Data storage</li>"
+"_legalPageH2KeyLegalH31","Verifikation av identitet","Verification of identity"
+"_legalPageH2KeyLegalH31Body","Svensk lagstiftning reglerar mycket sällan formen för signering
+ (sk. formkrav). Huvudregeln är att en överenskommelse är juridiskt
+ bindande, oberoende av hur den bekräftas (genom handslag, uttalande,
+ skrift, e-post, etc.). Den stora skillnaden mellan olika sätt
+ att bekräfta en överenskommelse ligger inte i själva juridiken,
+ dvs om den är giltig eller inte, utan i skillnaden i möjlighet
+ att bevisa överenskommelsens existens, innehåll och identitet
+ på deltagande parter. Orsaken är att olika metoder för att ingå
+ avtal genererar olika mängd och kvalitet på bevismaterial. SkrivaPå
+ erbjuder idag endast e-signering (e-post) och e-legitimation
+ som metoder för identifiering av avtalsparter vid signering.
+ SkrivaPå planerar att inom kort expandera antalet metoder för
+ att göra tjänsten än mer användarvänlig för användaren. Nedan
+ följer en detaljerad beskrivning av de två metoder som SkrivaPå
+ tillhandahåller idag.","Swedish law rarely regulates the form of signatures used. The
+ main rule is that an agreement is legally binding, regardless
+ of how it was confirmed (e.g. through a hand-shake, a statement,
+ a written signature, or an e-mail). The big difference between
+ different kinds of agreements is not in the legal part, but
+ rather the possibility to prove if an agreement exists at all,
+ the content of it and who is involved in it. The reason to this
+ is that different kinds of agreements generates different quality
+ and quantity of evidence. Today, Scrive only offers e-mail and
+ e-ID as methods of identifying parties when signing. Scrive
+ plans to expand the number of methods provided to make the service
+ even more user-friendly. Below, a description of the two methods
+ provided today are presented."
+"_legalPageH2KeyLegalH32","E-post","E-mail"
+"_legalPageH2KeyLegalH32Body1","<h4>Användningsområde:</h4> Vid transaktioner med låg risk och
+ låg insats, där företag som har egna registrerade domäner och
+ domänspecifika e-postadreser (ex. personnamn@företagsurl.se)
+ kan det passa väl att använda vår e-signering på grund av e-postens
+ smidighet, dess starka inarbetning i andra företagsprocesser
+ och eftersom e-post är en teknik som nästan alla har tillgång
+ till och använder dagligen.","<h4>Application area:</h4> In transactions with low risk and
+ low stake, where companies have their own registered domains
+ and domain-specific e-mail addresses (e.g. PersonName@CompanyDomain.com),
+ e-mail is a suitable solution for signing, considering the simplicity
+ of e-mails and its strong incorporation with other business
+ processes, and because just about everyone uses e-mail on a
+ daily bases."
+"_legalPageH2KeyLegalH32Body2","<h4>Verifieringsmetod:</h4> Det finns tre delar av verifieringen.
+ En aktiv del, en passiv del och IP-adressen. I ett första steg
+ skickar vi en unik länk till e-postadressen som användaren måste
+ klicka på för att kunna underteckna ett dokument på SkrivaPå
+ med e-postadressen. I det andra steget, när dokumentet skrivits
+ på av samtliga parter, skickar vi en bekräftelse till samtliga
+ parter via e-post. Underlåtelse att reagera om en bekräftelse
+ av någon anledning skickats felaktigt kan vid senare konflikt
+ användas som argument för att bekräftelsen var giltig vid tillfället
+ och att bestridandet är en efterkonstruktion. Vi registrerar
+ dessutom användares IP-adress. IP-adresser genereras dynamiskt
+ och anger bland annat var användaren befinner sig rent geografiskt.
+ Detta kan användas för att styrka rimligheten att en person
+ har eller inte har befunnit sig på platsen där dokumentet undertecknats
+ ifrån.","<h4>Method of verification:</h4> There are three main parts of
+ the verification. One active part, one passive part and the
+ IP-address. In the first step, we send an e-mail containing
+ a unique link that the user has to click to sign a document
+ via e-mail verification through Scrive. In the second step,
+ when the document has been signed by all parties, a confirmation
+ is sent to all parties by e-mail. Omission to react if a user
+ for some reason incorrectly receives a confirmation can be used
+ as evidence arguing for that the confirmation was, in fact,
+ correct. We also collect the IP-addresses that the parties uses
+ when they sign. IP-addresses are generated dynamically, and
+ indicate, among other things, where the user is located. This
+ can be used to strengthen if a person has been at the sight
+ of the signing when the document was signed or not."
+"_legalPageH2KeyLegalH32Body3","<h4>Juridisk reflektion:</h4> E-postidentifiering kan anses stark
+ som verifieringsmetod då den tillämpas på domänspecifika e-postadresser
+ så som adress@företagsdomän.se. Det finns två anledningar till
+ detta:","<h4>Legal reflection:</h4> E-mail identification should be seen
+ as a strong method of verification when it is applied on
+ domain specific e-mail addresses such as PersonName@CompanyDomain.com.
+ There are two reasons for this:"
+"_legalPageH2KeyLegalH32Body31","<li>Det går inte att vara anonym domänägare. Därmed är domänägaren
+ alltid känd.</li>	<li>De domänspecifika adresserna är inte fria
+ utan i standardfallet delas de ut genom personliga relationer
+ inom organisationen och därmed är den interna verifieringen
+ stark.</li>","<li>It is impossible to be an anonymous domain owner. Thus, the
+ domain oner is always known.</li>	<li>The domain specific addresses
+ are not accessible by anyone, but access are distributed and
+ certified through relationships within the organisation. This
+ makes the identification of the user very strong.</li>"
+"_legalPageH2KeyLegalH32Body4","Därmed är kopplingen mellan identitet och en domänspecifik e-postadress
+ relativt stark. Styrkan i domänspecifika e-postadresser ska
+ inte förväxlas med e-postadresser från öppna e-postleverantörer
+ som GMail och Hotmail där vem som helst kan skapa ett konto
+ i valfritt namn och med valfri identitet. Eftersom identifieringen
+ är obefintlig vid registrering av konto hos sådana e-postleverantörer
+ har konton hos dessa betydligt svagare styrka vid verifiering
+ än domänspecifika konton. I fall då e-posten inte bidrar till
+ identifiering av användaren krävs annan bevisning som knyter
+ ett undertecknat dokument till en specifik identitet, exempelvis
+ annan mailkommunikation från e-postkontot, telefonsamtal eller
+ sms. Eftersom SkrivaPå i dagsläget helt saknar metoder för registrering
+ av sådan övrig kommunikation räknar vi den som att den ligger
+ utanför SkrivaPå´s kontrolldomän. Vi rekommenderar därmed våra
+ användare att inte använda e-postkonton som hör till öppna domäner
+ för identifiering vid signering av dokument. Det stora flertalet
+ privata användare använder e-postkonton tillhörande just öppna
+ domäner, därför avråder vi företag och privatpersoner att använda
+ tjänstens e-postverifiering om inte båda parter har tillgång
+ till domänspecifika e-postadresser som jobbmail, skolmail eller
+ annat.","Thereby, the connection between identity and domain specific
+ e-mail address is relatively strong. The strength in domain specific
+ e-mail addresses are not to be confused with e-mail addresses
+ hosted by open e-mail providers, such as Gmail or Hotmail, where
+ anyone can create an account with any name and identity. Since
+ the identification of the user is nonexistent when creating
+ such an account, other evidence is required to connect a signed
+ document to a person, such as an e-mail conversation a phone
+ conversation or something else. Today, Scrive does not have
+ any methods for collecting such information, thus, this lies
+ outside of Scrive's domain of control. Therefore we recommend
+ our user not to use e-mail accounts provided by open distributors
+ when signing a document. The vast majority of private e-mail
+ users use this kind of open e-mail providers, therefore we discourage
+ Companies and private persons from using the e-mail verification
+ in the service if not all parties have accesses to domain specific
+ e-mail addresses such as work e-mail, school e-mail or alike."
+"_legalPageH2KeyLegalH33","E-legitimation","E-ID"
+"_legalPageH2KeyLegalH33Body1","<h4>Användningsområde:</h4> <p>Denna metod passar bra alla typer
+ av dokument som kräver extra hög säkerhet i verifieringen och
+ för signering mellan parter (ofta privatpersoner) som inte har
+ domänspecifika e-postadresser. Exempel på bra användningsområden
+ är för privatpersoner och för företag som skriver på dokument
+ med privatpersoner, för företag som ska skriva under extra viktiga
+ dokument eller dokument som ska lämnas in till statlig myndighet
+ som har formkrav.</p><br /><p>Verifiering med e-legitimation
+ sker som en extra verifiering utöver epostverifiering. E-legitimationsverifieringen
+ sker i tre steg.</p>","<h4>Application area:</h4> <p>This method is suitable for all
+ kinds of documents that require extra high security, and for
+ signing between parties who does not have domain specific e-mail
+ addresses (e.g. private persons). An example of usage is for
+ comapnies who sign documents with private persons, companies
+ who sign extra important documents, or documents with specific
+ requirements on formalities.</p><br /><p>Verification by e-ID
+ is done additionally to the e-mail identification. The e-ID
+ verification is compleated in three steps.</p>"
+"_legalPageH2KeyLegalH33Body2","<li>Första steget är då parten införskaffar sin e-legitimation
+ genom att logga in på sin internetbank. För att kunna logga
+ in på internetbanken måste du först ha skaffat ett konto på
+ banken genom att identifiera dig med ID-kort eller målsmans
+ godkännande.</li>	<li>I processen när parten genom internetbanken
+ installerar sin e-legitimation på datorn ombeds den definiera
+ en stark kod som den sedan ska använda för att verifiera sig
+ vid användning av legitimationen. Vid tillfället då parterna
+ ska skriva på dokumentet öppnas partens e-legitimationsklient
+ (exempelvis Nexus Personal) på datorn och parten identifierar
+ sig genom att skriva in sin e-legitimationskod. För att verifiera
+ partens identitet kommunicerar e-legitimationsklienten med certifikatsutfärdarens
+ server som kontrollerar partens personuppgifter och om allting
+ stämmer så accepteras partens identitet.</li>	<li>I sista steget
+ kontrollerar SkrivaPå partens e-legitimation mot personuppgifter
+ på avsedd undertecknande part enligt definition från dokumentutfärdaren.
+ Om uppgifterna från e-legitimationen matchar med dokumentutfärdarens
+ godkänns underskriften av SkrivaPå.</li>","<li>The first step of identification is when the user obtains
+ his e-ID by logging in at his online bank. To be able to log
+ in at the bank, you first have to get an account in the bank
+ by identify yourself using your ID or legal guardian.</li>	<li>In
+ the process when the person installs his e-ID on the computer,
+ he is asked to select a strong password for identification when
+ using the e-ID. When a party are about to sign a document with
+ the e-ID, the e-ID client is opened on the computer, and the
+ party identifies himself by writing the strong password selected
+ previously. To confirm the party's identity, the e-ID client
+ Communicates with the e-ID provider's server that confirms the
+ party's ID. </li>	<li>In the last step, Scrive compares the
+ party's e-ID with the personal info given by the creator of
+ the document. If everything matches, the signature is accepted
+ by Scrive.</li>"
+"_legalPageH2KeyLegalH33Body3","<h4>Juridisk reflektion:</h4> Svensk lagstiftning likställer
+ kvalificerade signaturer med vanliga handskrivna signaturer
+ (det finns dock några få dokument som är undantagna från denna
+ regel, exempelvis testamente, köp av fastighet och giftermål).
+ E-legitimation är baserat på PKI teknologi som klassas till
+ kategorin kvalificerade signaturer. E-legitimation är därmed
+ enligt lag likställt med en handskriven signatur. Faktum är
+ dock att metoden att signera med e-legitimation är betydligt
+ mer komplex och mer svårförfalskad än en handskriven signatur
+ och därmed bör e-legitimation utgöra en starkare signatur än
+ den som utfärdas för hand. Till bevistyngden skall även tilläggas
+ att dokumentet även undertecknas med e-postverifiering. Därmed
+ drar vi slutsatsen att denna verifieringsmetod är exceptionellt
+ stark.","<h4>Legal reflection:</h4> Swedish law equates qualified signatures
+ with ordinary hand-written signatures (though there are some
+ few exceptions, e.g. testament, property purchase and marriage).
+ E-ID is based on PKI technology, and therefore belongs to the
+ category qualified signatures. E-ID is thereby, by law, equivalent
+ to hand-written signatures. Truth is, though, that an e-ID signature
+ is way more complex and way harder to forge than a hand-written
+ signature, and should therefore provide an even stronger evidence
+ of agreement than a hand-written one. Only to add even further
+ to the strength of the evidence, the document is also signed
+ by e-mail verification. Thereby, we draw the conclusion the
+ this method of verification is exceptionally strong."
+"_legalPageH2KeyLegalH34","Identifiering av bedrägeri","Identification of fraud"
+"_legalPageH2KeyLegalH34Body","En omstridd del i diskussionen kring elektroniska identifikationsmetoder
+ behandlar huruvida integriteten hos verifikationsverktyget kan
+ garanteras: hur kan vi förhindra att till exempel avtal signeras
+ av en bedragare i en situation då ett e-postkonto kapats eller
+ verifikationskoden till en e-legitimation stulits? Svaret måste
+ tyvärr bli att SkrivaPå inte kan förhindra detta eftersom människors
+ e-postkonton och koder ligger utanför SkrivaPå´s kontrolldomän.
+ Innan man drar några slutsatser av detta bör man dock fråga
+ sig: vad är egentligen skillnaden mellan dagens standard med
+ handskriven signatur och de elektroniska signeringsmetoder som
+ SkrivaPå tillhandahåller? Hur klarar handskrivna signaturer
+ motsvarande frågeställning? Oss veterligen krävs inga stulna
+ inloggningar eller teknisk kunskap för att förfalska en handskriven
+ signatur, det räcker med papper och penna och hur säkert är
+ egentligen det? Vår bedömning är att elektroniska signaturer
+ per definition är steget säkrare eftersom tekniken utgör en
+ barriär att utföra bedrägeriet i första hand (koder och privat
+ hårdvara) och dessutom möjliggör direkt övervakning vid själva
+ signeringstillfället till exempel med hjälp av IP-adresser och
+ avancerade övervakningssystem för förebyggande av bedrägeri.
+ SkrivaPå tillämpar IP-registrering och ser även över möjligheten
+ att införa ovan nämnda övervakningssystem.","A controversial part of the discussion about electronic methods
+ for identification deals with whether the integrity of the verification
+ tool can be guaranteed: how to prevent contracts to be signed
+ by an intruder if an e-mail account has been hijacked or the
+ verification code for an e-ID has been stolen? The answer is
+ unfortunately that this cannot be prevented by Scrive, since
+ this is outside of Scrive's domain of control. Before drawing
+ any conclusions from this one should as oneself: what is really
+ the difference between today's hand-written signatures  and
+ the electronic signatures provided by Scirve? How well does
+ a hand-written signature answer to the very same questioning?
+ As far as we know, no stolen passwords or technical knowlage
+ is required to forge a hand-written signature, only a paper
+ and a pen is needed, and how secure is that? Our conclusion
+ is that electronic signatures by default is one step more
+ secure than  hand-written ones, since the technology itself
+ forms a barrier to intruders and allows Scrive to witness the
+ transaction by storing e.g. IP-adresses and implement advanced
+ surveillance systems for preventing frauds. Scrive uses IP-registration
+ and is considering implementing the advanced surveillance systems
+ mentioned above."
+"_legalPageH2Proof","Bevismaterial","Proof material"
+"_legalPageH2ProofH31","Stabil mjukvara","Stable software"
+"_legalPageH2ProofH31Body1","För att kunna generera starkt bevismaterial är det viktigt att
+ systemet är stabilt och inte genererar felaktig information
+ eller har luckor som tillåter att systemet kan manipuleras på
+ oönskade sätt. Med grundliga rutiner och stabil teknologi säkerställer
+ vi att tjänsten SkrivaPå drivs av stabil och säker mjukvara.","To be able to generate strong proof materials, it is important
+ that the system does not generate incorrect information, and
+ that it does not have gaps in the system that allows it to be
+ Manipulated in undesired ways. By thorough routines and stable
+ technology, we secure that the service Scrive is powered by
+ stable and secure software."
+"_legalPageH2ProofH31Body2","<h4>Haskell:</h4> Tjänsten SkrivaPå är byggd på teknologin Haskell,
+ som räknas som en av de mest stabila och pålitliga mjukvaruteknologier
+ som någonsin utvecklats. En av anledningarna till detta är att
+ Haskell är utvecklat för att minimera mänskliga felsteg i mjukvaruutvecklingen
+ genom att tillämpa något som kallas ” strong type checking”.
+ Strong type checking innebär att ingen ny programmeringskod
+ kan implementeras i existerande system utan att den först har
+ accepterats som logiskt kompatibel med resterande system genom
+ stränga automatiska tester. I och med detta kan vissa problem
+ omöjligen uppstå vid mjukvaruutveckling med Haskell och sannolikheten
+ att vissa andra typer av problem uppstår blir betydligt mindre
+ än vid användning av andra teknologier.","<h4>Haskell:</h4> The service Scrive is built upon the technology
+ Hasell, which is counted as one of the most stable and reliable
+ software technologies ever developed. One of the reasons for
+ this is that Haskell is developed to minimize human error in
+ the software development by using something called ""strong type
+ checking"". Strong type checking means that no code may be implemented
+ into the system without first being accepted as logically compatible with
+ the rest of the system through strict automatic tests. Because
+ of this, some problems just can not occur when programming in
+ Haskell, and the probability of some other types of problems
+ arising are much smaller than when using other technologies."
+"_legalPageH2ProofH31Body3","<h4>Rigorösa tester:</h4> För att ytterligare säkra kvalitén
+ på vår mjukvara har vi en rigorös flerstegsprocedur för programvaruuppdateringar
+ som säkrar att mjukvaran är grundligt testad innan den lanseras
+ publikt. För att nå ett slutgiltigt godkännande testas mjukvaran
+ i minst 10 steg utifrån ett grundligt protokoll som garanterar
+ att samtliga delar av tjänsten sluttestats minst 3 gånger.","<h4>Rigorous tests:</h4> To further secure the quality of the
+ software, we follow a strict software update routine in several
+ steps that secure that the software is tested thoroughly before
+ being launched publicly Before being finally accepted, the
+ software is end-tested through at least 10 steps following a
+ protocol that guarantees that every part of the service is end-tested
+ at least 3 times before being launched."
+"_legalPageH2ProofH31Body4","<h4>Krypterad kommunikation:</h4> All vår kommunikation med användare
+ och med våra samarbetspartners krypteras enligt högsta säkerhetsstandarder
+ för att skydda data från förvanskning. För mer information läs
+ under rubriken Säkerhet.","<h4>Encrypted communication:</h4> All communication with our
+ users and our partners are encrypted pursuant the highest security
+ standards to protect all data from distortion. For more information,
+ please read the part ""Security""."
+"_legalPageH2ProofH31Body5","<h4>Personal och säkerhet:</h4> För att kunna garantera högsta
+ möjliga kvalitet på bevismaterialet är det även viktigt att
+ systemet är säkrat mot interna attacker.","<h4>Staff and security:</h4> To protect the highest quality of
+ the proof material possible, it is also important to protect
+ the system from internal attacks."
+"_legalPageH2ProofH31Body6","<li>Vi begränsar antalet individer med tillgång till systemets
+ kärna. Endast vår tekniska chef och ytterligare två utvalda
+ tekniker har tillgång till att göra ändringar i våra servrar.
+ Därmed kan endast ändringar genomföras av en begränsad och väl
+ definierad grupp individer.</li>	<li>Samtliga anställda får
+ underteckna strikta avtal som reglerar vad som är tillåtet inom
+ ramarna för arbetsplatsen och samtliga anställda synas grundligt
+ innan de kan få anställning på SkrivaPå.</li>	<li>Systemet loggar
+ all aktivitet på våra servrar. Vi registrerar samtliga ändringar,
+ när de utförts och av vem. Därmed finns alltid full spårbarhet
+ av ändringar genomförda i systemet.</li>","<li>We limit the number of individuals with access to the core
+ of the system. Only our CTO and another two carefully selected
+ technicians has access to make changes in our servers. Thereby,
+ changes can only be made by a small, and carefully selected
+ group of individuals.</li>	<li>All employees has to sign strict
+ contracts regulating what is allowed within the context of the
+ work, and all employees are examined thoroughly before being
+ employed at Scrive.</li>	<li>The system logs all activity on
+ our servers. We register all changes, when they occur, and
+ who preforms them. Thereby, all changes in the system are traceable.</li>"
+"_legalPageH2ProofH32","Bevissäkring","Securing evidence"
+"_legalPageH2ProofH32Body1","Bevis måste inte bara genereras på rätt sätt utan även lagras
+ på rätt sätt för att förhindra förvanskning och för att bibehålla
+ trovärdigheten hos bevismaterialet vid eventuell domstolsprövning.
+ För att säkra vårt genererade bevismaterial skapar vi en så
+ kallad ”hasch” av det (en kod som är unik för varje existerande
+ datastruktur) och stämplar haschen med en kvalificerad signatur.
+ Detta garanterar att bevismaterialet är kvalitetssäkrat och
+ inte kan ändras. Dessutom tar vi säkerheten i bevissäkringen
+ ytterligare ett steg. Efter att ha stämplat materialet lagrar
+ vi det i säkerhetsklassade datahallar som inte tillåter att
+ material tas ut, förvanskas och stoppas in igen. Följande material
+ lagras på detta sätt:","Evidence does not only have to be generated in the right way,
+ but also be stored in a good way to prevent distortion and to
+ maintain the credibility of the evidence in a possible court
+ trial. To secure our evidence, we create a so-called ""hasch""
+ from it, and stamp the hasch with a qualified signature. This
+ guarantees that the evidence is qualitatively secured, and cannot
+ be changed. Moreover, we take the security of evidence storage
+ even one step further. After being stamped, the material is
+ stored in high-security classed computer centers that does not
+ allow material to be extracted, distorted and put back in again.
+ The following types of material is stored in the way described
+ above:"
+"_legalPageH2ProofH32Body2","<li>Valda delar av våra loggar (dagligen)</li>	<li>Vår tjänst,
+ själva mjukvarumaskinen som genererar de undertecknade dokumenten
+ (efter varje systemuppdatering)</li>	<li>Vår tjänst, hur den
+ ser ut för användaren när den undertecknar dokumenten (efter
+ varje systemuppdatering)</li>	<li>Samtligavåratestdokument (efter
+ varje systemuppdatering)</li>","<li>Selected parts of our logs (daily)</li>	<li>Our service,
+ the software itself that generates the signed documents (after
+ each system update)</li>	<li>Our service, how it looks from
+ the user's point of view when he signs a document (after each
+ system update)</li>	<li>All of our test documents (after each
+ system update)</li>"
+"_legalPageH2SignProcess","Dokumentsigneringsprocess","Document signing process"
+"_legalPageH2SignProcessH31","Användargränssnitt","User interface"
+"_legalPageH2SignProcessH31Body1","En förutsättning, enligt svensk lagstiftning, för att en signatur
+ ska anses giltig är att undertecknande part förstår vad den
+ undertecknar och att den undertecknar. Är detta inte fallet
+ kan avtalet betraktas som ogiltigt i en domstolsprövning. Vi
+ har utvecklat vår process i följande steg för att säkerställa
+ att samtliga parter ska vara införstådda med att de signerar
+ och vad de signerar:","A condition, according to Swedish law, for a signature to be
+ valid is that the signing party understands what is signed.
+ If this is not the case, the contract should be considered invalid
+ in a court trial. We have developed our process in the following
+ steps to ensure that all parties involved understand that they
+ are signing, and what they are signing:"
+"_legalPageH2SignProcessH31Body2Table1","		<td>1</td>		<td>Avsändare</td>		<td>Avsändaren skapar ett konto
+ online på tjänsten SkrivaPå, kommunicerar med en person som
+ bjuder in till ett konto eller skapar ett konto i slutsteget
+ då den har varit mottagande part i ett dokument skickat genom
+ SkrivaPå. Avsändaren antas här ha blivit införstådd i tjänsten.</td>	","		<td>1</td>		<td>Sender</td>		<td>The sender creates an account
+ online in Scrive, communicates with another user who invites
+ to an account, or creates an account in the last step of a signing
+ process through Scrive in which it was a signatory. The sender
+ is assumed to understand the service.</td>	"
+"_legalPageH2SignProcessH31Body2Table10","		<td>10</td>		<td>Mottagare</td>		<td>Då mottagaren tryckt på
+ knappen ”Underteckna” visas ett pop-up- fönster där sändaren
+ frågas om den verkligen är säker på att den vill underteckna
+ dokumentet.</td>	","		<td>10</td>		<td>Recipient</td>		<td>When the recipient presses
+ the button ""Sign"", a pop-up shows where the signatory is asked
+ if it really wants to sign the document.</td>	"
+"_legalPageH2SignProcessH31Body2Table11","		<td>11</td>		<td>Mottagare</td>		<td>Slutligen, då dokumentet
+ är undertecknat visas en informationstext som konstaterar att
+ mottagaren har undertecknat dokumentet.</td>	","		<td>11</td>		<td>Recipient</td>		<td>Finally, when the document
+ has been signed, an informative text shows, telling the recipient
+ that the document has been signed.</td>	"
+"_legalPageH2SignProcessH31Body2Table12","		<td>12</td>		<td>Mottagare &amp; Avsändare</td>		<td>När samtliga
+ parter undertecknat dokumentet stämplar SkrivaPå det med dokumentuppgifter
+ och med en kvalificerad signatur. Sedan skickas ett e-postmeddelande
+ innehållandes det färdiga dokumentet och information om att
+ dokumentet slutligen undertecknats av samtliga parter och är
+ juridiskt bindande till alla avtalsparter.</td>	","		<td>12</td>		<td>Recipient &amp; Sender</td>		<td>When all
+ parties have signed the document, Scrive stamps it with the
+ document information and a qualified signature. The document
+ is then sent out to all involved parties by e-mail, telling
+ them that the document has been signed, and that it is legally
+ binding for all signatories.</td>	"
+"_legalPageH2SignProcessH31Body2Table2","		<td>2</td>		<td>Avsändare</td>		<td>Avsändaren får ett mail
+ med ett välkomstmeddelande innehållandes information om tjänsten
+ och en verifieringslänk.</td>	","		<td>2</td>		<td>Sender</td>		<td>The sender recives an e-mail
+ with a welcome message containing information about the service
+ and an activation link.</td>	"
+"_legalPageH2SignProcessH31Body2Table3","		<td>3</td>		<td>Avsändare</td>		<td>Efter att avsändaren klickat
+ på länken fyller den i sina uppgifter på SkrivaPå, läser och
+ accepterar användarvillkoren.</td>	","		<td>3</td>		<td>Sender</td>		<td>After clicking the link, the
+ personal information is filled into Scrive, and the Terms Of
+ Service are ridden and accepted.</td>	"
+"_legalPageH2SignProcessH31Body2Table4","		<td>4</td>		<td>Avsändare</td>		<td>När avsändaren ska bjuda
+ in en motpart följer den en trestegsprocess. Först laddar den
+ upp ett dokument, sedan fyller den i inbjudna parters uppgifter
+ och definierar fält i dokumentet som eventuellt ska fyllas i
+ av mottagaren. I sista steget kan avsändaren underteckna dokumentet
+ genom att klicka på knappen ”Underteckna”.</td>	","		<td>4</td>		<td>Sener</td>		<td>When the sender is inviting
+ a counterpart, it follows a three step process. First, a document
+ is uploaded. Second, information about the counterpart is
+ filled in and fields are that the counterpart is supposed to
+ fill in are defined. In the last step, the sender signs the
+ document by clicking ""Sign"".</td>	"
+"_legalPageH2SignProcessH31Body2Table5","		<td>5</td>		<td>Avsändare</td>		<td>Då avsändaren trycker på
+ knappen ”Underteckna” visas ett pop-up-fönster där avsändaren
+ frågas om den verkligen är säker på att den vill underteckna
+ dokumentet. När den klickat ”Underteckna” skickas en inbjudan
+ via e-post till definierade parter och avsändaren informeras
+ att det undertecknade dokumentet nu undertecknats och skickats.
+ </td>	","		<td>5</td>		<td>Sender</td>		<td>When the sender clicks the
+ button ""Sign"", a pop-up shows where the sender is asked if it
+ s really sure that it wants to sign the document. When ""Sign""
+ is clicked, an invitation is sent by e-mail to the involved
+ Counterparts, and the sender is informed that the document
+ has been signed and sent.</td>	"
+"_legalPageH2SignProcessH31Body2Table6","		<td>6</td>		<td>Mottagare</td>		<td>Mottagaren tar emot meddelandet
+ i vilket denne informeras om att den är inbjuden att skriva
+ på dokumentet med parterna xyz och den informeras även hur den
+ ska gå vidare.</td>	","		<td>6</td>		<td>Recipient</td>		<td>The recipient receives the
+ message which contains an invitation to sign the document with
+ the parties xyz, and information about how to proceed with the
+ signing process.</td>	"
+"_legalPageH2SignProcessH31Body2Table7","		<td>7</td>		<td>Mottagare</td>		<td>Då mottagaren klickar på
+ länken som bifogas med e-postmeddelandet hamnar den i en vy
+ på SkrivaPå där vi informerar mottagaren om att den noggrant
+ bör läsa all tillgänglig information i dokumentet samt de tillhörande
+ kontaktuppgifterna.</td>	","		<td>7</td>		<td>Recipient</td>		<td>When the recipient clicks
+ the link in the e-mail, a view inside Scrive appears where the
+ recipient is informed that it should read the document carefully,
+ and the associated contact information.</td>	"
+"_legalPageH2SignProcessH31Body2Table8","		<td>8</td>		<td>Mottagare</td>		<td>För att försäkra oss om
+ att mottagaren har tagit del av innehållet i dokumentet måste
+ mottagaren bläddra igenom hela dokumentet ned till slutet för
+ att komma vidare och kunna underteckna.</td>	","		<td>8</td>		<td>Recipient</td>		<td>To ensure that the recipient
+ reads the who document, it has to scroll down to the bottom
+ of the document to sign.</td>	"
+"_legalPageH2SignProcessH31Body2Table9","		<td>9</td>		<td>Mottagare</td>		<td>När mottagaren bläddrat
+ ned genom hela dokumentet till slutet och med största sannolikt
+ noterat att den bläddrar genom ett dokument kan mottagaren slutligen
+ klicka i en knapp med texten ”Underteckna”.</td>	","		<td>9</td>		<td>Recipient</td>		<td>When the recipient has
+ scrolled through the whole document, and most likely noted that
+ he is scrolling through a document, he clicks a button with
+ the text ""Sign"" if he wants to sign.</td>	"
+"_legalPageH2SignProcessH31Body2TableHead","		<th>Steg</th>		<th>Användare</th>		<th>Juridisk orsak</th>	","		<th>Step</th>		<th>User</th>		<th>Legal reason</th>	"
+"_legalPageH2SignProcessH31Body3","Efter de sex steg med vilka avsändaren (steg 1-5 och 12) och
+ mottagaren (6-12) vardera informeras om att de använder en tjänst
+ för att skriva på ett dokument bör med all rimlighet parterna
+ ska vara införstådda i:","After six steps through which the sender (step 1-5 and 12) and
+ the recipient (step 6-12), each are informed that they are using
+ a service to sign a document, they should reasonably understand:"
+"_legalPageH2SignProcessH31Body4","	<li>Att det rör sig om en tjänst för att skriva på ett juridiskt
+ bindande dokument.</li>	<li>Innehållet i dokumentet som de skriver
+ på.</li>	<li>Att de endast får skriva på dokumentet under förutsättning
+ att de är rätt person.</li>","	<li>That they are signing a legally binding document.</li>	<li>The
+ contents of the document they are signing.</li>	<li>That they
+ may only sing the document if they are the right person to do
+ so.</li>"
+"_legalPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj mellan olika
+ verifikationsmetoder – behåll högsta möjliga juridiska säkerhet
+ och användarvänlighet.","Sign and store contracts electronically. Choose between different
+ methods of verification – obtain the highest possible legal
+ security and usability."
+"_legalPageTitle","| Juridik","| Legal"

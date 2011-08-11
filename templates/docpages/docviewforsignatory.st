@@ -176,29 +176,37 @@ pageDocumentForSignContent=
   $if(hasanyattachments)$
   <span id="attachmenttabview" style="display:none">
     <div id="signStepsBody" class="ericfix forauthor"> 
-      <div id="signViewBodyLeft" >
-        <span id="signViewBodyLeftTextContainer"> 
-          <div class="attachmentListContainer">  
+       <div class="attachmentListContainer">
             $if(isattachments)$
+            <div class="float-left" >
             <div class="subheader">$_signStepsBodyAttachmentsSubhead()$</div>
             $attachments:{attachment |
             <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
             }$
+            </div>
             $endif$
             $if(hassigattachments)$
+            <div class="float-left" style="margin-left:20px;">
             <div class="subheader">$_signStepsBodyRequestedAttachmentsSubhead()$</div>
             <table id="signatorysignatoryattachments">
               <tbody>
                 $sigattachments:{attachment |
-                <tr><td><a href="$attachment.viewerlink$" target="_blank">$attachment.name$</a></td><td>$attachment.signame$</td></tr>
+                <tr><td>
+                  $if(attachment.viewerlink)$
+                  <a href="$attachment.viewerlink$"
+                  style="margin-right:10px"
+                  target="_blank">$attachment.name$</a>
+                  $else$
+                  <span  style="margin-right:10px">$attachment.name$</span>
+                  $endif$
+                </td><td>$attachment.signame$</td></tr>
                 }$
                 </tbody>
             </table>
+            </div>
             $endif$
             
           </div>
-        </span>
-      </div>
     </div>
     <div id="attachmentbox waiting4page"></div>
   </span>
@@ -248,17 +256,25 @@ pageDocumentForSignContent=
               $if(attachment.filename)$
               <a href="$attachment.viewerlink$"
                  target="_blank">$attachment.filename$</a>
+              <a href="#" class="deleteSigAttachment"
+              style="padding-left: 2em">x</a>
+              <form method="post">
+                <input type="hidden" name="deletesigattachment"
+                value="$attachment.fileid$" />
+              </form>
               $else$
-              <form method="post" enctype="multipart/form-data">
+              <form method="post" enctype="multipart/form-data" class="sigattachmentupload">
                 <input type="hidden" name="sigattachment" value="yes" />
                 <input type="hidden" name="attachname"
                        value="$attachment.name$" />
+                <div class="signStepsButtonContainer">
                   <a class="btn-small green">  
                     <div class="left"> </div>
-                    <div class="label" style="width:80px">$_signViewSigAttachmentBoxChooseFile()$</div>
+                    <div class="label" style="min-width:100px">$_signViewSigAttachmentBoxChooseFile()$</div>
                     <div class="right"> </div>                 
                     <input class="multiFileInput submitOnUpload" maxlength="20" type="file" name="sigattach" accept="application/pdf" rel="#tobeattached-$attachment.name$" />
                   </a>
+                </div>
                 <div id="tobeattached-$attachment.name$" style="display:none;"></div>
               </form>
 
@@ -276,7 +292,7 @@ pageDocumentForSignContent=
     
     <div id="signViewBottomBox">
       <div id="signViewBottomBoxContainerLeft">
-        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+        <a class="btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel" style="display:inline-block;">
           <div class="left"></div>
           <div class="label">$process.rejectbuttontext$</div>
           <div class="right"></div>
@@ -301,7 +317,7 @@ pageDocumentForSignContent=
       </div>
       $endif$
       <div id="signViewBottomBoxContainerRight">
-        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign" style="display:inline-block;">
           <div class="left"></div>
           <div class="label" style="$if(process.requiressignguard)$width:120px$else$padding-left:20px;padding-right:20px;$endif$">
             <span>$process.signbuttontext$</span>

@@ -21,7 +21,7 @@ pagingFooter=	<div class="table-paginate">
                    $endif$
 					<div class="pages">
                         $if(!elements.none)$
-						 <strong>$elements.min$$if(!elements.single)$-$elements.max$ $endif$ av $elements.total$</strong>
+						 <strong>$elements.min$$if(!elements.single)$-$elements.max$ $endif$ $_of()$ $elements.total$</strong>
                         $endif$
 						 $pages:{page | 
                          $if(page.current)$

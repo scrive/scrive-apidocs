@@ -1,0 +1,155 @@
+"!Template name","LANG_SE","LANG_EN"
+"_addattachmentlink","BIFOGA BILAGA","ADD ATTACHMENT"
+"_addsigattachmentlink","BEGÄR BILAGA","REQUEST ATTACHMENT"
+"_authorsignatoryradioSenderNotSign","Ej undertecknande part","Non-signing party"
+"_authorsignatoryradioSenderSign","Undertecknande part","Signing party"
+"_contractconfirmsendtext"," "," "
+"_contractconfirmsendtitle","Skicka inbjudan","Send invitation"
+"_contractexpirytext","Undertecknas inom","Expiration in"
+"_contractexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
+ inbjudan innan datumet förfallit. Detta regleras av avtalslagen.","OBSERVE: If you choose an expiration date, you cannot withdraw
+ the invitation before the expiration. This is controlled by
+ the Swedish Law of Contracts."
+"_contractname","Avtal","Contract"
+"_contractsendtext","Skicka","Send"
+"_contractstep1text","Välj dokument","Select document"
+"_contracttitle","DOKUMENT","DOCUMENT"
+"_daystosigncheckboxActivateExpDate","Aktivera förfallodatum","Activate expiration date"
+"_daystosigncheckboxExpDate","Förfallodatum","Expiration date"
+"_dialogConfirmAdvancedBody","Du kan byta till avancerad process för att ta del av mer avancerade
+ funktioner så som förfallodatum, mallar, massutskick mm. Denna
+ process tillhör betalplanerna Business och Enterprise, även
+ vid fri testperiod.","Change to advanced process to enjoy more advanced features such
+ as expiration date, templates, multi send etc. You can use the
+ advanced process if you have price plan Business or Enterprise,
+ or if you are in a trial period."
+"_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt process","Change process"
+"_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad process?","Do you want to change to advanced process?"
+"_dialogConfirmBasicChangeToBody","Du kan byta till förenklad process för att göra processen ännu
+ smidigare.            Vid betalplan Business eller Enterprise
+ kan du givetvis byta tillbaks när du vill, även vid fri testperiod.
+           ","Change to simplified process to make the process even smoother.
+ You can of course change back whenever you want to if you have
+ price plan Business or Enterprise, or if you are in a trial period.
+           "
+"_dialogConfirmBasicChangeToBody2","När du byter kommer alla ändringar du gjort förutom de för part
+ 1 och part 2 att försvinna.             Är du säker att du vill
+ byta process          ","When you change process, all data you have filled in, except that
+ for party 1 and party 2, will disappear.             Are you
+ sure you want to change process?"
+"_dialogConfirmBasicChangeToChangeProcess","Byt process","Change process"
+"_dialogConfirmBasicChangeToHead","Vill du byta till förenklad process?","Do you want to change to simplified process?"
+"_dialogConfirmSendinviteBody","Du har valt att vara Ej undertecknande part och kommer själv inte att underteckna.
+ Är du säker på att du vill skicka en inbjudan att underteckna
+ dokumentet ","You have chosen a non-signatory role, and will not sign. Are you
+ sure you want to sent an invitation to sign the document"
+"_dialogConfirmSendinviteBody2To"," till "," to"
+"_dialogConfirmSendinviteBody3","Du har skapat fält för parterna att fylla i innan de undertecknar.
+ Efter att alla har undertecknat kommer du att              
+ få ett mail med en länk till en sida på SkrivaPå där du kan
+ granska parternas uppgifter och underteckna dokumentet. ","You have created fields for the parties to fill in before they
+ sign. When all counterparts have signed,               you
+ will receive an e-mail with a link to a Scrive page where you
+ can sign the document."
+"_dialogConfirmSendinviteBody4"," Vill du skicka inbjudan att fylla i och underteckna dokumentet","Do you want to send an invitation to fill in and sign the document"
+"_dialogConfirmSendinviteBody5"," till "," to"
+"_dialogConfirmSigninviteBody","Är du säker att du vill underteckna dokumentet ","Are you sure you want to sign the document "
+"_dialogConfirmSigninviteBody2","När du undertecknat kommer en automatisk inbjudan att skickas
+ till             ","When you have signed, an invitation will be automatically sent
+ to             "
+"_dialogConfirmSigninviteBody3"," med e-post."," with e-mail."
+"_dialogConfirmSigninviteHead","Underteckna","Sign"
+"_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en            
+  e-legitimation från din internetbank eller från           
+   Telia. ","No e-ID? You can download an e-ID from you online           
+   bank or from Telia."
+"_dialogConfirmSigninviteSubBody2ClickHere","Klicka här","Click here"
+"_dialogConfirmSigninviteSubBody3"," för att läsa mer."," to read more."
+"_dialogConfirmSigninviteSubHead","Välj typ av e-legitimation","Choose type of e-legitimation"
+"_dialogConfirmTextSendIfNotNormalOrFieldsTo"," till "," to"
+"_dialogConfirmTextSendNormalBody1","Vill du skicka en inbjudan att underteckna dokumentet till ","Do you want to send an invitation to sign the document to "
+"_dialogConfirmTextSendNormalBody2","?               Efter att de har undertecknat kommer du att få
+ ett mail med en länk till en sida på SkrivaPå där du kan underteckna
+ dokumentet.","?               After they have signed, you will receive an e-mail
+ with a link to a Scrive page where you can sign the document."
+"_dialogCsvupload1Body","            Du har valt att göra ett massutskick, för att genomföra
+ detta krävs att du laddar upp ett dokument med formatet .csv
+          ","            You have chosen to multi send. To complete this you
+ are required to upload a document with format .csv         
+ "
+"_dialogCsvupload1CSVOnly","OBS! Endast .CSV",".CSV only!"
+"_dialogCsvupload1ChooseFile","Välj fil ","Select file"
+"_dialogCsvupload1ChooseFileToUpLoad","Välj fil att ladda upp","Select file to upload"
+"_dialogCsvupload1Head","Massutskick","Multi send"
+"_dialogCsvupload2CSVMultiChooseFile","Välj fil ","Select file"
+"_dialogCsvupload2CSVProblemBack","Bakåt","Back"
+"_dialogCsvupload2CSVProblemNext","Nästa","Next"
+"_dialogCsvupload2FooterBack","Bakåt","Back"
+"_dialogCsvupload2FooterNext","Nästa","Next"
+"_dialogCsvupload2Head","Massutskick: Granska Data","Multi send: Review data"
+"_editInviteTextDialogFooterOwnMessage","Skriv eget meddelande","Write your own message"
+"_editInviteTextDialogHead","Hälsningsmeddelande","Invitation message"
+"_editinvitetextlink","JUSTERA HÄLSNINGSMEDDELANDE","ADJUST INVITATION MESSAGE"
+"_editinvitetextlinkInviteText","HÄLSNINGSMEDDELANDE","INVITATION MESSAGE"
+"_eleg","E-legitimation","E-ID"
+"_invitetextSaveTemplate","Spara mall","Save template"
+"_offerconfirmsendtext","Är du säker på att du vill skicka offerten","Are you sure you want to send the offer"
+"_offerconfirmsendtitle","Skicka offert","Send offer"
+"_offerexpirytext","Förfallodatum","Expiration date"
+"_offerexpirywarntext","Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum.
+ Detta regleras av avtalslagen.","OBSERVE: If you choose an expiration date, you cannot withdraw
+ the invitation before the expiration. This is controlled by
+ the Swedish Law of Contracts."
+"_offername","Offert","Offer"
+"_offersendtext","Skicka offert","Send offer"
+"_offerstep1text","Välj offert","Select offer"
+"_offertitle","OFFERT","OFFER"
+"_orderconfirmsendtext","Är du säker att du vill skicka orderbekräftelsen","Are you sure you want to send the order confirmation"
+"_orderconfirmsendtitle","Skicka orderbekräftelse","Send order confirmation"
+"_orderexpirytext","Förfallodatum","Expiration date"
+"_orderexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
+ inbjudan innan datumet förfallit. Detta regleras av avtalslagen.","OBSERVE: If you choose an expiration date, you cannot withdraw
+ the invitation before the expiration. This is controlled by
+ the Swedish Law of Contracts."
+"_ordername","Orderbekräftelse","Order confirmation"
+"_ordersendtext","Skicka order","Send order confirmation"
+"_orderstep1text","Välj orderbekräftelse","Select order confirmation"
+"_ordertitle","ORDER-BEKRÄFTELSE","ORDER CONFIRMATION"
+"_pageDocumentForAuthorHelpersLocalDialogsAddAttachment","Lägg till bilaga","Add attachment"
+"_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc","Beskrivning ","Description"
+"_pageDocumentForAuthorHelpersLocalDialogsAttachmentname","Bilaga      ","Attachment"
+"_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs","Begär från","Request from"
+"_pageDocumentForAuthorHelpersLocalDialogsHead","Begär bilaga","Request attachment"
+"_pageDocumentForAuthorHelpersLocalDialogsRecipient","Mottagare","Recipient"
+"_personpanePart1","PART 1","PARTY 1"
+"_save","Spara","Save"
+"_signStep2ContentPersons","PARTER","PARTIES"
+"_signStep2ContentSignOrder","SIGNERINGSORDNING","SIGNING ORDER"
+"_signStepsBodyDaysLeftToSign"," dagar"," days"
+"_signStepsBodyFunctionsAddPerson","LÄGG TILL PART","ADD PERSON"
+"_signStepsBodyFunctionsBoxChooseVerification","Välj verifieringsmetod","Select verification method"
+"_signStepsBodyFunctionsNextStep","Nästa steg","Next step"
+"_signStepsBodyFunctionsRemovePerson","TA BORT PART","REMOVE PERSON"
+"_signStepsBodyFunctionssaveTemplate","Spara mall","Save template"
+"_signStepsFunctionalityChangeToAdvanced","BYT TILL AVANCERAD PROCESS","CHANGE TO ADVANCED PROCESS"
+"_signStepsFunctionalityChangeToSimplified","BYT TILL FÖRENKLAD PROCES","CHANGE TO SIMPLIFIED PROCESS"
+"_signStepsMenuEmptyStepSaveAsTemplate","SPARA SOM MALL","SAVE AS TEMPLATE"
+"_signStepsTitleRowTextContainerIfTemplate","MALL:","TEMPLATE:"
+"_step1selectIfTemplate","Välj mall","Select template"
+"_step2selectIfElse","Lägg till parter","Add parties"
+"_step2selectIfTemplate","Utforma mall","Design template"
+"_step2selectIfisbasic","Lägg till part &amp; Skicka!","Add party &amp; Send!"
+"_step3selectIfNotTemplate","Underteckna och skicka!","Sign and send!"
+"_step3selectIfTemplate","Färdigställ och spara","Finish and save"
+"_switchercheckboxNotSignatory","Ej undertecknande part","Non-signing party"
+"_switchercheckboxSignLast","Underteckna sist ","Sign last"
+"_updateAttachmentsDialogChooseAttachment","Välj de bilagor du vill bifoga          ","Select the files you want to attach          "
+"_updateAttachmentsDialogHead","Välj bilagor","Select attachment"
+"_updateAttachmentsDialogUpLoad","Välj fil från dator","Select file from computer"
+"_updateAttachmentsDialogUpLoadChooseAttachment","Välj bilaga","Select attachment"
+"_updateAttachmentsDialogUpLoadChooseExistingAttachment","Välj bilaga","Select attachment"
+"_updateAttachmentsDialogUpLoadChooseFile","Välj fil","Select file"
+"_updateAttachmentsDialogUpLoadFooterAttach","Bifoga","Attach"
+"_updateAttachmentsDialogUpLoadOnlyPDF","OBS! Endast PDF","PDF only!"
+"_updateAttachmentsDialogUpLoadSaved","Sparad på SkrivaPå","Stored in Scrive"
+"_validationdropdownChooseVMethod","Välj verifieringsmetod","Select verification method"

@@ -10,14 +10,13 @@
 --
 -----------------------------------------------------------------------------
 
-module API.UserAPI (userAPI)
-
-where
+module API.UserAPI (userAPI) where
 
 import API.API
 import API.APICommons hiding (SignatoryTMP(..))
 import Doc.DocControl
 import Doc.DocState
+import Company.CompanyState
 import Kontra
 import Misc
 import Doc.DocViewMail
@@ -34,9 +33,10 @@ import Text.JSON
 import qualified Data.ByteString as BS
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
 
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
-type UserAPIFunction a = APIFunction UserAPIContext a
+type UserAPIFunction m a = APIFunction m UserAPIContext a
 
 instance APIContext UserAPIContext where
     body= wsbody
@@ -49,7 +49,7 @@ instance APIContext UserAPIContext where
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
              (_, Left s)             -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
 
-apiUser ::  Kontra (Maybe User)
+apiUser :: Kontrakcja m => m (Maybe User)
 apiUser = do
     email <- getFieldUTFWithDefault BS.empty "email"
     muser <- query $ GetUserByEmail Nothing (Email email)
@@ -62,14 +62,15 @@ apiUser = do
                else return Nothing
 
 userAPI :: Kontra Response
-userAPI =  dir "userapi" $ msum [ apiCall "sendnewdocument" sendNewDocument
-                                 , apiCall "sendFromTemplate" sendFromTemplate
-                                 , apiCall "document" getDocument
-                                 , apiCall "sendReminder" sendReminder
-                                 , apiUnknownCall
-                                 ]
+userAPI =  dir "api" $ dir "userapi" $ msum [
+      apiCall "sendnewdocument" sendNewDocument   :: Kontrakcja m => m Response
+    , apiCall "sendFromTemplate" sendFromTemplate :: Kontrakcja m => m Response
+    , apiCall "document" getDocument              :: Kontrakcja m => m Response
+    , apiCall "sendReminder" sendReminder         :: Kontrakcja m => m Response
+    , apiUnknownCall
+    ]
 
-sendReminder :: UserAPIFunction APIResponse
+sendReminder :: Kontrakcja m => UserAPIFunction m APIResponse
 sendReminder = do
   ctx <- getContext
   doc <- getUserDoc
@@ -77,7 +78,7 @@ sendReminder = do
                              , isSignatory sl
                              , not $ hasSigned sl]
   _ <- forM siglinkstoremind $ (\signlink -> do
-                              mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
+                              mail <- mailDocumentRemind Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
                                 to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
@@ -85,14 +86,14 @@ sendReminder = do
   return $ toJSObject []
 
 
-getDocument :: UserAPIFunction APIResponse
+getDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 getDocument = do
   doc <- getUserDoc
   api_doc <- api_document True (doc)
   return $ toJSObject [("document",api_doc)]
 
 
-getUserDoc :: UserAPIFunction Document
+getUserDoc :: Kontrakcja m => UserAPIFunction m Document
 getUserDoc = do
   author <- user <$> ask
   mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
@@ -100,7 +101,7 @@ getUserDoc = do
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
 
-sendFromTemplate :: UserAPIFunction APIResponse
+sendFromTemplate :: Kontrakcja m => UserAPIFunction m APIResponse
 sendFromTemplate = do
   author <- user <$> ask
   ctx <- getContext
@@ -110,7 +111,6 @@ sendFromTemplate = do
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
   let Just authorsiglink = mauthorsiglink
-  let saccount = getSignatoryAccount author
   medoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx)
@@ -119,7 +119,7 @@ sendFromTemplate = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext doc)
-          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, saccount)
+          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality
@@ -140,7 +140,7 @@ sendFromTemplate = do
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
-getTemplate :: UserAPIFunction Document
+getTemplate :: Kontrakcja m => UserAPIFunction m Document
 getTemplate = do
   author <- user <$> ask
   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
@@ -150,10 +150,12 @@ getTemplate = do
   when (not $ isTemplate temp) $ throwApiError API_ERROR_OTHER "This document is not a template"
   return temp
 
-
-sendNewDocument :: UserAPIFunction APIResponse
+sendNewDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 sendNewDocument = do
   author <- user <$> ask
+  mcompany <- case usercompany author of
+                Just companyid -> query $ GetCompany companyid
+                Nothing -> return Nothing
   mtitle <- apiAskBS "title"
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""
   let title = fromJust mtitle
@@ -168,10 +170,11 @@ sendNewDocument = do
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
   ctx <- getContext
-  newdoc <- update $ NewDocument author title doctype (ctxtime ctx)
+  mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx) --TODO EM i don't know about this
+  when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
+  let newdoc = fromRight mnewdoc
   liftIO $ print newdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  let saccount = getSignatoryAccount author
   edoc <- update $
           UpdateDocument --really? This is ridiculous! Too many params
           (ctxtime ctx)
@@ -180,7 +183,7 @@ sendNewDocument = do
           (zip signatories (repeat [SignatoryPartner]))
           Nothing
           (documentinvitetext newdoc)
-          ((signatoryDetailsFromUser author) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], saccount)
+          ((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
           [EmailIdentification]
           Nothing
           AdvancedFunctionality
@@ -201,7 +204,7 @@ sendNewDocument = do
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
-getSignatories :: UserAPIFunction [SignatoryDetails]
+getSignatories :: Kontrakcja m => UserAPIFunction m [SignatoryDetails]
 getSignatories = do
     minvolved  <- apiLocal "involved" $ apiMapLocal $ fmap toSignatoryDetails <$> getSignatoryTMP
     case minvolved of

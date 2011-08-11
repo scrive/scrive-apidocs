@@ -277,7 +277,7 @@ checkValidity now maction = maction >>= \action ->
        then Just action
        else Nothing
 
--- | Create new 'password remainder' action
+-- | Create new 'password reminder' action
 newPasswordReminder :: User -> IO Action
 newPasswordReminder user = do
     hash <- randomIO

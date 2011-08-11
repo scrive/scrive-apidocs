@@ -18,7 +18,9 @@ a.btn-small.center, a.btn-big.center, a.btn-tiny.center {
 .btn-small p, btn-big p, btn-tiny p {
 	display: inline;
 }
-
+a.btn-small{
+    height: 33px;
+}
 /* Small Buttons */
 
 a.btn-small .left {
@@ -216,6 +218,10 @@ a.btn-small.red:active .label {
 
 /* Big Buttons */
 
+a.btn-big{
+    height: 46px;
+}
+
 a.btn-big .left {
 	background-image: url(../img/spr-btn-borders.png);
 	float: left;
@@ -407,6 +413,10 @@ a.btn-big.red:active .label {
 }
 
 /* Tiny Buttons */
+
+a.btn-tiny{
+    height: 26px;
+}
 
 a.btn-tiny .left {
 	background-image: url(../img/spr-btn-borders.png);

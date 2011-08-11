@@ -18,17 +18,16 @@ import Happstack.Server hiding (simpleHTTP)
 import Kontra
 import Contacts.ContactsView
 import KontraLink
-import FlashMessage
+import Util.FlashUtil
 
-
-showContacts ::Kontra Response
+showContacts :: Kontrakcja m => m Response
 showContacts =  do
   ctx <- getContext
   content <- liftIO $ contactsView (ctxtemplates ctx)
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for advanced user administration -}
-handleContactsChange :: Kontra KontraLink
+handleContactsChange :: Kontrakcja m => m KontraLink
 handleContactsChange =  do
-  addFlashMsg $ toFlashMsg OperationDone "POST"
+  addFlash (OperationDone, "POST")
   return LoopBack

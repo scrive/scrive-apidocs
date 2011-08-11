@@ -32,11 +32,11 @@ function docstateToHTML(){
 	    placePlacements(fd.placements, fd.label, fd.value);
 	});
 
-    placePlacements(author.nameplacements, "Avsändare namn på motpart", author.name);
-    placePlacements(author.companyplacements, "Avsändare  titel, företag", author.company);
-    placePlacements(author.numberplacements, "Avsändare Orgnr/Persnr", author.number);
-    placePlacements(author.emailplacements, "Avsändare personens e-mail", author.email);
-
+    placePlacements(author.nameplacements, localization.senderName, author.name);
+    placePlacements(author.companyplacements, localization.senderTitle, author.company);
+    placePlacements(author.numberplacements, localization.senderNumber, author.number);
+    placePlacements(author.emailplacements, localization.senderEmail, author.email);
+                                
     var signatories = docstate.signatories;
     $(signatories).each(function () {
 	    signatoryToHTML(this);
@@ -51,12 +51,11 @@ function signatoryToHTML(sig) {
 	    placePlacements(fd.placements, fd.label, fd.value);
 	});
 
-    placePlacements(sig.nameplacements, "Namn på motpart", sig.name);
-    placePlacements(sig.companyplacements, "Titel, företag", sig.company);
-    placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number);
-    placePlacements(sig.emailplacements, "Personens e-mail", sig.email);
+    placePlacements(sig.nameplacements, localization.partnerName , sig.name);
+    placePlacements(sig.companyplacements, localization.partnerTitle, sig.company);
+    placePlacements(sig.numberplacements, localization.partnerNumber , sig.number);
+    placePlacements(sig.emailplacements,  localization.partnerEmail, sig.email);
 }
-
 
 function initializeTemplates () {
 

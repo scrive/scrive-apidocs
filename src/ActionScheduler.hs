@@ -4,15 +4,19 @@ module ActionScheduler (
     , runEnforceableScheduler
     , actionScheduler
     , oldScheduler
+    , runDocumentProblemsCheck
     ) where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader
+import Data.List
 import Data.Maybe
 import Happstack.State
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
@@ -23,24 +27,27 @@ import MinutesTime
 import Mails.MailsData
 import Mails.SendMail
 import Session
-import Templates.Templates (KontrakcjaMultilangTemplates,langVersion,Lang(..))
+import Templates.LocalTemplates
+import Templates.Templates
 import User.UserView
 import qualified AppLogger as Log
 import System.Time
-import Misc
 import Util.HasSomeUserInfo
+import Doc.Invariants
 
-type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaMultilangTemplates))
+type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
-type ActionScheduler a = ReaderT SchedulerData' IO a
+newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
+    deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
+
+-- Note: Do not define TemplatesMonad instance for ActionScheduler, use
+-- LocalTemplates instead. Reason? We don't have access to currently used
+-- language, so we should rely on user's language settings the action is
+-- assigned to and since TemplatesMonad doesn't give us the way to get
+-- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler sched sd =
-    runReaderT sched sd `E.catch` catchEverything
-    where
-        catchEverything :: E.SomeException -> IO ()
-        catchEverything e =
-            Log.error $ "Oops, scheduler error: " ++ show e
+runScheduler (AS sched) sd = runReaderT sched sd
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -55,9 +62,26 @@ runEnforceableScheduler interval enforcer sched sd = listen 0
 -- | Gets 'expired' actions and evaluates them
 actionScheduler :: ActionImportance -> ActionScheduler ()
 actionScheduler imp = do
-        liftIO getMinutesTime
-    >>= query . GetExpiredActions imp
-    >>= sequence_ . map evaluateAction
+    sd <- ask
+    liftIO $ getMinutesTime
+         >>= query . GetExpiredActions imp
+         >>= sequence_ . map (run sd)
+    where
+        run sd a = runScheduler (evaluateAction a) sd `E.catch` catchEverything a
+        catchEverything :: Action -> E.SomeException -> IO ()
+        catchEverything a e =
+            Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
+            
+
+
+-- | Old scheduler (used as main one before action scheduler was implemented)
+oldScheduler :: ActionScheduler ()
+oldScheduler = do
+    now <- liftIO getMinutesTime
+    timeoutDocuments now
+    dropExpiredSessions now
+
+-- Internal stuff
 
 -- | Evaluates one action depending on its type
 evaluateAction :: Action -> ActionScheduler ()
@@ -90,12 +114,14 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             mdoc <- query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
-                (_,templates) <- liftIO $ mapSnd (langVersion LANG_SE) $ readMVar (sdTemplates sd)
-                let mailfunc = case documenttype <$> mdoc of
-                      (Just (Signable Offer)) -> mailAccountCreatedBySigningOfferReminder
-                      (Just (Signable Contract))-> mailAccountCreatedBySigningContractReminder
-                      _ -> error "Case for order not implemented yet" -- TODO THIS WILL GIVE A WARNING TILL IT IS FIXED
-                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+                    mailfunc = case documenttype <$> mdoc of
+                      Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
+                      Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
+                      Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
+                      t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
+                templates <- getLocalizedTemplates $ systemserver &&& lang $ usersettings user
+                mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
@@ -135,20 +161,47 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
 
 evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
     deleteAction actionID
+    
+runDocumentProblemsCheck :: ActionScheduler ()
+runDocumentProblemsCheck = do
+  sd <- ask
+  now <- liftIO getMinutesTime
+  docs <- query $ GetDocuments Nothing
+  let probs = listInvariantProblems now docs
+  when (probs /= []) $ mailDocumentProblemsCheck $ 
+    "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++ 
+    intercalate ("</p>\n\n<p>" ++ (hostpart $ sdAppConf sd) ++ "/dave/document/") probs ++ 
+    "</p>"
+  return ()
+
+-- | Send an email out to all registered emails about document problems.
+mailDocumentProblemsCheck :: String -> ActionScheduler ()
+mailDocumentProblemsCheck msg = do
+  sd <- ask
+  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
+                                                  , title = BS.fromString $ "Document problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = BS.fromString msg
+                                                  , attachments = []
+                                                  , from = Nothing
+                                                  , mailInfo = None
+                                                  }
+
+-- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
+documentProblemsCheckEmails :: [BS.ByteString]
+documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
     _ <- update $ DeleteAction aid
     return ()
 
--- | Old scheduler
-oldScheduler :: ActionScheduler ()
-oldScheduler = do
-    now <- liftIO getMinutesTime
-    timeoutDocuments now
-    dropExpiredSessions now
-    deleteQuarantinedDocuments now
-    Log.debug $ "Scheduler is running ..."
+getLocalizedTemplates :: Localization -> ActionScheduler KontrakcjaTemplates
+getLocalizedTemplates lang = do
+    sd <- ask
+    (_, templates) <- liftIO $ second (localizedVersion lang) <$> readMVar (sdTemplates sd)
+    return templates
+
+-- Old scheduler internal stuff
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
@@ -156,11 +209,4 @@ timeoutDocuments now = do
     forM_ docs $ \doc -> do
         _ <- update $ TimeoutDocument (documentid doc) now
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
-
-deleteQuarantinedDocuments :: MinutesTime -> ActionScheduler ()
-deleteQuarantinedDocuments now = do
-    docs <- query $ GetExpiredQuarantinedDocuments now
-    forM_ docs $ \doc -> do
-        _ <- update $ EndQuarantineForDocument (documentid doc)
-        Log.debug $ "Document quarantine expired " ++ (show $ documenttitle doc)
 

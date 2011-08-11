@@ -1,0 +1,49 @@
+"!Template name","LANG_SE","LANG_EN"
+"_Attachment","Bilaga:","Attachment:"
+"_Attachments","Bilagor","Attachments"
+"_Document","Dokument","Document"
+"_DownloadPDF","Ladda ned PDF","Download PDF"
+"_RequestedAttachments","Bägarda bilagor:","Requested attachments:"
+"_cancelByAuthorDialogOwnMessage","Skriv eget meddelande","Write your own message"
+"_contractcancelbuttontext","Återkalla inbjudan","Withdraw invitation"
+"_contractcancelbyauthormodaltitleBody","Är du säker att du vill återkalla din inbjudan att underteckna
+ dokumentet?            <br/> När du återkallat inbjudan kommer
+ nedanstående meddelande att skickas till dina motparter.   
+       ","Are you sure you want to withdraw the invitation to sign the
+ document? <br/> When you have withdrawn it, the following message
+ will be sent to your counterparts."
+"_contractcancelbyauthormodaltitleHead","Återkalla inbjudan","Withdraw invitation"
+"_contractrestartbuttontext","Starta om dokument","Restart the document"
+"_dialogConfirmSignByAuthorBody1","Är du säker att du vill underteckna dokumentet ","Are you sure you want to sign the document"
+"_dialogConfirmSignByAuthorBody2","När","When"
+"_dialogConfirmSignByAuthorBody3","undertecknat blir avtalet <strong>juridiskt bindande</strong>
+ och              det färdigställda avtalet skickas till din
+ e-post.","has signed the document, it becomes <strong>legally binding</strong>
+              and the finished document will be sent to your
+ e-mail."
+"_dialogConfirmSignByAuthorElegBody","Har du ingen e-legitimation? Du kan ladda ned en            
+    e-legitimation från din internetbank eller från         
+       Telia. ","No e-ID? You can download an e-ID from your online bank or from
+ Telia."
+"_dialogConfirmSignByAuthorElegClickHere1","Klicka här","Click here"
+"_dialogConfirmSignByAuthorElegClickHere2","för att läsa mer.","to read more."
+"_dialogConfirmSignByAuthorElegSubHead","Välj typ av e-legitimation","Select type of e-ID"
+"_dialogConfirmSignByAuthorHead","Underteckna","Sign"
+"_offercancelbuttontext","Återkalla offert","Withdraw offer"
+"_offercancelbyauthormodaltitleBody","När du återkallat offerten kommer nedanstående meddelande att
+ skickas till din motpart.","When you have withdrawn the offer, the following message will
+ be sent to your counterpart."
+"_offercancelbyauthormodaltitleHead","Är du säker att du vill återkalla offerten?","Are you sure you want to withdraw the offer?"
+"_offerrestartbuttontext","Starta om offert","Restart offer"
+"_ordercancelbuttontext","Återkalla order","Withdraw order"
+"_ordercancelbyauthormodaltitleBody","När du återkallat orderbekräftelsen kommer nedanstående meddelande
+ att skickas till din motpart.","When you have withdrawn the order confirmation, the following
+ message will be sent to your counterpart."
+"_ordercancelbyauthormodaltitleHead","Är du säker att du vill återkalla orderbekräftelsen?","Are you sure you want to withdraw the order confirmation?"
+"_orderrestartbuttontext","Starta om order","Restart the order"
+"_signGuardField1","Jag intygar att:","I certify that:"
+"_signGuardField2","          <br/>1. Samtliga undertecknande parter är korrekta.
+          <br/>2. Jag granskat och förstått dokumentet.
+         <br/>3. Jag har befogenhet att skriva på dokumentet.","          <br/>1. All signatories are correct.          <br/>2.
+ I have reviewed and understood the document.           <br/>3.
+ I am authorized to sign the document."

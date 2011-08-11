@@ -16,14 +16,15 @@ class HasProcess a where
   getValueForProcess doctype fieldname =
     fmap fieldname (getProcess doctype)
 
-  renderTemplateForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> Fields -> IO String
-  renderTemplateForProcess templates hasprocess fieldname fields =
+  renderTemplateForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> Fields m -> m String
+  renderTemplateForProcess hasprocess fieldname fields =
     case getValueForProcess hasprocess fieldname of
-      (Just templatename) -> renderTemplate templates templatename fields
+      (Just templatename) -> renderTemplateFM templatename fields
       _ -> return ""
 
-  renderTextForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> IO String
-  renderTextForProcess templates hasprocess fieldname = renderTemplateForProcess templates hasprocess fieldname $ do return ()
+  renderTextForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> m String
+  renderTextForProcess hasprocess fieldname =
+      renderTemplateForProcess hasprocess fieldname $ do return ()
 
 instance HasProcess DocumentType where
   getProcess (Signable Contract) = Just contractProcess
@@ -49,7 +50,7 @@ data DocProcessInfo =
   , processuploadname :: String
 
   -- used in the design view
-  , processadvancedview :: Bool
+  , processbasicavailable :: Bool
   , processauthorsend :: Bool
   , processvalidationchoiceforbasic :: Bool
   , processexpiryforbasic :: Bool
@@ -136,7 +137,7 @@ contractProcess =
   , processuploadname = "contractuploadname"
 
   -- used in the design view
-  , processadvancedview = True
+  , processbasicavailable = True
   , processauthorsend = False
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
@@ -223,7 +224,7 @@ offerProcess =
   , processuploadprompttext = "offeruploadprompttext"
 
   -- used in the design view
-  , processadvancedview = False
+  , processbasicavailable = True
   , processauthorsend = True
   , processvalidationchoiceforbasic = False
   , processexpiryforbasic = True
@@ -310,7 +311,7 @@ orderProcess =
   , processuploadname = "orderuploadname"
 
   -- used in the design view
-  , processadvancedview = True
+  , processbasicavailable = False
   , processauthorsend = True
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True

@@ -15,7 +15,8 @@ module API.API(
      , APIRequestBody
      , APIResponse
      , APIContext(..)
-     , APICall(..)
+     --, APICall(..)
+     , apiCall
      , liftKontra
      , runApiFunction
      , apiUnknownCall
@@ -43,7 +44,7 @@ import Data.Functor
 import AppView as V
 import Happstack.Server hiding (simpleHTTP,host,body)
 import Misc
-import Kontra
+import KontraMonad
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
@@ -51,6 +52,7 @@ import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
 import Data.Ratio
+import Templates.Templates
 import qualified Data.ByteString.Base64 as BASE64
 import qualified AppLogger as Log (debug)
 
@@ -58,24 +60,25 @@ import qualified AppLogger as Log (debug)
 type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
-{- | API functions are build over Kontra with a ability to exit, and with some context -}
---type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra) a
-
-newtype APIFunction c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) Kontra) a }
+{- | API functions are build over Kontra with an ability to exit, and with some context -}
+newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c)
 
-instance KontraMonad (APIFunction c) where
+instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
+    getTemplates = liftKontra getTemplates
+
+instance Kontrakcja m => KontraMonad (APIFunction m c) where
     getContext    = liftKontra getContext
     modifyContext = liftKontra . modifyContext
 
-runApiFunction :: APIFunction c a -> c -> Kontra (Either (API_ERROR, String) a)
+runApiFunction :: Kontrakcja m => APIFunction m c a -> c -> m (Either (API_ERROR, String) a)
 runApiFunction f ctx = runErrorT $ runReaderT (unAF f) ctx
 
-liftKontra :: Kontra a -> APIFunction c a
+liftKontra :: Kontrakcja m => m a -> APIFunction m c a
 liftKontra = AF . lift . lift
 
 {- |  Used to convert json object to HTTP response-}
-apiResponse ::  Kontra APIResponse ->  Kontra Response
+apiResponse :: Kontrakcja m => m APIResponse -> m Response
 apiResponse action = action >>= simpleResponse . encode
 
 {- | Used to build api routing tables
@@ -90,29 +93,23 @@ apiResponse action = action >>= simpleResponse . encode
     as long as they hold response JSON inside.
 
 -}
-class APICall a where
-    apiCall :: String -> a -> Kontra Response
 
-instance APICall (Kontra APIResponse) where
-    apiCall s action = dir "api" $ dir s $ do
-                    methodM POST 
-                    Log.debug $ "API call " ++ s ++ " matched"
-                    apiResponse action
-
-
-instance (APIContext c) => APICall (APIFunction c APIResponse) where
-    apiCall s action = apiCall s $ do
+apiCall :: (APIContext c, Kontrakcja m) => String -> APIFunction m c APIResponse -> m Response
+apiCall s f = dir s $ do
+    methodM POST
+    Log.debug $ "API call " ++ s ++ " matched"
+    apiResponse $ do
         mcontext <- apiContext
         case mcontext  of
-             Right apicontext -> do
-                 res <- either (uncurry apiError) id <$> runApiFunction action apicontext
+             Right apictx -> do
+                 res <- either (uncurry apiError) id <$> runApiFunction f apictx
                  Log.debug $ "API call result: " ++ encode res
                  return res
              Left emsg -> return $ uncurry apiError emsg
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
-apiUnknownCall ::  Kontra Response
-apiUnknownCall = dir "api" $ apiResponse $  return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
+apiUnknownCall :: Kontrakcja m => m Response
+apiUnknownCall = apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
 
 
 
@@ -123,30 +120,30 @@ apiUnknownCall = dir "api" $ apiResponse $  return $ apiError API_ERROR_UNNOWN_C
 -}
 
 class APIContext a where
-    apiContext::Kontra (Either (API_ERROR,String) a)
-    body:: a -> APIRequestBody
-    newBody:: APIRequestBody -> a -> a
+    apiContext :: Kontrakcja m => m (Either (API_ERROR,String) a)
+    body       :: a -> APIRequestBody
+    newBody    :: APIRequestBody -> a -> a
 
 
 -- When building API calls you wan't to dig into JSON object with params
 -- Here are some helper functions for that. Some can be localized (like in ReaderMonad) to subcontext.
 
-apiAskBS::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)
+apiAskBS :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
 apiAskBS = fmap (fmap BS.fromString) . apiAskString
 
-apiAskString::(APIContext c) => String -> APIFunction c (Maybe String)
+apiAskString :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe String)
 apiAskString s = apiLocal s (fromString <$> askBody)
     where
         fromString (JSString string) = Just $ fromJSString string
         fromString _ = Nothing
 
-apiAskInteger::(APIContext c) => String -> APIFunction c (Maybe Integer)
+apiAskInteger :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe Integer)
 apiAskInteger s = apiLocal s (fromNumerator <$> askBody)
     where
         fromNumerator (JSRational _ r) = Just $ numerator r
         fromNumerator _ = Nothing
 
-apiAskBase64::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)
+apiAskBase64 :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
 apiAskBase64 s =  do
     coded <- (fmap $ BASE64.decode)  <$> apiAskBS s
     case coded of
@@ -154,32 +151,32 @@ apiAskBase64 s =  do
          _ -> return Nothing
 
 
-apiAskStringMap::(APIContext c) => APIFunction c (Maybe [(String,String)])
+apiAskStringMap :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [(String,String)])
 apiAskStringMap = join <$> fmap (foldl getStr (Just [])) <$> apiAskMap
     where
         getStr (Just l) (key,JSString string) = Just $ (key,fromJSString string):l
         getStr _ _ = Nothing
 
-apiAskMap::(APIContext c) => APIFunction c (Maybe [(String,JSValue)])
+apiAskMap :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [(String,JSValue)])
 apiAskMap = fromObject <$> askBody
     where
         fromObject (JSObject object) = Just $ fromJSObject object
-        fromObject _ =Nothing
+        fromObject _ = Nothing
 
-apiAskList:: (APIContext c) => APIFunction c (Maybe [JSValue])
+apiAskList :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [JSValue])
 apiAskList = fromList <$> askBody
     where
         fromList (JSArray list) = Just $ list
         fromList _ = Nothing
 
-apiLocal ::(APIContext c) => String -> APIFunction c (Maybe a) -> APIFunction c (Maybe a)
+apiLocal :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe a) -> APIFunction m c (Maybe a)
 apiLocal s digger = do
     mobj <- apiAskField s
     case mobj of
          Just obj -> AF $ withReaderT (newBody obj) (unAF digger)
          Nothing -> return Nothing
 
-apiMapLocal :: (APIContext c) => APIFunction c (Maybe a) -> APIFunction c (Maybe [a])
+apiMapLocal :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe a) -> APIFunction m c (Maybe [a])
 apiMapLocal digger = do
     mdiggers <- (fmap $ map (\nbody -> AF $ withReaderT (newBody nbody) (unAF digger))) <$> apiAskList
     case mdiggers of
@@ -197,23 +194,23 @@ apiMapLocal digger = do
                  _ -> return Nothing
          runDiggers _ = return $ Just []
 
-apiAskField:: (APIContext c) => String -> APIFunction c (Maybe JSValue)
+apiAskField :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe JSValue)
 apiAskField s = fromObject <$> askBody
     where
       fromObject (JSObject object) = lookup s $ fromJSObject object
       fromObject _ = Nothing
 
-askBody :: (APIContext c) => APIFunction c APIRequestBody
+askBody :: (APIContext c, Kontrakcja m) => APIFunction m c APIRequestBody
 askBody = body <$> ask
 
 --- This will read JSON object from some HTTP request body parameter
-apiBody ::  Kontra (Either String JSValue)
+apiBody :: Kontrakcja m => m (Either String JSValue)
 apiBody = runGetJSON readJSObject <$> getFieldWithDefault "" "body"
 
 --- ERROR Response
 
 -- Building pure api error.
-apiError::API_ERROR -> String ->  APIResponse
+apiError :: API_ERROR -> String -> APIResponse
 apiError code message= toJSObject [
       ("error" , showJSON $ fromSafeEnum code)
     , ("error_message", showJSON message)
@@ -223,7 +220,7 @@ instance Error (API_ERROR,String) where
     strMsg s = (API_ERROR_OTHER,s)
 
 --This will break the execution and send error message to the user
-throwApiError:: (APIContext c) => API_ERROR -> String -> APIFunction c a
+throwApiError :: (APIContext c, Kontrakcja m) => API_ERROR -> String -> APIFunction m c a
 throwApiError = curry throwError
 
 

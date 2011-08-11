@@ -109,11 +109,11 @@ swedishTimeLocale = defaultTimeLocale { months = [ ("januari","jan")
 showDateAbbrev :: MinutesTime -> MinutesTime -> String
 showDateAbbrev current time
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
-                   formatSwedishMinutesTime "%H:%M" current
+                   formatSwedishMinutesTime "%H:%M" time
                | ctYear ct1 == ctYear ct =
-                   formatSwedishMinutesTime "%d %b" current
+                   formatSwedishMinutesTime "%d %b" time
                | otherwise =
-                   formatSwedishMinutesTime "%Y-%m-%d" current
+                   formatSwedishMinutesTime "%Y-%m-%d" time
                where
                  ct1 = unsafePerformIO $ toCalendarTime $ toClockTime current
                  ct = unsafePerformIO $ toCalendarTime $ toClockTime time
