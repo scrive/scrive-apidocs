@@ -290,10 +290,40 @@ flashMessagePleaseSign document = do
 
 documentJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON _crttime doc = (fmap toJSObject) $ propagateMonad  $
-    [  ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc)
+    [  ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
+       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> documentfiles doc ),
+       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> documentsealedfiles doc ),
+       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
+       ("process", processJSON doc )
     ]
 
-    
+processJSON :: (TemplatesMonad m) => Document -> m JSValue
+processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
+      [
+        ("title", text processtitle)
+      , ("name", text processname)
+        -- used in the design view
+      , ("basicavailable", bool processbasicavailable)
+      , ("authorsend", bool processauthorsend)
+      , ("validationchoiceforbasic", bool processvalidationchoiceforbasic)
+      , ("expiryforbasic", bool processexpiryforbasic)
+      , ("step1text", text processstep1text )
+      , ("expirywarntext ", text processexpirywarntext )
+      , ("sendbuttontext", text processsendbuttontext )
+      , ("confirmsendtitle", text processconfirmsendtitle )
+      , ("confirmsendtext ", text processconfirmsendtext )
+      , ("expirytext", text processexpirytext )
+     ]
+    where
+        text  k = JSString <$> toJSString <$> renderTextForProcess doc k
+        bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
+
+fileJSON :: File ->  [(String,String)]
+fileJSON file = 
+    [  ("id",   show $ fileid file),
+       ("name", BS.toString $ filename file)
+    ] 
+ 
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 docForListJSON crtime doc = (fmap toJSObject) $ propagateMonad  $
     [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),

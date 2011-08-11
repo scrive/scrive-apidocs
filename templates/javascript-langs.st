@@ -75,5 +75,10 @@ javascriptLocalisation =
              , of : "$_of()$"
              , outLogoClass : "$ourLogoClass()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
+             , downloadPDF : "$_DownloadPDF()$"
+             , document : "$_Document()$"
+             , attachment : "$_Attachment()$"
+             , attachments : "$_Attachments()$"
+             , requestedAttachments : "$_RequestedAttachments()$"
    }
 ####

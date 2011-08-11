@@ -1418,8 +1418,8 @@ handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
 handleFilePages did fid = do
   doc <- guardRightM $ getDocByDocID did
   ctx <- getContext
-  liftIO $ putStrLn $ show $ map authorattachmentfile (documentauthorattachments doc)
-  case (find (\f -> fid == fileid f) $ documentfiles doc) of
+  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc) ++ (authorattachmentfile <$> documentauthorattachments doc)
+  case (find (((==) fid) . fileid) $ allfiles) of
     Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No file found")]
     Just file  -> do
       jpages <- liftIO $ maybeScheduleRendering ctx file did
@@ -2014,9 +2014,11 @@ jsonDocument did = do
                      then return mdoc
                      else return Nothing
     cttime <- liftIO $ getMinutesTime
-    case mdoc of
+    rsp <- case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
          Just doc -> JSObject <$> documentJSON cttime doc
+    liftIO $ putStrLn $ show rsp
+    return rsp
     
                       
 
