@@ -51,6 +51,7 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
+    flashUserIsAlreadyCompanyAccount,
     flashMessageUserInvitedAsCompanyAccount,
     flashMessageUserHasBecomeCompanyAccount,
     flashMessageUserHasLiveDocs,
@@ -435,6 +436,10 @@ flashMessageNewActivationLinkSend =
 flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
+
+flashUserIsAlreadyCompanyAccount :: TemplatesMonad m => m FlashMessage
+flashUserIsAlreadyCompanyAccount =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashUserIsAlreadyCompanyAccount" ()
 
 flashMessageUserInvitedAsCompanyAccount :: TemplatesMonad m => m FlashMessage
 flashMessageUserInvitedAsCompanyAccount =

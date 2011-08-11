@@ -104,6 +104,7 @@
 "_flashMessageUserHasLiveDocs","Unable to remove account(s) as there are some remaining documents
  that need to be finalised (spec/translate me please).","Unable to remove account(s) as there are some remaining documents
  that need to be finalised."
+"_flashUserIsAlreadyCompanyAccount","Du har redan skickat en inbjudan till denna e-post!","You've already sent an invite to that e-mail!"
 "_flashMessageUserInvitedAsSubaccount","Din förfrågan har skickats!","Your request has been sent!"
 "_flashMessageUserPasswordChanged","Ditt lösenord har ändrats.","Your password has been changed."
 "_flashMessageUserSignupDone","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter

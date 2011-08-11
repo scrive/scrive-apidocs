@@ -230,6 +230,8 @@ flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()
 ###
 flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
+flashUserIsAlreadyCompanyAccount = $_flashUserIsAlreadyCompanyAccount()$
+###
 flashMessageUserInvitedAsCompanyAccount=	$_flashMessageUserInvitedAsSubaccount()$
 ###
 flashMessageUserHasBecomeCompanyAccount=	$_flashMessageUserHasBecomeSubaccount()$
