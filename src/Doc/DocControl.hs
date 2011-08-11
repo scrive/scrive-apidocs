@@ -1327,6 +1327,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
            if getValueForProcess document processauthorsend == Just True
              then [SignatoryAuthor]
              else [SignatoryPartner, SignatoryAuthor]
+         --basicauthordetails = ((removeFieldsAndPlacements authordetails), basicauthorroles, authoraccount)
          basicauthordetails = ((removeFieldsAndPlacements authordetails), basicauthorroles, authorid, authorcompany)
          basicsignatories = zip
                              (take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
