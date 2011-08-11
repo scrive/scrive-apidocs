@@ -50,7 +50,7 @@
 "_tooltipsent","Status: Skickat","Status: Sent"
 "_tooltipsigned","Status: Signerat","Status: Signed"
 "_verifyingSignature","Verifierar signatur...","Verifying signature..."
-"_youCanNotInviteSameEmail","Du kan inte bjuda in underkonton vars e-post inte har samma URL som du har i din e-post.","You cannot invite subaccounts that do not have the same URL as you have in your email address."
+"_youCanNotInviteSameEmail","Du kan endast bjuda in e-post adresser med samma domännamn som din egen.","You can only invite e-mail addresses with the same domain alias as your own."
 "_youMustSetParnerEmail","Du måste ange e-post till motpart.","You must enter an email address to your counterpart."
 "_yourSigningPluginFailed","Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. ","You sign plug-in failed to sign the document. Please contact your e-ID provider."
 "_searchBoxButtonText","Sök","Search"
