@@ -9,7 +9,7 @@
     been signed by all signatories."
 "_contractpendingauthorinfotextIfiamauthor","Du har skickat inbjudan att                           underteckna.
  Dokumentet har ännu inte                           undertecknats
- av samtliga parter.","You have sent an invitation to                           sign.
+ av samtliga parter.","You have sent an invitation to sign.
  The document has not yet been signed                       
     by all signatories."
 "_contractpendingauthornotsignedinfoheader","Granska","Please review"
@@ -73,7 +73,7 @@
 "_documentInfoTextTimedoutNotsignedbymeImauthorHead","Förfallodatum har passerat","Expiration date has passed"
 "_documentInfoTextTimedoutSignedbymeImauthorBody","Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum
  har passerat och därför har dokumentet avbrutits.","All parties did not sign the document in time. The expiration
- date has passed and the document process is therefore canceled."
+ date has passed and the document process has therefore been canceled."
 "_documentInfoTextTimedoutSignedbymeImauthorHead","Förfallodatum har passerat","Expiration date has passed"
 "_offercancelledinfoheader","Offert återkallad","Offer withdrawn"
 "_offercancelledinfotext","har återkallat offerten. Den går således inte att acceptera.","has withdrawn the offer. You can no longer accept it."

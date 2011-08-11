@@ -296,8 +296,13 @@ caseOf [] d = d
 allValues::(Bounded a, Enum a) => [a]
 allValues = enumFromTo minBound maxBound
 
-defaultValue::(Bounded a) => a
-defaultValue = minBound
+class HasDefaultValue a where
+    defaultValue :: a
+
+instance (Bounded a) => HasDefaultValue a where
+    defaultValue = minBound
+
+
 
 -- | Extra classes for one way enums
 class SafeEnum a where
