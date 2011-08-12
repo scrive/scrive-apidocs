@@ -134,15 +134,14 @@ showAdminUsersForPayments = onlySuperUser $ do
   content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
-getUsersAndStats :: Kontrakcja m => m [(User,Maybe Company, DocStats,UserStats)]
+getUsersAndStats :: Kontrakcja m => m [(User,Maybe Company, DocStats)]
 getUsersAndStats = do
     Context{ctxtime} <- getContext
     users <- runDBQuery GetUsers
     let queryStats user = do
           mcompany <- getCompanyForUser user
           docstats <- query $ GetDocumentStatsByUser user ctxtime
-          userstats <- runDBQuery $ GetUserStatsByUser $ userid user
-          return (user, mcompany, docstats, userstats)
+          return (user, mcompany, docstats)
     users2 <- mapM queryStats users
     return users2
 
@@ -179,17 +178,13 @@ read_df = do
 showStats :: Kontrakcja m => m Response
 showStats = onlySuperUser $ do
     docstats <- query GetDocumentStats
-    userstats <- runDBQuery GetUserStats
 #ifndef WINDOWS
     df <- liftIO read_df
 #else
     let df = empty
 #endif
     let stats = StatsView { svDoccount = doccount docstats,
-                            svSignaturecount = signaturecount docstats,
-                            svUsercount = usercount userstats,
-                            svViralinvitecount = viralinvitecount userstats,
-                            svAdmininvitecount = admininvitecount userstats }
+                            svSignaturecount = signaturecount docstats }
     content <- statsPage stats $ toString df
     renderFromBody TopEmpty kontrakcja content
 
@@ -630,10 +625,10 @@ calculateStatsFromUsers users =
                                                          Viral -> docStatsZero { dsViralInvites = 1 }
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
-                           -}
+-}
 fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats _users documents = do
-    let userStats = undefined -- calculateStatsFromUsers users
+    let userStats = IntMap.empty -- calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
         showAsDate :: Int -> String
         showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)

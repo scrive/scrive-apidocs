@@ -15,7 +15,6 @@ module User.Model (
   , UserInfo(..)
   , UserMailAPI(..)
   , UserSettings(..)
-  , UserStats(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
@@ -24,8 +23,6 @@ module User.Model (
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
   , GetUserMailAPI(..)
-  , GetUserStats(..)
-  , GetUserStatsByUser(..)
   , ExportUsersDetailsToCSV(..)
   , SetUserCompany(..)
   , DeleteUser(..)
@@ -144,12 +141,6 @@ data UserSettings  = UserSettings {
   , systemserver        :: SystemServer
   } deriving (Eq, Ord, Show)
 
-data UserStats = UserStats {
-    usercount        :: Int
-  , viralinvitecount :: Int
-  , admininvitecount :: Int
-  } deriving (Eq, Ord, Show, Data, Typeable)
-
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
   dbQuery GetUsers = wrapDB $ \conn -> do
@@ -235,14 +226,6 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
            , umapiSentToday = fromSql sent_today
            , umapiLastSentDate = fromSql last_sent_date
          } : acc)
-
-data GetUserStats = GetUserStats
-instance DBQuery GetUserStats UserStats where
-  dbQuery GetUserStats = undefined
-
-data GetUserStatsByUser = GetUserStatsByUser UserID
-instance DBQuery GetUserStatsByUser UserStats where
-  dbQuery (GetUserStatsByUser _uid) = undefined
 
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where

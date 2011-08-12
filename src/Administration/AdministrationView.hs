@@ -66,7 +66,7 @@ adminUsersAdvancedPage users params =
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage users page - can find user here -}
-adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
 adminUsersPage users params =
     renderTemplateFM "adminusers" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -78,7 +78,7 @@ adminUsersPage users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
 adminUsersPageForSales users params =
     renderTemplateFM "adminUsersForSales" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -90,7 +90,7 @@ adminUsersPageForSales users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
 adminUsersPageForPayments users params =
     renderTemplateFM "adminUsersForPayments" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -122,7 +122,7 @@ adminUserUsageStatsPage user mcompany morefields =
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
-allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> m String
+allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
 allUsersTable users =
     renderTemplateFM "allUsersTable" $ do
         fieldFL "users" $ map mkUserInfoView $ users
@@ -153,11 +153,10 @@ servicesAdminPage conn services = do
 adminTranslationsPage::TemplatesMonad m => m String
 adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
 
-mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats, UserStats) -> Fields m
-mkUserInfoView (user, mcompany, docstats, userstats) = do
+mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats) -> Fields m
+mkUserInfoView (user, mcompany, docstats) = do
   fieldF "userdetails" $ userBasicFields user mcompany
   field "docstats" $ docstats
-  field "userstats" $ userstats
   fieldF "adminview" $ do userFields user
                           companyFields mcompany
 
@@ -165,9 +164,6 @@ mkUserInfoView (user, mcompany, docstats, userstats) = do
 data StatsView = StatsView
                  { svDoccount          :: Int
                  , svSignaturecount    :: Int
-                 , svUsercount         :: Int
-                 , svViralinvitecount  :: Int
-                 , svAdmininvitecount  :: Int
                  } deriving (Data, Typeable)
 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}
@@ -189,8 +185,8 @@ instance UserBased User where
 instance UserBased (User,Maybe Company) where
   getUser (user,_) = user
 
-instance UserBased (User,Maybe Company,DocStats,UserStats) where
-  getUser (user,_,_,_) = user
+instance UserBased (User,Maybe Company,DocStats) where
+  getUser (user,_,_) = user
 
 {-| Users on current page-}
 visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]
