@@ -31,7 +31,6 @@ import KontraMonad
 import MinutesTime
 import User.Model
 import Misc
-import Payments.Model
 import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
@@ -339,7 +338,6 @@ blankUser = User {
                  , userhasacceptedtermsofservice = Nothing
                  , userfreetrialexpirationdate = Nothing
                  , usersignupmethod = AccountRequest
-                 , userpaymentaccounttype = FreeTrial
                  , userinfo = UserInfo {
                                     userfstname = BS.empty
                                   , usersndname = BS.empty

@@ -15,7 +15,6 @@ import Company.Model
 import DB.Types
 import MinutesTime
 import InspectXML
-import Payments.Model
 import Mails.MailsUtil
 import User.Model
 import KontraLink
@@ -80,7 +79,6 @@ instance InspectXML MagicHash where
 instance InspectXML Signatory where
 instance InspectXML MinutesTime where
 instance InspectXML Password where
-instance InspectXML PaymentAccountType where
 instance InspectXML FlashMessage where
 instance InspectXML Email where
 instance InspectXML SignupMethod where

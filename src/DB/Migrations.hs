@@ -16,7 +16,6 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
-import Payments.Tables
 import User.Tables
 
 migrationsList :: [Migration]
@@ -31,7 +30,6 @@ tablesList = [
   , tableUserMailAPIs
   , tableUserInviteInfos
   , tableUserSettings
-  , tableUserPaymentPolicies
   , tableServices
   , tableServiceUIs
   , tableCompanies

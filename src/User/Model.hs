@@ -33,7 +33,6 @@ module User.Model (
   , SetUserInfo(..)
   , SetUserSettings(..)
   , SetPreferredDesignMode(..)
-  , SetUserPaymentAccountType(..)
   , AddViewerByEmail(..)
   , AcceptTermsOfService(..)
   , SetFreeTrialExpirationDate(..)
@@ -59,7 +58,6 @@ import DB.Types
 import DB.Utils
 import MinutesTime
 import Misc
-import Payments.Model
 import User.Lang
 import User.Password
 import User.SystemServer
@@ -111,7 +109,6 @@ data User = User {
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
-  , userpaymentaccounttype        :: PaymentAccountType
   , userservice                   :: Maybe ServiceID
   , usercompany                   :: Maybe CompanyID
   , userdeleted                   :: Bool
@@ -327,12 +324,6 @@ instance DBUpdate AddUser (Maybe User) where
               , toSql (defaultValue::Lang)
               , toSql ss
               ]
-          _ <- run conn ("INSERT INTO user_payment_policies ("
-            ++ "  user_id"
-            ++ ", account_type) VALUES (?, ?)") [
-                toSql uid
-              , toSql FreeTrial
-              ]
           _ <- run conn ("INSERT INTO user_login_infos ("
             ++ "  user_id"
             ++ ", last_success"
@@ -487,17 +478,6 @@ instance DBUpdate SetPreferredDesignMode Bool where
       [toSql mmode, toSql uid]
     oneRowAffectedGuard r
 
-data SetUserPaymentAccountType = SetUserPaymentAccountType UserID PaymentAccountType
-instance DBUpdate SetUserPaymentAccountType Bool where
-  dbUpdate (SetUserPaymentAccountType uid paymentacctype) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE user_payment_policies SET"
-      ++ " account_type = ?"
-      ++ " WHERE user_id = ?") [
-        toSql paymentacctype
-      , toSql uid
-      ]
-    oneRowAffectedGuard r
-
 -- FIXME: this is broken, first query may return more than one user.
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
@@ -572,14 +552,14 @@ checkIfUserExists uid = wrapDB $ \conn -> do
     >>= return . maybe False (const True)
 
 selectUsersSQL :: String
-selectUsersSQL = "SELECT u.id, encode(u.password, 'base64'), encode(u.salt, 'base64'), u.is_company_admin, u.account_suspended, EXTRACT(EPOCH FROM u.has_accepted_terms_of_service), EXTRACT(EPOCH FROM u.free_trial_expiration_date), u.signup_method, u.service_id, u.company_id, u.deleted, ui.first_name, ui.last_name, ui.personal_number, ui.company_position, ui.phone, ui.mobile, ui.email, us.payment_method, us.preferred_design_mode, us.lang, us.system_server, upp.account_type FROM users u JOIN user_infos ui ON (u.id = ui.user_id) JOIN user_settings us ON (u.id = us.user_id) JOIN user_payment_policies upp ON (u.id = upp.user_id) "
+selectUsersSQL = "SELECT u.id, encode(u.password, 'base64'), encode(u.salt, 'base64'), u.is_company_admin, u.account_suspended, EXTRACT(EPOCH FROM u.has_accepted_terms_of_service), EXTRACT(EPOCH FROM u.free_trial_expiration_date), u.signup_method, u.service_id, u.company_id, u.deleted, ui.first_name, ui.last_name, ui.personal_number, ui.company_position, ui.phone, ui.mobile, ui.email, us.payment_method, us.preferred_design_mode, us.lang, us.system_server, FROM users u JOIN user_infos ui ON (u.id = ui.user_id) JOIN user_settings us ON (u.id = us.user_id) JOIN user_payment_policies upp ON (u.id = upp.user_id) "
 
 fetchUsers :: Statement -> [User] -> IO [User]
 fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
    , free_trial_expiration_date, signup_method, service_id, company_id, deleted, first_name
    , last_name, personal_number, company_position, phone, mobile, email, payment_method
-   , preferred_design_mode, lang, system_server, payment_account_type
+   , preferred_design_mode, lang, system_server
    ] -> fetchUsers st $ User {
        userid = fromSql uid
      , userpassword = case (fromSql password, fromSql salt) of
@@ -608,7 +588,6 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
        , lang = fromSql lang
        , systemserver = fromSql system_server
      }
-     , userpaymentaccounttype = fromSql payment_account_type
      , userservice = fromSql service_id
      , usercompany = fromSql company_id
      , userdeleted = fromSql deleted
@@ -620,7 +599,6 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
 -- instances when we're done with the migration.
 
 deriving instance Typeable User
-deriving instance Typeable PaymentAccountType
 deriving instance Typeable UserSettings
 deriving instance Typeable UserInfo
 deriving instance Typeable SignupMethod
@@ -633,7 +611,6 @@ deriving instance Typeable Binary
 deriving instance Typeable SystemServer
 
 instance Version User
-instance Version PaymentAccountType
 instance Version UserSettings
 instance Version UserInfo
 instance Version SignupMethod
@@ -647,7 +624,6 @@ instance Version SystemServer
 
 $(deriveSerializeFor [
     ''User
-  , ''PaymentAccountType
   , ''UserSettings
   , ''UserInfo
   , ''SignupMethod
