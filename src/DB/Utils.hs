@@ -37,4 +37,4 @@ oneObjectReturnedGuard xs  =
 checkIfOneObjectReturned :: Monad m => [a] -> m Bool
 checkIfOneObjectReturned xs =
   oneObjectReturnedGuard xs
-    >>= return . maybe True (const False)
+    >>= return . maybe False (const True)

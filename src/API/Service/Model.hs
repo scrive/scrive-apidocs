@@ -124,8 +124,8 @@ instance DBUpdate CreateService (Maybe Service) where
             ++ ", salt"
             ++ ", admin_id) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?)") [
                 toSql sid
-              , toSql $ pwdSalt <$> pwd
               , toSql $ pwdHash <$> pwd
+              , toSql $ pwdSalt <$> pwd
               , toSql aid
               ]
           _ <- run conn "INSERT INTO service_uis (service_id) VALUES (?)" [toSql sid]

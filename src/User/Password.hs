@@ -1,5 +1,6 @@
 module User.Password where
 
+import Control.Monad.IO.Class
 import System.Random
 import qualified Data.ByteString as BS
 import qualified Data.Digest.SHA256 as D
@@ -11,8 +12,8 @@ data Password = Password {
   , pwdSalt :: Binary
   } deriving (Eq, Ord, Show)
 
-createPassword :: BS.ByteString -> IO Password
-createPassword password = do
+createPassword :: MonadIO m => BS.ByteString -> m Password
+createPassword password = liftIO $ do
   salt <- makeSalt
   return Password {
       pwdHash = hashPassword password salt

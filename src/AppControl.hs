@@ -52,6 +52,7 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
+import Database.HDBC
 import Database.HDBC.PostgreSQL
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
@@ -454,6 +455,7 @@ appHandler appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
+      liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context

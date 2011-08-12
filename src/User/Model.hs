@@ -191,7 +191,7 @@ data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance DBQuery GetUserByEmail (Maybe User) where
   dbQuery (GetUserByEmail msid email) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL
-      ++ " WHERE u.deleted = FALSE AND ((?::BIGINT IS NULL AND u.service_id IS NULL) OR u.service_id = ?) AND ui.email = ?"
+      ++ " WHERE u.deleted = FALSE AND ((?::TEXT IS NULL AND u.service_id IS NULL) OR u.service_id = ?) AND ui.email = ?"
     _ <- execute st [toSql msid, toSql msid, toSql email]
     us <- fetchUsers st []
     oneObjectReturnedGuard us
