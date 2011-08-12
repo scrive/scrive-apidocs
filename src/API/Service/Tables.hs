@@ -37,5 +37,5 @@ tableServices = Table {
     runRaw conn "CREATE INDEX idx_services_admin_id ON services(admin_id)"
     runRaw conn $ "ALTER TABLE services"
       ++ " ADD CONSTRAINT fk_services_users FOREIGN KEY (admin_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
+      ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE"
   }
