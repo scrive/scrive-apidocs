@@ -1580,39 +1580,25 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
       ++ ", is_company_admin"
       ++ ", account_suspended"
       ++ ", has_accepted_terms_of_service"
-      ++ ", free_trial_expiration_date"
       ++ ", signup_method"
-      ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, to_timestamp(?), to_timestamp(?), ?, ?)") [
-        toSql $ userid u
-      , toSql hash
-      , toSql salt
-      , toSql $ useriscompanyadmin u
-      , toSql $ useraccountsuspended u
-      , toSql $ userhasacceptedtermsofservice u
-      , toSql $ userfreetrialexpirationdate u
-      , toSql $ usersignupmethod u
-      , toSql $ userdeleted u
-      ]
-    _ <- run conn ("INSERT INTO user_login_infos ("
-      ++ "  user_id"
-      ++ ", last_success"
-      ++ ", last_fail"
-      ++ ", consecutive_fails) VALUES (?, to_timestamp(?), to_timestamp(?), ?)") [
-        toSql $ userid u
-      , toSql $ lastsuccesstime $ userlogininfo u
-      , toSql $ lastfailtime $ userlogininfo u
-      , toSql $ consecutivefails $ userlogininfo u
-      ]
-    _ <- run conn ("INSERT INTO user_infos ("
-      ++ "  user_id"
       ++ ", first_name"
       ++ ", last_name"
       ++ ", personal_number"
       ++ ", company_position"
       ++ ", phone"
       ++ ", mobile"
-      ++ ", email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") [
+      ++ ", email"
+      ++ ", preferred_design_mode"
+      ++ ", lang"
+      ++ ", system_server"
+      ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
         toSql $ userid u
+      , toSql hash
+      , toSql salt
+      , toSql $ useriscompanyadmin u
+      , toSql $ useraccountsuspended u
+      , toSql $ userhasacceptedtermsofservice u
+      , toSql $ usersignupmethod u
       , toSql $ userfstname $ userinfo u
       , toSql $ usersndname $ userinfo u
       , toSql $ userpersonalnumber $ userinfo u
@@ -1620,6 +1606,10 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
       , toSql $ userphone $ userinfo u
       , toSql $ usermobile $ userinfo u
       , toSql $ useremail $ userinfo u
+      , toSql $ preferreddesignmode $ usersettings u
+      , toSql $ lang $ usersettings u
+      , toSql $ systemserver $ usersettings u
+      , toSql $ userdeleted u
       ]
     when (isJust $ usermailapi u) $ do
       let mailapi = fromJust $ usermailapi u
@@ -1636,47 +1626,20 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
         , toSql $ umapiLastSentDate mailapi
         ]
       return ()
-    _ <- run conn ("INSERT INTO user_settings ("
-      ++ "  user_id"
-      ++ ", payment_method"
-      ++ ", preferred_design_mode"
-      ++ ", lang"
-      ++ ", system_server) VALUES (?, ?, ?, ?, ?)") [
-        toSql $ userid u
-      , toSql $ userpaymentmethod $ usersettings u
-      , toSql $ preferreddesignmode $ usersettings u
-      , toSql $ lang $ usersettings u
-      , toSql $ systemserver $ usersettings u
-      ]
-    when (isJust $ signeddocstorage $ usersettings u) $ do
-      let tws = fromJust $ signeddocstorage $ usersettings u
-      _ <- run conn ("INSERT INTO trust_weaver_storages ("
-        ++ "  user_id"
-        ++ ", enabled"
-        ++ ", name"
-        ++ ", superadmin"
-        ++ ", superadmin_pwd"
-        ++ ", section_path) VALUES (?, ?, ?, ?, ?, ?)") [
-          toSql $ userid u
-        , toSql $ storagetwenabled tws
-        , toSql $ storagetwname tws
-        , toSql $ storagetwsuperadmin tws
-        , toSql $ storagetwsuperadminpwd tws
-        , toSql $ storagetwsectionpath tws
-        ]
-      return ()
-    _ <- run conn ("INSERT INTO user_payment_policies ("
-      ++ "  user_id"
-      ++ ", account_type) VALUES (?, ?)") [
-        toSql $ userid u
-      , toSql $ paymentaccounttype $ userpaymentpolicy u
-      ]
     return ()
 
 finalizeInsertUsersIntoPG :: DB ()
 finalizeInsertUsersIntoPG = wrapDB $ \conn -> do
   users <- query GetAllUsersForDBMigration
   forM_ users $ \u -> do
+    _ <- run conn ("UPDATE users SET"
+      ++ "  service_id = ?"
+      ++ ", company_id = ?"
+      ++ "  WHERE id = ?") [
+        toSql $ usercompany u
+      , toSql $ userservice u
+      , toSql $ userid u
+      ]
     when (isJust $ userinviteinfo u) $ do
       let ii = fromJust $ userinviteinfo u
       _ <- run conn ("INSERT INTO user_invite_infos ("
@@ -1699,7 +1662,7 @@ finalizeInsertUsersIntoPG = wrapDB $ \conn -> do
 populateDBWithUsersIfEmpty :: DB ()
 populateDBWithUsersIfEmpty = do
   n <- wrapDB $ \conn -> do
-    st <- prepare conn "SELECT COUNT(*) FROM user_infos"
+    st <- prepare conn "SELECT COUNT(*) FROM users"
     _ <- executeRaw st
     [n] <- fetchAllRows' st >>= return . map fromSql . join
     return (n::Int)
