@@ -34,7 +34,6 @@ module User.Model (
   , SetPreferredDesignMode(..)
   , AddViewerByEmail(..)
   , AcceptTermsOfService(..)
-  , SetFreeTrialExpirationDate(..)
   , SetSignupMethod(..)
   , MakeUserCompanyAdmin(..)
   , composeFullName
@@ -100,7 +99,6 @@ data User = User {
   , useriscompanyadmin            :: Bool
   , useraccountsuspended          :: Bool
   , userhasacceptedtermsofservice :: Maybe MinutesTime
-  , userfreetrialexpirationdate   :: Maybe MinutesTime
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
@@ -275,17 +273,15 @@ instance DBUpdate AddUser (Maybe User) where
             ++ ", is_company_admin"
             ++ ", account_suspended"
             ++ ", has_accepted_terms_of_service"
-            ++ ", free_trial_expiration_date"
             ++ ", signup_method"
             ++ ", service_id"
             ++ ", company_id"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?)") [
+            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?)") [
                 toSql uid
               , toSql $ pwdHash <$> mpwd
               , toSql $ pwdSalt <$> mpwd
               , toSql iscompadmin
               , toSql False
-              , SqlNull
               , SqlNull
               , toSql AccountRequest
               , toSql msid
@@ -476,21 +472,8 @@ instance DBUpdate AcceptTermsOfService Bool where
   dbUpdate (AcceptTermsOfService uid time) = wrapDB $ \conn -> do
     r <- run conn ("UPDATE users SET"
       ++ "  has_accepted_terms_of_service = to_timestamp(?)"
-      ++ ", free_trial_expiration_date = to_timestamp(?)"
       ++ "  WHERE id = ? AND deleted = FALSE") [
         toSql time
-      , toSql $ (60*24*30) `minutesAfter` time
-      , toSql uid
-      ]
-    oneRowAffectedGuard r
-
-data SetFreeTrialExpirationDate = SetFreeTrialExpirationDate UserID (Maybe MinutesTime)
-instance DBUpdate SetFreeTrialExpirationDate Bool where
-  dbUpdate (SetFreeTrialExpirationDate uid mtime) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE users SET"
-      ++ " free_trial_expiration_date = to_timestamp(?)"
-      ++ " WHERE id = ? AND deleted = FALSE") [
-        toSql mtime
       , toSql uid
       ]
     oneRowAffectedGuard r
@@ -538,7 +521,6 @@ selectUsersSQL = "SELECT "
  ++ ", u.is_company_admin"
  ++ ", u.account_suspended"
  ++ ", EXTRACT(EPOCH FROM u.has_accepted_terms_of_service)"
- ++ ", EXTRACT(EPOCH FROM u.free_trial_expiration_date)"
  ++ ", u.signup_method"
  ++ ", u.service_id"
  ++ ", u.company_id"
@@ -560,7 +542,7 @@ selectUsersSQL = "SELECT "
 fetchUsers :: Statement -> [User] -> IO [User]
 fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
-   , free_trial_expiration_date, signup_method, service_id, company_id, deleted, first_name
+   , signup_method, service_id, company_id, deleted, first_name
    , last_name, personal_number, company_position, phone, mobile, email
    , preferred_design_mode, lang, system_server
    ] -> fetchUsers st $ User {
@@ -574,7 +556,6 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
      , useriscompanyadmin = fromSql is_company_admin
      , useraccountsuspended = fromSql account_suspended
      , userhasacceptedtermsofservice = fromSql has_accepted_terms_of_service
-     , userfreetrialexpirationdate = fromSql free_trial_expiration_date
      , usersignupmethod = fromSql signup_method
      , userinfo = UserInfo {
          userfstname = fromSql first_name

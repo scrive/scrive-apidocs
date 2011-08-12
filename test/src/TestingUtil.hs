@@ -336,7 +336,6 @@ blankUser = User {
                  , useriscompanyadmin = False
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
-                 , userfreetrialexpirationdate = Nothing
                  , usersignupmethod = AccountRequest
                  , userinfo = UserInfo {
                                     userfstname = BS.empty

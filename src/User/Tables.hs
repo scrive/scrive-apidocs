@@ -35,7 +35,7 @@ tableUsers = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("is_company_admin", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("free_trial_expiration_date", SqlColDesc {colType = SqlDateT, colNullable = Just True}), ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True}), ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})] -> return TVRvalid
+      [("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("is_company_admin", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True}), ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE users ("
           ++ "  id BIGINT NOT NULL"
@@ -44,7 +44,6 @@ tableUsers = Table {
           ++ ", is_company_admin BOOL NOT NULL"
           ++ ", account_suspended BOOL NOT NULL"
           ++ ", has_accepted_terms_of_service TIMESTAMPTZ NULL"
-          ++ ", free_trial_expiration_date DATE NULL"
           ++ ", signup_method SMALLINT NOT NULL"
           ++ ", service_id TEXT NULL"
           ++ ", company_id BIGINT NULL"

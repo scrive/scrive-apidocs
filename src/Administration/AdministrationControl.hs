@@ -225,7 +225,7 @@ handleUserChange a = onlySuperUser $
                                            --paymentPaymentPolicy <- getUserPaymentPolicyChange
                                            --Updating DB , ignoring fails
                                            runDB $ do
-                                             _ <- dbUpdate $ SetFreeTrialExpirationDate userId freetrialexpirationdate
+                                             --_ <- dbUpdate $ SetFreeTrialExpirationDate userId freetrialexpirationdate
                                              _ <- dbUpdate $ SetUserInfo userId $ infoChange $ userinfo user
                                              _ <- dbUpdate $ SetUserSettings userId $ settingsChange $ usersettings user
                                              return ()

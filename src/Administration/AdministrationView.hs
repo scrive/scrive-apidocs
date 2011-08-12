@@ -39,7 +39,6 @@ import Data.Maybe
 import Database.HDBC.PostgreSQL
 import DB.Classes
 import Misc
-import MinutesTime
 import User.UserView
 import User.Model
 import Doc.DocState
@@ -247,8 +246,8 @@ userFields u =  do
                                                                          (\x -> if (x == userpaymentaccounttype u)
                                                                                  then soption show show x
                                                                                  else option show show x)
--}
         field "freetrialexpirationdate" $ showDateOnly <$> userfreetrialexpirationdate u
+-}
         --field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
         --field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
         --field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
