@@ -335,16 +335,7 @@ insertServicesIntoPG = wrapDB $ \conn -> do
       ++ ", salt"
       ++ ", admin_id"
       ++ ", location"
-      ++ ", email_from_address) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?)") [
-        toSql $ serviceid s
-      , toSql hash
-      , toSql salt
-      , toSql $ serviceadmin $ servicesettings s
-      , toSql $ servicelocation $ servicesettings s
-      , toSql $ servicemailfromaddress $ servicesettings s
-      ]
-    _ <- run conn ("INSERT INTO service_uis ("
-      ++ "  service_id"
+      ++ ", email_from_address"
       ++ ", mail_footer"
       ++ ", button1"
       ++ ", button2"
@@ -352,8 +343,13 @@ insertServicesIntoPG = wrapDB $ \conn -> do
       ++ ", background"
       ++ ", overlay_background"
       ++ ", bars_background"
-      ++ ", logo) VALUES (?, ?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, decode(?, 'base64'))") [
+      ++ ", logo) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, decode(?, 'base64'))") [
         toSql $ serviceid s
+      , toSql hash
+      , toSql salt
+      , toSql $ serviceadmin $ servicesettings s
+      , toSql $ servicelocation $ servicesettings s
+      , toSql $ servicemailfromaddress $ servicesettings s
       , toSql $ servicemailfooter $ serviceui s
       , toSql $ (B64.encode . fst) `fmap` servicebuttons (serviceui s)
       , toSql $ (B64.encode . snd) `fmap` servicebuttons (serviceui s)

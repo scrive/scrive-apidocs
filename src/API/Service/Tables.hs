@@ -11,7 +11,7 @@ tableServices = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-         [("id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("admin_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("location", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("email_from_address", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})] -> return TVRvalid
+         [("id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("admin_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("location", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("email_from_address", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("button1", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("button2", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("buttons_text_color", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("overlay_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})] -> return TVRvalid
          [] -> do
            runRaw conn $ "CREATE TABLE services ("
              ++ "  id TEXT NOT NULL"
@@ -20,6 +20,14 @@ tableServices = Table {
              ++ ", admin_id BIGINT NOT NULL"
              ++ ", location TEXT NULL"
              ++ ", email_from_address TEXT NULL"
+             ++ ", mail_footer TEXT NULL"
+             ++ ", button1 BYTEA NULL"
+             ++ ", button2 BYTEA NULL"
+             ++ ", buttons_text_color TEXT NULL"
+             ++ ", background TEXT NULL"
+             ++ ", overlay_background TEXT NULL"
+             ++ ", bars_background TEXT NULL"
+             ++ ", logo BYTEA NULL"
              ++ ", CONSTRAINT pk_services PRIMARY KEY (id)"
              ++ ", CONSTRAINT idx_services_location UNIQUE (location)"
              ++ ")"
@@ -30,32 +38,4 @@ tableServices = Table {
     runRaw conn $ "ALTER TABLE services"
       ++ " ADD CONSTRAINT fk_services_users FOREIGN KEY (admin_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
-  }
-
-tableServiceUIs :: Table
-tableServiceUIs = Table {
-    tblName = "service_uis"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-         [("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("button1", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("button2", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("buttons_text_color", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("overlay_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})] -> return TVRvalid
-         [] -> do
-           runRaw conn $ "CREATE TABLE service_uis ("
-             ++ "  service_id TEXT NOT NULL"
-             ++ ", mail_footer TEXT NULL"
-             ++ ", button1 BYTEA NULL"
-             ++ ", button2 BYTEA NULL"
-             ++ ", buttons_text_color TEXT NULL"
-             ++ ", background TEXT NULL"
-             ++ ", overlay_background TEXT NULL"
-             ++ ", bars_background TEXT NULL"
-             ++ ", logo BYTEA NULL"
-             ++ ", CONSTRAINT pk_service_uis PRIMARY KEY (service_id)"
-             ++ ")"
-           return TVRcreated
-         _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE service_uis"
-      ++ " ADD CONSTRAINT fk_service_uis_services FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON DELETE CASCADE ON UPDATE CASCADE"
   }

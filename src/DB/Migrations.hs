@@ -29,7 +29,6 @@ tablesList = [
   , tableUserMailAPIs
   , tableUserInviteInfos
   , tableServices
-  , tableServiceUIs
   , tableCompanies
   ]
 

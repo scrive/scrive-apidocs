@@ -128,7 +128,6 @@ instance DBUpdate CreateService (Maybe Service) where
               , toSql $ pwdSalt <$> pwd
               , toSql aid
               ]
-          _ <- run conn "INSERT INTO service_uis (service_id) VALUES (?)" [toSql sid]
           return ()
         dbQuery $ GetService sid
 
@@ -136,7 +135,7 @@ data UpdateServiceUI = UpdateServiceUI ServiceID ServiceUI
 instance DBUpdate UpdateServiceUI Bool where
   dbUpdate (UpdateServiceUI sid sui) = do
     r <- wrapDB $ \conn -> do
-      run conn ("UPDATE service_uis SET"
+      run conn ("UPDATE services SET"
         ++ "  mail_footer = ?"
         ++ ", button1 = decode(?, 'base64')"
         ++ ", button2 = decode(?, 'base64')"
@@ -145,7 +144,7 @@ instance DBUpdate UpdateServiceUI Bool where
         ++ ", overlay_background = ?"
         ++ ", bars_background = ?"
         ++ ", logo = decode(?, 'base64')"
-        ++ "  WHERE service_id = ?") [
+        ++ "  WHERE id = ?") [
           toSql $ servicemailfooter sui
         , toSql $ fst <$> servicebuttons sui
         , toSql $ snd <$> servicebuttons sui
@@ -194,15 +193,14 @@ selectServicesSQL = "SELECT"
   ++ ", s.admin_id"
   ++ ", s.location"
   ++ ", s.email_from_address"
-  ++ ", su.mail_footer"
-  ++ ", encode(su.button1, 'base64')"
-  ++ ", encode(su.button2, 'base64')"
-  ++ ", su.buttons_text_color"
-  ++ ", su.background"
-  ++ ", su.overlay_background"
-  ++ ", su.bars_background"
-  ++ ", encode(su.logo, 'base64') FROM services s"
-  ++ "  JOIN service_uis su ON (s.id = su.service_id)"
+  ++ ", s.mail_footer"
+  ++ ", encode(s.button1, 'base64')"
+  ++ ", encode(s.button2, 'base64')"
+  ++ ", s.buttons_text_color"
+  ++ ", s.background"
+  ++ ", s.overlay_background"
+  ++ ", s.bars_background"
+  ++ ", encode(s.logo, 'base64') FROM services s"
   ++ " "
 
 fetchServices :: Statement -> [Service] -> IO [Service]
