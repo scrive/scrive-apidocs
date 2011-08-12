@@ -165,28 +165,3 @@ tableUserSettings = Table {
       ++ " ADD CONSTRAINT fk_user_settings_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
   }
-
-tableTrustWeaverStorages :: Table
-tableTrustWeaverStorages = Table {
-    tblName = "trust_weaver_storages"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("enabled", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("superadmin", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("superadmin_pwd", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("section_path", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        runRaw conn $ "CREATE TABLE trust_weaver_storages ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", enabled BOOL NOT NULL"
-          ++ ", name TEXT NOT NULL"
-          ++ ", superadmin TEXT NOT NULL"
-          ++ ", superadmin_pwd TEXT NOT NULL"
-          ++ ", section_path TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_trustweaver_storages PRIMARY KEY (user_id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE trust_weaver_storages"
-      ++ " ADD CONSTRAINT fk_trustweaver_storages_users FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
-  }

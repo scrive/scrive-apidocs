@@ -31,7 +31,6 @@ tablesList = [
   , tableUserMailAPIs
   , tableUserInviteInfos
   , tableUserSettings
-  , tableTrustWeaverStorages
   , tableUserPaymentPolicies
   , tableServices
   , tableServiceUIs

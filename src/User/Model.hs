@@ -11,13 +11,11 @@ module User.Model (
   , PaymentMethod(..)
   , SignupMethod(..)
   , InviteInfo(..)
-  , LoginInfo(..)
   , User(..)
   , UserInfo(..)
   , UserMailAPI(..)
   , UserSettings(..)
   , UserStats(..)
-  , TrustWeaverStorage(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
@@ -106,12 +104,6 @@ data InviteInfo = InviteInfo {
   , invitetype  :: Maybe InviteType
   } deriving (Eq, Ord, Show)
 
-data LoginInfo = LoginInfo {
-    lastsuccesstime  :: Maybe MinutesTime
-  , lastfailtime     :: Maybe MinutesTime
-  , consecutivefails :: Int32
-  } deriving (Eq, Ord, Show)
-
 data User = User {
     userid                        :: UserID
   , userpassword                  :: Maybe Password
@@ -123,8 +115,6 @@ data User = User {
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
   , userpaymentaccounttype        :: PaymentAccountType
-  -- unused, so we don't fetch it with user for now
-  --, userlogininfo                 :: LoginInfo
   , userservice                   :: Maybe ServiceID
   , usercompany                   :: Maybe CompanyID
   , userdeleted                   :: Bool
@@ -148,7 +138,6 @@ data UserMailAPI = UserMailAPI {
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
-  -- signeddocstorage    :: Maybe TrustWeaverStorage
     userpaymentmethod   :: PaymentMethod
   , preferreddesignmode :: Maybe DesignMode
   , lang                :: Lang
@@ -160,15 +149,6 @@ data UserStats = UserStats {
   , viralinvitecount :: Int
   , admininvitecount :: Int
   } deriving (Eq, Ord, Show, Data, Typeable)
-
--- currently unused.
-data TrustWeaverStorage = TrustWeaverStorage {
-    storagetwenabled       :: Bool
-  , storagetwname          :: BS.ByteString
-  , storagetwsuperadmin    :: BS.ByteString
-  , storagetwsuperadminpwd :: BS.ByteString
-  , storagetwsectionpath   :: BS.ByteString
-  } deriving (Eq, Ord, Show)
 
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
