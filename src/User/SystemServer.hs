@@ -6,7 +6,7 @@ module User.SystemServer
 
 import Data.Data
 import Happstack.Data hiding (defaultValue)
---import Data.List
+import Data.List
 
 
 data SystemServer = SkrivaPa | Scrive
@@ -15,11 +15,9 @@ data SystemServer = SkrivaPa | Scrive
 instance Version SystemServer
 
 systemServerFromURL :: String -> SystemServer
-systemServerFromURL _url = SkrivaPa
-{-  if ("localhost" `isInfixOf` url)
+systemServerFromURL url = if ("scrive" `isInfixOf` url)
                             then Scrive
                             else SkrivaPa
- -}
 
 
 $(deriveSerializeFor [ ''SystemServer  ])
