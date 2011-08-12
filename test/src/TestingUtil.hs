@@ -123,22 +123,21 @@ instance Arbitrary DocumentUI where
 -}
 class ExtendWithRandomnes a where
     moreRandom :: a -> Gen a
-    extendRandomness ::  a -> IO a
+    extendRandomness :: MonadIO m => a -> m a
     extendRandomness a = do
-          stdgen <- newStdGen
+          stdgen <- liftIO newStdGen
           return $ unGen (moreRandom a) stdgen 10
 
-        
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = do
         ofields <- arbitrary
         return $ sl {signatoryotherfields = ofields}
-    
+
 instance Arbitrary SignatoryLinkID where
   arbitrary = do
     si <- arbitrary
     return $ SignatoryLinkID si
-    
+
 instance Arbitrary SignatoryLink where
   arbitrary = do
     (slid, sd, mh) <- arbitrary
@@ -184,20 +183,6 @@ instance Arbitrary SignatureInfo where
                            , signaturelstnameverified = f
                            , signaturepersnumverified = g
                            }
-
-do100Times' :: IO (Maybe T.Assertion) -> IO ()
-do100Times' action = doTimes 100 action
-             
-doTimes :: Int -> IO (Maybe T.Assertion) -> IO ()
-doTimes i action 
-  | i == 0 = return ()
-  | otherwise = do
-    res <- action
-    case res of
-      Nothing -> doTimes i action
-      Just ass -> do
-        _ <- ass
-        doTimes (i - 1) action
 
 instance Arbitrary CSVUpload where
   arbitrary = do
@@ -286,13 +271,13 @@ instance Arbitrary FieldDefinition where
                                fieldplacements = [],
                                fieldfilledbyauthor = filledByAuthor
                              }
-                      
+
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
-  
+
 instance Arbitrary DocumentFunctionality where
   arbitrary = elements [BasicFunctionality, AdvancedFunctionality]
-  
+
 instance Arbitrary IdentificationType where
   arbitrary = elements [EmailIdentification, ELegitimationIdentification]
 
@@ -390,21 +375,14 @@ blankDocument =
           }
 
 
-testThat :: String -> T.Assertion -> Test
-testThat s a = testCase s (withTestState a)
+testThat :: String -> Connection -> DB () -> Test
+testThat s conn a = testCase s (withTestEnvironment conn a)
 
-assertSuccess :: T.Assertion
-assertSuccess = assertBool "not success?!" True
-
-addNewUser :: DBMonad m => String -> String -> String -> m (Maybe User)
+addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
-  runDBUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
 
-whatTimeIsIt :: IO (MinutesTime)
-whatTimeIsIt = liftIO $ getMinutesTime
-
-      
-addNewRandomUser :: DBMonad m => m User
+addNewRandomUser :: DB User
 addNewRandomUser = do
   stdgn <- liftIO newStdGen
   let fn = unGen arbitrary stdgn 10
@@ -435,9 +413,9 @@ emptySignatoryDetails = SignatoryDetails
     , signatoryotherfields              = []
     }
 
-addRandomDocumentWithAuthor :: Connection -> User -> IO DocumentID
-addRandomDocumentWithAuthor conn user = do
-  stdgen <- newStdGen
+addRandomDocumentWithAuthor :: User -> DB DocumentID
+addRandomDocumentWithAuthor user = do
+  stdgen <- liftIO newStdGen
   let rs = unGen arbitrary stdgen 100
   let roles = SignatoryAuthor : rs
   let doc = unGen arbitrary stdgen 10
@@ -448,7 +426,7 @@ addRandomDocumentWithAuthor conn user = do
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
-    Just cid -> ioRunDB conn $ dbQuery $ GetCompany cid
+    Just cid -> dbQuery $ GetCompany cid
   
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
@@ -457,18 +435,18 @@ addRandomDocumentWithAuthor conn user = do
                  }
   update $ StoreDocumentForTesting adoc
 
-addRandomDocumentWithAuthorAndCondition :: Connection -> User -> (Document -> Bool) -> IO Document
-addRandomDocumentWithAuthorAndCondition conn user p =  do
-  stdgen <- newStdGen
+addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
+addRandomDocumentWithAuthorAndCondition user p =  do
+  stdgen <- liftIO newStdGen
   let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
               stdgen 10000
   let doc = unGen arbitrary stdgen 10
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
-    Just cid -> ioRunDB conn $ dbQuery $ GetCompany cid
+    Just cid -> dbQuery $ GetCompany cid
     
-  now <- getMinutesTime
+  now <- liftIO getMinutesTime
   
   let (signinfo, seeninfo) = unGen arbitrary stdgen 10
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
@@ -499,14 +477,14 @@ addRandomDocumentWithAuthorAndCondition conn user p =  do
         else do
           --uncomment this to find out why the doc was rejected
           --print $ "rejecting doc: " ++ fromJust d
-          addRandomDocumentWithAuthorAndCondition conn user p
+          addRandomDocumentWithAuthorAndCondition user p
     else do
       --print adoc   
-      addRandomDocumentWithAuthorAndCondition conn user p
+      addRandomDocumentWithAuthorAndCondition user p
 
-rand :: Int -> Gen a -> IO a
+rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do  
-  stdgn <- newStdGen
+  stdgn <- liftIO newStdGen
   return $ unGen a stdgn i
 
 untilCondition :: (Monad m) => (b -> Bool) -> m b -> m b
@@ -514,51 +492,60 @@ untilCondition cond gen = do
   v <- gen
   if cond v then return v else untilCondition cond gen
 
-addRandomDocumentWithAuthor' :: Connection -> User -> IO Document
-addRandomDocumentWithAuthor' conn user = addRandomDocumentWithAuthorAndCondition conn user (\_ -> True)
-  
-invalidateTest :: IO (Maybe T.Assertion)
+addRandomDocumentWithAuthor' :: User -> DB Document
+addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
+
+doTimes :: Int -> DB (Maybe (DB ())) -> DB ()
+doTimes i action
+  | i == 0 = return ()
+  | otherwise = do
+    res <- action
+    case res of
+      Nothing -> doTimes i action
+      Just ass -> do
+        _ <- ass
+        doTimes (i - 1) action
+
+invalidateTest :: DB (Maybe (DB ()))
 invalidateTest = return Nothing
 
-validTest :: T.Assertion -> IO (Maybe T.Assertion)
+validTest :: DB () -> DB (Maybe (DB ()))
 validTest = return . Just
-
-
 
 -- Random gen
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: a -> IO b
+  randomQuery :: MonadIO m => a -> m b
   
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
-    stdgn <- newStdGen
+    stdgn <- liftIO newStdGen
     let a = unGen arbitrary stdgn 10
     randomQuery $ f a
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: a -> IO b
+  randomUpdate :: MonadIO m => a -> m b
 
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
-    stdgn <- newStdGen
+    stdgn <- liftIO newStdGen
     let a = unGen arbitrary stdgn 10
     randomUpdate $ f a
 
 -- Other functions
 class RandomCallable a b where
-  randomCall :: a -> IO b
+  randomCall :: MonadIO m => a -> m b
 
 instance RandomCallable (IO res) res where
-  randomCall = id
+  randomCall = liftIO
 
 instance (Typeable res) => RandomCallable res res where
   randomCall = return 
@@ -566,25 +553,9 @@ instance (Typeable res) => RandomCallable res res where
 
 instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
   randomCall f = do
-    stdgn <- newStdGen
+    stdgn <- liftIO newStdGen
     let a = unGen arbitrary stdgn 10
     randomCall $ f a
-
-assertJust :: Maybe a -> T.Assertion
-assertJust (Just _) = assertSuccess
-assertJust Nothing = assertFailure "Should have returned Just but returned Nothing"
-
-assertRight :: (Show a) => Either a b -> T.Assertion
-assertRight (Right _) = assertSuccess
-assertRight (Left a) = assertFailure $ "Should have return Right but returned Left " ++ show a
-
-assertLeft :: Either a b -> T.Assertion
-assertLeft (Left _) = assertSuccess
-assertLeft _ = assertFailure "Should have returned Left but returned Right"
-
-assertNothing :: Maybe a -> T.Assertion
-assertNothing Nothing = assertSuccess
-assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
          => Arbitrary (a, b, c, d, e, f, g, h) where
@@ -628,6 +599,27 @@ instance Arbitrary SignInfo where
   arbitrary = do
     (a, b) <- arbitrary
     return $ SignInfo a b
+
+-- our asserts
+
+assertSuccess :: MonadIO m => m ()
+assertSuccess = assertBool "not success?!" True
+
+assertJust :: MonadIO m => Maybe a -> m ()
+assertJust (Just _) = assertSuccess
+assertJust Nothing = assertFailure "Should have returned Just but returned Nothing"
+
+assertRight :: (Show a, MonadIO m) => Either a b -> m ()
+assertRight (Right _) = assertSuccess
+assertRight (Left a) = assertFailure $ "Should have return Right but returned Left " ++ show a
+
+assertLeft :: MonadIO m => Either a b -> m ()
+assertLeft (Left _) = assertSuccess
+assertLeft _ = assertFailure "Should have returned Left but returned Right"
+
+assertNothing :: MonadIO m => Maybe a -> m ()
+assertNothing Nothing = assertSuccess
+assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
 
 -- versions of assert types from Test.HUnit with typeclass constraint for convenience
 

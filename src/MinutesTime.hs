@@ -25,6 +25,7 @@ module MinutesTime
        , toUTCTime
        ) where
 
+import Control.Monad.IO.Class
 import Data.Data
 import Data.Time
 import Happstack.Data
@@ -122,8 +123,8 @@ showDateAbbrev current time
                  ct = unsafePerformIO $ toCalendarTime $ toClockTime time
 
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
-getMinutesTime :: IO MinutesTime
-getMinutesTime = (return . fromClockTime) =<< getClockTime
+getMinutesTime :: MonadIO m => m MinutesTime
+getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
 
 -- | Get event time as 'MinutesTime'. Warning: server should work in UTC time.
 --

@@ -55,7 +55,7 @@ allTests conn = tail tests
         tests = [
             undefined
 #ifndef NO_DOCSTATE
-          , docStateTests
+          , docStateTests conn
 #endif
 #ifndef NO_HTML
           , htmlTests
@@ -93,7 +93,7 @@ testsToRun conn (t:ts) =
     case map toLower t of
          "all"             -> map Right (allTests conn) ++ rest
 #ifndef NO_DOCSTATE
-         "docstate"        -> Right docStateTests : rest
+         "docstate"        -> Right (docStateTests conn) : rest
 #endif
 #ifndef NO_HTML
          "html"            -> Right htmlTests : rest
