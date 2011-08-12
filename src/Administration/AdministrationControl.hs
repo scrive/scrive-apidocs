@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -w #-}
 {-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
@@ -41,7 +40,6 @@ import Happstack.State (query)
 import Misc
 import Kontra
 import Administration.AdministrationView
-import Payments.PaymentsState
 import Doc.DocState
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
@@ -49,7 +47,6 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy  as L
 import Company.Model
 import KontraLink
-import Payments.PaymentsControl(getPaymentChangeChange)
 import MinutesTime
 import System.Directory
 import DB.Classes
@@ -59,7 +56,6 @@ import User.Model
 import Data.Maybe
 import System.Process
 import System.IO (hClose)
-import qualified TrustWeaver as TW
 import Data.Char
 import Happstack.Util.Common
 import API.Service.Model
@@ -73,10 +69,8 @@ import Templates.TextTemplates
 import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
 
-eitherFlash :: Kontrakcja m => m (Either String b) -> m b
+{-eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do
   x <- action
   case x of
@@ -84,7 +78,7 @@ eitherFlash action = do
            addFlash (OperationFailed, errmsg)
            mzero
     Right value -> return value
-
+-}
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -217,17 +211,17 @@ handleUserChange a = onlySuperUser $
                              Nothing -> mzero
                              Just user -> do
                                            --Reading changes from params using dedicated functions for each user part
-                                           freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"
+                                           --freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"
                                            infoChange <- getUserInfoChange
                                            companyInfoChange <- getCompanyInfoChange
-                                           settingsChange <- getUserSettingsChange
+                                           --settingsChange <- getUserSettingsChange
                                            --paymentAccountChange <- getUserPaymentAccountChange
                                            --paymentPaymentPolicy <- getUserPaymentPolicyChange
                                            --Updating DB , ignoring fails
                                            runDB $ do
                                              --_ <- dbUpdate $ SetFreeTrialExpirationDate userId freetrialexpirationdate
                                              _ <- dbUpdate $ SetUserInfo userId $ infoChange $ userinfo user
-                                             _ <- dbUpdate $ SetUserSettings userId $ settingsChange $ usersettings user
+                                             --_ <- dbUpdate $ SetUserSettings userId $ settingsChange $ usersettings user
                                              return ()
                                            --_ <- update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
                                            --_ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
@@ -349,13 +343,7 @@ getUserInfoChange = do
                      muserfstname        <- getFieldUTF "userfstname"
                      musersndname        <- getFieldUTF "usersndname"
                      muserpersonalnumber <- getFieldUTF "userpersonalnumber"
-                     --musercompanyname    <- getFieldUTF "usercompanyname"
                      musercompanyposition    <- getFieldUTF "usercompanyposition"
-                     --musercompanynumber  <- getFieldUTF "usercompanynumber"
-                     --museraddress        <- getFieldUTF "useraddress"
-                     --muserzip            <- getFieldUTF "userzip"
-                     --musercity           <- getFieldUTF "usercity"
-                     --musercountry        <- getFieldUTF "usercountry"
                      muserphone          <- getFieldUTF "userphone"
                      musermobile         <- getFieldUTF "usermobile"
                      museremail          <- fmap (fmap Email) $ getFieldUTF "useremail"
@@ -378,65 +366,18 @@ getUserInfoChange = do
                                         })
 
 {- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
-getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
+{-getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange =  do
-                          --maccountplan          <- readField "accountplan"
-                          --msigneddocstorage     <- readField "signeddocstorage"
-                          --muserpaymentmethod    <- readField "userpaymentmethod"
                           return (\UserSettings {
-                                 --  accounttype
-                                 --, accountplan
-                                 --, signeddocstorage
-                                 --, userpaymentmethod
                                    preferreddesignmode
                                  , lang
                                  , systemserver }
                                        -> UserSettings {
-                                          --  accounttype  = accounttype
-                                          --, accountplan = fromMaybe accountplan maccountplan
-                                          --, signeddocstorage  = fromMaybe signeddocstorage  msigneddocstorage
-                                          --  userpaymentmethod =  fromMaybe userpaymentmethod muserpaymentmethod
                                             preferreddesignmode = preferreddesignmode
                                           , lang = lang
                                           , systemserver = systemserver
                                           })
-
-{- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}
-getUserPaymentAccountChange :: Kontrakcja m => m (UserPaymentAccount -> UserPaymentAccount)
-getUserPaymentAccountChange =  do
-                          mpaymentaccountfreesignatures        <- readField "paymentaccountfreesignatures"
-                          return (\UserPaymentAccount {
-                                   paymentAgreementRef
-                                 , paymentaccountfreesignatures
-                                  }
-                                    -> UserPaymentAccount  {
-                                            paymentAgreementRef  = paymentAgreementRef
-                                          , paymentaccountfreesignatures = fromMaybe paymentaccountfreesignatures mpaymentaccountfreesignatures
-                                        })
-
-
-{- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!! -}
-getUserPaymentPolicyChange :: Kontrakcja m => m (UserPaymentPolicy -> UserPaymentPolicy)
-getUserPaymentPolicyChange =  do
-                          mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "tmppaymentchangeenddate"
-                          mpaymentaccounttype        <- readField "paymentaccounttype"
-                          customPaymentChange        <- getPaymentChangeChange "custom"
-                          tempPaymentChange          <- getPaymentChangeChange "temp"
-                          return (\UserPaymentPolicy {
-                                    paymentaccounttype
-                                  , custompaymentchange
-                                  , temppaymentchange
-                                  }
-                                    -> UserPaymentPolicy  {
-                                            paymentaccounttype   = fromMaybe paymentaccounttype   mpaymentaccounttype
-                                          , custompaymentchange = customPaymentChange custompaymentchange
-                                          , temppaymentchange = case  mtmppaymentchangeenddate of
-                                                                 Nothing ->  Nothing
-                                                                 Just enddate -> case temppaymentchange of
-                                                                                   Nothing -> Just (enddate,tempPaymentChange emptyChange)
-                                                                                   Just (_,change) -> Just (enddate, tempPaymentChange change)
-
-                                        })
+-}
 
 {- | Reads params and returns structured params for user managment pages. -}
 getAdminUsersPageParams :: Kontrakcja m => m AdminUsersPageParams
@@ -458,7 +399,7 @@ handleCreateService = onlySuperUser $ do
             pwdBS <- getFieldUTFWithDefault mempty "password"
             pwd <- liftIO $ createPassword pwdBS
             mservice <- runDBUpdate $ CreateService (ServiceID name) (Just pwd) (userid admin)
-            case mservice of
+            _ <- case mservice of
                 Just srvs -> do
                     location <- getFieldUTF "location"
                     runDBUpdate $ UpdateServiceSettings (serviceid srvs) (servicesettings srvs)
