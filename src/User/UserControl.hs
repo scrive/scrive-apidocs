@@ -391,7 +391,15 @@ handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
             _ <- runDBUpdate $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
-            addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
+            Just invuser <- query $ GetUserByEmail Nothing $ Email email
+            case usercompany invuser of
+              Nothing -> addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
+              Just cid | fromJust (usercompany user) == cid -> addFlashM flashUserIsAlreadyCompanyAccount
+              _ ->
+                -- this is the case when companyid of invited user doesn't
+                -- match inviter's one. even if it's highly unlikely to
+                -- happen, I guess we should handle this case somehow.
+                return ()
             return ()
       _ -> return ()
 
