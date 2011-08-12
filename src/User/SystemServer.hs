@@ -18,7 +18,6 @@ systemServerFromURL :: String -> SystemServer
 systemServerFromURL url =  if ("scrive" `isInfixOf` url)
                              then Scrive
                              else SkrivaPa
- 
 
 
 $(deriveSerializeFor [ ''SystemServer  ])

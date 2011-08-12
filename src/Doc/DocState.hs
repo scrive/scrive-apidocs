@@ -43,7 +43,7 @@ module Doc.DocState
     , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
     , SetDocumentTrustWeaverReference(..)
-    , ShareDocuments(..)
+    , ShareDocument(..)
     , SetDocumentTitle(..)
     , SignDocument(..)
     , TimeoutDocument(..)
@@ -69,6 +69,7 @@ module Doc.DocState
     , SaveSigAttachment(..)
     , MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
+    , FixBug510ForDocument(..)
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
     , DeleteSigAttachment(..)
@@ -1139,16 +1140,10 @@ setupForDeletion doc = blankDocument {
     such as the user trying to share isn't the document author, or if the document
     doesn't exist.
 -}
-shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
-shareDocuments user docids = 
-  forEachDocument shareDocument docids
-  where
-    shareDocument :: DocumentID -> Update Documents (Either String Document)
-    shareDocument docid =
-      modifySignableOrTemplate docid $ \doc ->
-        if isAuthor (doc, user)
-          then Right $ doc { documentsharing = Shared }
-          else Left $ "Can't share document unless you are the author"
+shareDocument :: DocumentID -> Update Documents (Either String Document)
+shareDocument docid = 
+  modifySignableOrTemplate docid $ \doc ->
+  Right $ doc { documentsharing = Shared }
 
 {- |
     Sets the document title for the indicated document.
@@ -1452,6 +1447,46 @@ templateFromDocument docid = modifySignable docid $ \doc ->
           documentstatus = Preparation
         , documenttype =  Template process
         }
+        
+
+fixBug510ForDocument :: DocumentID -> Update Documents (Either String Document)
+fixBug510ForDocument docid =
+  modifyDocumentWithActionTime False (const True) docid $ \doc ->
+    case (wasBrokenByBug510 doc, nonAuthorPartLooksGood doc ) of
+    (False, _) -> return $ Left "This doc isn't broken!"
+    (_, False) -> return . Left $ "Hang on how did this doc get broken? it has the wrong number of parts " ++ (show $ documentid doc)
+    (True, True) -> do
+      let ndoc = doc {
+        documentsignatorylinks = map maybeRemoveAuthorAsPartner $ documentsignatorylinks doc
+      , documentstatus =
+          if shouldBecomeClosed doc
+            then Closed
+            else documentstatus doc
+      }
+      return $ Right ndoc
+  where
+    wasBrokenByBug510 :: Document -> Bool
+    wasBrokenByBug510 doc =
+      let isauthorsendonly = Just True == getValueForProcess doc processauthorsend
+          isauthorsigning = maybe False (elem SignatoryPartner . signatoryroles) (getAuthorSigLink doc)
+      in isauthorsendonly && isauthorsigning
+    nonAuthorPartLooksGood :: Document -> Bool
+    nonAuthorPartLooksGood doc =
+      let nonauthorparts = filter (not . isAuthor) $ documentsignatorylinks doc
+      in case nonauthorparts of
+        (nonauthorpart:[]) | SignatoryPartner `elem` (signatoryroles nonauthorpart) -> True
+        _ -> False
+    maybeRemoveAuthorAsPartner :: SignatoryLink -> SignatoryLink
+    maybeRemoveAuthorAsPartner sl =
+      if SignatoryAuthor `elem` (signatoryroles sl)
+        then sl { signatoryroles = [SignatoryAuthor] }
+        else sl
+    shouldBecomeClosed :: Document -> Bool
+    shouldBecomeClosed Document{documentstatus,documentsignatorylinks} =
+      let inPendingState = documentstatus == Pending || documentstatus == AwaitingAuthor
+          otherSigHasSigned = all hasSigned . filter (not . isAuthor) $ documentsignatorylinks
+      in inPendingState && otherSigHasSigned
+
 
 {- |
     This will migrate the indicated document's signatory links by populating maybecompany on them.
@@ -1617,7 +1652,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'restoreArchivedDocuments
                         , 'reallyDeleteDocuments
                         , 'deleteDocumentRecordIfRequired
-                        , 'shareDocuments
+                        , 'shareDocument
                         , 'setDocumentTitle
                         , 'timeoutDocument
                         , 'closeDocument
@@ -1643,4 +1678,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'templateFromDocument
                         , 'migrateDocumentSigAccounts
                         , 'migrateDocumentSigLinkCompanies
+                        , 'fixBug510ForDocument
                         ])

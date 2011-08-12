@@ -349,10 +349,10 @@ pageDocumentDesign=
                   <a rel="#update-attachments-dialog" href="#"
                      style="padding-top:3px" id="addattachmentlink">$_addattachmentlink()$</a>
                   $if(isattachments)$
-                  <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ dokument)</span>
+                  <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ $_document()$)</span>
                   <div id="tooltip-attachmentlist" class="hidden">
                     $attachments:{attachment |
-                    <div>$attachment.attachmentname$</div>
+                    <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
                     }$
                   </div>
                   $endif$
@@ -733,7 +733,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             $attachments:{attachment |
             <div class="alreadyattacheditem">
               <div class="display">
-                <a href="#" class="removesig">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
+                <a href="#" class="removesig">x</a><span style="padding-left:5px;"><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></span>
               </div>
               <div class="data">
                 <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />

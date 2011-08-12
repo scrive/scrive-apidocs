@@ -27,7 +27,8 @@ module Util.SignatoryLinkUtils (
   hasSeen,  
   hasUser,
   hasCompany,
-  SignatoryLinkIdentity
+  SignatoryLinkIdentity,
+  MaybeSignatoryLink(..),
        ) where
 
 import Company.CompanyState

@@ -252,6 +252,10 @@ handleRoutes = msum [
        
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
 
+     -- this stuff is for a fix
+     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ DocControl.handleLogBrokenByBug510
+     , dir "adminonly" $ dir "510bugfix" $ hGet1 $ toK1 $ DocControl.handleFixForBug510
+
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost1 $ toK1 $ handleChangeServiceUI
@@ -610,8 +614,10 @@ signup vip _freetill =  do
           else do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
-        Nothing -> do
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip
+        Nothing -> do         
+          rq <- askRq
+          let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip browserLang
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone

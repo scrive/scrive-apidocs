@@ -21,6 +21,7 @@ var ConfirmationModel = Backbone.Model.extend({
       title  : "",
       acceptText: "Ok",
       rejectText: "Cancel",
+      acceptColor : "green",
       content  : jQuery("<p/>")
   },
   title : function(){
@@ -34,6 +35,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   acceptText: function() {
        return this.get("acceptText");
+  },
+  acceptColor: function() {
+       return this.get("acceptColor");
   },
   rejectText: function() {
        return this.get("rejectText");
@@ -55,7 +59,7 @@ var ConfirmationView = Backbone.View.extend({
        this.el.addClass("modal-container");
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
-       title.append($("<h2/>").text(this.model.title()));
+       title.append($("<h2/>").append(this.model.title()));
        header.append(title);
        header.append("<a class='modal-close close'/a>");
        var body = $("<div class='modal-body'>");
@@ -66,7 +70,7 @@ var ConfirmationView = Backbone.View.extend({
        var cancel = $("<a class='cancel close float-left'/>");
        cancel.text(this.model.rejectText());
        footer.append(cancel);
-       var accept = Button.init({color:"green",
+       var accept = Button.init({color:model.acceptColor(),
                                  size: "small",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
@@ -95,6 +99,7 @@ window.Confirmation = {
                       submit : args.submit,
                       title  : args.title,
                       acceptText: args.acceptText,
+                      acceptColor : args.acceptColor,
                       rejectText: args.rejectText,
                       content  : args.content
                     });

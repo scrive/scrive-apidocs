@@ -9,6 +9,7 @@ $(document).ready(function() {
             load: true,
             closeOnClick: false,
             closeOnEsc: false,
+            fixed: false,
             mask: {
                 color: '#000000',
                 loadSpeed: 0,
@@ -209,7 +210,7 @@ function gotoPage(elm, index) {
 }
 
 jQuery(document).ready( function() {
-    jQuery('.campaign-text a, .campaign-play').overlay({mask: standardDialogMask});
+    jQuery('.campaign-text a, .campaign-play').overlay({mask: standardDialogMask, fixed:false});
     
     jQuery('.slide-nav ul li').click( function() {
         var index = jQuery(this).index();

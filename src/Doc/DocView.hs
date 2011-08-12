@@ -288,15 +288,123 @@ flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
 
 
-documentJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
-documentJSON _crttime doc = (fmap toJSObject) $ propagateMonad  $
-    [  ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
+documentJSON :: (TemplatesMonad m,KontraMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
+documentJSON msl _crttime doc = do
+    ctx <- getContext
+    fmap toJSObject $ propagateMonad  $
+     [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> documentfiles doc ),
        ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> documentsealedfiles doc ),
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
-       ("process", processJSON doc )
+       ("process", processJSON doc ),
+       ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
+       ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
+       ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
+       ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
+       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc))
+     ]
+
+
+signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
+signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad $
+    [
+        ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
+      , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
+      , ("signorder",return $ JSRational True (toRational $ unSignOrder $ signatorysignorder $ signatorydetails siglink))
+      , ("undelivered", return $ JSBool $ (invitationdeliverystatus siglink == Undelivered))
+      , ("delivered", return $ JSBool $ (invitationdeliverystatus siglink == Delivered))
+      , ("signs", return $ JSBool $ isSignatory siglink)
+      , ("author",return $ JSBool $ isAuthor siglink)
+      , ("datamismatch", return $ JSBool datamismatch)
+      , ("signdate", return $ jsonDate $ signtime <$> maybesigninfo siglink)
+      , ("seendate", return $ jsonDate $ signtime <$> maybeseeninfo siglink)
+      , ("readdate", return $ jsonDate $ maybereadinvite siglink)
+      , ("rejecteddate", return $ jsonDate $ rejectedDate)
+      , ("fields", return $ signatoryFieldsJSON doc siglink)
+      , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
+   ]
+    where
+    datamismatch = case documentcancelationreason doc of
+                    Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
+                    _                                   -> False
+    rejectedDate = case documentrejectioninfo doc of
+                    Just (rt, slid, _)
+                        | slid == signatorylinkid siglink -> Just rt
+                    _                             -> Nothing
+
+signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
+signatoryFieldsJSON doc siglink = JSArray $
+    [
+       fieldJSON doc "fstname" (BS.toString $ getFirstName siglink) True (signatoryfstnameplacements $ signatorydetails siglink)
+     , fieldJSON doc "sndname" (BS.toString $ getLastName siglink) True (signatorysndnameplacements $ signatorydetails siglink)
+     , fieldJSON doc "email" (BS.toString $ getEmail siglink) True (signatoryemailplacements  $ signatorydetails siglink)
+     , fieldJSON doc "personalnumber" (BS.toString $ getPersonalNumber siglink) True (signatorypersonalnumberplacements $ signatorydetails siglink)
+     , fieldJSON doc "company" (BS.toString $ getCompanyName siglink) True (signatorycompanyplacements $ signatorydetails siglink)
+     , fieldJSON doc "companynumber" (BS.toString $ getCompanyNumber siglink) True (signatorycompanynumberplacements $ signatorydetails siglink)
+    ] ++
+    for (signatoryotherfields $ signatorydetails siglink) (\fielddef ->
+        fieldJSON
+            doc
+            (BS.toString $ fieldlabel fielddef)
+            (BS.toString $ fieldvalue fielddef)
+            (fieldfilledbyauthor fielddef)
+            (fieldplacements fielddef)
+        )
+
+                                                   
+fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON  doc name value closed placements = JSObject $ toJSObject $
+    [   ("name", JSString $ toJSString $ name) 
+      , ("value", JSString $ toJSString $ value)
+      , ("closed", JSBool $ closed)
+      , ("placements", JSArray $ map (placementJSON doc) placements)
     ]
 
+placementJSON :: Document -> FieldPlacement -> JSValue
+placementJSON doc placement = JSObject $ toJSObject $
+    [   ("x", JSRational True (toRational $ placementx  placement))
+      , ("y", JSRational True (toRational $ placementy  placement))
+      , ("page", JSRational True (toRational $ placementpage  placement))
+      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> fileid <$> (listToMaybe $ documentfiles doc))
+    ]
+
+
+jsonDate :: Maybe MinutesTime -> JSValue
+jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateDMY <$> mdate
+
+{- 
+, signatorysndnameplacements        = []
+    , signatorycompanyplacements        = []
+    , signatorypersonalnumberplacements = []
+    , signatorycompanynumberplacements  = []
+    , signatoryemailplacements          = []
+    , signatoryotherfields
+    
+
+      field "current" $ current
+      field "fstname" $ packToMString $ getFirstName signatorydetails
+      field "sndname" $ packToMString $ getLastName  signatorydetails
+      field "company" $ packToMString $ signatorycompany $ signatorydetails
+      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
+      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
+      field "email" $ packToMString $ getEmail signatorydetails
+      fieldFL "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
+        field "fieldlabel" $ fieldlabel sof
+        field "fieldvalue" $ fieldvalue sof
+      field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
+      field "allowRemindForm" $ isEligibleForReminder muser document siglnk
+      field "linkremind" $ show (LinkRemind document siglnk)
+      field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
+      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered || invitationdeliverystatus == Deferred) && isActiveDoc)
+      fieldM "reminderMessage" $ mailDocumentRemindContent Nothing ctx document siglnk
+      field "role" $ if isSignatory siglnk
+                     then "signatory"
+                     else "viewer"
+      field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)
+      field "author" $ (isAuthor siglnk)
+      ]      
+      -}
+      
 processJSON :: (TemplatesMonad m) => Document -> m JSValue
 processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       [
@@ -313,6 +421,15 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("confirmsendtitle", text processconfirmsendtitle )
       , ("confirmsendtext ", text processconfirmsendtext )
       , ("expirytext", text processexpirytext )
+      -- some buttons texts
+      , ("restartbuttontext", text processrestartbuttontext)
+      , ("cancelbuttontext", text processcancelbuttontext)
+      , ("rejectbuttontext", text processrejectbuttontext)
+      , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
+      , ("signatorysignedtext", text processsignatorysignedtext)
+      , ("signatorycanceledtext", text processsignatorycanceledtext)
+      , ("authorissecretarytext", text processauthorissecretarytext)
+      , ("remindagainbuttontext", text processremindagainbuttontext)
      ]
     where
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k
@@ -340,7 +457,7 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $  BS.toString $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
-    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) (documentsignatorylinks doc)),
+    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) . filter isSignatory $ documentsignatorylinks doc),
     ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
     ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
@@ -651,7 +768,7 @@ pageDocumentDesign ctx
        documentInfoFields document
        documentViewFields document
        designViewFields step
-       documentAttachmentDesignFields (documentauthorattachments document)
+       documentAttachmentDesignFields documentid (documentauthorattachments document)
        documentAuthorAttachments attachments
        documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
        fieldF "process" processFields
@@ -673,8 +790,8 @@ pageDocumentDesign ctx
        fieldM "expirytext" $ getProcessText processexpirytext
 
 
-documentAttachmentDesignFields :: (Functor m, MonadIO m) => [AuthorAttachment] -> Fields m
-documentAttachmentDesignFields atts = do
+documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> Fields m
+documentAttachmentDesignFields docid atts = do
   field "isattachments" $ not $ null atts
   field "attachmentcount" $ length atts
   fieldFL "attachments" $ map attachmentFields atts
@@ -682,6 +799,7 @@ documentAttachmentDesignFields atts = do
     attachmentFields AuthorAttachment{authorattachmentfile = File {fileid, filename}} = do
       field "attachmentid" $ show fileid
       field "attachmentname" $ filename
+      field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
 
 documentFunctionalityFields :: MonadIO m => Document -> Fields m
 documentFunctionalityFields Document{documentfunctionality} = do
@@ -1151,8 +1269,8 @@ signedByMeFields _document siglnk = do
 
 
 documentViewFields :: MonadIO m => Document -> Fields m
-documentViewFields document = do
-  field "addSignatoryScript" $ documentstatus document == Pending  || documentstatus document == AwaitingAuthor
+documentViewFields Document{documentstatus} = do
+  field "addSignatoryScript" $ documentstatus /= Closed
 
 
 designViewFields :: MonadIO m => Maybe DesignStep -> Fields m

@@ -164,10 +164,14 @@ evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
     
 runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
+  sd <- ask
   now <- liftIO getMinutesTime
   docs <- query $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
-  when (probs /= []) $ mailDocumentProblemsCheck $ intercalate "\n" probs
+  when (probs /= []) $ mailDocumentProblemsCheck $ 
+    "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++ 
+    intercalate ("</p>\n\n<p>" ++ (hostpart $ sdAppConf sd) ++ "/dave/document/") probs ++ 
+    "</p>"
   return ()
 
 -- | Send an email out to all registered emails about document problems.
@@ -184,7 +188,7 @@ mailDocumentProblemsCheck msg = do
 
 -- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
 documentProblemsCheckEmails :: [BS.ByteString]
-documentProblemsCheckEmails = map BS.fromString ["eric@skrivapa.se"]
+documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
