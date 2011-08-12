@@ -391,7 +391,7 @@ handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
             _ <- runDBUpdate $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
-            Just invuser <- query $ GetUserByEmail Nothing $ Email email
+            Just invuser <- runDBQuery $ GetUserByEmail Nothing $ Email email
             case usercompany invuser of
               Nothing -> addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
               Just cid | fromJust (usercompany user) == cid -> addFlashM flashUserIsAlreadyCompanyAccount
