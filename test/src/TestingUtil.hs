@@ -68,7 +68,7 @@ instance Arbitrary CompanyInfo where
     c <- arbitrary
     d <- arbitrary
     e <- arbitrary
-    f <- arbitrary    
+    f <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -249,10 +249,15 @@ instance Arbitrary DocumentStatus where
                        , DocumentError "Bad document."
                        ]
     
+nonemptybs :: Gen BS.ByteString              
+nonemptybs = do
+  s <- arbString 1 10
+  return $ BS.fromString s
+
 instance Arbitrary SignatoryDetails where
   arbitrary = do
-    fn <- arbitrary
-    ln <- arbitrary
+    fn <- nonemptybs
+    ln <- nonemptybs
     cn <- arbitrary
     pn <- arbitrary
     cm <- arbitrary
@@ -326,10 +331,10 @@ arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
   l <- choose (minl, maxl)
   vectorOf l $ elements ['a'..'z']
-
+  
 arbEmail :: Gen BS.ByteString
 arbEmail = do
-  n <- arbString 1 7
+  n <- arbString 1 34
   d <- arbString 3 7
   return $ BS.fromString (n ++ "@" ++ d ++ ".com")
 
@@ -434,10 +439,9 @@ whatTimeIsIt = liftIO $ getMinutesTime
       
 addNewRandomUser :: IO (User)
 addNewRandomUser = do
-  stdgn <- newStdGen
-  let fn = unGen arbitrary stdgn 10
-      ln = unGen arbitrary stdgn 10
-      em = unGen arbEmail  stdgn 10
+  fn <- rand 10 $ arbString 3 30
+  ln <- rand 10 $ arbString 3 30
+  em <- rand 10 arbEmail
   muser <- addNewUser fn ln (BS.toString em)
   case muser of
     Just user -> return user
@@ -465,13 +469,13 @@ emptySignatoryDetails = SignatoryDetails
 
 addRandomDocumentWithAuthor :: User -> IO DocumentID
 addRandomDocumentWithAuthor user = do
-  stdgen <- newStdGen
-  let rs = unGen arbitrary stdgen 100
+  rs <- rand 10 arbitrary
   let roles = SignatoryAuthor : rs
-  let doc = unGen arbitrary stdgen 10
-      sls = 1 + (abs $ unGen arbitrary stdgen 10)
-      sldets = unGen (vectorOf sls arbitrary) stdgen 10
-      slr = unGen (vectorOf sls $ elements [[], [SignatoryPartner]]) stdgen 10000
+  doc <- rand 10 arbitrary
+  slsab <- rand 10 arbitrary
+  let sls = 1 + abs slsab
+  sldets <- rand 10 (vectorOf sls arbitrary)
+  slr <- rand 1000 (vectorOf sls $ elements [[], [SignatoryPartner]])
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
   
   mcompany <- case usercompany user of  
@@ -487,10 +491,8 @@ addRandomDocumentWithAuthor user = do
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> IO Document
 addRandomDocumentWithAuthorAndCondition user p =  do
-  stdgen <- newStdGen
-  let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
-              stdgen 10000
-  let doc = unGen arbitrary stdgen 10
+  roles <- rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+  doc <- rand 10 arbitrary
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
@@ -498,7 +500,7 @@ addRandomDocumentWithAuthorAndCondition user p =  do
     
   now <- getMinutesTime
   
-  let (signinfo, seeninfo) = unGen arbitrary stdgen 10
+  (signinfo, seeninfo) <- rand 10 arbitrary
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let asl' = asl { maybeseeninfo = seeninfo
@@ -524,10 +526,11 @@ addRandomDocumentWithAuthorAndCondition user p =  do
             return doc
           Just doc' -> do
             return doc'
-        else do
-          --uncomment this to find out why the doc was rejected
-          --print $ "rejecting doc: " ++ fromJust d
-          addRandomDocumentWithAuthorAndCondition user p
+      else do
+        --uncomment this to find out why the doc was rejected
+        --print adoc
+        --print $ "rejecting doc: " ++ fromJust d
+        addRandomDocumentWithAuthorAndCondition user p
     else do
       --print adoc   
       addRandomDocumentWithAuthorAndCondition user p
@@ -564,8 +567,7 @@ instance (QueryEvent ev res) => RandomQuery ev res where
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
-    stdgn <- newStdGen
-    let a = unGen arbitrary stdgn 10
+    a <- rand 10 arbitrary
     randomQuery $ f a
 
 --Random update
@@ -577,8 +579,7 @@ instance (UpdateEvent ev res) => RandomUpdate ev res where
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
-    stdgn <- newStdGen
-    let a = unGen arbitrary stdgn 10
+    a <- rand 10 arbitrary
     randomUpdate $ f a
 
 -- Other functions
@@ -594,8 +595,7 @@ instance (Typeable res) => RandomCallable res res where
 
 instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
   randomCall f = do
-    stdgn <- newStdGen
-    let a = unGen arbitrary stdgn 10
+    a <- rand 10 arbitrary
     randomCall $ f a
 
 assertJust :: Maybe a -> Assertion

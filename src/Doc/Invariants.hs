@@ -234,7 +234,7 @@ hasFirstName :: MinutesTime -> Document -> Maybe String
 hasFirstName _ document =
   assertInvariant "has a signatory with no first name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
-                (not $ BS.null $ getFirstName sl))
+                (not $ null $ BS.toString$ getFirstName sl))
         (documentsignatorylinks document)
 
 -- | Last Name not null
@@ -242,7 +242,7 @@ hasLastName :: MinutesTime -> Document -> Maybe String
 hasLastName _ document =
   assertInvariant "has a signatory with no last name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
-                (not $ BS.null $ getLastName sl))
+                (not $ null $ BS.toString $ getLastName sl))
         (documentsignatorylinks document)
 
 -- | Email looks like email
