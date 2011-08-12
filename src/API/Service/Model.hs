@@ -187,7 +187,23 @@ checkIfServiceExists uid = wrapDB $ \conn -> do
   fetchAllRows' st >>= checkIfOneObjectReturned
 
 selectServicesSQL :: String
-selectServicesSQL = "SELECT s.id, encode(s.password, 'base64'), encode(s.salt, 'base64'), s.admin_id, s.location, s.email_from_address, su.mail_footer, encode(su.button1, 'base64'), encode(su.button2, 'base64'), su.buttons_text_color, su.background, su.overlay_background, su.bars_background, encode(su.logo, 'base64') FROM services s JOIN service_uis su ON (s.id = su.service_id) "
+selectServicesSQL = "SELECT"
+  ++ "  s.id"
+  ++ ", encode(s.password, 'base64')"
+  ++ ", encode(s.salt, 'base64')"
+  ++ ", s.admin_id"
+  ++ ", s.location"
+  ++ ", s.email_from_address"
+  ++ ", su.mail_footer"
+  ++ ", encode(su.button1, 'base64')"
+  ++ ", encode(su.button2, 'base64')"
+  ++ ", su.buttons_text_color"
+  ++ ", su.background"
+  ++ ", su.overlay_background"
+  ++ ", su.bars_background"
+  ++ ", encode(su.logo, 'base64') FROM services s"
+  ++ "  JOIN service_uis su ON (s.id = su.service_id)"
+  ++ " "
 
 fetchServices :: Statement -> [Service] -> IO [Service]
 fetchServices st acc = fetchRow st >>= maybe (return acc)

@@ -8,7 +8,6 @@ module User.Model (
   , ExternalUserID(..)
   , DesignMode(..)
   , InviteType(..)
-  , PaymentMethod(..)
   , SignupMethod(..)
   , InviteInfo(..)
   , User(..)
@@ -84,10 +83,6 @@ data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''InviteType)
 
-data PaymentMethod = CreditCard | Invoice | Undefined
-  deriving (Eq, Ord, Read, Show)
-$(enumDeriveConvertible ''PaymentMethod)
-
 data SignupMethod = AccountRequest | ViralInvitation | BySigning
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''SignupMethod)
@@ -132,8 +127,7 @@ data UserMailAPI = UserMailAPI {
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
-    userpaymentmethod   :: PaymentMethod
-  , preferreddesignmode :: Maybe DesignMode
+    preferreddesignmode :: Maybe DesignMode
   , lang                :: Lang
   , systemserver        :: SystemServer
   } deriving (Eq, Ord, Show)
@@ -314,25 +308,13 @@ instance DBUpdate AddUser (Maybe User) where
               ++ [toSql email]
           _ <- run conn ("INSERT INTO user_settings ("
             ++ "  user_id"
-            ++ ", payment_method"
             ++ ", preferred_design_mode"
             ++ ", lang"
-            ++ ", system_server) VALUES (?, ?, ?, ?, ?)") [
+            ++ ", system_server) VALUES (?, ?, ?, ?)") [
                 toSql uid
-              , toSql Undefined
               , SqlNull
               , toSql (defaultValue::Lang)
               , toSql ss
-              ]
-          _ <- run conn ("INSERT INTO user_login_infos ("
-            ++ "  user_id"
-            ++ ", last_success"
-            ++ ", last_fail"
-            ++ ", consecutive_fails) VALUES (?, ?, ?, ?)") [
-                toSql uid
-              , SqlNull
-              , SqlNull
-              , toSql (0::Int)
               ]
           return ()
         dbQuery $ GetUserByID uid
@@ -458,13 +440,11 @@ data SetUserSettings = SetUserSettings UserID UserSettings
 instance DBUpdate SetUserSettings Bool where
   dbUpdate (SetUserSettings uid us) = wrapDB $ \conn -> do
     r <- run conn ("UPDATE user_settings SET"
-      ++ "  payment_method = ?"
-      ++ ", preferred_design_mode = ?"
+      ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", system_server = ?"
       ++ "  WHERE user_id = ?") [
-        toSql $ userpaymentmethod us
-      , toSql $ preferreddesignmode us
+        toSql $ preferreddesignmode us
       , toSql $ lang us
       , toSql $ systemserver us
       , toSql uid
@@ -551,13 +531,37 @@ checkIfUserExists uid = wrapDB $ \conn -> do
     >>= return . maybe False (const True)
 
 selectUsersSQL :: String
-selectUsersSQL = "SELECT u.id, encode(u.password, 'base64'), encode(u.salt, 'base64'), u.is_company_admin, u.account_suspended, EXTRACT(EPOCH FROM u.has_accepted_terms_of_service), EXTRACT(EPOCH FROM u.free_trial_expiration_date), u.signup_method, u.service_id, u.company_id, u.deleted, ui.first_name, ui.last_name, ui.personal_number, ui.company_position, ui.phone, ui.mobile, ui.email, us.payment_method, us.preferred_design_mode, us.lang, us.system_server, FROM users u JOIN user_infos ui ON (u.id = ui.user_id) JOIN user_settings us ON (u.id = us.user_id) JOIN user_payment_policies upp ON (u.id = upp.user_id) "
+selectUsersSQL = "SELECT "
+ ++ "  u.id"
+ ++ ", encode(u.password, 'base64')"
+ ++ ", encode(u.salt, 'base64')"
+ ++ ", u.is_company_admin"
+ ++ ", u.account_suspended"
+ ++ ", EXTRACT(EPOCH FROM u.has_accepted_terms_of_service)"
+ ++ ", EXTRACT(EPOCH FROM u.free_trial_expiration_date)"
+ ++ ", u.signup_method"
+ ++ ", u.service_id"
+ ++ ", u.company_id"
+ ++ ", u.deleted"
+ ++ ", ui.first_name"
+ ++ ", ui.last_name"
+ ++ ", ui.personal_number"
+ ++ ", ui.company_position"
+ ++ ", ui.phone"
+ ++ ", ui.mobile"
+ ++ ", ui.email"
+ ++ ", us.preferred_design_mode"
+ ++ ", us.lang"
+ ++ ", us.system_server FROM users u"
+ ++ "  JOIN user_infos ui ON (u.id = ui.user_id)"
+ ++ "  JOIN user_settings us ON (u.id = us.user_id)"
+ ++ " "
 
 fetchUsers :: Statement -> [User] -> IO [User]
 fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
    , free_trial_expiration_date, signup_method, service_id, company_id, deleted, first_name
-   , last_name, personal_number, company_position, phone, mobile, email, payment_method
+   , last_name, personal_number, company_position, phone, mobile, email
    , preferred_design_mode, lang, system_server
    ] -> fetchUsers st $ User {
        userid = fromSql uid
@@ -582,8 +586,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
        , useremail = fromSql email
      }
      , usersettings = UserSettings {
-         userpaymentmethod = fromSql payment_method
-       , preferreddesignmode = fromSql preferred_design_mode
+         preferreddesignmode = fromSql preferred_design_mode
        , lang = fromSql lang
        , systemserver = fromSql system_server
      }
@@ -604,7 +607,6 @@ deriving instance Typeable SignupMethod
 deriving instance Typeable Password
 deriving instance Typeable Lang
 deriving instance Typeable DesignMode
-deriving instance Typeable PaymentMethod
 deriving instance Typeable Email
 deriving instance Typeable Binary
 deriving instance Typeable SystemServer
@@ -616,7 +618,6 @@ instance Version SignupMethod
 instance Version Password
 instance Version Lang
 instance Version DesignMode
-instance Version PaymentMethod
 instance Version Email
 instance Version Binary
 instance Version SystemServer
@@ -629,7 +630,6 @@ $(deriveSerializeFor [
   , ''Password
   , ''Lang
   , ''DesignMode
-  , ''PaymentMethod
   , ''Email
   , ''Binary
   , ''SystemServer

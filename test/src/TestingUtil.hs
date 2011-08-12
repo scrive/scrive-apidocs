@@ -348,8 +348,7 @@ blankUser = User {
                                   , useremail =  Email BS.empty 
                                    }
                 , usersettings  = UserSettings {
-                                    userpaymentmethod = Undefined
-                                  , preferreddesignmode = Nothing
+                                    preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
                                   , systemserver = Misc.defaultValue
                                   }

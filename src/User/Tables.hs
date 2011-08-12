@@ -148,11 +148,10 @@ tableUserSettings = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("payment_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True}), ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})] -> return TVRvalid
+      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True}), ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE user_settings ("
           ++ "  user_id BIGINT NOT NULL"
-          ++ ", payment_method SMALLINT NOT NULL"
           ++ ", preferred_design_mode SMALLINT NULL"
           ++ ", lang SMALLINT NOT NULL"
           ++ ", system_server SMALLINT NOT NULL"

@@ -143,7 +143,18 @@ instance DBUpdate GetOrCreateCompanyWithExternalID Company where
 -- helpers
 
 selectCompaniesSQL :: String
-selectCompaniesSQL = "SELECT c.id, c.external_id, c.service_id, ci.name, ci.number, ci.address, ci.zip, ci.city, ci.country FROM companies c JOIN company_infos ci ON (c.id = ci.company_id) "
+selectCompaniesSQL = "SELECT"
+  ++ "  c.id"
+  ++ ", c.external_id"
+  ++ ", c.service_id"
+  ++ ", ci.name"
+  ++ ", ci.number"
+  ++ ", ci.address"
+  ++ ", ci.zip"
+  ++ ", ci.city"
+  ++ ", ci.country FROM companies c"
+  ++ "  JOIN company_infos ci ON (c.id = ci.company_id)"
+  ++ " "
 
 fetchCompanies :: Statement -> [Company] -> IO [Company]
 fetchCompanies st acc = fetchRow st >>= maybe (return acc)

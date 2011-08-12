@@ -382,21 +382,21 @@ getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange =  do
                           --maccountplan          <- readField "accountplan"
                           --msigneddocstorage     <- readField "signeddocstorage"
-                          muserpaymentmethod    <- readField "userpaymentmethod"
+                          --muserpaymentmethod    <- readField "userpaymentmethod"
                           return (\UserSettings {
                                  --  accounttype
                                  --, accountplan
                                  --, signeddocstorage
-                                   userpaymentmethod
-                                 , preferreddesignmode
+                                 --, userpaymentmethod
+                                   preferreddesignmode
                                  , lang
                                  , systemserver }
                                        -> UserSettings {
                                           --  accounttype  = accounttype
                                           --, accountplan = fromMaybe accountplan maccountplan
                                           --, signeddocstorage  = fromMaybe signeddocstorage  msigneddocstorage
-                                            userpaymentmethod =  fromMaybe userpaymentmethod muserpaymentmethod
-                                          , preferreddesignmode = preferreddesignmode
+                                          --  userpaymentmethod =  fromMaybe userpaymentmethod muserpaymentmethod
+                                            preferreddesignmode = preferreddesignmode
                                           , lang = lang
                                           , systemserver = systemserver
                                           })
