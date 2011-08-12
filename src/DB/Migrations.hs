@@ -31,7 +31,6 @@ tablesList = [
   , tableServices
   , tableServiceUIs
   , tableCompanies
-  , tableCompanyInfos
   ]
 
 checkDBConsistency :: DB ()

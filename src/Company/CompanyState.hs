@@ -260,20 +260,16 @@ insertCompaniesIntoPG = wrapDB $ \conn -> do
     _ <- run conn ("INSERT INTO companies ("
       ++ "  id"
       ++ ", external_id"
-      ++ ", service_id) VALUES (?, ?, ?)") [
-        toSql $ companyid c
-      , toSql $ companyexternalid c
-      , toSql $ companyservice c
-      ]
-    _ <- run conn ("INSERT INTO company_infos ("
-      ++ "  company_id"
+      ++ ", service_id"
       ++ ", name"
       ++ ", number"
       ++ ", address"
       ++ ", zip"
       ++ ", city"
-      ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?)") [
+      ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") [
         toSql $ companyid c
+      , toSql $ companyexternalid c
+      , toSql $ companyservice c
       , toSql $ companyname $ companyinfo c
       , toSql $ companynumber $ companyinfo c
       , toSql $ companyaddress $ companyinfo c

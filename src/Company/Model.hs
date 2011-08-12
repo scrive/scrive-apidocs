@@ -94,34 +94,31 @@ instance DBUpdate CreateCompany Company where
       _ <- run conn ("INSERT INTO companies ("
         ++ "  id"
         ++ ", external_id"
-        ++ ", service_id) VALUES (?, ?, ?)") [
-            toSql cid
-          , toSql mecid
-          , toSql msid
-          ]
-      _ <- run conn ("INSERT INTO company_infos ("
-        ++ "  company_id"
+        ++ ", service_id"
         ++ ", name"
         ++ ", number"
         ++ ", address"
         ++ ", zip"
         ++ ", city"
-        ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?)")
-          $ toSql cid : replicate 6 (toSql "")
+        ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+            toSql cid
+          , toSql mecid
+          , toSql msid
+          ] ++ replicate 6 (toSql "")
       return ()
     dbQuery (GetCompany cid) >>= maybe (E.throw NoObject) return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
   dbUpdate (SetCompanyInfo cid ci) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE company_infos SET"
+    r <- run conn ("UPDATE companies SET"
       ++ "  name = ?"
       ++ ", number = ?"
       ++ ", address = ?"
       ++ ", zip = ?"
       ++ ", city = ?"
       ++ ", country = ?"
-      ++ "  WHERE company_id = ?") [
+      ++ "  WHERE id = ?") [
         toSql $ companyname ci
       , toSql $ companynumber ci
       , toSql $ companyaddress ci
@@ -147,13 +144,12 @@ selectCompaniesSQL = "SELECT"
   ++ "  c.id"
   ++ ", c.external_id"
   ++ ", c.service_id"
-  ++ ", ci.name"
-  ++ ", ci.number"
-  ++ ", ci.address"
-  ++ ", ci.zip"
-  ++ ", ci.city"
-  ++ ", ci.country FROM companies c"
-  ++ "  JOIN company_infos ci ON (c.id = ci.company_id)"
+  ++ ", c.name"
+  ++ ", c.number"
+  ++ ", c.address"
+  ++ ", c.zip"
+  ++ ", c.city"
+  ++ ", c.country FROM companies c"
   ++ " "
 
 fetchCompanies :: Statement -> [Company] -> IO [Company]

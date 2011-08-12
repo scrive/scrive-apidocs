@@ -1636,8 +1636,8 @@ finalizeInsertUsersIntoPG = wrapDB $ \conn -> do
       ++ "  service_id = ?"
       ++ ", company_id = ?"
       ++ "  WHERE id = ?") [
-        toSql $ usercompany u
-      , toSql $ userservice u
+        toSql $ userservice u
+      , toSql $ usercompany u
       , toSql $ userid u
       ]
     when (isJust $ userinviteinfo u) $ do
