@@ -478,11 +478,10 @@ instance DBUpdate SetPreferredDesignMode Bool where
       [toSql mmode, toSql uid]
     oneRowAffectedGuard r
 
--- FIXME: this is broken, first query may return more than one user.
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
   dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT user_id FROM user_infos WHERE email = ?"
+    st <- prepare conn "SELECT user_id FROM user_infos WHERE service_id IS NULL AND email = ?"
     _ <- execute st [toSql email]
     mfid <- fmap (UserID . fromSql) <$> (fetchAllRows' st >>= oneObjectReturnedGuard . join)
     case mfid of
