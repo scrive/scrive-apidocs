@@ -35,7 +35,7 @@ tableUsers = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("is_company_admin", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True}), ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})] -> return TVRvalid
+      [("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("is_company_admin", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True}), ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("company_position", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("phone", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("mobile", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True}), ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE users ("
           ++ "  id BIGINT NOT NULL"
@@ -47,6 +47,16 @@ tableUsers = Table {
           ++ ", signup_method SMALLINT NOT NULL"
           ++ ", service_id TEXT NULL"
           ++ ", company_id BIGINT NULL"
+          ++ ", first_name TEXT NOT NULL"
+          ++ ", last_name TEXT NOT NULL"
+          ++ ", personal_number TEXT NOT NULL"
+          ++ ", company_position TEXT NOT NULL"
+          ++ ", phone TEXT NOT NULL"
+          ++ ", mobile TEXT NOT NULL"
+          ++ ", email TEXT NOT NULL"
+          ++ ", preferred_design_mode SMALLINT NULL"
+          ++ ", lang SMALLINT NOT NULL"
+          ++ ", system_server SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
           ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
           ++ ")"
@@ -55,40 +65,13 @@ tableUsers = Table {
   , tblPutProperties = wrapDB $ \conn -> do
     runRaw conn "CREATE INDEX idx_users_service_id ON users(service_id)"
     runRaw conn "CREATE INDEX idx_users_company_id ON users(company_id)"
+    runRaw conn "CREATE INDEX idx_users_email ON users(email)"
     runRaw conn $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE SET NULL ON UPDATE CASCADE"
     runRaw conn $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE SET NULL ON UPDATE CASCADE"
-  }
-
-tableUserInfos :: Table
-tableUserInfos = Table {
-    tblName = "user_infos"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("company_position", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("phone", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("mobile", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        runRaw conn $ "CREATE TABLE user_infos ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", first_name TEXT NOT NULL"
-          ++ ", last_name TEXT NOT NULL"
-          ++ ", personal_number TEXT NOT NULL"
-          ++ ", company_position TEXT NOT NULL"
-          ++ ", phone TEXT NOT NULL"
-          ++ ", mobile TEXT NOT NULL"
-          ++ ", email TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_user_infos PRIMARY KEY (user_id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn "CREATE INDEX idx_user_infos_email ON user_infos(email)"
-    runRaw conn $ "ALTER TABLE user_infos"
-      ++ " ADD CONSTRAINT fk_user_infos_users FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
   }
 
 tableUserMailAPIs :: Table
@@ -138,28 +121,5 @@ tableUserInviteInfos = Table {
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
     runRaw conn $ "ALTER TABLE user_invite_infos"
       ++ " ADD CONSTRAINT fk_user_invite_infos_users FOREIGN KEY(inviter_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
-  }
-
-tableUserSettings :: Table
-tableUserSettings = Table {
-    tblName = "user_settings"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True}), ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        runRaw conn $ "CREATE TABLE user_settings ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", preferred_design_mode SMALLINT NULL"
-          ++ ", lang SMALLINT NOT NULL"
-          ++ ", system_server SMALLINT NOT NULL"
-          ++ ", CONSTRAINT pk_user_settings PRIMARY KEY (user_id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE user_settings"
-      ++ " ADD CONSTRAINT fk_user_settings_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
   }

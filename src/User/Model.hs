@@ -133,7 +133,7 @@ data UserSettings  = UserSettings {
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
   dbQuery GetUsers = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY ui.first_name || ' ' || ui.last_name DESC"
+    st <- prepare conn $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY u.first_name || ' ' || u.last_name DESC"
     _ <- executeRaw st
     fetchUsers st []
 
@@ -149,7 +149,7 @@ data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance DBQuery GetUserByEmail (Maybe User) where
   dbQuery (GetUserByEmail msid email) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL
-      ++ " WHERE u.deleted = FALSE AND ((?::TEXT IS NULL AND u.service_id IS NULL) OR u.service_id = ?) AND ui.email = ?"
+      ++ " WHERE u.deleted = FALSE AND ((?::TEXT IS NULL AND u.service_id IS NULL) OR u.service_id = ?) AND u.email = ?"
     _ <- execute st [toSql msid, toSql msid, toSql email]
     us <- fetchUsers st []
     oneObjectReturnedGuard us
@@ -158,7 +158,7 @@ data GetUsersByFriendUserID = GetUsersByFriendUserID UserID
 instance DBQuery GetUsersByFriendUserID [User] where
   dbQuery (GetUsersByFriendUserID uid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL
-      ++ " JOIN user_friends uf ON (u.id = uf.user_id) WHERE uf.friend_id = ? AND u.deleted = FALSE ORDER BY ui.email DESC"
+      ++ " JOIN user_friends uf ON (u.id = uf.user_id) WHERE uf.friend_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
     _ <- execute st [toSql uid]
     fetchUsers st []
 
@@ -166,7 +166,7 @@ data GetUserFriends = GetUserFriends UserID
 instance DBQuery GetUserFriends [User] where
   dbQuery (GetUserFriends uid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL
-      ++ " JOIN user_friends uf ON (u.id = uf.friend_id) WHERE uf.user_id = ? AND u.deleted = FALSE ORDER BY ui.email DESC"
+      ++ " JOIN user_friends uf ON (u.id = uf.friend_id) WHERE uf.user_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
     _ <- execute st [toSql uid]
     fetchUsers st []
 
@@ -219,7 +219,7 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
   dbQuery ExportUsersDetailsToCSV = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT first_name || ' ' || last_name, email FROM user_infos"
+    st <- prepare conn "SELECT first_name || ' ' || last_name, email FROM users"
     executeRaw st
     return . toCSV =<< fetchAllRows st
     where
@@ -241,15 +241,27 @@ instance DBUpdate DeleteUser Bool where
       then do
         _ <- run conn ("INSERT INTO users ("
           ++ "  id"
+          ++ ", deleted"
           ++ ", is_company_admin"
           ++ ", account_suspended"
           ++ ", signup_method"
-          ++ ", deleted) VALUES (?, ?, ?, ?, ?)") [
+          ++ ", first_name"
+          ++ ", last_name"
+          ++ ", personal_number"
+          ++ ", company_position"
+          ++ ", phone"
+          ++ ", mobile"
+          ++ ", email"
+          ++ ", lang"
+          ++ ", system_server) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
             toSql uid
+          , toSql True
           , toSql False
           , toSql False
           , toSql AccountRequest
-          , toSql True
+          ] ++ replicate 7 (toSql "") ++ [
+            toSql (defaultValue::Lang)
+          , toSql (defaultValue::SystemServer)
           ]
         return True
       else return False
@@ -276,7 +288,17 @@ instance DBUpdate AddUser (Maybe User) where
             ++ ", signup_method"
             ++ ", service_id"
             ++ ", company_id"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?)") [
+            ++ ", first_name"
+            ++ ", last_name"
+            ++ ", personal_number"
+            ++ ", company_position"
+            ++ ", phone"
+            ++ ", mobile"
+            ++ ", email"
+            ++ ", preferred_design_mode"
+            ++ ", lang"
+            ++ ", system_server"
+            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
                 toSql uid
               , toSql $ pwdHash <$> mpwd
               , toSql $ pwdSalt <$> mpwd
@@ -286,31 +308,14 @@ instance DBUpdate AddUser (Maybe User) where
               , toSql AccountRequest
               , toSql msid
               , toSql mcid
-              , toSql False
-              ]
-          _ <- run conn ("INSERT INTO user_infos ("
-            ++ "  user_id"
-            ++ ", first_name"
-            ++ ", last_name"
-            ++ ", personal_number"
-            ++ ", company_position"
-            ++ ", phone"
-            ++ ", mobile"
-            ++ ", email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") $ [
-              toSql uid
-            , toSql fname
-            , toSql lname
-            ] ++ replicate 4 (toSql "")
-              ++ [toSql email]
-          _ <- run conn ("INSERT INTO user_settings ("
-            ++ "  user_id"
-            ++ ", preferred_design_mode"
-            ++ ", lang"
-            ++ ", system_server) VALUES (?, ?, ?, ?)") [
-                toSql uid
-              , SqlNull
+              , toSql fname
+              , toSql lname
+              ] ++ replicate 4 (toSql "")
+                ++ [toSql email] ++ [
+                SqlNull
               , toSql (defaultValue::Lang)
               , toSql ss
+              , toSql False
               ]
           return ()
         dbQuery $ GetUserByID uid
@@ -412,7 +417,7 @@ instance DBUpdate SetUserMailAPI Bool where
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance DBUpdate SetUserInfo Bool where
   dbUpdate (SetUserInfo uid info) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE user_infos SET"
+    r <- run conn ("UPDATE users SET"
       ++ "  first_name = ?"
       ++ ", last_name = ?"
       ++ ", personal_number = ?"
@@ -420,7 +425,7 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
-      ++ "  WHERE user_id = ?") [
+      ++ "  WHERE id = ?") [
         toSql $ userfstname info
       , toSql $ usersndname info
       , toSql $ userpersonalnumber info
@@ -435,11 +440,11 @@ instance DBUpdate SetUserInfo Bool where
 data SetUserSettings = SetUserSettings UserID UserSettings
 instance DBUpdate SetUserSettings Bool where
   dbUpdate (SetUserSettings uid us) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE user_settings SET"
+    r <- run conn ("UPDATE users SET"
       ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", system_server = ?"
-      ++ "  WHERE user_id = ?") [
+      ++ "  WHERE id = ?") [
         toSql $ preferreddesignmode us
       , toSql $ lang us
       , toSql $ systemserver us
@@ -450,14 +455,14 @@ instance DBUpdate SetUserSettings Bool where
 data SetPreferredDesignMode = SetPreferredDesignMode UserID (Maybe DesignMode)
 instance DBUpdate SetPreferredDesignMode Bool where
   dbUpdate (SetPreferredDesignMode uid mmode) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE user_settings SET preferred_design_mode = ? WHERE user_id = ?"
+    r <- run conn "UPDATE users SET preferred_design_mode = ? WHERE id = ?"
       [toSql mmode, toSql uid]
     oneRowAffectedGuard r
 
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
   dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT user_id FROM user_infos WHERE service_id IS NULL AND email = ?"
+    st <- prepare conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?"
     _ <- execute st [toSql email]
     mfid <- fmap (UserID . fromSql) <$> (fetchAllRows' st >>= oneObjectReturnedGuard . join)
     case mfid of
@@ -524,27 +529,25 @@ selectUsersSQL = "SELECT "
  ++ ", u.signup_method"
  ++ ", u.service_id"
  ++ ", u.company_id"
- ++ ", u.deleted"
- ++ ", ui.first_name"
- ++ ", ui.last_name"
- ++ ", ui.personal_number"
- ++ ", ui.company_position"
- ++ ", ui.phone"
- ++ ", ui.mobile"
- ++ ", ui.email"
- ++ ", us.preferred_design_mode"
- ++ ", us.lang"
- ++ ", us.system_server FROM users u"
- ++ "  JOIN user_infos ui ON (u.id = ui.user_id)"
- ++ "  JOIN user_settings us ON (u.id = us.user_id)"
+ ++ ", u.first_name"
+ ++ ", u.last_name"
+ ++ ", u.personal_number"
+ ++ ", u.company_position"
+ ++ ", u.phone"
+ ++ ", u.mobile"
+ ++ ", u.email"
+ ++ ", u.preferred_design_mode"
+ ++ ", u.lang"
+ ++ ", u.system_server"
+ ++ ", u.deleted FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> [User] -> IO [User]
 fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
-   , signup_method, service_id, company_id, deleted, first_name
+   , signup_method, service_id, company_id, first_name
    , last_name, personal_number, company_position, phone, mobile, email
-   , preferred_design_mode, lang, system_server
+   , preferred_design_mode, lang, system_server, deleted
    ] -> fetchUsers st $ User {
        userid = fromSql uid
      , userpassword = case (fromSql password, fromSql salt) of

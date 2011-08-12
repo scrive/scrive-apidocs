@@ -26,10 +26,8 @@ tablesList = [
     tableVersions
   , tableUsers
   , tableUserFriends
-  , tableUserInfos
   , tableUserMailAPIs
   , tableUserInviteInfos
-  , tableUserSettings
   , tableServices
   , tableServiceUIs
   , tableCompanies
