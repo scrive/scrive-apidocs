@@ -1,25 +1,18 @@
-module User.SystemServer
-    ( SystemServer(..)
-    , systemServerFromURL
+module User.SystemServer (
+    SystemServer(..)
+  , systemServerFromURL
+  ) where
 
-) where
-
-import Data.Data
-import Happstack.Data hiding (defaultValue)
 import Data.List
 
+import DB.Derive
 
 data SystemServer = SkrivaPa | Scrive
-    deriving (Bounded, Enum, Show, Read, Ord, Eq, Typeable)
-    
-instance Version SystemServer
+  deriving (Bounded, Enum, Show, Read, Ord, Eq)
+$(enumDeriveConvertible ''SystemServer)
 
 systemServerFromURL :: String -> SystemServer
-systemServerFromURL url = if ("scrive" `isInfixOf` url)
-                            then Scrive
-                            else SkrivaPa
-
-
-$(deriveSerializeFor [ ''SystemServer  ])
-
-
+systemServerFromURL url =
+  if "localhost" `isInfixOf` url
+     then Scrive
+     else SkrivaPa

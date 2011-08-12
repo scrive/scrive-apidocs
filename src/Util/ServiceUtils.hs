@@ -12,10 +12,10 @@ module Util.ServiceUtils (
             , MayHaveService(..)
        ) where
 
-import API.Service.ServiceState
-import User.UserState
+import API.Service.Model
+import User.Model
 import Doc.DocState
-import Company.CompanyState
+import Company.Model
 import Control.Monad
 import Misc
 

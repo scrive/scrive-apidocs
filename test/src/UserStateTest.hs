@@ -1,95 +1,90 @@
 module UserStateTest (userStateTests) where
 
 import Data.Maybe
-import Happstack.State
-import Test.HUnit hiding (Test)
+import Database.HDBC.PostgreSQL
+import Test.HUnit (Assertion)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import qualified Data.ByteString.UTF8 as BS
-import Misc
+import DB.Classes
 import StateHelper
-import User.Password
-import User.UserState
+import User.Model
+import TestingUtil
 
-userStateTests :: Test
-userStateTests = testGroup "UserState" [
+userStateTests :: Connection -> Test
+userStateTests conn = testGroup "UserState" [
       testGroup "getUserByEmail" [
-          testCase "returns nothing when there isn't a user with a matching email" test_getUserByEmail_returnsNothing
-        , testCase "returns a user with a matching email" test_getUserByEmail_returnsTheRightUser
+          testCase "returns nothing when there isn't a user with a matching email" $ test_getUserByEmail_returnsNothing conn
+        , testCase "returns a user with a matching email" $ test_getUserByEmail_returnsTheRightUser conn
         ]
     , testGroup "getUserByUserID" [
-          testCase "returns nothing when there isn't a user with a matching id" test_getUserByUserID_returnsNothing
-        , testCase "returns a user with a matching id" test_getUserByUserID_returnsTheRightUser
+          testCase "returns nothing when there isn't a user with a matching id" $ test_getUserByUserID_returnsNothing conn
+        , testCase "returns a user with a matching id" $ test_getUserByUserID_returnsTheRightUser conn
         ]
-    , testGroup "getUserStats" [
-          testCase "returns the number of users" test_getUserStats_returnsTheUserCount
-        ]
+{-    , testGroup "getUserStats" [
+          testCase "returns the number of users" $ test_getUserStats_returnsTheUserCount conn
+        ]-}
     , testGroup "getAllUsers" [
-          testCase "returns all the users" test_getAllUsers_returnsAllUsers
+          testCase "returns all the users" $ test_getAllUsers_returnsAllUsers conn
         ]
     , testGroup "setUserPassword" [
-          testCase "password is successfully set" test_setUserPassword_changesPassword
+          testCase "password is successfully set" $ test_setUserPassword_changesPassword conn
         ]
     , testGroup "addUser" [
-          testCase "adding a repeated email returns nothing" test_addUser_repeatedEmailReturnsNothing
+          testCase "adding a repeated email returns nothing" $ test_addUser_repeatedEmailReturnsNothing conn
         ]
     ]
 
-test_getUserByEmail_returnsNothing :: Assertion
-test_getUserByEmail_returnsNothing = withTestState $ do
-    queriedUser <- query $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
+test_getUserByEmail_returnsNothing :: Connection -> Assertion
+test_getUserByEmail_returnsNothing conn = withTestEnvironment conn $ do
+    queriedUser <- dbQuery $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
     assert (isNothing queriedUser)
 
-test_getUserByEmail_returnsTheRightUser :: Assertion
-test_getUserByEmail_returnsTheRightUser = withTestState $ do
+test_getUserByEmail_returnsTheRightUser :: Connection -> Assertion
+test_getUserByEmail_returnsTheRightUser conn = withTestEnvironment conn $ do
     Just user <- addNewUser "Emily" "Green" "emily@green.com"
-    queriedUser <- query $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
+    queriedUser <- dbQuery $ GetUserByEmail Nothing (Email $ BS.fromString "emily@green.com")
     assert (isJust queriedUser) 
     assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
 
-test_getUserByUserID_returnsNothing :: Assertion
-test_getUserByUserID_returnsNothing = withTestState $ do
-    queriedUser <- query $ GetUserByUserID (UserID 100)
+test_getUserByUserID_returnsNothing :: Connection -> Assertion
+test_getUserByUserID_returnsNothing conn = withTestEnvironment conn $ do
+    queriedUser <- dbQuery $ GetUserByID (UserID 100)
     assert (isNothing queriedUser)
 
-test_getUserByUserID_returnsTheRightUser :: Assertion
-test_getUserByUserID_returnsTheRightUser = withTestState $ do
+test_getUserByUserID_returnsTheRightUser :: Connection -> Assertion
+test_getUserByUserID_returnsTheRightUser conn = withTestEnvironment conn $ do
     Just user <- addNewUser "Emily" "Green" "emiy@green.com"
-    queriedUser <- query $ GetUserByUserID (userid user)
+    queriedUser <- dbQuery $ GetUserByID $ userid user
     assert (isJust queriedUser)
     assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
-test_getUserStats_returnsTheUserCount :: Assertion
-test_getUserStats_returnsTheUserCount = withTestState $ do
-    Just _ <- addNewUser "Emily" "Green" "emily@green.com"
-    Just _ <- addNewUser "Bob" "Blue" "bob@blue.com"
-    queriedStats <- query $ GetUserStats
-    assertEqual "For GetUserStats" 2 (usercount queriedStats)
+{-test_getUserStats_returnsTheUserCount :: Connection -> Assertion
+test_getUserStats_returnsTheUserCount conn = withTestState $ do
+    Just _ <- addNewUser conn "Emily" "Green" "emily@green.com"
+    Just _ <- addNewUser conn "Bob" "Blue" "bob@blue.com"
+    queriedStats <- ioRunDB conn $ dbQuery GetUserStats
+    assertEqual "For GetUserStats" 2 (usercount queriedStats)-}
 
-test_getAllUsers_returnsAllUsers :: Assertion
-test_getAllUsers_returnsAllUsers = withTestState $ do
+test_getAllUsers_returnsAllUsers :: Connection -> Assertion
+test_getAllUsers_returnsAllUsers conn = withTestEnvironment conn $ do
     Just user0 <- addNewUser "Emily" "Green" "emily@green.com"
     Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
-    queriedUsers <- query $ GetAllUsers
-    assertEqual "For GetAllUsers result" 2 (length queriedUsers)
+    queriedUsers <- dbQuery GetUsers
+    assertEqual "For GetUsers result" 2 (length queriedUsers)
     assert $ user0 `elem` queriedUsers
     assert $ user1 `elem` queriedUsers
 
-test_setUserPassword_changesPassword :: Assertion
-test_setUserPassword_changesPassword = withTestState $ do
+test_setUserPassword_changesPassword :: Connection -> Assertion
+test_setUserPassword_changesPassword conn = withTestEnvironment conn $ do
     Just user <- addNewUser "Emily" "Green" "emily@green.com"
-    passwordhash <- (createPassword (BS.fromString "Secret Password!"))
-    _ <- update $ SetUserPassword (userid user) passwordhash
-    queriedUser <- query $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
+    passwordhash <- createPassword (BS.fromString "Secret Password!")
+    _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+    queriedUser <- dbQuery $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
     assert $ verifyPassword (userpassword (fromJust queriedUser)) (BS.fromString "Secret Password!")
 
-test_addUser_repeatedEmailReturnsNothing :: Assertion
-test_addUser_repeatedEmailReturnsNothing = withTestState $ do
+test_addUser_repeatedEmailReturnsNothing :: Connection -> Assertion
+test_addUser_repeatedEmailReturnsNothing conn = withTestEnvironment conn $ do
     Just _ <- addNewUser "Emily" "Green" "emily@green.com"
     result <- addNewUser "Emily" "Green Again" "emily@green.com"
     assert (isNothing result)
-
-addNewUser :: String -> String -> String -> IO (Maybe User)
-addNewUser firstname secondname email = do
-    muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname)(BS.fromString email) NoPassword False Nothing Nothing defaultValue
-    return muser

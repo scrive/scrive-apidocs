@@ -25,6 +25,7 @@ module MinutesTime
        , toUTCTime
        ) where
 
+import Control.Monad.IO.Class
 import Data.Data
 import Data.Time
 import Happstack.Data
@@ -33,6 +34,8 @@ import System.IO.Unsafe
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime)
 import qualified System.Time as System.Time (toUTCTime, toClockTime)
+
+import DB.Derive
 
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
@@ -48,6 +51,7 @@ data MinutesTime1 = MinutesTime1
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 newtype MinutesTime = MinutesTime { _unMinutesTime :: Int }
     deriving (Eq, Ord, Typeable, Data)
+$(newtypeDeriveConvertible ''MinutesTime)
 
 instance Version MinutesTime0
 $(deriveSerialize ''MinutesTime0)
@@ -119,8 +123,8 @@ showDateAbbrev current time
                  ct = unsafePerformIO $ toCalendarTime $ toClockTime time
 
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
-getMinutesTime :: IO MinutesTime
-getMinutesTime = (return . fromClockTime) =<< getClockTime
+getMinutesTime :: MonadIO m => m MinutesTime
+getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
 
 -- | Get event time as 'MinutesTime'. Warning: server should work in UTC time.
 --

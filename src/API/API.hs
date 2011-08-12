@@ -52,9 +52,10 @@ import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
 import Data.Ratio
+import DB.Classes
 import Templates.Templates
 import qualified Data.ByteString.Base64 as BASE64
-import qualified AppLogger as Log (debug)
+import qualified AppLogger as Log
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
@@ -63,6 +64,10 @@ type APIRequestBody = JSValue
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
 newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+
+instance (APIContext c, Kontrakcja m) => DBMonad (APIFunction m c) where
+    getConnection = liftKontra getConnection
+    handleDBError e = throwApiError API_ERROR_OTHER $ "DB error: " ++ show e
 
 instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
     getTemplates = liftKontra getTemplates

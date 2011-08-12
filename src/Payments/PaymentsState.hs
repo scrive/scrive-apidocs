@@ -62,6 +62,7 @@ import Misc (allValues, mkTypeOf)
 import MinutesTime
 import Data.Maybe
 import Data.Data
+import DB.Derive
 
 -- | Mail model for payments account
 data PaymentAccountModel = PaymentAccountModel {
@@ -149,8 +150,7 @@ data UserPaymentAccount = UserPaymentAccount {
       }
     deriving (Eq, Ord, Show, Read, Typeable)
 
-
-
+$(enumDeriveConvertible ''PaymentAccountType)
 
 $(deriveSerialize ''PaymentAccountModel)
 instance Version (PaymentAccountModel)

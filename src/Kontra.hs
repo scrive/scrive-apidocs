@@ -1,7 +1,5 @@
 module Kontra
-    ( module User.UserState
-    , module User.Password
-    , Context(..)
+    ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
     , isSuperUser
@@ -24,13 +22,15 @@ module Kontra
     )
     where
 
-import API.Service.ServiceState
+import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Monad.Reader
 import Control.Monad.State
+import DB.Classes
+import DB.Types
 import Doc.DocState
 import ELegitimation.ELeg
 import Happstack.Server
@@ -40,8 +40,7 @@ import KontraMonad
 import Mails.SendMail
 import Misc
 import Templates.Templates
-import User.Password hiding (Password, NoPassword)
-import User.UserState
+import User.Model
 import Util.HasSomeUserInfo
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
@@ -50,6 +49,10 @@ newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
 
 instance Kontrakcja Kontra
+
+instance DBMonad Kontra where
+  getConnection = ctxdbconn <$> getContext
+  handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
 
 instance KontraMonad Kontra where
     getContext    = Kontra get

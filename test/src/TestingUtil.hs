@@ -2,29 +2,36 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Test.HUnit (assertFailure, Assertion, assertBool)
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
+import Control.Applicative
 import System.Random
 import Test.QuickCheck
+import Happstack.Server
 import Happstack.State
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
+import Database.HDBC.PostgreSQL
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
+import qualified Test.HUnit as T
 
-import Company.CompanyState
+import API.API
+import DB.Classes
+import DB.Types
+import Company.Model
+import FlashMessage
 import qualified AppLogger as Log
 import StateHelper
 import Mails.MailsUtil
 import Doc.DocState
+import KontraMonad
 import MinutesTime
-import User.UserState
+import User.Model
 import Misc
-import Payments.PaymentsState as Payments
-import API.Service.ServiceState
+import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocInfo
@@ -55,12 +62,7 @@ instance Arbitrary ExternalCompanyID where
   arbitrary = do
     a <- arbitrary
     return $ ExternalCompanyID a
-  
-instance Arbitrary CompanyUser where
-  arbitrary = do
-    a <- arbitrary
-    return $ CompanyUser a
-  
+
 instance Arbitrary CompanyInfo where
   arbitrary = do
     a <- arbitrary
@@ -121,22 +123,21 @@ instance Arbitrary DocumentUI where
 -}
 class ExtendWithRandomnes a where
     moreRandom :: a -> Gen a
-    extendRandomness ::  a -> IO a
+    extendRandomness :: MonadIO m => a -> m a
     extendRandomness a = do
-          stdgen <- newStdGen
+          stdgen <- liftIO newStdGen
           return $ unGen (moreRandom a) stdgen 10
 
-        
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = do
         ofields <- arbitrary
         return $ sl {signatoryotherfields = ofields}
-    
+
 instance Arbitrary SignatoryLinkID where
   arbitrary = do
     si <- arbitrary
     return $ SignatoryLinkID si
-    
+
 instance Arbitrary SignatoryLink where
   arbitrary = do
     (slid, sd, mh) <- arbitrary
@@ -182,20 +183,6 @@ instance Arbitrary SignatureInfo where
                            , signaturelstnameverified = f
                            , signaturepersnumverified = g
                            }
-
-do100Times' :: IO (Maybe Assertion) -> IO ()
-do100Times' action = doTimes 100 action
-             
-doTimes :: Int -> IO (Maybe Assertion) -> IO ()
-doTimes i action 
-  | i == 0 = return ()
-  | otherwise = do
-    res <- action
-    case res of
-      Nothing -> doTimes i action
-      Just ass -> do
-        _ <- ass
-        doTimes (i - 1) action
 
 instance Arbitrary CSVUpload where
   arbitrary = do
@@ -289,13 +276,13 @@ instance Arbitrary FieldDefinition where
                                fieldplacements = [],
                                fieldfilledbyauthor = filledByAuthor
                              }
-                      
+
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
-  
+
 instance Arbitrary DocumentFunctionality where
   arbitrary = elements [BasicFunctionality, AdvancedFunctionality]
-  
+
 instance Arbitrary IdentificationType where
   arbitrary = elements [EmailIdentification, ELegitimationIdentification]
 
@@ -303,21 +290,13 @@ instance Arbitrary UserInfo where
   arbitrary = do
     fn <- arbitrary
     ln <- arbitrary
-    cn <- arbitrary
     pn <- arbitrary
-    cm <- arbitrary
     em <- arbEmail
 
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyname     = cn
                       , usercompanyposition = ""
-                      , usercompanynumber   = cm
-                      , useraddress         = ""
-                      , userzip             = ""
-                      , usercity            = ""
-                      , usercountry         = ""
                       , userphone           = ""
                       , usermobile          = ""
                       , useremail           = Email em
@@ -343,49 +322,27 @@ arbEmail = do
 blankUser :: User
 blankUser = User {  
                    userid                  =  UserID 0
-                 , userpassword            =  NoPassword
-                 , usersupervisor          =  Nothing 
+                 , userpassword            =  Nothing
                  , useriscompanyadmin = False
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
-                 , userfreetrialexpirationdate = Nothing
                  , usersignupmethod = AccountRequest
                  , userinfo = UserInfo {
                                     userfstname = BS.empty
                                   , usersndname = BS.empty
                                   , userpersonalnumber = BS.empty
-                                  , usercompanyname =  BS.empty
                                   , usercompanyposition =  BS.empty
-                                  , usercompanynumber  =  BS.empty
-                                  , useraddress =  BS.empty
-                                  , userzip = BS.empty
-                                  , usercity  = BS.empty
-                                  , usercountry = BS.empty
                                   , userphone = BS.empty
                                   , usermobile = BS.empty
                                   , useremail =  Email BS.empty 
                                    }
                 , usersettings  = UserSettings {
-                                    accounttype = PrivateAccount
-                                  , accountplan = Basic
-                                  , signeddocstorage = Nothing
-                                  , userpaymentmethod = Undefined
-                                  , preferreddesignmode = Nothing
+                                    preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
                                   , systemserver = Misc.defaultValue
-                                  }                   
-                , userpaymentpolicy = Payments.initialPaymentPolicy
-                , userpaymentaccount = Payments.emptyPaymentAccount
-              , userfriends = []
-              , userinviteinfo = Nothing
-              , userlogininfo = LoginInfo
-                                { lastsuccesstime = Nothing
-                                , lastfailtime = Nothing
-                                , consecutivefails = 0
-                                }
+                                  }
               , userservice = Nothing
               , usercompany = Nothing
-              , usermailapi = Nothing
               , userdeleted = False
               }
 
@@ -423,25 +380,18 @@ blankDocument =
           }
 
 
-testThat :: String -> Assertion -> Test
-testThat s a = testCase s (withTestState a)
+testThat :: String -> Connection -> DB () -> Test
+testThat s conn a = testCase s (withTestEnvironment conn a)
 
-assertSuccess :: Assertion
-assertSuccess = assertBool "not success?!" True
+addNewUser :: String -> String -> String -> DB (Maybe User)
+addNewUser firstname secondname email =
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
 
-addNewUser :: String -> String -> String -> IO (Maybe User)
-addNewUser firstname secondname email = 
-  update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword False Nothing Nothing defaultValue
-
-whatTimeIsIt :: IO (MinutesTime)
-whatTimeIsIt = liftIO $ getMinutesTime
-
-      
-addNewRandomUser :: IO (User)
+addNewRandomUser :: DB User
 addNewRandomUser = do
-  fn <- rand 10 $ arbString 3 30
-  ln <- rand 10 $ arbString 3 30
-  em <- rand 10 arbEmail
+  fn <- liftIO $ rand 10 $ arbString 3 30
+  ln <- liftIO $ rand 10 $ arbString 3 30
+  em <- liftIO $ rand 10 arbEmail
   muser <- addNewUser fn ln (BS.toString em)
   case muser of
     Just user -> return user
@@ -467,9 +417,9 @@ emptySignatoryDetails = SignatoryDetails
     , signatoryotherfields              = []
     }
 
-addRandomDocumentWithAuthor :: User -> IO DocumentID
+addRandomDocumentWithAuthor :: User -> DB DocumentID
 addRandomDocumentWithAuthor user = do
-  rs <- rand 10 arbitrary
+  rs <- liftIO $ rand 10 arbitrary
   let roles = SignatoryAuthor : rs
   doc <- rand 10 arbitrary
   slsab <- rand 10 arbitrary
@@ -480,7 +430,7 @@ addRandomDocumentWithAuthor user = do
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
-    Just cid -> query $ GetCompany cid
+    Just cid -> dbQuery $ GetCompany cid
   
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
@@ -489,16 +439,16 @@ addRandomDocumentWithAuthor user = do
                  }
   update $ StoreDocumentForTesting adoc
 
-addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> IO Document
+addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
 addRandomDocumentWithAuthorAndCondition user p =  do
-  roles <- rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
-  doc <- rand 10 arbitrary
+  roles <- liftIO $ rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+  doc <- liftIO $ rand 10 arbitrary
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
-    Just cid -> query $ GetCompany cid
+    Just cid -> dbQuery $ GetCompany cid
     
-  now <- getMinutesTime
+  now <- liftIO getMinutesTime
   
   (signinfo, seeninfo) <- rand 10 arbitrary
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
@@ -535,9 +485,9 @@ addRandomDocumentWithAuthorAndCondition user p =  do
       --print adoc   
       addRandomDocumentWithAuthorAndCondition user p
 
-rand :: Int -> Gen a -> IO a
+rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do  
-  stdgn <- newStdGen
+  stdgn <- liftIO newStdGen
   return $ unGen a stdgn i
 
 untilCondition :: (Monad m) => (b -> Bool) -> m b -> m b
@@ -545,49 +495,58 @@ untilCondition cond gen = do
   v <- gen
   if cond v then return v else untilCondition cond gen
 
-addRandomDocumentWithAuthor' :: User -> IO Document
+addRandomDocumentWithAuthor' :: User -> DB Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
-  
-invalidateTest :: IO (Maybe Assertion)
+
+doTimes :: Int -> DB (Maybe (DB ())) -> DB ()
+doTimes i action
+  | i == 0 = return ()
+  | otherwise = do
+    res <- action
+    case res of
+      Nothing -> doTimes i action
+      Just ass -> do
+        _ <- ass
+        doTimes (i - 1) action
+
+invalidateTest :: DB (Maybe (DB ()))
 invalidateTest = return Nothing
 
-validTest :: Assertion -> IO (Maybe Assertion)
+validTest :: DB () -> DB (Maybe (DB ()))
 validTest = return . Just
-
-
 
 -- Random gen
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: a -> IO b
+  randomQuery :: MonadIO m => a -> m b
   
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
-    a <- rand 10 arbitrary
+    a <- liftIO $ rand 10 arbitrary
     randomQuery $ f a
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: a -> IO b
+  randomUpdate :: MonadIO m => a -> m b
 
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
-    a <- rand 10 arbitrary
+    a <- liftIO $ rand 10 arbitrary
     randomUpdate $ f a
 
 -- Other functions
 class RandomCallable a b where
-  randomCall :: a -> IO b
+  randomCall :: MonadIO m => a -> m b
 
 instance RandomCallable (IO res) res where
-  randomCall = id
+  randomCall = liftIO
 
 instance (Typeable res) => RandomCallable res res where
   randomCall = return 
@@ -595,24 +554,8 @@ instance (Typeable res) => RandomCallable res res where
 
 instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
   randomCall f = do
-    a <- rand 10 arbitrary
+    a <- liftIO $ rand 10 arbitrary
     randomCall $ f a
-
-assertJust :: Maybe a -> Assertion
-assertJust (Just _) = assertSuccess
-assertJust Nothing = assertFailure "Should have returned Just but returned Nothing"
-
-assertRight :: (Show a) => Either a b -> Assertion
-assertRight (Right _) = assertSuccess
-assertRight (Left a) = assertFailure $ "Should have return Right but returned Left " ++ show a
-
-assertLeft :: Either a b -> Assertion
-assertLeft (Left _) = assertSuccess
-assertLeft _ = assertFailure "Should have returned Left but returned Right"
-
-assertNothing :: Maybe a -> Assertion
-assertNothing Nothing = assertSuccess
-assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
          => Arbitrary (a, b, c, d, e, f, g, h) where
@@ -656,3 +599,60 @@ instance Arbitrary SignInfo where
   arbitrary = do
     (a, b) <- arbitrary
     return $ SignInfo a b
+
+-- our asserts
+
+assertSuccess :: MonadIO m => m ()
+assertSuccess = assertBool "not success?!" True
+
+assertJust :: MonadIO m => Maybe a -> m ()
+assertJust (Just _) = assertSuccess
+assertJust Nothing = assertFailure "Should have returned Just but returned Nothing"
+
+assertRight :: (Show a, MonadIO m) => Either a b -> m ()
+assertRight (Right _) = assertSuccess
+assertRight (Left a) = assertFailure $ "Should have return Right but returned Left " ++ show a
+
+assertLeft :: MonadIO m => Either a b -> m ()
+assertLeft (Left _) = assertSuccess
+assertLeft _ = assertFailure "Should have returned Left but returned Right"
+
+assertNothing :: MonadIO m => Maybe a -> m ()
+assertNothing Nothing = assertSuccess
+assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
+
+-- versions of assert types from Test.HUnit with typeclass constraint for convenience
+
+assert :: (T.Assertable t, MonadIO m) => t -> m ()
+assert = liftIO . T.assert
+
+assertBool :: MonadIO m => String -> Bool -> m ()
+assertBool msg = liftIO . T.assertBool msg
+
+assertEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
+assertEqual msg a = liftIO . T.assertEqual msg a
+
+assertFailure :: MonadIO m => String -> m ()
+assertFailure = liftIO . T.assertFailure
+
+assertString :: MonadIO m => String -> m ()
+assertString = liftIO . T.assertString
+
+assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
+assertionPredicate = liftIO . T.assertionPredicate
+
+-- other helpers
+
+-- | Runs API function and returns its json response
+testAPI :: (APIContext c, Kontrakcja m) => APIFunction m c APIResponse -> m APIResponse
+testAPI f = do
+    methodM POST
+    mcontext <- apiContext
+    case mcontext of
+         Right apictx -> either (uncurry apiError) id <$> runApiFunction f apictx
+         Left emsg -> return $ uncurry apiError emsg
+
+-- | Checks type of flash message
+isFlashOfType :: FlashMessage -> FlashType -> Bool
+isFlashOfType (FlashMessage ft _) t = ft == t
+isFlashOfType (FlashTemplate ft _ _) t = ft == t

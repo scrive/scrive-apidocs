@@ -4,9 +4,8 @@ import Data.Typeable
 import Happstack.State
 import qualified Data.ByteString as BS
 
-import User.UserState
 import Doc.DocStateData
-import API.Service.ServiceState
+import API.Service.Model
 
 data SendGridEventType =
       Processed
@@ -34,7 +33,7 @@ data Mail = Mail
     , mailInfo    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)
 
-
+{-
 data Mail2 = Mail2
     { to2          :: [MailAddress]
     , title2       :: BS.ByteString
@@ -62,6 +61,7 @@ data Mail0 = Mail0 {
     , from0           :: Maybe User
     , mailInfo0       :: MailInfo
     } deriving Typeable
+-}
 
 data MailInfo = Invitation DocumentID SignatoryLinkID
               | None
@@ -69,20 +69,24 @@ data MailInfo = Invitation DocumentID SignatoryLinkID
 
 instance Version SendGridEventType
 
-instance Version Mail0
+{-instance Version Mail0
 instance Version Mail1 where
     mode = extension 1 (Proxy :: Proxy Mail0)
 instance Version Mail2 where
     mode = extension 2 (Proxy :: Proxy Mail1)
-
+    -}
 instance Version Mail where
-    mode = extension 3 (Proxy :: Proxy Mail2)
+    mode = extension 3 (Proxy :: Proxy ())
 
 instance Version MailInfo
 instance Version MailAddress
 
-$(deriveSerializeFor [''SendGridEventType, ''Mail, ''Mail2, ''Mail1, ''Mail0, ''MailAddress, ''MailInfo])
+$(deriveSerializeFor [''SendGridEventType, ''Mail, {-''Mail2, ''Mail1, ''Mail0,-} ''MailAddress, ''MailInfo])
 
+instance Migrate () Mail where
+  migrate () = error "Can't migrate to Mail"
+
+{-
 instance Migrate Mail0 Mail1 where
     migrate Mail0 {
           fullnameemails0
@@ -137,3 +141,4 @@ instance Migrate Mail2 Mail where
                     , from = Nothing
                     , mailInfo = mailInfo2
                     }
+-}

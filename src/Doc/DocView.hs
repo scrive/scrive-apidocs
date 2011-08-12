@@ -72,6 +72,7 @@ module Doc.DocView (
   ) where
 
 import ActionSchedulerState (ActionID)
+import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocState
@@ -88,6 +89,7 @@ import Templates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import User.Model
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
