@@ -91,6 +91,7 @@ newtype Mailer = Mailer { sendMail :: DBMonad m => ActionID -> Mail -> m Bool }
 createSendgridMailer :: MailsConfig -> Mailer
 createSendgridMailer config = Mailer{sendMail = reallySend}
     where
+        reallySend :: DBMonad m => ActionID -> Mail -> m Bool
         reallySend aid mail@Mail{to, title, attachments} = do
             boundaries <- createBoundaries
             wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
@@ -120,6 +121,7 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
 createSendmailMailer :: MailsConfig -> Mailer
 createSendmailMailer config = Mailer{sendMail = reallySend}
     where
+        reallySend :: DBMonad m => ActionID -> Mail -> m Bool
         reallySend aid mail@Mail{title, attachments} = do
             boundaries <- createBoundaries
             wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
@@ -142,6 +144,7 @@ createSendmailMailer config = Mailer{sendMail = reallySend}
 createLocalOpenMailer :: String -> String -> Mailer
 createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = sendToTempFile}
     where
+        sendToTempFile :: DBMonad m => ActionID -> Mail -> m Bool
         sendToTempFile aid mail@Mail{to} = do
             let email' = email $ head to
             tmp <- liftIO getTemporaryDirectory
