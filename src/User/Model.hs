@@ -89,8 +89,8 @@ $(enumDeriveConvertible ''SignupMethod)
 -- data structures
 data InviteInfo = InviteInfo {
     userinviter :: UserID
-  , invitetime  :: Maybe MinutesTime
-  , invitetype  :: Maybe InviteType
+  , invitetime  :: MinutesTime
+  , invitetype  :: InviteType
   } deriving (Eq, Ord, Show)
 
 data User = User {
