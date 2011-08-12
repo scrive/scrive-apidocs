@@ -7,10 +7,12 @@ import Doc.DocInfo
 import Doc.DocUtils
 import Misc
 import Util.HasSomeUserInfo
+import InputValidation
 
 import Data.List
 import Data.Maybe
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 
 listInvariantProblems :: MinutesTime -> [Document] -> [String]
@@ -24,7 +26,7 @@ invariantProblems now document =
 
 {- |
    The invariants we want to test. Each returns Nothing if there is no problem,
-   and Just message to describe a problem.
+    and Just message to describe a problem.
 
    MinutesTime is the current time, in case an invariant depends on age.
  -} 
@@ -46,6 +48,9 @@ documentInvariants = [ documentHasOneAuthor
                      , maxCustomFields
                      , closedWhenAllSigned
                      , hasSignedAttachments
+                     , hasFirstName
+                     , hasLastName
+                     , hasValidEmail
                      ]
 
 {- |
@@ -152,7 +157,7 @@ seenWhenSigned _ document =
  -}
 maxLengthOnFields :: MinutesTime -> Document -> Maybe String
 maxLengthOnFields _ document =
-  let maxlength = 50 
+  let maxlength = 512 
       assertMaxLength s = BS.length s <= maxlength in
   assertInvariant ("some fields were too long. max is " ++ show maxlength) $
     all (\sl -> let sd = signatorydetails sl in
@@ -172,18 +177,20 @@ maxLengthOnFields _ document =
  -}
 maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
-  let maxlength = 20 
-      assertMaxLength l = length l <= maxlength in
-  assertInvariant ("some signatory had too many placements. max is " ++ show maxlength ++ " per field") $
-    all (\sl -> let sd = signatorydetails sl in
-          assertMaxLength (signatoryfstnameplacements sd) &&
-          assertMaxLength (signatorysndnameplacements sd) &&
-          assertMaxLength (signatorycompanyplacements sd) &&
-          assertMaxLength (signatoryemailplacements sd) &&
-          assertMaxLength (signatorypersonalnumberplacements sd) &&
-          assertMaxLength (signatorycompanynumberplacements sd) &&
-          all (assertMaxLength . fieldplacements) (signatoryotherfields sd))
-        (documentsignatorylinks document)
+  let maxlength = 25 * totalfields
+      totalfields = sum (map countplacements (documentsignatorylinks document))
+      countplacements sl =
+        let sd = signatorydetails sl in
+        length (signatoryfstnameplacements sd) +
+        length (signatorysndnameplacements sd) +
+        length (signatorycompanyplacements sd) +
+        length (signatoryemailplacements sd) +
+        length (signatorypersonalnumberplacements sd) +
+        length (signatorycompanynumberplacements sd) +
+        sum (map (length . fieldplacements) (signatoryotherfields sd))
+  in
+   assertInvariant ("document had too many placements. max is " ++ show maxlength ++ " (25 * number of fields)") $
+   totalfields <= maxlength
     
 {- |
    AwaitingAuthor implies Author has not signed
@@ -215,10 +222,36 @@ notSignatoryNotSigned _ document =
  -}
 maxCustomFields :: MinutesTime -> Document -> Maybe String
 maxCustomFields _ document =
-  let maxfields = 20 
+  let maxfields = 250 
       assertMaximum sl = length (signatoryotherfields $ signatorydetails sl) <= maxfields in
   assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
     all assertMaximum (documentsignatorylinks document)
+
+-- the following should work in Pending, Closed, AwaitingAuthor
+
+-- | First Name not null
+hasFirstName :: MinutesTime -> Document -> Maybe String
+hasFirstName _ document =
+  assertInvariant "has a signatory with no first name" $
+    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+                (not $ BS.null $ getFirstName sl))
+        (documentsignatorylinks document)
+
+-- | Last Name not null
+hasLastName :: MinutesTime -> Document -> Maybe String
+hasLastName _ document =
+  assertInvariant "has a signatory with no last name" $
+    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+                (not $ BS.null $ getLastName sl))
+        (documentsignatorylinks document)
+
+-- | Email looks like email
+hasValidEmail :: MinutesTime -> Document -> Maybe String
+hasValidEmail _ document =
+  assertInvariant "has a signatory with invalid email" $
+    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+                (isGood $ asValidEmail $ BS.toString $ getEmail sl))
+        (documentsignatorylinks document)
 
 -- some helpers  
        
