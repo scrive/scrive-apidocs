@@ -121,7 +121,6 @@ data UserMailAPI = UserMailAPI {
     umapiKey          :: MagicHash
   , umapiDailyLimit   :: Int32
   , umapiSentToday    :: Int32
-  , umapiLastSentDate :: Int32
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
@@ -202,18 +201,17 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
 data GetUserMailAPI = GetUserMailAPI UserID
 instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
   dbQuery (GetUserMailAPI uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT key, daily_limit, sent_today, last_sent_date FROM user_mail_apis WHERE user_id = ?"
+    st <- prepare conn "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
     _ <- execute st [toSql uid]
     mapis <- fetchUserMailAPIs st []
     oneObjectReturnedGuard mapis
     where
       fetchUserMailAPIs st acc = fetchRow st >>= maybe (return acc)
-        (\[key, daily_limit, sent_today, last_sent_date
+        (\[key, daily_limit, sent_today
          ] -> fetchUserMailAPIs st $ UserMailAPI {
              umapiKey = fromSql key
            , umapiDailyLimit = fromSql daily_limit
            , umapiSentToday = fromSql sent_today
-           , umapiLastSentDate = fromSql last_sent_date
          } : acc)
 
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
@@ -387,12 +385,11 @@ instance DBUpdate SetUserMailAPI Bool where
                   ++ "  key = ?"
                   ++ ", daily_limit = ?"
                   ++ ", sent_today = ?"
-                  ++ ", last_sent_date = ?"
+                  ++ ", last_sent_date = now()"
                   ++ "  WHERE user_id = ?") [
                     toSql $ umapiKey mailapi
                   , toSql $ umapiDailyLimit mailapi
                   , toSql $ umapiSentToday mailapi
-                  , toSql $ umapiLastSentDate mailapi
                   , toSql uid
                   ]
               Nothing -> do
@@ -401,12 +398,11 @@ instance DBUpdate SetUserMailAPI Bool where
                   ++ ", key"
                   ++ ", daily_limit"
                   ++ ", sent_today"
-                  ++ ", last_sent_date) VALUES (?, ?, ?, ?, ?)") [
+                  ++ ", last_sent_date) VALUES (?, ?, ?, ?, now())") [
                     toSql uid
                   , toSql $ umapiKey mailapi
                   , toSql $ umapiDailyLimit mailapi
                   , toSql $ umapiSentToday mailapi
-                  , toSql $ umapiLastSentDate mailapi
                   ]
             oneRowAffectedGuard r
           Nothing -> do

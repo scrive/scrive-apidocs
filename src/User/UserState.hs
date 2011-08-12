@@ -1618,12 +1618,10 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
         ++ ", key"
         ++ ", daily_limit"
         ++ ", sent_today"
-        ++ ", last_sent_date) VALUES (?, ?, ?, ?, ?)") [
+        ++ ", last_sent_date) VALUES (?, ?, ?, 0, to_timestamp(0))") [
           toSql $ userid u
         , toSql $ umapiKey mailapi
         , toSql $ umapiDailyLimit mailapi
-        , toSql $ umapiSentToday mailapi
-        , toSql $ umapiLastSentDate mailapi
         ]
       return ()
     return ()

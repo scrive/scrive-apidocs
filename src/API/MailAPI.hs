@@ -30,7 +30,6 @@ import qualified Data.ByteString.UTF8 as BS
 
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
-import MinutesTime
 import API.API
 import API.APICommons
 
@@ -167,22 +166,11 @@ handleMailCommand = do
              , (True,                         Signable Contract)
              ]
 
-    today <- fromIntegral . asInt <$> liftIO getMinutesTime
-    if today == umapiLastSentDate mailapi
-       then do
-           when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
-               fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
-           let senttoday = umapiSentToday mailapi + 1
-           _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
-               umapiSentToday = senttoday
-           }
-           return ()
-       else do
-           _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
-                 umapiLastSentDate = today
-               , umapiSentToday = 1
-           }
-           return ()
+    when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
+        fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
+    _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
+        umapiSentToday = umapiSentToday mailapi + 1
+    }
 
     (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP

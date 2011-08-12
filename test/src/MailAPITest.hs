@@ -19,7 +19,6 @@ import API.MailAPI
 import DB.Classes
 import Context
 import Doc.DocState
-import MinutesTime
 import Misc
 import StateHelper
 import User.Model
@@ -44,7 +43,6 @@ testSuccessfulDocCreation conn = withMyTestEnvironment conn $ \tmpdir -> do
           umapiKey = read "ef545848bcd3f7d8"
         , umapiDailyLimit = 1
         , umapiSentToday = 0
-        , umapiLastSentDate = fromIntegral . asInt $ ctxtime ctx
     }
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
     wrapDB rollback

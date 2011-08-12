@@ -126,22 +126,7 @@ getCompanyInfoUpdate = do
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    mapi <- runDB $ dbQuery (GetUserMailAPI userid)
-      >>= \mapi -> case mapi of
-        Nothing -> return mapi
-        Just api -> do
-          today <- fromIntegral . asInt <$> liftIO getMinutesTime
-          if today /= umapiLastSentDate api
-             then do
-               let mnewapi = Just api {
-                   umapiLastSentDate = today
-                 , umapiSentToday = 0
-               }
-               api_updated <- dbUpdate $ SetUserMailAPI userid mnewapi
-               if api_updated
-                  then return mnewapi
-                  else return Nothing
-             else return mapi
+    mapi <- runDBQuery $ GetUserMailAPI userid
     showUserMailAPI user mapi >>= renderFromBody TopAccount kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
@@ -154,12 +139,10 @@ handlePostUserMailAPI = withUserPost $ do
              Nothing -> do
                  when enabledapi $ do
                      apikey <- liftIO randomIO
-                     today <- fromIntegral . asInt <$> liftIO getMinutesTime
                      _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
                            umapiKey = apikey
                          , umapiDailyLimit = 50
                          , umapiSentToday = 0
-                         , umapiLastSentDate = today
                      }
                      return ()
              Just api -> do

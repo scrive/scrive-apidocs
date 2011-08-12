@@ -80,14 +80,14 @@ tableUserMailAPIs = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("key", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("daily_limit", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("sent_today", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("last_sent_date", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})] -> return TVRvalid
+      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("key", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("daily_limit", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("sent_today", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("last_sent_date", SqlColDesc {colType = SqlDateT, colNullable = Just False})] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE user_mail_apis ("
           ++ "  user_id BIGINT NOT NULL"
           ++ ", key BIGINT NOT NULL"
           ++ ", daily_limit INTEGER NOT NULL"
           ++ ", sent_today INTEGER NOT NULL"
-          ++ ", last_sent_date INTEGER NOT NULL"
+          ++ ", last_sent_date DATE NOT NULL"
           ++ ", CONSTRAINT pk_user_mail_apis PRIMARY KEY (user_id)"
           ++ ")"
         return TVRcreated

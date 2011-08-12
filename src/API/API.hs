@@ -67,9 +67,7 @@ newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m
 
 instance (APIContext c, Kontrakcja m) => DBMonad (APIFunction m c) where
     getConnection = liftKontra getConnection
-    handleDBError e = do
-      Log.error $ show e
-      throwApiError API_ERROR_OTHER "Database problem"
+    handleDBError e = throwApiError API_ERROR_OTHER $ "DB error: " ++ show e
 
 instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
     getTemplates = liftKontra getTemplates
