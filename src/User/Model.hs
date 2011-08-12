@@ -39,8 +39,6 @@ module User.Model (
   , SetUserSettings(..)
   , SetPreferredDesignMode(..)
   , SetUserPaymentAccountType(..)
-  , RecordFailedLogin(..)
-  , RecordSuccessfulLogin(..)
   , AddViewerByEmail(..)
   , AcceptTermsOfService(..)
   , SetFreeTrialExpirationDate(..)
@@ -533,30 +531,6 @@ instance DBUpdate SetUserPaymentAccountType Bool where
       ++ " account_type = ?"
       ++ " WHERE user_id = ?") [
         toSql paymentacctype
-      , toSql uid
-      ]
-    oneRowAffectedGuard r
-
-data RecordFailedLogin = RecordFailedLogin UserID MinutesTime
-instance DBUpdate RecordFailedLogin Bool where
-  dbUpdate (RecordFailedLogin uid time) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE user_login_infos SET"
-      ++ "  last_fail = to_timestamp(?)"
-      ++ ", consecutive_fails = consecutive_fails + 1"
-      ++ "  WHERE user_id = ?") [
-        toSql time
-      , toSql uid
-      ]
-    oneRowAffectedGuard r
-
-data RecordSuccessfulLogin = RecordSuccessfulLogin UserID MinutesTime
-instance DBUpdate RecordSuccessfulLogin Bool where
-  dbUpdate (RecordSuccessfulLogin uid time) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE user_login_infos SET"
-      ++ "  last_success = to_timestamp(?)"
-      ++ ", consecutive_fails = 0"
-      ++ "  WHERE user_id = ?") [
-        toSql time
       , toSql uid
       ]
     oneRowAffectedGuard r

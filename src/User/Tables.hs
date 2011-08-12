@@ -142,29 +142,6 @@ tableUserInviteInfos = Table {
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
   }
 
-tableUserLoginInfos :: Table
-tableUserLoginInfos = Table {
-    tblName = "user_login_infos"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("last_success", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("last_fail", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("consecutive_fails", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})] -> return TVRvalid
-      [] -> do
-        runRaw conn $ "CREATE TABLE user_login_infos ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", last_success TIMESTAMPTZ NULL"
-          ++ ", last_fail TIMESTAMPTZ NULL"
-          ++ ", consecutive_fails INTEGER NOT NULL"
-          ++ ", CONSTRAINT pk_user_login_infos PRIMARY KEY (user_id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE user_login_infos"
-      ++ " ADD CONSTRAINT fk_user_login_infos_users FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
-  }
-
 tableUserSettings :: Table
 tableUserSettings = Table {
     tblName = "user_settings"

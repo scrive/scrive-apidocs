@@ -30,7 +30,6 @@ tablesList = [
   , tableUserInfos
   , tableUserMailAPIs
   , tableUserInviteInfos
-  , tableUserLoginInfos
   , tableUserSettings
   , tableTrustWeaverStorages
   , tableUserPaymentPolicies

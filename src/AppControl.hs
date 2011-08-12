@@ -669,17 +669,13 @@ handleLoginPost = do
             Log.debug $ "Logging " ++ show email
             maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
-                Just User{ userid, userpassword }
+                Just User{userpassword}
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "Logging: User logged in"
                         logUserToContext maybeuser
-                        time <- liftIO getMinutesTime
-                        _ <- runDBUpdate $ RecordSuccessfulLogin userid time
                         return BackToReferer
-                Just User{userid } -> do
+                Just _ -> do
                         Log.debug $ "Logging: User found, Not verified password"
-                        time <- liftIO getMinutesTime
-                        _ <- runDBUpdate $ RecordFailedLogin userid time
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "Logging: No user matching the email found"  
