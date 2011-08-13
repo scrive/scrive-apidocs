@@ -389,9 +389,9 @@ addNewUser firstname secondname email =
 
 addNewRandomUser :: DB User
 addNewRandomUser = do
-  fn <- liftIO $ rand 10 $ arbString 3 30
-  ln <- liftIO $ rand 10 $ arbString 3 30
-  em <- liftIO $ rand 10 arbEmail
+  fn <- rand 10 $ arbString 3 30
+  ln <- rand 10 $ arbString 3 30
+  em <- rand 10 arbEmail
   muser <- addNewUser fn ln (BS.toString em)
   case muser of
     Just user -> return user
@@ -419,7 +419,7 @@ emptySignatoryDetails = SignatoryDetails
 
 addRandomDocumentWithAuthor :: User -> DB DocumentID
 addRandomDocumentWithAuthor user = do
-  rs <- liftIO $ rand 10 arbitrary
+  rs <- rand 10 arbitrary
   let roles = SignatoryAuthor : rs
   doc <- rand 10 arbitrary
   slsab <- rand 10 arbitrary
@@ -441,8 +441,8 @@ addRandomDocumentWithAuthor user = do
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
 addRandomDocumentWithAuthorAndCondition user p =  do
-  roles <- liftIO $ rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
-  doc <- liftIO $ rand 10 arbitrary
+  roles <- rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+  doc <- rand 10 arbitrary
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
@@ -526,7 +526,7 @@ instance (QueryEvent ev res) => RandomQuery ev res where
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
-    a <- liftIO $ rand 10 arbitrary
+    a <- rand 10 arbitrary
     randomQuery $ f a
 
 --Random update
@@ -538,7 +538,7 @@ instance (UpdateEvent ev res) => RandomUpdate ev res where
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
-    a <- liftIO $ rand 10 arbitrary
+    a <- rand 10 arbitrary
     randomUpdate $ f a
 
 -- Other functions
@@ -554,7 +554,7 @@ instance (Typeable res) => RandomCallable res res where
 
 instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
   randomCall f = do
-    a <- liftIO $ rand 10 arbitrary
+    a <- rand 10 arbitrary
     randomCall $ f a
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 

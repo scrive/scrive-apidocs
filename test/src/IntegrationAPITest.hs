@@ -1,7 +1,6 @@
 module IntegrationAPITest (integrationAPITests) where
 
 import Control.Applicative
-import Control.Monad.IO.Class
 import Happstack.Server
 import Test.HUnit (Assertion)
 import Test.Framework
@@ -78,7 +77,7 @@ testDocumentAccessEmbeddedPage conn = withTestEnvironment conn $ do
 
 -- Requests body 
 createDocumentJSON :: String -> String -> DB JSValue
-createDocumentJSON company author = liftIO $ randomCall $ \title fname sname -> JSObject $ toJSObject $
+createDocumentJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString  title)
          ,("type" , JSRational True (1%1))
@@ -91,13 +90,13 @@ createDocumentJSON company author = liftIO $ randomCall $ \title fname sname -> 
         )]
 
 getDocumentsJSON :: String -> String -> DB JSValue
-getDocumentsJSON company email = liftIO $ randomCall $ JSObject $ toJSObject $
+getDocumentsJSON company email = randomCall $ JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("email" , JSString $ toJSString  email)
         ]
 
 getEmbedDocumentaJSON :: String -> String -> String -> DB JSValue
-getEmbedDocumentaJSON  documentid company email = liftIO $ randomCall $ JSObject $ toJSObject $
+getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSObject $
         [ ("document_id", JSString $ toJSString documentid)
          ,("company_id", JSString $ toJSString company)
          ,("email" , JSString $ toJSString  email)
