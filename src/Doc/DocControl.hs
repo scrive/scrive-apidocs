@@ -1761,7 +1761,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
       ctx@Context { ctxmaybeuser = Just user } <- getContext
       edoc <- getDocByDocID docid
       case edoc of
-        Left _ -> return LinkMain
+        Left _ -> return LoopBack
         Right doc -> do
           guard $ isAuthor (doc, user)
           muser <- query $ GetUserByEmail (documentservice doc) (Email email)
@@ -1771,9 +1771,9 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
               -- get (updated) siglink from updated document
               sl <- guardJust (getSigLinkFor newdoc slid)
               sendInvitationEmail1 ctx newdoc sl
-              return $ LinkIssueDoc $ docid
-            _ -> return LinkMain
-    _ -> return LinkMain
+              return $ LoopBack
+            _ -> return LoopBack
+    _ -> return LoopBack
 
 sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
 sendCancelMailsForDocument customMessage ctx document = do
@@ -2053,7 +2053,6 @@ jsonDocument did = do
     rsp <- case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
          Just doc -> JSObject <$> documentJSON msiglink cttime doc
-    liftIO $ putStrLn $ show rsp
     return rsp
     
                       
@@ -2070,4 +2069,29 @@ handleInvariantViolations = onlySuperUser $ do
         [] -> "No problems!"
         _  -> intercalate "\n" probs
   return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
+
+
+
+prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+prepareEmailPreview docid slid = do
+    ctx <- getContext
+    mailtype <- getFieldWithDefault "" "mailtype"
+    mdoc <- query $ GetDocumentByDocumentID docid
+    when (isNothing mdoc) mzero
+    let doc = fromJust mdoc
+    content <- case mailtype of
+         "cancel" -> mailCancelDocumentByAuthorContent True Nothing ctx doc
+         "remind" -> do
+             let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
+             case msl of
+               Just sl -> mailDocumentRemindContent  Nothing ctx doc sl
+               Nothing -> return ""
+         "reject" -> do
+             let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
+             case msl of
+               Just sl -> mailRejectMailContent Nothing ctx  BS.empty doc sl
+               Nothing -> return ""
+         _ -> return ""
+    return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]
+    
 

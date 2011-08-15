@@ -80,5 +80,15 @@ javascriptLocalisation =
              , attachment : "$_Attachment()$"
              , attachments : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
+             , send : "$_send()$"
+             , signatoryMessage : {
+                         datamismatch :"$_signatoryMessageIfSignatoryDatamismatch()$"
+                       , timedout : "$_signatoryMessageIfTimedout()$"
+                       , rejected : "$_signatoryMessageIfSignatoryRejecteddate()$"
+                       , seen : "_signatoryMessageIfSignatorySeendate()"
+                       , read : "_signatoryMessageIfSignatoryReaddate()"
+                       , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
+                       , other : "$_signatoryMessageIfElse()$"   
+                    }
    }
 ####
