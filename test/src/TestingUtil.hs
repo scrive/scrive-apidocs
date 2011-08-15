@@ -440,15 +440,18 @@ addRandomDocumentWithAuthor user = do
                  }
   update $ StoreDocumentForTesting adoc
 
-getRandomAuthorRoles stdgen doc =
+getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
+getRandomAuthorRoles doc =
+  rand 10000 (elements $ getPossibleAuthorRoles doc)
+
+getPossibleAuthorRoles :: Document -> [[SignatoryRole]]
+getPossibleAuthorRoles doc = [SignatoryAuthor] :
   case getValueForProcess doc processauthorsend of
-    Just True -> [SignatoryAuthor]
-    _ ->  let possibleroles = [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
-          in rand 10000 (elements possibleroles)
+    Just True -> []
+    _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
 addRandomDocumentWithAuthorAndCondition user p =  do
-  roles <- rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
   doc <- rand 10 arbitrary
   roles <- getRandomAuthorRoles doc
   

@@ -216,10 +216,12 @@ handleUserChange a = onlySuperUser $
                                            -- the admin of it
                                            user <- case (mupgradetocompany, usercompany userbeforeupgrade) of
                                                      (Just upgradeval, Nothing) | (toString upgradeval) == "on" -> do
-                                                       company <- update $ CreateNewCompany
-                                                       Right upgradeduser' <- update $ SetUserCompany (userid userbeforeupgrade) (companyid company)
-                                                       Right upgradeduser <- update $ MakeUserACompanyAdmin (userid upgradeduser')
-                                                       return upgradeduser
+                                                       runDB $ do
+                                                         company <- dbUpdate $ CreateCompany Nothing Nothing
+                                                         _ <- dbUpdate $ SetUserCompany userId (companyid company)
+                                                         _ <- dbUpdate $ MakeUserCompanyAdmin userId
+                                                         upgradeduser <- runDBOrFail . runDBQuery $ GetUserByID userId
+                                                         return upgradeduser
                                                      _ -> return userbeforeupgrade
                                            --Reading changes from params using dedicated functions for each user part
                                            --freetrialexpirationdate <- join . (fmap parseMinutesTimeDMY) <$> getField "freetrialexpirationdate"

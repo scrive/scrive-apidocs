@@ -49,13 +49,10 @@ documentInvariants = [ documentHasOneAuthor
                      , maxCustomFields
                      , closedWhenAllSigned
                      , hasSignedAttachments
-<<<<<<< HEAD
                      , sendOnlyProcessesDontHaveAuthorsWhoSign
-=======
                      , hasFirstName
                      , hasLastName
                      , hasValidEmail
->>>>>>> b0e2f97d3451f18aacb731e97ee280b05d3141b3
                      ]
 
 {- |
