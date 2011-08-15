@@ -159,10 +159,11 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
   author <- addNewRandomUser
   (mt, a, b, c, d, e, f, g) <- rand 10 arbitrary
   doc <-  addRandomDocumentWithAuthorAndCondition author isPreparation
+  r <- getRandomAuthorRoles doc
 
   let sd = signatoryDetailsFromUser author Nothing
-  -- execute      
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f g
+  -- execute
+  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f g
   --assert
   validTest $ do
     assertRight enewdoc
@@ -175,10 +176,11 @@ testDocumentUpdateCanChangeTitle = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   (mt, a, b, c, d, e, f, g) <- rand 10 arbitrary
+  r <- getRandomAuthorRoles doc
   
   --execute
   let sd = signatoryDetailsFromUser author Nothing
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f g
+  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f g
   --assert
   validTest $ do
     assertRight enewdoc
@@ -263,10 +265,11 @@ testPreparationUpdateDocumentAlwaysRight = doTimes 10 $ do
   
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  r <- getRandomAuthorRoles doc
   let sd = signatoryDetailsFromUser author Nothing
                      
   --execute
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f g
+  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f g
   
   --assert
   validTest $ do

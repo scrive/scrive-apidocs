@@ -464,7 +464,11 @@ updateDocumentSimple did (authordetails,author) signatories = do
    modifySignableOrTemplateWithAction did $ \document ->
         if documentstatus document == Preparation
          then do
-             authorlink0 <- signLinkFromDetails authordetails [SignatoryPartner,SignatoryAuthor]
+             let authorroles = 
+                   case getValueForProcess document processauthorsend of
+                     Just True -> [SignatoryAuthor]
+                     _ -> [SignatoryPartner,SignatoryAuthor]
+             authorlink0 <- signLinkFromDetails authordetails authorroles
              let authorlink = authorlink0 {
                                 maybesignatory = Just $ userid author,
                                 maybecompany = usercompany author

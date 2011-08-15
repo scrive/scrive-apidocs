@@ -28,6 +28,7 @@ import API.Service.ServiceState
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocInfo
+import Doc.DocProcess
 
 instance Arbitrary UserID where
   arbitrary = do
@@ -485,12 +486,23 @@ addRandomDocumentWithAuthor user = do
                  }
   update $ StoreDocumentForTesting adoc
 
+getRandomAuthorRoles :: Document -> IO [SignatoryRole]
+getRandomAuthorRoles doc = do
+  stdgen <- newStdGen
+  return $ getRandomAuthorRoles' stdgen doc
+
+getRandomAuthorRoles' :: StdGen -> Document -> [SignatoryRole]
+getRandomAuthorRoles' stdgen doc =
+  case getValueForProcess doc processauthorsend of
+    Just True -> [SignatoryAuthor]
+    _ ->  let possibleroles = [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
+          in unGen (elements possibleroles) stdgen 10000
+
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> IO Document
 addRandomDocumentWithAuthorAndCondition user p =  do
   stdgen <- newStdGen
-  let roles = unGen (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
-              stdgen 10000
   let doc = unGen arbitrary stdgen 10
+  let roles = getRandomAuthorRoles' stdgen doc
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
