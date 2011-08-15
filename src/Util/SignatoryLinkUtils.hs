@@ -29,12 +29,12 @@ module Util.SignatoryLinkUtils (
   SignatoryLinkIdentity
        ) where
 
-import Company.CompanyState
+import Company.Model
+import DB.Types
 import Doc.DocStateData
 import Mails.MailsUtil
-import User.UserState
+import User.Model
 import Util.HasSomeUserInfo
-import Misc
 
 import Data.List
 import Data.Maybe

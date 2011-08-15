@@ -27,6 +27,7 @@ module Templates.TemplatesLoader
 import Text.StringTemplate
 import Text.StringTemplate.Classes
 import Control.Monad
+import Control.Monad.IO.Class
 import qualified Data.Map as Map
 import Data.Map ((!))
 import AppLogger as Log
@@ -52,9 +53,9 @@ localizedVersion::Localization -> KontrakcjaGlobalTemplates -> KontrakcjaTemplat
 localizedVersion localization mtemplates = mtemplates ! localization
 
 -- Fixme: Make this do only one read of all files !!
-readGlobalTemplates :: IO KontrakcjaGlobalTemplates
+readGlobalTemplates :: (Functor m, MonadIO m) => m KontrakcjaGlobalTemplates
 readGlobalTemplates = fmap Map.fromList $ forM allValues $ \localization -> do
-    templates <- readTemplates $ localization
+    templates <- liftIO $ readTemplates localization
     return (localization,templates)
 
 readTemplates :: Localization -> IO KontrakcjaTemplates

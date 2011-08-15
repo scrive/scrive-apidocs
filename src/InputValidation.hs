@@ -66,6 +66,7 @@ import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
 import Util.FlashUtil
+import User.Model
 import Data.Monoid
 
 {- |
@@ -496,7 +497,7 @@ asValidDaysToSign :: String -> Result Int
 asValidDaysToSign input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= parseAsInt fieldtemplate
+    >>= parseAsNum fieldtemplate
     >>= checkWithinLowerBound 1 fieldtemplate
     >>= checkWithinUpperBound 99 fieldtemplate
     where fieldtemplate = "daysToSignFieldName"
@@ -525,18 +526,18 @@ asValidDocID input =
 -}
 asValidID :: String -> Result BS.ByteString
 asValidID input =
-    asValidNumber input
+  asValidNumber input
     >>= useInput input
-    where useInput :: String -> Int -> Result BS.ByteString
-          useInput xs _ = return $ BS.fromString xs
+  where
+    useInput xs (_::Int) = return $ BS.fromString xs
 
 {- |
-    Parses as a int.
+    Parses as a number.
 -}
-asValidNumber :: String -> Result Int
+asValidNumber :: (Num a, Read a) => String -> Result a
 asValidNumber input =
     checkIfEmpty input
-    >>= parseAsInt fieldtemplate
+    >>= parseAsNum fieldtemplate
     where fieldtemplate = "idFieldName"
 
 {- |
@@ -556,7 +557,7 @@ asValidBool input =
 asValidPlace :: String -> Result Int
 asValidPlace input =
     checkIfEmpty input
-    >>= parseAsInt fieldtemplate
+    >>= parseAsNum fieldtemplate
     >>= checkWithinLowerBound 0 fieldtemplate
     where fieldtemplate = "placeFieldName"
 
@@ -680,10 +681,10 @@ flashMessageNumberAboveMaximum fieldtemplate upperbound =
     flashMessageWithFieldName fieldtemplate "flashMessageNumberAboveMaximum" . Just $ field "max" (show upperbound)
 
 {- |
-    Parses a string as an int
+    Parses a string as a Num
 -}
-parseAsInt :: String -> String -> Result Int
-parseAsInt fieldtemplate xs =
+parseAsNum :: (Num a, Read a) => String -> String -> Result a
+parseAsNum fieldtemplate xs =
     case reads xs of
         (val,[]):[] -> return val
         _ -> Bad $ flashMessageNotAValidInteger fieldtemplate

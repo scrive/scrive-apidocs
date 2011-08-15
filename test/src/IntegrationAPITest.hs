@@ -2,49 +2,50 @@ module IntegrationAPITest (integrationAPITests) where
 
 import Control.Applicative
 import Happstack.Server
-import Happstack.State
-import Test.HUnit hiding (Test)
+import Test.HUnit (Assertion)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import qualified Data.ByteString.Char8 as BS
 import StateHelper
 import Templates.TemplatesLoader
+import TestingUtil
 import TestKontra as T
-import User.Password
-import User.UserState
+import User.Model
 import Misc
 import API.API
-import API.Service.ServiceState
-import API.IntegrationAPI 
+import API.Service.Model
+import API.IntegrationAPI
+import Context
+import DB.Classes
 import Text.JSON
-import TestingUtil
 import Data.Ratio
 import Data.List
+import Database.HDBC.PostgreSQL
 
-integrationAPITests :: Test
-integrationAPITests = testGroup "Integration API" [
-      testCase "Testing if we can create sample document" testDocumentCreation
-    , testCase "Accessing documents created by the API" testDocumentsAccess
-    , testCase "Accessing documents in embedded frame" testDocumentAccessEmbeddedPage
+integrationAPITests :: Connection -> Test
+integrationAPITests conn = testGroup "Integration API" [
+      testCase "Testing if we can create sample document" $ testDocumentCreation conn
+    , testCase "Accessing documents created by the API" $ testDocumentsAccess conn
+    , testCase "Accessing documents in embedded frame" $ testDocumentAccessEmbeddedPage conn
     ]
 
 -- Main tests
 
-testDocumentCreation :: Assertion
-testDocumentCreation = withTestState $ do 
+testDocumentCreation :: Connection -> Assertion
+testDocumentCreation conn = withTestEnvironment conn $ do
     createTestService
     apiReq1 <- createDocumentJSON "test_company1" "mariusz@skrivapa.se"
     apiRes1 <- makeAPIRequest createDocument $ apiReq1
     assertBool ("Failed to create first document :" ++ show apiRes1)  $ not (isError apiRes1)
     apiReq2 <- createDocumentJSON "test_company2" "mariusz@skrivapa.se"
     apiRes2 <- makeAPIRequest createDocument $ apiReq2
-    assertBool ("Failed to create secound document" ++ show apiRes2) $ not (isError apiRes2)
+    assertBool ("Failed to create second document" ++ show apiRes2) $ not (isError apiRes2)
     apiReq3 <- createDocumentJSON "test_company1" "mariusz+1@skrivapa.se"
     apiRes3 <- makeAPIRequest createDocument $ apiReq3
     assertBool ("Failed to create third document" ++ show apiRes3) $ not (isError apiRes3)
 
-testDocumentsAccess :: Assertion
-testDocumentsAccess = withTestState $ do
+testDocumentsAccess :: Connection -> Assertion
+testDocumentsAccess conn = withTestEnvironment conn $ do
     createTestService
     _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se"
     _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se"
@@ -60,8 +61,8 @@ testDocumentsAccess = withTestState $ do
     assertBool ("No document was created for this company but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 0
 
 
-testDocumentAccessEmbeddedPage :: Assertion
-testDocumentAccessEmbeddedPage = withTestState $ do
+testDocumentAccessEmbeddedPage :: Connection -> Assertion
+testDocumentAccessEmbeddedPage conn = withTestEnvironment conn $ do
     createTestService
     docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
     docid2 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se")
@@ -75,8 +76,8 @@ testDocumentAccessEmbeddedPage = withTestState $ do
 
 
 -- Requests body 
-createDocumentJSON :: String -> String -> IO JSValue
-createDocumentJSON company author =  randomCall $ \title fname sname -> JSObject $ toJSObject $
+createDocumentJSON :: String -> String -> DB JSValue
+createDocumentJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString  title)
          ,("type" , JSRational True (1%1))
@@ -86,49 +87,36 @@ createDocumentJSON company author =  randomCall $ \title fname sname -> JSObject
                                       ("email",   JSString $ toJSString author)
                                     ]
                                 ]
-                                
         )]
 
-getDocumentsJSON :: String -> String -> IO JSValue
-getDocumentsJSON company email =  randomCall $ JSObject $ toJSObject $
+getDocumentsJSON :: String -> String -> DB JSValue
+getDocumentsJSON company email = randomCall $ JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("email" , JSString $ toJSString  email)
         ]
 
-
-
-getEmbedDocumentaJSON :: String -> String -> String -> IO JSValue
-getEmbedDocumentaJSON  documentid company email =  randomCall $ JSObject $ toJSObject $
+getEmbedDocumentaJSON :: String -> String -> String -> DB JSValue
+getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSObject $
         [ ("document_id", JSString $ toJSString documentid)
          ,("company_id", JSString $ toJSString company)
          ,("email" , JSString $ toJSString  email)
         ]
 
-
-
 -- Making requests
-makeAPIRequest:: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> IO APIResponse
+makeAPIRequest :: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> DB APIResponse
 makeAPIRequest handler req = do
-    ctx <- mkContext =<<  localizedVersion defaultValue <$> readGlobalTemplates
+    conn <- getConnection
+    ctx <- (\c -> c { ctxdbconn = conn }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
     rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
-    fmap fst $ runTestKontra rq ctx $ do
-        mcontext <- apiContext
-        case mcontext  of
-             Right apictx -> do
-                 res <- either (uncurry apiError) id <$> runApiFunction handler apictx
-                 return res
-             Left emsg -> return $ uncurry apiError emsg
-
+    fmap fst $ runTestKontra rq ctx $ testAPI handler
 
 -- A service to be used with API. We need one to use it.
-createTestService :: IO ()
+createTestService :: DB ()
 createTestService = do
     pwd <- createPassword $ BS.pack "test_password"
-    Just User{userid} <- update $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") pwd False Nothing Nothing defaultValue
-    _ <- update $ CreateService (ServiceID $ BS.pack "test_service") pwd (ServiceAdmin $ unUserID userid)
+    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing defaultValue
+    _ <- dbUpdate $ CreateService (ServiceID $ BS.pack "test_service") (Just pwd) userid
     return ()
-
-
 
 -- Utils
 isError :: JSObject JSValue -> Bool
@@ -153,6 +141,3 @@ getJSONStringField name obj =
     case (getJSONField name obj) of
         Just (JSString s) -> fromJSString s
         _ -> ""
-
-
-

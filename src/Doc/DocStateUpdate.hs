@@ -14,10 +14,10 @@ module Doc.DocStateUpdate
     , shareDocuments
     ) where
 
+import DB.Types
 import DBError
 import Doc.DocState
 import Kontra
-import Misc
 import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
@@ -26,6 +26,7 @@ import Doc.DocStateQuery
 import qualified Data.ByteString as BS
 import Doc.DocUtils
 import Control.Applicative
+import User.Model
 import User.UserControl
 import Control.Monad.Trans
 import Doc.DocStorage

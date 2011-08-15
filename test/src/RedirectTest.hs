@@ -2,13 +2,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module RedirectTest where
 
-import Test.HUnit (assertFailure, Assertion, assertEqual, assertBool)
+import Test.HUnit (Assertion)
 import Test.Framework
-import TestingUtil
 import Redirect
 import Test.Framework.Providers.HUnit (testCase)
 import Control.Monad
---import Control.Monad.Trans
 import Control.Applicative
 import Data.List
 import DBError
@@ -17,6 +15,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import Happstack.Server
 import Context
+import TestingUtil
 import TestKontra as T
 
 redirectTests :: Test
@@ -26,7 +25,7 @@ redirectTests = testGroup "RedirectTests"
                   ,testCase "finishWith if Left DBNotLoggedIn" testDBErrorGuardRedirectLeftDBNotLoggedIn
                   ,testCase "mzero if Left DBResourceNotAvailable" testDBErrorGuardMZeroLeft
                   ]
-                  
+
 testGuardRight :: Assertion
 testGuardRight = withTestState $ do
     ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
@@ -42,7 +41,6 @@ testStringGuardMZeroLeft = withTestState $ do
                                        (return "hello"))
     assertEqual "should be equal" res "hello"
 
-
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
 testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
   ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
@@ -54,7 +52,7 @@ testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
   assertBool "Location starts with /?logging" $ (isPrefixOf "/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
   assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
 --    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
-                
+
 testDBErrorGuardMZeroLeft :: Assertion
 testDBErrorGuardMZeroLeft = withTestState $ do
   ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
@@ -62,7 +60,7 @@ testDBErrorGuardMZeroLeft = withTestState $ do
   (res, _ctx') <- runTestKontra req ctx (mplus (guardRight $ (Left DBResourceNotAvailable))
                                        (return ("hello" :: String)))
   assertEqual "Should be equal" "hello" res
-  
+
 assertMZero :: IO t -> IO ()
 assertMZero action = 
   mplus 
@@ -70,4 +68,3 @@ assertMZero action =
         _ <- action
         assertFailure "did not mzero")
     assertSuccess
-

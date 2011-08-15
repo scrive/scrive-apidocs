@@ -21,7 +21,7 @@ module Util.HasSomeUserInfo (
   ) where
 
 import Doc.DocStateData
-import User.UserState
+import User.Model
 import Mails.MailsData
 
 import Data.Char

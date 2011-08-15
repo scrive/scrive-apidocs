@@ -13,6 +13,8 @@ import qualified AppLogger as Log
 import Control.Monad.State
 import Data.List
 import Data.Maybe
+import DB.Types
+import DB.Classes
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocUtils
@@ -28,6 +30,7 @@ import SOAP.SOAP
 import Templates.Templates
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
+import User.Model
 import User.UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
@@ -412,7 +415,7 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
     case mcancelationreason of
         Just (ELegDataMismatch msg sid _ _ _)
             | sid == signatorylinkid -> do
-                maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
+                maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
                 content1 <- signCanceledDataMismatch document signatorylink (isJust maybeuser) msg
                 renderFromBody TopEmpty kontrakcja content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink

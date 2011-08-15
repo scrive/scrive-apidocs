@@ -2,9 +2,9 @@ module ELegitimation.ELeg where
 
 import Happstack.Data
 
+import DB.Types
 import Doc.DocState
 import MinutesTime
-import Misc
 
 data ELegTransaction = ELegTransaction { transactiontransactionid   :: String
                                        , transactionnonce           :: String

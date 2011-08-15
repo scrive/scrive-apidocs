@@ -24,6 +24,7 @@ module API.IntegrationAPI (
 import Control.Monad.State
 import Data.Functor
 import Data.Maybe
+import DB.Classes
 import Doc.DocState
 import Happstack.Server hiding (simpleHTTP,host,body)
 import Happstack.State (query, update)
@@ -34,16 +35,16 @@ import Session
 import Kontra
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import PayEx.PayExInterface () -- Import so at least we check if it compiles
 import InputValidation
 import Text.JSON
 import Control.Monad.Reader
 import API.API
 import Routing
-import API.Service.ServiceState
+import API.Service.Model
 import API.APICommons
 import Doc.DocUtils
-import Company.CompanyState
+import Company.Model
+import User.Model
 import Data.Foldable (fold)
 import System.Random (randomIO)
 import Util.SignatoryLinkUtils
@@ -80,7 +81,7 @@ instance APIContext IntegrationAPIContext where
 integrationService :: Kontrakcja m => m (Maybe Service)
 integrationService = do
     sid <- getFieldUTFWithDefault BS.empty "service"
-    mservice <- query $ GetService (ServiceID sid)
+    mservice <- runDBQuery $ GetService $ ServiceID sid
     case mservice of
          Just service -> do
              passwd <- getFieldUTFWithDefault BS.empty "password"
@@ -119,7 +120,7 @@ embeddDocumentFrame = do
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> apiAskString "location"
     doc <- documentFromParam
-    mcompany <- lift_M (update . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
+    mcompany <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
     when (isNothing mcompany) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
     let company = fromJust mcompany
     when (not $ isAuthoredByCompany (companyid company) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
@@ -132,7 +133,7 @@ embeddDocumentFrame = do
          Just siglink -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
-                     muser <- query $ GetUserByUserID $ fromJust $ maybesignatory siglink
+                     muser <- runDBQuery $ GetUserByID $ fromJust $ maybesignatory siglink
                      when (not $ sameService sid muser && sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching user or company| This should never happend"
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
@@ -148,7 +149,7 @@ createDocument = do
    sid <- serviceid <$> service <$> ask
    mcompany_id <- maybeReadM $ apiAskString "company_id"
    when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
-   company <- update $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
+   company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
    mtitle <- apiAskBS "title"
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
@@ -207,44 +208,47 @@ userFromTMP uTMP company = do
     sid <- serviceid <$> service <$> ask
     let remail = fold $ asValidEmail . BS.toString <$> email uTMP
     when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"
-    muser <- query $ GetUserByEmail (Just sid) $ Email $ fromGood remail
+    muser <- runDBQuery $ GetUserByEmail (Just sid) $ Email $ fromGood remail
     user <- case muser of
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password False (Just sid) (Just $ companyid company) defaultValue --TODO EM is this a user for the company?  if so should they be a company admin?  will users from the past migrate okay?
-                when (isNothing u) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
-                u' <- update $ AcceptTermsOfService (userid $ fromJust u) (fromSeconds 0)
-                when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
-                return $ fromRight u'
-    user' <- update $ SetUserInfo (userid user) (userinfo user)
+                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue --TODO EM is this a user for the company?  if so should they be a company admin?  will users from the past migrate okay?
+                when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
+                let u = fromJust mu
+                tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
+                when (not tos_accepted) $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
+                return u
+    info_set <- runDBUpdate $ SetUserInfo (userid user) (userinfo user)
             {
               userfstname = fromMaybe (getFirstName user) $ fstname uTMP
             , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
             }
-    when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
-    user'' <- update $ SetUserCompany (userid user) (companyid company)
-    when (isLeft user'') $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
-    return $ fromRight user''
+    when (not info_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
+    company_set <- runDBUpdate $ SetUserCompany (userid user) (companyid company)
+    when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
+    Just user' <- runDBQuery $ GetUserByID $ userid user
+    return user'
 
 setCompanyInfoFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m Company
 setCompanyInfoFromTMP uTMP company = do
     --TODO EM is this okay?  also users from the past, will they migrate okay
-    company' <- update $ SetCompanyInfo company (companyinfo company)
+    info_set <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfo company)
                 {
                   companyname = fromMaybe (getCompanyName company) $ API.APICommons.company uTMP
-                , Company.CompanyState.companynumber = fromMaybe (getCompanyNumber company) $ API.APICommons.companynumber uTMP
+                , Company.Model.companynumber = fromMaybe (getCompanyNumber company) $ API.APICommons.companynumber uTMP
                 }
-    when (isLeft company') $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
-    return $ fromRight company'
+    when (not info_set) $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
+    Just company' <- runDBQuery $ GetCompany $ companyid company
+    return company'
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
     sid <- serviceid <$> service <$> ask
     mcompany_id <- maybeReadM $ apiAskString "company_id"
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
-    company <- update $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
+    company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
     tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
                     n <- apiAskBS "name"
                     v <- apiAskBS "value"
@@ -291,7 +295,7 @@ removeDocument = do
 -}
 connectUserToSession :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
 connectUserToSession sid uid ssid = do
-    matchingService <-sameService sid <$> (query $ GetUserByUserID uid)
+    matchingService <-sameService sid <$> (runDBQuery $ GetUserByID uid)
     when (not matchingService) mzero
     loaded <- loadServiceSession (Right uid) ssid
     if (loaded)
@@ -300,7 +304,7 @@ connectUserToSession sid uid ssid = do
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession sid cid ssid = do
-    matchingService <- sameService sid <$> (query $ GetCompany cid)
+    matchingService <- sameService sid <$> (runDBQuery $ GetCompany cid)
     when (not matchingService) mzero
     loaded <- loadServiceSession (Left cid) ssid
     if (loaded)

@@ -1,17 +1,18 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
+import DB.Types
 import Doc.DocState
 import Misc
 import ActionSchedulerState (ActionID)
-import User.UserState
+import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
 import PayEx.PayExState
 import ListUtil
 import Session
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 
 {- |
    Defines the reason why we are redirected to login page
