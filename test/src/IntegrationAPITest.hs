@@ -104,8 +104,7 @@ getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSOb
 
 -- Making requests
 makeAPIRequest :: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> DB APIResponse
-makeAPIRequest handler req = do
-    conn <- getConnection
+makeAPIRequest handler req = wrapDB $ \conn -> do
     ctx <- (\c -> c { ctxdbconn = conn }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
     rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
     fmap fst $ runTestKontra rq ctx $ testAPI handler

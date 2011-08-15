@@ -49,13 +49,9 @@ class (Functor m, MonadIO m) => DBMonad m where
 newtype DB a = DB { unDB :: ReaderT Connection IO a }
   deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
 
-instance DBMonad DB where
-  getConnection = DB ask
-  handleDBError = E.throw
-
 -- | Wraps IO action in DB
 wrapDB :: (Connection -> IO a) -> DB a
-wrapDB f = getConnection >>= liftIO . f
+wrapDB f = DB ask >>= liftIO . f
 
 -- | Runs DB action in single transaction (IO monad)
 ioRunDB :: MonadIO m => Connection -> DB a -> m a
@@ -109,11 +105,10 @@ instance Show DBException where
 
 -- | Catch in DB monad
 catchDB :: E.Exception e => DB a -> (e -> DB a) -> DB a
-catchDB f exhandler = do
-  conn <- getConnection
+catchDB f exhandler = wrapDB $ \conn -> do
   let handler e = runReaderT (unDB $ exhandler e) conn
   liftIO $ runReaderT (unDB f) conn `E.catch` handler
 
 -- | Try in DB monad
 tryDB :: E.Exception e => DB a -> DB (Either e a)
-tryDB f = getConnection >>= liftIO . E.try . runReaderT (unDB f)
+tryDB f = wrapDB $ liftIO . E.try . runReaderT (unDB f)

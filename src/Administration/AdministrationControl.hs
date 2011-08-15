@@ -216,11 +216,11 @@ handleUserChange a = onlySuperUser $
                                            -- the admin of it
                                            user <- case (mupgradetocompany, usercompany userbeforeupgrade) of
                                                      (Just upgradeval, Nothing) | (toString upgradeval) == "on" -> do
-                                                       runDB $ do
+                                                       runDBOrFail $ do
                                                          company <- dbUpdate $ CreateCompany Nothing Nothing
                                                          _ <- dbUpdate $ SetUserCompany userId (companyid company)
                                                          _ <- dbUpdate $ MakeUserCompanyAdmin userId
-                                                         upgradeduser <- runDBOrFail . runDBQuery $ GetUserByID userId
+                                                         upgradeduser <- dbQuery $ GetUserByID userId
                                                          return upgradeduser
                                                      _ -> return userbeforeupgrade
                                            --Reading changes from params using dedicated functions for each user part
