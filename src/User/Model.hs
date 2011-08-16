@@ -173,14 +173,14 @@ instance DBQuery GetUserFriends [User] where
 data GetCompanyAccounts = GetCompanyAccounts UserID
 instance DBQuery GetCompanyAccounts [User] where
   dbQuery (GetCompanyAccounts uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT company_id, is_company_admin FROM users WHERE id = ? AND deleted = FALSE"
-    _ <- execute st [toSql uid]
-    mrow <- fmap (\[a, b] -> (fromSql a, fromSql b)) <$> (fetchAllRows' st >>= oneObjectReturnedGuard)
+    mrow <- quickQuery' conn "SELECT company_id, is_company_admin FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+      >>= oneObjectReturnedGuard
+      >>= return . fmap (\[a, b] -> (fromSql a, fromSql b))
     case mrow of
       Just (Just (cid::CompanyID), True) -> do
-        st' <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ?"
-        _ <- execute st' [toSql uid, toSql cid]
-        fetchUsers st' []
+        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ?"
+        _ <- execute st [toSql uid, toSql cid]
+        fetchUsers st []
       _ -> return []
 
 data GetInviteInfo = GetInviteInfo UserID
@@ -218,9 +218,8 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
   dbQuery ExportUsersDetailsToCSV = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT first_name || ' ' || last_name, email FROM users"
-    executeRaw st
-    return . toCSV =<< fetchAllRows st
+    quickQuery conn "SELECT first_name || ' ' || last_name, email FROM users" []
+      >>= return . toCSV
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
 
@@ -339,9 +338,8 @@ instance DBUpdate SetInviteInfo Bool where
       then do
         wrapDB $ \conn -> case minviterid of
           Just inviterid -> do
-            st <- prepare conn "SELECT user_id FROM user_invite_infos WHERE user_id = ?"
-            _ <- execute st [toSql uid]
-            mrow <- fetchRow st
+            mrow <- quickQuery' conn "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
+              >>= oneObjectReturnedGuard
             r <- case mrow of
               Just _ -> do
                 run conn ("UPDATE user_invite_infos SET"
@@ -379,9 +377,8 @@ instance DBUpdate SetUserMailAPI Bool where
       then do
         wrapDB $ \conn -> case musermailapi of
           Just mailapi -> do
-            st <- prepare conn "SELECT user_id FROM user_mail_apis WHERE user_id = ?"
-            _ <- execute st [toSql uid]
-            mrow <- fetchRow st
+            mrow <- quickQuery' conn "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
+              >>= oneObjectReturnedGuard
             r <- case mrow of
               Just _ -> do
                 run conn ("UPDATE user_mail_apis SET"
@@ -461,9 +458,9 @@ instance DBUpdate SetPreferredDesignMode Bool where
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
   dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?"
-    _ <- execute st [toSql email]
-    mfid <- fmap (UserID . fromSql) <$> (fetchAllRows' st >>= oneObjectReturnedGuard . join)
+    mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?" [toSql email]
+      >>= oneObjectReturnedGuard . join
+      >>= return . fmap (UserID . fromSql)
     case mfid of
       Just fid -> do
         _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
@@ -492,9 +489,9 @@ instance DBUpdate SetSignupMethod Bool where
 data MakeUserCompanyAdmin = MakeUserCompanyAdmin UserID
 instance DBUpdate MakeUserCompanyAdmin Bool where
   dbUpdate (MakeUserCompanyAdmin uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE"
-    _ <- execute st [toSql uid]
-    mcid <- join . fmap fromSql <$> (fetchAllRows' st >>= oneObjectReturnedGuard . join)
+    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+      >>= oneObjectReturnedGuard . join
+      >>= return . join . fmap fromSql
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> do
@@ -511,11 +508,8 @@ composeFullName (fstname, sndname) =
 
 checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = wrapDB $ \conn -> do
-  st <- prepare conn "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE"
-  _ <- execute st [toSql uid]
-  fetchAllRows' st
-    >>= oneObjectReturnedGuard
-    >>= return . maybe False (const True)
+  quickQuery' conn "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+    >>= checkIfOneObjectReturned
 
 selectUsersSQL :: String
 selectUsersSQL = "SELECT "
