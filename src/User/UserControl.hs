@@ -796,8 +796,13 @@ handleActivate aid hash signupmethod actvuser = do
           
     finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
     finalizeCompanyActivation user company = do
-      muserf <- getUserInfoUpdateFunc user
-      mcompanyf <- if useriscompanyadmin user
+      -- is this from the acceptaccount after signup modal? if it is then they just type in their
+      -- password, so we don't want to check for the user and company info stuff
+      acceptaccount <- isFieldSet "acceptaccount"
+      muserf <- if not acceptaccount
+                  then getUserInfoUpdateFunc user
+                  else return $ Just id
+      mcompanyf <- if not acceptaccount && useriscompanyadmin user
                      then getCompanyInfoUpdateFunc company
                      else return $ Just id
       case (muserf, mcompanyf) of
