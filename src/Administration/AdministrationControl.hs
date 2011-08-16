@@ -30,6 +30,7 @@ module Administration.AdministrationControl(
           , handleStatistics
           --, migrateSigAccounts
           --, migrateCompanies
+          , handleFixForBug510
           , resealFile
           ) where
 import Control.Monad.State
@@ -40,7 +41,10 @@ import Happstack.State (query)
 import Misc
 import Kontra
 import Administration.AdministrationView
+import Doc.DocControl (postDocumentChangeAction) -- required for 510 bug fix migration
+import Happstack.State (update) -- required for 510 bug fix migration
 import Doc.DocState
+import Doc.DocProcess
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
@@ -69,6 +73,9 @@ import Templates.TextTemplates
 import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+import Redirect
 
 {-eitherFlash :: Kontrakcja m => m (Either String b) -> m b
 eitherFlash action = do
@@ -628,6 +635,51 @@ showAdminTranslations = do
     liftIO $ updateCSV
     adminTranslationsPage
     
+{- |
+    This handles fixing of documents broken by bug 510, which means
+    that the authors were mistakenly made signatories of offers or orders.
+-}
+handleFixForBug510 :: Kontrakcja m => m Response
+handleFixForBug510 = onlySuperUser $ do
+  services <- runDBQuery $ GetServices
+  mapM_ fixForService $ Nothing : map (Just . serviceid) services
+  sendRedirect LinkMain
+  where
+    fixForService :: Kontrakcja m => Maybe ServiceID -> m ()
+    fixForService service = do
+      docs <- query $ GetDocuments service
+      mapM_ maybeFixForDocument docs
+      return ()
+    maybeFixForDocument :: Kontrakcja m => Document -> m ()
+    maybeFixForDocument doc =
+      let isauthorsendonly = Just True == getValueForProcess doc processauthorsend
+          isauthorsigning = maybe False (elem SignatoryPartner . signatoryroles) (getAuthorSigLink doc)
+          nonauthorpartisgood = nonAuthorPartLooksGood doc
+          hasauthorsigned = maybe False (isJust . maybesigninfo) (getAuthorSigLink doc) in
+      case (isauthorsendonly && isauthorsigning,
+            nonauthorpartisgood,
+            hasauthorsigned) of
+        (True, False, _) -> Log.debug $ mkMsg doc
+          "broken, but because of counterparts looks like it was broken by something else, leaving for now"
+        (True, _, False) -> Log.debug $ mkMsg doc
+          "broken, but the author has already signed, so unsure how to fix, leaving for now"
+        (True, True, True) -> do
+          Log.debug $ mkMsg doc "fixing"
+          udoc <- guardRightM . update $ FixBug510ForDocument (documentid doc)
+          postDocumentChangeAction udoc doc Nothing
+        _ -> return ()
+    nonAuthorPartLooksGood :: Document -> Bool
+    nonAuthorPartLooksGood doc =
+      let nonauthorparts = filter (not . isAuthor) $ documentsignatorylinks doc
+      in case nonauthorparts of
+        (nonauthorpart:[]) | SignatoryPartner `elem` (signatoryroles nonauthorpart) -> True
+        _ -> False
+    mkMsg :: Document -> String -> String
+    mkMsg doc msg = "Handling 510 bug fix for " ++
+                    " doc " ++ (show $ documentid doc) ++
+                    " with type " ++ (show $ documenttype doc) ++
+                    " and author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc) ++ " : " ++ msg
+
 {- |
     Migrate companies.  This takes the following steps
     

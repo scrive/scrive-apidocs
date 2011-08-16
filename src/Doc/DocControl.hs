@@ -1874,53 +1874,7 @@ respondWithPDF :: Kontrakcja m => BS.ByteString -> m Response
 respondWithPDF contents = do
   let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-  return res2
-  
-{- |
-    This handles a bug fix for a document which has mistakenly
-    got authors of offers and orders that were marked as
-    being SignatoryParts.
--}
-handleFixForBug510 :: Kontrakcja m => DocumentID -> m Response
-handleFixForBug510 docid = onlySuperUser $ do
-  doc <- guardJustM . query $ GetDocumentByDocumentID docid
-  if wasBrokenByBug510 doc
-    then do
-      Log.debug $ "Fixed doc broken by bug 510: doc " ++ (show docid)
-                  ++ " with type " ++ (show $ documenttype doc)
-                  ++ " so its author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc)
-                  ++ " isn't signing anymore"
-      udoc <- guardRightM . update $ FixBug510ForDocument docid
-      postDocumentChangeAction udoc doc Nothing
-      sendRedirect $ LinkDaveDocument (documentid udoc)
-    else do
-      Log.error "doc doesn't require fixing"
-      mzero
-
-{- |
-    This logs out all the broken documents which have
-    been messed up by bug 510.  This means they have
-    an author that's signing on an offer or order.
--}
-handleLogBrokenByBug510 :: Kontrakcja m => m Response
-handleLogBrokenByBug510 = onlySuperUser $ do
-  docs <- query $ GetDocuments Nothing
-  let brokendocs = filter wasBrokenByBug510 docs
-  mapM_ logDetails brokendocs
-  sendRedirect LinkMain
-  where
-    logDetails doc = do
-      Log.debug $ "Broken by bug 510:  doc " ++ (show $ documentid doc)
-                  ++ " with type " ++ (show $ documenttype doc)
-                  ++ " has an author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc)
-                  ++ " who is mistakenly signing"
-
-wasBrokenByBug510 :: Document -> Bool
-wasBrokenByBug510 doc =
-  let isauthorsendonly = Just True == getValueForProcess doc processauthorsend
-      isauthorsigning = maybe False (elem SignatoryPartner . signatoryroles) (getAuthorSigLink doc)
-  in isauthorsendonly && isauthorsigning
-
+  return res2  
 
 -- Fix for broken production | To be removed after fixing is done
 isBroken :: Document -> Bool

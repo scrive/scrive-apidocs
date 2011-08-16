@@ -254,8 +254,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
 
      -- this stuff is for a fix
-     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ DocControl.handleLogBrokenByBug510
-     , dir "adminonly" $ dir "510bugfix" $ hGet1 $ toK1 $ DocControl.handleFixForBug510
+     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
