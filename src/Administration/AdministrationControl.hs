@@ -713,9 +713,9 @@ handleFixForBug510 = onlySuperUser $ do
             hasauthorsigned) of
         (True, False, _) -> Log.debug $ mkMsg doc
           "broken, but because of counterparts looks like it was broken by something else, leaving for now"
-        (True, _, False) -> Log.debug $ mkMsg doc
+        (True, _, True) -> Log.debug $ mkMsg doc
           "broken, but the author has already signed, so unsure how to fix, leaving for now"
-        (True, True, True) -> do
+        (True, True, False) -> do
           Log.debug $ mkMsg doc "fixing"
           udoc <- guardRightM . update $ FixBug510ForDocument (documentid doc)
           postDocumentChangeAction udoc doc Nothing
