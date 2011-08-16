@@ -338,10 +338,10 @@ instance DBUpdate SetInviteInfo Bool where
       then do
         wrapDB $ \conn -> case minviterid of
           Just inviterid -> do
-            mrow <- quickQuery' conn "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
-              >>= oneObjectReturnedGuard
-            r <- case mrow of
-              Just _ -> do
+            rec_exists <- quickQuery' conn "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
+              >>= checkIfOneObjectReturned
+            r <- if rec_exists
+              then do
                 run conn ("UPDATE user_invite_infos SET"
                   ++ "  inviter_id = ?"
                   ++ ", invite_time = to_timestamp(?)"
@@ -352,7 +352,7 @@ instance DBUpdate SetInviteInfo Bool where
                   , toSql invitetype
                   , toSql uid
                   ]
-              Nothing -> do
+              else do
                 run conn ("INSERT INTO user_invite_infos ("
                   ++ "  user_id"
                   ++ ", inviter_id"
@@ -377,10 +377,10 @@ instance DBUpdate SetUserMailAPI Bool where
       then do
         wrapDB $ \conn -> case musermailapi of
           Just mailapi -> do
-            mrow <- quickQuery' conn "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
-              >>= oneObjectReturnedGuard
-            r <- case mrow of
-              Just _ -> do
+            rec_exists <- quickQuery' conn "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
+              >>= checkIfOneObjectReturned
+            r <- if rec_exists
+              then do
                 run conn ("UPDATE user_mail_apis SET"
                   ++ "  key = ?"
                   ++ ", daily_limit = ?"
@@ -392,7 +392,7 @@ instance DBUpdate SetUserMailAPI Bool where
                   , toSql $ umapiSentToday mailapi
                   , toSql uid
                   ]
-              Nothing -> do
+              else do
                 run conn ("INSERT INTO user_mail_apis ("
                   ++ "  user_id"
                   ++ ", key"
