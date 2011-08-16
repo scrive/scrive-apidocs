@@ -13,6 +13,7 @@ module DB.Classes (
   , DBException(..)
   , catchDB
   , tryDB
+  , retryOn
   ) where
 
 import Control.Applicative
@@ -112,3 +113,20 @@ catchDB f exhandler = wrapDB $ \conn -> do
 -- | Try in DB monad
 tryDB :: E.Exception e => DB a -> DB (Either e a)
 tryDB f = wrapDB $ liftIO . E.try . runReaderT (unDB f)
+
+-- | Retry DB action on a given sql error. 10 times should be sufficient
+-- and we also protect ourselves from falling into infinite loop.
+-- Note: full list of errors can be found here:
+-- http://hackage.haskell.org/packages/archive/HDBC-postgresql/latest/doc/html/Database-HDBC-PostgreSQL.html
+retryOn :: String -> DB a -> DB a
+retryOn err f = retry 1
+  where
+    retry (10::Int) = f
+    retry n = do
+      er <- tryDB f
+      case er of
+        Right r -> return r
+        Left (e::SqlError) ->
+          if seState e == err
+             then retry $ n+1
+             else E.throw e

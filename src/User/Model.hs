@@ -44,6 +44,7 @@ import Control.Monad
 import Data.Data
 import Data.Int
 import Database.HDBC
+import Database.HDBC.PostgreSQL
 import Happstack.State
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
@@ -233,6 +234,8 @@ instance DBUpdate SetUserCompany Bool where
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
   dbUpdate (DeleteUser uid) = wrapDB $ \conn -> do
+    -- it removes a user and all its references from database.
+    -- however, it'll fail if this user is a service admin.
     r <- run conn "DELETE FROM users WHERE id = ?" [toSql uid]
     res <- oneRowAffectedGuard r
     if res
@@ -273,7 +276,7 @@ instance DBUpdate AddUser (Maybe User) where
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
-      Nothing -> do
+      Nothing -> retryOn uniqueViolation $ do
         uid <- UserID <$> getUniqueID tableUsers
         wrapDB $ \conn -> do
           _ <- run conn ("INSERT INTO users ("
@@ -330,7 +333,7 @@ instance DBUpdate SetUserPassword Bool where
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
 instance DBUpdate SetInviteInfo Bool where
-  dbUpdate (SetInviteInfo minviterid invitetime invitetype uid) = do
+  dbUpdate (SetInviteInfo minviterid invitetime invitetype uid) = retryOn uniqueViolation $ do
     exists <- checkIfUserExists uid
     if exists
       then do
@@ -370,7 +373,7 @@ instance DBUpdate SetInviteInfo Bool where
 
 data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
 instance DBUpdate SetUserMailAPI Bool where
-  dbUpdate (SetUserMailAPI uid musermailapi) = do
+  dbUpdate (SetUserMailAPI uid musermailapi) = retryOn uniqueViolation $ do
     exists <- checkIfUserExists uid
     if exists
       then do
