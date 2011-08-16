@@ -457,15 +457,20 @@ instance DBUpdate SetPreferredDesignMode Bool where
 
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
-  dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
+  dbUpdate (AddViewerByEmail uid email) = retryOn uniqueViolation $ wrapDB $ \conn -> do
     mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?" [toSql email]
       >>= oneObjectReturnedGuard . join
       >>= return . fmap (UserID . fromSql)
     case mfid of
       Just fid -> do
-        _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
-          [toSql uid, toSql fid]
-        return True
+        rec_exists <- quickQuery' conn "SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?" [toSql uid, toSql fid]
+          >>= checkIfOneObjectReturned
+        if rec_exists
+          then return True
+          else do
+            _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
+              [toSql uid, toSql fid]
+            return True
       Nothing -> return False
 
 data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
