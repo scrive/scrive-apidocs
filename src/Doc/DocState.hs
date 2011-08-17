@@ -441,6 +441,7 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                  updatedFstFileName  = case (documentfiles document) of
                                          (f:fs) -> (f {filename= docname} :fs)
                                          fs -> fs
+                 isbasic = BasicFunctionality == docfunctionality
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
                     , documentdaystosign             = daystosign
@@ -448,9 +449,11 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documenttitle                  = docname
                     , documentinvitetext             = invitetext
                     , documentallowedidtypes         = idtypes
-                    , documentcsvupload              = csvupload
+                    , documentcsvupload              = if isbasic then Nothing else csvupload
                     , documentfunctionality          = docfunctionality
                     , documentfiles                  = updatedFstFileName
+                    , documentauthorattachments      = if isbasic then [] else documentauthorattachments document
+                    , documentsignatoryattachments   = if isbasic then [] else documentsignatoryattachments document
                     }
          else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
