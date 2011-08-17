@@ -399,6 +399,13 @@ addNewRandomUser = do
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
+      
+addNewRandomAdvancedUser :: DB User
+addNewRandomAdvancedUser = do
+  User{userid,usersettings} <- addNewRandomUser
+  True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
+  Just user <- dbQuery $ GetUserByID userid
+  return user
 
 emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails
@@ -567,6 +574,19 @@ instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
   randomCall f = do
     a <- rand 10 arbitrary
     randomCall $ f a
+
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g)
+         => Arbitrary (a, b, c, d, e, f, g) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary
+    g <- arbitrary
+    return (a, b, c, d, e, f, g)
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
          => Arbitrary (a, b, c, d, e, f, g, h) where
