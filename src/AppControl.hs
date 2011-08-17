@@ -228,7 +228,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
-     --, dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
 
