@@ -120,7 +120,7 @@ embeddDocumentFrame = do
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> apiAskString "location"
     doc <- documentFromParam
-    mcompany <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
+    mcompany <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid)) (fmap ExternalCompanyID <$> apiAskBS "company_id")
     when (isNothing mcompany) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
     let company = fromJust mcompany
     when (not $ isAuthoredByCompany (companyid company) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
@@ -147,7 +147,7 @@ embeddDocumentFrame = do
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
-   mcompany_id <- maybeReadM $ apiAskString "company_id"
+   mcompany_id <- fmap ExternalCompanyID <$> apiAskBS "company_id"
    when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
    company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
    mtitle <- apiAskBS "title"
@@ -246,7 +246,7 @@ setCompanyInfoFromTMP uTMP company = do
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
     sid <- serviceid <$> service <$> ask
-    mcompany_id <- maybeReadM $ apiAskString "company_id"
+    mcompany_id <- fmap ExternalCompanyID <$> apiAskBS "company_id"
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
     company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
     tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
