@@ -54,7 +54,10 @@ newtype DB a = DB { unDB :: ReaderT Connection IO a }
 wrapDB :: (Connection -> IO a) -> DB a
 wrapDB f = DB ask >>= liftIO . f
 
--- | Runs DB action in single transaction (IO monad)
+-- | Runs DB action in single transaction (IO monad). Note that since
+-- it runs in IO, you need to pass Connecion object explicitly. Also,
+-- sql releated exceptions are not handled, so you probably need to do
+-- it yourself. Use this function ONLY if there is no way to use runDB.
 ioRunDB :: MonadIO m => Connection -> DB a -> m a
 ioRunDB conn f = liftIO $ withTransaction conn (runReaderT (unDB f))
 
