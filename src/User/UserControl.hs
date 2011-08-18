@@ -11,6 +11,7 @@ import Happstack.State (update, query)
 import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
+import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import ActionSchedulerState
 import AppView
@@ -1035,6 +1036,23 @@ dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
   
+handleFriends :: Kontrakcja m => m JSValue
+handleFriends = do
+  Context{ctxmaybeuser} <- getContext
+  user <- guardJust ctxmaybeuser
+  friends <- runDBQuery $ GetUserFriends $ userid user
+  params <- getListParamsNew
+  let friendsPage = friendSortSearchPage params friends
+  return $ JSObject $ toJSObject [("list", 
+                                   JSArray $ 
+                                   map (\f -> JSObject $ 
+                                              toJSObject [("fields",
+                                                           JSObject $ toJSObject [("email", 
+                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)
+                                                                                 ,("id", JSString $ toJSString (show (userid f)))])])
+                                           (list friendsPage)),
+                                  ("paging", pagingParamsJSON friendsPage)]
+
 {- | 
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
  -}

@@ -61,7 +61,11 @@ module User.UserView (
     modalNewPasswordView,
 
     --utils
-    userBasicFields) where
+    userBasicFields,
+    
+    -- friends list
+    friendSortSearchPage
+    ) where
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -82,6 +86,7 @@ import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
+import Data.List
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> m String
 showUser user mcompany = renderTemplateFM "showUser" $ do
@@ -466,3 +471,20 @@ userBasicFields u mc = do
     field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
+
+-- list stuff for friends
+
+-- Friends currently only use the email
+friendSortSearchPage :: ListParams -> [User] -> PagedList User
+friendSortSearchPage = listSortSearchPage friendSortFunc friendSearchFunc friendPageSize
+
+friendPageSize :: Int
+friendPageSize = 20
+
+friendSortFunc :: SortingFunction User
+friendSortFunc _ u1 u2 = compare (getEmail u1) (getEmail u2)
+
+friendSearchFunc :: SearchingFunction User
+friendSearchFunc s u = s `isInfixOf` (BS.toString $ getEmail u)
+  
+  
