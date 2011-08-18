@@ -23,6 +23,7 @@ module Util.SignatoryLinkUtils (
   isViewer,
   isDeletedFor,
   getSigLinkFor,
+  getSignatoryPartnerLinks,
   hasSeen,  
   hasUser,
   hasCompany,
@@ -184,6 +185,14 @@ isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
  -}
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
+
+
+{- |
+   Gets the signatory links from the document that are
+   signing the document, rather than just viewing.
+-}
+getSignatoryPartnerLinks :: Document -> [SignatoryLink] 
+getSignatoryPartnerLinks doc = filter isSignatory $ documentsignatorylinks doc
 
 {- |
   Does this siglink have a user (maybesignatory)?

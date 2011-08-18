@@ -15,12 +15,12 @@ import Control.Applicative
 import Data.Data
 import Data.Int
 import Database.HDBC
+import Database.HDBC.PostgreSQL
 import Happstack.State
 import Happstack.Server
 import Happstack.Util.Common
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BSU
 
 import DB.Classes
 import DB.Derive
@@ -37,13 +37,8 @@ instance FromReqURI CompanyID where
   fromReqURI = readM
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 $(newtypeDeriveConvertible ''ExternalCompanyID)
-
-instance Show ExternalCompanyID where
-  show (ExternalCompanyID val) = BSU.toString val
-instance Read ExternalCompanyID where
-  readsPrec _ s = [(ExternalCompanyID $ BSU.fromString s, "")]
 
 data Company = Company {
     companyid         :: CompanyID
@@ -88,7 +83,7 @@ instance DBQuery GetCompanyByExternalID (Maybe Company) where
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
-  dbUpdate (CreateCompany msid mecid) = do
+  dbUpdate (CreateCompany msid mecid) = retryOn uniqueViolation $ do
     cid <- CompanyID <$> getUniqueID tableCompanies
     wrapDB $ \conn -> do
       _ <- run conn ("INSERT INTO companies ("

@@ -229,7 +229,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
-     --, dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
 
@@ -255,8 +254,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
 
      -- this stuff is for a fix
-     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ DocControl.handleLogBrokenByBug510
-     , dir "adminonly" $ dir "510bugfix" $ hGet1 $ toK1 $ DocControl.handleFixForBug510
+     , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
 
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
