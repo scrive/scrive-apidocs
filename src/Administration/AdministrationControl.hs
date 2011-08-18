@@ -392,21 +392,21 @@ getAdminUsersPageParams = do
 {- Create service-}
 handleCreateService :: Kontrakcja m => m KontraLink
 handleCreateService = onlySuperUser $ do
-    mname<- getFieldUTF "name"
-    madmin <- liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
-    case (mname,madmin) of
-         (Just name,Just admin) -> do
-            pwdBS <- getFieldUTFWithDefault mempty "password"
-            pwd <- liftIO $ createPassword pwdBS
-            mservice <- runDBUpdate $ CreateService (ServiceID name) (Just pwd) (userid admin)
-            _ <- case mservice of
-                Just srvs -> do
-                    location <- getFieldUTF "location"
-                    runDBUpdate $ UpdateServiceSettings (serviceid srvs) (servicesettings srvs)
-                                    {servicelocation = ServiceLocation <$> location}
-                _ -> mzero
-            return LoopBack
-         _ -> mzero
+    name <- guardJustM $ getFieldUTF "name"
+    Log.debug $ "name: " ++ show name
+    admin <- guardJustM $ liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
+    Log.debug $ "admin: " ++ show admin
+    pwdBS <- getFieldUTFWithDefault mempty "password"
+    Log.debug $ "password: " ++ show pwdBS
+    pwd <- liftIO $ createPassword pwdBS
+    service <- guardJustM $ runDBUpdate $ CreateService (ServiceID name) (Just pwd) (userid admin)
+    Log.debug $ "service: " ++ show service
+    location <- getFieldUTF "location"
+    Log.debug $ "location: " ++ show location
+    _ <- runDBUpdate $ UpdateServiceSettings (serviceid service) (servicesettings service)
+                                               {servicelocation = ServiceLocation <$> location}
+    Log.debug $ "LoopBack"
+    return LoopBack
 
 {- Services page-}
 showServicesPage :: Kontrakcja m => m Response
