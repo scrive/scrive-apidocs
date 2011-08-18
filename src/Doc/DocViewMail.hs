@@ -393,7 +393,7 @@ mailCancelDocumentByAuthor customMessage ctx document@Document{documenttitle} si
     title <- renderTemplateFM "mailCancelDocumentByAuthorTitle" $ do
         field "documenttitle" documenttitle
     content <- wrapHTML' =<< mailCancelDocumentByAuthorContent True customMessage ctx document
-    return $ emptyMail { title = BS.fromString title, to = [getMailAddress signlink], content = BS.fromString content }
+    return $ emptyMail { title = BS.fromString title, to = [getMailAddress signlink], content = BS.fromString content, from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
                         => Document
