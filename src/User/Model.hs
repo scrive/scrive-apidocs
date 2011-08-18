@@ -44,6 +44,7 @@ import Control.Monad
 import Data.Data
 import Data.Int
 import Database.HDBC
+import Database.HDBC.PostgreSQL
 import Happstack.State
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
@@ -172,14 +173,14 @@ instance DBQuery GetUserFriends [User] where
 data GetCompanyAccounts = GetCompanyAccounts UserID
 instance DBQuery GetCompanyAccounts [User] where
   dbQuery (GetCompanyAccounts uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT company_id, is_company_admin FROM users WHERE id = ? AND deleted = FALSE"
-    _ <- execute st [toSql uid]
-    mrow <- fmap (\[a, b] -> (fromSql a, fromSql b)) <$> (fetchAllRows' st >>= oneObjectReturnedGuard)
+    mrow <- quickQuery' conn "SELECT company_id, is_company_admin FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+      >>= oneObjectReturnedGuard
+      >>= return . fmap (\[a, b] -> (fromSql a, fromSql b))
     case mrow of
       Just (Just (cid::CompanyID), True) -> do
-        st' <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ?"
-        _ <- execute st' [toSql uid, toSql cid]
-        fetchUsers st' []
+        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ?"
+        _ <- execute st [toSql uid, toSql cid]
+        fetchUsers st []
       _ -> return []
 
 data GetInviteInfo = GetInviteInfo UserID
@@ -217,9 +218,8 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
   dbQuery ExportUsersDetailsToCSV = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT first_name || ' ' || last_name, email FROM users"
-    executeRaw st
-    return . toCSV =<< fetchAllRows st
+    quickQuery conn "SELECT first_name || ' ' || last_name, email FROM users" []
+      >>= return . toCSV
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
 
@@ -233,6 +233,8 @@ instance DBUpdate SetUserCompany Bool where
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
   dbUpdate (DeleteUser uid) = wrapDB $ \conn -> do
+    -- it removes a user and all its references from database.
+    -- however, it'll fail if this user is a service admin.
     r <- run conn "DELETE FROM users WHERE id = ?" [toSql uid]
     res <- oneRowAffectedGuard r
     if res
@@ -273,7 +275,7 @@ instance DBUpdate AddUser (Maybe User) where
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
-      Nothing -> do
+      Nothing -> retryOn uniqueViolation $ do
         uid <- UserID <$> getUniqueID tableUsers
         wrapDB $ \conn -> do
           _ <- run conn ("INSERT INTO users ("
@@ -330,17 +332,16 @@ instance DBUpdate SetUserPassword Bool where
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
 instance DBUpdate SetInviteInfo Bool where
-  dbUpdate (SetInviteInfo minviterid invitetime invitetype uid) = do
+  dbUpdate (SetInviteInfo minviterid invitetime invitetype uid) = retryOn uniqueViolation $ do
     exists <- checkIfUserExists uid
     if exists
       then do
         wrapDB $ \conn -> case minviterid of
           Just inviterid -> do
-            st <- prepare conn "SELECT user_id FROM user_invite_infos WHERE user_id = ?"
-            _ <- execute st [toSql uid]
-            mrow <- fetchRow st
-            r <- case mrow of
-              Just _ -> do
+            rec_exists <- quickQuery' conn "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
+              >>= checkIfOneObjectReturned
+            r <- if rec_exists
+              then do
                 run conn ("UPDATE user_invite_infos SET"
                   ++ "  inviter_id = ?"
                   ++ ", invite_time = to_timestamp(?)"
@@ -351,7 +352,7 @@ instance DBUpdate SetInviteInfo Bool where
                   , toSql invitetype
                   , toSql uid
                   ]
-              Nothing -> do
+              else do
                 run conn ("INSERT INTO user_invite_infos ("
                   ++ "  user_id"
                   ++ ", inviter_id"
@@ -370,17 +371,16 @@ instance DBUpdate SetInviteInfo Bool where
 
 data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
 instance DBUpdate SetUserMailAPI Bool where
-  dbUpdate (SetUserMailAPI uid musermailapi) = do
+  dbUpdate (SetUserMailAPI uid musermailapi) = retryOn uniqueViolation $ do
     exists <- checkIfUserExists uid
     if exists
       then do
         wrapDB $ \conn -> case musermailapi of
           Just mailapi -> do
-            st <- prepare conn "SELECT user_id FROM user_mail_apis WHERE user_id = ?"
-            _ <- execute st [toSql uid]
-            mrow <- fetchRow st
-            r <- case mrow of
-              Just _ -> do
+            rec_exists <- quickQuery' conn "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
+              >>= checkIfOneObjectReturned
+            r <- if rec_exists
+              then do
                 run conn ("UPDATE user_mail_apis SET"
                   ++ "  key = ?"
                   ++ ", daily_limit = ?"
@@ -392,7 +392,7 @@ instance DBUpdate SetUserMailAPI Bool where
                   , toSql $ umapiSentToday mailapi
                   , toSql uid
                   ]
-              Nothing -> do
+              else do
                 run conn ("INSERT INTO user_mail_apis ("
                   ++ "  user_id"
                   ++ ", key"
@@ -457,15 +457,20 @@ instance DBUpdate SetPreferredDesignMode Bool where
 
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
-  dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?"
-    _ <- execute st [toSql email]
-    mfid <- fmap (UserID . fromSql) <$> (fetchAllRows' st >>= oneObjectReturnedGuard . join)
+  dbUpdate (AddViewerByEmail uid email) = retryOn uniqueViolation $ wrapDB $ \conn -> do
+    mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?" [toSql email]
+      >>= oneObjectReturnedGuard . join
+      >>= return . fmap (UserID . fromSql)
     case mfid of
       Just fid -> do
-        _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
-          [toSql uid, toSql fid]
-        return True
+        rec_exists <- quickQuery' conn "SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?" [toSql uid, toSql fid]
+          >>= checkIfOneObjectReturned
+        if rec_exists
+          then return True
+          else do
+            _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
+              [toSql uid, toSql fid]
+            return True
       Nothing -> return False
 
 data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
@@ -489,9 +494,9 @@ instance DBUpdate SetSignupMethod Bool where
 data MakeUserCompanyAdmin = MakeUserCompanyAdmin UserID
 instance DBUpdate MakeUserCompanyAdmin Bool where
   dbUpdate (MakeUserCompanyAdmin uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE"
-    _ <- execute st [toSql uid]
-    mcid <- join . fmap fromSql <$> (fetchAllRows' st >>= oneObjectReturnedGuard . join)
+    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+      >>= oneObjectReturnedGuard . join
+      >>= return . join . fmap fromSql
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> do
@@ -508,11 +513,8 @@ composeFullName (fstname, sndname) =
 
 checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = wrapDB $ \conn -> do
-  st <- prepare conn "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE"
-  _ <- execute st [toSql uid]
-  fetchAllRows' st
-    >>= oneObjectReturnedGuard
-    >>= return . maybe False (const True)
+  quickQuery' conn "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+    >>= checkIfOneObjectReturned
 
 selectUsersSQL :: String
 selectUsersSQL = "SELECT "

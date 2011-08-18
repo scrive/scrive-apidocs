@@ -181,9 +181,8 @@ instance DBUpdate UpdateServiceSettings Bool where
 
 checkIfServiceExists :: ServiceID -> DB Bool
 checkIfServiceExists uid = wrapDB $ \conn -> do
-  st <- prepare conn "SELECT 1 FROM services WHERE id = ?"
-  _ <- execute st [toSql uid]
-  fetchAllRows' st >>= checkIfOneObjectReturned
+  quickQuery' conn "SELECT 1 FROM services WHERE id = ?" [toSql uid]
+    >>= checkIfOneObjectReturned
 
 selectServicesSQL :: String
 selectServicesSQL = "SELECT"

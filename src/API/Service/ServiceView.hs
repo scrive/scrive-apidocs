@@ -43,7 +43,7 @@ serviceAdminPage conn superuser service =
        field "logo" $ isJust $ servicelogo $ serviceui service
        field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
        fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
-       field "location" $ fmap show $ servicelocation $ servicesettings service
+       field "location" $ fmap unServiceLocation $ servicelocation $ servicesettings service
        field "allowToChangeSettings" $ superuser
 
 servicesListPage :: TemplatesMonad m => [Service] -> m String

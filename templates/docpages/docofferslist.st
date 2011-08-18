@@ -2,20 +2,20 @@
 pageOffersList=
 $loadingdialog()$
 <div>
-	<div id="tab-viewer">
-		<div class="tab-header">
-    $docListRubbishBinLink()$
-		</div>
-		$docListTabs()$
-     </div>
+  <div id="tab-viewer">
+	<div class="tab-header">
+      $docListRubbishBinLink()$
+	</div>
+	$docListTabs()$
+  </div>
 </div>
 
 <script>
-var documentsTable = KontraList.init({
-    schema: new Schema({
-    url: "/docs",
-    extraParams : { documentType : "Offer" },
-    sorting: new Sorting({ fields: ["title", "status", "time","partner", "partnercomp", "author"]}),
+  var documentsTable = KontraList.init({
+  schema: new Schema({
+  url: "/docs",
+  extraParams : { documentType : "Offer" },
+  sorting: new Sorting({ fields: ["title", "status", "time","partner", "partnercomp", "author"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [

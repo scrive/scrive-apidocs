@@ -35,6 +35,7 @@ import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocInfo
+import Doc.DocProcess
 
 instance Arbitrary UserID where
   arbitrary = do
@@ -398,6 +399,13 @@ addNewRandomUser = do
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
+      
+addNewRandomAdvancedUser :: DB User
+addNewRandomAdvancedUser = do
+  User{userid,usersettings} <- addNewRandomUser
+  True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
+  Just user <- dbQuery $ GetUserByID userid
+  return user
 
 emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails
@@ -439,10 +447,20 @@ addRandomDocumentWithAuthor user = do
                  }
   update $ StoreDocumentForTesting adoc
 
+getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
+getRandomAuthorRoles doc =
+  rand 10000 (elements $ getPossibleAuthorRoles doc)
+
+getPossibleAuthorRoles :: Document -> [[SignatoryRole]]
+getPossibleAuthorRoles doc = [SignatoryAuthor] :
+  case getValueForProcess doc processauthorsend of
+    Just True -> []
+    _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
+
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
 addRandomDocumentWithAuthorAndCondition user p =  do
-  roles <- rand 10000 (elements [[SignatoryAuthor], [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
   doc <- rand 10 arbitrary
+  roles <- getRandomAuthorRoles doc
   
   mcompany <- case usercompany user of  
     Nothing -> return Nothing
@@ -556,6 +574,19 @@ instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
   randomCall f = do
     a <- rand 10 arbitrary
     randomCall $ f a
+
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g)
+         => Arbitrary (a, b, c, d, e, f, g) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary
+    g <- arbitrary
+    return (a, b, c, d, e, f, g)
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
          => Arbitrary (a, b, c, d, e, f, g, h) where

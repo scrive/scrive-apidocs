@@ -23,7 +23,11 @@ module Util.SignatoryLinkUtils (
   isViewer,
   isDeletedFor,
   getSigLinkFor,
+<<<<<<< HEAD
   validSigLink,
+=======
+  getSignatoryPartnerLinks,
+>>>>>>> 96767a83b9516b404ed4969b486e953923a5d77c
   hasSeen,  
   hasUser,
   hasCompany,
@@ -189,6 +193,7 @@ isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
 
+<<<<<<< HEAD
 {- 
   Checks if siglink with magic hash is valid for this document
 -}
@@ -196,6 +201,16 @@ getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
 validSigLink ::  SignatoryLinkID -> MagicHash-> Maybe Document -> Bool
 validSigLink a mh (Just doc) =  joinB $ (== mh)  <$> signatorymagichash <$> (getSigLinkFor doc a)
 validSigLink _ _ _ = False
+=======
+
+{- |
+   Gets the signatory links from the document that are
+   signing the document, rather than just viewing.
+-}
+getSignatoryPartnerLinks :: Document -> [SignatoryLink] 
+getSignatoryPartnerLinks doc = filter isSignatory $ documentsignatorylinks doc
+
+>>>>>>> 96767a83b9516b404ed4969b486e953923a5d77c
 {- |
   Does this siglink have a user (maybesignatory)?
  -}

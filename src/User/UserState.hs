@@ -1144,7 +1144,7 @@ getUserFriends uid = do
     Nothing -> return []
     Just user -> do
       mfriends <- sequence . map (getUserByUserID . UserID . unFriend) $ userfriends user
-      return . map fromJust . filter isJust $ mfriends
+      return $ catMaybes mfriends
 
 {- |
     Fetches all of the accounts with a matching company id

@@ -462,10 +462,17 @@ fileJSON file =
  
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 docForListJSON crtime doc = (fmap toJSObject) $ propagateMonad  $
+<<<<<<< HEAD
     [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
       ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
       ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
     ]
+=======
+                [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
+                  ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (getSignatoryPartnerLinks doc)),
+                  ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
+                ]
+>>>>>>> 96767a83b9516b404ed4969b486e953923a5d77c
 
 
 jsonPack :: [(String,String)] -> JSValue
@@ -476,9 +483,9 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $  BS.toString $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
-    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) . filter isSignatory $ documentsignatorylinks doc),
-    ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
-    ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (documentsignatorylinks doc)),
+    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) $ getSignatoryPartnerLinks doc),
+    ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
+    ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
     ("time", return $ showDateAbbrev crtime (documentmtime doc)),
     ("type", renderTextForProcess doc processname),
@@ -528,7 +535,7 @@ instance Show StatusClass where
 
 documentStatusClass :: Document -> StatusClass
 documentStatusClass doc =
-  case (map (signatoryStatusClass doc) $ filter isSignatory $ documentsignatorylinks doc) of
+  case (map (signatoryStatusClass doc) $ getSignatoryPartnerLinks doc) of
     [] -> SCDraft
     xs -> minimum xs
 
@@ -541,7 +548,7 @@ docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
-    signMatch d = any match $ map (BS.toString . getSmartName) (documentsignatorylinks d)
+    signMatch d = any match $ map (BS.toString . getSmartName) (getSignatoryPartnerLinks d)
 
 
 docSortFunc:: SortingFunction Document
@@ -564,7 +571,7 @@ docSortFunc "authorRev" = viewComparingRev getAuthorName
 docSortFunc _ = const $ const EQ
 
 partnerComps :: Document -> BS.ByteString
-partnerComps doc = BS.concat $ map getCompanyName $ documentsignatorylinks doc
+partnerComps doc = BS.concat $ map getCompanyName $ getSignatoryPartnerLinks doc
 
 revCompareStatus :: Document -> Document -> Ordering
 revCompareStatus doc1 doc2 = compareStatus doc2 doc1
@@ -581,7 +588,7 @@ revComparePartners doc1 doc2 = comparePartners doc2 doc1
 -}
 comparePartners :: Document -> Document -> Ordering
 comparePartners doc1 doc2 =
-  case (dropWhile isMatch $ zipWith compareSignatory (documentsignatorylinks doc1) (documentsignatorylinks doc2)) of
+  case (dropWhile isMatch $ zipWith compareSignatory (getSignatoryPartnerLinks doc1) (getSignatoryPartnerLinks doc2)) of
     [] -> EQ
     (x:_) -> x
   where

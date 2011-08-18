@@ -13,6 +13,7 @@ module DB.Classes (
   , DBException(..)
   , catchDB
   , tryDB
+  , retryOn
   ) where
 
 import Control.Applicative
@@ -49,15 +50,14 @@ class (Functor m, MonadIO m) => DBMonad m where
 newtype DB a = DB { unDB :: ReaderT Connection IO a }
   deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
 
-instance DBMonad DB where
-  getConnection = DB ask
-  handleDBError = E.throw
-
 -- | Wraps IO action in DB
 wrapDB :: (Connection -> IO a) -> DB a
-wrapDB f = getConnection >>= liftIO . f
+wrapDB f = DB ask >>= liftIO . f
 
--- | Runs DB action in single transaction (IO monad)
+-- | Runs DB action in single transaction (IO monad). Note that since
+-- it runs in IO, you need to pass Connecion object explicitly. Also,
+-- sql releated exceptions are not handled, so you probably need to do
+-- it yourself. Use this function ONLY if there is no way to use runDB.
 ioRunDB :: MonadIO m => Connection -> DB a -> m a
 ioRunDB conn f = liftIO $ withTransaction conn (runReaderT (unDB f))
 
@@ -109,11 +109,27 @@ instance Show DBException where
 
 -- | Catch in DB monad
 catchDB :: E.Exception e => DB a -> (e -> DB a) -> DB a
-catchDB f exhandler = do
-  conn <- getConnection
+catchDB f exhandler = wrapDB $ \conn -> do
   let handler e = runReaderT (unDB $ exhandler e) conn
   liftIO $ runReaderT (unDB f) conn `E.catch` handler
 
 -- | Try in DB monad
 tryDB :: E.Exception e => DB a -> DB (Either e a)
-tryDB f = getConnection >>= liftIO . E.try . runReaderT (unDB f)
+tryDB f = wrapDB $ liftIO . E.try . runReaderT (unDB f)
+
+-- | Retry DB action on a given sql error. 10 times should be sufficient
+-- and we also protect ourselves from falling into infinite loop.
+-- Note: full list of errors can be found here:
+-- http://hackage.haskell.org/packages/archive/HDBC-postgresql/latest/doc/html/Database-HDBC-PostgreSQL.html
+retryOn :: String -> DB a -> DB a
+retryOn err f = retry 1
+  where
+    retry (10::Int) = f
+    retry n = do
+      er <- tryDB f
+      case er of
+        Right r -> return r
+        Left (e::SqlError) ->
+          if seState e == err
+             then retry $ n+1
+             else E.throw e

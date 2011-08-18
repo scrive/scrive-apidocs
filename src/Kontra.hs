@@ -42,6 +42,7 @@ import Misc
 import Templates.Templates
 import User.Model
 import Util.HasSomeUserInfo
+import qualified AppLogger as Log
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
 
@@ -52,7 +53,9 @@ instance Kontrakcja Kontra
 
 instance DBMonad Kontra where
   getConnection = ctxdbconn <$> getContext
-  handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
+  handleDBError e = do
+    Log.error $ show e
+    mzero
 
 instance KontraMonad Kontra where
     getContext    = Kontra get

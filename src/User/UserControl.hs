@@ -11,6 +11,7 @@ import Happstack.State (update, query)
 import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
+import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import ActionSchedulerState
 import AppView
@@ -799,8 +800,13 @@ handleActivate aid hash signupmethod actvuser = do
           
     finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
     finalizeCompanyActivation user company = do
-      muserf <- getUserInfoUpdateFunc user
-      mcompanyf <- if useriscompanyadmin user
+      -- is this from the acceptaccount after signup modal? if it is then they just type in their
+      -- password, so we don't want to check for the user and company info stuff
+      acceptaccount <- isFieldSet "acceptaccount"
+      muserf <- if not acceptaccount
+                  then getUserInfoUpdateFunc user
+                  else return $ Just id
+      mcompanyf <- if not acceptaccount && useriscompanyadmin user
                      then getCompanyInfoUpdateFunc company
                      else return $ Just id
       case (muserf, mcompanyf) of
@@ -1035,6 +1041,23 @@ dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
   
+handleFriends :: Kontrakcja m => m JSValue
+handleFriends = do
+  Context{ctxmaybeuser} <- getContext
+  user <- guardJust ctxmaybeuser
+  friends <- runDBQuery $ GetUserFriends $ userid user
+  params <- getListParamsNew
+  let friendsPage = friendSortSearchPage params friends
+  return $ JSObject $ toJSObject [("list", 
+                                   JSArray $ 
+                                   map (\f -> JSObject $ 
+                                              toJSObject [("fields",
+                                                           JSObject $ toJSObject [("email", 
+                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)
+                                                                                 ,("id", JSString $ toJSString (show (userid f)))])])
+                                           (list friendsPage)),
+                                  ("paging", pagingParamsJSON friendsPage)]
+
 {- | 
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
  -}
