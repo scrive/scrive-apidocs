@@ -116,7 +116,7 @@ embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
     let sid = serviceid srvs
-    let slocation = fromMaybe (ctxhostpart ctx) $ show <$> (servicelocation $ servicesettings srvs)
+    let slocation = fromMaybe (ctxhostpart ctx) $ (BS.toString . unServiceLocation) <$> (servicelocation $ servicesettings srvs)
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> apiAskString "location"
     doc <- documentFromParam
