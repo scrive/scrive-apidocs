@@ -81,14 +81,30 @@ javascriptLocalisation =
              , attachments : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
+			 , reminder : {
+					     send : "$_sendReminder()$"
+					   , formHead : "$_reminderFormHead()$"
+					   , formSend :	"$_reminderFormSendReminder()$"
+                       , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
+					}
+             , sign :  {
+                        guardCBox : "$_signGuardCBox()$"
+                    }
+             , reject : {
+                         send : "$_pageDocumentForSignContentRejectFooterReject()$"
+                       , editMessage : "$_pageDocumentForSignContentRejectFooterOwnMessage()$"
+               }
              , signatoryMessage : {
                          datamismatch :"$_signatoryMessageIfSignatoryDatamismatch()$"
                        , timedout : "$_signatoryMessageIfTimedout()$"
                        , rejected : "$_signatoryMessageIfSignatoryRejecteddate()$"
-                       , seen : "_signatoryMessageIfSignatorySeendate()"
-                       , read : "_signatoryMessageIfSignatoryReaddate()"
+                       , seen : "$_signatoryMessageIfSignatorySeendate()$"
+                       , read : "$_signatoryMessageIfSignatoryReaddate()$"
                        , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
                        , other : "$_signatoryMessageIfElse()$"   
                     }
+            , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
+            , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
+            , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
    }
 ####

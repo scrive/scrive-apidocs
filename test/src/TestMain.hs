@@ -4,9 +4,13 @@ module TestMain where
 import Control.Applicative
 import Data.Char
 import Data.Either
+import Database.HDBC.PostgreSQL
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
+
+import DB.Classes
+import DB.Migrations
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -45,13 +49,13 @@ import RedirectTest
 import IntegrationAPITest
 #endif
 
-allTests :: [Test]
-allTests = tail tests
+allTests :: Connection -> [Test]
+allTests conn = tail tests
     where
         tests = [
             undefined
 #ifndef NO_DOCSTATE
-          , docStateTests
+          , docStateTests conn
 #endif
 #ifndef NO_HTML
           , htmlTests
@@ -60,17 +64,17 @@ allTests = tail tests
           , inputValidationTests
 #endif
 #ifndef NO_LOGIN
-          , loginTests
+          , loginTests conn
 #endif
 #ifndef NO_MAILAPI
-          , mailApiTests
+          , mailApiTests conn
 #endif
 #ifndef NO_TRUSTWEAVER
           -- everything fails for trustweaver, so commenting out for now
           --, trustWeaverTest
 #endif
 #ifndef NO_USERSTATE
-          , userStateTests
+          , userStateTests conn
 #endif
 #ifndef NO_DOCSTATEQUERY
           , docStateQueryTests
@@ -79,17 +83,17 @@ allTests = tail tests
           , redirectTests
 #endif
 #ifndef NO_INTEGRATIONAPI
-          , integrationAPITests
+          , integrationAPITests conn
 #endif
           ]
 
-testsToRun :: [String] -> [Either String Test]
-testsToRun [] = []
-testsToRun (t:ts) =
+testsToRun :: Connection -> [String] -> [Either String Test]
+testsToRun _ [] = []
+testsToRun conn (t:ts) =
     case map toLower t of
-         "all"             -> map Right allTests ++ rest
+         "all"             -> map Right (allTests conn) ++ rest
 #ifndef NO_DOCSTATE
-         "docstate"        -> Right docStateTests : rest
+         "docstate"        -> Right (docStateTests conn) : rest
 #endif
 #ifndef NO_HTML
          "html"            -> Right htmlTests : rest
@@ -98,16 +102,16 @@ testsToRun (t:ts) =
          "inputvalidation" -> Right inputValidationTests : rest
 #endif
 #ifndef NO_LOGIN
-         "login"           -> Right loginTests : rest
+         "login"           -> Right (loginTests conn) : rest
 #endif
 #ifndef NO_MAILAPI
-         "mailapi"         -> Right mailApiTests : rest
+         "mailapi"         -> Right (mailApiTests conn) : rest
 #endif
 #ifndef NO_TRUSTWEAVER
          "trustweaver"     -> Right trustWeaverTests : rest
 #endif
 #ifndef NO_USERSTATE
-         "userstate"       -> Right userStateTests : rest
+         "userstate"       -> Right (userStateTests conn) : rest
 #endif
 #ifndef NO_DOCSTATEQUERY
          "docstatequery"   -> Right docStateQueryTests : rest
@@ -116,15 +120,18 @@ testsToRun (t:ts) =
          "redirect"        -> Right redirectTests : rest
 #endif
 #ifndef NO_INTEGRATIONAPI
-         "integrationapi"        -> Right integrationAPITests : rest
+         "integrationapi"  -> Right (integrationAPITests conn) : rest
 #endif
          _                 -> Left t : rest
     where
-        rest = testsToRun ts
+        rest = testsToRun conn ts
 
 main :: IO ()
 main = do
     hSetEncoding stdout utf8
     hSetEncoding stderr utf8
-    (args, tests) <- partitionEithers . testsToRun <$> getArgs
-    defaultMainWithArgs tests args
+    pgconf <- readFile "kontrakcja_test.conf"
+    withPostgreSQL pgconf $ \conn -> do
+        ioRunDB conn checkDBConsistency
+        (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
+        defaultMainWithArgs tests args

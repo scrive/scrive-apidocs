@@ -45,6 +45,20 @@ offersignguardwarntext=$_offersignguardwarntext()$
 ordersignguardwarntext=$_ordersignguardwarntext()$
 ######
 pageDocumentForSignContent=
+<script>
+
+jQuery(function(){
+var docview = KontraStandardDocument.init({
+	id:"$documentid$",
+	viewer : new DocumentViewer({
+				signatoryid : "$siglinkid$",
+				magichash : "$sigmagichash$"
+			})
+	});
+jQuery(".mainContainer960").append(docview.view.el)
+})
+</script>
+<!--
 <script type="text/javascript" src="/js/bankid.js"></script>
 <div class="localdialogs">
   $loadingdialog()$
@@ -331,5 +345,7 @@ pageDocumentForSignContent=
     $endif$
 </div>
 $signatoryScriptIfRequired()$
+
+-->
 ###
 #####

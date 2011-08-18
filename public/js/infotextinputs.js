@@ -3,7 +3,8 @@
  *  var iti =  InfoTextInput.init({
  *              infotext: "Infotext for the input",
  *              value*: "Value for input (if needed)",
- *              class* : "Extra css class to be put on the input" })
+ *              class* : "Extra css class to be put on the input" 
+ *              style: some extra style params})
  *  will create InfoTextInput object.
  *
  *  InfoTextInput methods
@@ -32,6 +33,9 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   setValue: function(value) {
       this.set({"value": value});
+      if (this.get("onChange") != undefined)
+          this.get("onChange")(value);
+          
   },
   setFocus : function() {
       this.set({focus : true});
@@ -52,7 +56,8 @@ var InfoTextInputView = Backbone.View.extend({
   events: {
         "focus"  :  "addFocus",
         "blur"   :  "looseFocus",
-        "change" :  "updateValue"
+        "change" :  "updateValue",
+        "keyup" : "updateValue"
     },
     initialize: function (args) {
         _.bindAll(this, 'render', 'addFocus' , 'looseFocus', 'updateValue');
@@ -98,11 +103,14 @@ window.InfoTextInput = {
     init: function (args) {
           var model = new InfoTextInputModel({
                       infotext: args.infotext,
-                      value: args.value
+                      value: args.value,
+                      onChange : args.onChange
                     });
           var input = $("<input type='text'/>");
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
+          if (args.style != undefined)
+              input.attr("style", attr.style);
           var view = new InfoTextInputView({model : model, el : input});
           return new Object({
               value : function() {return model.value();},

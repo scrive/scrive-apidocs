@@ -10,8 +10,6 @@ module TestKontra (
     , getCookie
     , mkRequest
     , mkContext
-    , testAPI
-    , isFlashOfType
     ) where
 
 import Control.Applicative
@@ -33,9 +31,8 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import API.API
 import Context
-import FlashMessage
+import DB.Classes
 import KontraMonad
 import MinutesTime
 import Templates.Templates
@@ -46,6 +43,10 @@ newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Co
     deriving (Applicative, Functor, Monad, MonadIO, MonadPlus)
 
 instance Kontrakcja TestKontra
+
+instance DBMonad TestKontra where
+  getConnection = ctxdbconn <$> getContext
+  handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
 
 instance TemplatesMonad TestKontra where
     getTemplates = ctxtemplates <$> getContext
@@ -90,18 +91,18 @@ instance WebMonad Response TestKontra where
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-    runTestKontra :: Request -> Context -> TestKontra a -> IO (a, Context)
+    runTestKontra :: MonadIO m => Request -> Context -> TestKontra a -> m (a, Context)
 
 instance RunnableTestKontra a where
     runTestKontra rq ctx tk = do
-        (mres, (ctx', _)) <- runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
+        (mres, (ctx', _)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
         case mres of
              Right res -> return (res, ctx')
              Left  _   -> error "finishWith called in function that doesn't return Response"
 
 instance RunnableTestKontra Response where
     runTestKontra rq ctx tk = do
-        (mres, (ctx', f)) <- runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
+        (mres, (ctx', f)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
         case mres of
              Right res -> return (f res, ctx')
              Left  res -> return (f res, ctx')
@@ -156,8 +157,8 @@ getCookie :: String -> [(String, Cookie)] -> Maybe String
 getCookie name cookies = cookieValue <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
-mkRequest :: Method -> [(String, Input)] -> IO Request
-mkRequest method vars = do
+mkRequest :: MonadIO m => Method -> [(String, Input)] -> m Request
+mkRequest method vars = liftIO $ do
     rqbody <- newEmptyMVar
     ib <- if isReqPost
              then newMVar vars
@@ -182,8 +183,8 @@ mkRequest method vars = do
         isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
-mkContext :: KontrakcjaTemplates -> IO Context
-mkContext templates = do
+mkContext :: MonadIO m => KontrakcjaTemplates -> m Context
+mkContext templates = liftIO $ do
     docs <- newMVar M.empty
     enforcer <- newEmptyMVar
     memcache <- MemCache.new BS.length 52428800
@@ -195,6 +196,7 @@ mkContext templates = do
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = 0
+        , ctxdbconn = error "dbconn is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""
@@ -218,19 +220,3 @@ mkContext templates = do
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
     }
-
--- | Runs API function and returns its json response
-testAPI :: (APIContext c, Kontrakcja m) => APIFunction m c APIResponse -> m APIResponse
-testAPI f = do
-    methodM POST
-    mcontext <- apiContext
-    case mcontext of
-         Right apictx -> either (uncurry apiError) id <$> runApiFunction f apictx
-         Left emsg -> return $ uncurry apiError emsg
-
--- Various helpers
-
--- | Checks type of flash message
-isFlashOfType :: FlashMessage -> FlashType -> Bool
-isFlashOfType (FlashMessage ft _) t = ft == t
-isFlashOfType (FlashTemplate ft _ _) t = ft == t

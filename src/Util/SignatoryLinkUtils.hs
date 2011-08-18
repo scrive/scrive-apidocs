@@ -31,16 +31,17 @@ module Util.SignatoryLinkUtils (
   MaybeSignatoryLink(..),
        ) where
 
-import Company.CompanyState
+import Company.Model
+import DB.Types
 import Doc.DocStateData
 import Mails.MailsUtil
-import User.UserState
+import User.Model
 import Util.HasSomeUserInfo
-import Misc
 
 import Data.List
 import Data.Maybe
 import Data.Functor
+import Misc
 
 import qualified Data.ByteString as BS
 

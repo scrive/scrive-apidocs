@@ -14,24 +14,32 @@ module API.Service.ServiceState
     , UpdateServiceUI(..)
     , UpdateServiceSettings(..)
     , toServiceLocation
+    , insertServicesIntoPG
 ) where
+
 import Codec.Binary.Base16 as Base16
+import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Data.Data
 import Data.Maybe (isJust)
+import Database.HDBC
+import DB.Classes
+import DB.Derive
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.State
 import Misc
-import User.Password
+import User.OldPassword
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.UTF8 as BS
 
 
 newtype ServiceID = ServiceID { unServiceID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''ServiceID)
 
 deriving instance Data ServiceID
 instance Version ServiceID
@@ -51,6 +59,7 @@ instance FromReqURI ServiceID  where
 
 newtype ServiceLocation = ServiceLocation { unServiceLocation :: BS.ByteString }
     deriving (Eq, Ord, Typeable, Read)
+$(newtypeDeriveConvertible ''ServiceLocation)
 
 toServiceLocation :: String -> ServiceLocation
 toServiceLocation s = let
@@ -62,7 +71,7 @@ instance Show ServiceLocation where
 
 newtype ServiceAdmin = ServiceAdmin { unServiceAdmin :: Int }
     deriving (Eq, Ord, Typeable, Read, Show)
-
+$(newtypeDeriveConvertible ''ServiceAdmin)
 
 deriving instance Data ServiceAdmin
 instance Version ServiceAdmin
@@ -287,7 +296,6 @@ updateServiceSettings sid settings = do
                     Right s { servicesettings = settings }
   return ()
 
-
 $(mkMethods ''Services [
                 'getService
               , 'getServicesForAdmin
@@ -313,3 +321,42 @@ $(deriveSerializeFor [
 instance Component Services where
   type Dependencies Services = End
   initialValue = IxSet.empty
+
+insertServicesIntoPG :: DB ()
+insertServicesIntoPG = wrapDB $ \conn -> do
+  services <- query GetServices
+  forM_ services $ \s -> do
+    let (salt, hash) = case servicepassword $ servicesettings s of
+         NoPassword -> (Nothing, Nothing)
+         Password salt' hash' -> (Just $ B64.encode $ BS.pack salt', Just $ B64.encode $ BS.pack hash')
+    _ <- run conn ("INSERT INTO services ("
+      ++ "  id"
+      ++ ", password"
+      ++ ", salt"
+      ++ ", admin_id"
+      ++ ", location"
+      ++ ", email_from_address"
+      ++ ", mail_footer"
+      ++ ", button1"
+      ++ ", button2"
+      ++ ", buttons_text_color"
+      ++ ", background"
+      ++ ", overlay_background"
+      ++ ", bars_background"
+      ++ ", logo) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, decode(?, 'base64'))") [
+        toSql $ serviceid s
+      , toSql hash
+      , toSql salt
+      , toSql $ serviceadmin $ servicesettings s
+      , toSql $ servicelocation $ servicesettings s
+      , toSql $ servicemailfromaddress $ servicesettings s
+      , toSql $ servicemailfooter $ serviceui s
+      , toSql $ (B64.encode . fst) `fmap` servicebuttons (serviceui s)
+      , toSql $ (B64.encode . snd) `fmap` servicebuttons (serviceui s)
+      , toSql $ servicebuttonstextcolor $ serviceui s
+      , toSql $ servicebackground $ serviceui s
+      , toSql $ serviceoverlaybackground $ serviceui s
+      , toSql $ servicebarsbackground $ serviceui s
+      , toSql $ B64.encode `fmap` servicelogo (serviceui s)
+      ]
+    return ()

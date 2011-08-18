@@ -51,12 +51,7 @@
 "_pageDocumentForSignContentElegSubhead","Välj typ av e-legitimation","Select type of e-ID"
 "_pageDocumentForSignContentRejectFooterOwnMessage","Skriv eget meddelande","Write own message"
 "_pageDocumentForSignContentRejectFooterReject","Avvisa","Reject"
-"_signGuardCBox","Jag intygar att:              <br/>1. Samtliga undertecknande
- parter är korrekta.              <br/>2. Jag granskat och
- förstått dokumentet.              <br/>3. Jag har befogenhet
- att skriva på dokumentet.","I certify that:          <br/>1. All signatories are correct.
-          <br/>2. I have reviewed and understood the document.
-           <br/>3. I am authorized to sign the document."
+"_signGuardCBox","Jag intygar att:              <br/>1. Samtliga undertecknande parter är korrekta.              <br/>2. Jag granskat och förstått dokumentet.           <br/>3. Jag har befogenhet att skriva på dokumentet.","I certify that:          <br/>1. All signatories are correct.          <br/>2. I have reviewed and understood the document.           <br/>3. I am authorized to sign the document."
 "_signStepsBodyAttachmentsSubhead","Bifogade bilagor:","Attached attachments:"
 "_signStepsBodyRequestedAttachmentsSubhead","Bägarda bilagor:","Requested attachments:"
 "_signStepsContainerSignedbymeHasattachmentAttachments","Bilagor","Attachments:"

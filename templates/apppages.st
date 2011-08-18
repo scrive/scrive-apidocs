@@ -51,7 +51,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/backbone.js"
                 type="text/javascript"></script>
-
+        <script src="$prefix$/js/livequery.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/flashmessages.js"
                 type="text/javascript"></script>
 
@@ -68,7 +69,7 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/confirmations.js"
                 type="text/javascript"></script>
-        <script src="$prefix$/js/selects.js"
+		<script src="$prefix$/js/selects.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/lists.js"
                 type="text/javascript"></script>
@@ -81,6 +82,8 @@ standardHeaderContents=
         <script src="$prefix$/js/signatories.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/documents.js"
+                type="text/javascript"></script>
+		<script src="$prefix$/js/confirmationsWithEmails.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/docview.js"
                 type="text/javascript"></script>  

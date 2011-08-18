@@ -73,6 +73,7 @@ module Doc.DocView (
   ) where
 
 import ActionSchedulerState (ActionID)
+import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocState
@@ -89,6 +90,7 @@ import Templates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import User.Model
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -301,7 +303,8 @@ documentJSON msl _crttime doc = do
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc))
+       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
+       ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc))
      ]
 
 
@@ -322,6 +325,8 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", return $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
+      , ("attachments", return $ JSArray $ map signatoryAttachmentJSON $ 
+                        filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
    ]
     where
     datamismatch = case documentcancelationreason doc of
@@ -331,6 +336,15 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
                     Just (rt, slid, _)
                         | slid == signatorylinkid siglink -> Just rt
                     _                             -> Nothing
+
+
+signatoryAttachmentJSON :: SignatoryAttachment -> JSValue
+signatoryAttachmentJSON sa = JSObject $ toJSObject $
+    [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
+      , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
+      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
+    ]
+
 
 signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc siglink = JSArray $
@@ -430,6 +444,11 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signatorycanceledtext", text processsignatorycanceledtext)
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
+      -- And more
+      , ("requiressignguard", bool processrequiressignguard)
+      , ("signbuttontext", text processsignbuttontext)
+      , ("signatorycancelmodaltitle", text processsignatorycancelmodaltitle)
+      , ("signguardwarntext", text processsignguardwarntext)
      ]
     where
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k

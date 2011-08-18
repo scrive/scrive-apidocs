@@ -82,6 +82,9 @@ Executable kontrakcja-server
     ghc-options: -rtsopts
   Build-depends: filepath
   Build-depends: base64-bytestring
+  Build-depends: convertible
+  Build-depends: HDBC
+  Build-depends: HDBC-postgresql
   Build-depends: tagsoup
   Build-depends: zlib
   Build-depends: cryptocipher==0.2.*

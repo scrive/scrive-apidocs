@@ -36,16 +36,14 @@ import Data.Char
 import Data.Typeable
 import Data.Data
 import Data.Maybe
-import Payments.PaymentsView
-import Payments.PaymentsState
+import Database.HDBC.PostgreSQL
+import DB.Classes
 import Misc
-import MinutesTime
 import User.UserView
-import User.UserState
+import User.Model
 import Doc.DocState
-import Company.CompanyState
-import API.Service.ServiceState
-import Happstack.State (query)
+import Company.Model
+import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 
@@ -66,7 +64,7 @@ adminUsersAdvancedPage users params =
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage users page - can find user here -}
-adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
 adminUsersPage users params =
     renderTemplateFM "adminusers" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -78,7 +76,7 @@ adminUsersPage users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
 adminUsersPageForSales users params =
     renderTemplateFM "adminUsersForSales" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -90,7 +88,7 @@ adminUsersPageForSales users params =
         field "startletter" $ startletter params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
 adminUsersPageForPayments users params =
     renderTemplateFM "adminUsersForPayments" $ do
         field "adminlink" $ show $ LinkAdminOnly
@@ -102,13 +100,13 @@ adminUsersPageForPayments users params =
         field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
-adminUserPage :: TemplatesMonad m => User -> Maybe Company -> PaymentAccountModel -> m String
-adminUserPage user mcompany paymentModel =
+adminUserPage :: TemplatesMonad m => User -> Maybe Company -> m String
+adminUserPage user mcompany =
     renderTemplateFM "adminuser" $ do
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
         fieldF "user" $ userFields user
         fieldF "company" $ companyFields mcompany
-        field "paymentmodel" $ getModelView paymentModel
+        --field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
@@ -122,7 +120,7 @@ adminUserUsageStatsPage user mcompany morefields =
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 
-allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,UserStats)] -> m String
+allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
 allUsersTable users =
     renderTemplateFM "allUsersTable" $ do
         fieldFL "users" $ map mkUserInfoView $ users
@@ -141,23 +139,22 @@ statsPage stats sysinfo =
         field "sysinfo" $ sysinfo
         field "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage :: TemplatesMonad m => [Service] -> m String
-servicesAdminPage services = do
+servicesAdminPage :: TemplatesMonad m => Connection -> [Service] -> m String
+servicesAdminPage conn services = do
     renderTemplateFM "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly
         fieldFL "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldM "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
+            fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
 adminTranslationsPage::TemplatesMonad m => m String
 adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
 
-mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats, UserStats) -> Fields m
-mkUserInfoView (user, mcompany, docstats, userstats) = do
+mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats) -> Fields m
+mkUserInfoView (user, mcompany, docstats) = do
   fieldF "userdetails" $ userBasicFields user mcompany
   field "docstats" $ docstats
-  field "userstats" $ userstats
   fieldF "adminview" $ do userFields user
                           companyFields mcompany
 
@@ -165,9 +162,6 @@ mkUserInfoView (user, mcompany, docstats, userstats) = do
 data StatsView = StatsView
                  { svDoccount          :: Int
                  , svSignaturecount    :: Int
-                 , svUsercount         :: Int
-                 , svViralinvitecount  :: Int
-                 , svAdmininvitecount  :: Int
                  } deriving (Data, Typeable)
 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}
@@ -189,8 +183,8 @@ instance UserBased User where
 instance UserBased (User,Maybe Company) where
   getUser (user,_) = user
 
-instance UserBased (User,Maybe Company,DocStats,UserStats) where
-  getUser (user,_,_,_) = user
+instance UserBased (User,Maybe Company,DocStats) where
+  getUser (user,_,_) = user
 
 {-| Users on current page-}
 visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]
@@ -240,6 +234,7 @@ userFields u =  do
         field "email" $ getEmail u
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin" $ useriscompanyadmin u
+{-
         field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
@@ -248,14 +243,15 @@ userFields u =  do
                                                                                  then soption show show x
                                                                                  else option show show x)
         field "paymentaccounttype" $ for (allValues::[PaymentAccountType])
-                                                                         (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
+                                                                         (\x -> if (x == userpaymentaccounttype u)
                                                                                  then soption show show x
                                                                                  else option show show x)
         field "freetrialexpirationdate" $ showDateOnly <$> userfreetrialexpirationdate u
-        field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
-        field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
-        field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
-        field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
+-}
+        --field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
+        --field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
+        --field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
+        --field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
         field "id" $ show (userid u)
 
 

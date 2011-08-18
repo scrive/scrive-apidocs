@@ -954,7 +954,7 @@ modalNewPasswordView=
   </div>
 </form>
 ####
-modalInviteUserAsSubaccount=
+modalInviteUserAsCompanyAccount=
 <form action="" method="post">
   <input type="hidden" name="takeover" value="really" />
   <input type="hidden" name="email" value="$email$" />
@@ -994,7 +994,7 @@ modalInviteUserAsSubaccount=
 </form>
 ####
 ####
-modalDoYouWantToBeSubaccount=
+modalDoYouWantToBeCompanyAccount=
 <form action="" method="post">
   <div class="modal-container">
     <div class="modal-header">

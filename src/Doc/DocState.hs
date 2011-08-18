@@ -67,7 +67,7 @@ module Doc.DocState
     , DocumentFromSignatoryData(..)
     , UpdateSigAttachments(..)
     , SaveSigAttachment(..)
-    , MigrateDocumentSigAccounts(..)
+    --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
     , StoreDocumentForTesting(..)
@@ -76,13 +76,14 @@ module Doc.DocState
     )
 where
 
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 import Control.Monad
 import Control.Monad.Reader (ask)
 import Data.List (find)
 import Data.Maybe
 import Data.Word
+import DB.Types
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
@@ -92,7 +93,7 @@ import Happstack.State
 import Mails.MailsUtil
 import MinutesTime
 import Misc
-import User.UserState
+import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
@@ -1104,7 +1105,7 @@ setupForDeletion doc = blankDocument {
   blankSigLink siglinkid = SignatoryLink {
                              signatorylinkid = siglinkid
                            , signatorydetails = blankSigDetails
-                           , signatorymagichash = MagicHash { unMagicHash = 0 }
+                           , signatorymagichash = MagicHash 0
                            , maybesignatory = Nothing
                            , maybesupervisor = Nothing -- this field is now deprecated, should use maybecompany instead
                            , maybecompany = Nothing
@@ -1522,6 +1523,7 @@ migrateDocumentSigLinkCompanies docid sigusers =
     This migration should be deleted soon.  It makes sure that maybesignatory and maybesupervisor
     are properly populated on the signatory links.
 -}
+{-
 migrateDocumentSigAccounts :: DocumentID -> [User] -> Update Documents (Either String Document)
 migrateDocumentSigAccounts docid sigusers =
   modifyDocumentWithActionTime False (const True) docid $ \doc ->
@@ -1548,7 +1550,7 @@ migrateDocumentSigAccounts docid sigusers =
       || ((isSignable documenttype) && (documentstatus /= Preparation))
     clearSignatoryAccount :: SignatoryLink -> SignatoryLink
     clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybecompany = Nothing }
-
+-}
 {- |
     Updates the list of required signatory attachments on the given document.
     This ensures that the document is in a preperation state.  If there's a problem,
@@ -1676,7 +1678,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'signableFromDocumentIDWithUpdatedAuthor
                         , 'documentFromSignatoryData
                         , 'templateFromDocument
-                        , 'migrateDocumentSigAccounts
+                        --, 'migrateDocumentSigAccounts
                         , 'migrateDocumentSigLinkCompanies
                         , 'fixBug510ForDocument
                         ])
