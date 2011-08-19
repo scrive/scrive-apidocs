@@ -46,7 +46,7 @@ adminsmain=
         </tr>
         <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-          <td style="height:50px;width:200px"><a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> </td>
+          <td style="height:50px;width:200px"><!--<a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> --> </td>
         </tr>
     </tbody></table>
 ###
