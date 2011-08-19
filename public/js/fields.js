@@ -95,6 +95,16 @@ window.Field = Backbone.Model.extend({
     },
     readyForSign : function(){
         return this.placements().length == 0 || this.value() != "" || this.isClosed();
+    },
+    nicename : function() {
+        var name = this.name();
+        if (name == "sigco")
+            return localization.company;
+        if (name == "sigpersnr" )     
+            return localization.personamNumber;
+        if (name == "sigcompnr") 
+            return localization.companyNumber;
+        return name;
     }
    
 });
@@ -118,7 +128,7 @@ window.FieldStandardView = Backbone.View.extend({
                 input.val(field.value());
             else
                 {
-                input.val(field.name());
+                input.val(field.nicename());
                 input.addClass("grayed");
                 }
         this.el.append(input);
@@ -128,7 +138,7 @@ window.FieldStandardView = Backbone.View.extend({
             this.el.addClass("dragfield");
             var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
             var input = InfoTextInput.init({
-                                 infotext: field.name(),
+                                 infotext: field.nicename(),
                                  value: field.value(),
                                  cssClass :'fieldvalue',       
                                  onChange : function(value) {

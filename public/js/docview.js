@@ -87,15 +87,19 @@ var DocumentStandarView = Backbone.View.extend({
           var middlebox = $("<div class='float-left signViewBodyBox'/>");
           if (document.currentSignatory() != undefined)
           {
-              var currentsignatoryview = new SignatoryStandarView({model : document.currentSignatory(), el : $("<div/>")});
-              middlebox.append(currentsignatoryview.el);
+              if (document.currentSignatory().author() || document.currentSignatory().signs()) {
+                var currentsignatoryview = new SignatoryStandarView({model : document.currentSignatory(), el : $("<div/>")});
+                middlebox.append(currentsignatoryview.el);
+              }  
           }    
           
           var lastbox = $("<div class='float-right signViewBodyBox'/>");
           var othersignatories = document.otherSignatories();
           _.each(document.otherSignatories(), function(signatory) {
-              var signatoryview = new SignatoryStandarView({model : signatory, el : $("<div/>")});
-              lastbox.append(signatoryview.el);
+              if (signatory.author() || signatory.signs()) {
+                var signatoryview = new SignatoryStandarView({model : signatory, el : $("<div/>")});
+                lastbox.append(signatoryview.el);
+              }
           });
 
           

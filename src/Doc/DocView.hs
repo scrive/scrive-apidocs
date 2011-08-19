@@ -357,9 +357,9 @@ signatoryFieldsJSON doc siglink = JSArray $
        fieldJSON doc "fstname" (BS.toString $ getFirstName siglink) True (signatoryfstnameplacements $ signatorydetails siglink)
      , fieldJSON doc "sndname" (BS.toString $ getLastName siglink) True (signatorysndnameplacements $ signatorydetails siglink)
      , fieldJSON doc "email" (BS.toString $ getEmail siglink) True (signatoryemailplacements  $ signatorydetails siglink)
-     , fieldJSON doc "personalnumber" (BS.toString $ getPersonalNumber siglink) True (signatorypersonalnumberplacements $ signatorydetails siglink)
-     , fieldJSON doc "company" (BS.toString $ getCompanyName siglink) True (signatorycompanyplacements $ signatorydetails siglink)
-     , fieldJSON doc "companynumber" (BS.toString $ getCompanyNumber siglink) True (signatorycompanynumberplacements $ signatorydetails siglink)
+     , fieldJSON doc "sigpersnr" (BS.toString $ getPersonalNumber siglink) closePersonaNumber (signatorypersonalnumberplacements $ signatorydetails siglink)
+     , fieldJSON doc "sigco" (BS.toString $ getCompanyName siglink) closeCompanyName (signatorycompanyplacements $ signatorydetails siglink)
+     , fieldJSON doc "sigcompnr" (BS.toString $ getCompanyNumber siglink) closeCompanyNumber (signatorycompanynumberplacements $ signatorydetails siglink)
     ] ++
     for (signatoryotherfields $ signatorydetails siglink) (\fielddef ->
         fieldJSON
@@ -369,7 +369,10 @@ signatoryFieldsJSON doc siglink = JSArray $
             (fieldfilledbyauthor fielddef)
             (fieldplacements fielddef)
         )
-
+    where 
+        closeCompanyNumber = (not $ BS.null $ getCompanyNumber siglink) || (null $ signatorycompanynumberplacements $ signatorydetails siglink)
+        closeCompanyName = (not $ BS.null $ getCompanyName siglink) || (null $ signatorycompanyplacements $ signatorydetails siglink)
+        closePersonaNumber = (not $ BS.null $ getPersonalNumber siglink) || (null $ signatorypersonalnumberplacements $ signatorydetails siglink)
                                                    
 fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> JSValue
 fieldJSON  doc name value closed placements = JSObject $ toJSObject $

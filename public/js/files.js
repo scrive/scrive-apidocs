@@ -136,12 +136,12 @@ var FilePageView = Backbone.View.extend({
             if (placement.field().value() != "")
                     val.text(field.value());
                 else
-                    val.text(field.name());
+                    val.text(field.nicename());
             field.bind('change', function() {
                 if (placement.field().value() != "")
                     val.text(field.value());
                 else
-                    val.text(field.name());
+                    val.text(field.nicename());
             });
             var place = $("<div style='position: absolute;' class='placedfield'>");
             place.offset({
