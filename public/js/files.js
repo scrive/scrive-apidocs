@@ -1,5 +1,6 @@
 /* Basic modules for daling with a files
- *
+ * File model + view of the files on all pages with ajax download of pages
+ * Also support for showing fields placements | Sign view only for now
  */
 
 

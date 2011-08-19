@@ -1,5 +1,5 @@
-/* Basic modules for daling with a files
- *
+/* Signatory view of document
+ * Now unified with author and viewer views
  */
 
 

@@ -1,7 +1,8 @@
-/*Module for basic system schema called tabs
+/*Module for basic system schema called tabs. Like three steps in design view or Conteacts | Offers | Orders | .. in Archive
  *
- * Tab contails of name and body, while Tabs is collection of Tabs with some title.
- * By default firs one is active.
+ * Tab contails of name and body, 
+ * Tabs is collection of Tabs with some title.
+ * By default first one is active.
  *
  * 
  */

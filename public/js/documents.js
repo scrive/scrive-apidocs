@@ -1,12 +1,9 @@
-/* Whole document schema
+/* Document model 
+ * Also document viewer (person thet is looking at document so we can hold current signatory magic hash somewere)
  */
 
 
 (function(window){
-/*
- * Document has id and knows if its signed
- */
-
 
 window.DocumentViewer = Backbone.Model.extend({
     signatoryid : function(){

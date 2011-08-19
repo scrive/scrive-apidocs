@@ -1,11 +1,8 @@
-/* Whole document schema
+/* Signatories model + basic view + signatories attachments
  */
 
 
 (function(window){
-/*
- * Document has id and knows if its signed
- */
 
 window.SignatoryAttachment = Backbone.Model.extend({
     defaults: {

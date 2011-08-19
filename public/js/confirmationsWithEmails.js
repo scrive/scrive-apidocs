@@ -1,15 +1,6 @@
-/* Basic buttons
- * Usage
- *  var button =  Button.init({
- *                   color: "red | green | blue | black",
- *                   size: "tiny | small | big",
- *                   text: "Text that will be put inside of button"
- *                   onClick* : "Function to be called when button is clicked" })
- *  will return Button object. 
- *
- * It exports method input that returns jQuery object to be inserted anywere you want
- *
- * button.input()
+/* We have a lot of popups where body if a preview of the mail.
+ * This modal downloads email preview from server and shows such modal allowing edit of some part of email
+ * 
 */
   
 $(function(){

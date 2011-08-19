@@ -1,12 +1,10 @@
-/* Whole document schema
+/* Fields of signatories
+ * Placement of fields + support for moving them to files
+ * View of field in sign view 
  */
 
 
 (function(window){
-/*
- * Document has id and knows if its signed
- */
-
 
 window.FieldPlacement = Backbone.Model.extend({
     defaults: {
