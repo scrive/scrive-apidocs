@@ -327,17 +327,35 @@
         getSelected : function() {
             return this.filter(function(e){return e.isSelected();});
         },
+        hasUnselected : function() {
+            var l = this.models.length;
+            for(var i = 0; i < l; i++)
+                if(!this.models[i].isSelected())
+                    return true;
+            return false;
+        },
         parse : function(response) {
             this.schema.paging().updateWithServerResponse(response.paging);
             return response.list;
+        },
+        selectNone : function() {
+            this.each(function(e) {
+                e.unselect();
+            });
+        },
+        selectAll : function() {
+            this.each(function(e) {
+                e.select();
+            });
         }
     });
 
     var ListObjectView = Backbone.View.extend({
         model : ListObject,
         events: {
-            'click .selectme': 'toggleSelect',
-            'click .expand': 'toggleExpand'
+            'click .selectme': 'selectCheck',
+            'click .expand': 'toggleExpand',
+            'click .row': 'selectRow'
         },
         initialize: function (args) {
             _.bindAll(this, 'render', 'renderSelection');
@@ -350,12 +368,12 @@
         render: function () {
             if (this.el.size() === 1)
                 for(var j = 0; j < this.model.subfieldsSize(); j++)  
-                    this.el = this.el.add($("<tr/>"));
+                    this.el = this.el.add($("<tr />"));
             
             this.el.empty();
             var mainrow = this.el.first();
             for(var i = 0; i < this.schema.size(); i++) {
-                var td = $("<td></td>");
+                var td = $("<td  class='row' ></td>");
                 var cell = this.schema.cell(i);
                 var value = this.model.field(cell.field());
                 if (cell.isSpecial()) {
@@ -409,8 +427,16 @@
             }
             
         },
-        toggleSelect: function(){
+        selectCheck: function(){
             this.model.toggleSelect();
+        },
+        selectRow: function(e){
+            // ignore checkboxes and links
+            if(!$(e.target).is(":checkbox, a")){
+                // select only this one
+                this.model.collection.selectNone();
+                this.model.toggleSelect();
+            }
         },
         toggleExpand: function(){
             this.model.toggleExpand();
@@ -545,14 +571,10 @@
         },
         toggleSelectAll : function(){
             // if there are some unselected, select them all
-            if(this.model.length > this.model.getSelected().length)
-                this.model.each(function(e) {
-                    e.select();
-                });
+            if(this.model.hasUnselected())
+                this.model.selectAll();
             else // all selected
-                this.model.each(function(e) {
-                    e.unselect();
-                });
+                this.model.selectNone();
         }
     });
 
