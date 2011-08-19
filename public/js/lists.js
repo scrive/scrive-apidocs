@@ -334,6 +334,13 @@
                     return true;
             return false;
         },
+        hasSelected : function() {
+            var l = this.models.length;
+            for(var i = 0; i < l; i++)
+                if(this.models[i].isSelected())
+                    return true;
+            return false;
+        },
         parse : function(response) {
             this.schema.paging().updateWithServerResponse(response.paging);
             return response.list;
@@ -373,7 +380,7 @@
             this.el.empty();
             var mainrow = this.el.first();
             for(var i = 0; i < this.schema.size(); i++) {
-                var td = $("<td  class='row' ></td>");
+                var td = $("<td class='row'></td>");
                 var cell = this.schema.cell(i);
                 var value = this.model.field(cell.field());
                 if (cell.isSpecial()) {
@@ -382,7 +389,7 @@
                     else if (cell.isRendered() && value != undefined)
                         td.append(cell.rendering(value,true,this.model));
                     else if (cell.isExpandable() &&  value != undefined)
-                        td.html($("<a href='#' class='expand'>"+value+"</a>"));
+                        td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     else if(cell.isLink() && this.model.hasLink() && value != undefined)
                         td.append($("<a href='"+this.model.link()+"'>"+value+"</a>"));
                 }    
@@ -427,7 +434,7 @@
             }
             
         },
-        selectCheck: function(){
+        selectCheck: function(e){
             this.model.toggleSelect();
         },
         selectRow: function(e){
@@ -512,7 +519,7 @@
                 var onSelectFunction =  e.onSelect
                 if (onSelectFunction != undefined)
                     e.onSelect = function() {
-                        if (model.getSelected().length > 0)
+                        if (model.hasSelected())
                             return onSelectFunction(model.getSelected());
                         else
                             return function(){};   
@@ -528,10 +535,8 @@
             for(var i=0;i<this.schema.size();i++)
             {  var cell = this.schema.cell(i);
                var th = $("<th>")
-               if (cell.isSpecial() && cell.isSelect()) {
-                   var checkbox = $("<input type='checkbox' class='selectall'>");
-                   th.append(checkbox);
-               }
+               if (cell.isSpecial() && cell.isSelect())
+                   th.append(this.checkbox = $("<input type='checkbox' class='selectall'>"));
                else { 
                    var a = $("<a/>");
                    var text = cell.name();
@@ -557,6 +562,10 @@
             
         },
         render: function () {
+            if(this.model.hasUnselected())
+                this.checkbox.attr('checked', false);
+            else
+                this.checkbox.attr('checked', true);
             var body = this.tbody;
             var odd = true;
             this.model.forEach( function(e) {
@@ -570,10 +579,9 @@
             return this;
         },
         toggleSelectAll : function(){
-            // if there are some unselected, select them all
             if(this.model.hasUnselected())
                 this.model.selectAll();
-            else // all selected
+            else
                 this.model.selectNone();
         }
     });
