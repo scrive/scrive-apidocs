@@ -179,13 +179,10 @@ handleRoutes = msum [
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
-<<<<<<< HEAD
      , dir "doc"                   $ hGet1  $ toK1 $ DocControl.jsonDocument
      , dir "mailpreview"           $ hGet2  $ toK2 $ DocControl.prepareEmailPreview 
-=======
 
      , dir "friends"               $ hGet0  $ toK0 $ UserControl.handleFriends
->>>>>>> 96767a83b9516b404ed4969b486e953923a5d77c
 
      , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet1  $ toK1 $ DocControl.handleAttachmentViewForAuthor

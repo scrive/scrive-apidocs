@@ -87,6 +87,7 @@
 "_dialogCsvupload2FooterBack","Bakåt","Back"
 "_dialogCsvupload2FooterNext","Nästa","Next"
 "_dialogCsvupload2Head","Massutskick: Granska Data","Multi send: Review data"
+"_document","dokument","document"
 "_editInviteTextDialogFooterOwnMessage","Skriv eget meddelande","Write your own message"
 "_editInviteTextDialogHead","Hälsningsmeddelande","Invitation message"
 "_editinvitetextlink","JUSTERA HÄLSNINGSMEDDELANDE","ADJUST INVITATION MESSAGE"
@@ -153,4 +154,3 @@
 "_updateAttachmentsDialogUpLoadOnlyPDF","OBS! Endast PDF","PDF only!"
 "_updateAttachmentsDialogUpLoadSaved","Sparad på SkrivaPå","Stored in Scrive"
 "_validationdropdownChooseVMethod","Välj verifieringsmetod","Select verification method"
-"_document","dokument","document"

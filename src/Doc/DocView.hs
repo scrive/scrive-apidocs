@@ -95,7 +95,7 @@ import User.Model
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Char (toUpper)
-import Data.List (find, isInfixOf)
+import Data.List (isInfixOf)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -304,8 +304,13 @@ documentJSON msl _crttime doc = do
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
-       ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc))
+       ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
+       ("authorization", return $ authorizationJSON $ head $ documentallowedidtypes doc)
      ]
+
+authorizationJSON :: IdentificationType -> JSValue
+authorizationJSON EmailIdentification = JSString $ toJSString "email"
+authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
 
 
 signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
@@ -449,6 +454,9 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signbuttontext", text processsignbuttontext)
       , ("signatorycancelmodaltitle", text processsignatorycancelmodaltitle)
       , ("signguardwarntext", text processsignguardwarntext)
+      , ("signatorysignmodalcontent", text processsignatorysignmodalcontent)
+      , ("signbuttontext", text processsignbuttontext)
+      , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
      ]
     where
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k
@@ -462,18 +470,10 @@ fileJSON file =
  
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 docForListJSON crtime doc = (fmap toJSObject) $ propagateMonad  $
-<<<<<<< HEAD
     [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
       ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
       ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
     ]
-=======
-                [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
-                  ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (getSignatoryPartnerLinks doc)),
-                  ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
-                ]
->>>>>>> 96767a83b9516b404ed4969b486e953923a5d77c
-
 
 jsonPack :: [(String,String)] -> JSValue
 jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
@@ -903,45 +903,11 @@ pageDocumentForAuthor :: TemplatesMonad m
                       => Context
                       -> Document
                       -> m String
-pageDocumentForAuthor ctx
-  document@Document {
-      documentsignatorylinks
-    , documentid
-    , documentstatus
-  }
-  =
-   let
-       authorsiglink = fromJust $ getAuthorSigLink document
-   in do
-     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
-     renderTemplateFM "pageDocumentForAuthor" $ do
-       field "linkissuedoc" $ show $ LinkIssueDoc documentid
-       fieldFL "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document
-       field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
-       fieldM "cancelMailContent" $ mailCancelDocumentByAuthorContent False Nothing ctx document
-       field "linkcancel" $ show $ LinkCancel document
-       field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
-       fieldM "documentinfotext" $ documentInfoText ctx document (find isAuthor documentsignatorylinks)
-       documentAuthorInfo document
-       documentInfoFields document
-       documentViewFields document
-       documentAttachmentViewFields documentid Nothing (documentauthorattachments document)
-       documentSigAttachmentViewFields csvstring documentid documentsignatorylinks Nothing (documentsignatoryattachments document)
-       fieldF "process" processFields
-   where
-     getProcessText = renderTextForProcess document
-     processFields = do
-       fieldM "title" $ getProcessText processtitle
-       fieldM "restartbuttontext" $ getProcessText processrestartbuttontext
-       fieldM "cancelbuttontext" $ getProcessText processcancelbuttontext
-       fieldM "rejectbuttontext" $ getProcessText processrejectbuttontext
-       fieldM "cancelbyauthormodaltitle" $ getProcessText processcancelbyauthormodaltitle
-       fieldM "signatorysignedtext" $ getProcessText processsignatorysignedtext
-       fieldM "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
-       fieldM "authorissecretarytext" $ getProcessText processauthorissecretarytext
-       fieldM "remindagainbuttontext" $ getProcessText processremindagainbuttontext
-       signatoryMessageProcessFields document
+pageDocumentForAuthor _ document =
+  renderTemplateFM "pageDocumentForAuthor" $ do
+      field "documentid" $ show $ documentid document
+      field "siglinkid" $ fmap (show . signatorylinkid) $ getAuthorSigLink document
+      field "sigmagichash" $ fmap (show .  signatorymagichash) $ getAuthorSigLink document
 
 {- |
    Show the document for Viewers (friends of author or signatory).
@@ -949,93 +915,11 @@ pageDocumentForAuthor ctx
  -}
 
 pageDocumentForViewer :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String
-pageDocumentForViewer ctx
-  document@Document {
-      documentsignatorylinks
-    , documentid
-    , documentstatus
-    , documentdaystosign
-    , documentinvitetext
-    , documentallowedidtypes
-  }
-  msignlink =
-    let documentdaystosignboxvalue = maybe 7 id documentdaystosign
-        authorsiglink = fromJust $ getAuthorSigLink document
-   in do
-     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
-     invitationMailContent <- mailInvitationToSignOrViewContent False ctx document Nothing
-     cancelMailContent <- mailCancelDocumentByAuthorContent False Nothing ctx document
-     documentinfotext <- documentInfoText ctx document Nothing
-     renderTemplateFM "pageDocumentForViewerContent" $  do
-       field "linkissuedoc" $ show $ LinkIssueDoc documentid
-       field "documentinvitetext" $ documentinvitetext
-       field "invitationMailContent" $ invitationMailContent
-       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
-       field "anyinvitationundelivered" $ anyInvitationUndelivered document
-       field "undelivered" $ map getEmail $ undeliveredSignatoryLinks document
-       fieldFL "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document
-       field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
-       field "cancelMailContent" $ cancelMailContent
-       field "linkcancel" $ show $ LinkCancel document
-       field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
-       case msignlink of
-           Nothing -> return ()
-           Just siglink -> do
-                          field "siglinkid" $ show $ signatorylinkid siglink
-                          field "sigmagichash" $ show $ signatorymagichash siglink
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF msignlink document)
-       field "documentinfotext" $ documentinfotext
-       documentInfoFields document
-       documentViewFields document
-       documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
-       documentSigAttachmentViewFields csvstring documentid documentsignatorylinks msignlink (documentsignatoryattachments document)
-       documentAuthorInfo document
-       fieldF "process" $ fieldM "title" $ renderTextForProcess document processtitle
-       signatoryMessageProcessFields document
-
-signatoryMessageProcessFields :: TemplatesMonad m => Document -> Fields m
-signatoryMessageProcessFields document = do
-  fieldM "signatorysignedtext" $ getProcessText processsignatorysignedtext
-  fieldM "signatorycanceledtext" $ getProcessText processsignatorycanceledtext
-  fieldM "authorissecretarytext" $ getProcessText processauthorissecretarytext
-  fieldM "remindagainbuttontext" $ getProcessText processremindagainbuttontext
-  where
-    getProcessText = renderTextForProcess document
-
-documentAttachmentViewFields :: (Functor m, MonadIO m) => DocumentID -> Maybe SignatoryLink -> [AuthorAttachment] -> Fields m
-documentAttachmentViewFields docid msignlink atts = do
-  field "isattachments" $ length atts > 0
-  fieldFL "attachments" $ map attachmentFields atts
-  where
-    attachmentFields AuthorAttachment{ authorattachmentfile = File{ filename, fileid } } = do
-      field "attachmentname" filename
-      field "linkattachment" $ case msignlink of
-        Just signlink -> show (LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) fileid)
-        Nothing -> show (LinkAttachmentForAuthor docid fileid)
-
-documentSigAttachmentViewFields :: (Functor m, MonadIO m) => String -> DocumentID -> [SignatoryLink] -> Maybe SignatoryLink -> [SignatoryAttachment] -> Fields m
-documentSigAttachmentViewFields csvstring docid sls msignlink atts = do
-  field "hassigattachments" $ length atts > 0
-  fieldFL "sigattachments" $ map sigAttachmentFields atts
-  where
-    sigAttachmentFields a = do
-      let mattachlink = find (isSigLinkFor (signatoryattachmentemail a)) sls
-      if (signatoryattachmentemail a) == BS.fromString "csv" 
-        then field "signame" csvstring
-        else field "signame" $ maybe "No name" (BS.toString . getFullName) mattachlink
-      field "email" $ signatoryattachmentemail a
-      field "name" $ signatoryattachmentname a
-      field "desc" $ signatoryattachmentdescription a
-      field "filename" $ fmap filename $ signatoryattachmentfile a
-      field "viewerlink" $
-        case (msignlink, maybe Nothing maybesigninfo mattachlink, signatoryattachmentfile a) of
-          (_, _, Nothing) -> Nothing
-          (_, Nothing, _) -> Nothing
-          (Nothing, _, Just file) -> Just $ show $ LinkAttachmentForAuthor docid (fileid file)
-          (Just signlink, _, Just file) -> Just $ show $ LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) (fileid file)
+pageDocumentForViewer _ document  msignlink =
+  renderTemplateFM "pageDocumentForViewerContent" $  do
+       field "documentid" $ show $ documentid document 
+       field "siglinkid" $ fmap (show . signatorylinkid) msignlink
+       field "sigmagichash" $ fmap (show . signatorymagichash) msignlink
 
 pageDocumentForSignatory :: TemplatesMonad m
                          => KontraLink
@@ -1043,74 +927,11 @@ pageDocumentForSignatory :: TemplatesMonad m
                          -> Context
                          -> SignatoryLink
                          -> m String
-pageDocumentForSignatory action document ctx invitedlink  = do
-  csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
-  listyou <- renderTemplateM "listyou" ()
+pageDocumentForSignatory _ document _ invitedlink  = do
   renderTemplateFM "pageDocumentForSignContent" $ do
-    mainFields csvstring listyou
-    fieldF "process" $ processFields csvstring listyou
-    where
-    mainFields csvstring listyou =
-      let authorsiglink = fromJust $ getAuthorSigLink document
-          localscripts =
-            "var docstate = "
-            ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
-            ++ "; docstate['useremail'] = '"
-            ++ (BS.toString $ getEmail invitedlink)
-            ++ "';"
-          allowedtypes = documentallowedidtypes document
-          requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
-          invitedemail = getEmail invitedlink
-          sigattachments = [a | a <- documentsignatoryattachments document
-                              , signatoryattachmentemail a == invitedemail]
-          hassigattachments = length sigattachments > 0
-          otherunsignedpartynames = map (BS.toString . getSmartName) . filter ((/=) invitedemail . getEmail) $ partyUnsignedList document
-          unsignedpartynames = 
-            if hasSigned invitedlink
-              then otherunsignedpartynames
-              else listyou : otherunsignedpartynames --refer to yourself in the list, like "you, bob and jim" or "du, bob och jim"
-      in do
-        field "localscripts" localscripts
-        fieldFL "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
-        fieldM "rejectMessage" $  mailRejectMailContent Nothing ctx (getSmartName authorsiglink) document invitedlink
-        fieldM "partyUnsigned" $ renderListTemplate unsignedpartynames
-        field "action" $ show action
-        field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
-        fieldM "documentinfotext" $ documentInfoText ctx document (Just invitedlink)
-        field "requireseleg" requiresEleg
-        field "siglinkid" $ show $ signatorylinkid invitedlink
-        field "sigmagichash" $ show $ signatorymagichash invitedlink
-        documentInfoFields document
-        documentAuthorInfo document
-        documentViewFields document
-        signedByMeFields document (Just invitedlink)
-        documentAttachmentViewFields (documentid document) (Just invitedlink) (documentauthorattachments document)
-        documentSigAttachmentViewFields csvstring (documentid document) (documentsignatorylinks document) (Just invitedlink) (documentsignatoryattachments document)
-        documentSingleSignatoryAttachmentsFields (documentid document) (signatorylinkid invitedlink) (signatorymagichash invitedlink) sigattachments
-        field "hasmysigattachments" hassigattachments
-    getProcessTextWithFields f csvstring listyou = renderTemplateForProcess document f (mainFields csvstring listyou)
-    getProcessText = renderTextForProcess document
-    processFields csvstring listyou = do
-      fieldM "signatorysignmodaltitle" $ getProcessText processsignatorysignmodaltitle
-      fieldM "signatorysignmodalcontent" $ getProcessTextWithFields processsignatorysignmodalcontent csvstring listyou
-      fieldM "signbuttontext" $ getProcessText processsignbuttontext
-      fieldM "signatorycancelmodaltitle" $ getProcessTextWithFields processsignatorycancelmodaltitle csvstring listyou
-      fieldM "rejectbuttontext" $ getProcessText processrejectbuttontext
-      fieldM "title" $ getProcessText processtitle
-      field "requiressignguard" $ getValueForProcess document processrequiressignguard
-      fieldM "signguardwarntext" $ getProcessText processsignguardwarntext
-      signatoryMessageProcessFields document
-
-documentSingleSignatoryAttachmentsFields :: (Functor m, MonadIO m) => DocumentID -> SignatoryLinkID -> MagicHash -> [SignatoryAttachment] -> Fields m
-documentSingleSignatoryAttachmentsFields docid sid mh atts =
-  fieldFL "mysigattachments" $ for atts
-  (\a -> do
-      field "name" $ signatoryattachmentname a
-      field "desc" $ signatoryattachmentdescription a
-      field "filename" $ fmap filename $ signatoryattachmentfile a
-      field "fileid" $ fmap (unFileID . fileid) $ signatoryattachmentfile a
-      field "viewerlink" $ fmap (show . LinkAttachmentForViewer docid sid mh . fileid) $ signatoryattachmentfile a
-  )
+      field "documentid" $ show $ documentid document
+      field "siglinkid" $ (show . signatorylinkid) invitedlink
+      field "sigmagichash" $ (show . signatorymagichash) invitedlink
 
 --- Display of signatory
 signatoryLinkFields :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> SignatoryLink -> Fields m
@@ -1210,13 +1031,6 @@ packToMString x =
   if BS.null x
      then Nothing
      else Just $ BS.toString x
-
-signatoriesWithSecretary :: Document -> [SignatoryLink]
-signatoriesWithSecretary doc =
-  (filter isSignatory $ documentsignatorylinks doc) ++
-  case getAuthorSigLink doc of
-    Just sl | not $ isSignatory sl -> [sl]
-    _ -> []
 
 -- Helper to get document after signing info text
 documentInfoText :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String

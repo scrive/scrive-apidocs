@@ -257,7 +257,7 @@ $signatoryScriptIfRequired()$
 
 jQuery(function(){
 var docview = KontraStandardDocument.init({id:"$documentid$"});
-jQuery(".mainContainer960").append(docview.view.el)
+jQuery("#body-container").replaceWith(docview.view.el)
 })
 </script>
 

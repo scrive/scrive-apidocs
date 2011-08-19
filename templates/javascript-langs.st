@@ -88,12 +88,37 @@ javascriptLocalisation =
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
 					}
              , sign :  {
-                        guardCBox : "$_signGuardCBox()$"
+                          guardCBox : "$_signGuardCBox()$"
+                        , eleg : {
+                                     subhead : "$_pageDocumentForSignContentElegSubhead()$"
+                                   , body1: "$_pageDocumentForSignContentElegBody1()$"
+                                   , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
+                                   , body2 : "$_pageDocumentForSignContentElegBody3()$"
+                                 }
                     }
+             , signByAuthor : {
+                          guardCBoxForAuthorLabel : "$_signGuardField1()$"
+                        , guardCBoxForAuthorAfterLabel : "$_signGuardField2()$"
+                        , modalTitle : "$_dialogConfirmSignByAuthorHead()$"
+                        , modalBody1 : "$_dialogConfirmSignByAuthorBody1()$"
+                        , modalBody2 : "$_dialogConfirmSignByAuthorBody2()$"
+                        , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
+                        , eleg : {
+                                     subhead : "$_dialogConfirmSignByAuthorElegSubHead()$"
+                                   , body1: "$_dialogConfirmSignByAuthorElegBody()$"
+                                   , clickHere : "$_dialogConfirmSignByAuthorElegClickHere1()$"
+                                   , body2 : "$_dialogConfirmSignByAuthorElegClickHere2()$"
+                                 }
+               
+               }
              , reject : {
                          send : "$_pageDocumentForSignContentRejectFooterReject()$"
                        , editMessage : "$_pageDocumentForSignContentRejectFooterOwnMessage()$"
                }
+
+
+
+
              , signatoryMessage : {
                          datamismatch :"$_signatoryMessageIfSignatoryDatamismatch()$"
                        , timedout : "$_signatoryMessageIfTimedout()$"
@@ -106,5 +131,6 @@ javascriptLocalisation =
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
+            , skrivapa : "$_skrivapa()$" 
    }
 ####

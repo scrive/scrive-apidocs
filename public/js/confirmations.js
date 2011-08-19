@@ -41,6 +41,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   rejectText: function() {
        return this.get("rejectText");
+  },
+  acceptButton: function() {
+      return this.get("acceptButton");
   }
 });
 
@@ -70,13 +73,14 @@ var ConfirmationView = Backbone.View.extend({
        var cancel = $("<a class='cancel close float-left'/>");
        cancel.text(this.model.rejectText());
        footer.append(cancel);
-       var accept = Button.init({color:model.acceptColor(),
+       var accept = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
+            Button.init({color:model.acceptColor(),
                                  size: "small",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
                                  onClick : function() { model.accept(); }
-        });
-       footer.append(accept.input());
+            }).input();
+       footer.append(accept);
        this.el.append(header);
        this.el.append(body);
        this.el.append(footer);
@@ -101,7 +105,8 @@ window.Confirmation = {
                       acceptText: args.acceptText,
                       acceptColor : args.acceptColor,
                       rejectText: args.rejectText,
-                      content  : args.content
+                      content  : args.content,
+                      acceptButton : args.acceptButton
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});
