@@ -299,14 +299,20 @@
         isSelected: function() {
             return this.get("selected") == true;
         },
-        toogleSelect:  function() {
+        toggleSelect:  function() {
             this.set({"selected":!this.isSelected()}, {silent: true});
             this.trigger("selected:change");
+        },
+        select: function() {
+            this.set({"selected": true});
+        },
+        unselect: function() {
+            this.set({"selected": false});
         },
         isExpanded: function() {
             return this.get("expanded") == true;
         },
-        toogleExpand:  function() {
+        toggleExpand:  function() {
             this.set({"expanded":!this.isExpanded()});
         }
     });
@@ -319,10 +325,9 @@
             this.url = args.schema.url();
         },
         getSelected : function() {
-            return this.filter(function(e){return e.isSelected()});
+            return this.filter(function(e){return e.isSelected();});
         },
-        parse : function(response)
-        {
+        parse : function(response) {
             this.schema.paging().updateWithServerResponse(response.paging);
             return response.list;
         }
@@ -331,8 +336,8 @@
     var ListObjectView = Backbone.View.extend({
         model : ListObject,
         events: {
-            'click .selectme': 'toogleSelect',
-            'click .expand': 'toogleExpand'
+            'click .selectme': 'toggleSelect',
+            'click .expand': 'toggleExpand'
         },
         initialize: function (args) {
             _.bindAll(this, 'render', 'renderSelection');
@@ -343,36 +348,25 @@
             this.render();
         },
         render: function () {
-            if (this.el.size() == 1)
-            {
-                for(var j=0;j<this.model.subfieldsSize();j++)  this.el = this.el.add($("<tr/>"));
-            }
-            this.el.empty()
+            if (this.el.size() === 1)
+                for(var j = 0; j < this.model.subfieldsSize(); j++)  
+                    this.el = this.el.add($("<tr/>"));
+            
+            this.el.empty();
             var mainrow = this.el.first();
-            for(var i=0;i<this.schema.size();i++)
-            {   var td = $("<td></td>");
+            for(var i = 0; i < this.schema.size(); i++) {
+                var td = $("<td></td>");
                 var cell = this.schema.cell(i);
                 var value = this.model.field(cell.field());
                 if (cell.isSpecial()) {
-                    if (cell.isSelect()) {
-                        this.checkbox = $("<input type='checkbox' class='selectme check'/>");
-                        td.append(this.checkbox);    
-                        
-                    }
-                    else if (cell.isRendered() && value != undefined){
+                    if (cell.isSelect())
+                        td.append(this.checkbox = $("<input type='checkbox' class='selectme check'/>"));
+                    else if (cell.isRendered() && value != undefined)
                         td.append(cell.rendering(value,true,this.model));
-                        
-                    }
                     else if (cell.isExpandable() &&  value != undefined)
-                    {
-                        var span = $("<a href='#' class='expand'>"+value+"</a>")
-                        td.html(span)
-                    }
+                        td.html($("<a href='#' class='expand'>"+value+"</a>"));
                     else if(cell.isLink() && this.model.hasLink() && value != undefined)
-                    {
-                        var a = $("<a href='"+this.model.link()+"'>"+value+"</a>");
-                        td.append(a);
-                    }
+                        td.append($("<a href='"+this.model.link()+"'>"+value+"</a>"));
                 }    
                 else if (value != undefined) {
                     var span = $("<span >"+value+"</span>")
@@ -401,7 +395,7 @@
                     subrow.css("display","none");
             }
             this.renderSelection();
-            return this
+            return this;
         },
         renderSelection : function(){
             if (this.model.isSelected()){
@@ -415,27 +409,27 @@
             }
             
         },
-        toogleSelect: function(){
-            this.model.toogleSelect();
+        toggleSelect: function(){
+            this.model.toggleSelect();
         },
-        toogleExpand: function(){
-            this.model.toogleExpand();
+        toggleExpand: function(){
+            this.model.toggleExpand();
             return false;
         }
     });
 
     var ListView = Backbone.View.extend({
         events: {
-            "click .selectall": "toogleSelectAll"
+            "click .selectall": "toggleSelectAll"
         },
         initialize: function (args) {
-            _.bindAll(this, 'render', 'makeElementsViews', 'toogleSelectAll');
+            _.bindAll(this, 'render', 'makeElementsViews', 'toggleSelectAll');
             this.model.bind('reset', this.makeElementsViews);
             this.model.bind('change', this.render);
             this.model.view = this;
-            this.schema = args.schema
-            this.headerExtras  = args.headerExtras
-            this.bottomExtras = args.bottomExtras
+            this.schema = args.schema;
+            this.headerExtras  = args.headerExtras;
+            this.bottomExtras = args.bottomExtras;
         },
         makeElementsViews : function(ms){
             this.el.empty();
@@ -515,8 +509,7 @@
                else { 
                    var a = $("<a/>");
                    var text = cell.name();
-                   if (this.schema.sorting().isSortable(cell.field()))
-                   {
+                   if (this.schema.sorting().isSortable(cell.field())) {
                        var field = cell.field();
                        var schema = this.schema;
                        a.click(schema.sorting().sortOnFunction(field))
@@ -548,14 +541,18 @@
                     odd = !odd;
                 }   
             });
-            makeSelectable($(body));
             return this;
-
         },
-        toogleSelectAll : function(){
-            this.model.each(function(e){
-                e.toogleSelect();
-            });
+        toggleSelectAll : function(){
+            // if there are some unselected, select them all
+            if(this.model.length > this.model.getSelected().length)
+                this.model.each(function(e) {
+                    e.select();
+                });
+            else // all selected
+                this.model.each(function(e) {
+                    e.unselect();
+                });
         }
     });
 
