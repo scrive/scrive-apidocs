@@ -1,5 +1,30 @@
 ####    Pages for users - usual from my account
 viewCompanyAccounts =
+<script>
+  var companyAccountsTable = KontraList.init({
+  schema: new Schema({
+  url: "/companyaccounts",
+  sorting: new Sorting({ fields: ["firstname",
+                                  "lastname",
+                                  "position",
+                                  "phone",
+                                  "email"]}),
+  paging: new Paging({}),
+  cells : [
+  new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
+  new Cell({name: "$_firstname()$", width:"125px", field:"firstname"}),
+  new Cell({name: "$_lastname()$", width:"125px", field:"lastname" }),
+  new Cell({name: "$_companyposition()$", width:"125px", field:"position" }),
+  new Cell({name: "$_phone()$", width:"125px", field:"phone" }),
+  new Cell({name: "$_email()$", width:"125px", field:"email" }),
+  ]})
+  });
+    
+  jQuery(function(){
+  jQuery("#tab-viewer").append(companyAccountsTable.view.el);
+  });
+</script>
+
 <div>
   <form method="post" action="$currentlink$" class="listForm">
     <div id="tab-viewer">

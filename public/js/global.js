@@ -229,9 +229,8 @@ safeReady(function() {
 /*
  * For the arkiv view fancy selection
  */
-safeReady(function() {
-    var selectable = $("#selectable"),
-    rows = selectable.find("tr"),
+function makeSelectable(selectable) {
+    var rows = selectable.find("tr"),
     rowsChecks = rows.find(".check");
 
     function highlightRow(row) {
@@ -309,6 +308,11 @@ safeReady(function() {
             selectRow($(this), true);
         });
     });
+}
+
+safeReady(function() {
+    var selectable = $("#selectable");
+    makeSelectable(selectable);
 });
 
 function initFileInputs() {

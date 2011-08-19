@@ -1058,6 +1058,33 @@ handleFriends = do
                                            (list friendsPage)),
                                   ("paging", pagingParamsJSON friendsPage)]
 
+handleCompanyAccounts :: Kontrakcja m => m JSValue
+handleCompanyAccounts = do
+  Context{ctxmaybeuser} <- getContext
+  user <- guardJust ctxmaybeuser
+  companyaccounts <- runDBQuery $ GetCompanyAccounts $ userid user
+  params <- getListParamsNew
+  let companypage = companyAccountsSortSearchPage params companyaccounts
+  return $ JSObject $ toJSObject [("list",
+                                   JSArray $
+                                   map (\f -> JSObject $
+                                              toJSObject [("fields",
+                                                           JSObject $ toJSObject [("id", 
+                                                                                   JSString $ toJSString $ show $ userid f)
+                                                                                 ,("firstname",
+                                                                                   JSString $ toJSString $ BS.toString $ getFirstName f)
+                                                                                 ,("lastname",
+                                                                                   JSString $ toJSString $ BS.toString $ getLastName f)
+                                                                                 ,("position",
+                                                                                   JSString $ toJSString $ BS.toString $ usercompanyposition $ userinfo f)
+                                                                                 ,("phone",
+                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f) 
+                                                                                 ,("email",
+                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)])])
+                                   (list companypage))
+                                 ,("paging", pagingParamsJSON companypage)]
+  
+
 {- | 
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
  -}

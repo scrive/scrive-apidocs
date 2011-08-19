@@ -181,6 +181,7 @@ handleRoutes = msum [
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
 
      , dir "friends"               $ hGet0  $ toK0 $ UserControl.handleFriends
+     , dir "companyaccounts"       $ hGet0  $ toK0 $ UserControl.handleCompanyAccounts
 
      , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet1  $ toK1 $ DocControl.handleAttachmentViewForAuthor
