@@ -176,7 +176,8 @@ propagateError();
 # The js submits the form with the target set as the iframe.
 # The browser loads the POST (which stores the cookie!).
 # Then we change the target and repost to the same URL, changing the entire iframe.
-# It requires two extra requests over the simple GET version. But it loads the same page twice,
+# It requires three extra requests over the simple GET version (a GET, a POST + 303 redirect, and a final GET).
+# But it loads the same page twice,
 # so most of the resources should already be loaded in the cache.
 connectredirect=
 <html>
@@ -187,13 +188,15 @@ $standardHeaderContents()$
 <div id="cookieframe" style="position: absolute; top: -10000px"></div>
 <script type="text/javascript">
 jQuery(function() {
-var a = jQuery('<form method="post" action="$url$" target="yoyo"><input type="hidden" name="referer" value="$referer$"></form>');
+var a = jQuery('<form method="post" action="$url$" target="yoyo"></form>');
 var i = jQuery('<iframe name="yoyo" src="javascript:false">');
 
 jQuery("#cookieframe").append(i);
 jQuery("#cookieframe").append(a);
 a.submit();
 a.attr("target", "");
+a.attr("action", "$referer$");
+a.attr("method", "GET");
 i.load(function() {
     a.submit();
 });

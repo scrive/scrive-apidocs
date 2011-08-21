@@ -295,6 +295,10 @@ handleRoutes = msum [
      , dir "s" $ param "eleg" $ hPost3 $ toK3 $ BankID.handleSignPostBankID
      , dir "d" $ hGet2  $ toK2 $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost1 $ toK1 $ BankID.handleIssuePostBankID
+       
+     -- a general purpose blank page
+     --, dir "/blank" $ hGet0 $ toK0 $ simpleResponse ""
+       
      , userAPI
      , integrationAPI
      -- static files

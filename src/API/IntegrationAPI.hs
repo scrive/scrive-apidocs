@@ -55,6 +55,8 @@ import Util.MonadUtils
 import AppView
 import Templates.Templates
 import qualified AppLogger as Log (debug)
+import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+
 
 {- |
   Definition of integration API
@@ -300,9 +302,9 @@ connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (runDBQuery $ GetUserByID uid)
     when (not matchingService) mzero
     loaded <- loadServiceSession (Right uid) ssid
-    if (loaded)
-     then return $ BackToReferer
-     else mzero
+    -- just send back empty string
+    when loaded $ finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+    mzero
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
 connectUserToSessionGet _sid _uid _ssid = do
