@@ -19,7 +19,9 @@ var ButtonModel = Backbone.Model.extend({
       color : "green",
       size  : "small",
       text  : "",
-      onClick : function() {return false;}
+      onClick : function() {return false;},
+      icon : jQuery(""),
+      labelstyle : ""
   },
   color : function(){
        return this.get("color");
@@ -32,7 +34,14 @@ var ButtonModel = Backbone.Model.extend({
   },
   clicked : function(){
        this.get("onClick")();
+  },
+  icon : function() {
+       return this.get("icon");
+  },
+  labelstyle :  function() {
+       return this.get("labelstyle");
   }
+  
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -51,7 +60,12 @@ var ButtonView = Backbone.View.extend({
         this.el.addClass(this.model.color());
         this.el.addClass("btn-"+this.model.size());
         this.el.append("<div class='left'/>");
-        this.el.append($("<div class='label'/>").text(this.model.text()));
+        
+        var label = $("<div class='label'/>").text(this.model.text());
+        label.append(this.model.icon());
+        label.attr("style",this.model.labelstyle());
+        this.el.append(label);
+        
         this.el.append("<div class='right'/>");
         return this;
     },
@@ -68,11 +82,15 @@ window.Button = {
                        color : args.color,
                        size  : args.size,
                        text  : args.text,
-                       onClick : args.onClick
+                       onClick : args.onClick,
+                       icon : args.icon,
+                       labelstyle : args.labelstyle
                     });
           var input = $("<a/>");
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
+          if (args.style != undefined)
+              input.attr("style",args.style);
           var view = new ButtonView({model : model, el : input});
           return new Object({
               input : function() {return input;}

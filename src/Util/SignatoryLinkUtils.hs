@@ -23,11 +23,13 @@ module Util.SignatoryLinkUtils (
   isViewer,
   isDeletedFor,
   getSigLinkFor,
+  validSigLink,
   getSignatoryPartnerLinks,
   hasSeen,  
   hasUser,
   hasCompany,
-  SignatoryLinkIdentity
+  SignatoryLinkIdentity,
+  MaybeSignatoryLink(..),
        ) where
 
 import Company.Model
@@ -39,6 +41,8 @@ import Util.HasSomeUserInfo
 
 import Data.List
 import Data.Maybe
+import Data.Functor
+import Misc
 
 import qualified Data.ByteString as BS
 
@@ -186,6 +190,13 @@ isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
 getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
 getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
 
+{- 
+  Checks if siglink with magic hash is valid for this document
+-}
+
+validSigLink ::  SignatoryLinkID -> MagicHash-> Maybe Document -> Bool
+validSigLink a mh (Just doc) =  joinB $ (== mh)  <$> signatorymagichash <$> (getSigLinkFor doc a)
+validSigLink _ _ _ = False
 
 {- |
    Gets the signatory links from the document that are

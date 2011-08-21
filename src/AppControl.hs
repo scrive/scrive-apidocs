@@ -179,6 +179,8 @@ handleRoutes = msum [
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
+     , dir "doc"                   $ hGet1  $ toK1 $ DocControl.jsonDocument
+     , dir "mailpreview"           $ hGet2  $ toK2 $ DocControl.prepareEmailPreview 
 
      , dir "friends"               $ hGet0  $ toK0 $ UserControl.handleFriends
      , dir "companyaccounts"       $ hGet0  $ toK0 $ UserControl.handleCompanyAccounts
@@ -197,6 +199,7 @@ handleRoutes = msum [
      , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
      , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
+     , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages
      , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax3 $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 

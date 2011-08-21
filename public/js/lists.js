@@ -638,7 +638,7 @@
         },
         recall : function()
         {
-            this.model.fetch({data: this.schema.getSchemaUrlParams(),   processData:  true});
+       this.model.fetch({data: this.schema.getSchemaUrlParams(),   processData:  true, cache : false});
         }
         
     }

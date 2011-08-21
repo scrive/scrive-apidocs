@@ -59,7 +59,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
-import Text.JSON (JSValue(..), toJSObject)
+import Text.JSON hiding (Result)
 
 import ForkAction
 
@@ -1407,6 +1407,29 @@ handleAttachmentViewForAuthor docid = do
         pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
         simpleResponse pages
 
+
+{- We return pending message if file is still pending, else we return JSON with number of pages-}
+handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
+handleFilePages did fid = do
+  (mdoc,_) <- jsonDocumentGetterWithPermissionCheck did
+  when (isNothing mdoc ) mzero
+  let doc = fromJust mdoc
+  ctx <- getContext
+  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc) ++ (authorattachmentfile <$> documentauthorattachments doc)
+  case (find (((==) fid) . fileid) $ allfiles) of
+    Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No file found")]
+    Just file  -> do
+      jpages <- liftIO $ maybeScheduleRendering ctx file did
+      case jpages of
+       JpegPagesPending -> return $ JSObject $ toJSObject [("wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
+       JpegPagesError _ -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "rendering failed")]
+       JpegPages pages  -> return $ JSObject $ toJSObject [("pages",JSArray $ map pageinfo pages)]
+  where
+      pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
+                                                         ("height",JSRational True $ toRational height)
+                                                        ]
+
+
 -- get rid of duplicates
 -- FIXME: nub is very slow
 prepareDocsForList :: [Document] -> [Document]
@@ -1744,7 +1767,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
       ctx@Context { ctxmaybeuser = Just user } <- getContext
       edoc <- getDocByDocID docid
       case edoc of
-        Left _ -> return LinkMain
+        Left _ -> return LoopBack
         Right doc -> do
           guard $ isAuthor (doc, user)
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
@@ -1754,9 +1777,9 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
               -- get (updated) siglink from updated document
               sl <- guardJust (getSigLinkFor newdoc slid)
               sendInvitationEmail1 ctx newdoc sl
-              return $ LinkIssueDoc $ docid
-            _ -> return LinkMain
-    _ -> return LinkMain
+              return $ LoopBack
+            _ -> return LoopBack
+    _ -> return LoopBack
 
 sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
 sendCancelMailsForDocument customMessage ctx document = do
@@ -1969,7 +1992,36 @@ jsonDocumentsList = do
     docsJSONs <- mapM (fmap JSObject . docForListJSON cttime) $ list docs
     return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
                                     ("paging", pagingParamsJSON docs)]
+
+
+jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
+jsonDocument did = do
+    (mdoc,msiglink) <- jsonDocumentGetterWithPermissionCheck did
+    cttime <- liftIO $ getMinutesTime
+    rsp <- case mdoc of
+         Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
+         Just doc -> JSObject <$> documentJSON msiglink cttime doc
+    return rsp
     
+jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
+jsonDocumentGetterWithPermissionCheck did = do
+    ctx <- getContext
+    mmagichashh <- readField "magichash"
+    msignatorylink <- readField "signatoryid" 
+    case (msignatorylink,mmagichashh) of
+        (Just slid,Just mh) -> do
+                   mdoc <- query $ GetDocumentByDocumentID did
+                   let msiglink = join $ find ((== slid) . signatorylinkid) <$> (documentsignatorylinks <$> mdoc)
+                   if (validSigLink slid mh mdoc)
+                     then return (mdoc,msiglink)
+                     else return (Nothing,Nothing)
+        _ -> do
+                    mdoc <- toMaybe <$> getDocByDocID did
+                    let msiglink = join $ getMaybeSignatoryLink <$> pairMaybe mdoc (ctxmaybeuser ctx)
+                    return $ (mdoc, msiglink)
+
+
+
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlySuperUser $ do
   Context{ ctxtime } <- getContext
@@ -1979,4 +2031,30 @@ handleInvariantViolations = onlySuperUser $ do
         [] -> "No problems!"
         _  -> intercalate "\n" probs
   return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
+
+
+
+prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+prepareEmailPreview docid slid = do
+    ctx <- getContext
+    Log.debug "Making email preview"
+    mailtype <- getFieldWithDefault "" "mailtype"
+    mdoc <- query $ GetDocumentByDocumentID docid
+    when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
+    let doc = fromJust mdoc
+    content <- case mailtype of
+         "cancel" -> mailCancelDocumentByAuthorContent True Nothing ctx doc
+         "remind" -> do
+             let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
+             case msl of
+               Just sl -> mailDocumentRemindContent  Nothing ctx doc sl
+               Nothing -> return ""
+         "reject" -> do
+             let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
+             case msl of
+               Just sl -> mailRejectMailContent Nothing ctx  BS.empty doc sl
+               Nothing -> return ""
+         _ -> return ""
+    return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]
+    
 

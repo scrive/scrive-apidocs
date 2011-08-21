@@ -12,7 +12,9 @@ data SystemServer = SkrivaPa | Scrive
 $(enumDeriveConvertible ''SystemServer)
 
 systemServerFromURL :: String -> SystemServer
-systemServerFromURL url =
-  if "localhost" `isInfixOf` url
-     then Scrive
-     else SkrivaPa
+systemServerFromURL url =  if ("scrive" `isInfixOf` url)
+                             then Scrive
+                             else SkrivaPa
+
+
+
