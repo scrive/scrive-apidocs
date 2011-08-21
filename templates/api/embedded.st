@@ -1,7 +1,11 @@
 ###
+# August 21, 2011
+# Eric Normand
+# Have to set style="overflow:hidden" on html tag to prevent safari from drawing
+# unnecessary scrollbars on iframe
 embeddedPage= 
 $doctype()$
-<html>
+<html style="overflow:hidden">
 <head>
 $standardHeaderContents()$
 
