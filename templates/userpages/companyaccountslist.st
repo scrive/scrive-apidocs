@@ -10,18 +10,23 @@ viewCompanyAccounts =
                                   "phone",
                                   "email"]}),
   paging: new Paging({}),
+  filtering: new Filtering({text: "", infotext: "$_SearchCompanyAccount()$"}),
   cells : [
-  new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-  new Cell({name: "$_firstname()$", width:"125px", field:"firstname"}),
-  new Cell({name: "$_lastname()$", width:"125px", field:"lastname" }),
-  new Cell({name: "$_companyposition()$", width:"125px", field:"position" }),
-  new Cell({name: "$_phone()$", width:"125px", field:"phone" }),
-  new Cell({name: "$_email()$", width:"125px", field:"email" }),
+  new Cell({name: "ID", width:"20px", field:"id", special: "select"}),
+  new Cell({name: "$_firstname()$", width:"65px", field:"firstname"}),
+  new Cell({name: "$_lastname()$", width:"80px", field:"lastname" }),
+  new Cell({name: "$_companyposition()$", width:"50px", field:"position" }),
+  new Cell({name: "$_phone()$", width:"105px", field:"phone" }),
+  new Cell({name: "$_email()$", width:"100px", field:"email" })
+,
+  new Cell({name: "adder", width:"40px", field:"isunsaved", special: "adder"})
   ]})
   });
     
   jQuery(function(){
-  jQuery("#tab-viewer").append(companyAccountsTable.view.el);
+  //uncomment this to add it
+  // but it's still not done!
+  //jQuery("#tab-viewer").append(companyAccountsTable.view.el);
   });
 </script>
 

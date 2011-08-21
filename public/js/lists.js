@@ -57,6 +57,9 @@
         isRendered: function() {
             return this.get("special") != undefined && this.get("special") == "rendered";
         },
+        isAdder: function() {
+            return this.get("special") != undefined && this.get("special") == "adder";
+        },
         rendering: function(value, mainrow, model) {
             return this.get("rendering")(value, mainrow, model);
         }
@@ -279,7 +282,8 @@
             fields: [],
             subfields: [],
             selected : false,
-            expanded : false
+            expanded : false,
+            unsaved : false
         },
         field: function(name) {
             return this.get("fields")[name];
@@ -298,6 +302,9 @@
         },
         isSelected: function() {
             return this.get("selected") == true;
+        },
+        isUnsaved: function() {
+            return this.get("unsaved");
         },
         toggleSelect:  function() {
             this.set({"selected":!this.isSelected()}, {silent: true});
@@ -326,6 +333,9 @@
         },
         getSelected : function() {
             return this.filter(function(e){return e.isSelected();});
+        },
+        isEmpty : function() {
+            return this.models.length === 0;
         },
         hasUnselected : function() {
             var l = this.models.length;
@@ -392,6 +402,8 @@
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     else if(cell.isLink() && this.model.hasLink() && value != undefined)
                         td.append($("<a href='"+this.model.link()+"'>"+value+"</a>"));
+                    else if(cell.isAdder() && this.model.isUnsaved()) 
+                        td.append($('<a href="#" class="icon small ok add"></a><a href="#" class="icon small minus remove"></a>'));
                 }    
                 else if (value != undefined) {
                     var span = $("<span >"+value+"</span>")
@@ -453,7 +465,8 @@
 
     var ListView = Backbone.View.extend({
         events: {
-            "click .selectall": "toggleSelectAll"
+            "click .selectall": "toggleSelectAll",
+            "click .add": "addNew"
         },
         initialize: function (args) {
             _.bindAll(this, 'render', 'makeElementsViews', 'toggleSelectAll');
@@ -537,6 +550,8 @@
                var th = $("<th>")
                if (cell.isSpecial() && cell.isSelect())
                    th.append(this.checkbox = $("<input type='checkbox' class='selectall'>"));
+               else if(cell.isAdder())
+                   th.append($('<a class="icon small add"></a>'));
                else { 
                    var a = $("<a/>");
                    var text = cell.name();
@@ -558,11 +573,11 @@
                    th.css("width",cell.width())
                headline.append(th);
             }
-            return $("<thead/>").append(headline);
+            return $("<thead />").append(headline);
             
         },
         render: function () {
-            if(this.model.hasUnselected())
+            if(this.model.hasUnselected() || this.model.isEmpty())
                 this.checkbox.attr('checked', false);
             else
                 this.checkbox.attr('checked', true);
@@ -583,6 +598,23 @@
                 this.model.selectAll();
             else
                 this.model.selectNone();
+        },
+        addNew: function(){
+            console.log("addNew");
+            var obj = {};//new ListObject();
+            var fields = {};
+            var l = this.model.schema.size();
+            for(var i = 0; i < l; i++) {
+                var cell = this.model.schema.cell(i);
+                if(cell.isAdder())
+                    obj[cell.field()] = true;
+                else
+                    fields[cell.field()] = "";
+            }
+            obj.fields = fields;
+            this.model.add(new ListObject(obj));
+            this.model.trigger('render');
+            console.log(this);
         }
     });
 
