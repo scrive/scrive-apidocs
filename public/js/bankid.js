@@ -1,77 +1,51 @@
 // checks for ie
 function hasIESigner1Plugin() {
     try {
-        var xObj = new ActiveXObject(Nexus.SignerCtl);
-        if (xObj) {
-            return true;
-        }
+        return !!(new ActiveXObject(Nexus.SignerCtl));
     } catch(e) {
-        // do nothing
+        return false;
     }
-    return false;
 }
 
 function hasSign2PluginIE() {
     try {
-        var xObj = new ActiveXObject("Nexus.SignerV2Ctl");
-        if (xObj) {
-            return true;
-        }
+        return !!(new ActiveXObject("Nexus.SignerV2Ctl"));
     } catch(e) {
-        // do nothing
+        return false;
     }
-    return false;
 }
 
 function hasNetIDPluginIE() {
+    // This function always returns true. The detection does not work.
+    // Eric
     return true;
     try {
-        var xObj = new ActiveXObject('Nexus.AuthenticationCtl');
-        if (xObj) {
-            return true;
-        }
-    } catch(e) {}
-    return false;
+        return !!(new ActiveXObject('Nexus.AuthenticationCtl'));
+    } catch(e) {
+        return false;
+    }
 }
 
 // checks for others
 function hasMozillaSigner1Plugin() {
-    if (navigator.plugins) {
-        if (navigator.plugins.length > 0) {
-            if (navigator.mimeTypes && navigator.mimeTypes["application/x-personal-signer"]) {
-                if (navigator.mimeTypes["application/x-personal-signer"].enabledPlugin) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+    return (navigator.plugins 
+            && navigator.plugins.length > 0
+            && navigator.mimeTypes && navigator.mimeTypes["application/x-personal-signer"]
+            && navigator.mimeTypes["application/x-personal-signer"].enabledPlugin);
 }
 
 function hasSign2PluginMozilla() {
-    if (navigator.plugins) {
-        if (navigator.plugins.length > 0) {
-            if (navigator.mimeTypes && navigator.mimeTypes["application/x-personal-signer2"]) {
-                if (navigator.mimeTypes["application/x-personal-signer2"].enabledPlugin) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+    return (navigator.plugins
+            && navigator.plugins.length > 0
+            && navigator.mimeTypes && navigator.mimeTypes["application/x-personal-signer2"]
+            && navigator.mimeTypes["application/x-personal-signer2"].enabledPlugin);
 }
 
 function hasNetIDPluginMozilla() {
-    if (navigator.plugins) {
-        if (navigator.plugins.length > 0) {
-            if (navigator.mimeTypes && navigator.mimeTypes["application/x-iid"]) {
-                if (navigator.mimeTypes["application/x-iid"].enabledPlugin) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+    return (navigator.plugins
+            && navigator.plugins.length > 0
+            && navigator.mimeTypes && navigator.mimeTypes["application/x-iid"]
+            && navigator.mimeTypes["application/x-iid"].enabledPlugin);
 }
 
 // ie installers
@@ -101,115 +75,101 @@ function installNetIDMozilla() {
 }
 
 // sign
-function doSign1(tbs, posturl) {
+function doSign1(tbs) {
     var signer = document.getElementById('signerId');
-    if (signer) {
-        signer.SetDataToBeSigned(tbs);
-        signer.SetIncludeCaCert('true');
-        signer.SetIncludeRootCaCert('true');
-        signer.SetBase64('true');
-        signer.SetCharacterEncoding('UTF8');
-        signer.SetMimeType('text/plain;charset=UTF-8');
-        signer.SetViewData('false');
-        if (signer.Sign() == 0) {
-            return unescape(signer.GetSignature());
-        } else {
-            failEleg(localization.yourSigningPluginFailed + " " + signer.GetErrorString());
-        }
-    } else {
-        failEleg(localization.yourSigningPluginFailed);
-    }
-    return null;
+    if(!signer) // could not find element means plugin activation failed
+        return failEleg(localization.yourSigningPluginFailed);
+
+    signer.SetDataToBeSigned(tbs);
+    signer.SetIncludeCaCert('true');
+    signer.SetIncludeRootCaCert('true');
+    signer.SetBase64('true');
+    signer.SetCharacterEncoding('UTF8');
+    signer.SetMimeType('text/plain;charset=UTF-8');
+    signer.SetViewData('false');
+
+    if (signer.Sign() === 0) // 0 means success
+        return unescape(signer.GetSignature());
+    else
+        return failEleg(localization.yourSigningPluginFailed + " " + signer.GetErrorString());
 }
 
 function doSign2(tbs, nonce, servertime) {
     var signer2 = document.getElementById("signer2");
-    console.log(signer2);
-    if (signer2) {
-        signer2.SetParam('TextToBeSigned', tbs);
-        signer2.SetParam('Nonce', nonce);
-        signer2.SetParam('ServerTime', servertime);
-        signer2.SetParam('TextCharacterEncoding', "UTF-8");
-        var res = signer2.PerformAction('Sign');
-        if (res == 0) {
-            return signer2.GetParam('Signature');
-        } else {
-            failEleg(localization.yourSigningPluginFailed + " error code: " + res);
-        }
-    } else {
-        failEleg(localization.yourSigningPluginFailed);
-    }
-    return null;
+    if(!signer2) // plugin installation failed
+        return failEleg(localization.yourSigningPluginFailed);
+
+    signer2.SetParam('TextToBeSigned', tbs);
+    signer2.SetParam('Nonce', nonce);
+    signer2.SetParam('ServerTime', servertime);
+    signer2.SetParam('TextCharacterEncoding', "UTF-8");
+    var res = signer2.PerformAction('Sign');
+
+    if (res === 0) // 0 means success
+        return signer2.GetParam('Signature');
+    else
+        return failEleg(localization.yourSigningPluginFailed + " error code: " + res);
 }
 
 function doSignNetID(tbs, nonce, servertime) {
     var signer = document.getElementById("iid");
-    if (signer) {
-        signer.SetProperty('DataToBeSigned', tbs);
-        signer.SetProperty('Base64', 'true');
-        signer.SetProperty('UrlEncode', 'false');
-        signer.SetProperty('IncludeRootCaCert', 'true');
-        signer.SetProperty('IncludeCaCert', 'true');
-        var res = signer.Invoke('Sign');
-        if (res == 0) {
-            return signer.GetProperty('Signature');
-        } else {
-            failEleg(localization.yourSigningPluginFailed + " error code: " + res);
-        }
-    } else {
-        failEleg(localization.yourSigningPluginFailed);
-    }
+    if(!signer) // installation failed
+        return failEleg(localization.yourSigningPluginFailed);
+
+    signer.SetProperty('DataToBeSigned', tbs);
+    signer.SetProperty('Base64', 'true');
+    signer.SetProperty('UrlEncode', 'false');
+    signer.SetProperty('IncludeRootCaCert', 'true');
+    signer.SetProperty('IncludeCaCert', 'true');
+    var res = signer.Invoke('Sign');
+    if (res === 0) // 0 means success
+        return signer.GetProperty('Signature');
+    else
+        return failEleg(localization.yourSigningPluginFailed + " error code: " + res);
+
     return null;
 }
 
 // success fns
 function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay();
-    if ($.browser.msie && hasIESigner1Plugin()) {
+    closeLoadingOverlay(); // this was opened just before starting
+    // ajax request
+    if ($.browser.msie && hasIESigner1Plugin())
         IEInstallSigner1Object();
-    } else if (hasMozillaSigner1Plugin()) {
+    else if (hasMozillaSigner1Plugin())
         mozillaInstallSigner1Object();
-    } else {
-        flashNordeaMessage();
-        return false;
-    }
-    var sig = doSign1(tbs);
-    postBack(sig, "nordea", formselector, transactionid, posturl);
+    else
+        return flashNordeaMessage();
+    postBack(doSign1(tbs), "nordea", formselector, transactionid, posturl);
 }
 
 function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
     closeLoadingOverlay();
-    if ($.browser.msie && hasSign2PluginIE()) {
+    if ($.browser.msie && hasSign2PluginIE())
         installSign2IE();
-    } else if (hasSign2PluginMozilla()) {
+    else if (hasSign2PluginMozilla())
         installSign2Mozilla();
-    } else {
-        flashBankIDMessage();
-        return false;
-    }
-    var sig = doSign2(tbs, nonce, servertime);
-    postBack(sig, "bankid", formselector, transactionid, posturl);
+    else
+        return flashBankIDMessage();
+    postBack(doSign2(tbs, nonce, servertime), "bankid", formselector, transactionid, posturl);
 }
 
 function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
     closeLoadingOverlay();
-    if ($.browser.msie && hasNetIDPluginIE()) {
+    if ($.browser.msie && hasNetIDPluginIE())
         installNetIDIE();
-    } else if (hasNetIDPluginMozilla()) {
+    else if (hasNetIDPluginMozilla())
         installNetIDMozilla();
-    } else {
-        flashTeliaMessage();
-        return false;
-    }
-    var sig = doSignNetID(tbs, nonce, servertime);
-    postBack(sig, "telia", formselector, transactionid, posturl);
+    else
+        return flashTeliaMessage();
+    postBack(doSignNetID(tbs, nonce, servertime), "telia", formselector, transactionid, posturl);
 }
 
 // start the signature for signatory
 function sign1() {
-    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
+    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/s/nordea" + url;
@@ -220,9 +180,9 @@ function sign1() {
 }
 
 function sign2() {
-    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
+    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/s/bankid" + url;
@@ -233,9 +193,9 @@ function sign2() {
 }
 
 function netIDSign() {
-    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
+    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/s/telia" + url;
@@ -247,9 +207,9 @@ function netIDSign() {
 
 // for author2
 function sign1AwaitingAuthor() {
-    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
+    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/nordea" + url;
@@ -260,9 +220,9 @@ function sign1AwaitingAuthor() {
 }
 
 function sign2AwaitingAuthor() {
-    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
+    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/bankid" + url;
@@ -273,9 +233,9 @@ function sign2AwaitingAuthor() {
 }
 
 function netIDSignAwaitingAuthor() {
-    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
+    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/telia" + url;
@@ -287,9 +247,9 @@ function netIDSignAwaitingAuthor() {
 
 // for author
 function sign1Author() {
-    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
+    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/nordea" + url;
@@ -300,9 +260,9 @@ function sign1Author() {
 }
 
 function sign2Author() {
-    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
+    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/bankid" + url;
@@ -313,9 +273,9 @@ function sign2Author() {
 }
 
 function netIDSignAuthor() {
-    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
+    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
-    }
+
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/telia" + url;
@@ -327,19 +287,23 @@ function netIDSignAuthor() {
 
 function flashNordeaMessage() {
     FlashMessages.add({ content: localization.noNordeaInstalled, color: "red"});
+    return false;
 }
 
 function flashBankIDMessage() {
     FlashMessages.add({ content: localization.noBankIdInstalled, color: "red"});
+    return false;
 }
 
 function flashTeliaMessage() {
     FlashMessages.add({ content: localization.noTeliaInstalled, color: "red"});
+    return false;
 }
 
 function failEleg(msg) {
     FlashMessages.add({ content: msg, color: "red"});
     closeLoadingOverlay();
+    return null;
 }
 
 safeReady(function() {
@@ -356,6 +320,7 @@ safeReady(function() {
     $("a.telia.author2").click(netIDSignAwaitingAuthor);
 });
 
+// set up the sign modals when eleg/email is selected
 safeReady(function() {
     var eleghidden = $(".eleghidden");
     var signhidden = $(".signhidden");
@@ -378,10 +343,14 @@ safeReady(function() {
     }).change();
 });
 
+// I hope this gets subsumed into backbone.js
 function isAuthorSecretary() {
     return $("#authorsecretaryradio").attr("checked");
 }
 
+// build a js object containing first name, last name, and personal
+// number for all signatories
+// I hope this gets subsumed into backbone.js
 function getSignatoryData() {
     var entries = $("#personpane .sigentry");
     var fnames = entries.find("input[name=signatoryfstname]").map(function(i, el) {
@@ -415,17 +384,16 @@ function getSignatoryData() {
     return ret;
 }
 
+// generate a TBS from the available data
 function generateTBS(doctitle, docid, signatories) {
     var text = localization.tbsGenerationMessage(doctitle, docid);
 
-    if ($("a.group").size() > 0) {
-        text = text + "\n " + localization.differentSignatories;
-    } else {
+    if($("a.group").size() > 0)
+        return text + "\n " + localization.differentSignatories;
+    else
         $(signatories).each(function() {
             text = text + "\n" + this.fname + " " + this.lname + ", " + this.num;
         });
-    }
-
     return text;
 }
 
@@ -434,47 +402,40 @@ function getTBS() {
 }
 
 function checkPlugin(iefn, otfn, msgfn) {
-    if (($.browser.msie && iefn()) || otfn()) {
+    if (($.browser.msie && iefn()) || otfn())
         return true;
-    } else {
+    else
         msgfn();
-        return false;
-    }
+    return false;
 }
 
 function ajaxRequest(ajaxurl, posturl, formselector, successfn, tbs) {
     $.ajax({
         'url': ajaxurl,
         'dataType': 'json',
-        'data': tbs ? {
-            'tbs': getTBS()
-            }: {},
+        'data': tbs ? { 'tbs': getTBS() }: {},
         'scriptCharset': "utf-8",
         'success': function(data) {
-            if (data && data['status'] === 0) {
-                var tbs = data['tbs'];
-                var nonce = data['nonce'];
-                var servertime = data['servertime'];
-                var transactionid = data['transactionid'];
-                successfn(transactionid, tbs, nonce, servertime, posturl, formselector);
-            } else {
+            if (data && data.status === 0)
+                successfn(data.transactionid, data.tbs, data.nonce, data.servertime, posturl, formselector);
+            else
                 failEleg(data.msg);
-            }
         },
         error: repeatForeverWithDelay(250)
     });
 }
 
 function postBack(sig, provider, formselector, transactionid, posturl) {
-    if (sig) {
-        displayLoadingOverlay(localization.verifyingSignature);
-        var form = $(formselector);
-        form.find("#signauto").attr("name", "dontsign");
-        form.find("#signatureinput").val(sig);
-        form.find("#transactionidinput").val(transactionid);
-        form.find("#elegprovider").val(provider);
-        form.find("#elegprovider").attr("name", "eleg");
-        form.attr("action", posturl);
-        form.submit();
-    }
+    if (!sig)
+        return false;
+
+    displayLoadingOverlay(localization.verifyingSignature);
+    var form = $(formselector);
+    form.find("#signauto").attr("name", "dontsign");
+    form.find("#signatureinput").val(sig);
+    form.find("#transactionidinput").val(transactionid);
+    form.find("#elegprovider").val(provider);
+    form.find("#elegprovider").attr("name", "eleg");
+    form.attr("action", posturl);
+    form.submit();
 }
