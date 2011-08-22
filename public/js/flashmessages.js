@@ -7,7 +7,7 @@
   
 $(function(){
 
-/* Flash mesage contrins text and color.
+/* Flash mesage contains text and color.
  * It can be active, but after 10 sec it will trigger deactive event.
   */
 var FlashMessage = Backbone.Model.extend({
