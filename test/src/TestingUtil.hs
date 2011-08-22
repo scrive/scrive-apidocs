@@ -388,6 +388,10 @@ addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
   dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
 
+addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
+addNewCompanyUser firstname secondname email cid =
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue
+
 addNewRandomUser :: DB User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30

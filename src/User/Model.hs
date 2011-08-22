@@ -154,6 +154,8 @@ instance DBQuery GetUserByEmail (Maybe User) where
     us <- fetchUsers st []
     oneObjectReturnedGuard us
 
+-- | Name may be confusing, but this just returns a list of
+-- users who have user with given id marked as their friend
 data GetUsersByFriendUserID = GetUsersByFriendUserID UserID
 instance DBQuery GetUsersByFriendUserID [User] where
   dbQuery (GetUsersByFriendUserID uid) = wrapDB $ \conn -> do
@@ -178,7 +180,7 @@ instance DBQuery GetCompanyAccounts [User] where
       >>= return . fmap (\[a, b] -> (fromSql a, fromSql b))
     case mrow of
       Just (Just (cid::CompanyID), True) -> do
-        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ?"
+        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ? ORDER BY u.email DESC"
         _ <- execute st [toSql uid, toSql cid]
         fetchUsers st []
       _ -> return []
