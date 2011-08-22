@@ -42,6 +42,9 @@ import MailAPITest
 #ifndef NO_REDIRECT
 import RedirectTest
 #endif
+#ifndef NO_SERVICESTATE
+import ServiceStateTest
+#endif
 #ifndef NO_TRUSTWEAVER
 import TrustWeaverTest
 #endif
@@ -77,6 +80,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_REDIRECT
       , redirectTests
+#endif
+#ifndef NO_SERVICESTATE
+      , serviceStateTests conn
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
@@ -115,6 +121,9 @@ testsToRun conn (t:ts) =
 #endif
 #ifndef NO_REDIRECT
     "redirect"        -> Right redirectTests : rest
+#endif
+#ifndef NO_SERVICESTATE
+    "servicestate"    -> Right (serviceStateTests conn) : rest
 #endif
 #ifndef NO_TRUSTWEAVER
     "trustweaver"     -> Right trustWeaverTests : rest

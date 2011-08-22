@@ -402,13 +402,17 @@ addNewRandomUser = do
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
-      
+
 addNewRandomAdvancedUser :: DB User
 addNewRandomAdvancedUser = do
   User{userid,usersettings} <- addNewRandomUser
   True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
   Just user <- dbQuery $ GetUserByID userid
   return user
+
+addService :: String -> UserID -> DB (Maybe Service)
+addService name uid =
+  dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
 
 emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails

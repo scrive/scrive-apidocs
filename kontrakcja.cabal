@@ -54,6 +54,10 @@ Flag test-redirect
   Description: Build redirect testsuite
   Default: True
 
+Flag test-servicestate
+  Description: Build servicestate testsuite
+  Default: True
+
 Flag test-trust-weaver
   Description: Build trust-weaver testsuite
   Default: True
@@ -208,6 +212,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_LOGIN
   if !flag(test-mailapi)
     cpp-options: -DNO_MAILAPI
+  if !flag(test-servicestate)
+    cpp-options: -DNO_SERVICESTATE
   if !flag(test-trust-weaver)
     cpp-options: -DNO_TRUSTWEAVER
   if !flag(test-userstate)

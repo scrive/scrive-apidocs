@@ -199,7 +199,8 @@ selectServicesSQL = "SELECT"
   ++ ", s.background"
   ++ ", s.overlay_background"
   ++ ", s.bars_background"
-  ++ ", encode(s.logo, 'base64') FROM services s"
+  ++ ", encode(s.logo, 'base64')"
+  ++ "  FROM services s"
   ++ " "
 
 fetchServices :: Statement -> [Service] -> IO [Service]
