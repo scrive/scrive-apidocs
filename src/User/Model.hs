@@ -105,7 +105,6 @@ data User = User {
   , usersettings                  :: UserSettings
   , userservice                   :: Maybe ServiceID
   , usercompany                   :: Maybe CompanyID
-  , userdeleted                   :: Bool
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
@@ -539,7 +538,7 @@ selectUsersSQL = "SELECT "
  ++ ", u.preferred_design_mode"
  ++ ", u.lang"
  ++ ", u.system_server"
- ++ ", u.deleted FROM users u"
+ ++ "  FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> [User] -> IO [User]
@@ -547,7 +546,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
    , signup_method, service_id, company_id, first_name
    , last_name, personal_number, company_position, phone, mobile, email
-   , preferred_design_mode, lang, system_server, deleted
+   , preferred_design_mode, lang, system_server
    ] -> fetchUsers st $ User {
        userid = fromSql uid
      , userpassword = case (fromSql password, fromSql salt) of
@@ -576,7 +575,6 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
      }
      , userservice = fromSql service_id
      , usercompany = fromSql company_id
-     , userdeleted = fromSql deleted
    } : acc)
 
 -- this will not be needed when we move documents to pgsql. for now it's needed

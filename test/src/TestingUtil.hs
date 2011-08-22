@@ -344,7 +344,6 @@ blankUser = User {
                                   }
               , userservice = Nothing
               , usercompany = Nothing
-              , userdeleted = False
               }
 
 blankDocument :: Document 
