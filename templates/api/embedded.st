@@ -181,27 +181,27 @@ propagateError();
 # so most of the resources should already be loaded in the cache.
 connectredirect=
 <html>
-<head>
-$standardHeaderContents()$
-</head>
-<body>
-<div id="cookieframe" style="position: absolute; top: -10000px"></div>
-<script type="text/javascript">
-jQuery(function() {
-var a = jQuery('<form method="post" action="$url$" target="yoyo"></form>');
-var i = jQuery('<iframe name="yoyo" src="javascript:false">');
-
-jQuery("#cookieframe").append(i);
-jQuery("#cookieframe").append(a);
-a.submit();
-a.attr("target", "");
-a.attr("action", "$referer$");
-a.attr("method", "GET");
-i.load(function() {
-    a.submit();
-});
-});
-</script>
-</body>
+  <head>
+    $standardHeaderContents()$
+  </head>
+  <body>
+    <div id="cookieframe" style="position: absolute; top: -10000px"></div>
+    <script type="text/javascript">
+      jQuery(function() {
+      var a = jQuery('<form method="post" action="$url$" target="yoyo"></form>');
+      var i = jQuery('<iframe name="yoyo" src="javascript:false">');
+      
+      jQuery("#cookieframe").append(i);
+      jQuery("#cookieframe").append(a);
+      a.submit();
+      a.attr("target", "");
+      a.attr("action", "$referer$");
+      a.attr("method", "GET");
+      i.load(function() {
+      a.submit();
+      });
+      });
+    </script>
+  </body>
 </html>
 ###
