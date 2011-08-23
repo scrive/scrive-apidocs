@@ -703,6 +703,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
+            $if(!fromservice)$
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
@@ -718,18 +719,21 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
+            $endif$
           </div>
+          $if(!fromservice)$
           <div id="possibleAttachmentsList">
-          <span id="attachmentselectlist" style="display:none">
-            <div class="existingattachments">
-              <ul>
-                $existingattachments:{a |
-                <li><a href="#" class="addattachment" rel="$a.attachmentid$">$a.attachmentname$</a></li>
-                }$
-              </ul>
-            </div>
-          </span>
+            <span id="attachmentselectlist" style="display:none">
+              <div class="existingattachments">
+                <ul>
+                  $existingattachments:{a |
+                  <li><a href="#" class="addattachment" rel="$a.attachmentid$">$a.attachmentname$</a></li>
+                  }$
+                </ul>
+              </div>
+            </span>
           </div>
+          $endif$
           <div id="attachedList">
           <div id="alreadyattached">
             $attachments:{attachment |

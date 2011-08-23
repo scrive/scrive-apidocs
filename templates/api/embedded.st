@@ -100,6 +100,11 @@ $if(logo)$
 }
 $endif$
 
+.signStepsBodyUploadBox {
+ margin-left: auto;
+ margin-right: auto;
+ float: none;
+}
 </style>
 <script type="text/javascript" src="/js/postmessage.js"></script>
 <script>
