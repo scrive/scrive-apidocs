@@ -105,7 +105,6 @@ data User = User {
   , usersettings                  :: UserSettings
   , userservice                   :: Maybe ServiceID
   , usercompany                   :: Maybe CompanyID
-  , userdeleted                   :: Bool
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
@@ -154,6 +153,8 @@ instance DBQuery GetUserByEmail (Maybe User) where
     us <- fetchUsers st []
     oneObjectReturnedGuard us
 
+-- | Name may be confusing, but this just returns a list of
+-- users who have user with given id marked as their friend
 data GetUsersByFriendUserID = GetUsersByFriendUserID UserID
 instance DBQuery GetUsersByFriendUserID [User] where
   dbQuery (GetUsersByFriendUserID uid) = wrapDB $ \conn -> do
@@ -178,7 +179,7 @@ instance DBQuery GetCompanyAccounts [User] where
       >>= return . fmap (\[a, b] -> (fromSql a, fromSql b))
     case mrow of
       Just (Just (cid::CompanyID), True) -> do
-        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ?"
+        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ? ORDER BY u.email DESC"
         _ <- execute st [toSql uid, toSql cid]
         fetchUsers st []
       _ -> return []
@@ -537,7 +538,7 @@ selectUsersSQL = "SELECT "
  ++ ", u.preferred_design_mode"
  ++ ", u.lang"
  ++ ", u.system_server"
- ++ ", u.deleted FROM users u"
+ ++ "  FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> [User] -> IO [User]
@@ -545,7 +546,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
    , signup_method, service_id, company_id, first_name
    , last_name, personal_number, company_position, phone, mobile, email
-   , preferred_design_mode, lang, system_server, deleted
+   , preferred_design_mode, lang, system_server
    ] -> fetchUsers st $ User {
        userid = fromSql uid
      , userpassword = case (fromSql password, fromSql salt) of
@@ -574,7 +575,6 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
      }
      , userservice = fromSql service_id
      , usercompany = fromSql company_id
-     , userdeleted = fromSql deleted
    } : acc)
 
 -- this will not be needed when we move documents to pgsql. for now it's needed

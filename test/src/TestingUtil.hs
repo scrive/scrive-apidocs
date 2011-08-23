@@ -344,7 +344,6 @@ blankUser = User {
                                   }
               , userservice = Nothing
               , usercompany = Nothing
-              , userdeleted = False
               }
 
 blankDocument :: Document 
@@ -388,6 +387,10 @@ addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
   dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
 
+addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
+addNewCompanyUser firstname secondname email cid =
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue
+
 addNewRandomUser :: DB User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
@@ -399,13 +402,17 @@ addNewRandomUser = do
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
-      
+
 addNewRandomAdvancedUser :: DB User
 addNewRandomAdvancedUser = do
   User{userid,usersettings} <- addNewRandomUser
   True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
   Just user <- dbQuery $ GetUserByID userid
   return user
+
+addService :: String -> UserID -> DB (Maybe Service)
+addService name uid =
+  dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
 
 emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails

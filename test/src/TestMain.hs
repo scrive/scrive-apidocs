@@ -21,11 +21,17 @@ import DB.Migrations
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
+#ifndef NO_DOCSTATEQUERY
+import DocStateQueryTest
+#endif
 #ifndef NO_HTML
 import HtmlTest
 #endif
 #ifndef NO_INPUTVALIDATION
 import InputValidationTest
+#endif
+#ifndef NO_INTEGRATIONAPI
+import IntegrationAPITest
 #endif
 #ifndef NO_LOGIN
 import LoginTest
@@ -33,105 +39,108 @@ import LoginTest
 #ifndef NO_MAILAPI
 import MailAPITest
 #endif
+#ifndef NO_REDIRECT
+import RedirectTest
+#endif
+#ifndef NO_SERVICESTATE
+import ServiceStateTest
+#endif
 #ifndef NO_TRUSTWEAVER
 import TrustWeaverTest
 #endif
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
-#ifndef NO_DOCSTATEQUERY
-import DocStateQueryTest
-#endif
-#ifndef NO_REDIRECT
-import RedirectTest
-#endif
-#ifndef NO_INTEGRATIONAPI
-import IntegrationAPITest
-#endif
 
 allTests :: Connection -> [Test]
 allTests conn = tail tests
-    where
-        tests = [
-            undefined
+  where
+    tests = [
+        undefined
 #ifndef NO_DOCSTATE
-          , docStateTests conn
-#endif
-#ifndef NO_HTML
-          , htmlTests
-#endif
-#ifndef NO_INPUTVALIDATION
-          , inputValidationTests
-#endif
-#ifndef NO_LOGIN
-          , loginTests conn
-#endif
-#ifndef NO_MAILAPI
-          , mailApiTests conn
-#endif
-#ifndef NO_TRUSTWEAVER
-          -- everything fails for trustweaver, so commenting out for now
-          --, trustWeaverTest
-#endif
-#ifndef NO_USERSTATE
-          , userStateTests conn
+      , docStateTests conn
 #endif
 #ifndef NO_DOCSTATEQUERY
-          , docStateQueryTests
+      , docStateQueryTests
 #endif
-#ifndef NO_REDIRECT
-          , redirectTests
+#ifndef NO_HTML
+      , htmlTests
+#endif
+#ifndef NO_INPUTVALIDATION
+      , inputValidationTests
 #endif
 #ifndef NO_INTEGRATIONAPI
-          , integrationAPITests conn
+      , integrationAPITests conn
 #endif
-          ]
+#ifndef NO_LOGIN
+      , loginTests conn
+#endif
+#ifndef NO_MAILAPI
+      , mailApiTests conn
+#endif
+#ifndef NO_REDIRECT
+      , redirectTests
+#endif
+#ifndef NO_SERVICESTATE
+      , serviceStateTests conn
+#endif
+#ifndef NO_TRUSTWEAVER
+      -- everything fails for trustweaver, so commenting out for now
+      --, trustWeaverTest
+#endif
+#ifndef NO_USERSTATE
+      , userStateTests conn
+#endif
+      ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
 testsToRun conn (t:ts) =
-    case map toLower t of
-         "all"             -> map Right (allTests conn) ++ rest
+  case map toLower t of
+    "all"             -> map Right (allTests conn) ++ rest
 #ifndef NO_DOCSTATE
-         "docstate"        -> Right (docStateTests conn) : rest
-#endif
-#ifndef NO_HTML
-         "html"            -> Right htmlTests : rest
-#endif
-#ifndef NO_INPUTVALIDATION
-         "inputvalidation" -> Right inputValidationTests : rest
-#endif
-#ifndef NO_LOGIN
-         "login"           -> Right (loginTests conn) : rest
-#endif
-#ifndef NO_MAILAPI
-         "mailapi"         -> Right (mailApiTests conn) : rest
-#endif
-#ifndef NO_TRUSTWEAVER
-         "trustweaver"     -> Right trustWeaverTests : rest
-#endif
-#ifndef NO_USERSTATE
-         "userstate"       -> Right (userStateTests conn) : rest
+    "docstate"        -> Right (docStateTests conn) : rest
 #endif
 #ifndef NO_DOCSTATEQUERY
-         "docstatequery"   -> Right docStateQueryTests : rest
+    "docstatequery"   -> Right docStateQueryTests : rest
 #endif
-#ifndef NO_REDIRECT
-         "redirect"        -> Right redirectTests : rest
+#ifndef NO_HTML
+    "html"            -> Right htmlTests : rest
+#endif
+#ifndef NO_INPUTVALIDATION
+    "inputvalidation" -> Right inputValidationTests : rest
 #endif
 #ifndef NO_INTEGRATIONAPI
-         "integrationapi"  -> Right (integrationAPITests conn) : rest
+    "integrationapi"  -> Right (integrationAPITests conn) : rest
 #endif
-         _                 -> Left t : rest
-    where
-        rest = testsToRun conn ts
+#ifndef NO_LOGIN
+    "login"           -> Right (loginTests conn) : rest
+#endif
+#ifndef NO_MAILAPI
+    "mailapi"         -> Right (mailApiTests conn) : rest
+#endif
+#ifndef NO_REDIRECT
+    "redirect"        -> Right redirectTests : rest
+#endif
+#ifndef NO_SERVICESTATE
+    "servicestate"    -> Right (serviceStateTests conn) : rest
+#endif
+#ifndef NO_TRUSTWEAVER
+    "trustweaver"     -> Right trustWeaverTests : rest
+#endif
+#ifndef NO_USERSTATE
+    "userstate"       -> Right (userStateTests conn) : rest
+#endif
+    _                 -> Left t : rest
+  where
+    rest = testsToRun conn ts
 
 main :: IO ()
 main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    pgconf <- readFile "kontrakcja_test.conf"
-    withPostgreSQL pgconf $ \conn -> do
-        ioRunDB conn checkDBConsistency
-        (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
-        defaultMainWithArgs tests args
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
+  pgconf <- readFile "kontrakcja_test.conf"
+  withPostgreSQL pgconf $ \conn -> do
+    ioRunDB conn checkDBConsistency
+    (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
+    defaultMainWithArgs tests args
