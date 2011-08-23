@@ -202,6 +202,8 @@ handleRoutes = msum [
      , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages
      , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax3 $ toK3 $ DocControl.handlePageOfDocumentForSignatory
+       
+     , dir "csvlandpage" $ hGet1 $ toK1 $ DocControl.handleCSVLandpage
 
      -- UserControl
      , dir "account"                    $ hGet0  $ toK0 $ UserControl.handleUserGet
