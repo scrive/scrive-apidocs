@@ -761,11 +761,7 @@ splitUpDocument doc =
           addFlashM flashMessageInvalidCSV
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          ctx <- getContext
-          udoc <- guardRightM $ if (isTemplate doc || isJust (ctxservice ctx))
-                                 then return $ Right doc
-                                 else update $ TemplateFromDocument $ documentid doc
-          mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
+          mdocs <- mapM (createDocFromRow doc (csvsignatoryindex csvupload)) csvbody
           if Data.List.null (lefts mdocs)
             then return $ Right (rights mdocs)
             else mzero
