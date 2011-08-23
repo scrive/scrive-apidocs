@@ -64,9 +64,11 @@ pageDocumentDesign=
       <div id="signStepsMenuEmptyStep">
         $if(!template)$
         $if(!isbasic)$
+        $if(!fromservice)$
         <div class="signStepsBodySave extraLink">
           <small><a class="submit" form=".stepForm" rel="template">$_signStepsMenuEmptyStepSaveAsTemplate()$</a></small>
         </div>
+        $endif$
         $endif$
         $endif$
 
