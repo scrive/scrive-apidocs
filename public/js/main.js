@@ -162,7 +162,7 @@ $(document).ready(function() {
                 var isSpecialCaseDomain = function(domain) {
                   return (domain == "resursbemanning.se") || (domain == "itresurs.se") || (domain == "ekonomresurs.se");
                 };
-                var isprodhack = isSpecialCaseDomain(userdomain) && isSpecialCaseDomain(userdomain);
+                var isprodhack = isSpecialCaseDomain(userdomain) && isSpecialCaseDomain(emaildomain);
 
                 if (!isprodhack && emaildomain != userdomain) {
                     FlashMessages.add({content: localization.youCanNotInviteSameEmail , color:  "red"});
