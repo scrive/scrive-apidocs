@@ -145,7 +145,7 @@ jQuery(function(){propagateHeight();})
 <body>
 <div class="mainContainer" style="margin-top:0;">
 <div class="mainContainer960">
-    $flashmessages(whitelabel="true")$
+$flashmessages(whitelabel="true")$
 
  $loginModal()$
   <div id="body-container">
