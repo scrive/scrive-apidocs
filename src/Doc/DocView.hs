@@ -70,6 +70,7 @@ module Doc.DocView (
   , uploadPage
   , docForListJSON
   , documentJSON
+  , csvLandPage
   ) where
 
 import ActionSchedulerState (ActionID)
@@ -912,6 +913,10 @@ pageDocumentForAuthor _ document =
       field "documentid" $ show $ documentid document
       field "siglinkid" $ fmap (show . signatorylinkid) $ getAuthorSigLink document
       field "sigmagichash" $ fmap (show .  signatorymagichash) $ getAuthorSigLink document
+
+csvLandPage :: TemplatesMonad m => Int -> m String
+csvLandPage count = renderTemplateFM "csvlandpage" $ do
+  field "doccount" (show count)
 
 {- |
    Show the document for Viewers (friends of author or signatory).

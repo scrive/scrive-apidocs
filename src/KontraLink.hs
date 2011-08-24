@@ -100,6 +100,7 @@ data KontraLink
     | LinkServiceLogo ServiceID
     | LinkServiceButtonsBody ServiceID
     | LinkServiceButtonsRest ServiceID
+    | LinkCSVLandPage
     deriving (Eq)
 
 {- |
@@ -182,4 +183,5 @@ instance Show KontraLink where
     showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
+    showsPrec _ LinkCSVLandPage = (++) "/csvlandpage"
 

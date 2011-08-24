@@ -144,7 +144,8 @@ selectCompaniesSQL = "SELECT"
   ++ ", c.address"
   ++ ", c.zip"
   ++ ", c.city"
-  ++ ", c.country FROM companies c"
+  ++ ", c.country"
+  ++ "  FROM companies c"
   ++ " "
 
 fetchCompanies :: Statement -> [Company] -> IO [Company]

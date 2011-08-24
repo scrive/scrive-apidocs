@@ -657,13 +657,16 @@ handleIssueSign document = do
                     addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    addFlashM $ flashMessageCSVSent $ length ds
-                    Log.debug (show $ map documenttype ds)
-                    case documenttype (head ds) of
-                      Signable Contract -> return $ LinkContracts
-                      Signable Offer    -> return $ LinkOffers                    
-                      Signable Order    -> return $ LinkOrders
-                      _                 -> return $ LinkMain
+                    if isJust $ ctxservice ctx
+                      then return LinkCSVLandPage
+                      else do
+                      addFlashM $ flashMessageCSVSent $ length ds
+                      Log.debug (show $ map documenttype ds)
+                      case documenttype (head ds) of
+                        Signable Contract -> return $ LinkContracts
+                        Signable Offer    -> return $ LinkOffers                    
+                        Signable Order    -> return $ LinkOrders
+                        _                 -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
@@ -694,13 +697,16 @@ handleIssueSend document = do
                     addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    addFlashM $ flashMessageCSVSent $ length ds
-                    Log.debug (show $ map documenttype ds)
-                    case documenttype (head ds) of
-                      Signable Contract -> return $ LinkContracts
-                      Signable Offer    -> return $ LinkOffers                  
-                      Signable Order    -> return $ LinkOrders 
-                      _ -> return $ LinkMain
+                    if isJust $ ctxservice ctx
+                      then return LinkCSVLandPage
+                      else do
+                      addFlashM $ flashMessageCSVSent $ length ds
+                      Log.debug (show $ map documenttype ds)
+                      case documenttype (head ds) of
+                        Signable Contract -> return $ LinkContracts
+                        Signable Offer    -> return $ LinkOffers                  
+                        Signable Order    -> return $ LinkOrders 
+                        _ -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
@@ -761,11 +767,7 @@ splitUpDocument doc =
           addFlashM flashMessageInvalidCSV
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          ctx <- getContext
-          udoc <- guardRightM $ if (isTemplate doc || isJust (ctxservice ctx))
-                                 then return $ Right doc
-                                 else update $ TemplateFromDocument $ documentid doc
-          mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
+          mdocs <- mapM (createDocFromRow doc (csvsignatoryindex csvupload)) csvbody
           if Data.List.null (lefts mdocs)
             then return $ Right (rights mdocs)
             else mzero
@@ -2059,3 +2061,7 @@ prepareEmailPreview docid slid = do
     return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]
     
 
+handleCSVLandpage :: Kontrakcja m => Int -> m String
+handleCSVLandpage c = do
+  text <- csvLandPage c
+  return text

@@ -154,7 +154,10 @@ $(document).ready(function() {
                 var emailfield = form.find("input[name='email']");
                 var email = emailfield.val();
 
-                if (email.replace(/.*@/, "") != useremail.replace(/.*@/, "")) {
+                var userdomain = useremail.replace(/.*@/, "");
+                var emaildomain = email.replace(/.*@/, "");
+
+                if (emaildomain != userdomain) {
                     FlashMessages.add({content: localization.youCanNotInviteSameEmail , color:  "red"});
                 } else {
                     form.append("<input type='hidden' name='add' value='YES'>").submit();

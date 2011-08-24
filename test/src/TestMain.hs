@@ -18,6 +18,9 @@ import DB.Migrations
 -- if e.g. for some reason they stop compiling. Also, please keep them in
 -- alphabetic order.
 
+#ifndef NO_COMPANYSTATE
+import CompanyStateTest
+#endif
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
@@ -57,6 +60,9 @@ allTests conn = tail tests
   where
     tests = [
         undefined
+#ifndef NO_COMPANYSTATE
+      , companyStateTests conn
+#endif
 #ifndef NO_DOCSTATE
       , docStateTests conn
 #endif
@@ -98,6 +104,9 @@ testsToRun _ [] = []
 testsToRun conn (t:ts) =
   case map toLower t of
     "all"             -> map Right (allTests conn) ++ rest
+#ifndef NO_COMPANYSTATE
+    "companystate"    -> Right (companyStateTests conn) : rest
+#endif
 #ifndef NO_DOCSTATE
     "docstate"        -> Right (docStateTests conn) : rest
 #endif
