@@ -1,7 +1,6 @@
 module CompanyStateTest (companyStateTests) where
 
 import Control.Monad
-import Data.Maybe
 import Database.HDBC.PostgreSQL
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
