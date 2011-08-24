@@ -98,7 +98,20 @@ $if(logo)$
     margin-left:20px;
    
 }
+
 $endif$
+
+.skrivapa-logo {
+  display: none;
+}
+
+.flashmessageembedded {
+  height: 50px;
+}
+
+.flashmsgbox {
+  position:relative;
+}
 
 .signStepsBodyUploadBox {
  margin-left: auto;
@@ -134,7 +147,8 @@ jQuery(function(){propagateHeight();})
 <body>
 <div class="mainContainer" style="margin-top:0;">
 <div class="mainContainer960">
- $flashmessages(whitelabel="true")$
+    $flashmessages(whitelabel="true")$
+
  $loginModal()$
   <div id="body-container">
  $content:noescape()$

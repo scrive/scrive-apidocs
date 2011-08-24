@@ -18,18 +18,18 @@ var FlashMessage = Backbone.Model.extend({
             console.log("FlashMessage error: No content provided");
   },
   isActive : function() {
-                return this.has("active");
+      return this.has("active");
   }, 
   activate : function(){
       if (!this.isActive()){
-        this.set({"active": "true"});
-        var current = this;
-        setTimeout(function(){current.deactivate();},10000);
-      }  
+          this.set({"active": "true"});
+          var current = this;
+          setTimeout(function(){current.deactivate();},10000);
+      }
   },  
   deactivate: function() {
-       this.trigger("deactivate");
-      }
+      this.trigger("deactivate");
+  }
 });
 
 /* Collection of flash messages. There will be only one instance in the system
@@ -72,18 +72,18 @@ var FlashMessageView = Backbone.View.extend({
     },
     render: function () {
         this.el = $("<div class='flash-container " + this.model.get("color") + "'/>")
-                    .append($("<div class='flash-content'> </div>")
-                            .append("<div class='"+localization.outLogoClass+" float-left'></div>")
-                            .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )                                
-                            .append($("<div class='flash-body'></div>").append(this.model.get("content")))
-                            .append("<div class='flash-close modal-close'></div>")
-                           );
+            .append($("<div class='flash-content'> </div>")
+                    .append("<div class='"+localization.outLogoClass+" float-left'></div>")
+                    .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )                                
+                    .append($("<div class='flash-body'></div>").append(this.model.get("content")))
+                    .append("<div class='flash-close modal-close'></div>")
+                   );
         return this;
     },
     hide: function(){
         var view = this;
         var model = this.model;
-        this.el.slideUp(800, function(){
+        $(this.el).parent().slideUp(800, function(){
             view.remove();
             model.destroy();
         });
@@ -97,7 +97,7 @@ var FlashMessageView = Backbone.View.extend({
 var FlashMessagesView = Backbone.View.extend({
     events: {
         'click .flash-close': 'closeCurrent'
-        },
+    },
     initialize: function (args) {
         _.bindAll(this, 'addFlashMessage', 'render');
         this.model.bind('add', this.addFlashMessage);
@@ -105,18 +105,17 @@ var FlashMessagesView = Backbone.View.extend({
         this.model.view = this;
     },
     render: function () {
-         if (this.model.isEmpty())
-         { this.el.hide();}
-         else
-         { this.el.empty();
-           var el = this.el;
-           this.model.forEach(function(e){
-              if (e.isActive())   {
-                 el.append(e.view.el);
-              }
-           });
+        if (this.model.isEmpty())
+            this.el.hide();
+        else { 
+            this.el.empty();
+            var el = this.el;
+            this.model.forEach(function(e){
+                if (e.isActive())
+                    el.append(e.view.el);
+            });
            if (this.el.css("display") == "none")
-           this.el.slideDown(800);
+               this.el.slideDown(800);
         }
     },
     addFlashMessage : function(fm){new FlashMessageView({model: fm}); this.render() ;},
@@ -127,6 +126,6 @@ var FlashMessagesView = Backbone.View.extend({
 /* Globally visible list of flash messages
  * Its view is bind to .flashmsgbox dom element
  */
-window.FlashMessages = new FlashMessagesList;
-new FlashMessagesView({model: FlashMessages,  el:  $(".flashmsgbox")});
+    window.FlashMessages = new FlashMessagesList;
+    new FlashMessagesView({model: FlashMessages,  el:  $(".flashmsgbox")});
 });
