@@ -180,6 +180,7 @@ runKontrakcjaServer = Log.withLogger $ do
             templates = templates
           , filecache = filecache'
           , mailer = mailer'
+          , appbackdooropen = isBackdoorOpen $ mailsConfig appConf1
           , docscache = docs
           , esenforcer = es_enforcer
         }

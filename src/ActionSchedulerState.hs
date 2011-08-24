@@ -3,6 +3,7 @@ module ActionSchedulerState (
     , ActionID(..)
     , ActionType(..)
     , ActionTypeID(..)
+    , ActionBackdoorInfo(..)
     , InactiveAccountState(..)
     , ActionImportance(..)
     , Action(..)
@@ -11,6 +12,7 @@ module ActionSchedulerState (
     , GetExpiredActions(..)
     , GetPasswordReminder(..)
     , GetViralInvitationByEmail(..)
+    , GetBackdoorInfoByEmail(..)
     , NewAction(..)
     , UpdateActionType(..)
     , UpdateActionEvalTime(..)
@@ -30,6 +32,10 @@ import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Monad.State
 import Control.Monad.Reader
+import qualified Data.ByteString as BS
+import Data.List
+import Data.Maybe
+import Data.Ord
 import Data.Typeable
 import Database.HDBC.PostgreSQL
 import Happstack.Data.IxSet
@@ -62,6 +68,10 @@ instance Show ActionID where
 
 instance FromReqURI ActionID where
     fromReqURI s = ActionID <$> readM s
+
+data ActionBackdoorInfo =
+  ActionBackdoorInfo { bdContent :: BS.ByteString
+                     } deriving (Eq, Ord, Show, Typeable)
 
 data ActionType = TrustWeaverUpload {
                       twuOwner :: String
@@ -101,6 +111,7 @@ data ActionType = TrustWeaverUpload {
                     , seiMailInfo         :: MailInfo
                     , seiEventType        :: SendGridEventType
                     , seiLastModification :: MinutesTime
+                    , seiBackdoorInfo     :: Maybe ActionBackdoorInfo
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
@@ -128,7 +139,7 @@ actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
 actionTypeID (EmailSendout _) = EmailSendoutID
-actionTypeID (SentEmailInfo _ _ _ _) = SentEmailInfoID
+actionTypeID (SentEmailInfo _ _ _ _ _) = SentEmailInfoID
 
 -- | Determines how often we should check if there's an action to evaluate
 data ActionImportance = UrgentAction
@@ -144,7 +155,7 @@ actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
 actionImportance (EmailSendout _) = EmailSendoutAction
-actionImportance (SentEmailInfo _ _ _ _) = LeisureAction
+actionImportance (SentEmailInfo _ _ _ _ _) = LeisureAction
 
 data Action = Action {
       actionID       :: ActionID
@@ -160,6 +171,9 @@ instance Version ActionID
 
 $(deriveSerialize ''ActionType)
 instance Version ActionType
+
+$(deriveSerialize ''ActionBackdoorInfo)
+instance Version ActionBackdoorInfo
 
 $(deriveSerialize ''ActionImportance)
 instance Version ActionImportance
@@ -177,7 +191,7 @@ instance Indexable Action where
         , ixFun (\a -> [actionTypeID $ actionType a])
         , ixFun (\a -> case actionType a of
                             ViralInvitationSent email _ _ _ _ -> [email]
-                            SentEmailInfo email _ _ _         -> [email]
+                            SentEmailInfo email _ _ _ _       -> [email]
                             _                                 -> [])
         , ixFun (\a -> case actionType a of
                             PasswordReminder uid _ _          -> [uid]
@@ -208,6 +222,19 @@ getPasswordReminder uid =
 getViralInvitationByEmail :: Email -> Query Actions (Maybe Action)
 getViralInvitationByEmail email =
     return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
+
+{- |
+    Gets the backdoor information for the last email sent.  This can be used
+    for running tests.  It shouldn't be used for normal functionality.
+-}
+getBackdoorInfoByEmail :: Email -> Query Actions (Maybe ActionBackdoorInfo)
+getBackdoorInfoByEmail email = do
+  return . listToMaybe . catMaybes . map getBackdoorInfo . reverse . sortBy (comparing actionEvalTime) . toList . (@= email) =<< ask
+  where
+    getBackdoorInfo action =
+      case actionType action of
+        SentEmailInfo{seiBackdoorInfo} -> seiBackdoorInfo
+        _ -> Nothing
 
 -- | Insert new action
 newAction :: ActionType -> MinutesTime -> Update Actions Action
@@ -260,6 +287,7 @@ $(mkMethods ''Actions
   , 'getExpiredActions
   , 'getPasswordReminder
   , 'getViralInvitationByEmail
+  , 'getBackdoorInfoByEmail
   , 'newAction
   , 'updateActionType
   , 'updateActionEvalTime

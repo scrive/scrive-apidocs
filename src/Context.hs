@@ -32,6 +32,7 @@ data Context = Context {
     , ctxs3action            :: AWS.S3Action -- ^ 
     , ctxgscmd               :: String -- ^ 
     , ctxproduction          :: Bool -- ^ Is this server the production server?
+    , ctxbackdooropen        :: Bool -- ^ Whether the testing backdoor is open?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text
     , ctxesenforcer          :: MVar () -- ^ 
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration

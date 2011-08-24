@@ -27,6 +27,7 @@ module Administration.AdministrationControl(
           , handleCreateUser
           , handleCreateService
           , handleStatistics
+          , handleBackdoorQuery
           , handleFixForBug510
           , resealFile
           ) where
@@ -73,6 +74,7 @@ import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Redirect
+import ActionSchedulerState
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -518,7 +520,13 @@ showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do
     --liftIO $ updateCSV
     adminTranslationsPage
-    
+
+handleBackdoorQuery :: Kontrakcja m => String -> m Response
+handleBackdoorQuery email = onlySuperUser $ onlyBackdoorOpen $ do
+  minfo <- query $ GetBackdoorInfoByEmail (Email $ fromString email)
+  let mailcontent = maybe "No email found" (toString . bdContent) minfo
+  renderFromBody TopEmpty kontrakcja mailcontent
+
 {- |
     This handles fixing of documents broken by bug 510, which means
     that the authors were mistakenly made signatories of offers or orders.

@@ -26,6 +26,7 @@ import Kontra
 import KontraLink
 import MinutesTime
 import Mails.MailsData
+import Mails.MailsConfig
 import Mails.SendMail
 import Session
 import Templates.LocalTemplates
@@ -144,6 +145,8 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
       Log.error $ "Email was removed from the queue"
   else do
     mailer <- sdMailer <$> ask
+    appconf <- sdAppConf <$> ask
+    let backdooropen = isBackdoorOpen $ mailsConfig appconf
     success <- sendMail mailer actionID mail
     if success
        then do
@@ -155,6 +158,9 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
                , seiMailInfo         = mailInfo
                , seiEventType        = Other "passed to sendgrid"
                , seiLastModification = now
+               , seiBackdoorInfo     = if backdooropen
+                                         then Just $ ActionBackdoorInfo { bdContent = content mail }
+                                         else Nothing
            }
            _ <- update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
            return ()

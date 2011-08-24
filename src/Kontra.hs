@@ -9,6 +9,7 @@ module Kontra
     , addELegTransaction
     , logUserToContext
     , onlySuperUser
+    , onlyBackdoorOpen
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
@@ -97,6 +98,16 @@ onlySuperUser a = do
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
+
+{- |
+    Will mzero if the testing backdoor isn't open.
+-}
+onlyBackdoorOpen :: Kontrakcja m => m a -> m a
+onlyBackdoorOpen a = do
+  ctx <- getContext
+  if ctxbackdooropen ctx
+    then a
+    else mzero
 
 {- |
    Adds an Eleg Transaction to the context.
