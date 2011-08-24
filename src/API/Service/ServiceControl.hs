@@ -107,7 +107,6 @@ handleChangeServicePassword sid = do
          return LoopBack
 
 
-
 handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
     ctx <- getContext

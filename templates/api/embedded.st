@@ -25,6 +25,13 @@ $if(barsbackground)$
    background: $barsbackground$;
    border-color: $barsbackground$;
 }
+
+ #tab-viewer .tabs li.active 
+ {
+   background : $barsbackground$;
+}
+
+
 $endif$
 
 $if(buttons)$
@@ -96,13 +103,9 @@ $if(logo)$
 .skrivapa-logo {
     background: url("$logoLink$") no-repeat scroll 0 0 transparent;
     margin-left:20px;
-   
+  
 }
 $endif$
-
-.flashmessageembedded {
-  height: 50px;
-}
 
 .flashmsgbox {
   position:relative;
