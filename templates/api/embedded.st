@@ -98,12 +98,7 @@ $if(logo)$
     margin-left:20px;
    
 }
-
 $endif$
-
-.skrivapa-logo {
-  display: none;
-}
 
 .flashmessageembedded {
   height: 50px;
