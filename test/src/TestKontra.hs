@@ -209,6 +209,7 @@ mkContext templates = liftIO $ do
         }
         , ctxgscmd = "gs"
         , ctxproduction = False
+        , ctxbackdooropen = False
         , ctxtemplates = templates
         , ctxesenforcer = enforcer
         , ctxtwconf = error "twconf is not defined"

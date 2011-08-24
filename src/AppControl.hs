@@ -23,6 +23,7 @@ import Doc.DocState
 import InputValidation
 import Kontra
 import KontraLink
+import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
@@ -83,6 +84,7 @@ data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
+                 , appbackdooropen    :: Bool --whether a backdoor used to get email content is open or not
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  , esenforcer      :: MVar ()
                  }
@@ -258,6 +260,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
        
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
+
+     , dir "adminonly" $ dir "backdoor" $ hGet1 $ toK1 $ Administration.handleBackdoorQuery
 
      -- this stuff is for a fix
      , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
@@ -519,6 +523,7 @@ appHandler appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
+                , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
                 , ctxtemplates = localizedVersion (systemServer,language) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
