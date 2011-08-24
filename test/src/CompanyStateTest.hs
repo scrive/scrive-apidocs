@@ -58,8 +58,8 @@ test_setCompanyInfo = do
   }
   res <- dbUpdate $ SetCompanyInfo cid ci
   assertBool "CompanyInfo updated correctly" res
-  Just Company{companyinfo} <- dbQuery $ GetCompany cid
-  assertBool "Returned CompanyInfo is correct" $ companyinfo == ci
+  Just Company{companyinfo = newci} <- dbQuery $ GetCompany cid
+  assertBool "Returned CompanyInfo is correct" $ ci == newci
 
 test_getOrCreateCompanyWithExternalID :: DB ()
 test_getOrCreateCompanyWithExternalID = do
