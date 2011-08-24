@@ -29,7 +29,7 @@ test_getCompanies :: DB ()
 test_getCompanies = do
   companies <- forM ["", "external_id"] addTestCompany
   result <- dbQuery $ GetCompanies Nothing
-  assertBool "GetCompanies returned correct result" $ companies == result
+  assertBool "GetCompanies returned correct result" $ and $ map (`elem` result) companies
 
 test_getCompany :: DB ()
 test_getCompany = do
