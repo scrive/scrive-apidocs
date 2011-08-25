@@ -95,7 +95,7 @@ getTextTemplatesFromFile path =
    addLine _ m _ = m
 
 
--- | Updating CSV.  We look at CSV file and texts that should land
+-- | Updating CSV. We look at CSV file and texts that should land
 -- there (from templates).  We leave matching ones, put new ones
 -- inside and mark with *** unussed ones.  There is some sorting
 -- involved to make this work
@@ -103,13 +103,11 @@ updateCSV :: IO ()
 updateCSV = do
     ttls <- getTextsFromTemplates
     let grouped = groupTTLs ttls Map.empty
-    forM_ (Map.toList $ Map.map (map name) grouped) $ \(fn, names) -> do
-        let fname = textsDirectory ++ "/" ++ (templateFileNameToCSV fn)
-        csv <- basicCSVParser fname
-        let updatedTexts = updateTexts csv names
-        writeFile fname (genCsvFile $ sortCSV $ updatedTexts)
-        return updatedTexts
-    --writeFile (textsDirectory ++ "/" ++ "everything.csv") (genCsvFile $ sortCSV $ concat allUpdatedTexts)
+    let fname = textsDirectory ++ "/" ++ "everything.csv"
+    csv <- basicCSVParser fname
+    let names = concat $ map snd $ Map.toList $ Map.map (map name) grouped
+    let updatedTexts = updateTexts csv names
+    writeFile fname (genCsvFile $ sortCSV $ updatedTexts)
     return ()
         
 updateTexts :: [[String]] -> [String] -> [[String]]
