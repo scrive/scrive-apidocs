@@ -156,3 +156,48 @@ propagateError();
 <body ></body>
 </html>
 ####
+# August 21, 2011
+# Eric Normand
+# Safari does not store cookies set in a page in an iframe on a domain not yet visited. This is to 
+# maintain privacy from ads that use an iframe and go to a different site. 
+# Note: This is not that the iframe cookies are inaccessible outside of the iframe, which is the
+# default behavior of most browsers. Safari requires a "user action" to initiate cookie storage.
+# Luckily, javascript submitting a form counts as "user action" (probably a bug in Safari, but it
+# works for now:). Apparently it has to be a post.
+# Here's what we do (and it did work at the time of this writing):
+# When a service requests a connectuser link with GET, we send them this page, which gets embedded
+# in the iframe.
+# This page creates its own iframe way off the screen (top: -100000px).
+# It also creates a form with a hidden referer input.
+# The js submits the form with the target set as the iframe.
+# The browser loads the POST (which stores the cookie!).
+# Then we change the target and repost to the same URL, changing the entire iframe.
+# It requires three extra requests over the simple GET version (a GET, a POST + 303 redirect, and a final GET).
+# But it loads the same page twice,
+# so most of the resources should already be loaded in the cache.
+connectredirect=
+<html>
+  <head>
+    $standardHeaderContents()$
+  </head>
+  <body>
+    <div id="cookieframe" style="position: absolute; top: -10000px"></div>
+    <script type="text/javascript">
+      jQuery(function() {
+      var a = jQuery('<form method="post" action="$url$" target="yoyo"></form>');
+      var i = jQuery('<iframe name="yoyo" src="javascript:false">');
+      
+      jQuery("#cookieframe").append(i);
+      jQuery("#cookieframe").append(a);
+      a.submit();
+      a.attr("target", "");
+      a.attr("action", "$referer$");
+      a.attr("method", "GET");
+      i.load(function() {
+      a.submit();
+      });
+      });
+    </script>
+  </body>
+</html>
+###
