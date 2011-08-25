@@ -111,11 +111,11 @@ handleChangeServicePasswordAdminOnly :: Kontrakcja m => ServiceID -> String -> m
 handleChangeServicePasswordAdminOnly sid passwordString = do
     let password = BS.fromString passwordString
     ctx <- getContext
-    mservice <- query $ GetService sid
+    mservice <- runDBQuery $ GetService sid
     case (mservice, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
        pwd <- liftIO $ createPassword password
-       update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
+       _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
        addFlash (OperationDone, "Password changed")
        return LinkMain
      _ -> mzero
