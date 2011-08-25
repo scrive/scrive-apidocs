@@ -51,6 +51,9 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.ServiceUtils
 import Util.MonadUtils
+import Templates.Templates
+import AppView
+import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 
 import qualified AppLogger as Log (debug)
 
@@ -98,7 +101,8 @@ integrationAPI = dir "integration" $ msum [
     , dir "api" $ apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
     , dir "api" $ apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
     , dir "api" $ apiUnknownCall
-    , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSession
+    , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSessionGet
+    , dir "connectuser" $ hPostNoXToken3 $ toK3 $ connectUserToSessionPost
     , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
     ]
 
@@ -289,14 +293,26 @@ removeDocument = do
 {- | Call connect user to session (all passed as URL params)
      and redirect user to referer
 -}
-connectUserToSession :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
-connectUserToSession sid uid ssid = do
+connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
+connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (query $ GetUserByUserID uid)
     when (not matchingService) mzero
     loaded <- loadServiceSession (Right uid) ssid
-    if (loaded)
-     then return $ BackToReferer
-     else mzero
+    -- just send back empty string
+    when loaded $ finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+    mzero
+
+connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
+connectUserToSessionGet _sid _uid _ssid = do
+  rq <- askRq
+  let uri = rqUri rq
+  Log.debug $ "uri: " ++ uri
+  referer <- look "referer"
+  Log.debug $ "referer: " ++ referer
+  bdy <- renderTemplateFM "connectredirect" $ do
+    field "url" uri
+    field "referer" referer
+  simpleResponse bdy  
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession sid cid ssid = do

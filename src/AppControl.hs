@@ -458,10 +458,7 @@ appHandler appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
-      -- Added to allow IE to see our pdfs in an iframe
-      -- Eric Normand
-      -- Aug 25, 2011
-      return (addHeader "P3P" "CP=\"NOI ADM DEV COM NAV OUR STP\"" res)
+      return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
     createContext rq session = do
