@@ -1,7 +1,7 @@
 ###
 embeddedPage= 
 $doctype()$
-<html>
+<html style="overflow:hidden; height=10000px">
 <head>
 $standardHeaderContents()$
 
