@@ -300,7 +300,7 @@ connectUserToSessionPost sid uid ssid = do
     when (not matchingService) mzero
     loaded <- loadServiceSession (Right uid) ssid
     -- just send back empty string
-    when loaded $ finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+    when loaded $ finishWith (addHeader "P3P" "CP=\"NOI ADM DEV COM NAV OUR STP\"" $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString ""))
     mzero
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
