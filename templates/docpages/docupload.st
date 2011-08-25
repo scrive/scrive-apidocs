@@ -86,7 +86,7 @@ $elseif(!showTemplates)$
       <div class="signStepsButtonContainer">
         <a class="btn-small green" >
           <div class="left"> </div>
-          <div class="label" style="min-width:100px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div>
+          <div class="label" style="width:100px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div>
           <div class="right"> </div>
           <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
         </a>
@@ -104,7 +104,7 @@ $elseif(!showTemplates)$
       <div class="signStepsButtonContainer" style="height:34px">
         <a class="btn-small green selectTemplateButton" href="/?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
           <div class="left"> </div>
-          <div class="label" style="min-width:100px">$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$</div>
+          <div class="label" style="width:100px">$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$</div>
           <div class="right"> </div>
         </a>
       </div>
