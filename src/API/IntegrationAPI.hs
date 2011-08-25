@@ -33,6 +33,7 @@ import MinutesTime
 import Misc
 import Session
 import Kontra
+import AppView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import InputValidation
@@ -52,10 +53,10 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.ServiceUtils
 import Util.MonadUtils
-import AppView
 import Templates.Templates
-import qualified AppLogger as Log (debug)
+
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+import qualified AppLogger as Log (debug)
 
 
 {- |
