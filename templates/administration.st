@@ -474,6 +474,9 @@ databaseContents=
       <ul>
         $files:{file| <li><a href="$file$">$file$</a></li>}$
       </ul>
+      <form method="POST" action="cleanup">
+         <input type="submit" value="Remove old database files"> </input>
+      </form>
     </div>
 ####
 pageStats=
