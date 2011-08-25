@@ -239,6 +239,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
+       
+
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Administration.handleStatistics
@@ -274,6 +276,11 @@ handleRoutes = msum [
      , dir "services" $ dir "logo" $ hGet1 $ toK1 $ handleServiceLogo
      , dir "services" $ dir "buttons_body" $ hGet1 $ toK1 $ handleServiceButtonsBody
      , dir "services" $ dir "buttons_rest" $ hGet1 $ toK1 $ handleServiceButtonsRest
+       
+     -- never ever use this
+     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
+       
+       
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
 

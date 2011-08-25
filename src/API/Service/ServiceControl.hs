@@ -17,6 +17,7 @@ module  API.Service.ServiceControl(
             , handleServiceLogo
             , handleServiceButtonsBody
             , handleServiceButtonsRest
+            , handleChangeServicePasswordAdminOnly
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -106,6 +107,18 @@ handleChangeServicePassword sid = do
          addFlash (OperationFailed, "Not changed")
          return LoopBack
 
+handleChangeServicePasswordAdminOnly :: Kontrakcja m => ServiceID -> String -> m KontraLink
+handleChangeServicePasswordAdminOnly sid passwordString = do
+    let password = BS.fromString passwordString
+    ctx <- getContext
+    mservice <- query $ GetService sid
+    case (mservice, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
+     (Just service,True) -> do
+       pwd <- liftIO $ createPassword password
+       update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
+       addFlash (OperationDone, "Password changed")
+       return LinkMain
+     _ -> mzero
 
 handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
