@@ -83,7 +83,7 @@ var FlashMessageView = Backbone.View.extend({
     hide: function(){
         var view = this;
         var model = this.model;
-        this.el.parent().slideUp(800, function(){
+        $(this.el).parent().slideUp(800, function(){
             view.remove();
             model.destroy();
         });
