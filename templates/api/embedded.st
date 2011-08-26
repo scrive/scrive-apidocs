@@ -1,4 +1,9 @@
 ###
+# August 21, 2011
+# Eric Normand
+# Have to set style="overflow:hidden" on html tag to prevent safari from drawing
+# unnecessary scrollbars on iframe
+###
 embeddedPage= 
 $doctype()$
 <html style="overflow:hidden">
@@ -21,6 +26,12 @@ $if(barsbackground)$
    background: $barsbackground$;
    border-color: $barsbackground$;
 }
+
+ #tab-viewer .tabs li.active 
+ {
+   background : $barsbackground$;
+}
+
 $endif$
 
 $if(buttons)$
@@ -95,6 +106,16 @@ $if(logo)$
    
 }
 $endif$
+
+.flashmsgbox {
+  position:relative;
+}
+
+.signStepsBodyUploadBox {
+ margin-left: auto;
+ margin-right: auto;
+ float: none;
+}
 
 </style>
 <script type="text/javascript" src="/js/postmessage.js"></script>
