@@ -33,4 +33,5 @@ tableCompanies = Table {
     runRaw conn $ "ALTER TABLE companies"
       ++ " ADD CONSTRAINT fk_companies_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

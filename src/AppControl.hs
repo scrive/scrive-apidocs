@@ -444,6 +444,8 @@ showRequest rq maybeInputsBody =
 -}
 appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler appConf appGlobals = do
+  startTime <- liftIO getClockTime
+
   let quota :: GHC.Int.Int64 = 10000000
 
   temp <- liftIO $ getTemporaryDirectory
@@ -456,7 +458,13 @@ appHandler appConf appGlobals = do
   --    putStrLn $ "INPUTS BODY: " ++ show bi
   session <- handleSession
   ctx <- createContext rq session
-  handle rq session ctx
+  response <- handle rq session ctx
+  finishTime <- liftIO getClockTime
+  let TOD ss sp = startTime
+      TOD fs fp = finishTime
+      diff = (fs - ss) * 1000000000000 + fp - sp
+  Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
+  return response
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
