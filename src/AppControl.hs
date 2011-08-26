@@ -177,6 +177,7 @@ handleRoutes = msum [
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
 
+     , dir "csvlandpage" $ hGet1 $ toK1 $ DocControl.handleCSVLandpage
 
      , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet1  $ toK1 $ DocControl.handleAttachmentViewForAuthor
