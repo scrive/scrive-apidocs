@@ -12,16 +12,18 @@ module Administration.AdministrationView(
             adminMainPage
           , adminUsersAdvancedPage
           , adminUsersPage
+          , adminCompaniesPage
           , adminUsersPageForSales
           , adminUsersPageForPayments
           , adminUserPage
+          , adminCompanyPage
           , allUsersTable
           , databaseContent
           , statsPage
           , servicesAdminPage
           , adminTranslationsPage
           , adminUserUsageStatsPage
-          , AdminUsersPageParams(..)
+          , AdminListPageParams(..)
           , StatsView(..)) where
 
 import KontraLink
@@ -52,52 +54,49 @@ adminMainPage :: TemplatesMonad m => m String
 adminMainPage = renderTemplateM "adminsmain" ()
 
 {-| Manage users page  - advanced, will be changed-}
-adminUsersAdvancedPage :: TemplatesMonad m => [(User,Maybe Company)] -> AdminUsersPageParams -> m String
+adminUsersAdvancedPage :: TemplatesMonad m => [(User,Maybe Company)] -> AdminListPageParams -> m String
 adminUsersAdvancedPage users params =
     renderTemplateFM "adminsmanageall" $ do
-        fieldFL "users" $ map (uncurry userBasicFields) $ visibleUsers params users
-        field "letters" $ letters
-        field "adminuserlink" $ show $ LinkUserAdmin Nothing
-        field "intervals" $ intervals $ avaibleUsers params users
-        field "search" $ search params
-        field "startletter" $ startletter params
-        field "adminlink" $ show $ LinkAdminOnly
+        fieldFL "users" $ map (uncurry userBasicFields) $ visibleItems params users
+        field "adminlistlink" $ show $ LinkUserAdmin Nothing
+        adminListFields LinkUserAdmin users params
 
 {-| Manage users page - can find user here -}
-adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
+adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
 adminUsersPage users params =
     renderTemplateFM "adminusers" $ do
-        field "adminlink" $ show $ LinkAdminOnly
-        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
-        field "letters" $ letters
-        field "adminuserlink" $ show $ LinkUserAdmin Nothing
-        field "intervals" $ intervals $ avaibleUsers params users
-        field "search" $ search params
-        field "startletter" $ startletter params
+        fieldFL "users" $ map mkUserInfoView $ visibleItems params users
+        adminListFields LinkUserAdmin users params
+
+{- | Manage companies page - can find a company here -}
+adminCompaniesPage :: TemplatesMonad m => [Company] -> AdminListPageParams -> m String
+adminCompaniesPage companies params =
+    renderTemplateFM "admincompanies" $ do
+        fieldFL "companies" $ map (companyFields . Just) $ visibleItems params companies
+        adminListFields LinkCompanyAdmin companies params   
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
 adminUsersPageForSales users params =
     renderTemplateFM "adminUsersForSales" $ do
-        field "adminlink" $ show $ LinkAdminOnly
-        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
-        field "letters" $ letters
-        field "adminuserlink" $ show $ LinkUserAdmin Nothing
-        field "intervals" $ intervals $ avaibleUsers params users
-        field "search" $ search params
-        field "startletter" $ startletter params
+        fieldFL "users" $ map mkUserInfoView $ visibleItems params users
+        adminListFields LinkUserAdmin users params
 
 {-| Manage users page - can find user here -}
-adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminUsersPageParams -> m String
+adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
 adminUsersPageForPayments users params =
     renderTemplateFM "adminUsersForPayments" $ do
-        field "adminlink" $ show $ LinkAdminOnly
-        fieldFL "users" $ map mkUserInfoView $ visibleUsers params users
-        field "letters" $ letters
-        field "adminuserlink" $ show $ LinkUserAdmin Nothing
-        field "intervals" $ intervals $ avaibleUsers params users
-        field "search" $ search params
-        field "startletter" $ startletter params
+        fieldFL "users" $ map mkUserInfoView $ visibleItems params users
+        adminListFields LinkUserAdmin users params
+
+adminListFields :: (TemplatesMonad m, AdminListable a) => (Maybe b -> KontraLink) -> [a] -> AdminListPageParams -> Fields m        
+adminListFields listlink items params = do
+  field "adminlistlink" $ show (listlink Nothing)
+  field "adminlink" $ show $ LinkAdminOnly
+  field "letters" $ letters
+  field "intervals" $ intervals $ availableItems params items
+  field "search" $ search params
+  field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
 adminUserPage :: TemplatesMonad m => User -> Maybe Company -> m String
@@ -108,6 +107,14 @@ adminUserPage user mcompany =
         fieldF "company" $ companyFields mcompany
         --field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
+        
+{- | Manager company page - can change company info and settings here -}
+adminCompanyPage :: TemplatesMonad m => Company -> m String
+adminCompanyPage company =
+  renderTemplateFM "admincompany" $ do
+    field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+    companyFields (Just company)
+    field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
@@ -166,7 +173,7 @@ data StatsView = StatsView
 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}
 intervals::[a] ->  [Option]
-intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length users) - 1)]) ++ [length users]
+intervals items =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length items) - 1)]) ++ [length items]
   where
     intervals' (a:(a':as))  = (Option {oValue= show a , oText = (show $ a+1) ++"-"++(show a'), oSelected=False}):intervals' (a':as)
     intervals' _ = []
@@ -174,40 +181,47 @@ intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((lengt
 pageSize :: Int
 pageSize = 500
 
-class UserBased a where
-  getUser :: a -> User
-
-instance UserBased User where
-  getUser = id
-  
-instance UserBased (User,Maybe Company) where
-  getUser (user,_) = user
-
-instance UserBased (User,Maybe Company,DocStats) where
-  getUser (user,_,_) = user
-
 {-| Users on current page-}
-visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]
-visibleUsers params@(AdminUsersPageParams {page}) = (take pageSize) . (drop page) . (avaibleUsers params)
+visibleItems :: (AdminListable a) => AdminListPageParams -> [a] -> [a]
+visibleItems params@(AdminListPageParams {page}) = (take pageSize) . (drop page) . (availableItems params)
 
 {-| filtering users by search string or first letter -}
-avaibleUsers :: (UserBased a) => AdminUsersPageParams->[a]->[a]
-avaibleUsers (AdminUsersPageParams {search=Just searchString,startletter=Just startLetter}) =  (searchUsers searchString) . (startLetterUsers startLetter)
-avaibleUsers (AdminUsersPageParams {search=Just searchString}) =  searchUsers searchString
-avaibleUsers (AdminUsersPageParams {startletter=Just startLetter}) =  startLetterUsers startLetter
-avaibleUsers _  = id
+availableItems :: (AdminListable a) => AdminListPageParams -> [a] -> [a]
+availableItems (AdminListPageParams {search=Just searchString,startletter=Just startLetter}) =  (searchItems searchString) . (startLetterItems startLetter)
+availableItems (AdminListPageParams {search=Just searchString}) =  searchItems searchString
+availableItems (AdminListPageParams {startletter=Just startLetter}) =  startLetterItems startLetter
+availableItems _  = id
 
-startLetterUsers :: (UserBased a) => String->[a]->[a]
-startLetterUsers startletter = filter (\u -> (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ getFullName $ getUser u) ||
-                                            (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ getEmail $ getUser u))
-searchUsers :: (UserBased a) => String->[a]->[a]
-searchUsers searchString =  filter (\u -> (isInfixOf (map toUpper searchString) $ map toUpper $ toString $ getFullName $ getUser u) ||
-                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ getEmail $ getUser u))
+startLetterItems :: (AdminListable a) => String -> [a] -> [a]
+startLetterItems startletter = filter (startsWith startletter)
 
+searchItems :: (AdminListable a) => String -> [a] -> [a]
+searchItems searchString =  filter (matches searchString)
 
+class AdminListable a where
+  startsWith :: String -> a -> Bool
+  matches :: String -> a -> Bool
+
+instance AdminListable User where
+  startsWith s u = (isPrefixOf (map toUpper s)  . map toUpper . toString $ getFullName u)
+                   || (isPrefixOf (map toUpper s)  . map toUpper . toString $ getEmail u)
+  matches s u = (isInfixOf (map toUpper s) $ map toUpper $ toString $ getFullName u)
+                || (isInfixOf (map toUpper s) $ map toUpper $ toString $ getEmail u)
+
+instance AdminListable (User, Maybe Company) where
+  startsWith s (u, _) = startsWith s u
+  matches s (u, _) = matches s u
+
+instance AdminListable (User, Maybe Company, DocStats) where
+  startsWith s (u, _, _) = startsWith s u
+  matches s (u, _, _) = matches s u
+
+instance AdminListable (Company ) where
+  startsWith s c = isPrefixOf (map toUpper s)  . map toUpper . toString $ getCompanyName c
+  matches s c = isInfixOf (map toUpper s)  . map toUpper . toString $ getCompanyName c
 
 {-| Structure for params when searching users list (also for templates)-}
-data AdminUsersPageParams = AdminUsersPageParams {
+data AdminListPageParams = AdminListPageParams {
                              search::Maybe String,
                              startletter::Maybe String,
                              page::Int
@@ -215,6 +229,7 @@ data AdminUsersPageParams = AdminUsersPageParams {
                             
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mc = do
+        field "companyid" $ maybe "" (show . companyid) mc
         field "companyname" $  getCompanyName mc
         field "companynumber" $ getCompanyNumber mc
         field "companyaddress" $ maybe "" (toString . companyaddress . companyinfo) mc

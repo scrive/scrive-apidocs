@@ -13,6 +13,7 @@ module Administration.AdministrationControl(
             showAdminMainPage
           , showAdminUserAdvanced
           , showAdminUsers
+          , showAdminCompanies
           , showAdminUsersForSales
           , showAdminUsersForPayments
           , showAdminUserUsageStats
@@ -23,6 +24,7 @@ module Administration.AdministrationControl(
           , indexDB
           , getUsersDetailsToCSV
           , handleUserChange
+          , handleCompanyChange
           , handleDatabaseCleanup
           , handleCreateUser
           , handleCreateService
@@ -87,7 +89,7 @@ showAdminUserAdvanced :: Kontrakcja m => m Response
 showAdminUserAdvanced = onlySuperUser $ do
   users <- runDBQuery GetUsers
   mcompanies <- mapM getCompanyForUser users
-  params <- getAdminUsersPageParams
+  params <- getAdminListPageParams
   content <- adminUsersAdvancedPage (zip users mcompanies) params
   renderFromBody TopEmpty kontrakcja content
 
@@ -96,7 +98,7 @@ it allows to edit user details -}
 showAdminUsers :: Kontrakcja m => Maybe UserID -> m Response
 showAdminUsers Nothing = onlySuperUser $ do
   users <- getUsersAndStats
-  params <- getAdminUsersPageParams
+  params <- getAdminListPageParams
   content <- adminUsersPage users params
   renderFromBody TopEmpty kontrakcja content
 
@@ -109,17 +111,29 @@ showAdminUsers (Just userId) = onlySuperUser $ do
       content <- adminUserPage user mcompany
       renderFromBody TopEmpty kontrakcja content
 
+showAdminCompanies :: Kontrakcja m => Maybe CompanyID -> m Response
+showAdminCompanies Nothing = onlySuperUser $ do
+  companies <- runDBQuery $ GetCompanies Nothing
+  params <- getAdminListPageParams
+  content <- adminCompaniesPage companies params
+  renderFromBody TopEmpty kontrakcja content
+  
+showAdminCompanies (Just companyid) = onlySuperUser $ do
+  company <- guardJustM . runDBQuery $ GetCompany companyid
+  content <- adminCompanyPage company
+  renderFromBody TopEmpty kontrakcja content
+
 showAdminUsersForSales :: Kontrakcja m => m Response
 showAdminUsersForSales = onlySuperUser $ do
   users <- getUsersAndStats
-  params <- getAdminUsersPageParams
+  params <- getAdminListPageParams
   content <- adminUsersPageForSales users params
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForPayments :: Kontrakcja m => m Response
 showAdminUsersForPayments = onlySuperUser $ do
   users <- getUsersAndStats
-  params <- getAdminUsersPageParams
+  params <- getAdminListPageParams
   content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
@@ -208,11 +222,16 @@ handleUserChange uid = onlySuperUser $ do
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
-  companyInfoChange <- getCompanyInfoChange
-  getCompanyForUser user >>= maybe (return ()) (\c -> do
-    _ <- runDBUpdate $ SetCompanyInfo (companyid c) (companyInfoChange $ companyinfo c)
-    return ())
   return $ LinkUserAdmin $ Just uid
+  
+{- | Handling company details change. It reads user info change -}
+handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
+handleCompanyChange companyid = onlySuperUser $ do
+  _ <- getAsStrictBS "change"
+  company <- runDBOrFail $ dbQuery $ GetCompany companyid
+  companyInfoChange <- getCompanyInfoChange
+  _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
+  return $ LinkCompanyAdmin $ Just companyid
 
 {-| Cleaning the database -}
 handleDatabaseCleanup :: Kontrakcja m => m KontraLink
@@ -305,13 +324,13 @@ getUserInfoChange = do
     }
 
 {- | Reads params and returns structured params for user managment pages. -}
-getAdminUsersPageParams :: Kontrakcja m => m AdminUsersPageParams
-getAdminUsersPageParams = do
+getAdminListPageParams :: Kontrakcja m => m AdminListPageParams
+getAdminListPageParams = do
   search <- getDataFn' (look "search")
   startletter <-  getDataFn' (look "startletter")
   mpage <-  getDataFn' (look "page")
   let (mpage'::Maybe Int) = join $ fmap readM mpage
-  return $ AdminUsersPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
+  return $ AdminListPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
 
 
 {- Create service-}

@@ -14,6 +14,13 @@ adminsmain=
             </a>
           </td>
        </tr>
+        <tr>
+          <td style="height:50px;width:200px">
+            <a href="/adminonly/companyadmin">
+              <button style="width:150px"> Company Admin </button>
+            </a>
+          </td>
+       </tr>
    </tbody></table>
     <br/>
     <br/>
@@ -65,10 +72,10 @@ adminsmanageall =
       <h3>Users</h3>
      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
       <div>
-        $usersfilter(link="/adminonly/advuseradmin")$
+        $adminlistfilter(link="/adminonly/advuseradmin")$
       </div>
       <div>
-        $userspaging(link="/adminonly/advuseradmin")$
+        $adminlistpaging(link="/adminonly/advuseradmin")$
         <table><tbody>
             $users:{user|
             <tr>
@@ -84,23 +91,23 @@ adminsmanageall =
       </div>
     </div>
 ###
-usersfilter=
+adminlistfilter=
     <form action="$link$" method="GET">
       <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
-        Find user:
+        Find $item$:
         <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$" />
         <input type="submit" value="Search"/>
       </div>
     </form>
     <br/><br/>
-    <a href="$link$">View list of users </a>
+    <a href="$link$">View list of $items$ </a>
     <br/><br/>
     <form action="$link$" method="GET">
       Find by name:
       $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
     </form>
 ###
-userspaging=
+adminlistpaging=
     <form action="$link$" method="GET">
       View page:
       $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
@@ -112,8 +119,8 @@ adminusers=
     <strong>USER ADMIN</strong>
     <br/>
     $backtoadminmainlink()$
-    $usersfilter(link=adminuserlink)$
-    $userspaging()$
+    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+    $adminlistpaging()$
     <br/><br/>
     <table>
         <thead>
@@ -132,8 +139,8 @@ adminusers=
           <td style="width:50px">Admin Invites</td>
         </thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$ </td>
           <td> $user.userdetails.phone$ </td>
           <td> $user.docstats.doccount$ </td>
@@ -147,14 +154,41 @@ adminusers=
           <td> $user.userstats.admininvitecount$ </td>
         </tr>}$
       </table>
-
+###
+admincompanies=
+    <strong>COMPANY ADMIN</strong>
+    <br/>
+    $backtoadminmainlink()$
+    $adminlistfilter(link=adminlistlink;item="company";items="companies")$
+    $adminlistpaging()$
+    <br/><br/>
+    <table>
+        <thead>
+          <td style="width:200px">ID</td>
+          <td style="width:200px">Name</td>
+          <td style="width:200px">Number</td>
+          <td style="width:200px">Address</td>
+          <td style="width:200px">Zip</td>
+          <td style="width:200px">City</td>
+          <td style="width:200px">Country</td>
+        </thead>
+        $companies:{company|<tr>
+          <td><a href="$adminlistlink$/$company.companyid$">$company.companyid$</a> </td>
+          <td><a href="$adminlistlink$/$company.companyid$">$company.companyname$</a> </td>
+          <td> $company.companynumber$ </td>
+          <td> $company.companyaddress$ </td>
+          <td> $company.companyzip$ </td>
+          <td> $company.companycity$ </td>
+          <td> $company.companycountry$ </td>
+        </tr>}$
+      </table>
 ###
 adminUsersForSales=
     <strong>USER ADMIN FOR SALES</strong>
     <br/>
     $backtoadminmainlink()$
-    $usersfilter(link=adminuserlink)$
-    $userspaging()$
+    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+    $adminlistpaging()$
     <br/><br/>
     <table>
         <thead>
@@ -167,8 +201,8 @@ adminUsersForSales=
           <td style="width:50px">Subaccounts</td>
        </thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$</td>
           <td> $user.userdetails.phone$ </td>
           <td> $user.userdetails.TOSDate$ </td>
@@ -181,8 +215,8 @@ adminUsersForPayments=
     <strong>USER ADMIN FOR PAYMENTS</strong>
     <br/>
     $backtoadminmainlink()$
-    $usersfilter(link=adminuserlink)$
-    $userspaging()$
+    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+    $adminlistpaging()$
     <br/><br/>
     <table>
         <thead>
@@ -198,8 +232,8 @@ adminUsersForPayments=
 	  <td style="width:200px">Current TW storage price</td>
 	</thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$
           </td>
 	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
@@ -272,41 +306,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
-		<tr> <td style="padding-top:10px"><strong>Company data</strong></td>
-		  <td> </td>
-		</tr>
-		<tr> <td>Company:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyname$"  name="companyname" />
-		  </td>
-		</tr>
-		<tr> <td>Company nr:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companynumber$"  name="companynumber" />
-		  </td>
-		</tr>
-		<tr> <td style="padding-top:10px"><strong>Company Location</strong></td>
-		  <td> </td>
-		</tr>
-		<tr> <td>Adress:</td>
-		  <td> <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyaddress$"  name="companyaddress" />
-		  </td>
-		</tr>
-		<tr> <td>ZIP:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companyzip$"  name="companyzip" />
-		  </td>
-		</tr>
-		<tr> <td>City:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companycity$"  name="companycity" />
-		  </td>
-		</tr>
-		<tr> <td>Country:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" $if(!user.iscompanyaccount)$disabled="true"$endif$ value="$company.companycountry$" name="companycountry" />
-		  </td>
-		</tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>
@@ -314,11 +313,71 @@ adminuser=
 		<tr> <td>Account type:</td>
 		  <td>
 		    $if(user.iscompanyaccount)$
-		    $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
+		    <a href="/adminonly/companyadmin/$company.companyid$">
+		      $company.companyname$ $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
+		    </a>
 		    $else$
 		    Private Account<br/>
 		    <input type="checkbox" name="upgradetocompany"/> Upgrade to Company
 		    $endif$
+		  </td>
+		</tr>
+	    </tbody></table>
+	    <br/>
+	    <input type="submit" style="width:200px;font-weight:bold"
+	    value="Change" name="change" />
+	  </div>
+	</div>
+      </div>
+    </form>
+####
+admincompany=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <br/>
+    <br/>
+    <form action="" method="POST">
+      <div id="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	</ul>
+	<div class="tab-container">
+	  <div class="tab-content account">
+	    <table><tbody>
+		<tr> <th style="width:200px"></th> <th> </th></tr>
+		<tr> <td style="padding-top:10px"><strong>Company data</strong></td> <td> </td></tr>
+		<tr> <td>Name:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companyname$"  name="companyname" />
+		  </td>
+		</tr>
+		<tr> <td>Company nr:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companynumber$"  name="companynumber" />
+		  </td>
+		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company Location</strong></td>
+		  <td> </td>
+		</tr>
+		<tr> <td>Adress:</td>
+		  <td> <input type="text" style="width:200px;margin:0" value="$companyaddress$"  name="companyaddress" />
+		  </td>
+		</tr>
+		<tr> <td>ZIP:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companyzip$"  name="companyzip" />
+		  </td>
+		</tr>
+		<tr> <td>City:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companycity$"  name="companycity" />
+		  </td>
+		</tr>
+		<tr> <td>Country:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companycountry$" name="companycountry" />
 		  </td>
 		</tr>
 	    </tbody></table>
