@@ -918,10 +918,6 @@ csvLandPage :: TemplatesMonad m => Int -> m String
 csvLandPage count = renderTemplateFM "csvlandpage" $ do
   field "doccount" (show count)
 
-csvLandPage :: TemplatesMonad m => Int -> m String
-csvLandPage count = renderTemplateFM "csvlandpage" $ do
-  field "doccount" (show count)
-
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
