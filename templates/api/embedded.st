@@ -3,6 +3,7 @@
 # Eric Normand
 # Have to set style="overflow:hidden" on html tag to prevent safari from drawing
 # unnecessary scrollbars on iframe
+###
 embeddedPage= 
 $doctype()$
 <html style="overflow:hidden">
@@ -106,6 +107,16 @@ $if(logo)$
   
 }
 $endif$
+
+.flashmsgbox {
+  position:relative;
+}
+
+.signStepsBodyUploadBox {
+ margin-left: auto;
+ margin-right: auto;
+ float: none;
+}
 
 .flashmsgbox {
   position:relative;
