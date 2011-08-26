@@ -18,6 +18,7 @@ import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
+import Company.Model
 import DB.Classes
 import Doc.DocState
 import InputValidation
@@ -288,6 +289,7 @@ handleRoutes = msum [
   
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
+     , dir "dave" $ dir "company"  $ hGet1 $ toK1 $ daveCompany
 
      -- account stuff
      , dir "logout"      $ hGet0  $ toK0 $ handleLogout
@@ -761,6 +763,14 @@ daveUser :: Kontrakcja m => UserID -> m Response
 daveUser userid = onlySuperUserGet $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
+    
+{- |
+    Used by super users to inspect a company in xml.
+-}
+daveCompany :: Kontrakcja m => CompanyID -> m Response
+daveCompany companyid = onlySuperUserGet $ do
+  company <- runDBOrFail $ dbQuery $ GetCompany companyid
+  V.renderFromBody V.TopNone V.kontrakcja $ inspectXML company
 
 sysdump :: Kontrakcja m => m Response
 sysdump = onlySuperUserGet $ do
