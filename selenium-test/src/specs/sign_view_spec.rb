@@ -11,7 +11,7 @@ require "selenium-test/src/login_helper.rb"
 describe "sign view" do
 
   before(:all) do
-    @wait = Selenium::WebDriver::Wait.new(:timeout => 10)
+    @wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 
     @ctx = TestContext.new
     @driver = @ctx.createWebDriver
@@ -140,7 +140,7 @@ describe "sign view" do
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
     
     #make sure it's got the opened icon displayed
-    @driver.find_element :css => "div.status.opened"
+    @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #try and sign the doc without checking the sign guard
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
@@ -156,7 +156,7 @@ describe "sign view" do
     #make sure there are two signed icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==2 }
   end
-  
+
   it "allows users to reject basic contracts" do
   
     @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
@@ -182,7 +182,7 @@ describe "sign view" do
     #make sure there are two cancelled icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.cancelled").length==2 }
   end
-  
+
   it "allows users to sign advanced contracts if they've filled in fields, uploaded attachments & checked the sign guard" do
   
     @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)

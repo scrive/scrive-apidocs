@@ -33,6 +33,7 @@ class LoginHelper
   end
   
   def logout
+    @wait.until { @driver.find_element :xpath => "//a[@href='/logout']" }
     (@driver.find_element :xpath => "//a[@href='/logout']").click
     @wait.until { @driver.find_element :css => "a.login-button" }
   end

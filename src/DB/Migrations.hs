@@ -12,6 +12,7 @@ import Database.HDBC
 import DB.Classes
 import DB.Model
 import DB.Versions
+import DB.Utils
 import qualified AppLogger as Log
 
 import API.Service.Tables
@@ -66,8 +67,8 @@ checkDBConsistency = do
         TVRcreated -> do
           Log.debug $ "Table created, writing version information..."
           wrapDB $ \conn -> do
-            st <- prepare conn $ "INSERT INTO table_versions (name, version) VALUES (?, ?)"
-            _ <- execute st [toSql $ tblName table, toSql $ tblVersion table]
+            _ <- run conn "INSERT INTO table_versions (name, version) VALUES (?, ?)"
+              [toSql $ tblName table, toSql $ tblVersion table]
             return ()
           _ <- checkTable table
           return $ Left table
@@ -81,20 +82,18 @@ checkDBConsistency = do
                return $ Right $ Just (table, ver)
       where
         checkVersion = wrapDB $ \conn -> do
-          st <- prepare conn $ "SELECT version FROM table_versions WHERE name = ?"
-          _ <- execute st [toSql $ tblName table]
-          mver <- fetchRow st
-          finish st
+          mver <- quickQuery' conn "SELECT version FROM table_versions WHERE name = ?"
+            [toSql $ tblName table] >>= oneObjectReturnedGuard . join
           case mver of
-               Just [ver] -> return $ fromSql ver
-               _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"
+            Just ver -> return $ fromSql ver
+            _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
          then do
            Log.debug $ "Migrating table '" ++ tblName t ++ "' from version " ++ show (mgrFrom m) ++ "..."
            mgrDo m
            wrapDB $ \conn -> do
-             st <- prepare conn $ "UPDATE table_versions SET version = ? WHERE name = ?"
-             _ <- execute st [toSql $ succ $ mgrFrom m, toSql $ tblName t]
+             _ <- run conn "UPDATE table_versions SET version = ? WHERE name = ?"
+               [toSql $ succ $ mgrFrom m, toSql $ tblName t]
              return ()
          else return ()
