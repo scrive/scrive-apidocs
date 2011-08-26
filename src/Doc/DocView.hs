@@ -607,6 +607,7 @@ pageDocumentDesign ctx
        fieldM "invitationMailContent" $ mailInvitationToSignOrViewContent False ctx document Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
+       field "fromservice" (isJust $ ctxservice ctx)       
        documentAuthorInfo document
        csvfields
        documentFunctionalityFields document
