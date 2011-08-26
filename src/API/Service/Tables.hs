@@ -38,4 +38,5 @@ tableServices = Table {
     runRaw conn $ "ALTER TABLE services"
       ++ " ADD CONSTRAINT fk_services_users FOREIGN KEY (admin_id)"
       ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

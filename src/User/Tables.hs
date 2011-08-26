@@ -24,9 +24,11 @@ tableUserFriends = Table {
     runRaw conn $ "ALTER TABLE user_friends"
       ++ " ADD CONSTRAINT fk_user_friends_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
     runRaw conn $ "ALTER TABLE user_friends"
       ++ " ADD CONSTRAINT fk_user_friends_users_2 FOREIGN KEY(friend_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableUsers :: Table
@@ -69,9 +71,11 @@ tableUsers = Table {
     runRaw conn $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
     runRaw conn $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableUserMailAPIs :: Table
@@ -96,6 +100,7 @@ tableUserMailAPIs = Table {
     runRaw conn $ "ALTER TABLE user_mail_apis"
       ++ " ADD CONSTRAINT fk_user_mail_apis_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableUserInviteInfos :: Table
@@ -119,7 +124,9 @@ tableUserInviteInfos = Table {
     runRaw conn $ "ALTER TABLE user_invite_infos"
       ++ " ADD CONSTRAINT fk_user_invite_info_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
     runRaw conn $ "ALTER TABLE user_invite_infos"
       ++ " ADD CONSTRAINT fk_user_invite_infos_users FOREIGN KEY(inviter_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
