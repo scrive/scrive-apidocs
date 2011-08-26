@@ -840,11 +840,11 @@ handleActivate aid hash signupmethod actvuser = do
           returnToAccountSetup newuser mnewcompany
 
     getUserInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (UserInfo -> UserInfo))
-    getUserInfoUpdateFunc user = do
+    getUserInfoUpdateFunc _user = do
       mfname <- getRequiredField asValidName "fname"
       mlname <- getRequiredField asValidName "lname"
-      mcompanyposition <- getDefaultedUserInfoField usercompanyposition asValidPosition "companyposition"
-      mphone <- getDefaultedUserInfoField userphone (Good . BS.fromString) "phone"
+      mcompanyposition <- getRequiredField asValidPosition "companyposition"
+      mphone <- getRequiredField (Good . BS.fromString) "phone"
       return $ 
         case (mfname, mlname, mcompanyposition, mphone) of
           (Just fname, Just lname, Just companytitle, Just phone) -> Just $ 
@@ -854,8 +854,6 @@ handleActivate aid hash signupmethod actvuser = do
                           , userphone = phone
                           }
           _ -> Nothing
-      where
-        getDefaultedUserInfoField f = getDefaultedField (f $ userinfo user)
  
     getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
     getCompanyInfoUpdateFunc _company = do
