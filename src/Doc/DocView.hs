@@ -69,6 +69,7 @@ module Doc.DocView (
   , documentsToFixView
   , uploadPage
   , docForListJSON
+  , csvLandPage
   ) where
 
 import ActionSchedulerState (ActionID)
@@ -607,6 +608,7 @@ pageDocumentDesign ctx
        fieldM "invitationMailContent" $ mailInvitationToSignOrViewContent False ctx document Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
+       field "fromservice" (isJust $ ctxservice ctx)       
        documentAuthorInfo document
        csvfields
        documentFunctionalityFields document
@@ -760,6 +762,10 @@ pageDocumentForAuthor ctx
        fieldM "authorissecretarytext" $ getProcessText processauthorissecretarytext
        fieldM "remindagainbuttontext" $ getProcessText processremindagainbuttontext
        signatoryMessageProcessFields document
+
+csvLandPage :: TemplatesMonad m => Int -> m String
+csvLandPage count = renderTemplateFM "csvlandpage" $ do
+  field "doccount" (show count)
 
 {- |
    Show the document for Viewers (friends of author or signatory).

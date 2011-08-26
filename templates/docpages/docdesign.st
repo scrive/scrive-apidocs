@@ -64,9 +64,11 @@ pageDocumentDesign=
       <div id="signStepsMenuEmptyStep">
         $if(!template)$
         $if(!isbasic)$
+        $if(!fromservice)$
         <div class="signStepsBodySave extraLink">
           <small><a class="submit" form=".stepForm" rel="template">$_signStepsMenuEmptyStepSaveAsTemplate()$</a></small>
         </div>
+        $endif$
         $endif$
         $endif$
 
@@ -701,6 +703,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
+            $if(!fromservice)$
             <div class="signStepsBodyUploadBox">
               <div>
                 <span id="signStepsBodyUploadTextContainer"> 
@@ -716,7 +719,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 </a>
               </div>
             </div>
+            $endif$
           </div>
+          $if(!fromservice)$
           <div id="possibleAttachmentsList">
           <span id="attachmentselectlist" style="display:none">
             <div class="existingattachments">
@@ -728,6 +733,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             </div>
           </span>
           </div>
+          $endif$
           <div id="attachedList">
           <div id="alreadyattached">
             $attachments:{attachment |

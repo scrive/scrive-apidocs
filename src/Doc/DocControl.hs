@@ -654,6 +654,9 @@ handleIssueSign document = do
                     addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
+                  if isJust $ ctxservice ctx
+                    then return LinkCSVLandPage
+                    else do
                     addFlashM $ flashMessageCSVSent $ length ds
                     Log.debug (show $ map documenttype ds)
                     case documenttype (head ds) of
@@ -760,10 +763,7 @@ splitUpDocument doc =
           addFlashM flashMessageInvalidCSV
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          udoc <- guardRightM $ if (isTemplate doc)
-                                 then return $ Right doc
-                                 else update $ TemplateFromDocument $ documentid doc
-          mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
+          mdocs <- mapM (createDocFromRow doc (csvsignatoryindex csvupload)) csvbody
           if Data.List.null (lefts mdocs)
             then return $ Right (rights mdocs)
             else mzero
@@ -1991,3 +1991,9 @@ handleInvariantViolations = onlySuperUser $ do
         [] -> "No problems!"
         _  -> intercalate "\n" probs
   return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
+
+
+handleCSVLandpage :: Kontrakcja m => Int -> m String
+handleCSVLandpage c = do
+  text <- csvLandPage c
+  return text
