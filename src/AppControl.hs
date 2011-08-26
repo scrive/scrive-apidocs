@@ -75,7 +75,7 @@ import InspectXMLInstances ()
 import InspectXML
 import Util.MonadUtils
 import ForkAction
-
+import Happstack.Server.FileServe.BuildingBlocks
 
 {- |
   Global application data
@@ -280,7 +280,9 @@ handleRoutes = msum [
      -- never ever use this
      , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
        
-       
+     , dir "adminonly" $ dir "log" $ onlySuperUser $ serveLogDirectory "log"
+
+  
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
 
@@ -753,3 +755,17 @@ sysdump :: Kontrakcja m => m Response
 sysdump = onlySuperUserGet $ do
     dump <- liftIO getAllActionAsString
     ok $ addHeader "refresh" "5" $ toResponse dump
+
+
+serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
+                   FilePath    -- ^ file/directory to serve
+                  -> m Response
+serveLogDirectory localPath = 
+    fileServe' serveFn mimeFn indexFn localPath
+        where
+          serveFn = filePathSendFile
+          mimeFn  = guessContentTypeM $ Map.fromList [("log","text/plain")]
+          indexFn fp =
+              msum [ tryIndex filePathSendFile mimeFn [] fp
+                   , browseIndex renderDirectoryContents filePathSendFile mimeFn [] fp
+                   ]

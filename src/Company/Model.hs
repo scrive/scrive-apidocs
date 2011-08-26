@@ -15,7 +15,6 @@ import Control.Applicative
 import Data.Data
 import Data.Int
 import Database.HDBC
-import Database.HDBC.PostgreSQL
 import Happstack.State
 import Happstack.Server
 import Happstack.Util.Common
@@ -83,7 +82,8 @@ instance DBQuery GetCompanyByExternalID (Maybe Company) where
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
-  dbUpdate (CreateCompany msid mecid) = retryOn uniqueViolation $ do
+  dbUpdate (CreateCompany msid mecid) = do
+    wrapDB $ \conn -> runRaw conn "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
     cid <- CompanyID <$> getUniqueID tableCompanies
     wrapDB $ \conn -> do
       _ <- run conn ("INSERT INTO companies ("

@@ -184,4 +184,3 @@ instance Show KontraLink where
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
     showsPrec _ LinkCSVLandPage = (++) "/csvlandpage"
-

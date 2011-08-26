@@ -44,7 +44,6 @@ import Control.Monad
 import Data.Data
 import Data.Int
 import Database.HDBC
-import Database.HDBC.PostgreSQL
 import Happstack.State
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
@@ -234,6 +233,7 @@ instance DBUpdate SetUserCompany Bool where
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
   dbUpdate (DeleteUser uid) = wrapDB $ \conn -> do
+    runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
     -- it removes a user and all its references from database.
     -- however, it'll fail if this user is a service admin.
     r <- run conn "DELETE FROM users WHERE id = ?" [toSql uid]
@@ -276,7 +276,8 @@ instance DBUpdate AddUser (Maybe User) where
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
-      Nothing -> retryOn uniqueViolation $ do
+      Nothing -> do
+        wrapDB $ \conn -> runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
         uid <- UserID <$> getUniqueID tableUsers
         wrapDB $ \conn -> do
           _ <- run conn ("INSERT INTO users ("
@@ -333,12 +334,13 @@ instance DBUpdate SetUserPassword Bool where
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
 instance DBUpdate SetInviteInfo Bool where
-  dbUpdate (SetInviteInfo minviterid invitetime invitetype uid) = retryOn uniqueViolation $ do
+  dbUpdate (SetInviteInfo minviterid invitetime invitetype uid) = do
     exists <- checkIfUserExists uid
     if exists
       then do
         wrapDB $ \conn -> case minviterid of
           Just inviterid -> do
+            runRaw conn "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
             rec_exists <- quickQuery' conn "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
               >>= checkIfOneObjectReturned
             r <- if rec_exists
@@ -372,12 +374,13 @@ instance DBUpdate SetInviteInfo Bool where
 
 data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
 instance DBUpdate SetUserMailAPI Bool where
-  dbUpdate (SetUserMailAPI uid musermailapi) = retryOn uniqueViolation $ do
+  dbUpdate (SetUserMailAPI uid musermailapi) = do
     exists <- checkIfUserExists uid
     if exists
       then do
         wrapDB $ \conn -> case musermailapi of
           Just mailapi -> do
+            runRaw conn "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
             rec_exists <- quickQuery' conn "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
               >>= checkIfOneObjectReturned
             r <- if rec_exists
@@ -458,12 +461,13 @@ instance DBUpdate SetPreferredDesignMode Bool where
 
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
-  dbUpdate (AddViewerByEmail uid email) = retryOn uniqueViolation $ wrapDB $ \conn -> do
+  dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
     mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?" [toSql email]
       >>= oneObjectReturnedGuard . join
       >>= return . fmap (UserID . fromSql)
     case mfid of
       Just fid -> do
+        runRaw conn "LOCK TABLE user_friends IN ACCESS EXCLUSIVE MODE"
         rec_exists <- quickQuery' conn "SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?" [toSql uid, toSql fid]
           >>= checkIfOneObjectReturned
         if rec_exists
@@ -495,7 +499,7 @@ instance DBUpdate SetSignupMethod Bool where
 data MakeUserCompanyAdmin = MakeUserCompanyAdmin UserID
 instance DBUpdate MakeUserCompanyAdmin Bool where
   dbUpdate (MakeUserCompanyAdmin uid) = wrapDB $ \conn -> do
-    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
       >>= oneObjectReturnedGuard . join
       >>= return . join . fmap fromSql
     case mcid :: Maybe CompanyID of
