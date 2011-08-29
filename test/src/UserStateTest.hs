@@ -128,7 +128,7 @@ test_getCompanyAccounts = do
     return user
   res <- dbUpdate $ MakeUserCompanyAdmin userid
   assertBool "User was made company admin" res
-  company_accounts <- dbQuery $ GetCompanyAccounts userid
+  company_accounts <- dbQuery $ GetCompanyAccounts cid
   assertBool "Company accounts returned correctly" $ users == company_accounts
 
 test_getInviteInfo :: DB ()
