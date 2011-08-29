@@ -17,6 +17,7 @@ module Administration.AdministrationControl(
           , showAdminUsersForSales
           , showAdminUsersForPayments
           , showAdminUserUsageStats
+          , showAdminCompanyUsageStats
           , showAllUsersTable
           , showStats
           , showServicesPage
@@ -157,6 +158,15 @@ showAdminUserUsageStats userid = onlySuperUser $ do
     fieldsFromStats [user] documents
   renderFromBody TopEmpty kontrakcja content
 
+showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
+showAdminCompanyUsageStats companyid = onlySuperUser $ do
+  users <- runDBQuery $ GetCompanyAccounts companyid
+  userdocs <- mapM (query . GetDocumentsByAuthor . userid) users
+  let documents = concat userdocs
+  Log.debug $ "There are " ++ (show $ length documents) ++ " docs related to company " ++ (show companyid)
+  content <- adminCompanyUsageStatsPage $ do
+    fieldsFromStats [] documents
+  renderFromBody TopEmpty kontrakcja content
 
 {- Shows table of all users-}
 showAllUsersTable :: Kontrakcja m => m Response

@@ -170,18 +170,12 @@ instance DBQuery GetUserFriends [User] where
     _ <- execute st [toSql uid]
     fetchUsers st []
 
-data GetCompanyAccounts = GetCompanyAccounts UserID
+data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
-  dbQuery (GetCompanyAccounts uid) = wrapDB $ \conn -> do
-    mrow <- quickQuery' conn "SELECT company_id, is_company_admin FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
-      >>= oneObjectReturnedGuard
-      >>= return . fmap (\[a, b] -> (fromSql a, fromSql b))
-    case mrow of
-      Just (Just (cid::CompanyID), True) -> do
-        st <- prepare conn $ selectUsersSQL ++ " WHERE u.id != ? AND u.company_id = ? ORDER BY u.email DESC"
-        _ <- execute st [toSql uid, toSql cid]
-        fetchUsers st []
-      _ -> return []
+  dbQuery (GetCompanyAccounts cid) = wrapDB $ \conn -> do
+    st <- prepare conn $ selectUsersSQL ++ " WHERE u.company_id = ? ORDER BY u.email DESC"
+    _ <- execute st [toSql cid]
+    fetchUsers st []
 
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where

@@ -224,9 +224,9 @@ friendsSortSearchPage  =
     listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
-handleGetCompanyAccounts = withUserGet $ do
+handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
     Context{ctxmaybeuser = Just user} <- getContext
-    companyaccounts <- runDBQuery $ GetCompanyAccounts $ userid user
+    companyaccounts <- runDBQuery $ GetCompanyAccounts companyid
     params <- getListParams
     content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
@@ -532,6 +532,15 @@ withUserGet action = do
     Just _  -> Right <$> action
     Nothing -> return $ Left $ LinkLogin NotLogged
 
+{- |
+   Runs an action only if currently logged in user is a company admin
+-}
+withCompanyAdmin :: Kontrakcja m => (CompanyID -> m a) -> m a
+withCompanyAdmin action = do
+  ctx <- getContext
+  User{useriscompanyadmin, usercompany} <- guardJust $ ctxmaybeuser ctx
+  guard $ useriscompanyadmin && isJust usercompany
+  action $ fromJust usercompany
 {- |
      Takes a document and a action
      Runs an action only if current user (from context) is author of document
@@ -1057,10 +1066,11 @@ handleFriends = do
                                   ("paging", pagingParamsJSON friendsPage)]
 
 handleCompanyAccounts :: Kontrakcja m => m JSValue
-handleCompanyAccounts = do
-  Context{ctxmaybeuser} <- getContext
-  user <- guardJust ctxmaybeuser
-  companyaccounts <- runDBQuery $ GetCompanyAccounts $ userid user
+handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
+  Context{ctxmaybeuser = Just user} <- getContext
+  companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
+  -- filter out the current user, they don't want to see themselves in the list
+  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",
