@@ -1005,7 +1005,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-body">
       <div class="modal-content">
           <p>$_dialogConfirmSigninviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
-          <p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p>
+          <span id="multipleinvite"><p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p></span>
+          <span id="onlyauthor" style="display:none"><p>$_dialogConfirmSigninviteBody2OnlyAuthor()$</p></span>
         <span class="eleghidden" style="display:none;">
             <h3>$_dialogConfirmSigninviteSubHead()$</h3>
             <p>$_dialogConfirmSigninviteSubBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"

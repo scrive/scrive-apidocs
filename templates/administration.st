@@ -342,6 +342,7 @@ admincompany=
 	</div>
 	<ul class="tabs">
 	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Usage Stats</a></li>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
@@ -444,7 +445,60 @@ userusagestats=
 	</div>
       </div>
     </div>
-	    
+####	    
+companyusagestats=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <br/>
+    <br/>
+      <div id="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Usage Stats</a></li>
+	</ul>
+      <div class="tab-container">
+	<div class="tab-content account">
+	  <table>
+            <thead>
+              <td style="width:200px">Date</td>
+              <td style="width:200px">All signatures</td>
+              <td style="width:200px">Signs in closed</td>
+              <td style="width:200px">All users</td>
+              <td style="width:200px">All documents</td>
+              <td style="width:200px">Preparation</td>
+              <td style="width:200px">Pending</td>
+              <td style="width:200px">Closed</td>
+              <td style="width:200px">AwaitingAuthor</td>
+              <td style="width:200px">Rejected</td>
+              <td style="width:200px">Canceled</td>
+              <td style="width:200px">Timeout</td>
+              <td style="width:200px">Error</td>
+              <td style="width:200px">Viral invites</td>
+              <td style="width:200px">Admin invites</td>
+	    </thead>
+            $allMonthsStats:{stat|<tr>
+              <td>$stat.date$</td>
+              <td>$stat.documents.signatures$ </td>
+              <td>$stat.documents.signaturesInClosed$ </td>
+              <td>$stat.users.all$ </td>
+              <td>$stat.documents.all$ </td>
+              <td>$stat.documents.preparation$</td>
+              <td>$stat.documents.pending$ </td>
+              <td>$stat.documents.closed$ </td>
+              <td>$stat.documents.awaitingauthor$ </td>
+              <td>$stat.documents.rejected$ </td>
+              <td>$stat.documents.canceled$ </td>
+              <td>$stat.documents.timeout$ </td>
+              <td>$stat.documents.error$ </td>
+              <td>$stat.users.viralInvites$ </td>
+              <td>$stat.users.adminInvites$ </td>
+	    </tr>}$
+	  </table>
+	</div>
+      </div>
+    </div>
 ###
 statisticsPage=
     $backtoadminmainlink()$

@@ -1,7 +1,7 @@
 .PHONY: all install test clean
 
 CC=gcc
-CFLAGS=-Wall -pedantic
+CFLAGS=-Wall -pedantic -static
 
 all: gswrapper closefds
 

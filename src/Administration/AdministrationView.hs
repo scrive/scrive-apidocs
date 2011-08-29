@@ -23,6 +23,7 @@ module Administration.AdministrationView(
           , servicesAdminPage
           , adminTranslationsPage
           , adminUserUsageStatsPage
+          , adminCompanyUsageStatsPage
           , AdminListPageParams(..)
           , StatsView(..)) where
 
@@ -124,6 +125,14 @@ adminUserUsageStatsPage user mcompany morefields =
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
         fieldF "user" $ userFields user
         fieldF "company" $ companyFields mcompany
+        field "adminlink" $ show $ LinkAdminOnly
+        morefields
+        
+{-| The company stats page -}
+adminCompanyUsageStatsPage :: TemplatesMonad m => Fields m -> m String
+adminCompanyUsageStatsPage morefields =
+    renderTemplateFM "companyusagestats" $ do
+        field "admincompanieslink" $ show $ LinkUserAdmin Nothing
         field "adminlink" $ show $ LinkAdminOnly
         morefields
 

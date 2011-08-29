@@ -462,6 +462,7 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
+            //here
         },
         fixed:false
     });
@@ -914,8 +915,10 @@ function isAuthorSignatory() {
          1. If numsigs === 0:
                 deactivate checkbox
                 uncheck the box
+                show author only signatory confirmation text
 
          2. If numsigs > 0:
+                show multiple signatory confirmation text
                 1. if sign order is enabled: 
                     deactivate checkbox
 
@@ -935,9 +938,9 @@ function isAuthorSignatory() {
 function showProperSignButtons() {
     var checkBox = $("#switchercheckbox");
     if(!isAuthorSignatory()) {
-        if (!checkBox.attr("checked")) {
+        if (!checkBox.attr("checked"))
             checkBox.attr("checked", true).change();
-        }
+
         deactivateSignInvite();
         checkBox.parent().find(".usual").hide();
         checkBox.parent().find(".secretary").show();        
@@ -954,15 +957,17 @@ function showProperSignButtons() {
         var numsigs = $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
         if(numsigs === 0) {
             deactivateSignInvite();
-            if (checkBox.attr("checked")) {
+            if (checkBox.attr("checked"))
                 checkBox.attr("checked", false).change();
-            }
+            $("#multipleinvite").hide();
+            $("#onlyauthor").show();
         } else {
-            if (signingOrderEnabled) {
+            if (signingOrderEnabled)
                 deactivateSignInvite();
-            } else {
+            else
                 activateSignInvite();
-            }
+            $("#multipleinvite").show();
+            $("#onlyauthor").hide();
         }
     }
 }
