@@ -54,14 +54,6 @@ $(newtypeDeriveUnderlyingReadShow ''Binary)
 instance Convertible Binary SqlValue where
   safeConvert = safeConvert . B64.encode . unBinary
 
+-- decode is too strict for PostgreSQL taste, so we use decodeLenient instead
 instance Convertible SqlValue Binary where
-  safeConvert v = case safeConvert v of
-    Right s -> case B64.decode s of
-      Right ds -> Right $ Binary ds
-      Left e   -> Left $ ConvertError {
-          convSourceValue = show s
-        , convSourceType = "ByteString"
-        , convDestType = "Binary"
-        , convErrorMessage = "Couldn't convert from base64: " ++ e
-      }
-    Left e -> Left e
+  safeConvert = either Left (Right . Binary . B64.decodeLenient) . safeConvert
