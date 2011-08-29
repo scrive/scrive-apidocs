@@ -277,9 +277,12 @@ var DocumentStandarView = Backbone.View.extend({
             var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-            bankid.click(function() {alert("Bank id selected"); return false;});
-            telia.click(function() {alert("Telia id selected");  return false;});
-            nordea.click(function() {alert("Nordea id selected");  return false;});
+            bankid.click(function() {alert("Bank id selected, but not supported in this envirement"); return false;});
+            telia.click(function() {
+                    Eleg.teliaSign(document,signatory, document.sign()); 
+                    return false;
+            });
+            nordea.click(function() {alert("Nordea id selected, but not supported in this envirement");  return false;});
             acceptButton.append(bankid).append(telia).append(nordea);
         }
         else    
@@ -327,9 +330,12 @@ var DocumentStandarView = Backbone.View.extend({
             var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg' /></a>");
             var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-            bankid.click(function() {alert("Bank id selected");  return false;});
-            telia.click(function() {alert("Telia id selected");  return false;});
-            nordea.click(function() {alert("Nordea id selected");  return false;});
+            bankid.click(function() {alert("Bank id selected, but not supported in this envirement");  return false;});
+            telia.click(function() {
+                 Eleg.teliaSign(document,signatory, document.sign()); 
+                 return false;
+            });
+            nordea.click(function() {alert("Nordea id selected, but not supported in this envirement");  return false;});
             acceptButton.append(bankid).append(telia).append(nordea);
         }
         else    
@@ -350,7 +356,7 @@ var DocumentStandarView = Backbone.View.extend({
         {
             
             var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
-            var a = $("<a target='_new' />").text(localization.sign.signByAuthor.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
+            var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
             var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
             content.add($("<span/>").append(subhead).append(p));
         }

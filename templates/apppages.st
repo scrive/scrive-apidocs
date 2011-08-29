@@ -55,6 +55,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/livequery.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/loading.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/flashmessages.js"
                 type="text/javascript"></script>
 
@@ -90,6 +92,8 @@ standardHeaderContents=
 		<script src="$prefix$/js/confirmationsWithEmails.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/docview.js"
+                type="text/javascript"></script>  
+        <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>  
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 

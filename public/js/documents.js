@@ -171,6 +171,13 @@ window.Document = Backbone.Model.extend({
     elegAuthorization : function() {
           return this.get("authorization") == "eleg";
     },
+    elegTBS : function() {
+        var text = this.title() + " "+  this.documentid() ;
+        _.each(this.signatories(),function(signatory) {
+            text += " "+signatory.name() + " " + signatory.personalnumber();
+        });
+        return text;
+    },
     parse: function(args) {
      var document = this;   
      var extendedWithDocument = function(hash){

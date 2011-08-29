@@ -439,3 +439,77 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
     form.attr("action", posturl);
     form.submit();
 }
+
+
+/* Totally new functions set for backbone connected stuff */
+
+(function(window){
+
+window.Eleg = {
+    bankidSign : function() {
+    },
+    nordeaSign : function(document, signatory) {
+    },
+    teliaSign : function(document, signatory, submit) {
+        if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
+            return false;
+        alert("/s/telia/" + document.documentid() +  document.viewer().urlPart());
+        LoadingDialog.open(localization.startingSaveSigning);
+        $.ajax({
+            'url': "/s/telia/" + document.documentid() +  document.viewer().urlPart(),
+            'dataType': 'json',
+            'data': {}, 
+            'scriptCharset': "utf-8",
+            'success': function(data) {
+            if (data && data.status === 0)  {
+                LoadingDialog.close();
+                if ($.browser.msie && hasNetIDPluginIE())
+                     installNetIDIE();
+                else if (hasNetIDPluginMozilla())
+                     installNetIDMozilla();
+                else {
+                     flashTeliaMessage();
+                     return; }
+                var signer = $("#iid")[0];
+                if(!signer) {
+                     FlashMessages.add({ content: localization.yourSigningPluginFailed, color: "red"});
+                     LoadingDialog.close();
+                     failEleg(localization.yourSigningPluginFailed);
+                     return;
+                }
+
+                signer.SetProperty('DataToBeSigned', data.tbs);
+                signer.SetProperty('Base64', 'true');
+                signer.SetProperty('UrlEncode', 'false');
+                signer.SetProperty('IncludeRootCaCert', 'true');
+                signer.SetProperty('IncludeCaCert', 'true');
+                var res = signer.Invoke('Sign');
+                if (res !== 0) {
+                    FlashMessages.add({ content: localization.yourSigningPluginFailed + " error code: " + res, color: "red"});
+                    LoadingDialog.close();
+                    return;
+                }
+                var signresult =  signer.GetProperty('Signature');
+                if (!signresult)
+                    return;
+                LoadingDialog.open(localization.verifyingSignature);
+                submit.add("signature",signresult);
+                submit.add("transactionid", data.transactionid);
+                submit.add("eleg" , "telia");
+                submit.send();
+
+            }    
+            else
+                FlashMessages.add({ content: data.msg, color: "red"});
+                LoadingDialog.close();
+            
+            
+        },
+        error: repeatForeverWithDelay(250)
+            
+    });
+}    
+
+};
+    
+})(window);     

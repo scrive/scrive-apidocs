@@ -4,7 +4,6 @@ pageDocumentDesign=
   <script type="text/javascript"> 
     var documentid = "$documentid$";
   </script>
-  <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
 <div id="signStepsWrapper" style="display:none">
 

@@ -140,6 +140,13 @@ window.Signatory = Backbone.Model.extend({
         else
             return "";                                    
     },
+    personalnumber : function() {
+        var pn = this.field("sigpersnr").value();
+        if (pn != undefined)
+            return pn; 
+        else
+            return "";
+    },
     signdate:function(){
         return  this.get("signdate");
     },

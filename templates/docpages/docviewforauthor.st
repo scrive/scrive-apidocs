@@ -256,7 +256,15 @@ $signatoryScriptIfRequired()$
 <script>
 
 jQuery(function(){
-var docview = KontraStandardDocument.init({id:"$documentid$"});
+var docview = KontraStandardDocument.init({
+    id:"$documentid$"
+     $if(siglinkid)$
+    , viewer : new DocumentViewer({
+        signatoryid : "$siglinkid$",
+        magichash : "$sigmagichash$"
+        })
+    $endif$
+});
 jQuery("#body-container").replaceWith(docview.view.el)
 })
 </script>
