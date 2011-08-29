@@ -1067,7 +1067,10 @@ handleFriends = do
 
 handleCompanyAccounts :: Kontrakcja m => m JSValue
 handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
-  companyaccounts <- runDBQuery $ GetCompanyAccounts $ companyid
+  Context{ctxmaybeuser = Just user} <- getContext
+  companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
+  -- filter out the current user, they don't want to see themselves in the list
+  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",

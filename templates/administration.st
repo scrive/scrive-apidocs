@@ -451,7 +451,6 @@ companyusagestats=
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
     <br/>
-    <form action="" method="POST">
       <div id="tab-viewer">
 	<div class="tab-header">
 	</div>

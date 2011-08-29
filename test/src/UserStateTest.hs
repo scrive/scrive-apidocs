@@ -122,12 +122,9 @@ test_getUsersByFriendUserID = do
 test_getCompanyAccounts :: DB ()
 test_getCompanyAccounts = do
   Company{companyid = cid} <- dbUpdate $ CreateCompany Nothing Nothing
-  Just User{userid} <- addNewCompanyUser "Andrzej" "Rybczak" "andrzej@skrivapa.se" cid
   users <- forM ["emily1@green.com", "emily2@green.com"] $ \email -> do
     Just user <- addNewCompanyUser "Emily" "Green" email cid
     return user
-  res <- dbUpdate $ MakeUserCompanyAdmin userid
-  assertBool "User was made company admin" res
   company_accounts <- dbQuery $ GetCompanyAccounts cid
   assertBool "Company accounts returned correctly" $ users == company_accounts
 
