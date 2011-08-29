@@ -638,26 +638,3 @@ unescapeEntities ('&':xs) =
              head a == ';' ->  c  : unescapeEntities (tail a)    
     _                      -> '&' : unescapeEntities xs
 unescapeEntities (x:xs) = x : unescapeEntities xs
-
-{-
--- A way to convert HTML entities to utf-8
-unescapeEntites :: BS.ByteString -> BS.ByteString
-unescapeEntites = regexReplaceBy "&#?[[:alnum:]]+;" $ lookupMatch
- where
-  lookupMatch m =
-    case lookupEntity (BS.tail . BS.init $ m) of
-      Nothing -> m
-      Just x -> UTF8.fromString [x]
-
--- regex replace taken from http://mutelight.org/articles/generating-a-permalink-slug-in-haskell
-regexReplaceBy :: L.ByteString -> (L.ByteString -> L.ByteString) -> L.ByteString -> L.ByteString
-regexReplaceBy regex f text = go text []
- where
-  go str res =
-    if L.null str
-      then L.concat . reverse $ res
-      else
-        case (str =~~ regex) :: Maybe (L.ByteString, L.ByteString, L.ByteString) of
-          Nothing -> L.concat . reverse $ (str : res)
-          Just (bef, match , aft) -> go aft (f match : bef : res)
--}
