@@ -677,7 +677,8 @@
 "_dialogConfirmSigninviteBody2","När du undertecknat kommer en automatisk inbjudan att skickas
  till             ","When you have signed, an invitation will be automatically sent
  to             "
-"_dialogConfirmSigninviteBody3"," med e-post."," with e-mail."
+"_dialogConfirmSigninviteBody3"," med e-post."," by e-mail."
+"_dialogConfirmSigninviteBody2OnlyAuthor","När du undertecknat kommer det färdigställda dokumentet att skickas till samtliga parter med e-post.",
 "_dialogConfirmSigninviteHead","Underteckna","Sign"
 "_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en            
   e-legitimation från din internetbank eller från           
