@@ -157,7 +157,15 @@ $(document).ready(function() {
                 var userdomain = useremail.replace(/.*@/, "");
                 var emaildomain = email.replace(/.*@/, "");
 
-                if (emaildomain != userdomain) {
+                /** these two lines are a very temporary hack to satisfy a customer that must start using multiple domains tomorrow
+                    sorry about this - em, a proper fix is planned (SKRIVAPADEV-578) but it's gonna involve db changes, so leaving until db
+                    migration is done **/
+                var isSpecialCaseDomain = function(domain) {
+                  return (domain == "resursbemanning.se") || (domain == "itresurs.se") || (domain == "ekonomresurs.se");
+                };
+                var isprodhack = isSpecialCaseDomain(userdomain) && isSpecialCaseDomain(emaildomain);
+
+                if (!isprodhack && emaildomain != userdomain) {
                     FlashMessages.add({content: localization.youCanNotInviteSameEmail , color:  "red"});
                 } else {
                     form.append("<input type='hidden' name='add' value='YES'>").submit();
