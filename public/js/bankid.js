@@ -453,7 +453,6 @@ window.Eleg = {
     teliaSign : function(document, signatory, submit) {
         if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
             return false;
-        alert("/s/telia/" + document.documentid() +  document.viewer().urlPart());
         LoadingDialog.open(localization.startingSaveSigning);
         $.ajax({
             'url': "/s/telia/" + document.documentid() +  document.viewer().urlPart(),
