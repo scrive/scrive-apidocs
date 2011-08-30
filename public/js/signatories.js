@@ -141,11 +141,13 @@ window.Signatory = Backbone.Model.extend({
             return "";                                    
     },
     smartname : function() {
+        if (this.current()) 
+         return localization.you;
         if (this.name() != "")
          return this.name();
         else 
          return this.email();
-    }
+    },
     personalnumber : function() {
         var pn = this.field("sigpersnr").value();
         if (pn != undefined)
@@ -238,7 +240,6 @@ window.Signatory = Backbone.Model.extend({
                         type: "reject"
                        })
     }
-    
 })
 
 window.SignatoryStandarView = Backbone.View.extend({

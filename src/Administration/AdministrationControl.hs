@@ -70,7 +70,7 @@ import Templates.Templates
 import Text.Printf
 import Util.FlashUtil
 import Data.List
---import Templates.TextTemplates
+import Templates.TextTemplates
 import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
@@ -547,7 +547,7 @@ handleStatistics =
 
 showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do
-    --liftIO $ updateCSV
+    liftIO $ updateCSV
     adminTranslationsPage
 
 handleBackdoorQuery :: Kontrakcja m => String -> m Response

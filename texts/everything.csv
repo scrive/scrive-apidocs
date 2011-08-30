@@ -480,6 +480,7 @@
 "_address","Adress","Address"
 "_addressFieldName","adress","address"
 "_addsigattachmentlink","BEGÄR BILAGA","REQUEST ATTACHMENT"
+"_and","om","and"
 "_appendixListAttachment","Bilagor:","Attachments:"
 "_atLeastOneSignatoryRequired","Du måste ha minst en undertecknande part.","You must add at least one signing party."
 "_authorsignatoryradioSenderNotSign","Ej undertecknande part","Non-signing party"
@@ -609,8 +610,8 @@
 "_contractsignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för
  att meddela ","When you have rejected, we send an e-mail to notify"
 "_contractsignatorycancelmodaltitleHead","Avvisa","Reject"
-"_contractsignatorysignmodalcontent1","När ","When"
-"_contractsignatorysignmodalcontent2","undertecknat blir             avtalet <strong>juridiskt bindande</strong> och            det färdigställda avtalet skickas till din            e-post.","has signed the document, it becomes <strong>legally binding</strong>              and the finished document will be sent to your e-mail."
+"_contractsignatorysignmodalcontentlast","När du undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.","When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
+"_contractsignatorysignmodalcontentnotlast","När du och <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.","When you and  <span class='unsignedpartynotcurrent'/> signed the contract will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodaltitle","Är du säker att du vill underteckna?","Are you sure you want to sign?"
 "_contractsignbuttontext","SkrivaPå","Scrive"
 "_contractsignedinfoheader","Färdigställt","Finished"
@@ -677,8 +678,8 @@
 "_dialogConfirmSigninviteBody2","När du undertecknat kommer en automatisk inbjudan att skickas
  till             ","When you have signed, an invitation will be automatically sent
  to             "
-"_dialogConfirmSigninviteBody3"," med e-post."," by e-mail."
 "_dialogConfirmSigninviteBody2OnlyAuthor","När du undertecknat kommer det färdigställda dokumentet att skickas till samtliga parter med e-post.",
+"_dialogConfirmSigninviteBody3"," med e-post."," by e-mail."
 "_dialogConfirmSigninviteHead","Underteckna","Sign"
 "_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en            
   e-legitimation från din internetbank eller från           
@@ -2126,10 +2127,8 @@ for creating an account with us. When you have activated your account you will b
  att meddela ","When you reject, an e-mail is sent to notify "
 "_offersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".          ",".             You can review the message below and adjust it by clicking ""Write own message""."
 "_offersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?","Are you sure you want to reject?"
-"_offersignatorysignmodalcontent1"," Genom att klicka på ""acceptera offert"" kommer du att acceptera offerten ","Accept the offer "
-"_offersignatorysignmodalcontent2",". När du accepterat offerten skickas en bekräftelse till din
- och avsändarens inkorg.","by clicking ""Accept offer"". When you have accepted the offer,
- the finished document will be sent to you and your counterparts."
+"_offersignatorysignmodalcontentlast"," Genom att klicka på 'acceptera offert' kommer du att acceptera offerten <span class='documenttitle'/>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.","Accept the offer  <span class='documenttitle'/> by clicking 'Accept offer'. When you have accepted the offer, the finished document will be sent to you and your counterparts."
+"_offersignatorysignmodalcontentnotlast"," Genom att klicka på 'acceptera offert' kommer du att acceptera offerten <span class='documenttitle'/>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.","Accept the offer  <span class='documenttitle'/> by clicking 'Accept offer'. When you have accepted the offer, the finished document will be sent to you and your counterparts."
 "_offersignatorysignmodaltitle","Är du säker att du vill acceptera offerten?","Are you sure you want to accept the offer?"
 "_offersignbuttontext","Acceptera offert","Accept offer"
 "_offersignedinfoheader","Offert accepterad","Offer accepted"
@@ -2199,10 +2198,8 @@ for creating an account with us. When you have activated your account you will b
 "_ordersignatorycancelmodaltitleBody"," När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela ","When you reject, an e-mail is sent to notify "
 "_ordersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".          ",".        You can review the message below and adjust it by clicking ""Write own message""."
 "_ordersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?","Are you sure you want to reject?"
-"_ordersignatorysignmodalcontent1","Genom att klicka ”bekräfta order” kommer du att bekräfta ordern","Confirm the order "
-"_ordersignatorysignmodalcontent2",". När du har bekräftat order skickas ett slutgiltigt dokument
- till din och avsändarens inkorg.","by clicking ""Confirm order"". When you have confirmed the order,
- the finished document will be sent to you and your counterparts."
+"_ordersignatorysignmodalcontentlast","Genom att klicka 'bekräfta order' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.","Confirm the order <span class='documenttitle' /> by clicking 'Confirm order'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
+"_ordersignatorysignmodalcontentnotlast","Genom att klicka 'bekräfta order' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.","Confirm the order <span class='documenttitle' /> by clicking 'Confirm order'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
 "_ordersignatorysignmodaltitle","Är du säker att du vill bekräfta ordern?","Are you sure you want to confirm the order?"
 "_ordersignbuttontext","Bekräfta order","Confirm order"
 "_ordersignedinfoheader","Ordern bekräftad","Order confirmed"
@@ -3391,6 +3388,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_whohadsignedofferinfoformailIfNotConfirmed","Har bekräftat:","Has signed:"
 "_whohadsignedorderinfoformailIfAccepted","Har accepterat:","Has accepted:"
 "_whohadsignedorderinfoformailIfNotAccepted","Har accepterat:","Has accepted:"
+"_you","du","you"
 "_youCanNotInviteSameEmail","Du kan endast bjuda in e-post adresser med samma domännamn som din egen.","You can only invite e-mail addresses with the same domain alias as your own."
 "_youMustSetParnerEmail","Du måste ange e-post till motpart.","You must enter an email address to your counterpart."
 "_yourSigningPluginFailed","Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. ","You sign plug-in failed to sign the document. Please contact your e-ID provider."

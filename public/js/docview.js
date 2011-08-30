@@ -303,8 +303,8 @@ var DocumentStandarView = Backbone.View.extend({
                     }
                 }).input();
         }
-        
-        var content = $(document.process().signatorysignmodalcontent());
+        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
+        DocumentDataFiller.fill(document, content);
         if (document.elegAuthorization())
         {
             
@@ -324,11 +324,7 @@ var DocumentStandarView = Backbone.View.extend({
     popupSignConfirmationByAuthor : function() {
         var document = this.model;
         var signatory = document.currentSignatory();
-        var content = $("<p/>").append(localization.signByAuthor.modalBody1);
-        content.append(($("<strong/>").text(" " + document.title())));
-        content.append("?");
-        //Skipped secound part since it makes no sense, for moust cases. No idea if it was important
-        //var p2 = $("<p/>").append(localization.signByAuthor.modalBody2).| unsign list |append(localization.signByAuthor.modalBody3)
+        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
         var acceptButton;
         if (document.elegAuthorization())
         {
