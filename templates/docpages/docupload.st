@@ -130,13 +130,13 @@ var documentsTable = KontraList.init({
     cells : [
         new Cell({name: "$_SortTemplate()$", width:"400px", field:"title",  special: "rendered",
         rendering : function(title, _mainrow, listobject) {
-                var link = jQuery("<a/>").text(title)
+                var link = jQuery("<a/>").text(title);
                 link.click(function(){
                   new Submit({
                         method : "POST",
                         url: "/t",
                         template: listobject.field("id")
-                  }).send()
+                  }).send();
                   return false;
                 })
                 return link;
