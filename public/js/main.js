@@ -74,6 +74,7 @@ $(document).ready(function() {
         declineaccount.insertBefore(acceptaccount);
         acceptaccount.remove();
         form.submit();
+        return false;
     });
 });
 
@@ -105,6 +106,7 @@ $(document).ready(function() {
         $('.recovery-container').data("overlay").close();
         $("#exposeMask").css("display", "block");
         $('.login-container').data("overlay").load();
+        return false;
     });
     $('.login-container .txt-link').click(function(e) {
         e.preventDefault();
@@ -112,6 +114,7 @@ $(document).ready(function() {
         $('.login-container').data("overlay").close();
         $("#exposeMask").css("display", "block");
         $('.recovery-container').data("overlay").load();
+        return false;
     });
     var tweetelems = $(".tweet");
     if (tweetelems.length > 0) {
@@ -133,6 +136,7 @@ $(document).ready(function() {
         } else {
             button.addClass("tab-dd-exp");
         }
+        return false;
     }).mouseleave(function() {
         $.data(this, 'dd', setTimeout(function() {
             $('.tab-dd').children('.tab-dd-opts').hide();
@@ -175,8 +179,10 @@ $(document).ready(function() {
                 $(".remove", newrow).click(function() {
                 $('.newSubaccount', container).remove();
                 $("tr", container).toggleClass('odd');
+                    return false;
             });
         }
+        return false;
     });
 });
 
