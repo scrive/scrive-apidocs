@@ -107,7 +107,7 @@ data AppGlobals
 
 handleRoutes :: Kontra Response
 handleRoutes = msum [
-       hGetAllowHttp0 $ handleHomepage
+       hGetAllowHttp0 handleHomepage
 
      -- static pages
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
