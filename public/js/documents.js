@@ -220,7 +220,7 @@ window.Document = Backbone.Model.extend({
 window.DocumentDataFiller = {
     fill : function (document,object) {
         // Filling title
-        var title = document.title()
+        var title = document.title();
         $(".documenttitle", object).text(title);
         
         // Filling unsigned signatories
