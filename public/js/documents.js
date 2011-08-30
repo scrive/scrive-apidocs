@@ -210,4 +210,19 @@ window.Document = Backbone.Model.extend({
     
 });
 
+
+window.DocumentDataFiller = {
+    function fill(document,object): {
+        var title = document.title()
+        $(".documenttitle", object).text(title);
+        var unsignedparty = "";
+        _.each(document.signatories(), function(signatory) {
+           unsignedparty += " " +signatory.smartname() + " ";
+        });
+        $(".unsignedparty", object).text(unsignedparty);
+        
+        
+    }
+}
+
 })(window); 

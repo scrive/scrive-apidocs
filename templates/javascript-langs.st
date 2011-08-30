@@ -73,6 +73,7 @@ javascriptLocalisation =
              }
              , select : "$_options()$"
              , of : "$_of()$"
+             , and : "$_and()$"
              , outLogoClass : "$ourLogoClass()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"

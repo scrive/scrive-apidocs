@@ -140,6 +140,12 @@ window.Signatory = Backbone.Model.extend({
         else
             return "";                                    
     },
+    smartname : function() {
+        if (this.name() != "")
+         return this.name();
+        else 
+         return this.email();
+    }
     personalnumber : function() {
         var pn = this.field("sigpersnr").value();
         if (pn != undefined)

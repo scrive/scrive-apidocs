@@ -12,13 +12,13 @@ offersignatorysignmodaltitle=$_offersignatorysignmodaltitle()$
 ordersignatorysignmodaltitle=$_ordersignatorysignmodaltitle()$
 ####
 contractsignatorysignmodalcontent=
-          <p>$_contractsignatorysignmodalcontent1()$$partyUnsigned:noescape()$ $_contractsignatorysignmodalcontent2()$</p>
+          <p>$_contractsignatorysignmodalcontent1()$ <span class="unsignedparty"></span> $_contractsignatorysignmodalcontent2()$</p>
 ####
 offersignatorysignmodalcontent=
-          <p>$_offersignatorysignmodalcontent1()$<strong>$documenttitle$</strong>$_offersignatorysignmodalcontent2()$</p>
+          <p>$_offersignatorysignmodalcontent1()$ <strong><span class="documenttitle"></span></strong> $_offersignatorysignmodalcontent2()$</p>
 ####
 ordersignatorysignmodalcontent=
-          <p>$_ordersignatorysignmodalcontent1()$<strong>$documenttitle$</strong>$_ordersignatorysignmodalcontent2()$</p>
+          <p>$_ordersignatorysignmodalcontent1()$ <span class="documenttitle"></span> $_ordersignatorysignmodalcontent2()$</p>
 ####
 contractsignbuttontext=$_contractsignbuttontext()$
 ####

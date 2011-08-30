@@ -277,12 +277,18 @@ var DocumentStandarView = Backbone.View.extend({
             var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-            bankid.click(function() {alert("Bank id selected, but not supported in this envirement"); return false;});
+            bankid.click(function() {
+                    Eleg.bankidSign(document,signatory, document.sign()); 
+                    return false;
+            });
             telia.click(function() {
                     Eleg.teliaSign(document,signatory, document.sign()); 
                     return false;
             });
-            nordea.click(function() {alert("Nordea id selected, but not supported in this envirement");  return false;});
+            nordea.click(function() {
+                    Eleg.nordeaSign(document,signatory, document.sign()); 
+                    return false;
+            });
             acceptButton.append(bankid).append(telia).append(nordea);
         }
         else    
@@ -319,7 +325,7 @@ var DocumentStandarView = Backbone.View.extend({
         var document = this.model;
         var signatory = document.currentSignatory();
         var content = $("<p/>").append(localization.signByAuthor.modalBody1);
-        content.append(($("<strong/>").text(document.title())));
+        content.append(($("<strong/>").text(" " + document.title())));
         content.append("?");
         //Skipped secound part since it makes no sense, for moust cases. No idea if it was important
         //var p2 = $("<p/>").append(localization.signByAuthor.modalBody2).| unsign list |append(localization.signByAuthor.modalBody3)
@@ -330,12 +336,18 @@ var DocumentStandarView = Backbone.View.extend({
             var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg' /></a>");
             var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-            bankid.click(function() {alert("Bank id selected, but not supported in this envirement");  return false;});
-            telia.click(function() {
-                 Eleg.teliaSign(document,signatory, document.sign()); 
-                 return false;
+            bankid.click(function() {
+                    Eleg.bankidSign(document,signatory, document.sign()); 
+                    return false;
             });
-            nordea.click(function() {alert("Nordea id selected, but not supported in this envirement");  return false;});
+            telia.click(function() {
+                    Eleg.teliaSign(document,signatory, document.sign()); 
+                    return false;
+            });
+            nordea.click(function() {
+                    Eleg.nordeaSign(document,signatory, document.sign()); 
+                    return false;
+            });
             acceptButton.append(bankid).append(telia).append(nordea);
         }
         else    
