@@ -53,6 +53,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                                 method : "POST",
                                 deletesigattachment : attachment.file().fileid()
                             }).send();
+                   return false;         
                     });
               lasttd.append(filelink);
               lasttd.append(removelink);
