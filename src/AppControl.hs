@@ -107,7 +107,7 @@ data AppGlobals
 
 handleRoutes :: Kontra Response
 handleRoutes = msum [
-       hGetAllowHttp0 $ handleHomepage
+       hGetAllowHttp0 handleHomepage
 
      -- static pages
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -703,19 +703,18 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            Log.debug $ "Logging " ++ show email
             maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just User{userpassword}
                     | verifyPassword userpassword passwd -> do
-                        Log.debug $ "Logging: User logged in"
+                        Log.debug $ "User " ++ show email ++ " logged in"
                         logUserToContext maybeuser
                         return BackToReferer
                 Just _ -> do
-                        Log.debug $ "Logging: User found, Not verified password"
+                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> do
-                    Log.debug $ "Logging: No user matching the email found"  
+                    Log.debug $ "User " ++ show email ++ " login failed (user not found)"
                     return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
 

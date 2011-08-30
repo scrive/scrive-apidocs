@@ -39,6 +39,7 @@ import qualified  Codec.Binary.Base64 as BASE64
 import API.API
 import Doc.DocStorage
 import Doc.DocControl
+import Doc.DocUtils
 import Control.Monad.Trans
 import Kontra
 import Misc
@@ -48,6 +49,7 @@ import Data.Functor
 import Control.Monad
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 {- -}
 
@@ -133,7 +135,7 @@ api_document_type doc
 
 api_document_status :: Document -> DOCUMENT_STATUS
 api_document_status doc =
-    case (documentstatus doc) of
+    case documentstatus doc of
          Preparation        -> DOCUMENT_STATUS_PREPARATION
          Pending            -> DOCUMENT_STATUS_PENDING
          AwaitingAuthor     -> DOCUMENT_STATUS_PENDING
@@ -145,15 +147,15 @@ api_document_status doc =
 
 api_document_authorisation :: Document -> DOCUMENT_AUTHORISATION
 api_document_authorisation doc
-    | (ELegitimationIdentification `elem` documentallowedidtypes doc) = DOCUMENT_AUTHORISATION_BASIC_ELEG
+    | ELegitimationIdentification `elem` documentallowedidtypes doc = DOCUMENT_AUTHORISATION_BASIC_ELEG
     | otherwise = DOCUMENT_AUTHORISATION_BASIC_EMAIL
 
 api_document_relation :: SignatoryLink -> DOCUMENT_RELATION
 api_document_relation sl
-    | (SignatoryAuthor `elem` signatoryroles sl && SignatoryPartner `elem` signatoryroles sl) =  DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | (SignatoryAuthor `elem` signatoryroles sl) = DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | (SignatoryPartner `elem` signatoryroles sl) = DOCUMENT_RELATION_SIGNATORY
-    | otherwise =  DOCUMENT_RELATION_VIEWER
+    | isAuthor sl && isSignatory sl = DOCUMENT_RELATION_AUTHOR_SIGNATORY
+    | isAuthor sl                   = DOCUMENT_RELATION_AUTHOR_SECRETARY
+    | isSignatory sl                = DOCUMENT_RELATION_SIGNATORY
+    | otherwise                     = DOCUMENT_RELATION_VIEWER
 
 api_signatory :: SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $  [
@@ -165,23 +167,23 @@ api_signatory sl = JSObject $ toJSObject $  [
     , ("companynr", showJSON  $ BS.toString $ getCompanyNumber sl)
     ]
     ++
-    case (maybeseeninfo sl) of
+    case maybeseeninfo sl of
      Just seeninfo ->  [("seen", api_date $ signtime seeninfo)]
      Nothing -> []
     ++
-    case (maybesigninfo sl) of
+    case maybesigninfo sl of
      Just signinfo ->  [("sign", api_date $ signtime signinfo)]
      Nothing -> []
     ++
     [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]
     ++
     [("fields", JSArray $ for (signatoryotherfields $ signatorydetails sl) $ \fd ->
-                    JSObject $ toJSObject $ [ ("name", JSString $ toJSString $ BS.toString $ fieldlabel fd)
-                                            , ("value", JSString $ toJSString $ BS.toString $ fieldvalue fd)]
+                    JSObject $ toJSObject [ ("name",  JSString $ toJSString $ BS.toString $ fieldlabel fd)
+                                          , ("value", JSString $ toJSString $ BS.toString $ fieldvalue fd)]
     )]
 
 api_document_tag :: DocumentTag -> JSValue
-api_document_tag tag = JSObject $ toJSObject $ [
+api_document_tag tag = JSObject $ toJSObject [
       ("name", showJSON $ BS.toString $ tagname tag)
     , ("value", showJSON $ BS.toString $ tagvalue tag)]
 
@@ -190,22 +192,19 @@ api_document_file file = do
     ctx <- getContext
     content <- liftIO $ getFileContents ctx file
     let base64data = BASE64.encode (BS.unpack content)
-    return $ JSObject $ toJSObject $ [
+    return $ JSObject $ toJSObject [
           ("name", showJSON $ BS.toString $ filename file)
-        , ("content", showJSON $ base64data)]
+        , ("content", showJSON base64data)]
 
 
 api_document :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
 api_document addFiles doc = do
     files <- if addFiles
               then do
-              files <- sequence $ map api_document_file $
-                case (documentstatus doc) of
-                    Closed -> documentsealedfiles doc
-                    _ -> documentfiles doc
-              return $ [("files",JSArray files)]
+               files <- mapM api_document_file $ getFilesByStatus doc
+               return [("files", JSArray files)]
               else return []
-    return $ JSObject $ toJSObject $  [
+    return $ JSObject $ toJSObject $ [
        ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
      , ("title", showJSON  $ BS.toString $ documenttitle doc)
      , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
@@ -234,12 +233,12 @@ data SignatoryTMP = SignatoryTMP {
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
-    fstname <- apiAskBS "fstname"
-    sndname <- apiAskBS "sndname"
-    company <- apiAskBS "company"
+    fstname        <- apiAskBS "fstname"
+    sndname        <- apiAskBS "sndname"
+    company        <- apiAskBS "company"
     personalnumber <- apiAskBS "personalnumber"
-    companynumber <- apiAskBS "companynumber"
-    email <- apiAskBS "email"
+    companynumber  <- apiAskBS "companynumber"
+    email          <- apiAskBS "email"
     fields <- apiLocal "fields" $ apiMapLocal $ do
                                         name <- apiAskBS "name"
                                         value <- apiAskBS "value"
