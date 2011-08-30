@@ -95,6 +95,7 @@ $(document).ready(function() {
                 newlocation += "&logging";
         }
         window.location = newlocation;
+        return false;
     });
 
     $('.recovery-container .txt-link').click(function(e) {
