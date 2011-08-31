@@ -658,7 +658,10 @@ handleIssueSign document = do
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     if isJust $ ctxservice ctx
-                      then return LinkCSVLandPage
+                      then do
+                        --sessionid <- readCookieValue "sessionId"
+                        --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+                        return $ LinkCSVLandPage (length ds)
                       else do
                       addFlashM $ flashMessageCSVSent $ length ds
                       Log.debug (show $ map documenttype ds)
@@ -698,7 +701,10 @@ handleIssueSend document = do
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     if isJust $ ctxservice ctx
-                      then return LinkCSVLandPage
+                      then do
+                      --sessionid <- readCookieValue "sessionId"
+                      --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+                      return $ LinkCSVLandPage (length ds)
                       else do
                       addFlashM $ flashMessageCSVSent $ length ds
                       Log.debug (show $ map documenttype ds)
