@@ -53,6 +53,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                                 method : "POST",
                                 deletesigattachment : attachment.file().fileid()
                             }).send();
+                   return false;         
                     });
               lasttd.append(filelink);
               lasttd.append(removelink);
@@ -139,6 +140,14 @@ window.Signatory = Backbone.Model.extend({
             return name;
         else
             return "";                                    
+    },
+    smartname : function() {
+        if (this.current()) 
+         return localization.you;
+        if (this.name() != "")
+         return this.name();
+        else 
+         return this.email();
     },
     personalnumber : function() {
         var pn = this.field("sigpersnr").value();
@@ -232,7 +241,6 @@ window.Signatory = Backbone.Model.extend({
                         type: "reject"
                        })
     }
-    
 })
 
 window.SignatoryStandarView = Backbone.View.extend({

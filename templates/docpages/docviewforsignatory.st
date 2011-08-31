@@ -11,14 +11,17 @@ offersignatorysignmodaltitle=$_offersignatorysignmodaltitle()$
 ####
 ordersignatorysignmodaltitle=$_ordersignatorysignmodaltitle()$
 ####
-contractsignatorysignmodalcontent=
-          <p>$_contractsignatorysignmodalcontent1()$$partyUnsigned:noescape()$ $_contractsignatorysignmodalcontent2()$</p>
+contractsignatorysignmodalcontentlast= <p>$_contractsignatorysignmodalcontentlast()$ </p>
 ####
-offersignatorysignmodalcontent=
-          <p>$_offersignatorysignmodalcontent1()$<strong>$documenttitle$</strong>$_offersignatorysignmodalcontent2()$</p>
+offersignatorysignmodalcontentlast=<p> $_offersignatorysignmodalcontentlast()$ </p>
 ####
-ordersignatorysignmodalcontent=
-          <p>$_ordersignatorysignmodalcontent1()$<strong>$documenttitle$</strong>$_ordersignatorysignmodalcontent2()$</p>
+ordersignatorysignmodalcontentlast=<p> $_ordersignatorysignmodalcontentlast()$ </p>      
+####
+contractsignatorysignmodalcontentnotlast=<p> $_contractsignatorysignmodalcontentnotlast()$ </p>
+####
+offersignatorysignmodalcontentnotlast=<p> $_offersignatorysignmodalcontentnotlast()$ </p>
+####
+ordersignatorysignmodalcontentnotlast= <p> $_ordersignatorysignmodalcontentnotlast()$ </p>         
 ####
 contractsignbuttontext=$_contractsignbuttontext()$
 ####

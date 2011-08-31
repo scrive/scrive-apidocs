@@ -577,10 +577,13 @@
             
         },
         render: function () {
-            if(this.model.hasUnselected() || this.model.isEmpty())
-                this.checkbox.attr('checked', false);
-            else
-                this.checkbox.attr('checked', true);
+            //We mark header checkbox only if one is defined and all elements are selected
+            if (this.checkbox != undefined) {
+                if(this.model.hasUnselected() || this.model.isEmpty())
+                    this.checkbox.attr('checked', false);
+                else
+                    this.checkbox.attr('checked', true);
+            }
             var body = this.tbody;
             var odd = true;
             this.model.forEach( function(e) {

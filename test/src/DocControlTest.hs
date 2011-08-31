@@ -2,21 +2,30 @@ module DocControlTest(
     docControlTests
 ) where
 
-import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
-import Test.Framework (Test, testGroup)
-import Test.Framework.Providers.HUnit (testCase)
-
+import Control.Applicative
+import Happstack.Server
+import Test.HUnit (Assertion)
+import Test.Framework
+import Test.Framework.Providers.HUnit
+import StateHelper
+import Templates.TemplatesLoader
+import TestingUtil
+import TestKontra as T
+import Misc
+import Context
+import Database.HDBC.PostgreSQL
 import Doc.DocState
-import Kontra
 import Doc.DocControl
-import SamplerHelper
-import SampleData
-import Mails.SendMail
-import Control.Monad.State
-import Data.IORef
+import Company.Model
 
-docControlTests :: [Test]
-docControlTests =  []
+
+docControlTests :: Connection -> Test
+docControlTests conn =  testGroup "Templates"
+                           [
+                               testCase "Create document from template" $ testDocumentFromTemplate conn
+                             , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
+                           ]
+                     
 {-
                      [testGroup "sendDocumentErrorEmail1"
                            [
@@ -38,3 +47,28 @@ countingMailer counter mail = do
     modifyIORef counter $ (+) 1
 
  -}
+ 
+testDocumentFromTemplate :: Connection -> Assertion
+testDocumentFromTemplate conn =  withTestEnvironment conn $ do
+    (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
+    doc <- addRandomDocumentWithAuthorAndCondition user isTemplate
+    docs1 <- randomQuery $ GetDocumentsByUser user
+    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    req <- mkRequest POST [("template", inText (show $ documentid doc))]
+    _ <- runTestKontra req ctx $ handleCreateFromTemplate
+    docs2 <- randomQuery $ GetDocumentsByUser user
+    assertBool "No new document" (length docs2 == 1+ length docs1)
+
+testDocumentFromTemplateShared :: Connection -> Assertion
+testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
+    (Company {companyid}) <- addNewCompany
+    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
+    doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate) 
+    _ <- randomUpdate $ ShareDocument $ documentid doc
+    (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
+    docs1 <- randomQuery $ GetDocumentsByUser user
+    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    req <- mkRequest POST [("template", inText (show $ documentid doc))]
+    _ <- runTestKontra req ctx $ handleCreateFromTemplate
+    docs2 <- randomQuery $ GetDocumentsByUser user
+    assertBool "No new document" (length docs2 == 1+ length docs1)

@@ -458,7 +458,8 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signbuttontext", text processsignbuttontext)
       , ("signatorycancelmodaltitle", text processsignatorycancelmodaltitle)
       , ("signguardwarntext", text processsignguardwarntext)
-      , ("signatorysignmodalcontent", text processsignatorysignmodalcontent)
+      , ("signatorysignmodalcontentlast", text processsignatorysignmodalcontentlast)
+      , ("signatorysignmodalcontentnotlast", text processsignatorysignmodalcontentnotlast)
       , ("signbuttontext", text processsignbuttontext)
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
      ]

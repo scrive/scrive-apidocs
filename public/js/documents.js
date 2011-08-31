@@ -178,6 +178,11 @@ window.Document = Backbone.Model.extend({
         });
         return text;
     },
+    lastSignatoryLeft : function() {
+        return _.all(this.signatories(), function(signatory) {
+          return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current(); 
+        });
+    },
     parse: function(args) {
      var document = this;   
      var extendedWithDocument = function(hash){
@@ -209,5 +214,28 @@ window.Document = Backbone.Model.extend({
     }
     
 });
+
+
+// This is an object that allows you to fill a dom element
+window.DocumentDataFiller = {
+    fill : function (document,object) {
+        // Filling title
+        var title = document.title();
+        $(".documenttitle", object).text(title);
+        
+        // Filling unsigned signatories
+        var unsignedpartynotcurrent = "";
+        var signatories = _.select(document.signatories(), function(signatory){
+            return signatory.signs() && !signatory.hasSigned() && !signatory.current();
+        });
+        for(var i=0;i<signatories.length;i++) {
+               unsignedpartynotcurrent += signatories[i].smartname();
+           if (i < signatories[i].length - 1)
+               unsignedpartynotcurrent += ",";
+        }
+        $(".unsignedpartynotcurrent", object).text(unsignedpartynotcurrent);
+        // Something more can come up
+    }
+}
 
 })(window); 

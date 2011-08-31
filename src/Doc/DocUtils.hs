@@ -134,6 +134,11 @@ instance  MaybeAttachment DocumentType where
 instance  MaybeAttachment Document where
    isAttachment =  isAttachment . documenttype
 
+class MaybeShared a where
+    isShared :: a -> Bool
+    
+instance  MaybeShared Document where
+    isShared doc = documentsharing doc == Shared
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
@@ -349,3 +354,8 @@ sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
 
 isAuthoredByCompany :: CompanyID -> Document -> Bool
 isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
+
+getFilesByStatus :: Document -> [File]
+getFilesByStatus doc 
+  | isClosed doc = documentsealedfiles doc
+  | otherwise    = documentfiles doc

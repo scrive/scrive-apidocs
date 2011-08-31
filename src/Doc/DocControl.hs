@@ -658,7 +658,10 @@ handleIssueSign document = do
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     if isJust $ ctxservice ctx
-                      then return LinkCSVLandPage
+                      then do
+                        --sessionid <- readCookieValue "sessionId"
+                        --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+                        return $ LinkCSVLandPage (length ds)
                       else do
                       addFlashM $ flashMessageCSVSent $ length ds
                       Log.debug (show $ map documenttype ds)
@@ -698,7 +701,10 @@ handleIssueSend document = do
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     if isJust $ ctxservice ctx
-                      then return LinkCSVLandPage
+                      then do
+                      --sessionid <- readCookieValue "sessionId"
+                      --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+                      return $ LinkCSVLandPage (length ds)
                       else do
                       addFlashM $ flashMessageCSVSent $ length ds
                       Log.debug (show $ map documenttype ds)
@@ -1826,22 +1832,27 @@ handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
   Context { ctxmaybeuser } <- getContext
   docid <- readField "template"
+  Log.debug $ show "Creating document from template : " ++ show docid 
   case docid of
     Just did -> do
       let user = fromJust ctxmaybeuser
       document <- queryOrFail $ GetDocumentByDocumentID $ did
+      Log.debug $ show "Matching document found"
       let haspermission = maybe False 
                                 (\sl -> isSigLinkFor (userid user) sl
-                                        || (isSigLinkSavedFor user sl 
-                                              && documentsharing document == Shared))
+                                        || (isSigLinkFor (usercompany user) sl
+                                              && isShared document))
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do
+                      Log.debug $ show "Valid persmision to create from template"                                
                       mcompany <- getCompanyForUser user
                       update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did
                     else mzero
       case enewdoc of
-        Right newdoc -> return $ LinkIssueDoc $ documentid newdoc
+        Right newdoc -> do
+            Log.debug $ show "Document created from template"                               
+            return $ LinkIssueDoc $ documentid newdoc
         Left _ -> mzero
     Nothing -> mzero
 
