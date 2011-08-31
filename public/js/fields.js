@@ -93,7 +93,7 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr")
+        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr");
     },
     readyForSign : function(){
         return this.value() != "" || this.canBeIgnored();
