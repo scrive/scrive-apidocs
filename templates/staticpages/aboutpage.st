@@ -90,25 +90,6 @@ aboutPageContents=
 									<p>$_aboutPagePerson7Body()$</p>
 									$_aboutPagePerson7Contact()$
 								</li>
-								<li>
-									<div class="portrait-image">
-								          <a class="nazli"></a>
-									</div>
-									<h2>$_aboutPagePerson8()$</h2>
-									<em>$_aboutPagePerson8Position()$</em>
-									<p>$_aboutPagePerson8Body()$</p>
-
-									$_aboutPagePerson8Contact()$
-								</li>
-								<li>
-									<div class="portrait-image">
-								          <a class="belle"></a>
-									</div>
-									<h2>$_aboutPagePerson9()$</h2>
-									<em>$_aboutPagePerson9Position()$</em>
-									<p>$_aboutPagePerson9Body()$</p>
-									$_aboutPagePerson9Contact()$
-								</li>
 							</ul>
 						</div>
 					</div>
