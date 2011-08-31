@@ -149,6 +149,9 @@ window.Document = Backbone.Model.extend({
     canceled :function() {
         return this.status() == "Canceled";
     },
+    closed :function() {
+        return this.status() == "Closed";
+    },
     datamismatch :function() {
         return _.any(this.signatory, function() {return this.datamismatch() == true;});
 
