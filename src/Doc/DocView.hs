@@ -493,9 +493,19 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
     ("time", return $ showDateAbbrev crtime (documentmtime doc)),
-    ("type", renderTextForProcess doc processname),
+    ("process", renderTextForProcess doc processname),
+    ("type", renderDocType),
     ("shared", return $ show $ (documentsharing doc)==Shared)
     ]
+  where
+    renderDocType :: (TemplatesMonad m) => m String
+    renderDocType = do
+      pn <- renderTextForProcess doc processname
+      case documenttype doc of
+        Attachment -> renderTemplateFM "docListAttachmentLabel" $ do return ()
+        AttachmentTemplate -> renderTemplateFM "docListAttachmentLabel" $ do return ()
+        Template _ -> renderTemplateFM "docListTemplateLabel" $ do field "processname" pn
+        Signable _ -> return pn
 
 signatoryFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
 signatoryFieldsListForJSON crtime doc sl = propagateMonad [
@@ -569,6 +579,8 @@ docSortFunc "partner" = comparePartners
 docSortFunc "partnerREV" = revComparePartners
 docSortFunc "partnercomp" = viewComparing partnerComps
 docSortFunc "partnercompREV" = viewComparingRev partnerComps
+docSortFunc "process" = viewComparing documenttype
+docSortFunc "processREV" = viewComparingRev documenttype
 docSortFunc "type" = viewComparing documenttype
 docSortFunc "typeREV" = viewComparingRev documenttype
 docSortFunc "author" = viewComparing getAuthorName

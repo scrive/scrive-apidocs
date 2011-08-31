@@ -710,6 +710,8 @@
 "_dialogCsvupload2FooterNext","Nästa","Next"
 "_dialogCsvupload2Head","Massutskick: Granska Data","Multi send: Review data"
 "_differentSignatories","Various signatories.","Various signatories."
+"_docListAttachmentLabel","Bilaga","Attachment"
+"_docListTemplateLabel","Mall","Template"
 "_docListTabsAttachemtns","Bilagor","Attachments"
 "_docListTabsDocs","Dokument","Documents"
 "_docListTabsOffers","Offerter","Offers"
