@@ -73,7 +73,10 @@ getResDict doc pageid =
         -- FIXME: refs or something
         Just (Indir (Dict pagedict) _) = PdfModel.lookup pageid doc
         resource = case Prelude.lookup (BS.pack "Resources") pagedict of
-          Nothing -> []
+          Nothing -> case Prelude.lookup (BS.pack "Parent") pagedict of
+                         Nothing -> []
+                         Just (Ref parentrefid') -> getResDict doc parentrefid'
+                         _ -> []
           Just (Dict value') -> value'
           Just (Ref refid') -> case PdfModel.lookup refid' doc of
                                 Just (Indir (Dict value') _) -> value'

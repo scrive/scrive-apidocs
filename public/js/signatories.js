@@ -338,7 +338,7 @@ window.SignatoryStandarView = Backbone.View.extend({
                 field.name() == "sndname" ||
                 field.name() == "email")
             return;
-            if (field.value() == "" && field.placements().length == 0)
+            if (field.canBeIgnored())
             return;    
             var fieldview = new FieldStandardView(
             { model : field,
@@ -364,7 +364,11 @@ window.SignatoryStandarView = Backbone.View.extend({
         }
         container.append(textsummary);
 
-        if (signatory.document().currentViewerIsAuthor() && !signatory.author())
+        if (signatory.document().currentViewerIsAuthor() 
+            && !signatory.author() 
+            && ((signatory.document().pending() || signatory.canSign())
+                || (signatory.document().closed()) )
+           )
 		  container.append(this.remidenMailOption());
 		
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())

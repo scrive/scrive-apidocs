@@ -139,6 +139,7 @@ safeReady(function() {
             nextone.toggle();
             nextone = nextone.next();
         }
+        return false;
     });
 });
 
@@ -287,6 +288,7 @@ function makeSelectable(selectable) {
                 row.removeAttr("selected");
             selectRow(row, false, target);
         }
+        return false;
     });
 
     selectable.mousedown(function(event) {
@@ -1584,12 +1586,14 @@ safeReady(function() {
         doctab.show();
         doctabli.addClass("active");
         atttabli.removeClass("active");
+        return false;
     });
     $("#attachtablink").click(function() {
         doctab.hide();
         atttab.show();
         doctabli.removeClass("active");
         atttabli.addClass("active");
+        return false;
     });
 });
 
@@ -1619,6 +1623,7 @@ safeReady(function() {
 safeReady(function() {
     $(".campaign-play-video").click(function(){
         window.open('http://player.vimeo.com/video/22397410','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+        return false;
     })
 });
 /*
@@ -1644,6 +1649,7 @@ function saveOverlay(d, o) {
             o.fixed = false;
             $(this).overlay(o);
         }
+        return false;
     });
 }
 
