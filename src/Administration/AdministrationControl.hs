@@ -476,27 +476,11 @@ addStats :: DocStatsL -> DocStatsL -> DocStatsL
 addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14) =
       DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11) (a12+b12) (a13+b13) (a14+b14)
 
-countSignatures :: Document -> Int
-countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
-
-getLastSignedTime :: Document -> Int
-getLastSignedTime doc = 
-  maximum [asInt $ signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
-     
-getInviteTime :: Document -> Int
-getInviteTime = asInt . signtime . fromJust . documentinvitetime
-
 addStats1 :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
 addStats1 (_, t1, s1, i1) (t, t2, s2, i2) = (t, t1+t2, s1+s2, i1+i2)
 
 sumStats :: [(Int, Int, Int, Int)] -> (Int, Int, Int, Int)
 sumStats = foldl1 addStats1
-
-sortWith :: Ord b => (a -> b) -> [a] -> [a]
-sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
-
-groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
-groupWith k ls = groupBy (\a b -> k a == k b) ls
 
 -- Stats are very simple:
 -- Date
