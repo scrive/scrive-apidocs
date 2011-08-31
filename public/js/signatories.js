@@ -338,7 +338,7 @@ window.SignatoryStandarView = Backbone.View.extend({
                 field.name() == "sndname" ||
                 field.name() == "email")
             return;
-            if (field.value() == "" && field.placements().length == 0)
+            if (field.canBeIgnored())
             return;    
             var fieldview = new FieldStandardView(
             { model : field,
