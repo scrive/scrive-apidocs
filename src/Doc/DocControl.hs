@@ -701,7 +701,7 @@ handleIssueSend document = do
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
                     if isJust $ ctxservice ctx
-                      then return LinkCSVLandPage
+                      then return $ LinkCSVLandPage (length ds)
                       else do
                       addFlashM $ flashMessageCSVSent $ length ds
                       Log.debug (show $ map documenttype ds)
