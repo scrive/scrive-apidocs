@@ -78,6 +78,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Redirect
 import ActionSchedulerState
+import Doc.DocInfo
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -155,7 +156,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
   content <- adminUserUsageStatsPage user mcompany $ do
-    fieldsFromStats [user] documents
+    statisticsFieldsForASingleUser documents
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
@@ -478,6 +479,37 @@ addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b
 countSignatures :: Document -> Int
 countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
 
+getLastSignedTime :: Document -> Int
+getLastSignedTime doc = 
+  maximum [asInt $ signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+     
+getInviteTime :: Document -> Int
+getInviteTime = asInt . signtime . fromJust . documentinvitetime
+
+addStats1 :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
+addStats1 (_, t1, s1, i1) (t, t2, s2, i2) = (t, t1+t2, s1+s2, i1+i2)
+
+sumStats :: [(Int, Int, Int, Int)] -> (Int, Int, Int, Int)
+sumStats = foldl1 addStats1
+
+sortWith :: Ord b => (a -> b) -> [a] -> [a]
+sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
+
+groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
+groupWith k ls = groupBy (\a b -> k a == k b) ls
+
+-- Stats are very simple:
+-- Date
+-- # of documents Closed that date
+-- # of signatures on documents closed that date
+-- # of documents sent that date
+newCalculateStatsFromDocuments :: [Document] -> [(Int, Int, Int, Int)]
+newCalculateStatsFromDocuments docs =
+  let cls = [(getLastSignedTime d, 1, countSignatures d, 0) | d <- docs, isClosed d]
+      pds = [(getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d]
+      byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (cls ++ pds)
+  in map sumStats byDay
+
 calculateStatsFromDocuments :: [Document] -> IntMap.IntMap DocStatsL
 calculateStatsFromDocuments documents =
   foldl' ins IntMap.empty documents
@@ -501,6 +533,22 @@ calculateStatsFromDocuments documents =
                       --_ -> docStatsZero  -- catch all to make it run in case somebody adds new status
                       )
                 ]
+                
+showAsDate1 :: Int -> String
+showAsDate1 int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
+
+
+statisticsFieldsForASingleUser :: (Functor m, MonadIO m) => [Document] -> Fields m
+statisticsFieldsForASingleUser ds = 
+  let stats = newCalculateStatsFromDocuments ds in
+  fieldFL "statistics" $ for stats (\(ct, c, s, i) -> do
+                                       field "date" $ showAsDate1 ct
+                                       field "closed" c
+                                       field "signatures" s
+                                       field "sent" i
+                                       field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
+                                                                     
+                                    
 
 fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats _users documents = do
