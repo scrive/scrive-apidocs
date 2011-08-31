@@ -1812,22 +1812,27 @@ handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
   Context { ctxmaybeuser } <- getContext
   docid <- readField "template"
+  Log.debug $ show "Creating document from template : " ++ show docid 
   case docid of
     Just did -> do
       let user = fromJust ctxmaybeuser
       document <- queryOrFail $ GetDocumentByDocumentID $ did
+      Log.debug $ show "Matching document found"
       let haspermission = maybe False 
                                 (\sl -> isSigLinkFor (userid user) sl
-                                        || (isSigLinkSavedFor user sl 
+                                        || (isSigLinkFor (usercompany user) sl
                                               && documentsharing document == Shared))
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do
+                      Log.debug $ show "Valid persmision to create from template"                                
                       mcompany <- getCompanyForUser user
                       update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did
                     else mzero
       case enewdoc of
-        Right newdoc -> return $ LinkIssueDoc $ documentid newdoc
+        Right newdoc -> do
+            Log.debug $ show "Document created from template"                               
+            return $ LinkIssueDoc $ documentid newdoc
         Left _ -> mzero
     Nothing -> mzero
 
