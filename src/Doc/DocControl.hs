@@ -697,13 +697,19 @@ handleIssueSend document = do
                     addFlashM $ modalSendConfirmationView d
                     return $ LinkIssueDoc (documentid d)
                 ([], ds) -> do
-                    addFlashM $ flashMessageCSVSent $ length ds
-                    Log.debug (show $ map documenttype ds)
-                    case documenttype (head ds) of
-                      Signable Contract -> return $ LinkContracts
-                      Signable Offer    -> return $ LinkOffers                  
-                      Signable Order    -> return $ LinkOrders 
-                      _ -> return $ LinkMain
+                    if isJust $ ctxservice ctx
+                      then do
+                      --sessionid <- readCookieValue "sessionId"
+                      --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+                      return $ LinkCSVLandPage (length ds)
+                      else do
+                      addFlashM $ flashMessageCSVSent $ length ds
+                      Log.debug (show $ map documenttype ds)
+                      case documenttype (head ds) of
+                        Signable Contract -> return $ LinkContracts
+                        Signable Offer    -> return $ LinkOffers                  
+                        Signable Order    -> return $ LinkOrders 
+                        _ -> return $ LinkMain
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
