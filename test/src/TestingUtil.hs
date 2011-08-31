@@ -383,6 +383,11 @@ blankDocument =
 testThat :: String -> Connection -> DB () -> Test
 testThat s conn a = testCase s (withTestEnvironment conn a)
 
+addNewCompany ::  DB Company
+addNewCompany = do
+    eid <- rand 10 arbitrary 
+    dbUpdate $ CreateCompany Nothing eid
+
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
   dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
@@ -482,7 +487,7 @@ addRandomDocumentWithAuthorAndCondition user p =  do
                  , maybesigninfo = signinfo
                  }
              
-  let siglinks = documentsignatorylinks doc ++ [asl' { maybesignatory = Just (userid user) }]
+  let siglinks = documentsignatorylinks doc ++ [asl' { maybesignatory = Just (userid user), maybecompany = usercompany user }]
   let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
                                           maybeseeninfo = Nothing }) siglinks
   let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
@@ -560,7 +565,7 @@ class RandomUpdate a b where
 
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
-
+  
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
     a <- rand 10 arbitrary

@@ -1841,7 +1841,7 @@ handleCreateFromTemplate = withUserPost $ do
       let haspermission = maybe False 
                                 (\sl -> isSigLinkFor (userid user) sl
                                         || (isSigLinkFor (usercompany user) sl
-                                              && documentsharing document == Shared))
+                                              && isShared document))
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do
