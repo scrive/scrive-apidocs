@@ -882,7 +882,7 @@
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.","You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.","Your account settings have been saved."
 "_flashMessageUserHasBecomeSubaccount","Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
- och rättigheterna till dinadokument har överförts till huvudkontot.","Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$
+ och rättigheterna till dina dokument har överförts till huvudkontot.","Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$
  and the rights to your documents have been transferred."
 "_flashMessageUserHasLiveDocs","Unable to remove account(s) as there are some remaining documents
  that need to be finalised (spec/translate me please).","Unable to remove account(s) as there are some remaining documents
