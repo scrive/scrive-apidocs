@@ -364,7 +364,11 @@ window.SignatoryStandarView = Backbone.View.extend({
         }
         container.append(textsummary);
 
-        if (signatory.document().currentViewerIsAuthor() && !signatory.author())
+        if (signatory.document().currentViewerIsAuthor() 
+            && !signatory.author() 
+            && ((signatory.document().pending() || signatory.canSign())
+                || (signatory.document().closed()) )
+           )
 		  container.append(this.remidenMailOption());
 		
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
