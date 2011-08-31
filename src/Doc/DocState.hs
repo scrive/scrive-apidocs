@@ -3,6 +3,7 @@
 module Doc.DocState
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
+    , isShared -- fromUtils
     , isDeletableDocument -- fromUtils
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks

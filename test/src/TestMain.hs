@@ -24,6 +24,9 @@ import CompanyStateTest
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
+#ifndef NO_DOCCONTROL
+import DocControlTest
+#endif
 #ifndef NO_DOCSTATEQUERY
 import DocStateQueryTest
 #endif
@@ -65,6 +68,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_DOCSTATE
       , docStateTests conn
+#endif
+#ifndef NO_DOCCONTROL
+      , docControlTests conn
 #endif
 #ifndef NO_DOCSTATEQUERY
       , docStateQueryTests
@@ -109,6 +115,9 @@ testsToRun conn (t:ts) =
 #endif
 #ifndef NO_DOCSTATE
     "docstate"        -> Right (docStateTests conn) : rest
+#endif
+#ifndef NO_DOCCONTROL
+    "doccontrol"        -> Right (docControlTests conn) : rest
 #endif
 #ifndef NO_DOCSTATEQUERY
     "docstatequery"   -> Right docStateQueryTests : rest
