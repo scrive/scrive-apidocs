@@ -222,7 +222,7 @@ window.ConfirmationWithEmail = {
 
 var whenReady = function(object, callback) {
         if (object.ready()) callback();
-        else setTimeout(function() {whenReady(object,callback)},50);
+        else setTimeout(function() {whenReady(object,callback);},50);
 };
 
 });

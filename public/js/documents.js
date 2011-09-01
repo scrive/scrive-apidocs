@@ -152,6 +152,9 @@ window.Document = Backbone.Model.extend({
     closed :function() {
         return this.status() == "Closed";
     },
+    signingInProcess: function(){
+        return this.pending() || this.awaitingauthor();
+    },
     datamismatch :function() {
         return _.any(this.signatory, function() {return this.datamismatch() == true;});
 
