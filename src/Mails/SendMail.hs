@@ -60,7 +60,7 @@ mailEncode source = unwords (map encodeWord w)
         -- and (important!) converts \r and \n to space.
         --
         -- please keep these conversions as the are security measure
-        w = words $ unescapeEntities (map w2c $ BS.unpack source)
+        w = words (map w2c $ BS.unpack source)
         wordNeedsEncoding word = any charNeedsEncoding word
         -- FIXME: needs to check if this is full list of exceptions
         charNeedsEncoding char = char <= ' ' || char >= '\x7f' || char == '='
@@ -226,7 +226,7 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
 
 -- | Convert e-mail from html to txt
 htmlToTxt :: String -> String
-htmlToTxt = dropWhile isSpace . unescapeEntities . toText . removeWSAfterNL . reduceWS .
+htmlToTxt = dropWhile isSpace . toText . removeWSAfterNL . reduceWS .
     replaceLinks . concatTexts . filterUnneeded . lowerTags . parseTags
     where
         toText = concat . foldr (\t ts -> f t : ts) []
