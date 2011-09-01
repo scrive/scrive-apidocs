@@ -430,7 +430,8 @@ var DocumentStandarView = Backbone.View.extend({
         if (document.currentSignatory() != undefined && 
             document.currentSignatory().signs() && 
             !document.currentSignatory().hasSigned() && 
-            document.authorattachments().length > 0 )
+            document.authorattachments().length > 0 &&
+            document.signingInProcess())
         {
           bottomparts.append(this.authorAttachmentBox()) ;
         }    
@@ -438,7 +439,8 @@ var DocumentStandarView = Backbone.View.extend({
         if (document.currentSignatory() != undefined && 
             document.currentSignatory().signs() && 
             !document.currentSignatory().hasSigned() && 
-            document.currentSignatory().attachments().length > 0 )
+            document.currentSignatory().attachments().length > 0 &&
+            document.signingInProcess())
         {
           bottomparts.append(this.signatoryAttachmentBox()) ;
         }    
@@ -477,7 +479,8 @@ var DocumentStandarView = Backbone.View.extend({
                     disabled : !this.model.hasAnyAttachments() ||
                                ( document.currentSignatory() != undefined &&
                                  document.currentSignatory().signs() &&
-                                 !document.currentSignatory().hasSigned()
+                                 !document.currentSignatory().hasSigned() &&
+                                 document.signingInProcess()
                                )
                   })
                 ]
