@@ -106,12 +106,12 @@ data DOCUMENT_TYPE =
 
 instance SafeEnum DOCUMENT_TYPE where
     fromSafeEnum DOCUMENT_TYPE_CONTRACT = 1
-    fromSafeEnum DOCUMENT_TYPE_OFFER = 2
-    fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 3
+    fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 2
+    fromSafeEnum DOCUMENT_TYPE_OFFER = 3
     fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE = 4
     toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
-    toSafeEnum 2 = Just DOCUMENT_TYPE_OFFER
-    toSafeEnum 3 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    toSafeEnum 2 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    toSafeEnum 3 = Just DOCUMENT_TYPE_OFFER
     toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
     toSafeEnum _ = Nothing
 
