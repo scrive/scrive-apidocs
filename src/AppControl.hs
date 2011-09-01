@@ -133,7 +133,9 @@ handleRoutes = msum [
 
      , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
-     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer
+     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  This will be droped 
+     
+     
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ toK3 $ DocControl.signDocument
      , dir "s" $ param "cancel"         $ hPostNoXToken3 $ toK3 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
@@ -172,7 +174,11 @@ handleRoutes = msum [
      , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
 
-     , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor
+     , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor -- This will be droped and unified to one below
+     
+     , dir "d"                     $ hGet3  $ toK3 $ DocControl.handleDownloadFileLogged -- This + magic hash version will be the only file download possible
+     , dir "d"                     $ hGet5 $ toK5 $ DocControl.handleDownloadFileNotLogged 
+     
      , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
      , dir "d"                     $ hGet1  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleIssueShowTitleGet

@@ -1907,6 +1907,32 @@ handleAttachmentDownloadForViewer did sid mh fid = do
           respondWithPDF =<< liftIO (getFileContents ctx file)
         _ -> mzero -- attachment with this file ID does not exist
         
+        
+handleDownloadFileLogged  :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
+handleDownloadFileLogged did fid _nameForBrowser = do
+  doc <- guardRightM $ getDocByDocID did
+  respondWithFile doc fid 
+
+handleDownloadFileNotLogged  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> String -> m Response
+handleDownloadFileNotLogged did sid mh fid _nameForBrowser= do
+  doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh      
+  respondWithFile doc fid 
+
+  
+respondWithFile :: Kontrakcja m =>  Document -> FileID -> m Response  
+respondWithFile doc fid =  do
+    ctx <- getContext
+    case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
+      Just AuthorAttachment{ authorattachmentfile } ->
+        respondWithPDF =<< liftIO (getFileContents ctx authorattachmentfile)
+      Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
+        Just SignatoryAttachment{ signatoryattachmentfile = Just file } ->
+          respondWithPDF =<< liftIO (getFileContents ctx file)
+        _ -> case find (((==) fid) . fileid) (documentfiles doc ++ documentsealedfiles doc) of
+           Just file ->   respondWithPDF =<< liftIO (getFileContents ctx file)
+           Nothing   -> mzero
+  
+        
 respondWithPDF :: Kontrakcja m => BS.ByteString -> m Response
 respondWithPDF contents = do
   let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing

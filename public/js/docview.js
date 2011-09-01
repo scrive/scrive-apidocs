@@ -131,21 +131,6 @@ var DocumentStandarView = Backbone.View.extend({
                         }
                 });
     },
-    authorattachmentBox : function() {
-      var document = this.model;
-      var signatory = document.currentSignatory();
-      var box = $("<div id='signViewAttachmentBox'/>");   
-      var header = $("<h2/>").text(localization.attachmentBoxHeader);
-      var list = $("<div id='signViewAttachmentBoxList'/>");
-         _.each(document.authorattachments(), function (attachment) {
-           var a = $("<a target='_blank'/>").text(attachment.name());
-           a.attr("href", attachment.downloadLink());
-           list.append($("<div>").append(a));
-        });
-      box.append(header);
-      box.append(list);
-      return box;
-    },
       authorAttachmentBox : function() {
       var document = this.model;
       var signatory = document.currentSignatory();
@@ -441,15 +426,24 @@ var DocumentStandarView = Backbone.View.extend({
 
         /* Make file part */ 
         var bottomparts = $("<div/>");
-        
-        if (document.authorattachments().length > 0 )
+        // Author attachment box
+        if (document.currentSignatory() != undefined && 
+            document.currentSignatory().signs() && 
+            !document.currentSignatory().hasSigned() && 
+            document.authorattachments().length > 0 )
         {
           bottomparts.append(this.authorAttachmentBox()) ;
         }    
-        if (document.currentSignatory() != undefined && document.currentSignatory().attachments().length > 0 )
+        // Signatory attachment box
+        if (document.currentSignatory() != undefined && 
+            document.currentSignatory().signs() && 
+            !document.currentSignatory().hasSigned() && 
+            document.currentSignatory().attachments().length > 0 )
         {
           bottomparts.append(this.signatoryAttachmentBox()) ;
         }    
+        
+        // Sign boxes
         if (!document.currentViewerIsAuthor() 
             && document.currentSignatory() != undefined 
             && document.currentSignatory().canSign())
@@ -480,7 +474,11 @@ var DocumentStandarView = Backbone.View.extend({
                             file.view.el,
                             bottomparts
                             ],
-                    disabled : !this.model.hasAnyAttachments()
+                    disabled : !this.model.hasAnyAttachments() ||
+                               ( document.currentSignatory() != undefined &&
+                                 document.currentSignatory().signs() &&
+                                 !document.currentSignatory().hasSigned()
+                               )
                   })
                 ]
         });

@@ -17,7 +17,7 @@ window.File = Backbone.Model.extend({
         this.url = "/filepages/" + args.document.documentid() + "/" + args.id;
     },
     downloadLink : function() {
-      return "/d/"+ this.document().documentid() + this.document().viewer().urlPart() +"/" + this.name() + ".pdf";
+      return "/d/"+ this.document().documentid() + this.document().viewer().urlPart() +"/" + this.fileid() +"/"+ this.name() + ".pdf";
     },
     fileid : function(){
         return this.get("id");
