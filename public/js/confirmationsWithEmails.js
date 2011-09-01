@@ -157,7 +157,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var footer = $("<div class='modal-footer'>");
        var cancelOption = $("<a class='cancel close float-left'/>");
        cancelOption.text(this.model.rejectText());
-	   this.editOption = $("<a class='edit float-left' style='margin-left:10px'/>");
+	   this.editOption = $("<a class='edit float-left' style='margin-left:10px; cursor:pointer'/>");
        this.editOption.text(this.model.editText());
        footer.append(cancelOption);
 	   footer.append(this.editOption);
@@ -206,16 +206,23 @@ window.ConfirmationWithEmail = {
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
-          $("body").append(overlay);
-          overlay.overlay({load: true,
+          whenReady(args.mail,function() {
+                    $("body").append(overlay);
+                    overlay.overlay({load: true,
                            target:overlay,
                            speed : 0,
                            mask: standardDialogMask,
                            top: standardDialogTop,
                            fixed: false      
                           });
+          });
    }
     
+};
+
+var whenReady = function(object, callback) {
+        if (object.ready()) callback();
+        else setTimeout(function() {whenReady(object,callback)},50);
 };
 
 });
