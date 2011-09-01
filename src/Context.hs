@@ -28,6 +28,7 @@ data Context = Context {
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^ 
     , ctxipnumber            :: Word32 -- ^ The ip number of the client.
     , ctxdbconn              :: Connection -- ^ PostgreSQL database connection
+    , ctxdbconnclose         :: Bool -- ^ Indicates whether we want to close connection explicitly or let it be closed by GC
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^ 
     , ctxgscmd               :: String -- ^ 
