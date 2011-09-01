@@ -91,8 +91,12 @@ window.Field = Backbone.Model.extend({
     signatory : function(){
         return this.get("signatory");
     },
+    canBeIgnored: function(){
+        var name = this.name();
+        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr");
+    },
     readyForSign : function(){
-        return this.placements().length == 0 || this.value() != "" || this.isClosed();
+        return this.value() != "" || this.canBeIgnored();
     },
     nicename : function() {
         var name = this.name();
