@@ -41,7 +41,7 @@ import Doc.Invariants
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
-newtype ActionScheduler a = AS (ReaderT SchedulerData' (ReaderT Connection IO) a)
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance DBMonad ActionScheduler where
@@ -55,8 +55,8 @@ instance DBMonad ActionScheduler where
 -- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler (AS sched) sd =
-    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT sched sd)
+runScheduler sched sd =
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT (unAS sched) sd)
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -72,11 +72,12 @@ runEnforceableScheduler interval enforcer sched sd = listen 0
 actionScheduler :: ActionImportance -> ActionScheduler ()
 actionScheduler imp = do
     sd <- ask
+    conn <- getConnection
+    let runAction a = runReaderT (runReaderT (unAS $ evaluateAction a) sd) conn `E.catch` catchEverything a
     liftIO $ getMinutesTime
          >>= query . GetExpiredActions imp
-         >>= sequence_ . map (run sd)
+         >>= sequence_ . map runAction
     where
-        run sd a = runScheduler (evaluateAction a) sd `E.catch` catchEverything a
         catchEverything :: Action -> E.SomeException -> IO ()
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
