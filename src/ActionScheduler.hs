@@ -14,6 +14,7 @@ import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
+import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -40,11 +41,11 @@ import Doc.Invariants
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
-newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
+newtype ActionScheduler a = AS (ReaderT SchedulerData' (ReaderT Connection IO) a)
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance DBMonad ActionScheduler where
-    getConnection = sdDBConnection <$> ask
+    getConnection = AS $ lift ask
     handleDBError = E.throw
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
@@ -54,7 +55,8 @@ instance DBMonad ActionScheduler where
 -- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler (AS sched) sd = runReaderT sched sd
+runScheduler (AS sched) sd =
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT sched sd)
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
