@@ -39,6 +39,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
 import Doc.Invariants
+import Stats.Control
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -91,7 +92,8 @@ postDocumentChangeAction document@Document  { documentstatus
             sendInvitationEmails ctx document
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
-    | oldstatus == Preparation && documentstatus == Pending = do
+    | oldstatus == Preparation && documentstatus == Pending = do 
+        _ <- addDocumentSendStatEvents document  
         ctx <- getContext
         msaveddoc <- saveDocumentForSignatories document
         document' <- case msaveddoc of
@@ -106,6 +108,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
+        _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxtemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- sealDocument ctx document
@@ -124,6 +127,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
+        _ <- addDocumentCloseStatEvents document          
         ctx@Context{ctxtemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- sealDocument ctx document
