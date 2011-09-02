@@ -32,6 +32,7 @@ import Data.Map ((!))
 import qualified Data.Map as Map
 import Data.CSV
 import User.Lang
+import User.Region
 import Text.ParserCombinators.Parsec
 import System.IO
 
@@ -44,21 +45,25 @@ getTextTemplatesMTime = getRecursiveMTime textsDirectory
 
 
 -- | We recursively read all csv files from texts directory. This
--- function will also merge selected lang with default lang.
-getTextTemplates:: Lang -> IO [(String,String)]
-getTextTemplates lang = do
-    texts <- getAllTextTemplates 
-    return $ unionBy (\x y -> fst x == fst y) (texts ! lang) (texts ! defaultValue)
+-- function will also merge by selecting the closest default text for those that are missing.
+getTextTemplates:: Region -> Lang -> IO [(String,String)]
+getTextTemplates region lang = do
+    texts <- getAllTextTemplates
+    let sameLang = map (\r -> (r, lang)) . filter (/= region) $ allValues
+        sameRegion = map (\l -> (region, l)) . filter (/= lang) $ allValues
+        unionFoldF a k = unionBy (\x y -> fst x == fst y) a (texts ! k)
+        alternatives = sameLang ++ sameRegion
+    return $ foldl unionFoldF (texts ! (region, lang)) alternatives
 
--- | All texts maped by the language.  Should be used only for tests
--- since it does not do a merge with default language.
-getAllTextTemplates:: IO (Map.Map Lang [(String,String)])
+-- | All texts maped by the region and language.  Should be used only for tests
+-- since it does not do a merge with a default.
+getAllTextTemplates:: IO (Map.Map (Region, Lang) [(String,String)])
 getAllTextTemplates = getTextTemplatesFrom textsDirectory    
 
-getTextTemplatesFrom:: String -> IO (Map.Map Lang [(String,String)])
+getTextTemplatesFrom:: String -> IO (Map.Map (Region, Lang) [(String,String)])
 getTextTemplatesFrom path =
  if ("." `isSuffixOf`path)
-  then return emptyLangsMap
+  then return emptyTextTemplatesMap
   else do
      isDir <- doesDirectoryExist path
      if not isDir
@@ -73,18 +78,18 @@ getTextTemplatesFrom path =
 -- we can skip columns with comments and match column with language.
 -- And we do the reading line by line skiping lines starting with !
 -- (control structure) and ***** (unussed translation).
-getTextTemplatesFromFile:: String -> IO (Map.Map Lang [(String,String)])
+getTextTemplatesFromFile:: String -> IO (Map.Map (Region, Lang) [(String,String)])
 getTextTemplatesFromFile path =
  if (not $ ".csv" `isSuffixOf` path)
-  then return emptyLangsMap
+  then return emptyTextTemplatesMap
   else do
     csv <- basicCSVParser path
     case csv of
-       schemeString:csv' -> return $ foldl (addLine $ getScheme schemeString) emptyLangsMap csv'
+       schemeString:csv' -> return $ foldl (addLine $ getScheme schemeString) emptyTextTemplatesMap csv'
        _ -> error $ "CSV parsing error in" ++path ++ "  \n Empty file"
  where
    getScheme s  = drop 1 (map maybeRead s)
-   addLine::[Maybe Lang] -> (Map.Map Lang [(String,String)]) -> [String] -> Map.Map Lang [(String,String)]
+   addLine::[Maybe (Region, Lang)] -> (Map.Map (Region, Lang) [(String,String)]) -> [String] -> Map.Map (Region, Lang) [(String,String)]
    addLine scheme m (n:rest) = if ( "!" `isPrefixOf` n || notvalidString `isPrefixOf` n)
                        then m
                        else Map.unionWith (++) m $ Map.fromList $
@@ -229,11 +234,11 @@ textCsvSort :: [String] -> [String] -> Ordering
 textCsvSort (s1:_) (s2:_) = compare (validName s1) (validName s2)
 textCsvSort s1 s2 = compare s1 s2
 
--- Empty langs map is used to ensure that we will not return map with
--- one of languages missing even if not translation was provided for
+-- Empty text templates map is used to ensure that we will not return map with
+-- one of regions or languages missing even if not translation was provided for
 -- it.
-emptyLangsMap:: (Monoid a) => Map.Map Lang a
-emptyLangsMap = Map.fromList $ for allValues $ \s -> (s,mempty)
+emptyTextTemplatesMap:: (Monoid a) => Map.Map (Region, Lang) a
+emptyTextTemplatesMap = Map.fromList $ for allValues $ \s -> (s,mempty)
 
 basicCSVParser :: String -> IO [[String]]
 basicCSVParser path =

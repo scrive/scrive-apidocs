@@ -538,6 +538,8 @@ appHandler appConf appGlobals = do
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
       let language = (fromMaybe browserLang $ lang <$> usersettings <$> muser )
+      let region = fromMaybe defaultValue $ (const defaultValue) <$> muser --TODO EM read the region from the request url
+                                                                           --TODO EM store the region in the user settings so we can do "region <$> usersettings <$> muser"
       let systemServer = systemServerFromURL hostpart    
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -553,7 +555,7 @@ appHandler appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,language) templates2
+                , ctxtemplates = localizedVersion (systemServer,region,language) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
