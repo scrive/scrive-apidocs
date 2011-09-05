@@ -380,7 +380,7 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
     --assert
     validTest $ assertLeft edoc
 
-testCreateFromSharedTemplate::DB ()
+testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomAdvancedUser
   docid <- addRandomDocumentWithAuthor user
@@ -392,7 +392,10 @@ testCreateFromSharedTemplate = do
   doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc)
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks doc'
-  if (fmap fieldvalue $ signatoryotherfields $ signatorydetails author1) == (fmap fieldvalue $ signatoryotherfields $ signatorydetails author2)
+  let isCustom (SignatoryField { sfType = CustomFT _ _ }) = True
+      isCustom _ = False
+  if (fmap sfValue $ filter isCustom $ signatoryfields $ signatorydetails author1) 
+     == (fmap sfValue $ filter isCustom $ signatoryfields $ signatorydetails author2)
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294" 
            

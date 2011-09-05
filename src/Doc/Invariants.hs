@@ -61,6 +61,7 @@ documentInvariants = [ documentHasOneAuthor
                      , hasFirstName
                      , hasLastName
                      , hasValidEmail
+                     , hasAtMostOneOfEachTypeOfField
                      ]
 
 {- |
@@ -332,13 +333,24 @@ hasValidEmail _ document =
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
                 (isGood $ asValidEmail $ BS.toString $ getEmail sl))
         (documentsignatorylinks document)
-
+    
+-- | Has only one of each type of field
+hasAtMostOneOfEachTypeOfField :: MinutesTime -> Document -> Maybe String
+hasAtMostOneOfEachTypeOfField _ document =
+ nothingIfEmpty $ intercalate ";" $ catMaybes $ 
+   for [FirstNameFT, LastNameFT, CompanyFT, PersonalNumberFT, CompanyNumberFT, EmailFT] $ \t ->
+    assertInvariant ("signatory with more than one " ++ show t) $
+      all (\sl -> 1 >= length (filter (fieldIsOfType t) (signatoryfields $ signatorydetails sl)))
+        (documentsignatorylinks document)
+      
 -- some helpers  
        
 assertInvariant :: String -> Bool -> Maybe String
 assertInvariant _ True = Nothing
 assertInvariant s False  = Just s
 
+fieldIsOfType :: FieldType -> SignatoryField -> Bool
+fieldIsOfType t f = t == sfType f
 
 -- | Given the time now, is doc older than minutes.
 olderThan :: MinutesTime -> Document -> Int -> Bool

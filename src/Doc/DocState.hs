@@ -72,7 +72,7 @@ module Doc.DocState
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
     , StoreDocumentForTesting(..)
-    --, SignLinkFromDetailsForTest(..)
+    , SignLinkFromDetailsForTest(..)
     , DeleteSigAttachment(..)
     )
 where
@@ -1310,6 +1310,9 @@ signLinkFromDetails details roles = do
                      , signatorylinkreallydeleted = False
                      }
 
+signLinkFromDetailsForTest :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
+signLinkFromDetailsForTest = signLinkFromDetails
+
 {- |
     Gets a unique signatory link id.
 -}
@@ -1653,7 +1656,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getMagicHash
                         , 'saveSigAttachment
                         , 'storeDocumentForTesting
-                        --, 'signLinkFromDetailsForTest
+                        , 'signLinkFromDetailsForTest
 
                         , 'getDocumentByFileID
                         , 'errorDocument

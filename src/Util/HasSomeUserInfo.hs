@@ -55,9 +55,9 @@ instance HasSomeUserInfo SignatoryDetails where
   getPersonalNumber = getValueOfType PersonalNumberFT
 
 instance HasSomeUserInfo SignatoryLink where
-  getEmail          = getEmail . signatorydetails
-  getFirstName      = getFirstName . signatorydetails
-  getLastName       = getLastName . signatorydetails
+  getEmail          = getEmail          . signatorydetails
+  getFirstName      = getFirstName      . signatorydetails
+  getLastName       = getLastName       . signatorydetails
   getPersonalNumber = getPersonalNumber . signatorydetails
 
 {- |
