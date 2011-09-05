@@ -354,20 +354,13 @@ safeReady(function() {
                 var content = $(data);
                 var errormsg = content.find(".errormsg");
                 if (errormsg.length > 0) {
-                    var errdialog = $("<div title='" + localization.problemWithPDF + "'>" + errormsg.text() + "</div>");
-                    errdialog.dialog({
-                        open: function(event, ui) {
-                            $(".ui-dialog-titlebar-close").hide();
-                        },
-                        modal: true,
-                        closeOnEscape: false,
-                        resizable: false,
-                        minWidth: 400,
-                        buttons: {
-                            Back: function() {
-                                window.location.href = '/d';
-                            }
-                        }
+                      Confirmation.popup({
+                        submit : new Submit({url: '/d' }) ,
+                        title : localization.problemWithPDF,
+                        content: errormsg.text(),
+                        cantCancel : true,
+                        acceptColor: "red",
+                        acceptText : "Back to Archive"
                     });
                 } else {
                     $('#documentBox').html(content);
@@ -1550,21 +1543,16 @@ safeReady(function() {
                 var content = $(data);
                 var errormsg = content.find(".errormsg");
                 if (errormsg.length > 0) {
-                    var errdialog = $("<div title='" + localization.problemWithPDF + "'>" + errormsg.text() + "</div>");
-                    errdialog.dialog({
-                        open: function(event, ui) {
-                            $(".ui-dialog-titlebar-close").hide();
-                        },
-                        modal: true,
-                        closeOnEscape: false,
-                        resizable: false,
-                        minWidth: 400,
-                        buttons: {
-                            Back: function() {
-                                window.location.href = '/d';
-                            }
-                        }
+                    
+                      Confirmation.popup({
+                        submit : new Submit({url: '/d' }) ,
+                        title : localization.problemWithPDF,
+                        content: errormsg.text(),
+                        cantCancel : true,
+                        acceptColor: "red",
+                        acceptText : "Back to Archive"
                     });
+                    
                 } else {
                     $('#attachmentbox').html(content);
                 }
