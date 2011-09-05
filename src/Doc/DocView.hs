@@ -467,7 +467,7 @@ fileJSON file =
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 docForListJSON crtime doc = (fmap toJSObject) $ propagateMonad  $
     [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
-      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
+      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (getSignatoryPartnerLinks doc)),
       ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
     ]
 
