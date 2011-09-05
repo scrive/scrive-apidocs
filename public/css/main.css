@@ -32,6 +32,14 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
     font-style: normal;
 }
 
+/* Preload images. Added by Eric Normand from http://dev.iceburg.net/jquery/jqModal/ */
+@media projection, screen {
+     div.imgCache { position: absolute; left: -8000px; top: -8000px; }
+     div.imgCache img { display:block; }
+}
+@media print { div.imgCache { display: none; } }
+
+
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
 	display: block;
@@ -61,16 +69,6 @@ table {
 	width: 3px;
 }
 
-/*	Offsets
-	money:	0 -103px
-	watch:	0 -167px
-	globe:	0 -220px
-	seal:	0 -278px
-	safe:	0 -339px
-	face:	0 -400px
-	paper:	0 -459px
-	ipad:	0 -523px
-*/
 .icon {
 	background: url(../img/icons.png) 0 0 no-repeat;
 }
@@ -115,13 +113,13 @@ table {
 input.shiny {
 	background: #fff;
 	border: 1px solid #c6dade;
-	border-radius: 4px;
 	height: 14px;
 	padding: 8px;
 	width: 202px;
-        margin: 0px;
+    margin: 0;
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
+	border-radius: 4px;
 }
 
 input.shiny:focus {
@@ -265,7 +263,7 @@ a.new-btn-small.black p {
 #top-container .logo {
 	position: absolute;
 	top: 20px;
-        left:0px;
+    left:0;
 }
 
 #top-container .leftMain {
@@ -365,9 +363,9 @@ a.new-btn-small.black p {
     padding: 20px;
     margin:auto;
     z-index: 101;
-    border-radius: 5px 5px 5px 5px;
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
     font: 11px "Lucida Grande";
     width: 240px;
     margin: auto;
@@ -387,12 +385,11 @@ a.new-btn-small.black p {
     padding: 20px;
     margin:auto;
     z-index: 101;
-    border-radius: 5px 5px 5px 5px;
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
     font: 11px "Lucida Grande";
     width: 300px;
-    margin: auto;
     text-align: center;
 }
 
@@ -873,7 +870,6 @@ a.new-btn-small.black p {
 #body-container .price-plan-container {
 	background: #fff;
 	border: 1px solid #ccc;
-	border-radius: 5px;
 	height: 250px;
 	margin-top: 65px;
 	position: relative;
@@ -881,6 +877,7 @@ a.new-btn-small.black p {
 	z-index: 1;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
+    border-radius: 5px 5px 5px 5px;
 }
 
 #body-container .price-plan {
@@ -983,6 +980,7 @@ a.new-btn-small.black p {
 	-moz-box-shadow: 0 0 5px #999;
 	-webkit-border-radius: 7px;
 	-webkit-box-shadow: 0 0 5px #999;
+    border-radius: 7px;
 }
 
 .highlight-container.ppfix {
@@ -1154,13 +1152,22 @@ div.price-plan-details {
 	min-width: 940px;
 }
 
-#top-slim-container .logo {
-	background: url(../img/logo-small.png);
+#top-slim-container .skrivapa-logo {
+	background: url(../img/logo-skrivapa-small.png);
 	display: block;
 	float: left;
 	height: 35px;
 	margin-top: 9px;
 	width: 137px;
+    margin-left: -8px;
+}
+#top-slim-container .scrive-logo {
+    background: url(../img/logo-scrive-small.png);
+    display: block;
+    float: left;
+    height: 35px;
+    margin-top: 9px;
+    width: 137px;
     margin-left: -8px;
 }
 
@@ -1372,7 +1379,6 @@ div.price-plan-details {
 .box .partner-list li .partner-image, .box .partner-list li .portrait-image {
 	background: #fff;
 	border: 1px solid #ccc;
-	border-radius: 3px;
 	float: left;
 	height: 180px;
 	margin-right: 20px;
@@ -1380,6 +1386,7 @@ div.price-plan-details {
 	width: 190px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
+    border-radius: 5px 5px 5px 5px;
 }
 
 .box .partner-list li .partner-image:before, .box .partner-list li .portrait-image:before {
@@ -1393,17 +1400,18 @@ div.price-plan-details {
 	top: 3px;
 	-moz-box-shadow: inset 0 0 5px #000;
 	-webkit-box-shadow: inset 0 0 5px #000;
+    border-radius: 5px;
 }
 
 .box .partner-list li .partner-image:after, .box .partner-list li .portrait-image:after {
-	bottom: 0px;
+	bottom: 0;
 	box-shadow: 0 0 5px #000;
 	content: "";
-	left: 0px;
+	left: 0;
 	opacity: 0.5;
 	position: absolute;
-	right: 0px;
-	top: 0px;
+	right: 0;
+	top: 0;
 	-moz-box-shadow: 0 0 5px #000;
 	-webkit-box-shadow: 0 0 5px #000;
 }
@@ -1454,13 +1462,13 @@ div.price-plan-details {
 #body-container .big-pp-container {
 	background: #fff;
 	border: 1px solid #ccc;
-	border-radius: 5px;
 	margin-top: 30px;
 	position: relative;
 	width: 938px;
 	z-index: 2;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
+	border-radius: 5px;
 }
 
 #body-container .big-pp-container table {

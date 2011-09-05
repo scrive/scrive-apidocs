@@ -14,6 +14,13 @@ adminsmain=
             </a>
           </td>
        </tr>
+        <tr>
+          <td style="height:50px;width:200px">
+            <a href="/adminonly/companyadmin">
+              <button style="width:150px"> Company Admin </button>
+            </a>
+          </td>
+       </tr>
    </tbody></table>
     <br/>
     <br/>
@@ -46,10 +53,7 @@ adminsmain=
         </tr>
         <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-          <td style="height:50px;width:200px"><a href="/adminonly/quarantine"><button style="width:150px"> Quarantine </button></a></td>
-        </tr>
-        <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> </td>
+          <td style="height:50px;width:200px"><!--<a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> --> </td>
         </tr>
     </tbody></table>
 ###
@@ -68,10 +72,10 @@ adminsmanageall =
       <h3>Users</h3>
      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
       <div>
-        $usersfilter(link="/adminonly/advuseradmin")$
+        $adminlistfilter(link="/adminonly/advuseradmin")$
       </div>
       <div>
-        $userspaging(link="/adminonly/advuseradmin")$
+        $adminlistpaging(link="/adminonly/advuseradmin")$
         <table><tbody>
             $users:{user|
             <tr>
@@ -87,23 +91,23 @@ adminsmanageall =
       </div>
     </div>
 ###
-usersfilter=
+adminlistfilter=
     <form action="$link$" method="GET">
       <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
-        Find user:
+        Find $item$:
         <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$" />
         <input type="submit" value="Search"/>
       </div>
     </form>
     <br/><br/>
-    <a href="$link$">View list of users </a>
+    <a href="$link$">View list of $items$ </a>
     <br/><br/>
     <form action="$link$" method="GET">
       Find by name:
       $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
     </form>
 ###
-userspaging=
+adminlistpaging=
     <form action="$link$" method="GET">
       View page:
       $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
@@ -115,8 +119,8 @@ adminusers=
     <strong>USER ADMIN</strong>
     <br/>
     $backtoadminmainlink()$
-    $usersfilter(link=adminuserlink)$
-    $userspaging()$
+    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+    $adminlistpaging()$
     <br/><br/>
     <table>
         <thead>
@@ -135,8 +139,8 @@ adminusers=
           <td style="width:50px">Admin Invites</td>
         </thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$ </td>
           <td> $user.userdetails.phone$ </td>
           <td> $user.docstats.doccount$ </td>
@@ -150,14 +154,41 @@ adminusers=
           <td> $user.userstats.admininvitecount$ </td>
         </tr>}$
       </table>
-
+###
+admincompanies=
+    <strong>COMPANY ADMIN</strong>
+    <br/>
+    $backtoadminmainlink()$
+    $adminlistfilter(link=adminlistlink;item="company";items="companies")$
+    $adminlistpaging()$
+    <br/><br/>
+    <table>
+        <thead>
+          <td style="width:200px">ID</td>
+          <td style="width:200px">Name</td>
+          <td style="width:200px">Number</td>
+          <td style="width:200px">Address</td>
+          <td style="width:200px">Zip</td>
+          <td style="width:200px">City</td>
+          <td style="width:200px">Country</td>
+        </thead>
+        $companies:{company|<tr>
+          <td><a href="$adminlistlink$/$company.companyid$">$company.companyid$</a> </td>
+          <td><a href="$adminlistlink$/$company.companyid$">$company.companyname$</a> </td>
+          <td> $company.companynumber$ </td>
+          <td> $company.companyaddress$ </td>
+          <td> $company.companyzip$ </td>
+          <td> $company.companycity$ </td>
+          <td> $company.companycountry$ </td>
+        </tr>}$
+      </table>
 ###
 adminUsersForSales=
     <strong>USER ADMIN FOR SALES</strong>
     <br/>
     $backtoadminmainlink()$
-    $usersfilter(link=adminuserlink)$
-    $userspaging()$
+    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+    $adminlistpaging()$
     <br/><br/>
     <table>
         <thead>
@@ -170,8 +201,8 @@ adminUsersForSales=
           <td style="width:50px">Subaccounts</td>
        </thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$</td>
           <td> $user.userdetails.phone$ </td>
           <td> $user.userdetails.TOSDate$ </td>
@@ -184,15 +215,14 @@ adminUsersForPayments=
     <strong>USER ADMIN FOR PAYMENTS</strong>
     <br/>
     $backtoadminmainlink()$
-    $usersfilter(link=adminuserlink)$
-    $userspaging()$
+    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+    $adminlistpaging()$
     <br/><br/>
     <table>
         <thead>
           <td style="width:200px">Username</td>
           <td style="width:200px">Email</td>
-	  <td style="width:200px">Superuser Company name</td>
-	  <td style="width:200px">Superuser email</td>
+	  <td style="width:200px">Company name</td>
 	  <td style="width:200px">Payment plan</td>
 	  <td style="width:200px">Next billing date</td>
 	  <td style="width:200px">Last billing date</td>
@@ -202,11 +232,10 @@ adminUsersForPayments=
 	  <td style="width:200px">Current TW storage price</td>
 	</thead>
         $users:{user|<tr>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminuserlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
+          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
           <td> $user.userdetails.company$
           </td>
-	  <td>-</td>
 	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
 	  <td>?</td>
 	  <td>?</td>
@@ -253,43 +282,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.personalnumber$"  name="userpersonalnumber" />
 		  </td>
 		</tr>
-		<tr> <td>Company:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyname$"  name="usercompanyname" />
-		  </td>
-		</tr>
-		<tr> <td>Company position:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
-		  </td>
-		</tr>
-		<tr> <td>Company nr:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companynumber$"  name="usercompanynumber" />
-		  </td>
-		</tr>
-		<tr> <td style="padding-top:10px"><strong>Location</strong></td>
-		  <td> </td>
-		</tr>
-		<tr> <td>Adress:</td>
-		  <td> <input type="text" style="width:200px;margin:0" value="$user.address$"  name="useraddress" />
-		  </td>
-		</tr>
-		<tr> <td>ZIP:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.zip$"  name="userzip" />
-		  </td>
-		</tr>
-		<tr> <td>City:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.city$"  name="usercity" />
-		  </td>
-		</tr>
-		<tr> <td>Country:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.country$" name="usercountry" />
-		  </td>
-		</tr>
 		<tr> <td style="padding-top:10px" ><strong>Contact</strong></td>
 		  <td>
 		  </td>
@@ -309,175 +301,26 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
 		  </td>
 		</tr>
+		<tr> <td>Company position:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
+		  </td>
+		</tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>
 		</tr>
 		<tr> <td>Account type:</td>
 		  <td>
-		    <select autocomplete="off" name="accounttype">$user.accounttype:options()$</select>
+		    $if(user.iscompanyaccount)$
+		    <a href="/adminonly/companyadmin/$company.companyid$">
+		      $company.companyname$ $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
+		    </a>
+		    $else$
+		    Private Account<br/>
+		    <input type="checkbox" name="upgradetocompany"/> Upgrade to Company
+		    $endif$
 		  </td>
-		</tr>
-		<tr> <td>Account plan:</td>
-		  <td>
-		    <select autocomplete="off" name="accountplan">$user.accountplan:options()$</select>
-		  </td>
-		</tr>
-		<tr> <td>Signed doc storage:</td>
-		  <td> $user.signeddocstorage$ </td>
-		</tr>
-		<tr> <td>Payment method:</td>
-		  <td>
-		    <select autocomplete="off" name="userpaymentmethod" >$user.userpaymentmethod:options()$</select>
-		  </td>
-		</tr>
-		<tr> <td style="padding-top:10px" ><strong>Special deals</strong></td>
-		  <td> </td>
-		</tr>
-		<tr> <td>Free trial expiration date:</td>
-                  <td>
-                     <span>
-                      <input type="checkbox" value="$if(user.freetrialexpirationdate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#freetrialexpirationdatecontainer" rel="#freetrialexpirationdatebox" class="addremovecheckbox" />
-                      <span id="freetrialexpirationdatecontainer">
-                      </span>
-                    </span>
-                  </td>
-                </tr>
-		<tr> <td>Free signatures left:</td>
-		  <td>
-		    <input type="text" style="width:40px;margin:0" value="$user.paymentaccountfreesignatures$" name="paymentaccountfreesignatures" />
-		  </td>
-		</tr>
-		<tr> <td style="padding-top:10px" ><strong>Pricing</strong></td>
-		  <td>
-		  </td>
-		</tr>
-		<tr> <td>Payment plan:</td>
-		  <td>
-		    <select autocomplete="off" name="paymentaccounttype">$user.paymentaccounttype:options()$</select>
-		  </td>
-		</tr>
-		<tr> <td>Temporary price:</td>
-		  <td>
-		    <span>
-                      <input type="checkbox" value="$if(user.tmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox" />
-                      <span id="datetosigncontainer">
-                      </span>
-		    </span>
-		  </td>
-		</tr>
-	    </tbody></table>
-	    <br/>
-	    <strong>User price plan</strong>
-	    <br/><br/>
-	    <table style="text-align:left"><tbody>
-		<tr>
-		  <th style="width:300px;"></th>
-		  <th> Standard</th>
-		  <th style="width:100px"> </th>
-		  <th> Custom</th>
-		  <th style="width:100px"> </th>
-		  <th> Temporary</th>
-		</tr>
-		<tr>
-		  <td style="padding-top:10px"><strong>Payment for account </strong> </td>
-		</tr>
-		<tr>
-		  <td>For account: </td>
-		  $paymentmodel.foraccount:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foraccountcustom" value="$user.custompaymentchange.changeforaccount$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foraccounttemp" value="$user.temppaymentchange.changeforaccount$"/>}:td()$
-		</tr>
-		<tr>
-		  <td>For subaccount: </td>
-		  $paymentmodel.forsubaccount:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="forsubaccountcustom" value="$user.custompaymentchange.changeforsubaccount$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="forsubaccounttemp" value="$user.temppaymentchange.changeforsubaccount$"/>}:td()$
-		</tr>
-		<tr>
-		  <td style="padding-top:20px"><strong>Payment for signatures </strong> </td>
-		</tr>
-		<tr>
-		  <td>For email signature:</td>
-		  $paymentmodel.foremailsignature:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foremailsignaturecustom" value="$user.custompaymentchange.changeforemailsignature$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foremailsignaturetemp" value="$user.temppaymentchange.changeforemailsignature$"/>}:td()$
-		</tr>
-		<tr>
-		  <td>For eLeg signature:</td>
-		  $paymentmodel.forelegsignature:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="forelegsignaturecustom" value="$user.custompaymentchange.changeforelegsignature$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="forelegsignaturetemp" value="$user.temppaymentchange.changeforelegsignature$"/>}:td()$
-		</tr>
-		<tr>
-		  <td> For mobile signature: :</td>
-		  $paymentmodel.formobiledignature:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="formobiledignaturecustom" value="$user.custompaymentchange.changeformobiledignature$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="formobiledignaturetemp" value="$user.temppaymentchange.changeformobiledignature$"/>}:td()$
-		</tr>
-		<tr>
-		  <td>For creadit card signature:</td>
-		  $paymentmodel.forcrediteardsignature:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="forcrediteardsignaturecustom" value="$user.custompaymentchange.changeforcrediteardsignature$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="forcrediteardsignaturetemp" value="$user.temppaymentchange.changeforcrediteardsignature$"/>}:td()$
-		</tr>
-		<tr>
-		  <td>For iPad signature: </td>
-		  $paymentmodel.foripadsignature:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foripadsignaturecustom" value="$user.custompaymentchange.changeforipadsignature$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foripadsignaturetemp" value="$user.temppaymentchange.changeforipadsignature$"/>}:td()$
-		</tr>
-		<tr>
-		  <td style="padding-top:20px"><strong>Storage of signed documents</strong> </td>
-		</tr>
-		<tr>
-		  <td>For Amazon: </td>
-		  $paymentmodel.foramazon:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foramazoncustom" value="$user.custompaymentchange.changeforamazon$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="foramazontemp" value="$user.temppaymentchange.changeforamazon$"/>}:td()$
-		</tr>
-		<tr>
-		  <td>For TrustWeaver: </td>
-		  $paymentmodel.fortrustweaver:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortrustweavercustom" value="$user.custompaymentchange.changefortrustweaver$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortrustweavertemp" value="$user.temppaymentchange.changefortrustweaver$"/>}:td()$
-		</tr>
-		<tr>
-		  <td style="padding-top:20px">  <strong>Storage of other documents</strong> </td>
-		</tr>
-		<tr>
-		  <td>Template:  </td>
-		  $paymentmodel.fortemplate:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortemplatecustom" value="$user.custompaymentchange.changefortemplate$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="fortemplatetemp" value="$user.temppaymentchange.changefortemplate$"/>}:td()$
-		</tr>
-		<tr>
-		  <td> Draft:  </td>
-		  $paymentmodel.fordraft:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="fordraftcustom" value="$user.custompaymentchange.changefordraft$"/>}:td()$
-		  <td></td>
-		  ${<input type="text" style="width:45px" name="fordrafttemp" value="$user.temppaymentchange.changefordraft$"/>}:td()$
 		</tr>
 	    </tbody></table>
 	    <br/>
@@ -487,20 +330,65 @@ adminuser=
 	</div>
       </div>
     </form>
+####
+admincompany=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
-    <form method="post" action="">
-      <input type="submit" name="enabletrustweaver" style="width:600px;font-weight:bold" value="Enable TrustWeaver storage for this client (cannot be undone)" />
+    <br/>
+    <form action="" method="POST">
+      <div id="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Usage Stats</a></li>
+	</ul>
+	<div class="tab-container">
+	  <div class="tab-content account">
+	    <table><tbody>
+		<tr> <th style="width:200px"></th> <th> </th></tr>
+		<tr> <td style="padding-top:10px"><strong>Company data</strong></td> <td> </td></tr>
+		<tr> <td>Name:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companyname$"  name="companyname" />
+		  </td>
+		</tr>
+		<tr> <td>Company nr:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companynumber$"  name="companynumber" />
+		  </td>
+		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company Location</strong></td>
+		  <td> </td>
+		</tr>
+		<tr> <td>Adress:</td>
+		  <td> <input type="text" style="width:200px;margin:0" value="$companyaddress$"  name="companyaddress" />
+		  </td>
+		</tr>
+		<tr> <td>ZIP:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companyzip$"  name="companyzip" />
+		  </td>
+		</tr>
+		<tr> <td>City:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companycity$"  name="companycity" />
+		  </td>
+		</tr>
+		<tr> <td>Country:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companycountry$" name="companycountry" />
+		  </td>
+		</tr>
+	    </tbody></table>
+	    <br/>
+	    <input type="submit" style="width:200px;font-weight:bold"
+	    value="Change" name="change" />
+	  </div>
+	</div>
+      </div>
     </form>
-    <div id="hiddenttimestuffbox" style="display:none">
-      <span id="daystosignbox">
-        <a class="datetodate date" rel="[name='tmppaymentchangeenddate']"> </a>
-        <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.tmppaymentchangeenddate$" />
-      </span>
-      <span id="freetrialexpirationdatebox">
-        <a class="datetodate date" rel="[name='freetrialexpirationdate']"> </a>
-        <input type="hidden" autocomplete="off" name="freetrialexpirationdate" value="$user.freetrialexpirationdate$" />
-      </span>
-    </div>
 ####
 userusagestats=
    <a href="$adminlink$">Go back to main admin page</a>
@@ -536,7 +424,7 @@ userusagestats=
               <td style="width:200px">Viral invites</td>
               <td style="width:200px">Admin invites</td>
 	    </thead>
-            $stats:{stat|<tr>
+            $allMonthsStats:{stat|<tr>
               <td>$stat.date$</td>
               <td>$stat.documents.signatures$ </td>
               <td>$stat.documents.signaturesInClosed$ </td>
@@ -557,7 +445,60 @@ userusagestats=
 	</div>
       </div>
     </div>
-	    
+####	    
+companyusagestats=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <br/>
+    <br/>
+      <div id="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Usage Stats</a></li>
+	</ul>
+      <div class="tab-container">
+	<div class="tab-content account">
+	  <table>
+            <thead>
+              <td style="width:200px">Date</td>
+              <td style="width:200px">All signatures</td>
+              <td style="width:200px">Signs in closed</td>
+              <td style="width:200px">All users</td>
+              <td style="width:200px">All documents</td>
+              <td style="width:200px">Preparation</td>
+              <td style="width:200px">Pending</td>
+              <td style="width:200px">Closed</td>
+              <td style="width:200px">AwaitingAuthor</td>
+              <td style="width:200px">Rejected</td>
+              <td style="width:200px">Canceled</td>
+              <td style="width:200px">Timeout</td>
+              <td style="width:200px">Error</td>
+              <td style="width:200px">Viral invites</td>
+              <td style="width:200px">Admin invites</td>
+	    </thead>
+            $allMonthsStats:{stat|<tr>
+              <td>$stat.date$</td>
+              <td>$stat.documents.signatures$ </td>
+              <td>$stat.documents.signaturesInClosed$ </td>
+              <td>$stat.users.all$ </td>
+              <td>$stat.documents.all$ </td>
+              <td>$stat.documents.preparation$</td>
+              <td>$stat.documents.pending$ </td>
+              <td>$stat.documents.closed$ </td>
+              <td>$stat.documents.awaitingauthor$ </td>
+              <td>$stat.documents.rejected$ </td>
+              <td>$stat.documents.canceled$ </td>
+              <td>$stat.documents.timeout$ </td>
+              <td>$stat.documents.error$ </td>
+              <td>$stat.users.viralInvites$ </td>
+              <td>$stat.users.adminInvites$ </td>
+	    </tr>}$
+	  </table>
+	</div>
+      </div>
+    </div>
 ###
 statisticsPage=
     $backtoadminmainlink()$
@@ -639,54 +580,6 @@ statisticsPage=
     </div>
 ###
 ###
-quarantinePage=
-    $backtoadminmainlink()$
-    <div>
-      <h1>Document Quarantine</h1>
-      <table>
-        <thead>
-          <td style="width:200px">Doc Name</td>
-          <td style="width:200px">Quarantine Expiry</td>
-          <td style="width:200px">Signatories</td>
-          <td style="width:200px"></td>
-          <td style="width:200px"></td>
-       </thead>
-        $documents:{doc|
-          <tr>
-            <td>$doc.name$</td>
-            <td>$doc.expiry$</td>
-            <td></td>
-            <td></td>
-            <td>
-              <form action="$linkquarantine$" method="post">
-                <input type="hidden" name="extend" value="true"/>
-                <input type="hidden" name="docid" value="$doc.docid$"/>
-                <input type="submit" value="Extend Quarantine"/>
-              </form>
-            </td>
-          </tr>
-          $doc.signatories:{sig|
-          <tr>
-            <td></td>
-            <td></td>
-            <td>$sig.email$</td>
-            <td>
-              $if(sig.isrevivable)$
-              <form action="$linkquarantine$" method="post">
-                <input type="hidden" name="revive" value="true"/>
-                <input type="hidden" name="docid" value="$doc.docid$"/>
-                <input type="hidden" name="siglinkid" value="$sig.siglinkid$"/>
-                <input type="submit" value="Undo Delete"/>
-              </form>
-              $endif$
-            </td>
-            <td></td>
-          </tr>
-          }$
-        }$
-      </table>
-    </div>
-###
 databaseContents=
     $backtoadminmainlink()$
     <div>
@@ -694,6 +587,9 @@ databaseContents=
       <ul>
         $files:{file| <li><a href="$file$">$file$</a></li>}$
       </ul>
+      <form method="POST" action="cleanup">
+         <input type="submit" value="Remove old database files"> </input>
+      </form>
     </div>
 ####
 pageStats=
@@ -812,103 +708,10 @@ adminTranslations =
 
 <center><h2> Translation stats </h2>
 
-<div style="width: 500px;padding:20px; "> If you see this page then .pot files have just been generated.
-      .pot files are for you to see what texts are avaible in the system and to generate .po files. 
-      You can use .pot files, but never write anything to them.
+<div style="width: 500px;padding:20px; ">
+    If you see this page then all csv files have been updated.
+    All not used any more texts will be marked with *****.
 </div>
 </center>
-
-$langs:{lang | 
-<br/>
-<div style="border: 1px solid black;margin:5px;padding:5px;">
-<center><h3> $lang.name$ </h3></center>
-
-<table>
-<thead>
- <th style="width:300px">
- </th>
- <th style="width:200px">
-
- </th>
-  <th style="width:200px">
- </th>
-</thead>
-<tbody>
-<tr>
-  <td>
-    <strong> Missing files, they have not been created</strong> 
-  </td>
-</tr>
-
-$lang.missingFiles:{file | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $file$.po
-  </td>
-</tr>
-}$
-
-<tr>
-  <td>
-    <strong> Not ussed files, they should not exist </strong> 
-  </td>
-</tr>
-
-$lang.extraFiles:{file | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $file$.po
-  </td>
-</tr>
-}$
-
-
-<tr>
-  <td>
-    <strong> Not synchronised files</strong> 
-  </td>
-</tr>
-
-$lang.notSynchronisedFiles:{file | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $file$.po
-  </td>
-</tr>
-}$
-
-
-<tr>
-  <td>
-    <strong> Empty texts </strong> 
-  </td>
-</tr>
-
-$lang.emptyTranslations :{t | 
-<tr>
-  <td>
-  </td>
-  <td>
-    $t.file$.po
-  </td>
-  <td>
-    $t.name$
-  </td>
-</tr>
-}$
-
-
-
-</tbody>
-</table>
-</div>
-<br/>
-}$
 
 ####

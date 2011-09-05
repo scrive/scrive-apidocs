@@ -2,13 +2,14 @@
 $(document).ready(function() {
 
     if ($.browser.msie && $.browser.version < "7.0") {
-        var alertModal = $("<div class='modal-container' style='height:80px'>" + "<div class='modal-body' style='padding:20px;font-size:13pt'>" + "<div class='modal-icon decline' style='margin-top:0px'></div>" + "<div>" + localization.ie6NotSupported + "</div>" + "" + "</div>")
+        var alertModal = $("<div class='modal-container' style='height:80px'>" + "<div class='modal-body' style='padding:20px;font-size:13pt'>" + "<div class='modal-icon decline' style='margin-top:0px'></div>" + "<div>" + localization.ie6NotSupported + "</div>" + "" + "</div>");
             $("body").html("");
         $("body").append(alertModal);
         alertModal.overlay({
             load: true,
             closeOnClick: false,
             closeOnEsc: false,
+            fixed: false,
             mask: {
                 color: '#000000',
                 loadSpeed: 0,
@@ -42,7 +43,7 @@ $(document).ready(function() {
                 form.append('<input type="hidden" name="' + name + '" value="1" />').submit();
             });
         });
-    }
+    };
 })(jQuery);
 
 // tooltip
@@ -59,7 +60,7 @@ $(document).ready(function() {
                 container.remove();
             });
         });
-    }
+    };
 })(jQuery);
 
 /*
@@ -153,16 +154,80 @@ $(document).ready(function() {
                 var emailfield = form.find("input[name='email']");
                 var email = emailfield.val();
 
-                if (email.replace(/.*@/, "") != useremail.replace(/.*@/, "")) {
-                    addFlashMessage(localization.youCanNotInviteSameEmail, "red");
+                var userdomain = useremail.replace(/.*@/, "");
+                var emaildomain = email.replace(/.*@/, "");
+
+                /** these two lines are a very temporary hack to satisfy a customer that must start using multiple domains tomorrow
+                    sorry about this - em, a proper fix is planned (SKRIVAPADEV-578) but it's gonna involve db changes, so leaving until db
+                    migration is done **/
+                var isSpecialCaseDomain = function(domain) {
+                  return (domain == "resursbemanning.se") || (domain == "itresurs.se") || (domain == "ekonomresurs.se");
+                };
+                var isprodhack = isSpecialCaseDomain(userdomain) && isSpecialCaseDomain(emaildomain);
+
+                if (!isprodhack && emaildomain != userdomain) {
+                    FlashMessages.add({content: localization.youCanNotInviteSameEmail , color:  "red"});
                 } else {
                     form.append("<input type='hidden' name='add' value='YES'>").submit();
                 }
-            })
+            });
                 $(".remove", newrow).click(function() {
                 $('.newSubaccount', container).remove();
                 $("tr", container).toggleClass('odd');
             });
         }
     });
+});
+
+function repeatSlide() {
+    doSlide('.slide-content');
+}
+                        
+function doSlide(elm) {
+    var items = jQuery(elm).length;
+    var current = jQuery(elm + '.active').index()-1;
+    
+    if(current == (items-1)) {
+        jQuery(elm).eq(current).fadeOut().removeClass('active');
+        jQuery(elm).eq(0).fadeIn().addClass('active');
+    } else {
+        jQuery(elm).eq(current).fadeOut('slow').removeClass('active');
+        jQuery(elm).eq(current+1).fadeIn('slow').addClass('active');
+    }
+    
+    jQuery('.slide-nav ul li').removeClass('active').eq(jQuery(elm + '.active').index()-1).addClass('active');
+    
+    jQuery.data(this, 'slide', setTimeout( function() {
+        repeatSlide();
+    }, 10000));
+}
+
+function gotoPage(elm, index) {
+    var items = jQuery(elm).length;
+    
+    if(index < items) {
+        clearTimeout(jQuery.data(this, 'slide'));
+        
+        jQuery(elm).filter('.active').fadeOut().removeClass('active');
+        jQuery('.slide-nav ul li').removeClass('active');
+        
+        jQuery(elm).eq(index).fadeIn().addClass('active');
+        jQuery('.slide-nav ul li').eq(index).addClass('active');
+        
+        jQuery.data(this, 'slide', setTimeout( function() {
+            repeatSlide();
+        }, 10000));
+    }
+}
+
+jQuery(document).ready( function() {
+    jQuery('.campaign-text a, .campaign-play').overlay({mask: standardDialogMask, fixed:false});
+    
+    jQuery('.slide-nav ul li').click( function() {
+        var index = jQuery(this).index();
+        
+        gotoPage('.slide-content', index);
+    });
+    
+    doSlide('.slide-content');
 });

@@ -19,27 +19,55 @@ Flag server
   Default: True
 
 Flag test
-  Description: Build test
+  Description: Build tests
   Default: True
 
-Flag input-validation-test
-  Description: Build kontrakcja-input-validation-test
+Flag test-companystate
+  Description: Build companystate testsuite
   Default: True
 
-Flag trust-weaver-test
-  Description: Build kontrakcja-trust-weaver-test
+Flag test-docstate
+  Description: Build docstate testsuite
   Default: True
 
-Flag action-scheduler-test
-  Description: Build kontrakcja-action-scheduler-test
-  Default: True
-  
-Flag html-test
-  Description: Build kontrakcja-html-test
+Flag test-docstatequery
+  Description: Build DocStateQuery testsuite
   Default: True
 
-Flag docstate-test
-  Description: Build kontrakcja-docstate-test
+Flag test-html
+  Description: Build html testsuite
+  Default: True
+
+Flag test-input-validation
+  Description: Build input-validation testsuite
+  Default: True
+
+Flag test-integrationapi
+  Description: Build integrationapi testsuite
+  Default: True
+
+Flag test-login
+  Description: Build login testsuite
+  Default: True
+
+Flag test-mailapi
+  Description: Build mailapi testsuite
+  Default: True
+
+Flag test-redirect
+  Description: Build redirect testsuite
+  Default: True
+
+Flag test-servicestate
+  Description: Build servicestate testsuite
+  Default: True
+
+Flag test-trust-weaver
+  Description: Build trust-weaver testsuite
+  Default: True
+
+Flag test-userstate
+  Description: Build userstate testsuite
   Default: True
 
 Flag allow-warnings
@@ -54,7 +82,7 @@ Executable kontrakcja-server
 
   Hs-source-dirs: src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-monomorphism-restriction -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if !os(windows)
@@ -66,11 +94,14 @@ Executable kontrakcja-server
     ghc-options: -rtsopts
   Build-depends: filepath
   Build-depends: base64-bytestring
+  Build-depends: convertible
+  Build-depends: HDBC
+  Build-depends: HDBC-postgresql
   Build-depends: tagsoup
   Build-depends: zlib
   Build-depends: cryptocipher==0.2.*
   Build-depends: happstack==6.*
-  Build-depends: happstack-server==6.*
+  Build-depends: happstack-server==6.2.*
   Build-depends: happstack-state==6.*
   Build-depends: happstack-ixset==6.*
   Build-depends: happstack-data==6.*
@@ -100,10 +131,10 @@ Executable kontrakcja-server
   Build-depends: parsec
   Build-depends: iconv
   Build-depends: json==0.4.*
-  Build-depends: i18n==0.3
   Build-depends: HPDF
   Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
   Build-depends: HUnit, QuickCheck
+  Build-depends: hxt, hxt-xpath
   Build-depends: text
   Build-depends: transformers
   Build-depends: unix
@@ -154,8 +185,8 @@ Executable pdfseal
               TypeSynonymInstances,
               UndecidableInstances
 
-Executable kontrakcja-input-validation-test
-  if flag(input-validation-test)
+Executable kontrakcja-test
+  if flag(test)
     Buildable: True
   else
     Buildable: False
@@ -164,168 +195,42 @@ Executable kontrakcja-input-validation-test
 
   Hs-source-dirs: test/src src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
 
-  cpp-options: -DInputValidationTest=Main
+  if !flag(test-companystate)
+    cpp-options: -DNO_COMPANYSTATE
+  if !flag(test-docstate)
+    cpp-options: -DNO_DOCSTATE
+  if !flag(test-html)
+    cpp-options: -DNO_HTML
+  if !flag(test-input-validation)
+    cpp-options: -DNO_INPUTVALIDATION
+  if !flag(test-integrationapi)
+    cpp-options: -DNO_INTEGRATIONAPI
+  if !flag(test-login)
+    cpp-options: -DNO_LOGIN
+  if !flag(test-mailapi)
+    cpp-options: -DNO_MAILAPI
+  if !flag(test-servicestate)
+    cpp-options: -DNO_SERVICESTATE
+  if !flag(test-trust-weaver)
+    cpp-options: -DNO_TRUSTWEAVER
+  if !flag(test-userstate)
+    cpp-options: -DNO_USERSTATE
+  if !flag(test-redirect)
+    cpp-options: -DNO_REDIRECT
+  if !flag(test-docstatequery)
+    cpp-options: -DNO_DOCSTATEQUERY
 
-  Main-is: InputValidationTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
-Executable kontrakcja-trust-weaver-test
-  if flag(trust-weaver-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DTrustWeaverTest=Main
-
-  Main-is: TrustWeaverTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
-Executable kontrakcja-action-scheduler-test
-  if flag(action-scheduler-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DSchedulerTest=Main
-
-  Main-is: SchedulerTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-              
-Executable kontrakcja-html-test
-  if flag(html-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DHtmlTest=Main
-
-  Main-is: HtmlTest.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
-Executable kontrakcja-docstate-test
-  if flag(docstate-test)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  Hs-source-dirs: test/src src pdfseal/inc
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-
-  cpp-options: -DDocStateTest=Main
-
-  Main-is: DocStateTest.hs
+  cpp-options: -DTestMain=Main
+  Main-is: TestMain.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

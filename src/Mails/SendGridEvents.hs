@@ -33,6 +33,8 @@ import qualified AppLogger as Log
 import MinutesTime
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
+import User.Model
 
 data SendgridEvent =
     SendgridEvent {
@@ -43,7 +45,7 @@ data SendgridEvent =
         } deriving Show
 
 -- | Handler for receving delivery info from sendgrid
-handleSendgridEvent :: Kontra KontraLink
+handleSendgridEvent :: Kontrakcja m => m KontraLink
 handleSendgridEvent = do
     mid <- readNum "id"
     -- email can be either 'email' or '<email>', so we want to get rid of brackets
@@ -65,7 +67,7 @@ handleSendgridEvent = do
          -- we update SentEmailInfo of given email. if email is reported
          -- delivered, dropped or bounced we remove it from the system.
          -- that way we can keep track of emails that were "lost".
-         Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo}} -> do
+         Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo, seiBackdoorInfo}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
                  Log.debug "Updating SentEmailInfo..."
                  _ <- update $ UpdateActionType actionID $ SentEmailInfo {
@@ -73,6 +75,7 @@ handleSendgridEvent = do
                      , seiMailInfo = seiMailInfo
                      , seiEventType = et
                      , seiLastModification = now
+                     , seiBackdoorInfo = seiBackdoorInfo
                  }
                  let removeAction = case et of
                       Delivered _  -> True
@@ -86,7 +89,7 @@ handleSendgridEvent = do
     routeToHandler ev
     return $ LinkMain
 
-readEventType :: String -> Kontra SendGridEventType
+readEventType :: Kontrakcja m => String -> m SendGridEventType
 readEventType "processed" = return Processed
 readEventType "open" = return Opened
 readEventType "dropped" = do
@@ -106,14 +109,14 @@ readEventType "bounce" = do
     return $ Bounce status reason type_
 readEventType name = return $ Other name
 
-readNum :: (Num a, Read a) => String -> Kontra a
+readNum :: (Num a, Read a, Kontrakcja m) => String -> m a
 readNum name = fromMaybe (-1) <$> readField name
 
-readString :: String -> Kontra String
+readString :: Kontrakcja m => String -> m String
 readString name = fromMaybe "" <$> getField name
 
 -- | Main routing table after getting sendgrid event.
-routeToHandler :: SendgridEvent -> Kontra ()
+routeToHandler :: Kontrakcja m => SendgridEvent -> m ()
 routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, event}) = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     let signemail = fromMaybe "" (BS.toString . signatoryemail . signatorydetails <$> getSignatoryLinkFromDocumentByID doc signlinkid)
@@ -137,7 +140,7 @@ routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, 
 routeToHandler _ = return ()
 
 -- | Actions perform that are performed then
-handleDeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleDeliveredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleDeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     case getSignatoryLinkFromDocumentByID doc signlinkid of
@@ -145,9 +148,9 @@ handleDeliveredInvitation docid signlinkid = do
              -- send it only if email was reported deferred earlier
              when (invitationdeliverystatus signlink == Mail.Deferred) $ do
                  ctx <- getContext
-                 title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredTitle" ()
+                 title <- renderTemplateM "invitationMailDeliveredAfterDeferredTitle" ()
                  let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-                 content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredContent" $ do
+                 content <- wrapHTML' =<< (renderTemplateFM "invitationMailDeliveredAfterDeferredContent" $ do
                      field "authorname" $ getFullName documentauthordetails
                      field "email" $ getEmail signlink
                      field "documenttitle" $ BS.toString $ documenttitle doc)
@@ -159,21 +162,21 @@ handleDeliveredInvitation docid signlinkid = do
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
 
-handleOpenedInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleOpenedInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleOpenedInvitation docid signlinkid = do
     now <- liftIO $ getMinutesTime
     _ <- update $ MarkInvitationRead docid signlinkid now
     return ()
 
-handleDeferredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleDeferredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleDeferredInvitation docid signlinkid = do
     mdoc <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
     case mdoc of
          Right doc -> do
              ctx <- getContext
-             title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeferredTitle" ()
+             title <- renderTemplateM "invitationMailDeferredTitle" ()
              let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-             content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeferredContent" $ do
+             content <- wrapHTML' =<< (renderTemplateFM "invitationMailDeferredContent" $ do
                 field "authorname" $ getFullName documentauthordetails
                 field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                 field "ctxhostpart" $ ctxhostpart ctx)
@@ -183,16 +186,16 @@ handleDeferredInvitation docid signlinkid = do
                                                                   }
          Left _ -> return ()
 
-handleUndeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleUndeliveredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     ctx <- getContext
-    title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
+    title <- renderTemplateM "invitationMailUndeliveredTitle" ()
     let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
     case getSignatoryLinkFromDocumentByID doc signlinkid of
          Just signlink -> do
              _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
-             content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredContent" $ do
+             content <- wrapHTML' =<< (renderTemplateFM "invitationMailUndeliveredContent" $ do
                  field "authorname" $ getFullName documentauthordetails
                  field "documenttitle" $ documenttitle doc
                  field "email" $ getEmail signlink

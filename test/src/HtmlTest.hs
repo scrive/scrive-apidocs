@@ -1,40 +1,24 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates
--fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
-
-module HtmlTest where
+module HtmlTest (htmlTests) where
 
 import Data.Char
 import Data.List
-import Test.Framework (Test, testGroup, defaultMain)
+import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
-import System.IO
 import Control.Monad
 
 import Misc
-import Templates.Langs
 import Templates.TemplatesFiles
 import Templates.Templates (renderTemplate)
-import Templates.TemplatesLoader (KontrakcjaTemplates, readAllLangsTemplates, langVersion)
+import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion)
+import Templates.TextTemplates
 
-main :: IO ()
-main = do
-    hSetEncoding stdout utf8
-    hSetEncoding stderr utf8
-    defaultMain tests
-
-tests :: [Test]
-tests = [ testGroup "Html" htmlTests
-        ]
-
-
-htmlTests :: [Test]
-htmlTests = 
+htmlTests :: Test
+htmlTests = testGroup "HTML"
     [ testGroup "static checks"
         [ testCase "templates make valid xml" testValidXml,
           testCase "no unecssary double divs" testNoUnecessaryDoubleDivs ,
@@ -68,12 +52,12 @@ testNoUnecessaryDoubleDivs = do
 
 testNoNestedP :: Assertion
 testNoNestedP = do
-  langtemplates <- readAllLangsTemplates
+  langtemplates <- readGlobalTemplates
   ts <- mapM getTemplates templatesFilesPath
-  texts <- mapM getTextTemplates allValues
+  texts <- forM allValues getTextTemplates
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM [LANG_SE, LANG_EN] $ \lang -> do
-    let templates = langVersion lang langtemplates
+  _ <- forM allValues $ \localization -> do
+    let templates = localizedVersion localization langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates
   assertSuccess
@@ -82,7 +66,7 @@ assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
     t <- emptyRender templates n
-    case parseStringAsXML (n, t) of
+    case parseStringAsXML (n, removeScripts t) of
       Left msg -> assertFailure msg
       Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
   assertSuccess
@@ -154,13 +138,26 @@ parseTemplateAsXML (name, rawtxt) =
   parseStringAsXML (name, clearTemplating rawtxt)
 
 clearTemplating :: String -> String
-clearTemplating = clearTemplating' NotTag NotTemplateCode . removeDocTypeDeclaration
+clearTemplating = clearTemplating' NotTag NotTemplateCode . removeScripts . removeDocTypeDeclaration
 
 removeDocTypeDeclaration :: String -> String
 removeDocTypeDeclaration s =
   if "<!DOCTYPE" `isPrefixOf` s
     then tail $ dropWhile (/= '>') s
     else s
+    
+removeScripts :: String -> String
+removeScripts = removeScripts' NotScript
+
+data ScriptState = NotScript | ScriptStartTag | InScript
+
+removeScripts' :: ScriptState -> String -> String
+removeScripts' _ [] = []
+removeScripts' NotScript ('<':'s':'c':'r':'i':'p':'t':xs) = "<script" ++ removeScripts' ScriptStartTag xs
+removeScripts' ScriptStartTag ('>':xs) = '>' : removeScripts' InScript xs
+removeScripts' InScript ('<':'/':'s':'c':'r':'i':'p':'t':'>':xs) = "</script>" ++ removeScripts' NotScript xs
+removeScripts' InScript (_:xs) = removeScripts' InScript xs
+removeScripts' s (x:xs) = x : removeScripts' s xs
 
 {-
   this is wrong.  but it pretty much seems to work.  i really really really need to make nicer :-(  but then again, this is just a test.

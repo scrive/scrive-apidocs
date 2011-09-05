@@ -1,17 +1,18 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
+import DB.Types
 import Doc.DocState
 import Misc
 import ActionSchedulerState (ActionID)
-import User.UserState
+import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
 import PayEx.PayExState
 import ListUtil
 import Session
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 
 {- |
    Defines the reason why we are redirected to login page
@@ -20,14 +21,14 @@ data LoginRedirectReason = LoginTry
                          | NotLogged
                          | NotLoggedAsSuperUser
                          | InvalidLoginInfo String -- email
-
-data DesignStep2Flag = AfterCSVUpload
+    deriving (Eq)
+data DesignStep2Flag = AfterCSVUpload  deriving (Eq)
 type Person = Int
 
 data DesignStep = DesignStep1
                 | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) SignLast
                 | DesignStep3 DocumentID SignLast
-
+    deriving (Eq)
 type SignLast = Bool
 
 instance Show DesignStep where
@@ -46,14 +47,14 @@ data KontraLink
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
-    | LinkContracts ListParams
-    | LinkTemplates ListParams
-    | LinkOffers ListParams
-    | LinkOrders ListParams
-    | LinkAttachments ListParams
+    | LinkContracts
+    | LinkTemplates
+    | LinkOffers
+    | LinkOrders
+    | LinkAttachments 
+    | LinkRubbishBin
     | LinkMain
-    | LinkNew (Maybe DocumentProcess) ListParams Bool
-    | LinkAjaxTemplates DocumentProcess ListParams
+    | LinkNew (Maybe DocumentProcess) Bool
     | LinkAccount
     | LinkSecurity
     | LinkUserMailAPI
@@ -64,7 +65,7 @@ data KontraLink
     | LinkDesignDoc DesignStep
     | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
-    | LinkSubaccount ListParams
+    | LinkCompanyAccounts ListParams
     | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
@@ -75,6 +76,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
+    | LinkCompanyAdmin (Maybe CompanyID)
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
@@ -99,7 +101,8 @@ data KontraLink
     | LinkServiceLogo ServiceID
     | LinkServiceButtonsBody ServiceID
     | LinkServiceButtonsRest ServiceID
-
+    | LinkCSVLandPage Int
+    deriving (Eq)
 
 {- |
    Shows each link as a relative url
@@ -112,17 +115,17 @@ instance Show KontraLink where
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
-    showsPrec _ (LinkContracts params) = (++) $ "/d" ++ "?" ++ show params
-    showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
-    showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
-    showsPrec _ (LinkOrders params) = (++) $ "/or" ++ "?" ++ show params
-    showsPrec _ (LinkAttachments params) = (++) $ "/a" ++ "?" ++ show params
+    showsPrec _ (LinkContracts) = (++) $ "/d"
+    showsPrec _ (LinkTemplates) = (++) $ "/t" 
+    showsPrec _ (LinkOffers) = (++) $ "/o" 
+    showsPrec _ (LinkOrders) = (++) $ "/or" 
+    showsPrec _ (LinkAttachments) = (++) $ "/a" 
+    showsPrec _ (LinkRubbishBin) = (++) $ "/r"
     showsPrec _ LinkMain = (++) "/"
-    showsPrec _ (LinkNew mdocprocess params templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess) ++"&"++ show params
-    showsPrec _ (LinkAjaxTemplates docprocess params) = (++) $ "/templates?" ++ "doctype="++ show docprocess ++"&"++ show params
+    showsPrec _ (LinkNew mdocprocess templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess)
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
-    showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
+    showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
@@ -155,6 +158,8 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
+    showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
@@ -181,4 +186,4 @@ instance Show KontraLink where
     showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
-
+    showsPrec _ (LinkCSVLandPage c) = (++) ("/csvlandpage/" ++ show c)

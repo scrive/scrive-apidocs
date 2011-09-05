@@ -20,12 +20,12 @@ import Data.Typeable
 import Data.Data
 import Mails.SendMail
 
-positionInfo::KontrakcjaTemplates -> (PaymentPosition,Money) -> IO String
-positionInfo templates (PaymentForSigning did,_money) = do
-                                        mtitle <- fmap (fmap $ BS.toString . documenttitle) $ query $ GetDocumentByDocumentID did
-                                        renderTemplate templates "paymentForSigningPosition" $ do
-                                                                     field "documenttitle" mtitle
-positionInfo _ _ = return "" --FIXME: do something better here
+positionInfo :: TemplatesMonad m => (PaymentPosition, Money) -> m String
+positionInfo (PaymentForSigning did, _money) = do
+    mtitle <- fmap (fmap $ BS.toString . documenttitle) $ query $ GetDocumentByDocumentID did
+    renderTemplateFM "paymentForSigningPosition" $ do
+        field "documenttitle" mtitle
+positionInfo _ = return "" -- FIXME: do something better here
 
 data PaymentView = PaymentView
                       { pvId::String,
@@ -41,43 +41,40 @@ data PaymentView = PaymentView
                         pvPayExUrl::String
                       } deriving (Data, Typeable)
 
-toPaymentView::KontrakcjaTemplates -> Payment -> IO PaymentView
-toPaymentView templates payment = do
-                                   ps <- sequence $ map (positionInfo templates) (positions payment)
-                                   return $ PaymentView
-                                             {
-                                              pvId = show $ paymentId payment,
-                                              pvPositions = ps,
-                                              pvIsSend =  Send == paymentState payment ,
-                                              pvIsWaiting=  Waiting == paymentState payment ,
-                                              pvIsFinished=  Finished == paymentState payment ,
-                                              pvIsDropped= False ,
-                                              pvIsInvoiceable = False ,
-                                              pvIsFailed=  isFailed $ payment ,
-                                              pvValue= show $ paymentValue payment,
-                                              pvLink= show $ LinkPayExView $ Just $ paymentId payment,
-                                              pvPayExUrl = redirectUrl payment
-                                             }
-viewPayment::KontrakcjaTemplates -> Payment -> IO String
-viewPayment templates payment = do
-                                 _pm <- toPaymentView templates payment
-                                 renderTemplate templates "paymentView" $ do
-                                     field "payment" True--pm
+toPaymentView :: TemplatesMonad m => Payment -> m PaymentView
+toPaymentView payment = do
+    ps <- sequence $ map positionInfo (positions payment)
+    return $ PaymentView {
+          pvId = show $ paymentId payment
+        , pvPositions = ps
+        , pvIsSend = Send == paymentState payment
+        , pvIsWaiting = Waiting == paymentState payment
+        , pvIsFinished = Finished == paymentState payment
+        , pvIsDropped = False
+        , pvIsInvoiceable = False
+        , pvIsFailed=  isFailed $ payment
+        , pvValue= show $ paymentValue payment
+        , pvLink= show $ LinkPayExView $ Just $ paymentId payment
+        , pvPayExUrl = redirectUrl payment
+    }
 
-viewPayments::KontrakcjaTemplates -> [Payment] -> IO String
-viewPayments templates payments = do
-                                   _pms <- sequence $ map (toPaymentView templates) payments
-                                   renderTemplate templates "paymentsView" $ do
-                                       field "payments" True--pms
+viewPayment :: TemplatesMonad m => Payment -> m String
+viewPayment payment = do
+    _pm <- toPaymentView payment
+    renderTemplateFM "paymentView" $ do
+        field "payment" True--pm
 
+viewPayments :: TemplatesMonad m => [Payment] -> m String
+viewPayments payments = do
+    _pms <- sequence $ map toPaymentView payments
+    renderTemplateFM "paymentsView" $ do
+        field "payments" True--pms
 
-mailNewPayment::Context -> User -> Payment -> IO Mail
+mailNewPayment :: TemplatesMonad m => Context -> User -> Payment -> m Mail
 mailNewPayment ctx _user payment = do
-                                        _pm <- toPaymentView (ctxtemplates ctx) payment
-                                        title <- renderTemplate (ctxtemplates ctx) "mailNewPaymentTitle" ()
-                                        content <- renderTemplate (ctxtemplates ctx) "mailNewPaymentContent" $ do
-                                                       field "payment" True--pm
-                                                       field "ctxhostpart" $ ctxhostpart ctx
-                                        return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-
+    _pm <- toPaymentView payment
+    title <- renderTemplateM "mailNewPaymentTitle" ()
+    content <- renderTemplateFM "mailNewPaymentContent" $ do
+        field "payment" True--pm
+        field "ctxhostpart" $ ctxhostpart ctx
+    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}

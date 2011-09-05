@@ -16,18 +16,19 @@ module API.Service.ServiceView(
 import Templates.Templates
 import Text.StringTemplate.GenericStandard()
 import Misc
-import API.Service.ServiceState
+import API.Service.Model
 import Util.HasSomeUserInfo
 import Data.Maybe
-import User.UserState
-import Happstack.State (query)
+import Database.HDBC.PostgreSQL
+import User.Model
 import Data.Functor
 import KontraLink
+import DB.Classes
 import qualified Data.ByteString.UTF8 as BS
 
-serviceAdminPage :: KontrakcjaTemplates -> Bool -> Service -> IO String
-serviceAdminPage templates superuser service =
-    renderTemplate templates "serviceAdminPage" $ do
+serviceAdminPage :: TemplatesMonad m => Connection -> Bool -> Service -> m String
+serviceAdminPage conn superuser service =
+    renderTemplateFM "serviceAdminPage" $ do
        field "name" $ show $ serviceid service
        field "nameforurl" $ encodeForURL $ serviceid service
        field "mailfooter"  $ BS.toString <$> (servicemailfooter $ serviceui service)
@@ -41,15 +42,14 @@ serviceAdminPage templates superuser service =
        field "barsbackground"  $ BS.toString <$> (servicebarsbackground $ serviceui service)
        field "logo" $ isJust $ servicelogo $ serviceui service
        field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-       fieldIO "admin" $ fmap getSmartName <$> (query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin $ servicesettings service)
-       field "location" $ fmap show $ servicelocation $ servicesettings service
+       fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+       field "location" $ fmap unServiceLocation $ servicelocation $ servicesettings service
        field "allowToChangeSettings" $ superuser
 
-servicesListPage :: KontrakcjaTemplates ->  [Service] -> IO String
-servicesListPage templates services =
-    renderTemplate templates "serviceList" $ do
-       field "services" $
+servicesListPage :: TemplatesMonad m => [Service] -> m String
+servicesListPage services =
+    renderTemplateFM "serviceList" $ do
+       fieldFL "services" $
             for services $ \srvs -> do
                 field "name" $ show $ serviceid srvs
                 field "nameforurl" $ encodeForURL $ serviceid srvs
-

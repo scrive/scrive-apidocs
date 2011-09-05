@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, ForeignFunctionInterface #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just
@@ -8,9 +9,10 @@ modules.
 Keep this one as unorganized dump.
 -}
 module Misc where
+
 import Control.Applicative
+import Control.Arrow
 import Control.Concurrent
-import Control.Monad.Reader (asks)
 import Control.Monad.State
 import Data.Char
 import Data.Data
@@ -18,18 +20,20 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
-import Data.Traversable (sequenceA)
 import Data.Word
 import Happstack.Data.IxSet as IxSet
-import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
-import Happstack.Util.Common
-import Numeric -- use new module
+import Happstack.Util.Common hiding  (mapFst,mapSnd)
+import System.Directory
 import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
 import System.Random
+import System.Time
+import Text.HTML.TagSoup.Entity (lookupEntity)
+import qualified AppLogger as Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
 import qualified Data.ByteString as BS
@@ -37,7 +41,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
-import qualified AppLogger as Log
+
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
@@ -149,18 +153,10 @@ openDocument filename =
       (\_e ->
         return ())))
 
-toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
+toIO :: Monad m => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO astate = mapServerPartT f
   where
     f m = evalStateT m astate
-
-
--- | Oh boy, invent something better.
---
--- FIXME: this is so wrong on so many different levels
-safehead :: [Char] -> [t] -> t
-safehead s [] = error s
-safehead _ (x:_) = x
 
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
@@ -202,32 +198,10 @@ getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do
-         inputs <- asks (\(a, b, _c) -> a ++ b)
+         inputs <- (\(a, b, _) -> a ++ fromMaybe [] b) <$> askRqEnv
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
-
--- | Opaque 'Word64' type. Used as authentication token. Useful is the 'Random' instance.
-newtype MagicHash = MagicHash { unMagicHash :: Word64 }
-    deriving (Eq, Ord, Typeable, Data)
-
-deriving instance Random MagicHash
-deriving instance Serialize MagicHash
-
-instance Version MagicHash
-
-instance Show MagicHash where
-  showsPrec _prec (MagicHash x) = (++) (pad0 16 (showHex x ""))
-
-
-instance Read MagicHash where
-  readsPrec _prec = let make (i,v) = (MagicHash i,v)
-                    in map make . readHex
-
-
-instance FromReqURI MagicHash where
-    fromReqURI = readM
-
 
 -- | Create an external process with arguments. Feed it input, collect
 -- exit code, stdout and stderr.
@@ -321,10 +295,15 @@ caseOf [] d = d
 
 -- | Enumerate all values of a bounded type.
 allValues::(Bounded a, Enum a) => [a]
-allValues = enumFrom minBound
+allValues = enumFromTo minBound maxBound
 
-defaultValue::(Bounded a) => a
-defaultValue = minBound
+class HasDefaultValue a where
+    defaultValue :: a
+
+instance (Bounded a) => HasDefaultValue a where
+    defaultValue = minBound
+
+
 
 -- | Extra classes for one way enums
 class SafeEnum a where
@@ -335,37 +314,8 @@ class SafeEnum a where
 for :: [a] -> (a -> b) -> [b]
 for = flip map
 
--- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation
--- that gives a then we can get real computation that may fail m
--- @(Maybe a)@ 'sequenceMM' does the same, but is aware that first
--- computation can also fail, and so it joins two posible fails.
-sequenceMM :: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
-sequenceMM = (fmap join) . sequenceA
-
-liftMM ::(Monad m) => (a -> m (Maybe b)) -> m (Maybe a) -> m (Maybe b)
-liftMM f v = do
-    mv <- v
-    case mv of
-         Just a -> f a
-         _ -> return Nothing
-
-
-lift_M ::(Monad m) => (a -> m b) -> m (Maybe a) -> m (Maybe b)
-lift_M f v = do
-    mv <- v
-    case mv of
-         Just a -> liftM Just (f a)
-         _ -> return Nothing
-
-when_::(Monad m) => Bool -> m a -> m ()
-when_ b c =  when b $ c >> return ()
-
-maybe' :: a -> Maybe a -> a
-maybe' a ma = maybe a id ma
-
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = isJust <$> getField name
-
 
 getFields :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m [String]
 getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInputList name)
@@ -402,7 +352,6 @@ whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c
 whenMaybe False _ = return Nothing
 
-
 getFileField:: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
 getFileField name = do
     finput <- getDataFn (lookInput name)
@@ -413,7 +362,6 @@ getFileField name = do
                 Left filepath -> joinEmpty <$> Just . concatChunks <$> (liftIO $ BSL.readFile filepath)
                 Right content -> return $ joinEmpty . Just $ concatChunks content
         _ -> return Nothing
-
 
 -- | Pack value to just unless we have 'mzero'.  Since we can not check
 -- emptyness of string in templates we want to pack it in maybe.
@@ -567,31 +515,38 @@ fromRight (Right b) = b
 fromRight _ = error "Reading Right for Left"
 
 
+toMaybe :: Either a b -> Maybe b
+toMaybe (Right a) = Just a
+toMaybe _ = Nothing
+
 joinB:: Maybe Bool -> Bool
 joinB (Just b) = b
 joinB _ = False
 
 mapJust :: (a -> Maybe b) -> [a] -> [b]
---mapJust = map fromJust . filter isJust . map
-mapJust f ls = [l | Just l <- map f ls]
-
-onFst ::  (a -> c) -> (a,b) -> (c,b)
-onFst f (a,b) = (f a,b)
-
-onSnd :: (b -> c) -> (a,b) -> (a,c)
-onSnd f (a,b) = (a, f b)
+mapJust f l = catMaybes $ map f l
 
 mapFst::(Functor f) => (a -> c) -> f (a,b)  -> f (c,b)
-mapFst f = fmap (onFst f)
+mapFst = fmap . first
 
 mapSnd::(Functor f) => (b -> c)  -> f (a,b) -> f (a,c)
-mapSnd f = fmap (onSnd f)
+mapSnd = fmap . second
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
 mapPair::(Functor f) => (a -> b) -> f (a,a)  -> f (b,b)
 mapPair f = fmap (\(a1,a2) -> (f a1, f a2))
+
+propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
+propagateMonad ((a,mb):rest) = do
+    b <- mb
+    rest' <- propagateMonad rest
+    return $ (a,b): rest'
+
+propagateMonad _ = return []
+
+
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []
@@ -603,3 +558,83 @@ splitOver = splitOver' []
              then (reverse c) : (splitOver' [] a (drop (length a) b) )
              else splitOver' (bh:c) a bt
 
+(||^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(||^) f g a =  f a || g a
+
+(&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(&&^) f g a =  f a && g a
+
+-- To be extended
+smartZip::[Maybe a] -> [b] -> [(a,b)]
+smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)
+smartZip (_: as) (_:bs) = smartZip as bs
+smartZip _ _  = []
+
+
+-- Check recursively time of modification of any file in directory
+getRecursiveMTime :: [Char] -> IO ClockTime
+getRecursiveMTime "."  = return $ TOD 0 0
+getRecursiveMTime ".." = return $ TOD 0 0
+getRecursiveMTime dir = do
+     isDir <- doesDirectoryExist dir
+     if not isDir
+      then getRecursiveMTime dir
+      else do
+          files <- getDirectoryContents dir
+          mts <- forM files $ \fn -> getModificationTime $ dir ++ "/" ++fn
+          mt <- getModificationTime dir
+          return $ maximum $ mt:mts
+
+jsText :: String -> String
+jsText  = filter (not . isControl)
+
+instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
+    toEnum  l = let
+                   block = length (allValues::[a])
+                in (toEnum $ l `div` block,toEnum $ l `mod` block)
+    fromEnum (a,b) = let
+                        block = length (allValues::[a])
+                in (fromEnum a * block) + (fromEnum b)
+
+none :: (a -> Bool) -> [a] -> Bool
+none f l = not $ any f l
+
+-- | Simple logical inference operator (arrow)
+(=>>) :: Bool -> Bool -> Bool
+(=>>) a b = not a || b
+
+-- | Higher order inference
+(=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(=>>^) a b x = a x =>> b x
+
+-- | Double Inference
+(<<=>>) :: Bool -> Bool -> Bool
+(<<=>>) = (==)
+
+-- | Higher order double inference
+(<<==>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(<<==>>^) a b x = a x == b x
+
+-- | Conditional choice operator
+-- Use it like this: a <| condition |> b  is equivalent to if condition then a else b
+-- http://zenzike.com/posts/2011-08-01-the-conditional-choice-operator
+(|>) :: Bool -> a -> Maybe a
+True  |> _ = Nothing
+False |> y = Just y
+
+(<|) :: a -> Maybe a -> a
+x <| Nothing = x
+_ <| Just y  = y
+
+infixr 0 <|
+infixr 0 |>
+
+unescapeEntities :: String -> String
+unescapeEntities [] = []
+unescapeEntities ('&':xs) = 
+  let (b, a) = break (== ';') xs in
+  case lookupEntity b of
+    Just c | "" /=  a && 
+             head a == ';' ->  c  : unescapeEntities (tail a)    
+    _                      -> '&' : unescapeEntities xs
+unescapeEntities (x:xs) = x : unescapeEntities xs

@@ -11,18 +11,27 @@
 -----------------------------------------------------------------------------
 module Company.CompanyState
     ( Company(..)
+    , CompanyInfo(..)
     , CompanyID(..)
     , CompanyUser(..)
     , Companies
     , GetCompany(..)
     , GetCompanyByExternalID(..)
+    , SetCompanyInfo(..)
+    , CreateNewCompany(..)
     , GetOrCreateCompanyWithExternalID(..)
+    , ExternalCompanyID(..)
+    , insertCompaniesIntoPG
 ) where
 import API.Service.ServiceState
+import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Data.Data
-import Data.Maybe (isJust, fromJust)
+import Data.Maybe (isJust, fromJust, catMaybes)
+import Database.HDBC
+import DB.Derive
+import DB.Classes
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
@@ -34,11 +43,13 @@ import qualified Data.ByteString.UTF8 as BS
 
 newtype CompanyID = CompanyID { unCompanyID :: Int }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''CompanyID)
 
 deriving instance Data CompanyID
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''ExternalCompanyID)
 
 deriving instance Data ExternalCompanyID
 
@@ -48,19 +59,61 @@ newtype CompanyUser = CompanyUser { unCompanyUser :: Int }
 
 deriving instance Data CompanyUser
 
+data Company0 = Company0
+               { companyid0 :: CompanyID
+               , companyexternalid0 :: ExternalCompanyID
+               , companyservice0 :: Maybe ServiceID
+               }
+             deriving (Eq, Ord, Show, Typeable)
+
 data Company = Company
                { companyid :: CompanyID
-               , companyexternalid :: ExternalCompanyID
+               , companyexternalid :: Maybe ExternalCompanyID
                , companyservice :: Maybe ServiceID
+               , companyinfo :: CompanyInfo
                }
-             deriving (Eq, Ord)
+             deriving (Eq, Ord, Show)
 
 instance Typeable Company where typeOf _ = mkTypeOf "Company"
 
+instance Migrate Company0 Company where
+    migrate (Company0 {
+               companyid0
+             , companyexternalid0
+             , companyservice0
+          }) = Company {
+              companyid         = companyid0
+            , companyexternalid = Just companyexternalid0
+            , companyservice    = companyservice0
+            , companyinfo       = CompanyInfo {
+                                      companyname       = BS.empty
+                                    , companynumber     = BS.empty
+                                    , companyaddress    = BS.empty
+                                    , companyzip        = BS.empty
+                                    , companycity       = BS.empty
+                                    , companycountry    = BS.empty
+                                  }
+          }
 
-deriving instance Show Company
+instance Version Company0
 
-instance Version Company
+instance Version Company where
+    mode = extension 1 (Proxy :: Proxy Company0)
+
+data CompanyInfo = CompanyInfo
+               { companyname :: BS.ByteString
+               , companynumber :: BS.ByteString
+               , companyaddress :: BS.ByteString
+               , companyzip :: BS.ByteString
+               , companycity :: BS.ByteString
+               , companycountry :: BS.ByteString
+               }
+             deriving (Eq, Ord, Show)
+
+instance Typeable CompanyInfo where typeOf _ = mkTypeOf "CompanyInfo"
+
+instance Version CompanyInfo
+
 instance Version CompanyUser
 instance Version CompanyID
 instance Version ExternalCompanyID
@@ -92,7 +145,7 @@ type Companies = IxSet Company
 
 instance Indexable Company where
         empty = ixSet [ ixFun (\x -> [companyid x] :: [CompanyID])
-                      , ixFun (\x -> [companyexternalid x] :: [ExternalCompanyID])
+                      , ixFun (\x -> catMaybes [companyexternalid x] :: [ExternalCompanyID])
                       , ixFun (\x -> [companyservice x] :: [Maybe ServiceID])]
 
 modifyCompany :: (Maybe ServiceID) -> CompanyID
@@ -122,6 +175,30 @@ getCompanyByExternalID sid ecid = do
   companies <- ask
   return $ getOne (companies @= sid @= ecid)
 
+setCompanyInfo :: Company -> CompanyInfo -> Update Companies (Either String Company)
+setCompanyInfo Company{companyid,companyservice} newcompanyinfo = modifyCompany companyservice companyid $ \company ->
+  return $ company { companyinfo = newcompanyinfo }
+  
+createNewCompany :: Update Companies Company
+createNewCompany = do
+  companies <- ask
+  cid <- getUnique companies CompanyID
+  let company = Company {
+    companyid = cid
+  , companyservice = Nothing
+  , companyexternalid = Nothing
+  , companyinfo = CompanyInfo {
+                      companyname = BS.empty
+                    , companynumber = BS.empty
+                    , companyaddress = BS.empty
+                    , companyzip = BS.empty
+                    , companycity = BS.empty
+                    , companycountry = BS.empty
+                  }
+  }
+  modify $ insert company
+  return $ company
+
 getOrCreateCompanyWithExternalID :: (Maybe ServiceID) -> ExternalCompanyID -> Update Companies Company
 getOrCreateCompanyWithExternalID sid ecid = do
     companies <- ask
@@ -133,7 +210,15 @@ getOrCreateCompanyWithExternalID sid ecid = do
         let company = Company {
                       companyid = cid
                     , companyservice = sid
-                    , companyexternalid = ecid
+                    , companyexternalid = Just ecid
+                    , companyinfo = CompanyInfo {
+                                        companyname = BS.empty
+                                      , companynumber = BS.empty
+                                      , companyaddress = BS.empty
+                                      , companyzip = BS.empty
+                                      , companycity = BS.empty
+                                      , companycountry = BS.empty
+                                   }
                     }
         modify $ insert company
         return $ company
@@ -143,20 +228,53 @@ getCompanies sid = do
   companies <- ask
   return $ toList (companies @= sid)
 
+getAllCompanies :: Query Companies [Company]
+getAllCompanies = ask >>= return . toList
 
 $(mkMethods ''Companies [
                        'getCompany
                      , 'getCompanyByExternalID
+                     , 'setCompanyInfo
                      , 'getCompanies
+                     , 'createNewCompany
                      , 'getOrCreateCompanyWithExternalID
+                     , 'getAllCompanies
                         ])
 
 $(deriveSerializeFor [ ''CompanyID
                      , ''CompanyUser
                      , ''Company
+                     , ''Company0
+                     , ''CompanyInfo
                      , ''ExternalCompanyID
                      ])
 
 instance Component Companies where
   type Dependencies Companies = End
   initialValue = IxSet.empty
+
+insertCompaniesIntoPG :: DB ()
+insertCompaniesIntoPG = wrapDB $ \conn -> do
+  companies <- query GetAllCompanies
+  forM_ companies $ \c -> do
+    _ <- run conn ("INSERT INTO companies ("
+      ++ "  id"
+      ++ ", external_id"
+      ++ ", service_id"
+      ++ ", name"
+      ++ ", number"
+      ++ ", address"
+      ++ ", zip"
+      ++ ", city"
+      ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") [
+        toSql $ companyid c
+      , toSql $ companyexternalid c
+      , toSql $ companyservice c
+      , toSql $ companyname $ companyinfo c
+      , toSql $ companynumber $ companyinfo c
+      , toSql $ companyaddress $ companyinfo c
+      , toSql $ companyzip $ companyinfo c
+      , toSql $ companycity $ companyinfo c
+      , toSql $ companycountry $ companyinfo c
+      ]
+    return ()

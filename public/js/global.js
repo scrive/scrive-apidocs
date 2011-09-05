@@ -8,7 +8,7 @@ if (!window.console) {
 if(typeof String.prototype.trim !== 'function') {
   String.prototype.trim = function() {
     return this.replace(/^\s+|\s+$/g, ''); 
-  }
+  };
 }
 
 function safeReady(f) {
@@ -156,7 +156,7 @@ safeReady(function() {
             } else {
                 if (countSentOrOpenRows(selectedrows) > 0) {
                     var flashtxt = $(".cantdeleteopenflashmsgtxt").text();
-                    addFlashMessage(flashtxt, "red");
+                    FlashMessages.add({content: flashtxt, color: "red"});
                     return false;
                 }
                 var deletionDetails = "";
@@ -169,7 +169,8 @@ safeReady(function() {
                 $("#dialog-list-delete-confirm").find(".deletionDetails").text(deletionDetails);
                 return true;
             }
-        }
+        },
+        fixed: false
     });
 });
 
@@ -184,7 +185,7 @@ safeReady(function() {
             } else {
                 if (countSentOrOpenRows(selectedrows) != selectedrows.length) {
                     var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
-                    addFlashMessage(localization.cantSendReminder(listtype), "red");
+                    FlashMessages.add({content: localization.cantSendReminder(listtype), color: "red"});
                     return false;
                 }
                 var singlemsg = $("#dialog-list-remind-confirm").find(".singleremindmsg");
@@ -201,7 +202,8 @@ safeReady(function() {
                 }
                 return true;
             }
-        }
+        },
+        fixed:false
     });
 });
 
@@ -209,7 +211,7 @@ safeReady(function() {
  * For share confirmation on lists.
  */
 safeReady(function() {
-    $(".listShare").overlay({
+    $(".listAction").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
         onBeforeLoad: function() {
@@ -219,16 +221,16 @@ safeReady(function() {
             } else {
                 return true;
             }
-        }
+        },
+        fixed:false
     });
 });
 
 /*
  * For the arkiv view fancy selection
  */
-safeReady(function() {
-    var selectable = $("#selectable"),
-    rows = selectable.find("tr"),
+function makeSelectable(selectable) {
+    var rows = selectable.find("tr"),
     rowsChecks = rows.find(".check");
 
     function highlightRow(row) {
@@ -306,6 +308,11 @@ safeReady(function() {
             selectRow($(this), true);
         });
     });
+}
+
+safeReady(function() {
+    var selectable = $("#selectable");
+    makeSelectable(selectable);
 });
 
 function initFileInputs() {
@@ -329,7 +336,6 @@ safeReady(function() {
 });
 
 safeReady(function() {
-    flashFlashMessages();
     flashSpecialFlashMessages();
     showModal();
     enableInfoTextOnce();
@@ -400,7 +406,7 @@ function allparties() {
 
             var fstnameelem = $("input[name='signatoryfstname']", this);
             if (isMultiPartElem(fstnameelem)) {
-                allpartiesret.push(csvrowcount + " Parter");
+                allpartiesret.push(csvrowcount + " " + localization.multiPartPartner);
             } else {
                 var fstname = fstnameelem.val();
                 var sndname = $("input[name='signatorysndname']", this).val();
@@ -431,7 +437,8 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
-        }
+        },
+        fixed:false
     });
 
     $("#signinvite").overlay({
@@ -455,19 +462,23 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
-        }
+            //here
+        },
+        fixed:false
     });
 });
 
 safeReady(function() {
     $("#tobasic").overlay({
         mask: standardDialogMask,
-        top: standardDialogTop
+        top: standardDialogTop,
+        fixed:false
     });
 
     $("#toadvanced").overlay({
         mask: standardDialogMask,
-        top: standardDialogTop
+        top: standardDialogTop,
+        fixed:false
     });
 
     $("#dialog-confirm-basic .tobasic").click(function() {
@@ -506,7 +517,7 @@ function checkSignatoriesHaveUniqueEmail() {
     }
 
     if (isRepetition || isAuthorUsedAsSignatory) {
-        addFlashMessage(localization.repetedEmailAddress, "red");
+        FlashMessages.add({content: localization.repetedEmailAddress, color: "red"});
         return false;
     } else {
         return true;
@@ -545,7 +556,8 @@ safeReady(function() {
         onBeforeLoad: function() {
             // remove all attachments that were added but not confirmed
             $("#tobeattached div").remove();
-        }
+        },
+        fixed:false
     });
 });
 
@@ -569,7 +581,8 @@ safeReady(function() {
             var select = $("select.signatoryselector");
             select.append($("<option selected>" + localization.offerSignatory + "</option>"));
             select.append(sigoptions);
-        }
+        },
+        fixed:false
     });
 });
 
@@ -624,7 +637,8 @@ safeReady(function() {
                 }
             });
             $(".partylistupdate").html(swedishList(partners));
-        }
+        },
+        fixed:false
     });
 });
 
@@ -661,6 +675,7 @@ safeReady(function() {
     saveOverlay("#sign", {
         mask: standardDialogMask,
         load: true,
+        fixed:false,
         // after finished loading
         onLoad: function () {
             if(navigator.platform === 'iPad' || navigator.platform === 'iPhone' || navigator.platform === 'iPod') {
@@ -674,10 +689,10 @@ safeReady(function() {
             if (!sigFieldsValidation()) {
                 return false;
             }
-            var trs = $("table#signViewSigAttachmentBoxList tr").has("form");
+            var trs = $("table#signViewSigAttachmentBoxList tr").has("form.sigattachmentupload");
             if (trs.length > 0) {
                 trs.addClass("redborder");
-                addFlashMessage(localization.addRequiredAttachments, "red");
+                FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
                 return false;
             }
             var guardChecked = $(".signGuard:checked").size() > 0;
@@ -686,7 +701,7 @@ safeReady(function() {
                 $(".signGuard").change(function() {
                     $("#signGuardField").css("border", "");
                 });
-                addFlashMessage(signguardwarntext, "red");
+                FlashMessages.add({content: signguardwarntext, color: "red"});
                 return false;
             }
         }
@@ -695,13 +710,15 @@ safeReady(function() {
 
 safeReady(function() {
     saveOverlay("#signbankid", {
-        mask: standardDialogMask
+        mask: standardDialogMask,
+        fixed:false
     });
 });
 
 safeReady(function() {
     saveOverlay("#cancel", {
-        mask: standardDialogMask
+        mask: standardDialogMask,
+        fixed:false
     });
 });
 
@@ -709,6 +726,7 @@ safeReady(function() {
     $("#signByAuthor").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
+        fixed:false,
         onBeforeLoad: function() {
             if (!sigFieldsValidation())
                 return false;
@@ -718,7 +736,6 @@ safeReady(function() {
                 $(".signGuard").change(function() {
                     $(this).parent().css("border", "");
                 });
-                //addFlashMessage("need text");
                 return false;
             }
         }
@@ -728,7 +745,8 @@ safeReady(function() {
 safeReady(function() {
     $("#toscontainer").overlay({
         mask: standardDialogMask,
-        load: true
+        load: true,
+        fixed:false
     });
 });
 
@@ -759,7 +777,7 @@ safeReady(function() {
 safeReady(function() {
     $(".flashOnClick").click(function() {
         $(".flashMessage", $(this).parent()).each(function() {
-            addFlashMessage($(this).html(), $(this).attr("flashtype"));
+            FlashMessages.add({content: $(this).html(), color:  $(this).attr("flashtype")});
             $(this).remove();
         });
     });
@@ -768,7 +786,8 @@ safeReady(function() {
         var ftype = $(this).attr("flashtype");
         if ($(this).val() == "off") {
             $(".flashMessage", $(this).parent()).each(function() {
-                addFlashMessage($(this).html(), ftype);
+                FlashMessages.add({content: $(this).html(), color: ftype});
+
             });
         }
     });
@@ -873,43 +892,83 @@ function activateSignInvite() {
     var checkBox = $("#switchercheckbox");
     checkBox.removeAttr("DISABLED");
 }
+
+function isAuthorSignatory() {
+    return $("#authorsignatoryradio").attr("checked");
+}
+
+/*************************************************************
+
+  RULES FOR SHOWING THE SIGN/SEND BUTTON
+
+  1. If the author IS NOT a signatory:
+         ALWAYS show SEND button
+                check the box (#switchercheckbox)
+                change the label to "Ej undertecknande part"
+                deactivate label + checkbox
+                show correct confirmation text
+
+  2. If the author IS a signatory:
+         show usual label
+         show correct confirmation text
+         numsigs <- number of signatories (excluding author)
+         1. If numsigs === 0:
+                deactivate checkbox
+                uncheck the box
+                show author only signatory confirmation text
+
+         2. If numsigs > 0:
+                show multiple signatory confirmation text
+                1. if sign order is enabled: 
+                    deactivate checkbox
+
+                2. if sign order is not enabled:
+                    activate checkbox
+
+  This is still crazy, but it's a little better than before.
+
+  Specific instances of crazy:
+  1. sign order system messes with button.
+  2. changing to and from secretary unchecks sign last button
+
+  When refactoring this with Backbone, we should hold all of the
+  application state in one model.
+
+ *************************************************************/
 function showProperSignButtons() {
     var checkBox = $("#switchercheckbox");
-    var numsigs = $("#personpane .persondetails").length;
-    if (numsigs > 1) {
-        if ($("#authorsignatoryradio").attr("checked")) {
-            if (!signingOrderEnabled)
-                activateSignInvite();
-            checkBox.parent().find(".usual").show();
-            checkBox.parent().find(".secretary").hide();
-        } else {
-            if (!checkBox.attr("checked")) {
-                checkBox.attr("checked", true).change();
-            }
-            deactivateSignInvite();
-            checkBox.parent().find(".usual").hide();
-            checkBox.parent().find(".secretary").show();
-        }
-    } else {
-        if (checkBox.attr("checked")) {
-            console.log("global.js:869");
-            checkBox.attr("checked", false).change();
-        }
-        checkBox.parent().find(".usual").show();
-        checkBox.parent().find(".secretary").hide();
-        deactivateSignInvite();
-    }
+    if(!isAuthorSignatory()) {
+        if (!checkBox.attr("checked"))
+            checkBox.attr("checked", true).change();
 
-    if ($("#authorsecretaryradio").attr("checked")) {
+        deactivateSignInvite();
+        checkBox.parent().find(".usual").hide();
+        checkBox.parent().find(".secretary").show();        
         $("#dialog-confirm-text-send").show();
         $("#dialog-confirm-text-send-fields").hide();
         $("#dialog-confirm-text-send-normal").hide();
+
     } else {
-        // normal
+        checkBox.parent().find(".usual").show();
+        checkBox.parent().find(".secretary").hide();
         $("#dialog-confirm-text-send").hide();
         $("#dialog-confirm-text-send-fields").hide();
         $("#dialog-confirm-text-send-normal").show();
-
+        var numsigs = $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
+        if(numsigs === 0) {
+            deactivateSignInvite();
+            if (checkBox.attr("checked"))
+                checkBox.attr("checked", false).change();
+            $("#multipleinvite").hide();
+            $("#onlyauthor").show();
+        } else {
+            if (signingOrderEnabled)
+                deactivateSignInvite();
+            else
+                activateSignInvite();
+            $("#multipleinvite").show();
+            $("#onlyauthor").hide();
+        }
     }
 }
 
@@ -937,7 +996,7 @@ function checkSignPossibility() {
     if ($("#authorsecretaryradio").attr("checked")) {
         // secretary
         $(".authordetails .man").addClass("redborder");
-        addFlashMessage(localization.secretaryCantSign, "red");
+        FlashMessages.add({content: localization.secretaryCantSign, color: "red"});
         return false;
     } else {
         // sign is possible
@@ -952,7 +1011,7 @@ function checkAllCustomFieldsAreNamed() {
     unamedfields = $("#personpane .newfield");
     unamedfields.addClass("redborder");
     if (unamedfields.length > 0) {
-        addFlashMessage(localization.setAllFields, "red");
+        FlashMessages.add({content: localization.setAllFields, color: "red"});
         return false;
     } else {
         return true;
@@ -971,13 +1030,13 @@ function authorFieldsValidation() {
     if (remainingAuthorFields.size() > 0) {
         console.log(remainingAuthorFields);
         if (remainingAuthorFields.hasClass('sigfstname') || remainingAuthorFields.hasClass('sigsndname')) {
-            addFlashMessage(localization.missingSignatoryNames, "red");
+           FlashMessages.add({content: localization.missingSignatoryNames, color: "red"});
         }
         if (remainingAuthorFields.hasClass('customfield')) {
-            addFlashMessage(localization.missingNames, "red");
+           FlashMessages.add({content: localization.missingNames, color: "red"});
         }
         if (remainingAuthorFields.hasClass('sigpersnum')) {
-            addFlashMessage(localization.backToStepTwoAndFillPersonNumber, "red");
+           FlashMessages.add({content: localization.backToStepTwoAndFillPersonNumber, color: "red"});
         }
         remainingAuthorFields.addClass('redborder').addClass('offending');
         fieldValidationType = "fillstatus";
@@ -997,7 +1056,7 @@ function sigFieldsValidation() {
     });
 
     if (remainingSigFields.size() > 0) {
-        addFlashMessage(localization.mustFillFieldsBeforeSigning, "red");
+        FlashMessages.add({content: localization.mustFillFieldsBeforeSigning, color: "red"});
         remainingSigFields.addClass("redborder");
         return false;
     } else {
@@ -1024,9 +1083,7 @@ function nonZeroSignatories() {
     var error = (sigs === 0);
 
     if (error) {
-        addFlashMessage(localization.atLeastOneSignatoryRequired, "red");
-        //saving this for later
-        //addFlashMessage('Du kan inte underteckna med endast dig sjГ¤lv.', "red");
+        FlashMessages.add({content: localization.atLeastOneSignatoryRequired, color: "red"});
         $("li.plus").addClass("redborder");
         return false;
     }
@@ -1041,7 +1098,8 @@ safeReady(function() {
     $(".prepareToSendReminderMail").each(function() {
         $(this).overlay({
             mask: standardDialogMask,
-            top: standardDialogTop
+            top: standardDialogTop,
+            fixed:false
         });
     });
 });
@@ -1066,25 +1124,6 @@ function flashSpecialFlashMessages() {
     flashmsgbox.delay(12000).fadeOut();
 }
 
-function flashFlashMessages() {
-    // try to preload image before showing flash
-    var preload = new Image();
-    preload.onload = function() {
-        var flashmsgbox = $(".flashmsgbox");
-        if ($(".flash-container", flashmsgbox).size() > 0) {
-            // delay() and click() doesn't work correctly in document
-            // creator since clearQueue() doesn't call clearTimeout(),
-            // so we need to use setTimeout() and unregister set events
-            // with clearTimeout() if user closed flash message by himself
-            var event = setTimeout(hideFlashMessages, 10000);
-            flashmsgbox.slideDown(800);
-            flashmsgbox.click(function() {
-                hideFlashMessages(event);
-            });
-        }
-    };
-    preload.src = "/img/spr-flash-bg.png";
-}
 
 function showModal() {
     var modalbox = $(".modalbox");
@@ -1095,7 +1134,8 @@ function showModal() {
             loadSpeed: 0,
             opacity: 0.9
         },
-        speed: 0
+        speed: 0,
+        fixed: false
     });
     if (modalbox.size() > 0) {
         modalbox.first().data("overlay").load();
@@ -1107,13 +1147,6 @@ function hideFlashMessages(event) {
     $(".flashmsgbox").slideUp(800, function() {
         $(this).children().remove();
     });
-}
-
-function addFlashMessage(msg, type) {
-    var flashmsgbox = $('.flashmsgbox');
-    flashmsgbox.children().remove();
-    flashmsgbox.append("<div class='flash-container " + type + "'>" + "<div class='flash-content'>" + "<div class='skrivapa-logo float-left'></div>" + "<div class='flash-icon " + type + "'></div>" + "<div class='flash-body'>" + msg + "</div>" + "<div class='flash-close modal-close'></div></div></div>");
-    flashFlashMessages();
 }
 
 function prepareEditor(textarea) {
@@ -1140,7 +1173,7 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
         var input = $(error.input);
         input.parents('.inputWrapper').addClass("redborder");
         if (!input.hasClass("noflash")) {
-            addFlashMessage(invalidEmailErrMsg, "red");
+            FlashMessages.add({content: input.val().length > 0?invalidEmailErrMsg:emptyEmailErrMsg, color: "red"});
             input.addClass("noflash");
         }
     });
@@ -1197,7 +1230,7 @@ function showStep3() {
     $('#signStep2Content').hide();
     $('#signStep3Content').show();
     $('#signStepsNextButton').hide();
-
+    console.log("here");
     showProperSignButtons();
     return false;
 }
@@ -1304,10 +1337,10 @@ $(document).ready(function() {
             return;
         }
         if (fstname == "" && sndname == "") {
-            val = "(NamnlГ¶s)";
+            val = "("+  localization.noNamePerson +")";
         }
         if (isMultiPartElem($(this))) {
-            val = "Massutskick";
+            val = localization.multipleSignatory;
         }
         $('#peopleList li:eq(' + idx + ') a').text(val).append(newSignOrderListElement(role.val() == "signatory" ? signorder.val() : "-"));
     });
@@ -1449,13 +1482,16 @@ safeReady(function() {
         //    onClose: function(e){ return false; },
         closeOnClick: false,
         closeOnEsc: false,
-        load: false
+        load: false,
+        fixed:false
     });
 });
 
 function displayLoadingOverlay(message) {
     $("#loadingmessage").html(message);
-    $("#loadingdialog").overlay().load();
+    $("#loadingdialog").overlay({
+        fixed:false
+    }).load();
 }
 
 function closeLoadingOverlay() {
@@ -1571,7 +1607,7 @@ safeReady(function() {
 
 safeReady(function() {
     $("form.requestAccount").submit(function() {
-        /* var res = _gaq.push(['_trackPageview', '/mal/skapa-konto']); */
+         if ( window._gaq != undefined ) _gaq.push(['_trackPageview', '/mal/skapa-konto']);
     });
 });
 
@@ -1605,8 +1641,71 @@ function saveOverlay(d, o) {
                 o.top = $(this).offset().top - $(document).scrollTop() - 400;
             }   
             o.load = true;
+            o.fixed = false;
             $(this).overlay(o);
         }
     });
 }
 
+function xml2string(node) {
+   if (typeof(XMLSerializer) !== 'undefined') {
+      var serializer = new XMLSerializer();
+      return serializer.serializeToString(node);
+   } else if (node.xml) {
+      return node.xml;
+   }
+}
+
+function hasOverrideMimeType() {
+    var req = new XMLHttpRequest();
+    return req.overrideMimeType !== undefined;
+}
+
+$(function () {
+    /* 
+     * We should not be doing this if there is no chance for his to work
+     */
+    
+    if( false && typeof(XMLSerializer) !== 'undefined' &&
+        hasOverrideMimeType() &&
+        !!(window.history && history.pushState)) {
+
+        $('a[ajaxrel]').live("click", function() {
+            var href = $(this).attr("href");
+            var rel = $(this).attr("ajaxrel");
+            console.log("JavaScript history going to " + href + " using " + rel );
+            var req = new XMLHttpRequest();
+            req.overrideMimeType("text/xml");
+            req.open("GET", href, false);
+            req.send(null);
+            var foundNode = $(req.responseXML).find(rel)[0];
+            var serializer = new XMLSerializer();
+            var strhtml = serializer.serializeToString(foundNode);
+            $(rel).replaceWith(strhtml);
+            history.pushState("zonk", null, href);
+            return false;
+        });
+        $(window).bind("popstate", function(event) {
+            window.location.href = window.location.href;
+        });
+    }
+});
+
+safeReady(function() {
+    $(document).unload(function() {
+        $("input").each(function() {
+            var i = $(this);
+            if(i.val().trim() === i.attr('infotext').trim()) {
+                i.val("");
+            }
+        });
+    });
+});
+
+safeReady(function () {
+    $(".deleteSigAttachment").click(function() {
+        console.log("doing it");
+        $(this).closest("td").find("form").submit();
+        return false;
+    });
+});

@@ -7,24 +7,21 @@
 -- Portability :  portable
 --
 -- Utility for abstracting away destructuring to get a name, email,
--- company number, company name, and personal number.
+-- and personal number.
 -----------------------------------------------------------------------------
 module Util.HasSomeUserInfo (
   emailFromSigLink,
-  getCompanyName,
-  getCompanyNumber,
   getEmail,
+  getMailAddress,
   getFirstName,
   getFullName,
   getLastName,
   getPersonalNumber,
   getSmartName,
-  getMailAddress
-
   ) where
 
 import Doc.DocStateData
-import User.UserState
+import User.Model
 import Mails.MailsData
 
 import Data.Char
@@ -32,43 +29,32 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Data.ByteString as BS
 
--- | Anything that might have a first name and last name, company name, company number,
--- or personalnumber
+-- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where
-  getCompanyName    :: a -> BS.ByteString
-  getCompanyNumber  :: a -> BS.ByteString
   getEmail          :: a -> BS.ByteString
   getFirstName      :: a -> BS.ByteString
   getLastName       :: a -> BS.ByteString
   getPersonalNumber :: a -> BS.ByteString
 
 instance HasSomeUserInfo UserInfo where
-  getCompanyName    = usercompanyname
-  getCompanyNumber  = usercompanynumber
   getEmail          = unEmail . useremail
   getFirstName      = userfstname
   getLastName       = usersndname
   getPersonalNumber = userpersonalnumber
 
 instance HasSomeUserInfo User where
-  getCompanyName    = usercompanyname     . userinfo
-  getCompanyNumber  = usercompanynumber   . userinfo
   getEmail          = unEmail . useremail . userinfo
   getFirstName      = userfstname         . userinfo
   getLastName       = usersndname         . userinfo
   getPersonalNumber = userpersonalnumber  . userinfo
 
 instance HasSomeUserInfo SignatoryDetails where
-  getCompanyName    = signatorycompany
-  getCompanyNumber  = signatorycompanynumber
   getEmail          = signatoryemail
   getFirstName      = signatoryfstname
   getLastName       = signatorysndname
   getPersonalNumber = signatorypersonalnumber
 
 instance HasSomeUserInfo SignatoryLink where
-  getCompanyName    = signatorycompany        . signatorydetails
-  getCompanyNumber  = signatorycompanynumber  . signatorydetails
   getEmail          = signatoryemail          . signatorydetails
   getFirstName      = signatoryfstname        . signatorydetails
   getLastName       = signatorysndname        . signatorydetails

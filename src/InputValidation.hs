@@ -44,7 +44,9 @@ module InputValidation
     , asValidFieldName
     , asValidFieldValue
     , asValidPlace
-    , asValidInviteText) where
+    , asValidInviteText
+    , sanitize
+    , flashMessageMissingRequiredField) where
 
 import Control.Applicative
 import Control.Monad()
@@ -63,13 +65,14 @@ import Kontra
 import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
-import FlashMessage
+import Util.FlashUtil
+import User.Model
 import Data.Monoid
 
 {- |
     If there's a problem this will create the appropriate FlashMessage.
 -}
-type ValidationMessage = KontrakcjaTemplates -> IO FlashMessage
+type ValidationMessage = TemplatesMonad m => m FlashMessage
 
 {- |
     The input data.
@@ -82,10 +85,10 @@ type Input = Maybe String
     Alternatively the user could've entered nothing.
 -}
 data Result a = Good a
-                | Bad ValidationMessage
-                | Empty
+              | Bad ValidationMessage
+              | Empty
 
-instance (Monoid a) => Monoid (Result a) where
+instance Monoid a => Monoid (Result a) where
     mappend (Good a1) (Good a2) = Good $ mappend a1 a2
     mappend Empty a = a
     mappend a Empty = a
@@ -227,9 +230,9 @@ getFields fieldname = do
 -}
 flashValidationMessage :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 flashValidationMessage x@(_, Bad flashmsg) = do
-  Context{ctxtemplates,ctxflashmessages} <- getContext
-  msg <- liftIO $ flashmsg ctxtemplates
-  when (msg `notElem` ctxflashmessages) $ addFlashMsg msg
+  flashmsgs <- ctxflashmessages <$> getContext
+  msg <- flashmsg
+  when (msg `notElem` flashmsgs) $ addFlash msg
   return x
 flashValidationMessage x = return x
 
@@ -240,8 +243,8 @@ flashValidationMessage x = return x
 -}
 logIfBad :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
 logIfBad x@(input, Bad flashmsg) = do
-  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- getContext
-  flash <- liftIO $ flashmsg ctxtemplates
+  Context{ctxmaybeuser, ctxipnumber} <- getContext
+  flash <- flashmsg
   let username :: String
       username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser
       logtext = "ip " ++ (show ctxipnumber) ++
@@ -394,6 +397,17 @@ asValidName input =
     >>= checkOnly (isAlpha : map (==) " \'-") fieldtemplate
     >>= mkByteString
     where fieldtemplate = "nameFieldName"
+          
+{- |
+   Sanitize characters that are not allowed but can be converted
+into something we do allow without upsetting the user.
+ -}
+sanitize :: String -> Result String
+sanitize input = 
+  replaceChar '\t' ' ' input
+  
+replaceChar :: Char -> Char -> String -> Result String
+replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 
 {- |
     Creates a clean and validated company name.
@@ -402,7 +416,8 @@ asValidName input =
 -}
 asValidCompanyName :: String -> Result BS.ByteString
 asValidCompanyName input =
-    stripWhitespace input
+    sanitize input 
+    >>= stripWhitespace
     >>= checkIfEmpty
     >>= checkLengthIsMax 100 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?") fieldtemplate
@@ -482,7 +497,7 @@ asValidDaysToSign :: String -> Result Int
 asValidDaysToSign input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= parseAsInt fieldtemplate
+    >>= parseAsNum fieldtemplate
     >>= checkWithinLowerBound 1 fieldtemplate
     >>= checkWithinUpperBound 99 fieldtemplate
     where fieldtemplate = "daysToSignFieldName"
@@ -511,18 +526,18 @@ asValidDocID input =
 -}
 asValidID :: String -> Result BS.ByteString
 asValidID input =
-    asValidNumber input
+  asValidNumber input
     >>= useInput input
-    where useInput :: String -> Int -> Result BS.ByteString
-          useInput xs _ = return $ BS.fromString xs
+  where
+    useInput xs (_::Int) = return $ BS.fromString xs
 
 {- |
-    Parses as a int.
+    Parses as a number.
 -}
-asValidNumber :: String -> Result Int
+asValidNumber :: (Num a, Read a) => String -> Result a
 asValidNumber input =
     checkIfEmpty input
-    >>= parseAsInt fieldtemplate
+    >>= parseAsNum fieldtemplate
     where fieldtemplate = "idFieldName"
 
 {- |
@@ -542,7 +557,7 @@ asValidBool input =
 asValidPlace :: String -> Result Int
 asValidPlace input =
     checkIfEmpty input
-    >>= parseAsInt fieldtemplate
+    >>= parseAsNum fieldtemplate
     >>= checkWithinLowerBound 0 fieldtemplate
     where fieldtemplate = "placeFieldName"
 
@@ -666,10 +681,10 @@ flashMessageNumberAboveMaximum fieldtemplate upperbound =
     flashMessageWithFieldName fieldtemplate "flashMessageNumberAboveMaximum" . Just $ field "max" (show upperbound)
 
 {- |
-    Parses a string as an int
+    Parses a string as a Num
 -}
-parseAsInt :: String -> String -> Result Int
-parseAsInt fieldtemplate xs =
+parseAsNum :: (Num a, Read a) => String -> String -> Result a
+parseAsNum fieldtemplate xs =
     case reads xs of
         (val,[]):[] -> return val
         _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
@@ -752,20 +767,19 @@ flashMessageInvalidFormat :: String -> ValidationMessage
 flashMessageInvalidFormat fieldtemplate =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidFormat" Nothing
 
-flashMessageWithFieldName :: String -> String -> Maybe Fields -> ValidationMessage
-flashMessageWithFieldName fieldtemplate templatename mfields templates = do
-   fieldname <- renderTemplate templates fieldtemplate ()
+flashMessageWithFieldName :: TemplatesMonad m => String -> String -> Maybe (Fields m) -> m FlashMessage
+flashMessageWithFieldName fieldtemplate templatename mfields = do
+   fieldname <- renderTemplateM fieldtemplate ()
    let fields = do
        when (isJust mfields) (fromJust mfields)
        field "fieldnametitlecase" (titleCase fieldname)
        field "fieldnamelowercase" (lowerCase fieldname)
-   flashMessage templatename (Just fields) templates
+   flashMessage templatename (Just fields)
    where titleCase (x:xs) = toUpper x : lowerCase xs
          titleCase [] = []
          lowerCase = map toLower
 
-flashMessage :: String -> Maybe Fields -> ValidationMessage
-flashMessage templatename mfields templates =
-    toFlashMsg OperationFailed <$>
-      renderTemplate templates templatename
+flashMessage :: TemplatesMonad m => String -> Maybe (Fields m) -> m FlashMessage
+flashMessage templatename mfields =
+    toFlashMsg OperationFailed <$> renderTemplateFM templatename
         (when (isJust mfields) (fromJust mfields))

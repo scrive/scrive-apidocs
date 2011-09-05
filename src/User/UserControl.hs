@@ -8,15 +8,17 @@ import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import Happstack.Util.Common (readM)
 import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
+import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import ActionSchedulerState
 import AppView
+import DB.Classes
+import DB.Types
 import Doc.DocState
-import FlashMessage
+import Company.Model
 import InputValidation
 import Kontra
 import KontraLink
@@ -24,129 +26,130 @@ import ListUtil
 import Mails.SendMail
 import MinutesTime
 import Misc
-import Payments.PaymentsState
 import Redirect
-import Templates.Templates (KontrakcjaTemplates)
+import Templates.Templates
+import User.Model
 import User.UserView
+import Util.FlashUtil
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
-import Util.FlashUtil
+import Util.MonadUtils
 
-checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
+
+checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
     if p1 == p2
        then Right ()
-       else Left  flashMessagePasswordsDontMatch
+       else Left flashMessagePasswordsDontMatch
 
-handleUserGet :: Kontra Response
+{- |
+    This is really a util function that I couldn't figure out a better
+    place for.  TODO put in better place!
+    
+    This looks up the company for the given user, if the user doesn't
+    have a company then it returns Nothing.
+-}
+getCompanyForUser :: Kontrakcja m => User -> m (Maybe Company)
+getCompanyForUser user =
+  case usercompany user of
+    Just companyid -> runDBQuery $ GetCompany companyid
+    _ -> return Nothing
+
+handleUserGet :: Kontrakcja m => m Response
 handleUserGet = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
-             content <- liftIO $ showUser (ctxtemplates ctx) user
-             renderFromBody TopAccount kontrakcja content
+           mcompany <- getCompanyForUser user
+           showUser user mcompany >>= renderFromBody TopAccount kontrakcja
          Nothing -> sendRedirect $ LinkLogin NotLogged
 
-handleUserPost :: Kontra KontraLink
+handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
              infoUpdate <- getUserInfoUpdate
-             _ <- update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             -- propagate company info to all subaccounts since it might have changed
-             query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
-                 subs <- query $ GetUserSubaccounts $ userid newuser
-                 forM_ subs $ \sub -> do
-                     update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
-                 )
-             flash $ flashMessageUserDetailsSaved $ ctxtemplates ctx
+             _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+             mcompany <- getCompanyForUser user
+             case (useriscompanyadmin user, mcompany) of
+               (True, Just company) -> do
+                 companyinfoupdate <- getCompanyInfoUpdate
+                 _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+                 return ()
+               _ -> return ()
+             addFlashM flashMessageUserDetailsSaved
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
 
-getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
+getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
     mfstname          <- getValidField asValidName "fstname"
     msndname          <- getValidField asValidName "sndname"
     mpersonalnumber   <- getFieldUTF "personalnumber"
-    maddress          <- getValidField asValidAddress "address"
-    mcity             <- getFieldUTF "city"
-    mcountry          <- getFieldUTF "country"
-    mzip              <- getFieldUTF "zip"
     mphone            <- getFieldUTF "phone"
     mcompanyposition  <- getValidField asValidPosition "companyposition"
-    mcompanynumber    <- getValidField asValidCompanyNumber "companynumber"
-    mcompanyname      <- getValidField asValidCompanyName "companyname"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
           , usersndname = fromMaybe (usersndname ui) msndname
           , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
-          , usercompanyname = fromMaybe (usercompanyname ui) mcompanyname
           , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
-          , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
-          , useraddress  = fromMaybe (useraddress ui) maddress
-          , userzip    = fromMaybe (userzip ui) mzip
-          , usercity  = fromMaybe (usercity ui) mcity
-          , usercountry  = fromMaybe (usercountry  ui) mcountry
           , userphone  = fromMaybe (userphone ui) mphone
         }
     where
-        getValidField :: Kontrakcja m => (String -> Result BS.ByteString) -> String -> m (Maybe BS.ByteString)
         getValidField = getDefaultedField BS.empty
 
-copyCompanyInfo :: User -> UserInfo -> UserInfo
-copyCompanyInfo fromuser info =
-  info
-  { usercompanyname = getCompanyName fromuser
-  , usercompanynumber = getCompanyNumber fromuser
-  , useraddress = useraddress $ userinfo fromuser
-  , userzip = userzip $ userinfo fromuser
-  , usercity = usercity $ userinfo fromuser
-  , usercountry = usercountry $ userinfo fromuser
-  }
+getCompanyInfoUpdate :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
+getCompanyInfoUpdate = do
+    -- a lot doesn't have validation rules defined, but i put in what we do have
+  mcompanyname <- getValidField asValidCompanyName "companyname"
+  mcompanynumber <- getValidField asValidCompanyNumber "companynumber"
+  mcompanyaddress <- getValidField asValidAddress "companyaddress"
+  mcompanyzip <- getFieldUTF "companyzip"
+  mcompanycity <- getFieldUTF "companycity"
+  mcompanycountry <- getFieldUTF "companycountry"
+  return $ \ci ->
+      ci {
+         companyname = fromMaybe (companyname ci) mcompanyname
+      ,  companynumber = fromMaybe (companynumber ci) mcompanynumber
+      ,  companyaddress = fromMaybe (companyaddress ci) mcompanyaddress
+      ,  companyzip = fromMaybe (companyzip ci) mcompanyzip
+      ,  companycity = fromMaybe (companycity ci) mcompanycity
+      ,  companycountry = fromMaybe (companycountry ci) mcompanycountry
+      }
+  where
+    getValidField = getDefaultedField BS.empty
 
-handleGetUserMailAPI :: Kontra (Either KontraLink Response)
+handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
-    Context { ctxmaybeuser = Just olduser@User{userid, usermailapi}, ctxtemplates } <- getContext
-    user <- case usermailapi of
-         Nothing -> return olduser
-         Just mailapi -> do
-             today <- asInt <$> liftIO getMinutesTime
-             if today /= umapiLastSentDate mailapi
-                then do
-                    Right user <- liftIO $ update $ SetUserMailAPI userid $ Just mailapi {
-                          umapiLastSentDate = today
-                        , umapiSentToday = 0
-                    }
-                    return user
-                else return olduser
-    content <- liftIO $ showUserMailAPI ctxtemplates user
-    renderFromBody TopAccount kontrakcja content
+    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
+    mapi <- runDBQuery $ GetUserMailAPI userid
+    showUserMailAPI user mapi >>= renderFromBody TopAccount kontrakcja
 
-handlePostUserMailAPI :: Kontra KontraLink
+handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
-    User{userid, usermailapi} <- fromJust . ctxmaybeuser <$> getContext
+    User{userid} <- fromJust . ctxmaybeuser <$> getContext
+    mapi <- runDBQuery $ GetUserMailAPI userid
     getDefaultedField False asValidCheckBox "api_enabled"
       >>= maybe (return LinkUserMailAPI) (\enabledapi -> do
-        case usermailapi of
+        case mapi of
              Nothing -> do
                  when enabledapi $ do
                      apikey <- liftIO randomIO
-                     today <- asInt <$> liftIO getMinutesTime
-                     _ <- liftIO $ update $ SetUserMailAPI userid $ Just UserMailAPI {
+                     _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
                            umapiKey = apikey
                          , umapiDailyLimit = 50
                          , umapiSentToday = 0
-                         , umapiLastSentDate = today
                      }
                      return ()
-             Just mailapi -> do
+             Just api -> do
                  if not enabledapi
                     then do
-                        _ <- liftIO $ update $ SetUserMailAPI userid Nothing
+                        _ <- runDBUpdate $ SetUserMailAPI userid Nothing
                         return ()
                     else do
                         mresetkey <- getDefaultedField False asValidCheckBox "reset_key"
@@ -156,86 +159,85 @@ handlePostUserMailAPI = withUserPost $ do
                              (Just resetkey, Just resetsenttoday, Just dailylimit) -> do
                                  newkey <- if resetkey
                                    then liftIO randomIO
-                                   else return $ umapiKey mailapi
-                                 _ <- liftIO $ update $ SetUserMailAPI userid $ Just mailapi {
+                                   else return $ umapiKey api
+                                 _ <- runDBUpdate $ SetUserMailAPI userid $ Just api {
                                        umapiKey = newkey
                                      , umapiDailyLimit = max 1 dailylimit
                                      , umapiSentToday = if resetsenttoday
                                                            then 0
-                                                           else umapiSentToday mailapi
+                                                           else umapiSentToday api
                                  }
                                  return ()
                              _ -> return ()
         return LinkUserMailAPI)
 
-handleGetUserSecurity :: Kontra Response
+handleGetUserSecurity :: Kontrakcja m => m Response
 handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> do
-             content <- liftIO $ showUserSecurity (ctxtemplates ctx) user
-             renderFromBody TopAccount kontrakcja content
+         Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
          Nothing -> sendRedirect $ LinkLogin NotLogged
 
-handlePostUserSecurity :: Kontra KontraLink
+handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
     Just user -> do
-      moldpassword <- getRequiredField asDirtyPassword "oldpassword"
-      mpassword <- getRequiredField asValidPassword "password"
-      mpassword2 <- getRequiredField asDirtyPassword "password2"
+      moldpassword <- getOptionalField asDirtyPassword "oldpassword"
+      mpassword <- getOptionalField asValidPassword "password"
+      mpassword2 <- getOptionalField asDirtyPassword "password2"
       case (moldpassword, mpassword, mpassword2) of
         (Just oldpassword, Just password, Just password2) ->
           case (verifyPassword (userpassword user) oldpassword,
                   checkPasswordsMatch password password2) of
             (False,_) ->
-              flash $ flashMessageBadOldPassword (ctxtemplates ctx)
+              addFlashM flashMessageBadOldPassword
             (_, Left f) ->
-              flash $ f (ctxtemplates ctx)
+              addFlashM f
             _ ->  do
               passwordhash <- liftIO $ createPassword password
-              _ <- update $ SetUserPassword (userid user) passwordhash
-              flash $ flashMessageUserDetailsSaved (ctxtemplates ctx)
+              _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
+              addFlashM flashMessageUserDetailsSaved
+        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
+              addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mlang <- readField "lang"
       case (mlang) of
           Just lang -> do
-              _ <-update $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
+              _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
               return ()
           Nothing -> return ()
       return LinkSecurity
     Nothing -> return $ LinkLogin NotLogged
 
-handleGetSharing :: Kontra (Either KontraLink Response)
+handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
-    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    friends <- query $ GetUserFriends userid
+    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
+    friends <- runDBQuery $ GetUserFriends userid
     params <- getListParams
-    content <- liftIO $ viewFriends (ctxtemplates ctx) (friendsSortSearchPage params friends) user
-    renderFromBody TopAccount kontrakcja content
+    viewFriends (friendsSortSearchPage params friends) user
+        >>= renderFromBody TopAccount kontrakcja
 
 -- Searching, sorting and paging
 friendsSortSearchPage :: ListParams -> [User] -> PagedList User
 friendsSortSearchPage  =
-    listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
+    listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
-
-handleGetSubaccount :: Kontra (Either KontraLink Response)
-handleGetSubaccount = withUserGet $ do
-    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    subaccounts <- query $ GetUserSubaccounts userid
+handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
+handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
+    Context{ctxmaybeuser = Just user} <- getContext
+    companyaccounts <- runDBQuery $ GetCompanyAccounts companyid
     params <- getListParams
-    content <- viewSubaccounts user (subaccountsSortSearchPage params $ subaccounts)
+    content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
 
 -- Searching, sorting and paging
-subaccountsSortSearchPage :: ListParams -> [User] -> PagedList User
-subaccountsSortSearchPage  =
-    listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
+companyAccountsSortSearchPage :: ListParams -> [User] -> PagedList User
+companyAccountsSortSearchPage  =
+    listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
-subaccountsSearchFunc :: SearchingFunction User
-subaccountsSearchFunc s user = userMatch user s -- split s so we support spaces
+companyAccountsSearchFunc :: SearchingFunction User
+companyAccountsSearchFunc s user = userMatch user s -- split s so we support spaces
     where
         match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
         userMatch u s' = match s' (usercompanyposition $ userinfo u)
@@ -244,28 +246,28 @@ subaccountsSearchFunc s user = userMatch user s -- split s so we support spaces
                       || match s' (getPersonalNumber u)
                       || match s' (getEmail u)
 
-subaccountsSortFunc :: SortingFunction User
-subaccountsSortFunc "fstname" = viewComparing getFirstName
-subaccountsSortFunc "fstnameREV" = viewComparingRev getFirstName
-subaccountsSortFunc "sndname" = viewComparing getLastName
-subaccountsSortFunc "sndnameREV" = viewComparingRev getLastName
-subaccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
-subaccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
-subaccountsSortFunc "phone" = viewComparing $  userphone . userinfo
-subaccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
-subaccountsSortFunc "email" = viewComparing getEmail
-subaccountsSortFunc "emailREV" = viewComparingRev getEmail
-subaccountsSortFunc _ = const $ const EQ
+companyAccountsSortFunc :: SortingFunction User
+companyAccountsSortFunc "fstname" = viewComparing getFirstName
+companyAccountsSortFunc "fstnameREV" = viewComparingRev getFirstName
+companyAccountsSortFunc "sndname" = viewComparing getLastName
+companyAccountsSortFunc "sndnameREV" = viewComparingRev getLastName
+companyAccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
+companyAccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
+companyAccountsSortFunc "phone" = viewComparing $  userphone . userinfo
+companyAccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
+companyAccountsSortFunc "email" = viewComparing getEmail
+companyAccountsSortFunc "emailREV" = viewComparingRev getEmail
+companyAccountsSortFunc _ = const $ const EQ
 
-subaccountsPageSize :: Int
-subaccountsPageSize = 20
+companyAccountsPageSize :: Int
+companyAccountsPageSize = 20
 
 ----
 
-handlePostSharing :: Kontra KontraLink
+handlePostSharing :: Kontrakcja m => m KontraLink
 handlePostSharing = do
     ctx <- getContext
-    case (ctxmaybeuser ctx) of
+    case ctxmaybeuser ctx of
          Just user -> do
              memail <- getOptionalField asValidEmail "email"
              remove <- isFieldSet "remove"
@@ -277,15 +279,15 @@ handlePostSharing = do
                   _ -> LinkSharing <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
-handleAddFriend :: User -> BS.ByteString -> Kontra ()
+handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
-    avereturn <- update $ AddViewerByEmail userid $ Email email
-    case avereturn of
-      Left msg -> flashOperationFailed msg
-      Right _  -> return ()
+    avereturn <- runDBUpdate $ AddViewerByEmail userid $ Email email
+    when (not avereturn) $ do
+      -- FIXME: display sane error msg here (as template)
+      addFlash (OperationFailed, "operation failed")
 
-handlePostSubaccount :: Kontra KontraLink
-handlePostSubaccount = do
+handlePostCompanyAccounts :: Kontrakcja m => m KontraLink
+handlePostCompanyAccounts = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
@@ -294,102 +296,87 @@ handlePostSubaccount = do
              takeover <- isFieldSet "takeover"
              case (add,remove,takeover) of
                   (True, _, _) -> do
-                    handleCreateSubaccount user
-                    return $ LinkSubaccount emptyListParams
-                  (_, True, _) -> handleDeleteSubaccounts user
+                    handleCreateCompanyUser user
+                    return $ LinkCompanyAccounts emptyListParams
+                  (_, True, _) -> handleDeleteCompanyUser user
                   (_, _, True) -> do
                       memail <- getOptionalField asValidEmail "email"
-                      handleTakeOverSubaccount (fromJust memail)
-                      return $ LinkSubaccount emptyListParams
-                  _ -> LinkSubaccount <$> getListParamsForSearch
+                      handleTakeOverUserForCompany (fromJust memail)
+                      return $ LinkCompanyAccounts emptyListParams
+                  _ -> LinkCompanyAccounts <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
-handleDeleteSubaccounts :: User -> Kontra KontraLink
-handleDeleteSubaccounts user = do
-  subaccountids <- getCriticalFieldList asValidNumber "subcheck"
-  handleUserDelete user (map UserID subaccountids)
-  return $ LinkSubaccount emptyListParams
-
-{- | I've commented this out for now, because I haven't got anywhere
-     that'll call this.  Em
-handleSelfDelete :: User -> Kontra KontraLink
-handleSelfDelete user = do
-  subaccounts <- query $ GetUserSubaccounts (userid user)
-  handleUserDelete user (map userid $ (toList subaccounts) ++ [user])
-  -- log them out!
-  return $ LinkMain
--}
+handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
+handleDeleteCompanyUser user = do
+  companyaccountsids <- getCriticalFieldList asValidNumber "acccheck"
+  handleUserDelete user (map UserID companyaccountsids)
+  return $ LinkCompanyAccounts emptyListParams
 
 {- |
     Deletes a list of users one at a time.  It first checks the permissions
     for all users, and if it's okay for all it deletes them all.  Otherwise
     it deletes no-one.
 -}
-handleUserDelete :: User -> [UserID] -> Kontra ()
+handleUserDelete :: Kontrakcja m => User -> [UserID] -> m ()
 handleUserDelete deleter deleteeids = do
-  Context{ctxtemplates} <- getContext
-  msubaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
-  case lefts msubaccounts of
+  mcompanyaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
+  case lefts mcompanyaccounts of
     (NoDeletionRights:_) -> mzero
     (UserHasLiveDocs:_) -> do
-      flash $ flashMessageUserHasLiveDocs ctxtemplates
+      addFlashM flashMessageUserHasLiveDocs
       return ()
     [] -> do
-      mapM_ performUserDeletion (rights msubaccounts)
-      flash $ flashMessageAccountsDeleted ctxtemplates
+      mapM_ performUserDeletion (rights mcompanyaccounts)
+      addFlashM flashMessageAccountsDeleted
       return ()
 
 type UserDeletionDetails = (User, [Document])
 
 data UserDeletionProblem = NoDeletionRights | UserHasLiveDocs
 
-getUserDeletionDetails :: UserID -> UserID -> Kontra (Either UserDeletionProblem UserDeletionDetails)
+getUserDeletionDetails :: Kontrakcja m => UserID -> UserID -> m (Either UserDeletionProblem UserDeletionDetails)
 getUserDeletionDetails deleterid deleteeid = do
-  deletee <- queryOrFail $ GetUserByUserID deleteeid
+  deleter <- runDBOrFail $ dbQuery $ GetUserByID deleterid
+  deletee <- runDBOrFail $ dbQuery $ GetUserByID deleteeid
   let isSelfDelete = deleterid == deleteeid
-      isSuperDelete = maybe False (\sid -> deleterid == (UserID $ unSupervisorID sid)) (usersupervisor deletee)
-      isPermissioned = isSelfDelete || isSuperDelete
-  userdocs <- query $ GetDocumentsByUser deletee
+      isAdminDelete = maybe False ((== (usercompany deleter)) . Just) (usercompany deletee)
+      isPermissioned = isSelfDelete || isAdminDelete
+  userdocs <- query $ GetDocumentsByUser deletee  --maybe this should be GetDocumentsBySignatory, but what happens to things yet to be activated?
   let isAllDeletable = all isDeletableDocument userdocs
   case (isPermissioned, isAllDeletable) of
     (False, _) -> return $ Left NoDeletionRights
     (_, False) -> return $ Left UserHasLiveDocs
     _ -> return $ Right (deletee, userdocs)
 
-performUserDeletion :: UserDeletionDetails -> Kontra ()
+performUserDeletion :: Kontrakcja m => UserDeletionDetails -> m ()
 performUserDeletion (user, docs) = do
-  _ <- update $ DeleteUser (userid user)
+  _ <- runDBUpdate $ DeleteUser $ userid user
   idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
-  mapM_ (\iu -> update $ UpdateDocumentRecordStatus  (fst iu) (snd iu)) idsAndUsers
+  mapM_ (\iu -> update $ DeleteDocumentRecordIfRequired  (fst iu) (snd iu)) idsAndUsers
 
 {- |
     This looks up all the users relevant for the given docid.
     This is the dodgy link between documents and users and is required
     when deleting a user or deleting a doc.  Bleurgh.
 -}
-lookupUsersRelevantToDoc :: DocumentID -> Kontra (DocumentID, [User])
+lookupUsersRelevantToDoc :: Kontrakcja m => DocumentID -> m (DocumentID, [User])
 lookupUsersRelevantToDoc docid = do
   doc <- queryOrFail $ GetDocumentByDocumentID docid
-  musers <- mapM (query . GetUserByUserID) (linkedUserIDs doc)
+  musers <- mapM (runDBQuery . GetUserByID) (linkedUserIDs doc)
   return $ (docid, catMaybes musers)
   where
-  linkedUserIDs = concatMap usersFromSigLink . documentsignatorylinks
-  usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} =
-    mkList maybesignatory ++ mkList maybesupervisor
-  mkList Nothing = []
-  mkList (Just x) = [x]
+    linkedUserIDs = catMaybes . map maybesignatory . documentsignatorylinks
 
-handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
-handleTakeOverSubaccount email = do
-  ctx@Context{ctxmaybeuser = Just supervisor} <- getContext
-  Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
-  mail <- mailInviteUserAsSubaccount ctx invited supervisor
+handleTakeOverUserForCompany :: Kontrakcja m => BS.ByteString -> m ()
+handleTakeOverUserForCompany email = do
+  ctx@Context{ctxmaybeuser = Just companyadmin} <- getContext
+  Just invited <- runDBQuery $ GetUserByEmail Nothing (Email email)
+  mail <- mailInviteUserAsCompanyAccount ctx invited companyadmin
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
-  flash $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx)
+  addFlashM flashMessageUserInvitedAsCompanyAccount
 
-
-handleCreateSubaccount :: User -> Kontra ()
-handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
+handleCreateCompanyUser :: Kontrakcja m => User -> m ()
+handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
     ctx <- getContext
     memail <- getOptionalField asValidEmail "email"
     fstname <- maybe "" id <$> getField "fstname"
@@ -397,27 +384,36 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
     let fullname = (BS.fromString fstname, BS.fromString sndname)
     case memail of
       Just email -> do
-        muser <- liftIO $ createUser ctx (ctxhostpart ctx) fullname email (Just user) False
+        mcompany <- getCompanyForUser user
+        muser <- createUser ctx (ctxhostpart ctx) fullname email (Just user) mcompany False defaultValue
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
-            _ <- update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
+            _ <- runDBUpdate $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
-            addModal $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
+            Just invuser <- runDBQuery $ GetUserByEmail Nothing $ Email email
+            case usercompany invuser of
+              Nothing -> addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
+              Just cid | fromJust (usercompany user) == cid -> addFlashM flashUserIsAlreadyCompanyAccount
+              _ ->
+                -- this is the case when companyid of invited user doesn't
+                -- match inviter's one. even if it's highly unlikely to
+                -- happen, I guess we should handle this case somehow.
+                return ()
             return ()
       _ -> return ()
 
-handleViralInvite :: Kontra KontraLink
+handleViralInvite :: Kontrakcja m => m KontraLink
 handleViralInvite = withUserPost $ do
   getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
     (\invitedemail -> do
         ctx@Context{ctxmaybeuser = Just user} <- getContext
-        muser <- query $ GetUserByEmail Nothing $ Email invitedemail
+        muser <- runDBQuery $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
            -- we leak user information here! SECURITY!!!!
            -- you can find out if a given email is already a user
-          then flash $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx
+          then addFlashM flashMessageUserWithSameEmailExists
           else do
             now <- liftIO getMinutesTime
             minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
@@ -429,7 +425,7 @@ handleViralInvite = withUserPost $ do
                                                                      , visToken } } -> do
                 if visInviterID == userid user
                   then case visRemainedEmails of
-                    0 -> flash $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx
+                    0 -> addFlashM flashMessageNoRemainedInvitationEmails
                     n -> do
                       _ <- update $ UpdateActionType actionID $ ViralInvitationSent { visEmail = visEmail
                                                                                     , visTime = visTime
@@ -437,7 +433,7 @@ handleViralInvite = withUserPost $ do
                                                                                     , visRemainedEmails = n -1
                                                                                     , visToken = visToken }
                       sendInvitation ctx (LinkViralInvitationSent actionID $ visToken) invitedemail
-                  else flash $ flashMessageOtherUserSentInvitation $ ctxtemplates ctx
+                  else addFlashM flashMessageOtherUserSentInvitation
               _ -> do
                 link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
                 sendInvitation ctx link invitedemail
@@ -445,65 +441,80 @@ handleViralInvite = withUserPost $ do
   return LoopBack
     where
       sendInvitation ctx link invitedemail = do
-        flash $ flashMessageViralInviteSent $ ctxtemplates ctx
-        mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
+        addFlashM flashMessageViralInviteSent
+        mail <- viralInviteMail ctx invitedemail link
         scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
 randomPassword :: IO BS.ByteString
 randomPassword =
     BS.fromString <$> randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
-createUser :: Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Bool -> IO (Maybe User)
-createUser ctx hostpart names email maybesupervisor vip = do
-    passwdhash <- createPassword =<< randomPassword
-    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor) Nothing Nothing
-    case muser of
-         Just user -> do
-             let fullname = composeFullName names
-             mail <- case maybesupervisor of
-                          Nothing -> do
-                              al <- newAccountCreatedLink user
-                              newUserMail (ctxtemplates ctx) hostpart email fullname al vip
-                          Just supervisor -> do
-                              al <- newAccountCreatedLink user
-                              inviteSubaccountMail (ctxtemplates ctx) hostpart (getSmartName supervisor) (getCompanyName supervisor) email fullname al
-             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
-             return muser
-         Nothing -> return muser
 
-createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe (User, ActionID, MagicHash))
-createUserBySigning _ctx _doctitle names email companyname doclinkdata =
-    createInvitedUser names email >>= maybe (return Nothing) (\user -> do
-        _ <- update $ SetUserInfo (userid user) $ (userinfo user) { usercompanyname = companyname }
+createUser :: Kontrakcja m => Context
+                                  -> String
+                                  -> (BS.ByteString, BS.ByteString)
+                                  -> BS.ByteString
+                                  -> Maybe User
+                                  -> Maybe Company
+                                  -> Bool
+                                  -> Lang
+                                  -> m (Maybe User)
+createUser ctx hostpart names email madminuser mcompany' vip lang = do
+  passwd <- liftIO $ createPassword =<< randomPassword
+  -- make sure we don't count the company unless the admin user actually is a company admin user
+  let mcompany = case (fmap useriscompanyadmin madminuser,
+                       madminuser >>= usercompany,
+                       mcompany') of
+                   (Just True, Just adminusercompanyid, Just company)
+                     | adminusercompanyid == companyid company -> mcompany'
+                   _ -> Nothing
+  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL $ ctxhostpart ctx)
+  case muser of
+    Just user -> do
+      _ <- runDBUpdate $ SetUserSettings (userid user) (usersettings user) {lang = lang}
+      let fullname = composeFullName names
+      mail <- case (madminuser, mcompany) of
+                (Just adminuser, Just company) -> do
+                  al <- newAccountCreatedLink user
+                  inviteCompanyAccountMail hostpart (getSmartName adminuser) (getCompanyName company) email fullname al
+                _ -> do
+                  al <- newAccountCreatedLink user
+                  newUserMail hostpart email fullname al vip
+      scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
+      return muser
+    Nothing -> return muser
+
+createUserBySigning :: Kontrakcja m => Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> m (Maybe (User, ActionID, MagicHash))
+createUserBySigning ctx _doctitle names email doclinkdata =
+    createInvitedUser names email (systemServerFromURL $ ctxhostpart ctx) >>= maybe (return Nothing) (\user -> do
         (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
         return $ Just (user, actionid, magichash)
     )
 
-createNewUserByAdmin :: Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
+createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> m (Maybe User)
 createNewUserByAdmin ctx names email _freetill custommessage = do
-    muser <- createInvitedUser names email
+    muser <- createInvitedUser names email (systemServerFromURL $ ctxhostpart ctx)
     case muser of
          Just user -> do
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
-             update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
+             _ <- runDBUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
-             mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink custommessage
+             mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
-createInvitedUser :: (BS.ByteString, BS.ByteString) -> BS.ByteString -> IO (Maybe User)
-createInvitedUser names email = do
-    password <- randomPassword
-    passwdhash <- createPassword password
-    update $ AddUser names email passwdhash Nothing Nothing Nothing
+createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> SystemServer -> m (Maybe User)
+createInvitedUser names email sserver = do
+    passwd <- liftIO $ createPassword =<< randomPassword
+    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing sserver
 
 {- |
    Guard against a POST with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserPost :: Kontra KontraLink -> Kontra KontraLink
+withUserPost :: Kontrakcja m => m KontraLink -> m KontraLink
 withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
@@ -514,7 +525,7 @@ withUserPost action = do
    Guard against a GET with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserGet ::  Kontra a -> Kontra (Either KontraLink a)
+withUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
 withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
@@ -522,23 +533,31 @@ withUserGet action = do
     Nothing -> return $ Left $ LinkLogin NotLogged
 
 {- |
+   Runs an action only if currently logged in user is a company admin
+-}
+withCompanyAdmin :: Kontrakcja m => (CompanyID -> m a) -> m a
+withCompanyAdmin action = do
+  ctx <- getContext
+  User{useriscompanyadmin, usercompany} <- guardJust $ ctxmaybeuser ctx
+  guard $ useriscompanyadmin && isJust usercompany
+  action $ fromJust usercompany
+{- |
      Takes a document and a action
      Runs an action only if current user (from context) is author of document
 | -}
-withDocumentAuthor :: Document -> Kontra a -> Kontra a
+withDocumentAuthor :: Kontrakcja m => Document -> m a -> m a
 withDocumentAuthor document action = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-      Nothing -> mzero
-      Just user -> case getAuthorSigLink document of
-        Just sl | Just (userid user) == maybesignatory sl -> action
-        _ -> mzero
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  sl <- guardJust $ getAuthorSigLink document
+  guard $ isSigLinkFor user sl
+  action
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
-checkUserTOSGet :: Kontra a -> Kontra (Either KontraLink a)
+checkUserTOSGet :: Kontrakcja m => m a -> m (Either KontraLink a)
 checkUserTOSGet action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
@@ -550,27 +569,25 @@ checkUserTOSGet action = do
 
 
 
-handleAcceptTOSGet :: Kontra (Either KontraLink Response)
+handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
-    Context{ ctxtemplates } <- getContext
-    content <- liftIO $ pageAcceptTOS ctxtemplates
-    renderFromBody TopNone kontrakcja content
+    renderFromBody TopNone kontrakcja =<< pageAcceptTOS
 
-handleAcceptTOSPost :: Kontra KontraLink
+handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
-  ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
+  Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
-      _ <- update $ AcceptTermsOfService userid ctxtime
-      flash $ flashMessageUserDetailsSaved (ctxtemplates ctx)
+      _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
+      addFlashM flashMessageUserDetailsSaved
       return LinkMain
     Just False -> do
-      flash $ flashMessageMustAcceptTOS (ctxtemplates ctx)
+      addFlashM flashMessageMustAcceptTOS
       return LinkAcceptTOS
     Nothing -> return LinkAcceptTOS
 
-handleQuestion :: Kontra KontraLink
+handleQuestion :: Kontrakcja m => m KontraLink
 handleQuestion = do
     ctx <- getContext
     name <- getField "name"
@@ -589,37 +606,38 @@ handleQuestion = do
                  , title = BS.fromString $ "Question"
                  , content = BS.fromString $ content
              }
-             flash $ flashMessageThanksForTheQuestion $ ctxtemplates ctx
+             addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
-handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
-handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
-  addModal $ modalDoYouWantToBeSubaccount
-  ctx@Context{ctxmaybeuser = Just user} <- getContext
-  content <- liftIO $ showUser (ctxtemplates ctx) user
+handleGetBecomeCompanyAccount :: Kontrakcja m => UserID -> m (Either KontraLink Response)
+handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
+  addFlashM modalDoYouWantToBeCompanyAccount
+  Context{ctxmaybeuser = Just user} <- getContext
+  mcompany <- getCompanyForUser user
+  content <- showUser user mcompany
   renderFromBody TopAccount kontrakcja content
 
-handlePostBecomeSubaccountOf :: UserID -> Kontra KontraLink
-handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
+handlePostBecomeCompanyAccount :: Kontrakcja m => UserID -> m KontraLink
+handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
   ctx@Context{ctxmaybeuser = Just user} <- getContext
-  if userid user /= supervisorid
-     then do
-          setsupervisorresult <- update $ SetUserSupervisor (userid user) supervisorid
-          case setsupervisorresult of
-            Left errmsg -> do
-              let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ errmsg
-              Log.debug $ msg
-              flashOperationFailed msg
-            Right _ -> do
-              Just supervisor <- query $ GetUserByUserID supervisorid
-              flash $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor
-              mail <- mailSubaccountAccepted ctx user supervisor
+  supervisor <- fromMaybe user <$> (runDBQuery $ GetUserByID supervisorid)
+  case (userid user /= supervisorid, usercompany supervisor) of
+     (True, Just companyid) -> do
+          setcompanyresult <- runDBUpdate $ SetUserCompany (userid user) companyid
+          if setcompanyresult
+            then do
+              addFlashM $ flashMessageUserHasBecomeCompanyAccount supervisor
+              mail <- mailCompanyAccountAccepted ctx user supervisor
               scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress supervisor] }
+            else do
+              -- FIXME: why this is exposed as flash message? We need this as template.
+              let msg = "Cannot become company account"
+              Log.debug msg
+              addFlash (OperationFailed, msg)
           return LinkAccount
-     else do
-          return LinkAccount
+     _ -> return LinkAccount
 
-handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
+handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
     now <- liftIO $ getMinutesTime
     maction <- do
@@ -634,58 +652,51 @@ handleAccountSetupGet aid hash = do
              case actionType action of
                   ViralInvitationSent _ _ _ _ token ->
                       if token == hash
-                         then activationPage Nothing
+                         then activationPage Nothing Nothing
                          else mzero
                   AccountCreatedBySigning _ uid _ token -> do
                       if token == hash
-                         then (query $ GetUserByUserID uid) >>= activationPage
+                         then (runDBQuery $ GetUserByID uid) >>= (\mu -> activationPage mu Nothing)
                          else mzero
                   AccountCreated uid token -> do
                       if token == hash
-                         then (query $ GetUserByUserID uid) >>= maybe mzero (\user ->
+                         then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user -> do
                              if isNothing $ userhasacceptedtermsofservice user
-                                then activationPage $ Just user
+                                then do
+                                  mcompany <- getCompanyForUser user
+                                  activationPage (Just user) mcompany
                                 else do
-                                    templates <- ctxtemplates <$> getContext
-                                    flash $ flashMessageUserAlreadyActivated templates
-                                    sendRedirect LinkMain)
+                                  addFlashM flashMessageUserAlreadyActivated
+                                  sendRedirect LinkMain)
                          else mzero
                   _  -> mzero
          Nothing -> do
-             muser <- liftMM (query . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
+             muser <- liftMM (runDBQuery . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
              case muser of
                   Just user ->
                     if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
                      then do
-                        ctx <- getContext
                         let email = getEmail user
-                        content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email
+                        content <- activatePageViewNotValidLink $ BS.toString email
                         renderFromBody TopNone kontrakcja content
                     else mzero
                   Nothing -> mzero
     where
-        activationPage muser = do
-            extendActionEvalTimeToOneDayMinimum aid
-            addModalT =<< (modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser)
-            sendRedirect LinkMain
+      activationPage muser mcompany = do
+        extendActionEvalTimeToOneDayMinimum aid
+        addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+        sendRedirect LinkMain
 
-handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
+handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
   muserid <- getUserIDFromAction
   case muserid of
     Just userid -> do
-      user <- queryOrFail $ GetUserByUserID userid
-      acctype <- getOptionalField asValidName "accounttype"
-      case join (readM . BS.unpack <$> acctype) of
-           Just PrivateAccount -> handleActivate' BySigning user PrivateAccount aid id
-           Just CompanyAccount -> handleActivate' BySigning user CompanyAccount aid id
-           _              -> do
-               templates <- ctxtemplates <$> getContext
-               flash $ flashMessageNoAccountType templates
-               return Nothing
+      user <- runDBOrFail $ dbQuery $ GetUserByID userid
+      handleActivate aid hash BySigning user
     Nothing -> return Nothing
   where
-    getUserIDFromAction :: Kontra (Maybe UserID)
+    getUserIDFromAction :: Kontrakcja m => m (Maybe UserID)
     getUserIDFromAction = do
       now <- liftIO $ getMinutesTime
       maction <- checkValidity now <$> (query $ GetAction aid)
@@ -700,187 +711,203 @@ handleAccountSetupFromSign aid hash = do
             _ -> return Nothing
         _-> return Nothing
 
-handleAccountSetupPost :: ActionID -> MagicHash -> Kontra KontraLink
+handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
-    now <- liftIO $ getMinutesTime
-    maction <- checkValidity now <$> (query $ GetAction aid)
-    case maction of
-         Just action ->
-             case actionType action of
-                  ViralInvitationSent email invtime inviterid _ token ->
-                      if token == hash
-                         then getUserForViralInvite now email invtime inviterid
-                              >>= maybe mzero (handleActivate ViralInvitation)
-                         else mzero
-                  AccountCreatedBySigning _ uid _ token ->
-                      if token == hash
-                         then do
-                             link <- (query $ GetUserByUserID uid)
-                                     >>= maybe mzero (handleActivate BySigning)
-                             case link of
-                                  LinkMain -> do
-                                      templates <- ctxtemplates <$> getContext
-                                      addModal $ modalWelcomeToSkrivaPa templates
-                                  _ -> return ()
-                             return link
-                         else mzero
-                  AccountCreated uid token ->
-                      if token == hash
-                         then (query $ GetUserByUserID uid) >>= maybe mzero (\user ->
-                             if isNothing $ userhasacceptedtermsofservice user
-                                then handleActivate AccountRequest user
-                                else do
-                                    templates <- ctxtemplates <$> getContext
-                                    flash $ flashMessageUserAlreadyActivated templates
-                                    return LinkMain)
-                         else mzero
-                  _ -> mzero
-         Nothing -> do -- try to generate another activation link
-             getOptionalField asValidEmail "email" >>= maybe mzero (\email ->
-                 (query $ GetUserByEmail Nothing $ Email email) >>= maybe mzero (\user ->
-                     if isNothing $ userhasacceptedtermsofservice user
-                        then do
-                            ctx <- getContext
-                            al <- newAccountCreatedLink user
-                            mail <- liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
-                            scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
-                            flash $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)
-                            return LinkMain
-                        else mzero
-                     )
-                 )
-    where
-        returnToAccountSetup user = do
-            addModalT =<< (modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString $ getEmail user)
-            return LinkMain
-
-        handleActivate signupmethod user = do
-            acctype <- join . fmap (readM . BS.unpack) <$> getOptionalField asValidName "accounttype"
-            msupervisor <- maybe (return Nothing) (query . GetUserByUserID . UserID . unSupervisorID) $ usersupervisor user
-            case acctype of
-                 Just PrivateAccount -> do
-                     ifAccountTypeIsValid msupervisor PrivateAccount $
-                         finalizeActivation signupmethod user PrivateAccount id
-                 Just CompanyAccount -> do
-                     mfname <- getRequiredField asValidName "fname"
-                     mlname <- getRequiredField asValidName "lname"
-                     mcompanyname <- maybe (getRequiredField asValidName "companyname")
-                                         (\_ -> return $ Just BS.empty) msupervisor
-                     mcompanyposition <- getRequiredField asValidName "companyposition"
-                     mphone <- getRequiredField asValidPhone "phone"
-                     case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
-                          (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
-                              -- inherit company info from supervisor
-                              let infoupdatef = case msupervisor of
-                                   Just sv -> \info -> info {
-                                         userfstname = fname
-                                       , usersndname = lname
-                                       , usercompanyposition = companytitle
-                                       , userphone = phone
-                                       , usercompanyname = getCompanyName sv
-                                       , usercompanynumber = getCompanyNumber sv
-                                       , useraddress = useraddress $ userinfo sv
-                                       , userzip = userzip $ userinfo sv
-                                       , usercity = usercity $ userinfo sv
-                                       , usercountry = usercountry $ userinfo sv
-                                   }
-                                   Nothing -> \info -> info {
-                                       userfstname = fname
-                                     , usersndname = lname
-                                     , usercompanyname = companyname
-                                     , usercompanyposition = companytitle
-                                     , userphone = phone
-                                   }
-                              ifAccountTypeIsValid msupervisor CompanyAccount $
-                                finalizeActivation signupmethod user CompanyAccount infoupdatef
-                          _ -> returnToAccountSetup user
-                 _ -> do
-                     templates <- ctxtemplates <$> getContext
-                     flash $ flashMessageNoAccountType templates
-                     returnToAccountSetup user
-            where
-                -- we protect from choosing account type that doesn't match
-                -- supervisor in browser, but someone may just send invalid
-                -- data directly to the server
-                ifAccountTypeIsValid msupervisor acctype action = do
-                    case msupervisor of
-                         Just sv -> do
-                             if (accounttype $ usersettings sv) == acctype
-                                then action
-                                else do
-                                    templates <- ctxtemplates <$> getContext
-                                    flash $ flashMessageNoAccountType templates
-                                    returnToAccountSetup user
-                         Nothing -> action
-
-        finalizeActivation signupmethod user acctype infoupdatefunc = do
-            muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
-            case muser of
-                 Just _ -> do
-                     templates <- ctxtemplates <$> getContext
-                     flash $ flashMessageUserActivated templates
-                     return LinkMain
-                 Nothing -> do
-                     -- handleActivate' might have updated user info, so we
-                     -- need to query database for the newest user version
-                     newuser <- fromMaybe user <$> (query $ GetUserByUserID $ userid user)
-                     returnToAccountSetup newuser
-
-        getUserForViralInvite _now invitedemail invitationtime inviterid = do
-            muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail
-            case muser of
-                 Just user -> do -- user created, we need to fill in some info
-                     minviter <- query $ GetUserByUserID inviterid
-                     update $ SetInviteInfo minviter invitationtime Viral (userid user)
-                     return muser
-                 Nothing -> do -- user already exists, get her
-                     query $ GetUserByEmail Nothing invitedemail
-
-{- |
-    Helper method for handling account activation.  This'll check
-    the tos, and the passwords and add error flash messages as you'd
-    expect.
--}
-handleActivate' :: SignupMethod -> User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
-handleActivate' signupmethod user acctype actionid infoupdatefunc = do
-  ctx <- getContext
-  mtos <- getDefaultedField False asValidCheckBox "tos"
-  mpassword <- getRequiredField asValidPassword "password"
-  mpassword2 <- getRequiredField asValidPassword "password2"
-  -- update user info he typed on signup page, so he won't
-  -- have to type in again if password validation fails.
-  _ <- update $ SetUserInfo (userid user) $ infoupdatefunc (userinfo user)
-  case (mtos, mpassword, mpassword2) of
-    (Just tos, Just password, Just password2) -> do
-      case checkPasswordsMatch password password2 of
-        Right () ->
-          if tos
+  now <- liftIO $ getMinutesTime
+  maction <- checkValidity now <$> (query $ GetAction aid)
+  case fmap actionType maction of
+    Just (ViralInvitationSent email invtime inviterid _ token) ->
+      if token == hash
+         then do
+           _ <- (getUserForViralInvite email invtime inviterid)
+                 >>= maybe mzero (handleActivate aid hash ViralInvitation)
+           return LinkMain
+         else mzero
+    Just (AccountCreatedBySigning _ uid _ token) ->
+      if token == hash
+        then do
+          _ <- (runDBQuery $ GetUserByID uid)
+                  >>= maybe mzero (handleActivate aid hash BySigning)
+          addFlashM modalWelcomeToSkrivaPa
+          return LinkMain
+        else mzero
+    Just (AccountCreated uid token) ->
+      if token == hash
+        then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user ->
+          if isNothing $ userhasacceptedtermsofservice user
             then do
-              passwordhash <- liftIO $ createPassword password
-              _ <- update $ SetUserPassword (userid user) passwordhash
-              _ <- update $ AcceptTermsOfService (userid user) (ctxtime ctx)
-              _ <- update $ SetSignupMethod (userid user) signupmethod
-              _ <- update $ SetUserSettings (userid user) $ (usersettings user) {
-                accounttype = acctype
-              }
-              _ <- update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {
-                  paymentaccountfreesignatures =
-                      case usersupervisor user of
-                           Just _  -> 0
-                           Nothing -> 100 -- later we should set here either
-                           -- 10 or 20, depending on user's account type. for
-                           -- now we don't modify that number anyway.
-              }
-              dropExistingAction actionid
-              logUserToContext $ Just user
-              return $ Just user
-             else do
-               flash $ flashMessageMustAcceptTOS $ ctxtemplates ctx
-               return Nothing
-        Left flashmsg -> do
-          flash $ flashmsg (ctxtemplates ctx)
-          return Nothing
-    _ -> return Nothing
+              _ <- handleActivate aid hash AccountRequest user
+              return LinkMain
+            else do
+              addFlashM flashMessageUserAlreadyActivated
+              return LinkMain)
+        else mzero
+    Just _ -> mzero
+    Nothing -> do -- try to generate another activation link
+      getOptionalField asValidEmail "email" >>= maybe mzero (\email ->
+        (runDBQuery $ GetUserByEmail Nothing $ Email email) >>= maybe mzero (\user ->
+          if isNothing $ userhasacceptedtermsofservice user
+            then do
+              ctx <- getContext
+              al <- newAccountCreatedLink user
+              mail <- newUserMail (ctxhostpart ctx) email email al False
+              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
+              addFlashM flashMessageNewActivationLinkSend
+              return LinkMain
+            else mzero))
+  where
+    getUserForViralInvite :: Kontrakcja m => Email -> MinutesTime -> UserID -> m (Maybe User)
+    getUserForViralInvite invitedemail invitationtime inviterid = do
+      ctx <- getContext  
+      muser <- createInvitedUser (BS.empty, BS.empty) (unEmail invitedemail) (systemServerFromURL $ ctxhostpart ctx)
+      case muser of
+        Just user -> do -- user created, we need to fill in some info
+          minviter <- runDBQuery $ GetUserByID inviterid
+          _ <- runDBUpdate $ SetInviteInfo (userid <$> minviter) invitationtime Viral (userid user)
+          return muser
+        Nothing -> do -- user already exists, get her
+          runDBQuery $ GetUserByEmail Nothing invitedemail
+
+handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
+handleActivate aid hash signupmethod actvuser = do
+  iscompanyaccount <- getCriticalField asValidAccountType "accounttype"
+  mcompany <- getCompanyForUser actvuser
+  case (iscompanyaccount, mcompany) of
+    (False, Just _company) -> do
+      -- accounts setup as part of a company can't just switch to being private
+      -- we have protected against this on the client, but this should provide an extra server check
+      addFlashM flashMessageNoAccountType
+      returnToAccountSetup actvuser Nothing
+    (False, Nothing) ->
+      -- this is just a simple private account activation
+      finalizePrivateActivation actvuser
+    (True, Just company) -> do
+      -- this is an account for an existing company
+      finalizeCompanyActivation actvuser company
+    (True, Nothing) -> do
+      -- we need to make a new company, because one doesn't already exist - this user should be the admin too
+      (user, company) <- runDB $ do
+        company <- dbUpdate $ CreateCompany Nothing Nothing
+        _ <- dbUpdate $ SetUserCompany (userid actvuser) (companyid company)
+        _ <- dbUpdate $ MakeUserCompanyAdmin (userid actvuser)
+        Just user <- dbQuery $ GetUserByID $ userid actvuser
+        return (user, company)
+      finalizeCompanyActivation user company
+  where
+    returnToAccountSetup :: Kontrakcja n => User -> Maybe Company -> n (Maybe User)
+    returnToAccountSetup user mcompany = do
+      addFlashM $ modalAccountSetup (Just user) mcompany $ LinkAccountCreated aid hash $ BS.toString $ getEmail user
+      return Nothing
+
+    asValidAccountType :: String -> Result Bool
+    asValidAccountType "CompanyAccount" = return True
+    asValidAccountType _ = return False
+
+    finalizePrivateActivation :: Kontrakcja n => User -> n (Maybe User)
+    finalizePrivateActivation user =
+      finalizeActivation user Nothing id id
+          
+    finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
+    finalizeCompanyActivation user company = do
+      -- is this from the acceptaccount after signup modal? if it is then they just type in their
+      -- password, so we don't want to check for the user and company info stuff
+      acceptaccount <- isFieldSet "acceptaccount"
+      muserf <- if not acceptaccount
+                  then getUserInfoUpdateFunc user
+                  else return $ Just id
+      mcompanyf <- if not acceptaccount && useriscompanyadmin user
+                     then getCompanyInfoUpdateFunc company
+                     else return $ Just id
+      case (muserf, mcompanyf) of
+        (Just userf, Just companyf) ->
+          finalizeActivation user (Just company) userf companyf
+        _ -> returnToAccountSetup user (Just company)
+
+    finalizeActivation :: Kontrakcja n => User
+                                          -> Maybe Company
+                                          -> (UserInfo -> UserInfo)
+                                          -> (CompanyInfo -> CompanyInfo)
+                                          -> n (Maybe User)
+    finalizeActivation user mcompany userinfoupdatefunc companyinfoupdatefunc = do
+      mnewuser <- performActivation user mcompany aid userinfoupdatefunc companyinfoupdatefunc
+      case mnewuser of
+        Just newuser -> do
+          addFlashM flashMessageUserActivated
+          return $ Just newuser
+        Nothing -> do
+          -- performActivation might have updated user or company info, so we
+          -- need to query database for the newest user & company version
+          newuser <- fromMaybe user <$> (runDBQuery $ GetUserByID $ userid user)
+          mnewcompany <- getCompanyForUser newuser
+          returnToAccountSetup newuser mnewcompany
+
+    getUserInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (UserInfo -> UserInfo))
+    getUserInfoUpdateFunc _user = do
+      mfname <- getRequiredField asValidName "fname"
+      mlname <- getRequiredField asValidName "lname"
+      mcompanyposition <- getRequiredField asValidPosition "companyposition"
+      mphone <- getRequiredField (Good . BS.fromString) "phone"
+      return $ 
+        case (mfname, mlname, mcompanyposition, mphone) of
+          (Just fname, Just lname, Just companytitle, Just phone) -> Just $ 
+            \info -> info { userfstname = fname
+                          , usersndname = lname
+                          , usercompanyposition = companytitle
+                          , userphone = phone
+                          }
+          _ -> Nothing
+ 
+    getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
+    getCompanyInfoUpdateFunc _company = do
+      mcompanyname <- getRequiredField asValidCompanyName "companyname"
+      return $ 
+        case mcompanyname of
+          (Just companyname') -> Just $ \info -> info { companyname = companyname' }
+          _ -> Nothing
+    
+    performActivation :: Kontrakcja n => User
+                                         -> Maybe Company
+                                         -> ActionID
+                                         -> (UserInfo -> UserInfo)
+                                         -> (CompanyInfo -> CompanyInfo)
+                                         -> n (Maybe User)
+    performActivation user mcompany actionid userinfoupdatefunc companyinfoupdatefunc = do
+      ctx <- getContext
+      mtos <- getDefaultedField False asValidCheckBox "tos"
+      mpassword <- getRequiredField asValidPassword "password"
+      mpassword2 <- getRequiredField asValidPassword "password2"
+      -- update user info he typed on signup page, so he won't
+      -- have to type in again if password validation fails.
+      _ <- runDBUpdate $ SetUserInfo (userid user) $ userinfoupdatefunc (userinfo user)
+      -- if appropriate update the company info too
+      if (isJust mcompany && useriscompanyadmin user && usercompany user == fmap companyid mcompany)
+        then do
+          let Just company = mcompany
+          _ <- runDBUpdate $ SetCompanyInfo (companyid company) $ companyinfoupdatefunc (companyinfo company)
+          return ()
+        else return ()
+      case (mtos, mpassword, mpassword2) of
+        (Just tos, Just password, Just password2) -> do
+          case checkPasswordsMatch password password2 of
+            Right () ->
+              if tos
+                then do
+                  passwordhash <- liftIO $ createPassword password
+                  runDB $ do
+                    _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+                    _ <- dbUpdate $ AcceptTermsOfService (userid user) (ctxtime ctx)
+                    _ <- dbUpdate $ SetSignupMethod (userid user) signupmethod
+                    return ()
+                  dropExistingAction actionid
+                  logUserToContext $ Just user
+                  return $ Just user
+                else do
+                  addFlashM flashMessageMustAcceptTOS
+                  return Nothing
+            Left flash -> do
+              addFlashM flash
+              return Nothing
+        _ -> return Nothing
 
 
 {- |
@@ -888,31 +915,28 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
     email.  This'll show them the usual landing page, but with a modal dialog
     for changing their password.
 -}
-handlePasswordReminderGet :: ActionID -> MagicHash -> Kontra Response
+handlePasswordReminderGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handlePasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
          Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
-             addModal $ modalNewPasswordView aid hash
+             addFlashM $ modalNewPasswordView aid hash
              sendRedirect LinkMain
          Nothing -> do
-             templates <- ctxtemplates <$> getContext
-             flash $ flashMessagePasswordChangeLinkNotValid templates
+             addFlashM flashMessagePasswordChangeLinkNotValid
              sendRedirect LinkMain
 
-handlePasswordReminderPost :: ActionID -> MagicHash -> Kontra KontraLink
+handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePasswordReminderPost aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
          Just user -> handleChangePassword user
          Nothing   -> do
-             templates <- ctxtemplates <$> getContext
-             flash $ flashMessagePasswordChangeLinkNotValid templates
+             addFlashM flashMessagePasswordChangeLinkNotValid
              return LinkMain
     where
         handleChangePassword user = do
-            templates <- ctxtemplates <$> getContext
             mpassword <- getRequiredField asValidPassword "password"
             mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
@@ -921,80 +945,73 @@ handlePasswordReminderPost aid hash = do
                           Right () -> do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
-                              _ <- update $ SetUserPassword (userid user) passwordhash
-                              flash $ flashMessageUserPasswordChanged templates
+                              _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
+                              addFlashM flashMessageUserPasswordChanged
                               logUserToContext $ Just user
                               return LinkMain
-                          Left flashmsg -> do
-                              flash $ flashmsg templates
-                              addModal $ modalNewPasswordView aid hash
+                          Left flash -> do
+                              addFlashM flash
+                              addFlashM $ modalNewPasswordView aid hash
                               return LinkMain
                  _ -> do
-                   addModal $ modalNewPasswordView aid hash
+                   addFlashM $ modalNewPasswordView aid hash
                    return LinkMain
 
-handleAccountRemovalGet :: ActionID -> MagicHash -> Kontra Response
+handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountRemovalGet aid hash = do
-    getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
-        let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
-        if hash == token
-           then (query $ GetDocumentByDocumentID docid) >>= maybe mzero (\doc -> do
-               let sigs = filter ((==) sigid . signatorylinkid) $ documentsignatorylinks doc
-               case sigs of
-                    [sig] -> do
-                        extendActionEvalTimeToOneDayMinimum aid
-                        templates <- ctxtemplates <$> getContext
-                        addModal $ modalAccountRemoval templates (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
-                        sendRedirect $ LinkSignDoc doc sig
-                    _ -> mzero
-               )
-           else mzero
-        )
+  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
+  let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
+  guard $ hash == token
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  sig <- guardJust $ getSigLinkFor doc sigid
+  extendActionEvalTimeToOneDayMinimum aid
+  addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
+  sendRedirect $ LinkSignDoc doc sig
 
-handleAccountRemovalFromSign :: ActionID -> MagicHash -> Kontra ()
+handleAccountRemovalFromSign :: Kontrakcja m => ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign aid hash = do
   _doc <- handleAccountRemoval' aid hash
   return ()
 
-handleAccountRemovalPost :: ActionID -> MagicHash -> Kontra KontraLink
+handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountRemovalPost aid hash = do
   doc <- handleAccountRemoval' aid hash
-  templates <- ctxtemplates <$> getContext
-  addModal $ modalAccountRemoved templates (documenttitle doc)
+  addFlashM $ modalAccountRemoved $ documenttitle doc
   return LinkMain
 
 {- |
     Helper function for performing account removal (these are accounts setup
     by signing), this'll return the document that was removed.
 -}
-handleAccountRemoval' :: ActionID -> MagicHash -> Kontra Document
+handleAccountRemoval' :: Kontrakcja m => ActionID -> MagicHash -> m Document
 handleAccountRemoval' aid hash = do
-    getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
-        let AccountCreatedBySigning _ _ (docid, _) token = actionType action
-        if hash == token
-           then (query $ GetDocumentByDocumentID docid) >>= maybe mzero (\doc -> do
-               -- there should be done account and its documents removal, but
-               -- since the functionality is not there yet, we just remove
-               -- this action to prevent user from account activation and
-               -- receiving further reminders
-               dropExistingAction aid
-               return doc)
-           else mzero
-        )
+  action <- guardJustM $ getAccountCreatedBySigningIDAction aid        
+  let AccountCreatedBySigning _ _ (docid, _) token = actionType action
+  guard $ hash == token
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  -- there should be done account and its documents removal, but
+  -- since the functionality is not there yet, we just remove
+  -- this action to prevent user from account activation and
+  -- receiving further reminders
+  dropExistingAction aid
+  return doc
 
-getAccountCreatedBySigningIDAction :: ActionID -> Kontra (Maybe Action)
-getAccountCreatedBySigningIDAction aid =
-    (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
-        -- allow for account created by signing links only
-        if (actionTypeID $ actionType action) /= AccountCreatedBySigningID
-           then return Nothing
-           else if (acbsState $ actionType action) /= ReminderSent
-                   then return $ Just action
-                   else do
-                       now <- liftIO $ getMinutesTime
-                       return $ checkValidity now $ Just action)
+getAccountCreatedBySigningIDAction :: Kontrakcja m => ActionID -> m (Maybe Action)
+getAccountCreatedBySigningIDAction aid = do
+  maction <- query $ GetAction aid
+  case maction of
+    Nothing -> return Nothing
+    Just action -> 
+      -- allow for account created by signing links only
+      if actionTypeID (actionType action) /= AccountCreatedBySigningID
+      then return Nothing
+      else if acbsState (actionType action) /= ReminderSent
+           then return $ Just action
+           else do
+             now <- liftIO $ getMinutesTime
+             return $ checkValidity now $ Just action
 
-getUserFromActionOfType :: ActionTypeID -> ActionID -> MagicHash -> Kontra (Maybe User)
+getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do
     now <- liftIO $ getMinutesTime
     maction <- checkValidity now <$> query (GetAction aid)
@@ -1003,7 +1020,7 @@ getUserFromActionOfType atypeid aid hash = do
              if atypeid == (actionTypeID $ actionType action)
                 then getUID action >>= maybe
                          (return Nothing)
-                         (query . GetUserByUserID)
+                         (runDBQuery . GetUserByID)
                 else return Nothing
          Nothing -> return Nothing
     where
@@ -1019,30 +1036,76 @@ getUserFromActionOfType atypeid aid hash = do
 
 -- | Postpone link removal. Needed to make sure that between
 -- GET and POST requests action won't be removed from the system.
-extendActionEvalTimeToOneDayMinimum :: ActionID -> Kontra ()
+extendActionEvalTimeToOneDayMinimum :: Kontrakcja m => ActionID -> m ()
 extendActionEvalTimeToOneDayMinimum aid = do
     dayAfterNow <- minutesAfter (60*24) <$> liftIO getMinutesTime
     maction <- checkValidity dayAfterNow <$> query (GetAction aid)
     when_ (isNothing maction) $
         update $ UpdateActionEvalTime aid dayAfterNow
 
-dropExistingAction :: ActionID -> Kontra ()
+dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
+  
+handleFriends :: Kontrakcja m => m JSValue
+handleFriends = do
+  Context{ctxmaybeuser} <- getContext
+  user <- guardJust ctxmaybeuser
+  friends <- runDBQuery $ GetUserFriends $ userid user
+  params <- getListParamsNew
+  let friendsPage = friendSortSearchPage params friends
+  return $ JSObject $ toJSObject [("list", 
+                                   JSArray $ 
+                                   map (\f -> JSObject $ 
+                                              toJSObject [("fields",
+                                                           JSObject $ toJSObject [("email", 
+                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)
+                                                                                 ,("id", JSString $ toJSString (show (userid f)))])])
+                                           (list friendsPage)),
+                                  ("paging", pagingParamsJSON friendsPage)]
 
-guardXToken :: Kontra ()
+handleCompanyAccounts :: Kontrakcja m => m JSValue
+handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
+  Context{ctxmaybeuser = Just user} <- getContext
+  companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
+  -- filter out the current user, they don't want to see themselves in the list
+  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
+  params <- getListParamsNew
+  let companypage = companyAccountsSortSearchPage params companyaccounts
+  return $ JSObject $ toJSObject [("list",
+                                   JSArray $
+                                   map (\f -> JSObject $
+                                              toJSObject [("fields",
+                                                           JSObject $ toJSObject [("id", 
+                                                                                   JSString $ toJSString $ show $ userid f)
+                                                                                 ,("firstname",
+                                                                                   JSString $ toJSString $ BS.toString $ getFirstName f)
+                                                                                 ,("lastname",
+                                                                                   JSString $ toJSString $ BS.toString $ getLastName f)
+                                                                                 ,("position",
+                                                                                   JSString $ toJSString $ BS.toString $ usercompanyposition $ userinfo f)
+                                                                                 ,("phone",
+                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f) 
+                                                                                 ,("email",
+                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)])])
+                                   (list companypage))
+                                 ,("paging", pagingParamsJSON companypage)]
+  
+
+{- | 
+   Fetch the xtoken param and double read it. Once as String and once as MagicHash.
+ -}
+readXToken :: Kontrakcja m => m (Either String MagicHash)
+readXToken = do
+  mxtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
+  return $ maybe (Left $ "xtoken read failure" ) Right mxtoken
+
+guardXToken :: Kontrakcja m => m ()
 guardXToken = do
-    Context { ctxxtoken } <- getContext
-    (readM <$> getDataFnM (look "xtoken")) >>= maybe mzero (\xtokenstr -> do
-        maybe (readError xtokenstr) (\xtoken -> do
-            unless (xtoken == ctxxtoken) (do
-                Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
-                          ++ " param: " ++ show xtoken
-                mzero)
-            ) $ readM xtokenstr
-        )
-    where
-        readError v = do
-            Log.debug $ "couldn't read xtoken value: " ++ v
-            mzero
+  Context { ctxxtoken } <- getContext
+  xtoken <- guardRightM readXToken
+  unless (xtoken == ctxxtoken) $ do
+    Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
+      ++ " param: " ++ show xtoken
+    mzero

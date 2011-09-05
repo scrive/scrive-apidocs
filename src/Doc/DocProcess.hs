@@ -16,14 +16,15 @@ class HasProcess a where
   getValueForProcess doctype fieldname =
     fmap fieldname (getProcess doctype)
 
-  renderTemplateForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> Fields -> IO String
-  renderTemplateForProcess templates hasprocess fieldname fields =
+  renderTemplateForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> Fields m -> m String
+  renderTemplateForProcess hasprocess fieldname fields =
     case getValueForProcess hasprocess fieldname of
-      (Just templatename) -> renderTemplate templates templatename fields
+      (Just templatename) -> renderTemplateFM templatename fields
       _ -> return ""
 
-  renderTextForProcess :: KontrakcjaTemplates -> a -> (DocProcessInfo -> String) -> IO String
-  renderTextForProcess templates hasprocess fieldname = renderTemplateForProcess templates hasprocess fieldname $ do return ()
+  renderTextForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> m String
+  renderTextForProcess hasprocess fieldname =
+      renderTemplateForProcess hasprocess fieldname $ do return ()
 
 instance HasProcess DocumentType where
   getProcess (Signable Contract) = Just contractProcess
@@ -49,7 +50,7 @@ data DocProcessInfo =
   , processuploadname :: String
 
   -- used in the design view
-  , processadvancedview :: Bool
+  , processbasicavailable :: Bool
   , processauthorsend :: Bool
   , processvalidationchoiceforbasic :: Bool
   , processexpiryforbasic :: Bool
@@ -68,7 +69,8 @@ data DocProcessInfo =
   , processcancelbyauthormodaltitle :: String
   , processrejectbuttontext :: String
   , processsignatorysignmodaltitle :: String
-  , processsignatorysignmodalcontent :: String
+  , processsignatorysignmodalcontentlast :: String
+  , processsignatorysignmodalcontentnotlast :: String
   , processsignbuttontext :: String
   , processsignatorycancelmodaltitle :: String
   , processsignatorysignedtext :: String
@@ -136,7 +138,7 @@ contractProcess =
   , processuploadname = "contractuploadname"
 
   -- used in the design view
-  , processadvancedview = True
+  , processbasicavailable = True
   , processauthorsend = False
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
@@ -155,7 +157,8 @@ contractProcess =
   , processcancelbyauthormodaltitle = "contractcancelbyauthormodaltitle"
   , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
+  , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
+  , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
   , processsignatorysignedtext = "signatorysignedcontracttext"
@@ -223,7 +226,7 @@ offerProcess =
   , processuploadprompttext = "offeruploadprompttext"
 
   -- used in the design view
-  , processadvancedview = False
+  , processbasicavailable = True
   , processauthorsend = True
   , processvalidationchoiceforbasic = False
   , processexpiryforbasic = True
@@ -242,7 +245,8 @@ offerProcess =
   , processcancelbyauthormodaltitle = "offercancelbyauthormodaltitle"
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
+  , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
+  , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
   , processsignbuttontext = "offersignbuttontext"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
   , processsignatorysignedtext = "signatorysignedoffertext"
@@ -310,7 +314,7 @@ orderProcess =
   , processuploadname = "orderuploadname"
 
   -- used in the design view
-  , processadvancedview = True
+  , processbasicavailable = False
   , processauthorsend = True
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
@@ -329,7 +333,8 @@ orderProcess =
   , processcancelbyauthormodaltitle = "ordercancelbyauthormodaltitle"
   , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
+  , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
+  , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
   , processsignatorysignedtext = "signatorysignedordertext"

@@ -20,7 +20,7 @@ javascriptLocalisation =
              , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
-             , author : "Avsändare"
+             , author : "$_sender()$"
              , youMustSetParnerEmail : "$_youMustSetParnerEmail()$"
              , emptyOrNotValidEmail :  "$_emptyOrNotValidEmail()$"
              , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
@@ -51,5 +51,88 @@ javascriptLocalisation =
              , companyNumber : "$_orgnumber()$"
              , loadingTweets : "$_loadingTweets()$"
              , fieldName : "$_fieldName()$"
+             , multiPartPartner : "$_multiPartPartner()$"
+             , noNamePerson : "$_noNamePerson()$"
+             , senderName : "$_senderName()$"
+             , senderTitle : "$_senderTitle()$"
+             , senderNumber :  "$_senderNumber()$"
+             , senderEmail :  "$_senderEmail()$"
+             , partnerName : "$_partnerName()$"
+             , partnerTitle : "$_partnerTitle()$"
+             , partnerNumber : "$_partnerNumber()$"
+             , partnerEmail : "$_partnerEmail()$"
+             , statusToolTip: {
+                   draft: "$_tooltipdraft()$"
+                 , cancelled : "$_tooltipcancelled()$"
+                 , sent : "$_tooltipsent()$"
+                 , delivered : "$_tooltipdelivered()$"
+                 , reviewed : "$_tooltipreviewed()$"
+                 , read : "$_tooltipread()$"
+                 , opened : "$_tooltipopened()$"
+                 , signed : "$_tooltipsigned()$"
+             }
+             , select : "$_options()$"
+             , of : "$_of()$"
+             , and : "$_and()$"
+             , you : "$_you()$"
+             , outLogoClass : "$ourLogoClass()$"
+             , searchBoxButtonText : "$_searchBoxButtonText()$"
+             , downloadPDF : "$_DownloadPDF()$"
+             , document : "$_Document()$"
+             , attachment : "$_Attachment()$"
+             , attachments : "$_Attachments()$"
+             , requestedAttachments : "$_RequestedAttachments()$"
+             , send : "$_send()$"
+			 , reminder : {
+					     send : "$_sendReminder()$"
+					   , formHead : "$_reminderFormHead()$"
+					   , formSend :	"$_reminderFormSendReminder()$"
+                       , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
+					}
+             , sign :  {
+                          guardCBox : "$_signGuardCBox()$"
+                        , eleg : {
+                                     subhead : "$_pageDocumentForSignContentElegSubhead()$"
+                                   , body1: "$_pageDocumentForSignContentElegBody1()$"
+                                   , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
+                                   , body2 : "$_pageDocumentForSignContentElegBody3()$"
+                                 }
+                    }
+             , signByAuthor : {
+                          guardCBoxForAuthorLabel : "$_signGuardField1()$"
+                        , guardCBoxForAuthorAfterLabel : "$_signGuardField2()$"
+                        , modalTitle : "$_dialogConfirmSignByAuthorHead()$"
+                        , modalBody1 : "$_dialogConfirmSignByAuthorBody1()$"
+                        , modalBody2 : "$_dialogConfirmSignByAuthorBody2()$"
+                        , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
+                        , eleg : {
+                                     subhead : "$_dialogConfirmSignByAuthorElegSubHead()$"
+                                   , body1: "$_dialogConfirmSignByAuthorElegBody()$"
+                                   , clickHere : "$_dialogConfirmSignByAuthorElegClickHere1()$"
+                                   , body2 : "$_dialogConfirmSignByAuthorElegClickHere2()$"
+                                 }
+               
+               }
+             , reject : {
+                         send : "$_pageDocumentForSignContentRejectFooterReject()$"
+                       , editMessage : "$_pageDocumentForSignContentRejectFooterOwnMessage()$"
+               }
+
+
+
+
+             , signatoryMessage : {
+                         datamismatch :"$_signatoryMessageIfSignatoryDatamismatch()$"
+                       , timedout : "$_signatoryMessageIfTimedout()$"
+                       , rejected : "$_signatoryMessageIfSignatoryRejecteddate()$"
+                       , seen : "$_signatoryMessageIfSignatorySeendate()$"
+                       , read : "$_signatoryMessageIfSignatoryReaddate()$"
+                       , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
+                       , other : "$_signatoryMessageIfElse()$"   
+                    }
+            , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
+            , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
+            , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
+            , skrivapa : "$_skrivapa()$" 
    }
 ####

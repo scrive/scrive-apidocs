@@ -1,9 +1,14 @@
-module API.MailAPI where
+module API.MailAPI (
+      handleMailCommand
+    , mailAPI
+    ) where
 
+import DB.Classes
 import Doc.DocState
+import Company.Model
+import User.Model
 import Kontra
 import Misc
-import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import qualified AppLogger as Log (debug)
 import qualified Doc.DocControl as DocControl
 import Control.Monad.Reader
@@ -13,7 +18,6 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host)
-import Happstack.State (query)
 import Happstack.State (update)
 import Text.JSON
 import Text.JSON.String
@@ -26,7 +30,6 @@ import qualified Data.ByteString.UTF8 as BS
 
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
-import MinutesTime
 import API.API
 import API.APICommons
 
@@ -35,7 +38,7 @@ data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , ifrom :: BS.ByteString
                                      , ito :: BS.ByteString
                                      }
-type MailAPIFunction a = APIFunction MailAPIContext a
+type MailAPIFunction m a = APIFunction m MailAPIContext a
 
 instance APIContext MailAPIContext where
     body = ibody
@@ -43,7 +46,7 @@ instance APIContext MailAPIContext where
     apiContext = apiContextForMail
 
 
-apiContextForMail :: Kontra (Either (API_ERROR,String) MailAPIContext)
+apiContextForMail :: Kontrakcja m => m (Either (API_ERROR, String) MailAPIContext)
 apiContextForMail = do
     Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
     content <- case contentspec of
@@ -64,14 +67,8 @@ apiContextForMail = do
                                                         , ito = to
                                                         }
 
-mailAPI :: Kontra Response
-mailAPI = do
-    methodM POST
-    apiResponse $ do
-              mcontext <- apiContext
-              case mcontext  of
-                  Right apicontext -> (either (uncurry apiError) id) <$> runApiFunction handleMailCommand apicontext
-                  Left emsg -> return $ uncurry apiError emsg
+mailAPI :: Kontrakcja m => m Response
+mailAPI = apiCall "mailapi" handleMailCommand
 
 maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return
@@ -127,7 +124,7 @@ parseEmailMessage content = runErrorT $ do
 
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
 -- handleMailCommand (JSObject json) content from to = runErrorT $ do
-handleMailCommand :: APIFunction MailAPIContext (JSObject JSValue)
+handleMailCommand :: Kontrakcja m => MailAPIFunction m (JSObject JSValue)
 handleMailCommand = do
     MailAPIContext { ifrom = from, ito = to, icontent = content } <- ask
     let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
@@ -137,12 +134,13 @@ handleMailCommand = do
     let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
 
     Context { ctxtime, ctxipnumber } <- getContext
-    (maybeUser :: Maybe User) <- liftIO $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-    (user :: User) <- maybeFail ("User '" ++ username ++ "' not found") maybeUser
+    user <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString username))
+      >>= maybeFail ("User '" ++ username ++ "' not found")
 
-    when (isNothing $ usermailapi user) $
+    mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
+    when (isNothing mmailapi) $
         fail $ "User '" ++ username ++ "' hasn't enabled mail api"
-    let Just mailapi = usermailapi user
+    let Just mailapi = mmailapi
 
     title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
 
@@ -168,34 +166,29 @@ handleMailCommand = do
              , (True,                         Signable Contract)
              ]
 
-    today <- asInt <$> liftIO getMinutesTime
-    if today == umapiLastSentDate mailapi
-       then do
-           when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
-               fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
-           let senttoday = umapiSentToday mailapi + 1
-           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
-               umapiSentToday = senttoday
-           }
-           return ()
-       else do
-           _ <- liftIO $ update $ SetUserMailAPI (userid user) $ Just mailapi {
-                 umapiLastSentDate = today
-               , umapiSentToday = 1
-           }
-           return ()
+    when (umapiDailyLimit mailapi == umapiSentToday mailapi) $ do
+        fail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
+    _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
+        umapiSentToday = umapiSentToday mailapi + 1
+    }
 
     (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
-    let userDetails = signatoryDetailsFromUser user
+    mcompany <- case usercompany user of
+                  Just companyid -> runDBQuery $ GetCompany companyid
+                  Nothing -> return Nothing
+    let userDetails = signatoryDetailsFromUser user mcompany
 
-    (doc :: Document) <- liftIO $ update $ NewDocument user title doctype ctxtime
+    (eitherdoc :: Either String Document) <- liftIO $ update $ NewDocument user mcompany title doctype ctxtime
+    (doc :: Document) <- case eitherdoc of
+                           Left errmsg -> return (error errmsg)
+                           Right document -> return document
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
     (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
-                                    (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user)
+                                    (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)
                                     [EmailIdentification] Nothing AdvancedFunctionality
 
     (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing

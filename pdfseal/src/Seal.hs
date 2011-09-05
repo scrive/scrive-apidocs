@@ -73,7 +73,10 @@ getResDict doc pageid =
         -- FIXME: refs or something
         Just (Indir (Dict pagedict) _) = PdfModel.lookup pageid doc
         resource = case Prelude.lookup (BS.pack "Resources") pagedict of
-          Nothing -> []
+          Nothing -> case Prelude.lookup (BS.pack "Parent") pagedict of
+                         Nothing -> []
+                         Just (Ref parentrefid') -> getResDict doc parentrefid'
+                         _ -> []
           Just (Dict value') -> value'
           Just (Ref refid') -> case PdfModel.lookup refid' doc of
                                 Just (Indir (Dict value') _) -> value'
@@ -127,18 +130,33 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
 
         ([q,qQ,rr], docx) = flip runState document' $ do
             q' <- addStream (Dict []) $ BSL.pack "q "
-            qQ' <- addStream (Dict []) $ BSL.pack (" Q " ++ rotationtext ++ " ")
+            qQ' <- addStream (Dict []) $ BSL.pack (" Q " ++ normalizeToA4 ++ " " ++ rotationtext ++ " % here\n")
             rr' <- addStream (Dict []) $ BSL.pack (sealtext)
             return [q',qQ',rr']
 
         sealpagecontents = contentsValueListFromPageID document' sealrefid
 
         rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
+        ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
+            = case (Prelude.lookup (BS.pack "CropBox") pagedict `mplus` Prelude.lookup (BS.pack "MediaBox") pagedict) of
+                  Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) -> 
+                       [l :: Double, b, r, t]
+                  _ -> [0, 0, 595, 842]
+
+        cropbox_w = cropbox_r - cropbox_l
+        cropbox_h = cropbox_t - cropbox_b
+
+        normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
+                        show (Number (0)) ++ " " ++
+                        show (Number (0)) ++ " " ++
+                        show (Number (cropbox_h/842)) ++ " " ++
+                        show (Number (-cropbox_l)) ++ " " ++
+                        show (Number (-cropbox_b)) ++ " cm"
 
         rotationtext = case rotatekey of -- 595 842
-                         Just (Number 90) -> "0 1 -1 0 595 0 cm"
-                         Just (Number 180) -> "-1 0 0 -1 595 842 cm"
-                         Just (Number 270) -> "0 -1 1 0 0 842 cm"
+                         Just (Number 90) -> "0 1 -1 0 " ++ show (Number cropbox_w) ++ " 0 cm"
+                         Just (Number 180) -> "-1 0 0 -1 " ++ show (Number cropbox_w) ++ " " ++ show (Number cropbox_h) ++ " cm"
+                         Just (Number 270) -> "0 -1 1 0 0 " ++ show (Number cropbox_h) ++ " cm"
                          _ -> ""
 
         sealresdict = getResDict document' sealrefid

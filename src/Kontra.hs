@@ -1,29 +1,21 @@
 module Kontra
-    ( module User.UserState
-    , module User.Password
-    , Context(..)
+    ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
     , isSuperUser
     , Kontra(runKontra)
-    , KontraModal
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
-    , addFlashMsg
-    , addModal
-    , addModalT
     , logUserToContext
     , onlySuperUser
+    , onlyBackdoorOpen
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
     , newAccountCreatedBySigningLink
     , scheduleEmailSendout
     , queryOrFail
-    , queryOrFailIfLeft
-    , returnJustOrMZero
-    , returnRightOrMZero
     , param
     , currentService
     , currentServiceID
@@ -31,70 +23,40 @@ module Kontra
     )
     where
 
+import API.Service.Model
+import ActionSchedulerState
+import Context
 import Control.Applicative
+import Control.Concurrent.MVar
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Concurrent.MVar
-import Data.Word
+import DB.Classes
+import DB.Types
 import Doc.DocState
-import Happstack.Server
-import MinutesTime
-import Misc
-import Happstack.State (query,QueryEvent)
-import User.UserState
-import User.Password hiding (Password, NoPassword)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map as Map
-import qualified Network.AWS.Authentication as AWS
-import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
-import Mails.MailsConfig()
-import KontraLink
-import ActionSchedulerState
-import qualified TrustWeaver as TW
 import ELegitimation.ELeg
+import Happstack.Server
+import Happstack.State (query, QueryEvent)
+import KontraLink
+import KontraMonad
 import Mails.SendMail
-import qualified MemCache
-import API.Service.ServiceState
-import FlashMessage
-import Company.CompanyState
+import Misc
+import Templates.Templates
+import User.Model
 import Util.HasSomeUserInfo
-
-data Context = Context
-    { ctxmaybeuser           :: Maybe User
-    , ctxhostpart            :: String
-    , ctxflashmessages       :: [FlashMessage]
-    , ctxtime                :: MinutesTime
-    , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages)
-    , ctxipnumber            :: Word32
-    , ctxdocstore            :: FilePath
-    , ctxs3action            :: AWS.S3Action
-    , ctxgscmd               :: String
-    , ctxproduction          :: Bool
-    , ctxtemplates           :: KontrakcjaTemplates
-    , ctxesenforcer          :: MVar ()
-    , ctxtwconf              :: TW.TrustWeaverConf
-    , ctxelegtransactions    :: [ELegTransaction]
-    , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
-    , ctxxtoken              :: MagicHash
-    , ctxcompany             :: Maybe Company
-    , ctxservice             :: Maybe Service
-    , ctxlocation            :: String
-    , ctxadminaccounts       :: [Email]
-    }
-
--- | This is for grouping things together so we won't need to
--- write all that each time we write function type signature
-class (HasRqData m, KontraMonad m, MonadIO m, MonadPlus m, ServerMonad m) => Kontrakcja m
-
-class (Functor m, Monad m) => KontraMonad m where
-    getContext    :: m Context
-    modifyContext :: (Context -> Context) -> m ()
+import qualified AppLogger as Log
+import qualified Data.ByteString.UTF8 as BS
+import Util.MonadUtils
 
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
 
 instance Kontrakcja Kontra
+
+instance DBMonad Kontra where
+  getConnection = ctxdbconn <$> getContext
+  handleDBError e = do
+    Log.error $ show e
+    mzero
 
 instance KontraMonad Kontra where
     getContext    = Kontra get
@@ -102,8 +64,6 @@ instance KontraMonad Kontra where
 
 instance TemplatesMonad Kontra where
     getTemplates = ctxtemplates <$> getContext
-
-type KontraModal = ReaderT KontrakcjaTemplates IO String
 
 {- |
    A list of default user emails.  These should start out as the users
@@ -132,7 +92,7 @@ isSuperUser _ _ = False
 {- |
    Will mzero if not logged in as a super user.
 -}
-onlySuperUser :: Kontra a -> Kontra a
+onlySuperUser :: Kontrakcja m => m a -> m a
 onlySuperUser a = do
     ctx <- getContext
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
@@ -140,46 +100,32 @@ onlySuperUser a = do
         else mzero
 
 {- |
+    Will mzero if the testing backdoor isn't open.
+-}
+onlyBackdoorOpen :: Kontrakcja m => m a -> m a
+onlyBackdoorOpen a = do
+  ctx <- getContext
+  if ctxbackdooropen ctx
+    then a
+    else mzero
+
+{- |
    Adds an Eleg Transaction to the context.
 -}
-addELegTransaction :: ELegTransaction -> Kontra ()
+addELegTransaction :: Kontrakcja m => ELegTransaction -> m ()
 addELegTransaction tr = do
     modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
 {- |
-   Adds a flash message to the context.
--}
-addFlashMsg :: KontraMonad m => FlashMessage -> m ()
-addFlashMsg flash =
-    modifyContext $ \ctx@Context{ ctxflashmessages = flashmessages } ->
-        ctx { ctxflashmessages = flash : flashmessages }
-
-{- |
    Clears all the flash messages from the context.
 -}
-clearFlashMsgs:: Kontra ()
-clearFlashMsgs = modifyContext (\ctx -> ctx { ctxflashmessages = [] })
-
-
-{- |
-   Adds a modal from string
--}
-addModal :: KontraModal ->  Kontra ()
-addModal flash = do
-  templates <- ctxtemplates <$> getContext
-  fm <- liftIO $ runReaderT flash templates
-  modifyContext $ \ctx -> ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
-
-{- |
-   Adds modal as flash template, used for semantics sake
--}
-addModalT :: FlashMessage -> Kontra ()
-addModalT = addFlashMsg
+clearFlashMsgs:: KontraMonad m => m ()
+clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
 
 {- |
    Sticks the logged in user onto the context
 -}
-logUserToContext :: Maybe User -> Kontra ()
+logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 
@@ -223,20 +169,7 @@ scheduleEmailSendout enforcer mail = do
 queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) => ev -> m res
 queryOrFail q = do
   mres <- query q
-  returnJustOrMZero mres
-
-queryOrFailIfLeft :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Either a res)) => ev -> m res
-queryOrFailIfLeft q = do
-  mres <- query q
-  returnRightOrMZero mres
-
--- | if it's not a just, mzero. Otherwise, return the value
-returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a
-returnJustOrMZero = maybe mzero return
-
-returnRightOrMZero :: (MonadPlus m, Monad m) => Either a b -> m b
-returnRightOrMZero (Left _) = mzero
-returnRightOrMZero (Right res) = return res
+  guardJust mres
 
 -- | Checks if request contains a param , else mzero
 param :: String -> Kontra Response -> Kontra Response

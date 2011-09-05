@@ -28,20 +28,24 @@ import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe (isNothing,isJust, fromJust)
+import Database.HDBC.PostgreSQL
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
-import User.UserState (UserID,GetUserByUserID(GetUserByUserID), User)
+import User.Model
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random
 import Happstack.Util.Common ( readM)
-import Misc (MagicHash(MagicHash), mkTypeOf, isSecure, isHTTPS)
+import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELeg
 import Data.Typeable
-import API.Service.ServiceState
+import API.Service.Model
 import Cookies
-import Company.CompanyState
+import Company.Model
+import DB.Classes
+import DB.Types
+import Util.MonadUtils
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -496,16 +500,13 @@ startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) 
 startSession = liftIO emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: Session -> ServerPartT IO (Maybe User)
-getUserFromSession s =
-    case (userID $ sessionData s) of
-        Just i -> query $ GetUserByUserID i
-        _ -> return Nothing
+getUserFromSession :: Connection -> Session -> ServerPartT IO (Maybe User)
+getUserFromSession conn s =
+  liftMM (ioRunDB conn . dbQuery . GetUserByID) (return $ userID $ sessionData s)
 
-getCompanyFromSession :: Session -> ServerPartT IO (Maybe Company)
-getCompanyFromSession s = case (company $ sessionData s) of
-        Just i -> query $ GetCompany i -- This needs a fix
-        _ -> return Nothing
+getCompanyFromSession :: Connection -> Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession conn s =
+  liftMM (ioRunDB conn . dbQuery . GetCompany) (return $ company $ sessionData s)
 
 getLocationFromSession :: Session -> ServerPartT IO String
 getLocationFromSession s = return $ location $ sessionData s

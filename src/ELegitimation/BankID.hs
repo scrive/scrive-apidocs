@@ -7,19 +7,19 @@ module ELegitimation.BankID
     )
     where
 
-import ListUtil
 import Redirect
 import AppView
 import qualified AppLogger as Log
 import Control.Monad.State
 import Data.List
 import Data.Maybe
+import DB.Types
+import DB.Classes
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocUtils
 import Doc.DocView
 import ELegitimation.ELeg
-import FlashMessage
 import Happstack.Server
 import Happstack.State
 import Kontra
@@ -30,55 +30,48 @@ import SOAP.SOAP
 import Templates.Templates
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
+import User.Model
 import User.UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
 import GHC.Unicode (toLower)
 import Data.Either (lefts, rights)
+import Util.FlashUtil
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Util.MonadUtils
+import Doc.DocStateQuery
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
    URL: /s/{provider}/{docid}/{signid}/{magic}
    Method: GET
  -}
-handleSignBankID :: String -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignBankID :: Kontrakcja m => String -> DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleSignBankID provider docid signid magic = do
-    Context { ctxtime, ctxtemplates } <- getContext
+    Context{ctxtime} <- getContext
     let seconds = toSeconds ctxtime 
 
     -- sanity check
-    document <- queryOrFail $ GetDocumentByDocumentID docid
-    checkLinkIDAndMagicHash document signid magic
+    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
     providerCode <- providerStringToNumber provider
     nonceresponse <- generateChallenge providerCode
-    --nonce1@MagicHash {} <- liftIO $ randomIO
-    --tid@MagicHash { } <- liftIO $ randomIO
-    --nonceresponse <- return $ Right (show nonce1, show tid)
-    liftIO $ print "after first request"
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
-            liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.eleg $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
-            liftIO $ print "before"
-            tbs <- liftIO $ getTBS ctxtemplates document
-            liftIO $ print tbs
-            liftIO $ print "after"
+            tbs <- getTBS document
             encodetbsresponse <- encodeTBS providerCode tbs transactionid
-            --encodetbsresponse <- return $ Right "hello"
-            liftIO $ print "after second request"
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
-                    liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.eleg $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
                 Right txt -> do
                     -- store in session
@@ -92,12 +85,14 @@ handleSignBankID provider docid signid magic = do
                                             , transactionmagichash = Just magic
                                             , transactionnonce = nonce
                                             }
-                    Log.debug $ "encoding successful: " ++
+                    Log.eleg $ "encoding successful: " ++
                         toJSON [("status", JInt 0)
                             ,("servertime", JString $ show seconds)
                             ,("nonce", JString nonce)
                             ,("tbs", JString txt)
-                            ,("transactionid", JString transactionid)]
+                            ,("transactionid", JString transactionid)
+                            ,("docid", JString $ show $ unDocumentID docid)
+                            ,("siglinkid", JString $ show $ unSignatoryLinkID signid)]
                     return $ toResponse $ toJSON [("status", JInt 0)
                                                  ,("servertime", JString $ show seconds)
                                                  ,("nonce", JString nonce)
@@ -115,13 +110,11 @@ handleSignBankID provider docid signid magic = do
      fieldname -- zero or more names of fields filled out by author
      fieldvalues -- zero or more (same as # of fieldnames) of values filled out by author
  -}
-handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSignPostBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
-            , ctxipnumber
-            , ctxtemplates } <- getContext
-    liftIO $ print "eleg sign post!"
+            , ctxipnumber } <- getContext
     -- POST values
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
@@ -129,14 +122,11 @@ handleSignPostBankID docid signid magic = do
     fieldnames    <- getAndConcat "fieldname"
     fieldvalues   <- getAndConcat "fieldvalue"
 
-
     -- request validation
-    document <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-    checkLinkIDAndMagicHash document signid magic
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
-    let Just siglink@SignatoryLink
-            { signatorydetails = details } = getSigLinkFor document signid
+    siglink <- guardJust $ getSigLinkFor document signid
 
     -- valid transaction?
     ELegTransaction { transactionsignatorylinkid = mtsignid
@@ -147,11 +137,11 @@ handleSignPostBankID docid signid magic = do
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (tdocid   /= docid      ) mzero
-    when (mtsignid /= Just signid) mzero
-    when (mtmagic  /= Just magic ) mzero
+    guard (tdocid   == docid      )
+    guard (mtsignid == Just signid)
+    guard (mtmagic  == Just magic )
     -- end validation
-
+    Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
     providerCode <- providerStringToNumber provider
     -- send signature to ELeg
     res <- verifySignature providerCode
@@ -161,29 +151,25 @@ handleSignPostBankID docid signid magic = do
                     then Just transactionnonce
                     else Nothing)
                 transactionid
-    --res <- return $ Right ("abca", [(BS.fromString "lastname", BS.fromString "Andersson"), (BS.fromString "firstname", BS.fromString "Agda"), (BS.fromString "personnumber", BS.fromString "111111")])
-
     case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
-            liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
-            addFlashMsg $ toFlashMsg OperationFailed $ "E-legitimationstjänsten misslyckades att verifiera din signatur"
+            Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
+            addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
-            liftIO $ print attrs
-            Log.debug $ show attrs
+            Log.eleg $ "Successfully identified using eleg. (Omitting private information)."
             providerType <- providerStringToType provider
             let fields = zip fieldnames fieldvalues
             -- compare information from document (and fields) to that obtained from BankID
-            let contractFirst  = signatoryfstname details
-                contractLast   = signatorysndname details
-                contractNumber = signatorypersonalnumber details
+            let contractFirst  = getFirstName siglink
+                contractLast   = getLastName siglink
+                contractNumber = getPersonalNumber siglink
 
-                elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName") attrs
-                elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")  attrs
-                elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber")     attrs
+                elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
+                elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
+                elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
 
                 mfinal = mergeInfo
                             (contractFirst, contractLast, contractNumber)
@@ -194,20 +180,20 @@ handleSignPostBankID docid signid magic = do
                     let Just authorsiglink = getAuthorSigLink document
                         authorname = getSmartName authorsiglink
                         authoremail = getEmail authorsiglink
-                    liftIO $ print msg
-                    Log.debug msg
-                    txt <- liftIO $ renderTemplate ctxtemplates "signCanceledDataMismatchModal" $ do
+                    Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
+                    txt <- renderTemplateFM "signCanceledDataMismatchModal" $ do
                         field "authorname"  authorname
                         field "authoremail" authoremail
                         field "message"     $ concat $ map para $ lines msg
                     -- send to canceled with reason msg
-                    addFlashMsg $ toFlashMsg Modal txt
+                    addFlash (Modal, txt)
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc document (Just signid)
 
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
+                    Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
                                                     , signatureinfosignature = signature
                                                     , signatureinfocertificate = cert
@@ -226,8 +212,8 @@ handleSignPostBankID docid signid magic = do
                     case newdocument of
                         -- signature failed
                         Left message -> do
-                            Log.debug $ "SignDocument failed: " ++ message
-                            addFlashMsg $ toFlashMsg OperationFailed message
+                            Log.eleg $ "SignDocument failed: " ++ message
+                            addFlash (OperationFailed, message)
                             return LinkMain -- where should we go?
                         Right document2 -> do
                             postDocumentChangeAction document2 document (Just signid)
@@ -242,29 +228,25 @@ handleSignPostBankID docid signid magic = do
     the document absolutely must exist. If the docid is not found, 404
     the tbs text must exist
 -}
-handleIssueBankID :: String -> DocumentID -> Kontra (Either KontraLink Response)
+handleIssueBankID :: Kontrakcja m => String -> DocumentID -> m (Either KontraLink Response)
 handleIssueBankID provider docid = withUserGet $ do
-    Context { ctxtime
-            , ctxmaybeuser = Just author
-            , ctxtemplates
-            } <- getContext
+    Context { ctxtime, ctxmaybeuser = Just author } <- getContext
     let seconds = toSeconds ctxtime
 
-    document <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- guardRightM $ getDocByDocID docid
 
     tbs <- case documentstatus document of
-        Preparation    -> getDataFnM $ look "tbs"
-        AwaitingAuthor -> liftIO $ getTBS ctxtemplates document
+        Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
+        AwaitingAuthor -> getTBS document         -- tbs is stored in document
         _              -> mzero
 
-    failIfNotAuthor document author
+    guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
 
     providerCode <- providerStringToNumber provider
     nonceresponse <- generateChallenge providerCode
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
-            Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.eleg $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
@@ -272,8 +254,7 @@ handleIssueBankID provider docid = withUserGet $ do
             encodetbsresponse <- encodeTBS providerCode tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
-                    Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.eleg $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
                 Right txt -> do
                     -- store in session
@@ -310,7 +291,7 @@ handleIssueBankID provider docid = withUserGet $ do
         the transaction must use the same docid
 
  -}
-handleIssuePostBankID :: DocumentID -> Kontra KontraLink
+handleIssuePostBankID :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssuePostBankID docid = withUserPost $ do
     ctx@Context { ctxmaybeuser = Just author
                 , ctxelegtransactions
@@ -321,10 +302,9 @@ handleIssuePostBankID docid = withUserPost $ do
     signature     <- getDataFnM $ look "signature"
     transactionid <- getDataFnM $ look "transactionid"
     signlast <- isFieldSet "signlast"
-    document <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- guardRightM $ getDocByDocID docid
 
-    failIfNotAuthor document author
-
+    guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
 
     -- valid transaction?
     ELegTransaction { transactiondocumentid
@@ -333,18 +313,16 @@ handleIssuePostBankID docid = withUserPost $ do
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (transactiondocumentid /= docid)  mzero
+    guard $ transactiondocumentid == docid
     -- end validation
-    Log.debug $ "document status on post: " ++ show (documentstatus document)
     eudoc <- case documentstatus document of
                 Preparation -> updateDocument ctx document
                 AwaitingAuthor -> return $ Right document
                 s -> return $ Left $ "Wrong status: " ++ show s
     case eudoc of
         Left msg -> do
-            Log.debug $ "updateDocument failed: " ++ msg
-            liftIO $ print $ "updateDocument failed: " ++ msg
-            addFlashMsg $ toFlashMsg OperationFailed "Could not save document."
+            Log.eleg $ "updateDocument failed: " ++ msg
+            addFlash (OperationFailed, "Could not save document.")
             return LinkMain
         Right udoc -> do
             unless (udoc `allowsIdentification` ELegitimationIdentification) mzero
@@ -359,9 +337,8 @@ handleIssuePostBankID docid = withUserPost $ do
 
             case res of
                 Left (ImplStatus _a _b code msg) -> do
-                    liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    addFlashMsg $ toFlashMsg OperationFailed "E-legitimationstjänsten misslyckades att verifiera din signatur"
+                    Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
                     -- change me! I should return back to the same page
                     return $ LinkDesignDoc $ DesignStep3 docid signlast
                 Right (cert, attrs) -> do
@@ -383,13 +360,12 @@ handleIssuePostBankID docid = withUserPost $ do
                     Log.debug $ show (elegFirst,     elegLast,     elegNumber)
                     case mfinal of
                         Left (msg, _, _, _) -> do
-                            liftIO $ print $ "merge failed: " ++ msg
-                            Log.debug $ "merge failed: " ++ msg
-                            addFlashMsg $ toFlashMsg OperationFailed $ "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg
+                            Log.eleg $ "merge failed: " ++ msg
+                            addFlash (OperationFailed, "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg)
                             return $ LinkDesignDoc $ DesignStep3 docid signlast
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
-                            Log.debug $ show mfinal
+                            Log.eleg $ "author merge succeeded. (details omitted)"
                             let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                             , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
@@ -409,8 +385,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                                 _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
                                         Left msg -> do
-                                            liftIO $ print $ "AuthorSignDocument failed: " ++ msg
-                                            Log.debug $ "AuthorSignDocument failed: " ++ msg
+                                            Log.eleg $ "AuthorSignDocument failed: " ++ msg
                                             return ()
                                         Right newdocument -> do
                                             postDocumentChangeAction newdocument udoc Nothing
@@ -423,36 +398,36 @@ handleIssuePostBankID docid = withUserPost $ do
                                     case (lefts mndocs, rights mndocs) of
                                         ([], [d]) -> do
                                             case documentstatus d of
-                                                Pending -> addModal $ modalSendConfirmationView d
-                                                Closed  -> addModal modalSignAwaitingAuthorLast
+                                                Pending -> addFlashM $ modalSendConfirmationView d
+                                                Closed  -> addFlashM modalSignAwaitingAuthorLast
                                                 _ -> mzero -- should not be possible but necessary for compiling
                                             return $ LinkIssueDoc (documentid d)
-                                        ([], _) -> return $ LinkContracts emptyListParams
+                                        ([], _) -> return $ LinkContracts 
                                         _ -> mzero
                                 Left link -> return link
 
-handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
+handleSignCanceledDataMismatch :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
     ctx <- getContext
     document <- queryOrFail $ GetDocumentByDocumentID docid
-    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+    signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
     let mcancelationreason = documentcancelationreason document
     case mcancelationreason of
         Just (ELegDataMismatch msg sid _ _ _)
             | sid == signatorylinkid -> do
-                maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
-                content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
+                maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
+                content1 <- signCanceledDataMismatch document signatorylink (isJust maybeuser) msg
                 renderFromBody TopEmpty kontrakcja content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
 
-signCanceledDataMismatch :: KontrakcjaTemplates
-                            -> Doc.DocState.Document
-                            -> SignatoryLink
-                            -> Bool
-                            -> String
-                            -> IO String
-signCanceledDataMismatch  templates _document _signatorylink _hasaccount msg =
-    renderTemplate templates "signCanceledDataMismatch" $
+signCanceledDataMismatch :: TemplatesMonad m
+                         => Doc.DocState.Document
+                         -> SignatoryLink
+                         -> Bool
+                         -> String
+                         -> m String
+signCanceledDataMismatch _document _signatorylink _hasaccount msg =
+    renderTemplateFM "signCanceledDataMismatch" $
         field "cancelationMessage" msg
 
 -- JSON - just enough to get things working
@@ -658,7 +633,7 @@ instance XmlContent (VerifySignatureResponse) where
 certfile :: String
 certfile = "certs/steria3.pem"
 
-generateChallenge :: Int -> Kontra (Either ImplStatus (String, String))
+generateChallenge :: Kontrakcja m => Int -> m (Either ImplStatus (String, String))
 generateChallenge pid = do
     eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest pid serviceid
     case eresponse of
@@ -670,7 +645,7 @@ generateChallenge pid = do
             then return $ Right (challenge, transactionid)
             else return $ Left (ImplStatus a b status msg)
 
-encodeTBS :: Int -> String -> String -> Kontra (Either ImplStatus String)
+encodeTBS :: Kontrakcja m => Int -> String -> String -> m (Either ImplStatus String)
 encodeTBS provider tbs transactionID = do
     eresponse <- liftIO $ makeSoapCallCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider serviceid tbs transactionID
     case eresponse of
@@ -682,12 +657,13 @@ encodeTBS provider tbs transactionID = do
             then return $ Right txt
             else return $ Left (ImplStatus a b status msg)
 
-verifySignature :: Int
-                    -> String
-                    -> String
-                    -> Maybe String
-                    -> String
-                    -> Kontra (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
+verifySignature :: Kontrakcja m
+                => Int
+                -> String
+                -> String
+                -> Maybe String
+                -> String
+                -> m (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
 verifySignature provider tbs signature mnonce transactionID = do
     eresponse <- liftIO $
         makeSoapCallCA endpoint certfile
@@ -729,26 +705,26 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
         then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
         else Right (matches !! 0, matches !! 1, matches !! 2)
 
-findTransactionByIDOrFail :: [ELegTransaction] -> String -> Kontra ELegTransaction
+findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m ELegTransaction
 findTransactionByIDOrFail transactions transactionsid =
-    returnJustOrMZero $ find ((== transactionsid) . transactiontransactionid) transactions
+    guardJust $ find ((==) transactionsid . transactiontransactionid) transactions
 
-getTBS :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
-getTBS templates doc = do
-    entries <- getSigEntries templates doc
-    renderTemplate templates "tbs" $ do
+getTBS :: TemplatesMonad m => Doc.DocState.Document -> m String
+getTBS doc = do
+    entries <- getSigEntries doc
+    renderTemplateFM "tbs" $ do
         field "documentname"   $ documenttitle doc
         field "documentnumber" $ show $ documentid doc
         field "tbssigentries"  entries
 
-getSigEntries :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
-getSigEntries templates doc = do
-    s <- mapM (getSigEntry templates . signatorydetails) $ documentsignatorylinks doc
+getSigEntries :: TemplatesMonad m => Doc.DocState.Document -> m String
+getSigEntries doc = do
+    s <- mapM (getSigEntry . signatorydetails) $ documentsignatorylinks doc
     return $ intercalate "\n" s
 
-getSigEntry :: KontrakcjaTemplates -> SignatoryDetails -> IO String
-getSigEntry templates signatorydetails =
-    renderTemplate templates "tbssig" $ do
+getSigEntry :: TemplatesMonad m => SignatoryDetails -> m String
+getSigEntry signatorydetails =
+    renderTemplateFM "tbssig" $ do
         field "firstname" $ getFirstName signatorydetails
         field "lastname"  $ getLastName signatorydetails
         field "company"   $ getCompanyName signatorydetails
@@ -760,14 +736,14 @@ fieldvaluebyid fid ((k, v):xs)
     | k == fid  = v
     | otherwise = fieldvaluebyid fid xs
 
-providerStringToNumber :: String -> Kontra Int
+providerStringToNumber :: Kontrakcja m => String -> m Int
 providerStringToNumber provider
     | provider == "bankid" = return 6
     | provider == "nordea" = return 4
     | provider == "telia"  = return 5
     | otherwise            = mzero
 
-providerStringToType :: String -> Kontra SignatureProvider
+providerStringToType :: Kontrakcja m => String -> m SignatureProvider
 providerStringToType provider
     | provider == "bankid" = return BankIDProvider
     | provider == "nordea" = return NordeaProvider

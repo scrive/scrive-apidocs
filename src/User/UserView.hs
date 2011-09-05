@@ -1,6 +1,6 @@
 module User.UserView (
     -- pages
-    viewSubaccounts,
+    viewCompanyAccounts,
     viewFriends,
     showUser,
     showUserSecurity,
@@ -10,23 +10,24 @@ module User.UserView (
 
     -- mails
     newUserMail,
-    inviteSubaccountMail,
+    inviteCompanyAccountMail,
     viralInviteMail,
     mailNewAccountCreatedByAdmin,
     mailAccountCreatedBySigningContractReminder,
     mailAccountCreatedBySigningOfferReminder,
+    mailAccountCreatedBySigningOrderReminder,
     resetPasswordMail,
 
-    mailInviteUserAsSubaccount,
-    mailSubaccountAccepted,
+    mailInviteUserAsCompanyAccount,
+    mailCompanyAccountAccepted,
 
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
-    modalInviteUserAsSubaccount,
-    modalDoYouWantToBeSubaccount,
+    modalInviteUserAsCompanyAccount,
+    modalDoYouWantToBeCompanyAccount,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -50,8 +51,9 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
-    flashMessageUserInvitedAsSubaccount,
-    flashMessageUserHasBecomeSubaccount,
+    flashUserIsAlreadyCompanyAccount,
+    flashMessageUserInvitedAsCompanyAccount,
+    flashMessageUserHasBecomeCompanyAccount,
     flashMessageUserHasLiveDocs,
     flashMessageAccountsDeleted,
 
@@ -59,17 +61,21 @@ module User.UserView (
     modalNewPasswordView,
 
     --utils
-    userBasicFields) where
+    userBasicFields,
+    
+    -- friends list
+    friendSortSearchPage
+    ) where
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Maybe
 import ActionSchedulerState
-import Happstack.State (query)
+import Company.Model
+import DB.Types
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
-import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
@@ -77,14 +83,29 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 import FlashMessage
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import User.Model
+import Data.List
 
-showUser :: KontrakcjaTemplates -> User -> IO String
-showUser templates user = renderTemplate templates "showUser" $ do
+showUser :: TemplatesMonad m => User -> Maybe Company -> m String
+showUser user mcompany = renderTemplateFM "showUser" $ do
     userFields user
+    companyFields mcompany
     field "linkaccount" $ show LinkAccount
 
-userFields :: User -> Fields
+companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields mcompany = do
+    field "companyid" $ show $ fmap companyid mcompany
+    field "address" $ fmap (companyaddress . companyinfo) mcompany
+    field "city" $ fmap (companycity . companyinfo) mcompany
+    field "country" $ fmap (companycountry . companyinfo) mcompany
+    field "zip" $ fmap (companyzip . companyinfo) mcompany
+    field "companyname" $ getCompanyName mcompany
+    field "companynumber" $ getCompanyNumber mcompany
+    field "companyimagelink" False
+
+userFields :: MonadIO m => User -> Fields m
 userFields user = do
     let fullname          = BS.toString $ getFullName user
         fullnameOrEmail   = BS.toString $ getSmartName user
@@ -96,240 +117,224 @@ userFields user = do
     field "sndname" $ getLastName user
     field "email" $ getEmail user
     field "personalnumber" $ getPersonalNumber user
-    field "address" $ useraddress $ userinfo user
-    field "city" $ usercity $ userinfo user
-    field "country" $ usercountry $ userinfo user
-    field "zip" $ userzip $ userinfo user
     field "phone" $ userphone $ userinfo user
     field "mobile" $ usermobile $ userinfo user
-    field "companyname" $ getCompanyName user
     field "companyposition" $ usercompanyposition $ userinfo user
-    field "companynumber" $ getCompanyNumber user
     field "userimagelink" False
-    field "companyimagelink" False
     field "fullname" $ fullname
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
-    field "hassupervisor" $ isJust $ usersupervisor user
+    field "iscompanyaccount" $ isJust $ usercompany user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
 
-showUserSecurity :: KontrakcjaTemplates -> User -> IO String
-showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
+showUserSecurity :: TemplatesMonad m => User -> m String
+showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "linksecurity" $ show LinkSecurity
     field "fstname" $ getFirstName user
     field "sndname" $ getLastName user
     field "userimagelink" False
-    field "lang" $ do
+    fieldF "lang" $ do
         field "en" $ LANG_EN == (lang $ usersettings user)
         field "se" $ LANG_SE == (lang $ usersettings user)
     menuFields user
 
-showUserMailAPI :: KontrakcjaTemplates -> User -> IO String
-showUserMailAPI templates user@User{usermailapi} =
-    renderTemplate templates "showUserMailAPI" $ do
+showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
+showUserMailAPI user mapi =
+    renderTemplateFM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI
-        field "mailapienabled" $ maybe False (const True) usermailapi
-        field "mailapikey" $ show . umapiKey <$> usermailapi
-        field "mapidailylimit" $ umapiDailyLimit <$> usermailapi
-        field "mapisenttoday" $ umapiSentToday <$> usermailapi
+        field "mailapienabled" $ isJust mapi
+        field "mailapikey" $ show . umapiKey <$> mapi
+        field "mapidailylimit" $ show . umapiDailyLimit <$> mapi
+        field "mapisenttoday" $ show . umapiSentToday <$> mapi
         menuFields user
 
-pageAcceptTOS :: KontrakcjaTemplates -> IO String
-pageAcceptTOS templates =
-  renderTemplate templates "pageAcceptTOS" ()
+pageAcceptTOS :: TemplatesMonad m => m String
+pageAcceptTOS = renderTemplateM "pageAcceptTOS" ()
 
-viewFriends :: KontrakcjaTemplates -> PagedList User -> User -> IO String
-viewFriends templates friends user =
-  renderTemplate templates "viewFriends" $ do
-    field "friends" $ markParity $ map userFields $ list friends
+viewFriends :: TemplatesMonad m => PagedList User -> User -> m String
+viewFriends friends user =
+  renderTemplateFM "viewFriends" $ do
+    fieldFL "friends" $ markParity $ map userFields $ list friends
     field "currentlink" $ show $ LinkSharing $ params friends
     menuFields user
     pagedListFields friends
 
-menuFields :: User -> Fields
+menuFields :: MonadIO m => User -> Fields m
 menuFields user = do
-    field "issubaccounts" $ isAbleToHaveSubaccounts user
+    field "iscompanyadmin" $ useriscompanyadmin user
 
-viewSubaccounts :: (TemplatesMonad m) => User -> PagedList User -> m String
-viewSubaccounts user subusers =
-  renderTemplateM "viewSubaccounts" $ do
-    field "subaccounts" $ markParity $ map userFields $ list subusers
-    field "currentlink" $ show $ LinkSubaccount $ params subusers
-    field "user" $ userFields user
-    pagedListFields subusers
+viewCompanyAccounts :: TemplatesMonad m => User -> PagedList User -> m String
+viewCompanyAccounts user companyusers =
+  renderTemplateFM "viewCompanyAccounts" $ do
+    fieldFL "companyaccounts" $ markParity $ map userFields $ list companyusers
+    field "currentlink" $ show $ LinkCompanyAccounts $ params companyusers
+    fieldF "user" $ userFields user
+    pagedListFields companyusers
 
-activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
-activatePageViewNotValidLink templates email =
-  renderTemplate templates "activatePageViewNotValidLink" $ field "email" email
+activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
+activatePageViewNotValidLink email =
+  renderTemplateFM "activatePageViewNotValidLink" $ field "email" email
 
-
-resetPasswordMail :: KontrakcjaTemplates -> String -> User -> KontraLink -> IO Mail
-resetPasswordMail templates hostname user setpasslink = do
-  title   <- renderTemplate templates "passwordChangeLinkMailTitle" ()
-  content <- (renderTemplate templates "passwordChangeLinkMailContent" $ do
+resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
+resetPasswordMail hostname user setpasslink = do
+  title   <- renderTemplateM "passwordChangeLinkMailTitle" ()
+  content <- (renderTemplateFM "passwordChangeLinkMailContent" $ do
     field "personname"   $ getFullName user
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> IO Mail
-newUserMail templates hostpart emailaddress personname activatelink vip = do
-  title   <- renderTemplate templates "newUserMailTitle" ()
-  content <- (renderTemplate templates "newUserMailContent" $ do
+newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> m Mail
+newUserMail hostpart emailaddress personname activatelink vip = do
+  title   <- renderTemplateM "newUserMailTitle" ()
+  content <- (renderTemplateFM "newUserMailContent" $ do
     field "personname"   $ BS.toString personname
     field "email"        $ BS.toString emailaddress
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
     field "vip"            vip
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-inviteSubaccountMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> IO Mail
-inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress personname setpasslink = do
-  title   <- renderTemplate templates "inviteSubaccountMailTitle" ()
-  content <- (renderTemplate templates "inviteSubaccountMailContent" $ do
+inviteCompanyAccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
+inviteCompanyAccountMail hostpart supervisorname companyname emailaddress personname setpasslink = do
+  title   <- renderTemplateM "inviteCompanyAccountMailTitle" ()
+  content <- (renderTemplateFM "inviteCompanyAccountMailContent" $ do
     field "personname"     $ BS.toString personname
     field "email"          $ BS.toString emailaddress
     field "passwordlink"   $ show setpasslink
     field "supervisorname" $ BS.toString supervisorname
     field "companyname"    $ BS.toString companyname
     field "ctxhostpart"    $ hostpart
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-viralInviteMail :: KontrakcjaTemplates -> Context -> BS.ByteString -> KontraLink -> IO Mail
-viralInviteMail templates ctx invitedemail setpasslink = do
+viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
+viralInviteMail ctx invitedemail setpasslink = do
   let invitername = BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
-  title   <- renderTemplate templates "mailViralInviteTitle" $ field "invitername" invitername
-  content <- (renderTemplate templates "mailViralInviteContent" $ do
+  title   <- renderTemplateFM "mailViralInviteTitle" $ field "invitername" invitername
+  content <- (renderTemplateFM "mailViralInviteContent" $ do
     field "email"        $ BS.toString invitedemail
     field "invitername"  $ invitername
     field "ctxhostpart"  $ ctxhostpart ctx
     field "passwordlink" $ show setpasslink
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
-mailNewAccountCreatedByAdmin :: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> IO Mail
-mailNewAccountCreatedByAdmin templates ctx personname email setpasslink custommessage = do
-  title   <- renderTemplate templates "mailNewAccountCreatedByAdminTitle" ()
-  content <- (renderTemplate templates "mailNewAccountCreatedByAdminContent" $ do
+mailNewAccountCreatedByAdmin :: TemplatesMonad m => Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
+mailNewAccountCreatedByAdmin ctx personname email setpasslink custommessage = do
+  title   <- renderTemplateM "mailNewAccountCreatedByAdminTitle" ()
+  content <- (renderTemplateFM "mailNewAccountCreatedByAdminContent" $ do
     field "personname"    $ BS.toString personname
     field "email"         $ BS.toString email
     field "passwordlink"  $ show setpasslink
     field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
-    ) >>= wrapHTML templates
+    ) >>= wrapHTML'
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailAccountCreatedBySigningContractReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigningContractReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningContractReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningContractReminderTitle"
                                  "mailAccountBySigningContractReminderContent"
 
-mailAccountCreatedBySigningOfferReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigningOfferReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningOfferReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningOfferReminderTitle"
                                  "mailAccountBySigningOfferReminderContent"
 
-mailAccountCreatedBySigning' :: String -> String -> KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
-mailAccountCreatedBySigning' title_template content_template templates hostpart doctitle personname activationlink = do
-    title <- renderTemplate templates title_template ()
-    content <- (renderTemplate templates content_template $ do
+mailAccountCreatedBySigningOrderReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+mailAccountCreatedBySigningOrderReminder =
+    mailAccountCreatedBySigning' "mailAccountBySigningOrderReminderTitle"
+                                 "mailAccountBySigningOrderReminderContent"
+
+mailAccountCreatedBySigning' :: TemplatesMonad m => String -> String -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+mailAccountCreatedBySigning' title_template content_template hostpart doctitle personname activationlink = do
+    title <- renderTemplateM title_template ()
+    content <- (renderTemplateFM content_template $ do
         field "personname"     $ BS.toString personname
         field "ctxhostpart"    $ hostpart
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-        ) >>= wrapHTML templates
+        ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailInviteUserAsSubaccount :: (TemplatesMonad m) => Context -> User -> User -> m Mail
-mailInviteUserAsSubaccount ctx invited supervisor = do
-    templates <- getTemplates
-    title <- renderTemplateM "mailInviteUserAsSubaccountTitle" ()
-    content <- (liftIO $ renderTemplate templates "mailInviteUserAsSubaccountContent" $ do
+mailInviteUserAsCompanyAccount :: TemplatesMonad m => Context -> User -> User -> m Mail
+mailInviteUserAsCompanyAccount ctx invited supervisor = do
+    title <- renderTemplateM "mailInviteUserAsCompanyAccountTitle" ()
+    content <- (renderTemplateFM "mailInviteUserAsCompanyAccountContent" $ do
                    field "hostpart" (ctxhostpart ctx)
-                   field "supervisor" $ userFields supervisor
-                   field "invited" $ userFields invited
-        ) >>= (liftIO . wrapHTML templates)
+                   fieldF "supervisor" $ userFields supervisor
+                   fieldF "invited" $ userFields invited
+        ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailSubaccountAccepted :: (TemplatesMonad m) => Context -> User -> User -> m Mail
-mailSubaccountAccepted ctx invited supervisor = do
-    templates <- getTemplates
-    title <- renderTemplateM "mailSubaccountAcceptedTitle" ()
-    content <- (liftIO $ renderTemplate templates "mailSubaccountAcceptedContent" $ do
-                   field "hostpart" (ctxhostpart ctx)
-                   field "user" $ userFields supervisor
-                   field "invited" $ userFields invited
-        ) >>= (liftIO . wrapHTML templates)
+mailCompanyAccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
+mailCompanyAccountAccepted ctx invited supervisor = do
+    title <- renderTemplateM "mailCompanyAccountAcceptedTitle" ()
+    content <- (renderTemplateFM "mailCompanyAccountAcceptedContent" $ do
+                   field "hostpart" $ ctxhostpart ctx
+                   fieldF "user" $ userFields supervisor
+                   fieldF "invited" $ userFields invited
+        ) >>= wrapHTML'
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 -------------------------------------------------------------------------------
 
-modalInviteUserAsSubaccount :: String -> String -> String -> KontraModal
-modalInviteUserAsSubaccount fstname sndname email =
-    renderTemplateM "modalInviteUserAsSubaccount" $ do
+modalInviteUserAsCompanyAccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage
+modalInviteUserAsCompanyAccount fstname sndname email =
+    toModal <$> (renderTemplateFM "modalInviteUserAsCompanyAccount" $ do
       field "email" email
       field "fstname" fstname
-      field "sndname" sndname
+      field "sndname" sndname)
 
-modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
-modalWelcomeToSkrivaPa templates =
-    lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
+modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
+modalWelcomeToSkrivaPa =
+    toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => Maybe User -> KontraLink -> m FlashMessage
-modalAccountSetup muser signuplink = do
-    msupervisor <- case msupervisorid of
-        Just sid -> query $ GetUserByUserID $ UserID $ unSupervisorID sid
-        Nothing  -> return Nothing
-    return $ toFlashTemplate Modal "modalAccountSetup" $
-        supervisorfields msupervisor ++ [
-              ("fstname", showUserField userfstname)
-            , ("sndname", showUserField usersndname)
-            , ("companyname", showUserField usercompanyname)
-            , ("companyposition", showUserField usercompanyposition)
-            , ("phone", showUserField userphone)
-            , ("signuplink", show signuplink)
-            ]
-    where
-        showUserField f = maybe "" (BS.toString . f . userinfo) muser
-        msupervisorid = join (usersupervisor <$> muser)
-        supervisorfields Nothing = []
-        supervisorfields (Just svis) = [
-              ("hassupervisor", "true")
-            , ("supervisorcompany", BS.toString $ getCompanyName svis)
-            , ("supervisoraccounttype", supervisoraccounttype)
-            , (supervisoraccounttype, "true")
-            ]
-            where
-                supervisoraccounttype = show $ accounttype $ usersettings svis
+modalAccountSetup :: MonadIO m => Maybe User -> Maybe Company -> KontraLink -> m FlashMessage
+modalAccountSetup muser mcompany signuplink = do
+  return $ toFlashTemplate Modal "modalAccountSetup" $
+    [ ("fstname", showUserField userfstname)
+    , ("sndname", showUserField usersndname)
+    , ("companyposition", showUserField usercompanyposition)
+    , ("phone", showUserField userphone)
+    , ("companyname", showCompanyField companyname)
+    , ("signuplink", show signuplink)
+    ] ++ boolFieldList "iscompanyadmin" (maybe False useriscompanyadmin muser)
+      ++ boolFieldList "iscompanyaccount" (maybe False (isJust . usercompany) muser)
+  where
+    showUserField f = maybe "" (BS.toString . f . userinfo) muser
+    showCompanyField f = maybe "" (BS.toString . f . companyinfo) mcompany
+    boolFieldList _ False = []
+    boolFieldList name True = [(name, "true")]
 
-modalAccountRemoval :: KontrakcjaTemplates -> BS.ByteString -> KontraLink -> KontraLink -> KontraModal
-modalAccountRemoval templates doctitle activationlink removallink = do
-    lift $ renderTemplate templates "modalAccountRemoval" $ do
+modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
+modalAccountRemoval doctitle activationlink removallink = do
+    toModal <$> (renderTemplateFM "modalAccountRemoval" $ do
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-        field "removallink"    $ show removallink
+        field "removallink"    $ show removallink)
 
-modalAccountRemoved :: KontrakcjaTemplates -> BS.ByteString -> KontraModal
-modalAccountRemoved templates doctitle = do
-    lift $ renderTemplate templates "modalAccountRemoved" $ do
-        field "documenttitle"  $ BS.toString doctitle
+modalAccountRemoved :: TemplatesMonad m => BS.ByteString -> m FlashMessage
+modalAccountRemoved doctitle = do
+    toModal <$> (renderTemplateFM "modalAccountRemoved" $ do
+        field "documenttitle"  $ BS.toString doctitle)
 
-flashMessageThanksForTheQuestion :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageThanksForTheQuestion templates =
-    toFlashMsg OperationDone <$> renderTemplate templates "flashMessageThanksForTheQuestion" ()
+flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
+flashMessageThanksForTheQuestion =
+    toFlashMsg OperationDone <$> renderTemplateM "flashMessageThanksForTheQuestion" ()
 
-flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
-flashMessageLoginRedirectReason templates reason =
+flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
+flashMessageLoginRedirectReason reason =
   case reason of
        LoginTry             -> return Nothing
        NotLogged            -> render "notlogged"
@@ -337,130 +342,149 @@ flashMessageLoginRedirectReason templates reason =
        InvalidLoginInfo _   -> render "invloginfo"
   where
     render msg = Just . toFlashMsg OperationFailed <$>
-      (renderTemplate templates "flashMessageLoginPageRedirectReason" $ field msg True)
+      (renderTemplateFM "flashMessageLoginPageRedirectReason" $ field msg True)
+
+flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
+flashMessageUserDetailsSaved =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserDetailsSaved" ()
 
 
-flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserDetailsSaved templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserDetailsSaved" ()
+flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
+flashMessageNoAccountType =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoAccountType" ()
+
+flashMessageInvalidAccountType :: TemplatesMonad m => m FlashMessage
+flashMessageInvalidAccountType =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageInvalidAccountType" ()
+
+flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
+flashMessageMustAcceptTOS =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageMustAcceptTOS" ()
 
 
-flashMessageNoAccountType :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoAccountType templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoAccountType" ()
-
-flashMessageInvalidAccountType :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageInvalidAccountType templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidAccountType" ()
-
-flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageMustAcceptTOS templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageMustAcceptTOS" ()
+flashMessageBadOldPassword :: TemplatesMonad m => m FlashMessage
+flashMessageBadOldPassword =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageBadOldPassword" ()
 
 
-flashMessageBadOldPassword :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageBadOldPassword templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageBadOldPassword" ()
+flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
+flashMessagePasswordsDontMatch =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordsDontMatch" ()
 
 
-flashMessagePasswordsDontMatch :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePasswordsDontMatch templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates"flashMessagePasswordsDontMatch" ()
+flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
+flashMessageUserPasswordChanged =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserPasswordChanged" ()
+
+flashMessageUserHasBecomeCompanyAccount :: TemplatesMonad m => User -> m FlashMessage
+flashMessageUserHasBecomeCompanyAccount supervisor =
+  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageUserHasBecomeCompanyAccount" $ do
+    fieldF "supervisor" $ userFields supervisor)
+
+flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
+flashMessageUserHasLiveDocs =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserHasLiveDocs" ()
+
+flashMessageAccountsDeleted :: TemplatesMonad m => m FlashMessage
+flashMessageAccountsDeleted =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountsDeleted" ()
+
+flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
+flashMessagePasswordChangeLinkNotValid =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordChangeLinkNotValid" ()
 
 
-flashMessageUserPasswordChanged :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserPasswordChanged templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserPasswordChanged" ()
-
-flashMessageUserHasBecomeSubaccount :: KontrakcjaTemplates -> User -> IO FlashMessage
-flashMessageUserHasBecomeSubaccount templates supervisor =
-  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageUserHasBecomeSubaccount" $ do
-    field "supervisor" $ userFields supervisor)
-
-flashMessageUserHasLiveDocs :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserHasLiveDocs templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserHasLiveDocs" ()
-
-flashMessageAccountsDeleted :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageAccountsDeleted templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountsDeleted" ()
-
-flashMessagePasswordChangeLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePasswordChangeLinkNotValid templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessagePasswordChangeLinkNotValid" ()
+flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage
+flashMessageUserWithSameEmailExists =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserWithSameEmailExists" ()
 
 
-flashMessageUserWithSameEmailExists :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserWithSameEmailExists templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserWithSameEmailExists" ()
+flashMessageViralInviteSent :: TemplatesMonad m => m FlashMessage
+flashMessageViralInviteSent =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageViralInviteSent" ()
+
+flashMessageOtherUserSentInvitation :: TemplatesMonad m => m FlashMessage
+flashMessageOtherUserSentInvitation =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageOtherUserSentInvitation" ()
+
+flashMessageNoRemainedInvitationEmails :: TemplatesMonad m => m FlashMessage
+flashMessageNoRemainedInvitationEmails =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoRemainedInvitationEmails" ()
+
+flashMessageActivationLinkNotValid :: TemplatesMonad m => m FlashMessage
+flashMessageActivationLinkNotValid =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageActivationLinkNotValid" ()
 
 
-flashMessageViralInviteSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageViralInviteSent templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageViralInviteSent" ()
-
-flashMessageOtherUserSentInvitation :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageOtherUserSentInvitation templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageOtherUserSentInvitation" ()
-
-flashMessageNoRemainedInvitationEmails :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoRemainedInvitationEmails templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoRemainedInvitationEmails" ()
-
-flashMessageActivationLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageActivationLinkNotValid templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageActivationLinkNotValid" ()
+flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
+flashMessageUserActivated =
+  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageUserActivated" ()
 
 
-flashMessageUserActivated :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserActivated templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageUserActivated" ()
+flashMessageUserAlreadyActivated :: TemplatesMonad m => m FlashMessage
+flashMessageUserAlreadyActivated =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserAlreadyActivated" ()
+
+flashMessageChangePasswordEmailSend :: TemplatesMonad m => m FlashMessage
+flashMessageChangePasswordEmailSend =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageChangePasswordEmailSend" ()
+
+flashMessageNoRemainedPasswordReminderEmails :: TemplatesMonad m => m FlashMessage
+flashMessageNoRemainedPasswordReminderEmails =
+    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoRemainedPasswordReminderEmails" ()
+
+flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
+flashMessageNewActivationLinkSend =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageNewActivationLinkSend" ()
 
 
-flashMessageUserAlreadyActivated :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserAlreadyActivated templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserAlreadyActivated" ()
+flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
+flashMessageUserSignupDone =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
 
-flashMessageChangePasswordEmailSend :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageChangePasswordEmailSend templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageChangePasswordEmailSend" ()
+flashUserIsAlreadyCompanyAccount :: TemplatesMonad m => m FlashMessage
+flashUserIsAlreadyCompanyAccount =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashUserIsAlreadyCompanyAccount" ()
 
-flashMessageNoRemainedPasswordReminderEmails :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoRemainedPasswordReminderEmails templates =
-    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoRemainedPasswordReminderEmails" ()
+flashMessageUserInvitedAsCompanyAccount :: TemplatesMonad m => m FlashMessage
+flashMessageUserInvitedAsCompanyAccount =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserInvitedAsCompanyAccount" ()
 
-flashMessageNewActivationLinkSend :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNewActivationLinkSend templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageNewActivationLinkSend" ()
-
-
-flashMessageUserSignupDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserSignupDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserSignupDone" ()
-
-flashMessageUserInvitedAsSubaccount :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageUserInvitedAsSubaccount templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserInvitedAsSubaccount" ()
-
-modalNewPasswordView :: ActionID -> MagicHash -> KontraModal
+modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do
-  templates <- ask
-  lift $ renderTemplate templates "modalNewPasswordView" $ do
-            field "linkchangepassword" $ (show $ LinkPasswordReminder aid hash)
+  toModal <$> (renderTemplateFM "modalNewPasswordView" $ do
+            field "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
 
-modalDoYouWantToBeSubaccount :: KontraModal
-modalDoYouWantToBeSubaccount = do
-  renderTemplateM "modalDoYouWantToBeSubaccount" $ ()
+modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => m FlashMessage
+modalDoYouWantToBeCompanyAccount =
+  toModal <$> renderTemplateM "modalDoYouWantToBeCompanyAccount" ()
 
 
 -------------------------------------------------------------------------------
 
 {- | Basic fields for the user  -}
-userBasicFields :: User -> Fields
-userBasicFields u = do
+userBasicFields :: MonadIO m => User -> Maybe Company -> Fields m
+userBasicFields u mc = do
     field "id" $ show $ userid u
     field "fullname" $ getFullName u
     field "email" $ getEmail u
-    field "company" $ getCompanyName u
+    field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
+
+-- list stuff for friends
+
+-- Friends currently only use the email
+friendSortSearchPage :: ListParams -> [User] -> PagedList User
+friendSortSearchPage = listSortSearchPage friendSortFunc friendSearchFunc friendPageSize
+
+friendPageSize :: Int
+friendPageSize = 20
+
+friendSortFunc :: SortingFunction User
+friendSortFunc _ u1 u2 = compare (getEmail u1) (getEmail u2)
+
+friendSearchFunc :: SearchingFunction User
+friendSearchFunc s u = s `isInfixOf` (BS.toString $ getEmail u)
+  
+  

@@ -20,14 +20,17 @@ import Data.Data
 import Text.StringTemplate.GenericStandard()
 
 {- | Payments models view. Not-editable -}
-adminView::KontrakcjaTemplates-> [PaymentAccountModel] -> IO String
-adminView templates models = renderTemplate templates "paymentsadminpage" $ do
-                                 field "models" $ map getModelView models
+adminView :: TemplatesMonad m => [PaymentAccountModel] -> m String
+adminView models =
+    renderTemplateFM "paymentsadminpage" $ do
+        field "models" $ map getModelView models
+
 {-| Payments models view . Editable -}
-adminViewForSuperuser::KontrakcjaTemplates-> [PaymentAccountModel] -> IO String
-adminViewForSuperuser templates models = renderTemplate templates "paymentsadminpagesuperuser" $ do
-                                         field "models" $ map getModelView models
-                                         field "changeaction" $ show LinkPaymentsAdmin
+adminViewForSuperuser :: TemplatesMonad m => [PaymentAccountModel] -> m String
+adminViewForSuperuser models =
+    renderTemplateFM "paymentsadminpagesuperuser" $ do
+        field "models" $ map getModelView models
+        field "changeaction" $ show LinkPaymentsAdmin
 
 {- | Nice view for 'PaymentAccountModel'. It can be easyly handled by templates -}
 data PaymentAccountModelView  = PaymentAccountModelView {

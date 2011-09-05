@@ -23,48 +23,20 @@ pageDocumentForViewerHelpers=
 </script>
 ###
 pageDocumentForViewerContent=
-  <div class="localdialogs">
-    <div style="display: none">
-      $pageDocumentForViewerHelpers()$
-    </div>
-  </div>
-<div id="signStepsContainer"> 
-  <div id="signStepsTitleRow"> 
-     <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">
-        $process.title$ #$documentid$:
-      </span>
-      <span class="name">$documenttitle$</span>
-     </span>
-     <span class="download">
-        <a href="$linkissuedocpdf$" target="_blank">
-         $_pageDocumentForViewerContentDownloadPDF()$
-       </a>
-     </span>
-  </div>
-  <div id="signStepsBody" class="forauthor"> 
-    <div id="signViewBodyLeft" > 
-      <span id="signViewBodyLeftTextContainer"> 
-          $documentinfotext:noescape()$
-      </span> 
+<script>
+jQuery(function(){
+var docview = KontraStandardDocument.init({
+    id:"$documentid$"
+    $if(siglinkid)$
+    , viewer : new DocumentViewer({
+        signatoryid : "$siglinkid$",
+        magichash : "$sigmagichash$"
+        })
+    $endif$
+    });
+jQuery("#body-container").replaceWith(docview.view.el)
+})
+</script>
 
-  <div> 
-    
-  </div>
-
-    </div>
-      $signatoriesBox()$
-  </div>
-</div>
-
-<div id="documentBox">
-  <script type="text/javascript">
-    var docstate = $docstate:noescape()$;
-  </script>
-
-  <div class="waiting4page"></div>
-</div>
-
-$signatoryScriptIfRequired()$
 
 ####
