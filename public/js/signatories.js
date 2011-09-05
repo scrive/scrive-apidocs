@@ -366,9 +366,8 @@ window.SignatoryStandarView = Backbone.View.extend({
 
         if (signatory.document().currentViewerIsAuthor() 
             && !signatory.author() 
-            && ((signatory.document().pending() || signatory.canSign())
-                || (signatory.document().closed()) )
-           )
+            && ((signatory.document().pending() && signatory.canSign())
+                || signatory.document().closed()))
 		  container.append(this.remidenMailOption());
 		
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
