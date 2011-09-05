@@ -37,7 +37,6 @@ import Data.List
 import Data.Maybe
 import Data.Ord
 import Data.Typeable
-import Database.HDBC.PostgreSQL
 import Happstack.Data.IxSet
 import Happstack.State
 import System.Random
@@ -57,7 +56,6 @@ data SchedulerData a b c = SchedulerData {
     , sdMailer       :: b
     , sdTemplates    :: c
     , sdMailEnforcer :: MVar ()
-    , sdDBConnection :: Connection
 }
 
 newtype ActionID = ActionID Integer

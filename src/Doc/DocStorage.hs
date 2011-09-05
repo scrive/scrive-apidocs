@@ -17,6 +17,7 @@ module Doc.DocStorage(
 
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.IO.Class
 import Doc.DocState
 import Happstack.State (update,query)
 import MinutesTime
@@ -158,17 +159,18 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
   return result
 
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory. -}
-maybeScheduleRendering :: Context
-                       -> File
+maybeScheduleRendering :: Kontrakcja m
+                       => File
                        -> DocumentID
-                       -> IO JpegPages
-maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
-                       (file@File { fileid }) docid = do
-  modifyMVar mvar $ \setoffilesrenderednow ->
+                       -> m JpegPages
+maybeScheduleRendering (file@File { fileid }) docid = do
+  doNotCloseDBConnectionExplicitly
+  ctx@Context{ ctxnormalizeddocuments = mvar } <- getContext
+  liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
-           forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
+           forkActionIO ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
                 jpegpages <- convertPdfToJpgPages ctx file docid
                 case jpegpages of
                      JpegPagesError errmsg -> do

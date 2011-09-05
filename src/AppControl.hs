@@ -499,7 +499,8 @@ appHandler appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
-      liftIO $ disconnect $ ctxdbconn ctx'
+      when (ctxdbconnclose ctx') $
+        liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -550,6 +551,7 @@ appHandler appConf appGlobals = do
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
                 , ctxdbconn = conn
+                , ctxdbconnclose = True
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf

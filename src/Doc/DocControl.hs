@@ -1369,14 +1369,13 @@ someArchivePage page = checkUserTOSGet $ do
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
-  ctx <- getContext
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
   case files of
     [] -> return $ toResponse ""
     f  -> do
-      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
+      b <- mapM (\file -> maybeScheduleRendering file (documentid doc)) f
       if any pending b
         then notFound (toResponse "temporary unavailable (document has files pending for process)")
         else do
@@ -1386,14 +1385,13 @@ handleAttachmentViewForViewer docid siglinkid mh = do
 handleAttachmentViewForAuthor :: Kontrakcja m => DocumentID -> m Response
 handleAttachmentViewForAuthor docid = do
   doc <- guardRightM $ getDocByDocID docid
-  ctx <- getContext
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
   case files of
     [] -> return $ toResponse ""
     f  -> do
-      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
+      b <- mapM (\file -> maybeScheduleRendering file (documentid doc)) f
       if any pending b
         then notFound (toResponse "temporary unavailable (document has files pending for process)")
         else do
@@ -1407,12 +1405,11 @@ handleFilePages did fid = do
   (mdoc,_) <- jsonDocumentGetterWithPermissionCheck did
   when (isNothing mdoc ) mzero
   let doc = fromJust mdoc
-  ctx <- getContext
   let allfiles = (documentfiles doc) ++ (documentsealedfiles doc) ++ (authorattachmentfile <$> documentauthorattachments doc)
   case (find (((==) fid) . fileid) $ allfiles) of
     Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No file found")]
     Just file  -> do
-      jpages <- liftIO $ maybeScheduleRendering ctx file did
+      jpages <- maybeScheduleRendering file did
       case jpages of
        JpegPagesPending -> return $ JSObject $ toJSObject [("wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
        JpegPagesError _ -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "rendering failed")]
@@ -1452,7 +1449,6 @@ handlePageOfDocument' documentid mtokens = do
                    , documentsealedfiles
                    , documentstatus
                    } -> do
-      ctx <- getContext
       let pending JpegPagesPending = True
           pending _                = False
           files                    = if documentstatus == Closed
@@ -1461,7 +1457,7 @@ handlePageOfDocument' documentid mtokens = do
       case files of
          [] -> notFound $ toResponse "temporary unavailable (document has no files)"
          f  -> do
-             b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file documentid) f
+             b <- mapM (\file -> maybeScheduleRendering file documentid) f
              if any pending b
                 then notFound (toResponse "temporary unavailable (document has files pending for process)")
                 else do
