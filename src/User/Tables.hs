@@ -109,13 +109,13 @@ tableUserInviteInfos = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("inviter_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False}), ("invite_type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})] -> return TVRvalid
+      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("inviter_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("invite_type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE user_invite_infos ("
           ++ "  user_id BIGINT NOT NULL"
           ++ ", inviter_id BIGINT NOT NULL"
-          ++ ", invite_time TIMESTAMPTZ NOT NULL"
-          ++ ", invite_type SMALLINT NOT NULL"
+          ++ ", invite_time TIMESTAMPTZ"
+          ++ ", invite_type SMALLINT"
           ++ ", CONSTRAINT pk_user_invite_infos PRIMARY KEY (user_id)"
           ++ ")"
         return TVRcreated
