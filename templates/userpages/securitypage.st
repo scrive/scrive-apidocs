@@ -33,7 +33,7 @@ showUserSecurity =
                        </tr>
                    </table>
                </div>
-<!--
+
            </div>
 
            <div class="col">
@@ -53,7 +53,7 @@ showUserSecurity =
                        </tr>
                    </table>
                </div> 
--->
+
              <div class="account-footer">
                 <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">
