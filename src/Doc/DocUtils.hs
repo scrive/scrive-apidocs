@@ -182,22 +182,23 @@ documentcurrentsignorder doc =
    Build a SignatoryDetails from a User with no fields
  -}
 signatoryDetailsFromUser :: User -> Maybe Company -> SignatoryDetails
-signatoryDetailsFromUser user mcompany =
-    SignatoryDetails { signatoryfstname                  = getFirstName      user
-                     , signatorysndname                  = getLastName       user
-                     , signatoryemail                    = getEmail          user
-                     , signatorycompany                  = getCompanyName    mcompany
-                     , signatorypersonalnumber           = getPersonalNumber user
-                     , signatorycompanynumber            = getCompanyNumber  mcompany
-                     , signatorysignorder                = SignOrder 1
-                     , signatoryfstnameplacements        = []
-                     , signatorysndnameplacements        = []
-                     , signatorycompanyplacements        = []
-                     , signatoryemailplacements          = []
-                     , signatorypersonalnumberplacements = []
-                     , signatorycompanynumberplacements  = []
-                     , signatoryotherfields              = []
-                     }
+signatoryDetailsFromUser user mcompany = SignatoryDetails {
+    signatorysignorder = SignOrder 1
+  , signatoryfields = [
+      toSF FirstNameFT $ getFirstName user
+    , toSF LastNameFT $ getLastName user
+    , toSF EmailFT $ getEmail user
+    , toSF CompanyFT $ getCompanyName mcompany
+    , toSF PersonalNumberFT $ getPersonalNumber user
+    , toSF CompanyNumberFT $ getCompanyNumber mcompany
+    ]
+  }
+  where
+    toSF t v = SignatoryField {
+        sfType = t
+      , sfValue = v
+      , sfPlacements = []
+    }
 
 {- |
    Add some history to a document.
@@ -271,14 +272,8 @@ isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, C
     Removes the field placements and the custom fields.
 -}
 removeFieldsAndPlacements :: SignatoryDetails -> SignatoryDetails
-removeFieldsAndPlacements sd = sd { signatoryfstnameplacements = []
-                                  , signatorysndnameplacements = []
-                                  , signatorycompanyplacements = []
-                                  , signatoryemailplacements = []
-                                  , signatorypersonalnumberplacements = []
-                                  , signatorycompanynumberplacements = []
-                                  , signatoryotherfields = []
-                                  }
+removeFieldsAndPlacements sd = sd { signatoryfields = filter (not . isFieldCustom)
+  $ map (\sf -> sf { sfPlacements = [] }) $ signatoryfields sd }
 
 {- |
     Sets the sign order on some signatory details.
@@ -322,6 +317,9 @@ isCurrentSignatory signorder siglink =
   (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
+isFieldCustom :: SignatoryField -> Bool
+isFieldCustom SignatoryField{sfType = CustomFT{}} = True
+isFieldCustom _ = False
 
 {- | Add a tag to tag list -}
 addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]

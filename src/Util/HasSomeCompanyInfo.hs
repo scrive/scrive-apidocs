@@ -32,10 +32,9 @@ instance HasSomeUserInfo (Maybe Company) where
   getCompanyNumber = maybe BS.empty getCompanyNumber
 
 instance HasSomeUserInfo SignatoryDetails where
-  getCompanyName   = signatorycompany
-  getCompanyNumber = signatorycompanynumber
+  getCompanyName   = getValueOfType CompanyFT
+  getCompanyNumber = getValueOfType CompanyNumberFT
 
 instance HasSomeUserInfo SignatoryLink where
   getCompanyName   = getCompanyName . signatorydetails
   getCompanyNumber = getCompanyNumber . signatorydetails
-

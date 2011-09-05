@@ -24,7 +24,6 @@ module API.APICommons (
           , getSignatoryTMP
           , mergeSignatoryWithTMP
           , toSignatoryDetails
-          , fillFields
           , toDocumentType
           , getFiles
         ) where
@@ -47,8 +46,6 @@ import Data.Maybe
 import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 {- -}
@@ -158,14 +155,7 @@ api_document_relation sl
     | otherwise                     = DOCUMENT_RELATION_VIEWER
 
 api_signatory :: SignatoryLink -> JSValue
-api_signatory sl = JSObject $ toJSObject $  [
-      ("email", showJSON  $ BS.toString $ getEmail sl)
-    , ("fstname", showJSON  $ BS.toString $ getFirstName sl)
-    , ("sndname", showJSON  $ BS.toString $ getLastName sl)
-    , ("personalnr", showJSON $ BS.toString $ getPersonalNumber sl)
-    , ("company", showJSON $ BS.toString $ getCompanyName sl)
-    , ("companynr", showJSON  $ BS.toString $ getCompanyNumber sl)
-    ]
+api_signatory sl = JSObject $ toJSObject $ fields
     ++
     case maybeseeninfo sl of
      Just seeninfo ->  [("seen", api_date $ signtime seeninfo)]
@@ -177,10 +167,22 @@ api_signatory sl = JSObject $ toJSObject $  [
     ++
     [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]
     ++
-    [("fields", JSArray $ for (signatoryotherfields $ signatorydetails sl) $ \fd ->
-                    JSObject $ toJSObject [ ("name",  JSString $ toJSString $ BS.toString $ fieldlabel fd)
-                                          , ("value", JSString $ toJSString $ BS.toString $ fieldvalue fd)]
+    [("fields", JSArray $ for (filter isFieldCustom $ signatoryfields $ signatorydetails sl) $ \SignatoryField{sfType = CustomFT label _, sfValue} -> JSObject $ toJSObject [
+        ("name",  JSString $ toJSString $ BS.toString label)
+      , ("value", JSString $ toJSString $ BS.toString sfValue)
+      ]
     )]
+    where
+      sfToJS sf name = (name, showJSON $ BS.toString $ sfValue sf)
+      fields = for (filter (not . isFieldCustom) $ signatoryfields $ signatorydetails sl) $
+        \sf -> case sfType sf of
+          FirstNameFT -> sfToJS sf "fstname"
+          LastNameFT -> sfToJS sf "sndname"
+          CompanyFT -> sfToJS sf "company"
+          CompanyNumberFT -> sfToJS sf "companynr"
+          PersonalNumberFT -> sfToJS sf "personalnr"
+          EmailFT -> sfToJS sf "email"
+          CustomFT _ _ -> error "api_signatory: impossible happened"
 
 api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [
@@ -255,7 +257,7 @@ getSignatoryTMP = do
 
 toSignatoryDetails :: SignatoryTMP -> SignatoryDetails
 toSignatoryDetails sTMP =
-    let sig = makeSignatoryNoPlacements
+    let sig = makeSignatory [] [] BS.empty
                  (fold $ fstname sTMP)
                  (fold $ sndname sTMP)
                  (fold $ email sTMP)
@@ -263,31 +265,33 @@ toSignatoryDetails sTMP =
                  (fold $ company sTMP)
                  (fold $ personalnumber sTMP)
                  (fold $ companynumber sTMP)
-    in sig  {signatoryotherfields = for (fields sTMP) $ \(name, mvalue) ->
-                                        FieldDefinition { fieldlabel = name,
-                                                          fieldvalue = maybe BS.empty id mvalue,
-                                                          fieldplacements = [],
-                                                          fieldfilledbyauthor = isJust mvalue
-                                                        }
-            }
+    in sig { signatoryfields = signatoryfields sig ++ customfields }
+    where
+      customfields = for (fields sTMP) $ \(name, mvalue) ->
+        SignatoryField {
+            sfType = CustomFT name $ isJust mvalue
+          , sfValue = fromMaybe BS.empty mvalue
+          , sfPlacements = []
+          }
 
 mergeSignatoryWithTMP :: (APIContext c, Kontrakcja m) => SignatoryTMP -> SignatoryLink-> APIFunction m c SignatoryLink
-mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do
-  return $ sl { signatorydetails =  sd {
-      signatoryfstname = fromMaybe (signatoryfstname sd) (fstname sTMP)
-    , signatorysndname = fromMaybe (signatorysndname sd) (sndname sTMP)
-    , signatorycompany = fromMaybe (signatorycompany sd) (company sTMP)
-    , signatorycompanynumber = fromMaybe (signatorycompanynumber sd) (companynumber sTMP)
-    , signatorypersonalnumber = fromMaybe (signatorypersonalnumber sd) (personalnumber sTMP)
-    , signatoryemail = fromMaybe (signatoryemail  sd) (email sTMP)
-    , signatoryotherfields = fillFields (signatoryotherfields sd) (fields sTMP)
-  }}
-
-fillFields :: [FieldDefinition] -> [(BS.ByteString,Maybe BS.ByteString)] ->  [FieldDefinition]
-fillFields (f:fs) nv = (f {fieldvalue = fromMaybe (fieldvalue f) $ join $ lookup (fieldlabel f) nv}) : fillFields fs nv
-fillFields [] _ = []
-
-
+mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd}) = do
+  return $ sl {
+    signatorydetails = sd { signatoryfields = replaceValues $ signatoryfields sd }
+  }
+  where
+    replaceValues = map $ \sf -> case sfType sf of
+      FirstNameFT -> replace sf fstname
+      LastNameFT -> replace sf sndname
+      CompanyFT -> replace sf company
+      CompanyNumberFT -> replace sf companynumber
+      PersonalNumberFT -> replace sf personalnumber
+      EmailFT -> replace sf email
+      CustomFT label _ -> case join $ lookup label (fields sTMP) of
+                            Just nv -> sf { sfValue = nv }
+                            Nothing -> sf
+      where
+        replace sf f = sf { sfValue = fromMaybe (sfValue sf) (f sTMP) }
 
 -- High level commons. Used buy some simmilar API's, but not all of them
 getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]

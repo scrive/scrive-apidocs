@@ -49,16 +49,16 @@ instance HasSomeUserInfo User where
   getPersonalNumber = userpersonalnumber  . userinfo
 
 instance HasSomeUserInfo SignatoryDetails where
-  getEmail          = signatoryemail
-  getFirstName      = signatoryfstname
-  getLastName       = signatorysndname
-  getPersonalNumber = signatorypersonalnumber
+  getEmail          = getValueOfType EmailFT
+  getFirstName      = getValueOfType FirstNameFT
+  getLastName       = getValueOfType LastNameFT
+  getPersonalNumber = getValueOfType PersonalNumberFT
 
 instance HasSomeUserInfo SignatoryLink where
-  getEmail          = signatoryemail          . signatorydetails
-  getFirstName      = signatoryfstname        . signatorydetails
-  getLastName       = signatorysndname        . signatorydetails
-  getPersonalNumber = signatorypersonalnumber . signatorydetails
+  getEmail          = getEmail . signatorydetails
+  getFirstName      = getFirstName . signatorydetails
+  getLastName       = getLastName . signatorydetails
+  getPersonalNumber = getPersonalNumber . signatorydetails
 
 {- |
    Given a SignatoryLink, returns a tuple containing the name and the email address.
