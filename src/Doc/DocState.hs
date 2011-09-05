@@ -638,7 +638,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
         -- ??: We don't use this anymore? -EN
         -- hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
 
-        updateSigField fields sf =
+        updateSigField sfields sf =
           case sfType sf of
             CompanyFT -> updateF $ BS.pack "sigco"
             PersonalNumberFT -> updateF $ BS.pack "sigpersnr"
@@ -646,7 +646,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
             CustomFT label _ -> updateF label
             _ -> sf
           where
-            updateF = maybe sf (\v -> sf { sfValue = v }) . flip lookup fields
+            updateF = maybe sf (\v -> sf { sfValue = v }) . flip lookup sfields
 
         signeddocument2 =
               if isallsigned
@@ -1269,10 +1269,10 @@ changeSignatoryEmailWhenUndelivered did slid mnewuser email = modifySignable did
                                            sl <- find ((== slid) . signatorylinkid) signlinks
                                            when (invitationdeliverystatus sl /= Undelivered && invitationdeliverystatus sl /= Deferred) Nothing
                                            return sl { invitationdeliverystatus = Unknown
-                                                     , signatorydetails = changeEmail $ signatorydetails sl
+                                                     , signatorydetails = setEmail $ signatorydetails sl
                                                      , maybesignatory = fmap userid mnewuser
                                                      , maybecompany = mnewuser >>= usercompany }
-                              changeEmail sd@SignatoryDetails{signatoryfields} = sd { signatoryfields =
+                              setEmail sd@SignatoryDetails{signatoryfields} = sd { signatoryfields =
                                 map (\sf -> case sfType sf of
                                         EmailFT -> sf { sfValue = email }
                                         _       -> sf) signatoryfields
