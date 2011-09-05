@@ -476,7 +476,7 @@ fileJSON file =
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m (JSObject JSValue)
 docForListJSON crtime doc = (fmap toJSObject) $ propagateMonad  $
     [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
-      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (getSignatoryPartnerLinks doc)),
+      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
       ("link", return $ JSString $ toJSString $  show $ LinkIssueDoc $ documentid doc)
     ]
 
@@ -1006,7 +1006,8 @@ signatoryStatusClass
   , invitationdeliverystatus
   } =
   caseOf [
-      (invitationdeliverystatus==Undelivered,  SCCancelled)
+      (errorStatus documentstatus, SCCancelled)
+    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
@@ -1016,7 +1017,9 @@ signatoryStatusClass
     , (isJust maybereadinvite, SCRead)
     , (invitationdeliverystatus==Delivered, SCDelivered)
     ] SCSent
-
+  where
+      errorStatus (DocumentError _) = True
+      errorStatus _ = False
 signatoryStatusFields :: MonadIO m => Document -> SignatoryLink -> (MinutesTime -> String) -> Fields m
 signatoryStatusFields
   document
