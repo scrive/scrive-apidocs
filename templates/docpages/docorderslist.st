@@ -98,7 +98,7 @@ var documentsTable = KontraList.init({
                              if (docs.length == 1)
                                text += docs[0].field("title") + "."
                              else
-                               text += docs.length + (" _docListTabsOrders().").toLowerCase();
+                               text += docs.length + (" $_docListTabsOrders()$.").toLowerCase();
                              var content = jQuery("<p/>").text(text);
                              Confirmation.popup({
                                 submit: submit,
