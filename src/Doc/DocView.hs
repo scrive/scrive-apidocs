@@ -306,7 +306,7 @@ documentJSON msl _crttime doc = do
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
-       ("authorization", return $ authorizationJSON $ head $ documentallowedidtypes doc)
+       ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification])
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -1006,7 +1006,8 @@ signatoryStatusClass
   , invitationdeliverystatus
   } =
   caseOf [
-      (invitationdeliverystatus==Undelivered,  SCCancelled)
+      (errorStatus documentstatus, SCCancelled)
+    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
@@ -1016,7 +1017,9 @@ signatoryStatusClass
     , (isJust maybereadinvite, SCRead)
     , (invitationdeliverystatus==Delivered, SCDelivered)
     ] SCSent
-
+  where
+      errorStatus (DocumentError _) = True
+      errorStatus _ = False
 signatoryStatusFields :: MonadIO m => Document -> SignatoryLink -> (MinutesTime -> String) -> Fields m
 signatoryStatusFields
   document
