@@ -33,9 +33,11 @@ showUserSecurity =
                        </tr>
                    </table>
                </div>
+<!--
            </div>
 
            <div class="col">
+
                <div class="account-header">
                   <h2>$_LanguageSettings()$</h2>
                </div>
@@ -51,7 +53,7 @@ showUserSecurity =
                        </tr>
                    </table>
                </div> 
-
+-->
              <div class="account-footer">
                 <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">
