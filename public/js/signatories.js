@@ -222,7 +222,7 @@ window.Signatory = Backbone.Model.extend({
     
 	changeEmail: function(email) {
 		return new Submit({
-                url: "/changeemail/" + signatory.document().documentid() + "/" + signatory.signatoryid(),
+                url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
                 method: "POST",
                 email : email
          })

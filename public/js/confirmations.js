@@ -22,7 +22,8 @@ var ConfirmationModel = Backbone.Model.extend({
       acceptText: "Ok",
       rejectText: "Cancel",
       acceptColor : "green",
-      content  : jQuery("<p/>")
+      content  : jQuery("<p/>"),
+      cantCancel : false
   },
   title : function(){
        return this.get("title");
@@ -44,6 +45,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   acceptButton: function() {
       return this.get("acceptButton");
+  },
+  canCancel : function() {
+      return this.get("cantCancel") == false;
   }
 });
 
@@ -64,15 +68,18 @@ var ConfirmationView = Backbone.View.extend({
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
-       header.append("<a class='modal-close close'/a>");
+       if (model.canCancel()) 
+        header.append("<a class='modal-close close'/a>");
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'>");
        content.html(this.model.content());
        body.append(content);
        var footer = $("<div class='modal-footer'>");
-       var cancel = $("<a class='cancel close float-left'/>");
-       cancel.text(this.model.rejectText());
-       footer.append(cancel);
+       if (model.canCancel()) {
+        var cancel = $("<a class='cancel close float-left'/>");
+        cancel.text(this.model.rejectText());
+        footer.append(cancel);
+       } 
        var accept = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             Button.init({color:model.acceptColor(),
                                  size: "small",
@@ -106,7 +113,8 @@ window.Confirmation = {
                       acceptColor : args.acceptColor,
                       rejectText: args.rejectText,
                       content  : args.content,
-                      acceptButton : args.acceptButton
+                      acceptButton : args.acceptButton,
+                      cantCancel : args.cantCancel
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});
