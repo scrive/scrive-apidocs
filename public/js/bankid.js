@@ -446,7 +446,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
 (function(window){
 
 window.Eleg = {
-    bankidSign : function() {
+    bankidSign : function(document, signatory, submit) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
       LoadingDialog.open(localization.startingSaveSigning);
@@ -499,7 +499,7 @@ window.Eleg = {
             error: repeatForeverWithDelay(250)
       })  
     },
-    nordeaSign : function(document, signatory) {
+    nordeaSign : function(document, signatory, submit) {
        if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
             return;
 
