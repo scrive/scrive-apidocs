@@ -458,7 +458,6 @@ currentLinkBody = do
                      else a2
   return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
 
-
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 

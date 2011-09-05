@@ -43,4 +43,6 @@ data Context = Context {
     , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^ 
     , ctxadminaccounts       :: [Email] -- ^
+    , ctxregion              :: Region
+    , ctxlang                :: Lang
 }

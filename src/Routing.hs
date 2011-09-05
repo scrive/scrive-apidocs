@@ -255,3 +255,4 @@ toK4 = id
 
 toK5 :: (a -> b -> c -> d -> e -> Kontra f) -> (a -> b -> c -> d -> e -> Kontra f)
 toK5 = id
+

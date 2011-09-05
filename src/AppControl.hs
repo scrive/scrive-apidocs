@@ -104,21 +104,32 @@ data AppGlobals
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
+handleRoutes :: Region -> Lang -> Kontra Response
+handleRoutes ctxregion ctxlang = msum [
+     -- static pages  --TODO EM make this nice!
+       regionDir ctxregion $ langDir ctxlang $ hGetAllowHttp0 $ handleHomepage
+     , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome ctxregion ctxlang
 
-handleRoutes :: Kontra Response
-handleRoutes = msum [
-       hGetAllowHttp0 handleHomepage
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
+     , dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
+     , dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
+     , dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
+     , dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
+     , dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ handleAboutPage
+     , dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
+     , dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
+     , dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients ctxregion ctxlang
 
-     -- static pages
+     -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
-     , dir "priser"          $ hGetAllowHttp0 $ handlePriceplanPage
-     , dir "sakerhet"        $ hGetAllowHttp0 $ handleSecurityPage
-     , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage
-     , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
-     , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage
-     , dir "om-skrivapa"     $ hGetAllowHttp0 $ handleAboutPage
-     , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage
-     , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
+     , dir "sitemap"         $ hGetAllowHttp0 $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
      , mailAPI
@@ -334,6 +345,41 @@ handleRoutes = msum [
      ]
 
 {- |
+    Determines the localisation details by checking the user settings,
+    the request, and cookies.
+-}
+getLocalization :: (ServerMonad m, Functor m) => Maybe User -> Request -> m (SystemServer, Region, Lang)
+getLocalization muser rq = do
+  hostpart <- getHostpart
+  let systemServer = systemServerFromURL hostpart
+      region = firstOf [ Nothing --TODO EM store the region in the user settings and read from here
+                       , (listToMaybe $ rqPaths rq) >>= regionFromCode
+                       , Nothing -- TODO EM look at cookies
+                       , Just $ defaultRegion systemServer
+                       ]
+      language = firstOf [ lang <$> usersettings <$> muser
+                         , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
+                         , Nothing -- TODO EM look at cookies
+                         , Just $ defaultLang systemServer
+                         ]
+  return (systemServer, region, language)
+   where
+     firstOf opts =
+       case find isJust opts of
+         Just val -> fromJust val
+         Nothing -> defaultValue
+
+regionDir :: (ServerMonad m, MonadPlus m) => Region -> m a -> m a
+regionDir = dir . codeFromRegion
+
+langDir :: (ServerMonad m, MonadPlus m) => Lang -> m a -> m a
+langDir = dir . codeFromLang
+
+dirByLang :: (ServerMonad m, MonadPlus m) => Lang -> String -> String -> m a -> m a
+dirByLang LANG_SE swedishdir _englishdir = dir swedishdir
+dirByLang LANG_EN _swedishdir englishdir = dir englishdir
+
+{- |
    Goes to the front page, or to the main document upload page,
    depending on whether there is a logged in user.
 -}
@@ -482,7 +528,7 @@ appHandler appConf appGlobals = do
     handle rq session ctx = do
       (res,ctx') <- toIO ctx . runKontra $
          do
-          res <- (handleRoutes) `mplus` do
+          res <- handleRoutes (ctxregion ctx) (ctxlang ctx) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
@@ -519,7 +565,6 @@ appHandler appConf appGlobals = do
       let peerip = case addrAddress addr of
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
-      let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
 
       conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       minutestime <- liftIO getMinutesTime
@@ -537,10 +582,10 @@ appHandler appConf appGlobals = do
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
-      let language = (fromMaybe browserLang $ lang <$> usersettings <$> muser )
-      let region = fromMaybe defaultValue $ (const defaultValue) <$> muser --TODO EM read the region from the request url
-                                                                           --TODO EM store the region in the user settings so we can do "region <$> usersettings <$> muser"
-      let systemServer = systemServerFromURL hostpart    
+
+      -- work out the system, region and language
+      (systemServer, region, language) <- getLocalization muser rq
+
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
@@ -571,6 +616,8 @@ appHandler appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
+                , ctxregion = region
+                , ctxlang = language
                 }
       return ctx
 
@@ -666,8 +713,8 @@ signup vip _freetill =  do
             return LoopBack
         Nothing -> do         
           rq <- askRq
-          let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip browserLang
+          (_systemServer, _region, language) <- getLocalization muser rq
+          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip language
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone

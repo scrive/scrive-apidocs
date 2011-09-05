@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module User.Model (
     module User.Lang
+  , module User.Region
   , module User.Password
   , module User.SystemServer
   , module User.UserID
@@ -58,6 +59,7 @@ import MinutesTime
 import Misc
 import User.Lang
 import User.Password
+import User.Region
 import User.SystemServer
 import User.Tables
 import User.UserID

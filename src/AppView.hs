@@ -36,6 +36,9 @@ import Data.List
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
+import User.Lang
+import User.Region
+import User.SystemServer
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
 
@@ -137,6 +140,7 @@ sitemapPage = do
         field "hostpart" $ case hostpart of
                                 ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                                 xs -> xs
+        fieldFL "locales" $ map (uncurry staticLinksFields) . targetedLocales $ systemServerFromURL hostpart
 
 priceplanPage :: Kontra String
 priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True True
@@ -192,6 +196,7 @@ standardPageFields ctx title publicpage showCreateAccount loginOn referer email 
     field "title" title
     field "showCreateAccount" showCreateAccount
     mainLinksFields
+    staticLinksFields (ctxregion ctx) (ctxlang ctx)
     contextInfoFields ctx
     publicSafeFlagField ctx loginOn publicpage
     loginModal loginOn referer email
@@ -233,6 +238,7 @@ firstPage ctx loginOn referer email =
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
         mainLinksFields
+        staticLinksFields (ctxregion ctx) (ctxlang ctx)
         loginModal loginOn referer email
 
 {- |
@@ -251,6 +257,21 @@ mainLinksFields = do
     field "linksignup"           $ show LinkSignup
 
 {- |
+    Defines the static links which are region and language sensitive.
+-}
+staticLinksFields :: MonadIO m => Region -> Lang -> Fields m
+staticLinksFields ctxregion ctxlang = do
+    field "linkhome"  $ show $ LinkHome ctxregion ctxlang
+    field "linkpriceplan"  $ show $ LinkPriceplan ctxregion ctxlang
+    field "linksecurity"  $ show $ LinkSecurity ctxregion ctxlang
+    field "linklegal"  $ show $ LinkLegal ctxregion ctxlang
+    field "linkprivacypolicy"  $ show $ LinkPrivacyPolicy ctxregion ctxlang
+    field "linkterms"  $ show $ LinkTerms ctxregion ctxlang
+    field "linkabout"  $ show $ LinkAbout ctxregion ctxlang
+    field "linkpartners"  $ show $ LinkPartners ctxregion ctxlang
+    field "linkclients"  $ show $ LinkClients ctxregion ctxlang
+
+{- |
    Defines some standard context information as fields handy for substitution
    into templates.
 -}
@@ -261,6 +282,9 @@ contextInfoFields ctx = do
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
+    field "ctxregion" $ codeFromRegion (ctxregion ctx)
+    field "ctxlang" $ codeFromLang (ctxlang ctx)
+
 {- |
     Only public safe is explicitely set as a public page,
     and nobody is trying to login, and a user isn't logged in.

@@ -207,7 +207,7 @@ handlePostUserSecurity = do
               _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
               return ()
           Nothing -> return ()
-      return LinkSecurity
+      return LinkAccountSecurity
     Nothing -> return $ LinkLogin NotLogged
 
 handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)

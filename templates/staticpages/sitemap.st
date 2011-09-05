@@ -8,50 +8,52 @@ sitemapPage=
       http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
+$locales:{locale|<
 <url>
-  <loc>$hostpart$/</loc>
+  <loc>$hostpart$$linkhome$</loc>
   <changefreq>daily</changefreq>
   <priority>1.00</priority>
 </url>
 <url>
-  <loc>$hostpart$/partners</loc>
+  <loc>$hostpart$$linkpartners$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/priser</loc>
+  <loc>$hostpart$$linkpriceplan$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/sakerhet</loc>
+  <loc>$hostpart$$linksecurity$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/juridik</loc>
+  <loc>$hostpart$$linklegal$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/sekretesspolicy</loc>
+  <loc>$hostpart$$linkprivacypolicy$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/allmana-villkor</loc>
+  <loc>$hostpart$$linkterms$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/om-skrivapa</loc>
+  <loc>$hostpart$$linkabout$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/kunder</loc>
+  <loc>$hostpart$$linkclients$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 </urlset>
+}$
 ###
