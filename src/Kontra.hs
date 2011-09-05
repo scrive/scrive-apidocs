@@ -1,7 +1,5 @@
 module Kontra
-    ( module User.UserState
-    , module User.Password
-    , Context(..)
+    ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
     , isSuperUser
@@ -11,6 +9,7 @@ module Kontra
     , addELegTransaction
     , logUserToContext
     , onlySuperUser
+    , onlyBackdoorOpen
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
@@ -24,13 +23,15 @@ module Kontra
     )
     where
 
-import API.Service.ServiceState
+import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Monad.Reader
 import Control.Monad.State
+import DB.Classes
+import DB.Types
 import Doc.DocState
 import ELegitimation.ELeg
 import Happstack.Server
@@ -40,9 +41,9 @@ import KontraMonad
 import Mails.SendMail
 import Misc
 import Templates.Templates
-import User.Password hiding (Password, NoPassword)
-import User.UserState
+import User.Model
 import Util.HasSomeUserInfo
+import qualified AppLogger as Log
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
 
@@ -50,6 +51,12 @@ newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
 
 instance Kontrakcja Kontra
+
+instance DBMonad Kontra where
+  getConnection = ctxdbconn <$> getContext
+  handleDBError e = do
+    Log.error $ show e
+    mzero
 
 instance KontraMonad Kontra where
     getContext    = Kontra get
@@ -91,6 +98,16 @@ onlySuperUser a = do
     if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
+
+{- |
+    Will mzero if the testing backdoor isn't open.
+-}
+onlyBackdoorOpen :: Kontrakcja m => m a -> m a
+onlyBackdoorOpen a = do
+  ctx <- getContext
+  if ctxbackdooropen ctx
+    then a
+    else mzero
 
 {- |
    Adds an Eleg Transaction to the context.

@@ -229,9 +229,8 @@ safeReady(function() {
 /*
  * For the arkiv view fancy selection
  */
-safeReady(function() {
-    var selectable = $("#selectable"),
-    rows = selectable.find("tr"),
+function makeSelectable(selectable) {
+    var rows = selectable.find("tr"),
     rowsChecks = rows.find(".check");
 
     function highlightRow(row) {
@@ -309,6 +308,11 @@ safeReady(function() {
             selectRow($(this), true);
         });
     });
+}
+
+safeReady(function() {
+    var selectable = $("#selectable");
+    makeSelectable(selectable);
 });
 
 function initFileInputs() {
@@ -350,20 +354,13 @@ safeReady(function() {
                 var content = $(data);
                 var errormsg = content.find(".errormsg");
                 if (errormsg.length > 0) {
-                    var errdialog = $("<div title='" + localization.problemWithPDF + "'>" + errormsg.text() + "</div>");
-                    errdialog.dialog({
-                        open: function(event, ui) {
-                            $(".ui-dialog-titlebar-close").hide();
-                        },
-                        modal: true,
-                        closeOnEscape: false,
-                        resizable: false,
-                        minWidth: 400,
-                        buttons: {
-                            Back: function() {
-                                window.location.href = '/d';
-                            }
-                        }
+                      Confirmation.popup({
+                        submit : new Submit({url: '/d' }) ,
+                        title : localization.problemWithPDF,
+                        content: errormsg.text(),
+                        cantCancel : true,
+                        acceptColor: "red",
+                        acceptText : "Back to Archive"
                     });
                 } else {
                     $('#documentBox').html(content);
@@ -458,6 +455,7 @@ safeReady(function() {
             fieldValidationType = "";
             var tot = swedishString(allparties());
             $(".Xinvited").html(tot);
+            //here
         },
         fixed:false
     });
@@ -910,8 +908,10 @@ function isAuthorSignatory() {
          1. If numsigs === 0:
                 deactivate checkbox
                 uncheck the box
+                show author only signatory confirmation text
 
          2. If numsigs > 0:
+                show multiple signatory confirmation text
                 1. if sign order is enabled: 
                     deactivate checkbox
 
@@ -931,9 +931,9 @@ function isAuthorSignatory() {
 function showProperSignButtons() {
     var checkBox = $("#switchercheckbox");
     if(!isAuthorSignatory()) {
-        if (!checkBox.attr("checked")) {
+        if (!checkBox.attr("checked"))
             checkBox.attr("checked", true).change();
-        }
+
         deactivateSignInvite();
         checkBox.parent().find(".usual").hide();
         checkBox.parent().find(".secretary").show();        
@@ -950,15 +950,17 @@ function showProperSignButtons() {
         var numsigs = $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
         if(numsigs === 0) {
             deactivateSignInvite();
-            if (checkBox.attr("checked")) {
+            if (checkBox.attr("checked"))
                 checkBox.attr("checked", false).change();
-            }
+            $("#multipleinvite").hide();
+            $("#onlyauthor").show();
         } else {
-            if (signingOrderEnabled) {
+            if (signingOrderEnabled)
                 deactivateSignInvite();
-            } else {
+            else
                 activateSignInvite();
-            }
+            $("#multipleinvite").show();
+            $("#onlyauthor").hide();
         }
     }
 }
@@ -1541,21 +1543,16 @@ safeReady(function() {
                 var content = $(data);
                 var errormsg = content.find(".errormsg");
                 if (errormsg.length > 0) {
-                    var errdialog = $("<div title='" + localization.problemWithPDF + "'>" + errormsg.text() + "</div>");
-                    errdialog.dialog({
-                        open: function(event, ui) {
-                            $(".ui-dialog-titlebar-close").hide();
-                        },
-                        modal: true,
-                        closeOnEscape: false,
-                        resizable: false,
-                        minWidth: 400,
-                        buttons: {
-                            Back: function() {
-                                window.location.href = '/d';
-                            }
-                        }
+                    
+                      Confirmation.popup({
+                        submit : new Submit({url: '/d' }) ,
+                        title : localization.problemWithPDF,
+                        content: errormsg.text(),
+                        cantCancel : true,
+                        acceptColor: "red",
+                        acceptText : "Back to Archive"
                     });
+                    
                 } else {
                     $('#attachmentbox').html(content);
                 }

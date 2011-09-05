@@ -4,7 +4,6 @@ pageDocumentDesign=
   <script type="text/javascript"> 
     var documentid = "$documentid$";
   </script>
-  <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
 <div id="signStepsWrapper" style="display:none">
 
@@ -351,10 +350,10 @@ pageDocumentDesign=
                   <a rel="#update-attachments-dialog" href="#"
                      style="padding-top:3px" id="addattachmentlink">$_addattachmentlink()$</a>
                   $if(isattachments)$
-                  <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ dokument)</span>
+                  <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ $_document()$)</span>
                   <div id="tooltip-attachmentlist" class="hidden">
                     $attachments:{attachment |
-                    <div>$attachment.attachmentname$</div>
+                    <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
                     }$
                   </div>
                   $endif$
@@ -417,7 +416,7 @@ pageDocumentDesign=
                 <div class="sendbutton" style="$if(!process.isauthorsend)$display:none;$else$padding-top:20px;$endif$">
                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                     <div class="left"></div>
-                    <div class="label" style="min-width: 120px;">
+                    <div class="label" style="width: 120px;">
 		                  <span>$process.sendbuttontext$</span>
                       <span class="btn-symbol green arrow-left"
                             style="position:relative;top:3px;right:0px"></span>
@@ -429,7 +428,7 @@ pageDocumentDesign=
                 <div class="signbutton">
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
-                    <div class="label" style="min-width: 120px;">
+                    <div class="label" style="width: 120px;">
                     <span>$_skrivapa()$</span>
                       <span class="icon cross"></span>
                     </div> 
@@ -697,7 +696,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               <div class="signStepsButtonContainer">
                 <a class="btn-small green">  
                   <div class="left"> </div>
-                  <div class="label" style="min-width:100px">$_updateAttachmentsDialogUpLoadChooseFile()$</div>
+                  <div class="label" style="width:100px">$_updateAttachmentsDialogUpLoadChooseFile()$</div>
                   <div class="right"> </div>
                   <input class="multiFileInput" maxlength="20" type="file" name="attachment" accept="application/pdf" rel="#tobeattached" />
                 </a>
@@ -714,7 +713,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
               <div class="signStepsButtonContainer">
                 <a id="showexistingattachments" class="btn-small green">  
                   <div class="left"> </div>
-                  <div class="label" style="min-width:100px">$_updateAttachmentsDialogUpLoadChooseExistingAttachment()$</div>
+                  <div class="label" style="width:100px">$_updateAttachmentsDialogUpLoadChooseExistingAttachment()$</div>
                   <div class="right"> </div>
                 </a>
               </div>
@@ -723,15 +722,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           $if(!fromservice)$
           <div id="possibleAttachmentsList">
-          <span id="attachmentselectlist" style="display:none">
-            <div class="existingattachments">
-              <ul>
-                $existingattachments:{a |
-                <li><a href="#" class="addattachment" rel="$a.attachmentid$">$a.attachmentname$</a></li>
-                }$
-              </ul>
-            </div>
-          </span>
+            <span id="attachmentselectlist" style="display:none">
+              <div class="existingattachments">
+                <ul>
+                  $existingattachments:{a |
+                  <li><a href="#" class="addattachment" rel="$a.attachmentid$">$a.attachmentname$</a></li>
+                  }$
+                </ul>
+              </div>
+            </span>
           </div>
           $endif$
           <div id="attachedList">
@@ -739,7 +738,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             $attachments:{attachment |
             <div class="alreadyattacheditem">
               <div class="display">
-                <a href="#" class="removesig">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
+                <a href="#" class="removesig">x</a><span style="padding-left:5px;"><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></span>
               </div>
               <div class="data">
                 <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />
@@ -793,7 +792,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <div class="signStepsButtonContainer">
               <a class="btn-small green">  
                 <div class="left"> </div>
-                <div class="label" style="min-width:100px">$_dialogCsvupload1ChooseFile()$</div>
+                <div class="label" style="width:100px">$_dialogCsvupload1ChooseFile()$</div>
                 <div class="right"> </div>
                 <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
               </a>
@@ -1006,7 +1005,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-body">
       <div class="modal-content">
           <p>$_dialogConfirmSigninviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
-          <p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p>
+          <span id="multipleinvite"><p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p></span>
+          <span id="onlyauthor" style="display:none"><p>$_dialogConfirmSigninviteBody2OnlyAuthor()$</p></span>
         <span class="eleghidden" style="display:none;">
             <h3>$_dialogConfirmSigninviteSubHead()$</h3>
             <p>$_dialogConfirmSigninviteSubBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"

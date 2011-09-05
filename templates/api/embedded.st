@@ -34,6 +34,7 @@ $if(barsbackground)$
    background : $barsbackground$;
 }
 
+
 $endif$
 
 $if(buttons)$
@@ -105,7 +106,7 @@ $if(logo)$
 .skrivapa-logo {
     background: url("$logoLink$") no-repeat scroll 0 0 transparent;
     margin-left:20px;
-   
+  
 }
 $endif$
 
@@ -119,6 +120,15 @@ $endif$
  float: none;
 }
 
+.flashmsgbox {
+  position:relative;
+}
+
+.signStepsBodyUploadBox {
+ margin-left: auto;
+ margin-right: auto;
+ float: none;
+}
 </style>
 <script type="text/javascript" src="/js/postmessage.js"></script>
 <script>
@@ -148,7 +158,8 @@ jQuery(function(){propagateHeight();})
 <body>
 <div class="mainContainer" style="margin-top:0;">
 <div class="mainContainer960">
- $flashmessages(whitelabel="true")$
+$flashmessages(whitelabel="true")$
+
  $loginModal()$
   <div id="body-container">
  $content:noescape()$
@@ -178,7 +189,6 @@ propagateError();
 </head>
 <body ></body>
 </html>
-####
 ####
 # August 21, 2011
 # Eric Normand
@@ -225,3 +235,4 @@ connectredirect=
   </body>
 </html>
 ###
+

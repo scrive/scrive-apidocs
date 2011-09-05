@@ -22,3 +22,7 @@ $else$
 <li><a href="$link$">$name$</a></li>
 $endif$
 ####
+docListAttachmentLabel=$_docListAttachmentLabel()$
+####
+docListTemplateLabel=$processname$ ($_docListTemplateLabel()$)
+####

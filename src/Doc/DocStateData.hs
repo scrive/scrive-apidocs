@@ -40,14 +40,15 @@ module Doc.DocStateData
     , emptyDocumentUI
     ) where
 
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 import Control.Monad
 import Data.Bits
 import Data.Data (Data)
 import Data.Int
 import Data.Maybe
 import Data.Word
+import DB.Types
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
@@ -56,7 +57,7 @@ import Happstack.Util.Common
 import Mails.MailsUtil
 import MinutesTime
 import Misc
-import User.UserState
+import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 

@@ -14,7 +14,7 @@ module Util.HasSomeCompanyInfo (
   ) where
 
 import Doc.DocStateData
-import Company.CompanyState
+import Company.Model
 
 import qualified Data.ByteString as BS
 

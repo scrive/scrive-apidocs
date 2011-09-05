@@ -8,7 +8,7 @@ module User.UserState
     , DefaultMainSignatory(..)
     , SignupMethod(..)
     , ExternalUserID(..)
-    , Password(..)
+    , module User.OldPassword
     , TrustWeaverStorage(..)
     , UserAccountType(..)
     , PaymentMethod(..)
@@ -55,16 +55,22 @@ module User.UserState
     , getUserPaymentSchema
     , takeImmediatelyPayment
     , RequiresCompanyForMigration(..) --just for company migration
+    , populateDBWithUsersIfEmpty
 ) where
 import API.Service.ServiceState
 import Company.CompanyState
 import Control.Arrow (first)
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Data.Data
 import Data.List
 import Data.Maybe
+import Database.HDBC
+import DB.Classes
+import DB.Derive
+import DB.Types
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
@@ -73,29 +79,36 @@ import Happstack.Util.Common
 import MinutesTime as MT
 import Misc
 import Payments.PaymentsState as Payments
-import User.Password
-import User.Lang
+import User.OldPassword
+import User.OldLang
+import User.OldSystemServer
+import qualified AppLogger as Log
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS (unlines)
 import qualified Data.ByteString.UTF8 as BS
-import User.SystemServer
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''UserID)
 
 deriving instance Data UserID
 
 data SignupMethod = AccountRequest | ViralInvitation | BySigning
     deriving (Eq, Ord, Show, Typeable)
+$(enumDeriveConvertible ''SignupMethod)
 
 newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
 newtype Friend = Friend { unFriend :: Int }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''Friend)
 newtype Inviter = Inviter { unInviter :: Int }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''Inviter)
 data InviteType = Viral | Admin
     deriving (Eq, Ord, Typeable)
+$(enumDeriveConvertible ''InviteType)
 data InviteInfo = InviteInfo
           { userinviter :: Inviter
           , invitetime :: Maybe MinutesTime
@@ -113,6 +126,7 @@ newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
 
 newtype Email = Email { unEmail :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
+$(newtypeDeriveConvertible ''Email)
 instance Read Email where
     readsPrec p s = first (Email . BS.fromString) <$> readsPrec p s
 instance Show Email where
@@ -139,6 +153,7 @@ data UserAccountType = PrivateAccount | CompanyAccount
 
 data PaymentMethod = CreditCard | Invoice | Undefined
     deriving (Eq, Ord, Typeable)
+$(enumDeriveConvertible ''PaymentMethod)
 
 deriving instance Data PaymentMethod
 
@@ -217,6 +232,7 @@ data UserSettings  = UserSettings {
     
 data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
+$(enumDeriveConvertible ''DesignMode)
 
 {- |
     Deprecated, replaced with a simple flag called userdeleted, because
@@ -1128,7 +1144,7 @@ getUserFriends uid = do
     Nothing -> return []
     Just user -> do
       mfriends <- sequence . map (getUserByUserID . UserID . unFriend) $ userfriends user
-      return . map fromJust . filter isJust $ mfriends
+      return $ catMaybes mfriends
 
 {- |
     Fetches all of the accounts with a matching company id
@@ -1461,6 +1477,9 @@ requiresCompanyForMigration userid = queryUsers $ \users ->
       in islive && nocompany && ((issingle && hascompanyinfo) || issupervisor)
     Nothing -> False
 
+getAllUsersForDBMigration :: Query Users [User]
+getAllUsersForDBMigration = ask >>= return . toList
+
 {-
 
 Template Haskell derivations should be kept at the end of the file
@@ -1501,6 +1520,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'requiresCompanyForMigration
                       -- the below should be only used carefully and by admins
                     --, 'addFreePaymentsForInviter
+                    , 'getAllUsersForDBMigration
                     ])
 
 $(deriveSerializeFor [ ''User
@@ -1545,3 +1565,116 @@ $(deriveSerializeFor [ ''User
 instance Component Users where
   type Dependencies Users = End
   initialValue = IxSet.empty
+
+initialInsertUsersIntoPG :: DB ()
+initialInsertUsersIntoPG = wrapDB $ \conn -> do
+  users <- query GetAllUsersForDBMigration
+  forM_ users $ \u -> do
+    Log.debug $ show u
+    let (salt, hash) = case userpassword u of
+         NoPassword -> (Nothing, Nothing)
+         Password salt' hash' -> (Just $ B64.encode $ BS.pack salt', Just $ B64.encode $ BS.pack hash')
+    _ <- run conn ("INSERT INTO users ("
+      ++ "  id"
+      ++ ", password"
+      ++ ", salt"
+      ++ ", is_company_admin"
+      ++ ", account_suspended"
+      ++ ", has_accepted_terms_of_service"
+      ++ ", signup_method"
+      ++ ", first_name"
+      ++ ", last_name"
+      ++ ", personal_number"
+      ++ ", company_position"
+      ++ ", phone"
+      ++ ", mobile"
+      ++ ", email"
+      ++ ", preferred_design_mode"
+      ++ ", lang"
+      ++ ", system_server"
+      ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
+        toSql $ userid u
+      , toSql hash
+      , toSql salt
+      , toSql $ useriscompanyadmin u
+      , toSql $ useraccountsuspended u
+      , toSql $ userhasacceptedtermsofservice u
+      , toSql $ usersignupmethod u
+      , toSql $ userfstname $ userinfo u
+      , toSql $ usersndname $ userinfo u
+      , toSql $ userpersonalnumber $ userinfo u
+      , toSql $ usercompanyposition $ userinfo u
+      , toSql $ userphone $ userinfo u
+      , toSql $ usermobile $ userinfo u
+      , toSql $ BS.filter (<128) $ unEmail $ useremail $ userinfo u
+      , toSql $ preferreddesignmode $ usersettings u
+      , toSql $ lang $ usersettings u
+      , toSql $ systemserver $ usersettings u
+      , toSql $ userdeleted u
+      ]
+    when (isJust $ usermailapi u) $ do
+      let mailapi = fromJust $ usermailapi u
+      _ <- run conn ("INSERT INTO user_mail_apis ("
+        ++ "  user_id"
+        ++ ", key"
+        ++ ", daily_limit"
+        ++ ", sent_today"
+        ++ ", last_sent_date) VALUES (?, ?, ?, 0, to_timestamp(0))") [
+          toSql $ userid u
+        , toSql $ umapiKey mailapi
+        , toSql $ umapiDailyLimit mailapi
+        ]
+      return ()
+    return ()
+
+finalizeInsertUsersIntoPG :: DB ()
+finalizeInsertUsersIntoPG = wrapDB $ \conn -> do
+  users <- query GetAllUsersForDBMigration
+  forM_ users $ \u -> do
+    _ <- run conn ("UPDATE users SET"
+      ++ "  service_id = ?"
+      ++ ", company_id = ?"
+      ++ "  WHERE id = ?") [
+        toSql $ userservice u
+      , toSql $ usercompany u
+      , toSql $ userid u
+      ]
+    when (isJust $ userinviteinfo u) $ do
+      let ii = fromJust $ userinviteinfo u
+      _ <- run conn ("INSERT INTO user_invite_infos ("
+        ++ "  user_id"
+        ++ ", inviter_id"
+        ++ ", invite_time"
+        ++ ", invite_type) VALUES (?, ?, to_timestamp(?), ?)") [
+          toSql $ userid u
+        , toSql $ userinviter ii
+        , toSql $ invitetime ii
+        , toSql $ invitetype ii
+        ]
+      return ()
+    forM_ (nub $ userfriends u) $ \f -> do
+      when (isJust $ find (\u2 -> unUserID (userid u2) == unFriend f) users) $ do
+                 _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
+                      [toSql $ userid u, toSql f]
+                 return ()
+      return ()
+    return ()
+
+populateDBWithUsersIfEmpty :: DB ()
+populateDBWithUsersIfEmpty = do
+  n <- wrapDB $ \conn -> do
+    st <- prepare conn "SELECT COUNT(*) FROM users"
+    _ <- executeRaw st
+    [n] <- fetchAllRows' st >>= return . map fromSql . join
+    return (n::Int)
+  when (n == 0) $ do
+    Log.debug "No users in database, populating with values from happstack-state..."
+    Log.debug "Copying users..."
+    initialInsertUsersIntoPG
+    Log.debug "Copying services..."
+    insertServicesIntoPG
+    Log.debug "Copying companies..."
+    insertCompaniesIntoPG
+    Log.debug "Finalizing users..."
+    finalizeInsertUsersIntoPG
+    Log.debug "Done."

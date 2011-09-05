@@ -43,7 +43,7 @@ module Doc.DocState
     , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
     , SetDocumentTrustWeaverReference(..)
-    , ShareDocuments(..)
+    , ShareDocument(..)
     , SetDocumentTitle(..)
     , SignDocument(..)
     , TimeoutDocument(..)
@@ -67,7 +67,7 @@ module Doc.DocState
     , DocumentFromSignatoryData(..)
     , UpdateSigAttachments(..)
     , SaveSigAttachment(..)
-    , MigrateDocumentSigAccounts(..)
+    --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
     , StoreDocumentForTesting(..)
@@ -76,13 +76,14 @@ module Doc.DocState
     )
 where
 
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 import Control.Monad
 import Control.Monad.Reader (ask)
 import Data.List (find)
 import Data.Maybe
 import Data.Word
+import DB.Types
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
@@ -92,7 +93,7 @@ import Happstack.State
 import Mails.MailsUtil
 import MinutesTime
 import Misc
-import User.UserState
+import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
@@ -440,6 +441,7 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                  updatedFstFileName  = case (documentfiles document) of
                                          (f:fs) -> (f {filename= docname} :fs)
                                          fs -> fs
+                 isbasic = BasicFunctionality == docfunctionality
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
                     , documentdaystosign             = daystosign
@@ -447,9 +449,11 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documenttitle                  = docname
                     , documentinvitetext             = invitetext
                     , documentallowedidtypes         = idtypes
-                    , documentcsvupload              = csvupload
+                    , documentcsvupload              = if isbasic then Nothing else csvupload
                     , documentfunctionality          = docfunctionality
                     , documentfiles                  = updatedFstFileName
+                    , documentauthorattachments      = if isbasic then [] else documentauthorattachments document
+                    , documentsignatoryattachments   = if isbasic then [] else documentsignatoryattachments document
                     }
          else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
@@ -464,7 +468,11 @@ updateDocumentSimple did (authordetails,author) signatories = do
    modifySignableOrTemplateWithAction did $ \document ->
         if documentstatus document == Preparation
          then do
-             authorlink0 <- signLinkFromDetails authordetails [SignatoryPartner,SignatoryAuthor]
+             let authorroles = 
+                   case getValueForProcess document processauthorsend of
+                     Just True -> [SignatoryAuthor]
+                     _ -> [SignatoryPartner,SignatoryAuthor]
+             authorlink0 <- signLinkFromDetails authordetails authorroles
              let authorlink = authorlink0 {
                                 maybesignatory = Just $ userid author,
                                 maybecompany = usercompany author
@@ -1104,7 +1112,7 @@ setupForDeletion doc = blankDocument {
   blankSigLink siglinkid = SignatoryLink {
                              signatorylinkid = siglinkid
                            , signatorydetails = blankSigDetails
-                           , signatorymagichash = MagicHash { unMagicHash = 0 }
+                           , signatorymagichash = MagicHash 0
                            , maybesignatory = Nothing
                            , maybesupervisor = Nothing -- this field is now deprecated, should use maybecompany instead
                            , maybecompany = Nothing
@@ -1140,16 +1148,10 @@ setupForDeletion doc = blankDocument {
     such as the user trying to share isn't the document author, or if the document
     doesn't exist.
 -}
-shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
-shareDocuments user docids = 
-  forEachDocument shareDocument docids
-  where
-    shareDocument :: DocumentID -> Update Documents (Either String Document)
-    shareDocument docid =
-      modifySignableOrTemplate docid $ \doc ->
-        if isAuthor (doc, user)
-          then Right $ doc { documentsharing = Shared }
-          else Left $ "Can't share document unless you are the author"
+shareDocument :: DocumentID -> Update Documents (Either String Document)
+shareDocument docid = 
+  modifySignableOrTemplate docid $ \doc ->
+  Right $ doc { documentsharing = Shared }
 
 {- |
     Sets the document title for the indicated document.
@@ -1511,6 +1513,7 @@ migrateDocumentSigLinkCompanies docid sigusers =
     This migration should be deleted soon.  It makes sure that maybesignatory and maybesupervisor
     are properly populated on the signatory links.
 -}
+{-
 migrateDocumentSigAccounts :: DocumentID -> [User] -> Update Documents (Either String Document)
 migrateDocumentSigAccounts docid sigusers =
   modifyDocumentWithActionTime False (const True) docid $ \doc ->
@@ -1537,7 +1540,7 @@ migrateDocumentSigAccounts docid sigusers =
       || ((isSignable documenttype) && (documentstatus /= Preparation))
     clearSignatoryAccount :: SignatoryLink -> SignatoryLink
     clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybecompany = Nothing }
-
+-}
 {- |
     Updates the list of required signatory attachments on the given document.
     This ensures that the document is in a preperation state.  If there's a problem,
@@ -1641,7 +1644,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'restoreArchivedDocuments
                         , 'reallyDeleteDocuments
                         , 'deleteDocumentRecordIfRequired
-                        , 'shareDocuments
+                        , 'shareDocument
                         , 'setDocumentTitle
                         , 'timeoutDocument
                         , 'closeDocument
@@ -1665,7 +1668,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'signableFromDocumentIDWithUpdatedAuthor
                         , 'documentFromSignatoryData
                         , 'templateFromDocument
-                        , 'migrateDocumentSigAccounts
+                        --, 'migrateDocumentSigAccounts
                         , 'migrateDocumentSigLinkCompanies
                         , 'fixBug510ForDocument
                         ])

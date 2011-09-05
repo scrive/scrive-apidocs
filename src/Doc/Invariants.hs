@@ -4,13 +4,16 @@ import Doc.DocStateData
 import Util.SignatoryLinkUtils
 import MinutesTime
 import Doc.DocInfo
+import Doc.DocProcess
 import Doc.DocUtils
 import Misc
 import Util.HasSomeUserInfo
+import InputValidation
 
 import Data.List
 import Data.Maybe
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 
 listInvariantProblems :: MinutesTime -> [Document] -> [String]
@@ -24,7 +27,7 @@ invariantProblems now document =
 
 {- |
    The invariants we want to test. Each returns Nothing if there is no problem,
-   and Just message to describe a problem.
+    and Just message to describe a problem.
 
    MinutesTime is the current time, in case an invariant depends on age.
  -} 
@@ -46,6 +49,18 @@ documentInvariants = [ documentHasOneAuthor
                      , maxCustomFields
                      , closedWhenAllSigned
                      , hasSignedAttachments
+                     , sendOnlyProcessesDontHaveAuthorsWhoSign
+                     , basicDocsDontHaveCSVs
+                     , basicDocsDontHaveDaysToSign
+                     , basicDocsDontHaveMultipleCounterparts
+                     , basicDocsDontHaveViewingCounterparts
+                     , basicDocsDontHaveCustomFields
+                     , basicDocsDontHavePlacements
+                     , basicDocsDontUseSignOrder
+                     , basicDocsDontHaveAttachments
+                     , hasFirstName
+                     , hasLastName
+                     , hasValidEmail
                      ]
 
 {- |
@@ -152,7 +167,7 @@ seenWhenSigned _ document =
  -}
 maxLengthOnFields :: MinutesTime -> Document -> Maybe String
 maxLengthOnFields _ document =
-  let maxlength = 50 
+  let maxlength = 512 
       assertMaxLength s = BS.length s <= maxlength in
   assertInvariant ("some fields were too long. max is " ++ show maxlength) $
     all (\sl -> let sd = signatorydetails sl in
@@ -172,18 +187,20 @@ maxLengthOnFields _ document =
  -}
 maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
-  let maxlength = 20 
-      assertMaxLength l = length l <= maxlength in
-  assertInvariant ("some signatory had too many placements. max is " ++ show maxlength ++ " per field") $
-    all (\sl -> let sd = signatorydetails sl in
-          assertMaxLength (signatoryfstnameplacements sd) &&
-          assertMaxLength (signatorysndnameplacements sd) &&
-          assertMaxLength (signatorycompanyplacements sd) &&
-          assertMaxLength (signatoryemailplacements sd) &&
-          assertMaxLength (signatorypersonalnumberplacements sd) &&
-          assertMaxLength (signatorycompanynumberplacements sd) &&
-          all (assertMaxLength . fieldplacements) (signatoryotherfields sd))
-        (documentsignatorylinks document)
+  let maxlength = 25 * totalfields
+      totalfields = sum (map countplacements (documentsignatorylinks document))
+      countplacements sl =
+        let sd = signatorydetails sl in
+        length (signatoryfstnameplacements sd) +
+        length (signatorysndnameplacements sd) +
+        length (signatorycompanyplacements sd) +
+        length (signatoryemailplacements sd) +
+        length (signatorypersonalnumberplacements sd) +
+        length (signatorycompanynumberplacements sd) +
+        sum (map (length . fieldplacements) (signatoryotherfields sd))
+  in
+   assertInvariant ("document had too many placements. max is " ++ show maxlength ++ " (25 * number of fields)") $
+   totalfields <= maxlength
     
 {- |
    AwaitingAuthor implies Author has not signed
@@ -215,10 +232,132 @@ notSignatoryNotSigned _ document =
  -}
 maxCustomFields :: MinutesTime -> Document -> Maybe String
 maxCustomFields _ document =
-  let maxfields = 20 
+  let maxfields = 250 
       assertMaximum sl = length (signatoryotherfields $ signatorydetails sl) <= maxfields in
   assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
     all assertMaximum (documentsignatorylinks document)
+    
+{- |
+    Author is unable to sign processes which are author send only.
+    This includes offers and orders.
+-}
+sendOnlyProcessesDontHaveAuthorsWhoSign :: MinutesTime -> Document -> Maybe String
+sendOnlyProcessesDontHaveAuthorsWhoSign _ document =
+  let sendonlyprocess = Just True == getValueForProcess document processauthorsend
+      authorsigning = Just True == (fmap isSignatory $ getAuthorSigLink document) in
+  assertInvariant ("doc has type " ++ (show $ documenttype document) ++ " and has a signing author") 
+                  (sendonlyprocess =>> not authorsigning)
+                  
+{- |
+    Documents in basic mode don't have csvs
+-}
+basicDocsDontHaveCSVs :: MinutesTime -> Document -> Maybe String
+basicDocsDontHaveCSVs _ Document{documentfunctionality, documentcsvupload} =
+  assertInvariant ("basic doc has csv data on it")
+                  ((documentfunctionality == BasicFunctionality) =>> (documentcsvupload == Nothing))
+                  
+{- |
+    Documents in basic mode don't have days to sign set
+-}
+basicDocsDontHaveDaysToSign :: MinutesTime -> Document -> Maybe String
+basicDocsDontHaveDaysToSign _ Document{documentfunctionality, documentdaystosign} =
+  assertInvariant ("basic doc has days to sign on it")
+                  ((documentfunctionality == BasicFunctionality) =>> (documentdaystosign == Nothing))
+                  
+{- |
+    Documents in basic mode don't have multiple counterparts
+-}
+basicDocsDontHaveMultipleCounterparts :: MinutesTime -> Document -> Maybe String
+basicDocsDontHaveMultipleCounterparts _ Document{documentfunctionality, documentsignatorylinks} =
+  assertInvariant ("basic doc has multiple counterparts (" ++ (show $ length documentsignatorylinks) ++ ")")
+                  ((documentfunctionality == BasicFunctionality) =>> ((length documentsignatorylinks) <= 2))
+                  
+{- |
+    Documents in basic mode don't have viewing counterparts
+-}
+basicDocsDontHaveViewingCounterparts :: MinutesTime -> Document -> Maybe String
+basicDocsDontHaveViewingCounterparts _ Document{documentfunctionality, documentsignatorylinks} =
+  assertInvariant ("basic doc has viewing counterparts")
+                  ((documentfunctionality == BasicFunctionality) =>> 
+                    (not . any isViewer $ filter (not . isAuthor) documentsignatorylinks))
+                    
+{- |
+    Documents in basic mode don't have any custom fields
+-}
+basicDocsDontHaveCustomFields :: MinutesTime -> Document -> Maybe String
+basicDocsDontHaveCustomFields _ Document{documentfunctionality,documentsignatorylinks} =
+  assertInvariant ("basic doc has custom fields")
+                  ((documentfunctionality == BasicFunctionality) =>> 
+                    (all (null . signatoryotherfields . signatorydetails) documentsignatorylinks))
+                   
+{- |
+    Documents in basic mode don't have any placements
+-}
+basicDocsDontHavePlacements :: MinutesTime -> Document -> Maybe String
+basicDocsDontHavePlacements _ Document{documentfunctionality,documentsignatorylinks} =
+  assertInvariant ("basic doc has placement")
+                  ((documentfunctionality == BasicFunctionality) =>> 
+                    (not $ any hasPlacement documentsignatorylinks))
+  where
+    hasPlacement :: SignatoryLink -> Bool
+    hasPlacement SignatoryLink{signatorydetails} =
+      all hasNo [ signatoryfstnameplacements
+                , signatorysndnameplacements
+                , signatorycompanyplacements
+                , signatoryemailplacements
+                , signatorypersonalnumberplacements
+                , signatorycompanynumberplacements ]
+      where hasNo f = null $ f signatorydetails
+
+{- |
+    Documents in basic mode don't have a special sign order
+-}
+basicDocsDontUseSignOrder :: MinutesTime -> Document -> Maybe String
+basicDocsDontUseSignOrder _ Document{documentfunctionality,documentsignatorylinks} =
+  assertInvariant ("basic doc has a special sign order")
+                  ((documentfunctionality == BasicFunctionality) =>> 
+                    (all hasOrdinarySignOrder documentsignatorylinks))
+  where
+    hasOrdinarySignOrder :: SignatoryLink -> Bool
+    hasOrdinarySignOrder sl@SignatoryLink{signatorydetails}
+      | isAuthor sl = hasSignOrder 0
+      | otherwise = hasSignOrder 1
+      where hasSignOrder n = SignOrder n == signatorysignorder signatorydetails
+
+{- |
+    Documents in basic mode don't have any attachments
+-}
+basicDocsDontHaveAttachments :: MinutesTime -> Document -> Maybe String
+basicDocsDontHaveAttachments _ Document{documentfunctionality,documentauthorattachments, documentsignatoryattachments} =
+  assertInvariant ("basic doc has attachments")
+                  ((documentfunctionality == BasicFunctionality) =>> 
+                    (null documentauthorattachments && null documentsignatoryattachments))
+
+-- the following should work in Pending, Closed, AwaitingAuthor
+
+-- | First Name not null
+hasFirstName :: MinutesTime -> Document -> Maybe String
+hasFirstName _ document =
+  assertInvariant "has a signatory with no first name" $
+    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+                (not $ null $ BS.toString$ getFirstName sl))
+        (documentsignatorylinks document)
+
+-- | Last Name not null
+hasLastName :: MinutesTime -> Document -> Maybe String
+hasLastName _ document =
+  assertInvariant "has a signatory with no last name" $
+    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+                (not $ null $ BS.toString $ getLastName sl))
+        (documentsignatorylinks document)
+
+-- | Email looks like email
+hasValidEmail :: MinutesTime -> Document -> Maybe String
+hasValidEmail _ document =
+  assertInvariant "has a signatory with invalid email" $
+    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+                (isGood $ asValidEmail $ BS.toString $ getEmail sl))
+        (documentsignatorylinks document)
 
 -- some helpers  
        

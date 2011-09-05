@@ -16,13 +16,13 @@ var documentsTable = KontraList.init({
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Template" },
-    sorting: new Sorting({ fields: ["title", "time", "type"]}),
+    sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortType()$", width:"120px", field:"type", special: "expandable"}),
+        new Cell({name: "$_SortType()$", width:"120px", field:"process", special: "expandable"}),
         new Cell({name: "$_SortTemplate()$", width:"400px", field:"title",  special: "link"}),
         new Cell({name: "", width:"100px", field:"shared", special: "rendered",
                   rendering: function(shared) {

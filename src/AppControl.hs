@@ -11,26 +11,30 @@ module AppControl
 
 import AppConf
 import API.IntegrationAPI
-import API.Service.ServiceState
+import API.Service.Model
 import API.Service.ServiceControl
 import API.UserAPI
 import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
+import Company.Model
+import DB.Classes
 import Doc.DocState
 import InputValidation
 import Kontra
 import KontraLink
+import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
 import Misc
-import PayEx.PayExInterface ()-- Import so at least we check if it compiles
+--import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Session
 import Templates.Templates
+import User.Model
 import User.UserView as UserView
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
@@ -50,6 +54,8 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
+import Database.HDBC
+import Database.HDBC.PostgreSQL
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host)
 import Happstack.Server.Internal.Cookie
@@ -68,10 +74,9 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import InspectXMLInstances ()
 import InspectXML
-import User.Lang
 import Util.MonadUtils
 import ForkAction
-
+import Happstack.Server.FileServe.BuildingBlocks
 
 {- |
   Global application data
@@ -80,6 +85,7 @@ data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
+                 , appbackdooropen    :: Bool --whether a backdoor used to get email content is open or not
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  , esenforcer      :: MVar ()
                  }
@@ -127,7 +133,9 @@ handleRoutes = msum [
 
      , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
-     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer
+     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  This will be droped 
+     
+     
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ toK3 $ DocControl.signDocument
      , dir "s" $ param "cancel"         $ hPostNoXToken3 $ toK3 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
@@ -166,7 +174,11 @@ handleRoutes = msum [
      , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
 
-     , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor
+     , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor -- This will be droped and unified to one below
+     
+     , dir "d"                     $ hGet3  $ toK3 $ DocControl.handleDownloadFileLogged -- This + magic hash version will be the only file download possible
+     , dir "d"                     $ hGet5 $ toK5 $ DocControl.handleDownloadFileNotLogged 
+     
      , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
      , dir "d"                     $ hGet1  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleIssueShowTitleGet
@@ -176,8 +188,11 @@ handleRoutes = msum [
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
+     , dir "doc"                   $ hGet1  $ toK1 $ DocControl.jsonDocument
+     , dir "mailpreview"           $ hGet2  $ toK2 $ DocControl.prepareEmailPreview 
 
-     , dir "csvlandpage" $ hGet1 $ toK1 $ DocControl.handleCSVLandpage
+     , dir "friends"               $ hGet0  $ toK0 $ UserControl.handleFriends
+     , dir "companyaccounts"       $ hGet0  $ toK0 $ UserControl.handleCompanyAccounts
 
      , dir "df"                    $ hGet2  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet1  $ toK1 $ DocControl.handleAttachmentViewForAuthor
@@ -193,8 +208,11 @@ handleRoutes = msum [
      , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
      , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
+     , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages
      , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax3 $ toK3 $ DocControl.handlePageOfDocumentForSignatory
+       
+     , dir "csvlandpage" $ hGet1 $ toK1 $ DocControl.handleCSVLandpage
 
      -- UserControl
      , dir "account"                    $ hGet0  $ toK0 $ UserControl.handleUserGet
@@ -226,7 +244,10 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserEnableTrustWeaverStorage
+     , dir "adminonly" $ dir "companyadmin" $ hGet1 $ toK1 $ Administration.showAdminCompanies . Just
+     , dir "adminonly" $ dir "companyadmin" $ hGet0 $ toK0 $ Administration.showAdminCompanies Nothing
+     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminCompanyUsageStats
+     , dir "adminonly" $ dir "companyadmin" $ hPost1 $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
        
@@ -244,14 +265,16 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "translations" $ hGet0 $ toK0 $ Administration.showAdminTranslations
 
      -- a temporary service to help migration
-     , dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
-     , dir "adminonly" $ dir "migratecompanies" $ hGet0 $ toK0 $ Administration.migrateCompanies
+     --, dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
+     --, dir "adminonly" $ dir "migratecompanies" $ hGet0 $ toK0 $ Administration.migrateCompanies
 
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
        
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
+
+     , dir "adminonly" $ dir "backdoor" $ hGet1 $ toK1 $ Administration.handleBackdoorQuery
 
      -- this stuff is for a fix
      , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
@@ -268,9 +291,12 @@ handleRoutes = msum [
      -- never ever use this
      , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
        
-       
+     , dir "adminonly" $ dir "log" $ onlySuperUser $ serveLogDirectory "log"
+
+  
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
+     , dir "dave" $ dir "company"  $ hGet1 $ toK1 $ daveCompany
 
      -- account stuff
      , dir "logout"      $ hGet0  $ toK0 $ handleLogout
@@ -296,6 +322,10 @@ handleRoutes = msum [
      , dir "s" $ param "eleg" $ hPost3 $ toK3 $ BankID.handleSignPostBankID
      , dir "d" $ hGet2  $ toK2 $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost1 $ toK1 $ BankID.handleIssuePostBankID
+       
+     -- a general purpose blank page
+     --, dir "/blank" $ hGet0 $ toK0 $ simpleResponse ""
+       
      , userAPI
      , integrationAPI
      -- static files
@@ -426,6 +456,8 @@ showRequest rq maybeInputsBody =
 -}
 appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler appConf appGlobals = do
+  startTime <- liftIO getClockTime
+
   let quota :: GHC.Int.Int64 = 10000000
 
   temp <- liftIO $ getTemporaryDirectory
@@ -438,7 +470,13 @@ appHandler appConf appGlobals = do
   --    putStrLn $ "INPUTS BODY: " ++ show bi
   session <- handleSession
   ctx <- createContext rq session
-  handle rq session ctx
+  response <- handle rq session ctx
+  finishTime <- liftIO getClockTime
+  let TOD ss sp = startTime
+      TOD fs fp = finishTime
+      diff = (fs - ss) * 1000000000000 + fp - sp
+  Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
+  return response
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
@@ -459,6 +497,8 @@ appHandler appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
+      when (ctxdbconnclose ctx') $
+        liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -481,11 +521,13 @@ appHandler appConf appGlobals = do
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
       let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-      minutestime <- liftIO $ getMinutesTime
-      muser <- getUserFromSession session
-      mcompany <- getCompanyFromSession session
+
+      conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
+      minutestime <- liftIO getMinutesTime
+      muser <- getUserFromSession conn session
+      mcompany <- getCompanyFromSession conn session
       location <- getLocationFromSession session
-      mservice <- query . GetServiceByLocation . toServiceLocation =<< currentLink
+      mservice <- ioRunDB conn . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -506,10 +548,13 @@ appHandler appConf appGlobals = do
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
+                , ctxdbconn = conn
+                , ctxdbconnclose = True
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
+                , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
                 , ctxtemplates = localizedVersion (systemServer,language) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
@@ -539,7 +584,7 @@ forgotPasswordPagePost = do
   case memail of
     Nothing -> return LoopBack
     Just email -> do
-      muser <- query $ GetUserByEmail Nothing $ Email email
+      muser <- runDBQuery $ GetUserByEmail Nothing $ Email email
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
@@ -606,7 +651,7 @@ signup vip _freetill =  do
   case memail of
     Nothing -> return LoopBack
     Just email -> do
-      muser <- query $ GetUserByEmail Nothing $ Email $ email
+      muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
       case  muser of
         Just user ->
           if isNothing $ userhasacceptedtermsofservice user
@@ -619,8 +664,10 @@ signup vip _freetill =  do
           else do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
-        Nothing -> do
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip
+        Nothing -> do         
+          rq <- askRq
+          let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip browserLang
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone
@@ -665,19 +712,15 @@ handleLoginPost = do
         (Just email, Just passwd) -> do
             -- check the user things here
             Log.debug $ "Logging " ++ show email
-            maybeuser <- query $ GetUserByEmail Nothing (Email email)
+            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
-                Just User{ userid, userpassword }
+                Just User{userpassword}
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "Logging: User logged in"
                         logUserToContext maybeuser
-                        time <- liftIO getMinutesTime
-                        _ <- update $ RecordSuccessfulLogin userid time
                         return BackToReferer
-                Just User{userid } -> do
+                Just _ -> do
                         Log.debug $ "Logging: User found, Not verified password"
-                        time <- liftIO getMinutesTime
-                        _ <- update $ RecordFailedLogin userid time
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "Logging: No user matching the email found"  
@@ -727,10 +770,32 @@ daveDocument documentid = onlySuperUserGet $ do
 -}
 daveUser :: Kontrakcja m => UserID -> m Response
 daveUser userid = onlySuperUserGet $ do
-    user <- queryOrFail $ GetUserByUserID userid
+    user <- runDBOrFail $ dbQuery $ GetUserByID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
+    
+{- |
+    Used by super users to inspect a company in xml.
+-}
+daveCompany :: Kontrakcja m => CompanyID -> m Response
+daveCompany companyid = onlySuperUserGet $ do
+  company <- runDBOrFail $ dbQuery $ GetCompany companyid
+  V.renderFromBody V.TopNone V.kontrakcja $ inspectXML company
 
 sysdump :: Kontrakcja m => m Response
 sysdump = onlySuperUserGet $ do
     dump <- liftIO getAllActionAsString
     ok $ addHeader "refresh" "5" $ toResponse dump
+
+
+serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
+                   FilePath    -- ^ file/directory to serve
+                  -> m Response
+serveLogDirectory localPath = 
+    fileServe' serveFn mimeFn indexFn localPath
+        where
+          serveFn = filePathSendFile
+          mimeFn  = guessContentTypeM $ Map.fromList [("log","text/plain")]
+          indexFn fp =
+              msum [ tryIndex filePathSendFile mimeFn [] fp
+                   , browseIndex renderDirectoryContents filePathSendFile mimeFn [] fp
+                   ]

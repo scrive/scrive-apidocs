@@ -21,12 +21,11 @@ module  API.Service.ServiceControl(
           ) where
 import Control.Monad.State
 import Data.Functor
-import Happstack.State (update,query)
 import Misc
 import Kontra
 import KontraLink
 import Data.Maybe
-import API.Service.ServiceState
+import API.Service.Model
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import API.Service.ServiceView
@@ -34,27 +33,30 @@ import Doc.DocUtils
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 import Happstack.Server.SimpleHTTP
+import DB.Classes
+import DB.Types
+import User.Model
 import Util.FlashUtil
 import Util.MonadUtils
 
 handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceUI sid = do
     ctx <- getContext
-    mservice <- query $ GetService sid
+    mservice <- runDBQuery $ GetService sid
     clear <- isFieldSet "clear"
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx),clear) of
         (Just service,True,False) -> do
            mailfooter <- getFieldUTF "mailfooter"
-           buttonBody <-  getFileField "button-body"
-           buttonRest <-  getFileField "button-rest"
+           buttonBody <- fmap Binary <$> getFileField "button-body"
+           buttonRest <- fmap Binary <$> getFileField "button-rest"
            buttonstextcolor <- getFieldUTF "buttonstextcolor"
-           background <-  getFieldUTF "background"
-           overlaybackground <-   getFieldUTF "overlaybackground"
+           background <- getFieldUTF "background"
+           overlaybackground <- getFieldUTF "overlaybackground"
            barsbackground <- getFieldUTF "barsbackground"
-           logo <-  getFileField "logo"
+           logo <- fmap Binary <$> getFileField "logo"
            let ui = serviceui service
-           update $ UpdateServiceUI sid $ ui {
+           _ <- runDBUpdate $ UpdateServiceUI sid $ ui {
               servicemailfooter = joinEmpty $ mailfooter `mplus` (servicemailfooter ui)
             , servicebuttons = (pairMaybe buttonBody buttonRest) `mplus`
                                (mapFst (`fromMaybe` buttonBody) $ mapSnd (`fromMaybe` buttonRest) $ (servicebuttons  ui))
@@ -67,7 +69,7 @@ handleChangeServiceUI sid = do
            addFlash $ (OperationDone, "UI setting changes")
            return LoopBack
         (Just service,True,True) -> do
-           update $ UpdateServiceUI sid $ (serviceui service) {
+           _ <- runDBUpdate $ UpdateServiceUI sid $ (serviceui service) {
               servicemailfooter = Nothing
             , servicebuttons = Nothing
             , servicebuttonstextcolor = Nothing
@@ -85,7 +87,7 @@ handleChangeServiceUI sid = do
 handleChangeServicePassword :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServicePassword sid = do
     ctx <- getContext
-    mservice <- query $ GetService sid
+    mservice <- runDBQuery $ GetService sid
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
@@ -95,7 +97,7 @@ handleChangeServicePassword sid = do
             if (verifyPassword (servicepassword $ servicesettings service) password) && (newpassword1 == newpassword2)
                 then do
                     pwd <- liftIO $ createPassword password
-                    update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
+                    _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
                     addFlash (OperationDone, "Password changed")
                     return LoopBack
                 else do
@@ -109,29 +111,28 @@ handleChangeServicePasswordAdminOnly :: Kontrakcja m => ServiceID -> String -> m
 handleChangeServicePasswordAdminOnly sid passwordString = do
     let password = BS.fromString passwordString
     ctx <- getContext
-    mservice <- query $ GetService sid
+    mservice <- runDBQuery $ GetService sid
     case (mservice, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
        pwd <- liftIO $ createPassword password
-       update $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = pwd}
+       _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
        addFlash (OperationDone, "Password changed")
        return LinkMain
      _ -> mzero
 
-
 handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
     ctx <- getContext
-    mservice <- query $ GetService sid
+    mservice <- runDBQuery $ GetService sid
     case (mservice, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
      (Just service,True) -> do
             location <- getFieldUTF "location"
-            admin <- liftMM (query . GetUserByEmail Nothing) (fmap Email <$> getFieldUTF "admin")
+            admin <- liftMM (runDBQuery . GetUserByEmail Nothing) (fmap Email <$> getFieldUTF "admin")
             mailfromaddress <- getFieldUTF "mailfromaddress"
-            update $ UpdateServiceSettings sid $ (servicesettings service)
+            _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service)
                         {   servicelocation = (ServiceLocation <$> location) `mplus` (servicelocation $ servicesettings  service)
                           , servicemailfromaddress  = mailfromaddress `mplus` (servicemailfromaddress $ servicesettings  service)
-                          , serviceadmin =  fromMaybe (serviceadmin $ servicesettings service) (ServiceAdmin <$> unUserID <$> userid <$> admin)
+                          , serviceadmin =  fromMaybe (serviceadmin $ servicesettings service) (userid <$> admin)
                         }
             addFlash (OperationDone, "Settings changed")
             return LoopBack
@@ -144,11 +145,12 @@ handleChangeServiceSettings sid = do
 handleShowService :: Kontrakcja m => ServiceID -> m (Either KontraLink String)
 handleShowService sid = do
     ctx <- getContext
-    mservice <- query $ GetService sid
+    conn <- getConnection
+    mservice <- runDBQuery $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
             || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)))
-       then Right <$> serviceAdminPage (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
+       then Right <$> serviceAdminPage conn (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
        else return $ Left LinkMain
 
 handleShowServiceList :: Kontrakcja m => m String
@@ -156,28 +158,24 @@ handleShowServiceList = do
     ctx <- getContext
     case (ctxmaybeuser ctx, isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
          (Just user, False) -> do
-             srvs <- query $ GetServicesForAdmin $ ServiceAdmin $ unUserID $ userid user
+             srvs <- runDBQuery $ GetServicesForAdmin $ userid user
              servicesListPage srvs
          (_, True) -> do
-             srvs <- query $ GetServices
+             srvs <- runDBQuery GetServices
              servicesListPage srvs
          _ -> mzero
 
 handleServiceLogo :: Kontrakcja m => ServiceID -> m Response
-handleServiceLogo sid = do
-    mlogo <- join <$> fmap (servicelogo . serviceui) <$> (query $ GetService sid)
-    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
-                      Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mlogo) Nothing
-
+handleServiceLogo = handleServiceBinary (servicelogo . serviceui)
 
 handleServiceButtonsBody :: Kontrakcja m =>ServiceID -> m Response
-handleServiceButtonsBody sid = do
-    mimg <- join <$> fmap (fmap fst . servicebuttons . serviceui) <$> (query $ GetService sid)
-    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
-                      Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mimg) Nothing
+handleServiceButtonsBody = handleServiceBinary (fmap fst . servicebuttons . serviceui)
 
 handleServiceButtonsRest :: Kontrakcja m => ServiceID -> m Response
-handleServiceButtonsRest sid = do
-    mimg <- join <$> fmap (fmap snd . servicebuttons . serviceui) <$> (query $ GetService sid)
-    return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
-                      Response 200 Map.empty nullRsFlags (BSL.fromChunks $ maybeToList mimg) Nothing
+handleServiceButtonsRest = handleServiceBinary (fmap snd . servicebuttons . serviceui)
+
+handleServiceBinary :: Kontrakcja m => (Service -> Maybe Binary) -> ServiceID -> m Response
+handleServiceBinary f sid = do
+  mimg <- join <$> fmap f <$> (runDBQuery $ GetService sid)
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
+    Response 200 Map.empty nullRsFlags (BSL.fromChunks $ map unBinary $ maybeToList mimg) Nothing

@@ -91,8 +91,13 @@ instance Version PaymentState
 $(deriveSerialize ''Payment)
 instance Version (Payment)
 
+type Payments = IxSet Payment
 
-$(inferIxSet "Payments" ''Payment 'noCalcs [''PaymentId, ''UserID, ''DocumentID])
+instance Indexable Payment where
+  empty = ixSet [
+      ixFun (\x -> [paymentId x])
+    , ixFun (\x -> [userId x])
+    ]
 
 instance Component (Payments) where
   type Dependencies (Payments) = End

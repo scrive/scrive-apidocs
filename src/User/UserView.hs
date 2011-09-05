@@ -51,6 +51,7 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
+    flashUserIsAlreadyCompanyAccount,
     flashMessageUserInvitedAsCompanyAccount,
     flashMessageUserHasBecomeCompanyAccount,
     flashMessageUserHasLiveDocs,
@@ -60,17 +61,21 @@ module User.UserView (
     modalNewPasswordView,
 
     --utils
-    userBasicFields) where
+    userBasicFields,
+    
+    -- friends list
+    friendSortSearchPage
+    ) where
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Maybe
 import ActionSchedulerState
-import Company.CompanyState
+import Company.Model
+import DB.Types
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
-import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
@@ -80,7 +85,8 @@ import ListUtil
 import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import User.Lang
+import User.Model
+import Data.List
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> m String
 showUser user mcompany = renderTemplateFM "showUser" $ do
@@ -134,14 +140,14 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
         field "se" $ LANG_SE == (lang $ usersettings user)
     menuFields user
 
-showUserMailAPI :: TemplatesMonad m => User -> m String
-showUserMailAPI user@User{usermailapi} =
+showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
+showUserMailAPI user mapi =
     renderTemplateFM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI
-        field "mailapienabled" $ isJust usermailapi
-        field "mailapikey" $ show . umapiKey <$> usermailapi
-        field "mapidailylimit" $ umapiDailyLimit <$> usermailapi
-        field "mapisenttoday" $ umapiSentToday <$> usermailapi
+        field "mailapienabled" $ isJust mapi
+        field "mailapikey" $ show . umapiKey <$> mapi
+        field "mapidailylimit" $ show . umapiDailyLimit <$> mapi
+        field "mapisenttoday" $ show . umapiSentToday <$> mapi
         menuFields user
 
 pageAcceptTOS :: TemplatesMonad m => m String
@@ -436,6 +442,10 @@ flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
 
+flashUserIsAlreadyCompanyAccount :: TemplatesMonad m => m FlashMessage
+flashUserIsAlreadyCompanyAccount =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashUserIsAlreadyCompanyAccount" ()
+
 flashMessageUserInvitedAsCompanyAccount :: TemplatesMonad m => m FlashMessage
 flashMessageUserInvitedAsCompanyAccount =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserInvitedAsCompanyAccount" ()
@@ -461,3 +471,20 @@ userBasicFields u mc = do
     field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
+
+-- list stuff for friends
+
+-- Friends currently only use the email
+friendSortSearchPage :: ListParams -> [User] -> PagedList User
+friendSortSearchPage = listSortSearchPage friendSortFunc friendSearchFunc friendPageSize
+
+friendPageSize :: Int
+friendPageSize = 20
+
+friendSortFunc :: SortingFunction User
+friendSortFunc _ u1 u2 = compare (getEmail u1) (getEmail u2)
+
+friendSearchFunc :: SearchingFunction User
+friendSearchFunc s u = s `isInfixOf` (BS.toString $ getEmail u)
+  
+  

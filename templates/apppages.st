@@ -32,7 +32,9 @@ standardHeaderContents=
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
-        <link rel="stylesheet" type="text/css"  href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/ui-lightness/jquery-ui.css"              media="screen" />
+        <link rel="stylesheet" type="text/css"
+              href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/ui-lightness/jquery-ui.css"
+                   media="screen" />
         <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
                 type="text/javascript"></script>
         <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
@@ -51,7 +53,10 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/backbone.js"
                 type="text/javascript"></script>
-
+        <script src="$prefix$/js/livequery.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/loading.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/flashmessages.js"
                 type="text/javascript"></script>
 
@@ -68,10 +73,28 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/confirmations.js"
                 type="text/javascript"></script>
-        <script src="$prefix$/js/selects.js"
+		<script src="$prefix$/js/selects.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/lists.js"
-                type="text/javascript"></script> 
+                type="text/javascript"></script>
+        <script src="$prefix$/js/tabs.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/files.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/process.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/fields.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/signatories.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/documents.js"
+                type="text/javascript"></script>
+		<script src="$prefix$/js/confirmationsWithEmails.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/docview.js"
+                type="text/javascript"></script>  
+        <script src="$prefix$/js/bankid.js"
+                type="text/javascript"></script>  
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js" 
                 type="text/javascript"></script>

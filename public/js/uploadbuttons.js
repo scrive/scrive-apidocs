@@ -100,7 +100,7 @@ var UploadButtonView = Backbone.View.extend({
             list: list,
             onFileAppend: function() {
                 if (model.submitOnUpload()) {
-                    displayLoadingOverlay(localization.loadingFile);
+                    LoadingDialog.open(localization.loadingFile);
                     if (model.hasSubmit())
                     {
                         model.submit().addInputs(list);
@@ -125,7 +125,7 @@ var UploadButtonView = Backbone.View.extend({
 window.UploadButton = {
     init: function (args) {
           var model = new UploadButtonModel(args);
-          var input = $("<div style='position:relative;overflow:hidden'/>");
+          var input = $("<div style='position:relative;overflow:hidden;padding-bottom:5px'/>");
           var view = new UploadButtonView({model : model, el : input});
           return new Object({
               input : function() {return input;}

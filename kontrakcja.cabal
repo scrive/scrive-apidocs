@@ -22,8 +22,16 @@ Flag test
   Description: Build tests
   Default: True
 
+Flag test-companystate
+  Description: Build companystate testsuite
+  Default: True
+
 Flag test-docstate
   Description: Build docstate testsuite
+  Default: True
+
+Flag test-docstatequery
+  Description: Build DocStateQuery testsuite
   Default: True
 
 Flag test-html
@@ -34,6 +42,10 @@ Flag test-input-validation
   Description: Build input-validation testsuite
   Default: True
 
+Flag test-integrationapi
+  Description: Build integrationapi testsuite
+  Default: True
+
 Flag test-login
   Description: Build login testsuite
   Default: True
@@ -42,20 +54,20 @@ Flag test-mailapi
   Description: Build mailapi testsuite
   Default: True
 
+Flag test-redirect
+  Description: Build redirect testsuite
+  Default: True
+
+Flag test-servicestate
+  Description: Build servicestate testsuite
+  Default: True
+
 Flag test-trust-weaver
   Description: Build trust-weaver testsuite
   Default: True
 
 Flag test-userstate
   Description: Build userstate testsuite
-  Default: True
-
-Flag test-redirect
-  Description: Build redirect testsuite
-  Default: True
-
-Flag test-docstatequery
-  Description: Build DocStateQuery testsuite
   Default: True
 
 Flag allow-warnings
@@ -82,6 +94,9 @@ Executable kontrakcja-server
     ghc-options: -rtsopts
   Build-depends: filepath
   Build-depends: base64-bytestring
+  Build-depends: convertible
+  Build-depends: HDBC
+  Build-depends: HDBC-postgresql
   Build-depends: tagsoup
   Build-depends: zlib
   Build-depends: cryptocipher==0.2.*
@@ -189,16 +204,22 @@ Executable kontrakcja-test
   if os(windows)
     cpp-options: -DWINDOWS
 
+  if !flag(test-companystate)
+    cpp-options: -DNO_COMPANYSTATE
   if !flag(test-docstate)
     cpp-options: -DNO_DOCSTATE
   if !flag(test-html)
     cpp-options: -DNO_HTML
   if !flag(test-input-validation)
     cpp-options: -DNO_INPUTVALIDATION
+  if !flag(test-integrationapi)
+    cpp-options: -DNO_INTEGRATIONAPI
   if !flag(test-login)
     cpp-options: -DNO_LOGIN
   if !flag(test-mailapi)
     cpp-options: -DNO_MAILAPI
+  if !flag(test-servicestate)
+    cpp-options: -DNO_SERVICESTATE
   if !flag(test-trust-weaver)
     cpp-options: -DNO_TRUSTWEAVER
   if !flag(test-userstate)

@@ -25,7 +25,6 @@ import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
-import Numeric -- use new module
 import System.Directory
 import System.Exit
 import System.IO
@@ -33,6 +32,7 @@ import System.IO.Temp
 import System.Process
 import System.Random
 import System.Time
+import Text.HTML.TagSoup.Entity (lookupEntity)
 import qualified AppLogger as Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
@@ -153,7 +153,7 @@ openDocument filename =
       (\_e ->
         return ())))
 
-toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
+toIO :: Monad m => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO astate = mapServerPartT f
   where
     f m = evalStateT m astate
@@ -202,28 +202,6 @@ lookInputList name
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
-
--- | Opaque 'Word64' type. Used as authentication token. Useful is the 'Random' instance.
-newtype MagicHash = MagicHash { unMagicHash :: Word64 }
-    deriving (Eq, Ord, Typeable, Data)
-
-deriving instance Random MagicHash
-deriving instance Serialize MagicHash
-
-instance Version MagicHash
-
-instance Show MagicHash where
-  showsPrec _prec (MagicHash x) = (++) (pad0 16 (showHex x ""))
-
-
-instance Read MagicHash where
-  readsPrec _prec = let make (i,v) = (MagicHash i,v)
-                    in map make . readHex
-
-
-instance FromReqURI MagicHash where
-    fromReqURI = readM
-
 
 -- | Create an external process with arguments. Feed it input, collect
 -- exit code, stdout and stderr.
@@ -319,8 +297,13 @@ caseOf [] d = d
 allValues::(Bounded a, Enum a) => [a]
 allValues = enumFromTo minBound maxBound
 
-defaultValue::(Bounded a) => a
-defaultValue = minBound
+class HasDefaultValue a where
+    defaultValue :: a
+
+instance (Bounded a) => HasDefaultValue a where
+    defaultValue = minBound
+
+
 
 -- | Extra classes for one way enums
 class SafeEnum a where
@@ -532,6 +515,10 @@ fromRight (Right b) = b
 fromRight _ = error "Reading Right for Left"
 
 
+toMaybe :: Either a b -> Maybe b
+toMaybe (Right a) = Just a
+toMaybe _ = Nothing
+
 joinB:: Maybe Bool -> Bool
 joinB (Just b) = b
 joinB _ = False
@@ -641,3 +628,13 @@ _ <| Just y  = y
 
 infixr 0 <|
 infixr 0 |>
+
+unescapeEntities :: String -> String
+unescapeEntities [] = []
+unescapeEntities ('&':xs) = 
+  let (b, a) = break (== ';') xs in
+  case lookupEntity b of
+    Just c | "" /=  a && 
+             head a == ';' ->  c  : unescapeEntities (tail a)    
+    _                      -> '&' : unescapeEntities xs
+unescapeEntities (x:xs) = x : unescapeEntities xs

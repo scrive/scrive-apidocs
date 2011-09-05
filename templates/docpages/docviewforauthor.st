@@ -24,6 +24,8 @@ ordercancelbyauthormodaltitle=
           <p>$_ordercancelbyauthormodaltitleBody()$</p>
 ###
 pageDocumentForAuthor=
+
+<!--
 <div class="localdialogs">
   <div style="display: none">
     <script type="text/javascript"> 
@@ -250,4 +252,21 @@ pageDocumentForAuthor=
   </div>
 </div>
 $signatoryScriptIfRequired()$
+-->
+<script>
+
+jQuery(function(){
+var docview = KontraStandardDocument.init({
+    id:"$documentid$"
+     $if(siglinkid)$
+    , viewer : new DocumentViewer({
+        signatoryid : "$siglinkid$",
+        magichash : "$sigmagichash$"
+        })
+    $endif$
+});
+jQuery("#body-container").replaceWith(docview.view.el)
+})
+</script>
+
 ####

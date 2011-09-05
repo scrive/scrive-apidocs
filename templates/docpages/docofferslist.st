@@ -2,20 +2,20 @@
 pageOffersList=
 $loadingdialog()$
 <div>
-	<div id="tab-viewer">
-		<div class="tab-header">
-    $docListRubbishBinLink()$
-		</div>
-		$docListTabs()$
-     </div>
+  <div id="tab-viewer">
+	<div class="tab-header">
+      $docListRubbishBinLink()$
+	</div>
+	$docListTabs()$
+  </div>
 </div>
 
 <script>
-var documentsTable = KontraList.init({
-    schema: new Schema({
-    url: "/docs",
-    extraParams : { documentType : "Offer" },
-    sorting: new Sorting({ fields: ["title", "status", "time","partner", "partnercomp", "author"]}),
+  var documentsTable = KontraList.init({
+  schema: new Schema({
+  url: "/docs",
+  extraParams : { documentType : "Offer" },
+  sorting: new Sorting({ fields: ["title", "status", "time","partner", "partnercomp", "author"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
@@ -63,7 +63,7 @@ var documentsTable = KontraList.init({
                              if (docs.length == 1)
                                text = "$_OfferReminderBodySingel()$ "+ docs[0].field("title") + "."
                              else
-                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" _docListTabsOffers().").toLowerCase() + " $_OfferReminderBodyMulti2()$";
+                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" $_docListTabsOffers()$.").toLowerCase() + " $_OfferReminderBodyMulti2()$";
                              var content = jQuery("<p/>").text(text);
                              Confirmation.popup({
                                 submit: submit,
@@ -97,7 +97,7 @@ var documentsTable = KontraList.init({
                              if (docs.length == 1)
                                text += docs[0].field("title") + "."
                              else
-                               text += docs.length + (" _docListTabsOffers().").toLowerCase();
+                               text += docs.length + (" $_docListTabsOffers()$.").toLowerCase();
                              var content = jQuery("<p/>").text(text);
                              Confirmation.popup({
                                 submit: submit,

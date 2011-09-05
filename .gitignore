@@ -2,4 +2,6 @@ _local/
 dist/
 log/
 kontrakcja.conf
+kontrakcja_test.conf
 kontrakcja-server
+*.cookies

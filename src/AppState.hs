@@ -10,12 +10,12 @@ import Happstack.Data
 import Happstack.State
 import Payments.PaymentsState
 import Session
-import Kontra
 import ActionSchedulerState
 import Data.Data
 import Misc
 import API.Service.ServiceState
 import Company.CompanyState
+import User.UserState
 
 -- |top-level application state
 data AppState = AppState

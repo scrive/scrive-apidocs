@@ -14,21 +14,25 @@ import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
+import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
+import DB.Classes
 import Doc.DocState
 import Kontra
 import KontraLink
 import MinutesTime
 import Mails.MailsData
+import Mails.MailsConfig
 import Mails.SendMail
 import Session
 import Templates.LocalTemplates
 import Templates.Templates
+import User.Model
 import User.UserView
 import qualified AppLogger as Log
 import System.Time
@@ -37,8 +41,12 @@ import Doc.Invariants
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
-newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
+
+instance DBMonad ActionScheduler where
+    getConnection = AS $ lift ask
+    handleDBError = E.throw
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
 -- LocalTemplates instead. Reason? We don't have access to currently used
@@ -47,7 +55,8 @@ newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
 -- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler (AS sched) sd = runReaderT sched sd
+runScheduler sched sd =
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT (unAS sched) sd)
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -63,16 +72,15 @@ runEnforceableScheduler interval enforcer sched sd = listen 0
 actionScheduler :: ActionImportance -> ActionScheduler ()
 actionScheduler imp = do
     sd <- ask
+    conn <- getConnection
+    let runAction a = runReaderT (runReaderT (unAS $ evaluateAction a) sd) conn `E.catch` catchEverything a
     liftIO $ getMinutesTime
          >>= query . GetExpiredActions imp
-         >>= sequence_ . map (run sd)
+         >>= sequence_ . map runAction
     where
-        run sd a = runScheduler (evaluateAction a) sd `E.catch` catchEverything a
         catchEverything :: Action -> E.SomeException -> IO ()
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
-            
-
 
 -- | Old scheduler (used as main one before action scheduler was implemented)
 oldScheduler :: ActionScheduler ()
@@ -113,7 +121,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             sd <- ask
             mdoc <- query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
-            (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
+            (runDBQuery $ GetUserByID uid) >>= maybe (return ()) (\user -> do
                 let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
                     mailfunc = case documenttype <$> mdoc of
                       Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
@@ -140,7 +148,9 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
       Log.error $ "Email was removed from the queue"
   else do
     mailer <- sdMailer <$> ask
-    success <- liftIO $ sendMail mailer actionID mail
+    appconf <- sdAppConf <$> ask
+    let backdooropen = isBackdoorOpen $ mailsConfig appconf
+    success <- sendMail mailer actionID mail
     if success
        then do
            -- morph action type into SentEmailInfo
@@ -151,6 +161,9 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
                , seiMailInfo         = mailInfo
                , seiEventType        = Other "passed to sendgrid"
                , seiLastModification = now
+               , seiBackdoorInfo     = if backdooropen
+                                         then Just $ ActionBackdoorInfo { bdContent = content mail }
+                                         else Nothing
            }
            _ <- update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
            return ()

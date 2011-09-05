@@ -23,7 +23,8 @@ module AppView( TopMenu(..)
               , modalError
               , embeddedErrorPage
               ) where
-import API.Service.ServiceState
+
+import API.Service.Model
 import FlashMessage
 import Kontra
 import KontraLink

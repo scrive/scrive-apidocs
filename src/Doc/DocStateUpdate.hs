@@ -7,12 +7,17 @@ module Doc.DocStateUpdate
     , authorSendDocument
     , updateSigAttachments
     , closeDocument
+    , signableFromTemplateWithUpdatedAuthor
+    , updateDocAuthorAttachments
+    , attachFile
+    , newDocument
+    , shareDocuments
     ) where
 
+import DB.Types
 import DBError
 import Doc.DocState
 import Kontra
-import Misc
 import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
@@ -21,6 +26,10 @@ import Doc.DocStateQuery
 import qualified Data.ByteString as BS
 import Doc.DocUtils
 import Control.Applicative
+import User.Model
+import User.UserControl
+import Control.Monad.Trans
+import Doc.DocStorage
 
 {- |
    Mark document seen securely.
@@ -39,20 +48,16 @@ markDocumentSeen docid sigid mh time ipnum =
    Securely
  -}
 restartDocument :: Kontrakcja m => Document -> m (Either DBError Document)
-restartDocument doc= do
+restartDocument doc = withUser $ \user -> do
   Context { ctxtime
-          , ctxipnumber
-          , ctxmaybeuser
-          } <- getContext
-  case ctxmaybeuser of
-    Nothing   -> return $ Left DBNotLoggedIn
-    Just user -> case getAuthorSigLink doc of
-      Just authorsiglink | isSigLinkFor user authorsiglink -> do
-        enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber
-        case enewdoc of
-          Right newdoc -> return $ Right newdoc
-          _            -> return $ Left DBResourceNotAvailable
-      _ -> return $ Left DBResourceNotAvailable
+          , ctxipnumber } <- getContext
+  if isSigLinkFor user $ getAuthorSigLink doc
+    then do
+      enewdoc <- update $ RestartDocument doc user ctxtime ctxipnumber
+      case enewdoc of
+        Left _ -> return $ Left DBResourceNotAvailable
+        Right doc' -> return $ Right doc'
+    else return $ Left DBResourceNotAvailable
 
 {- |
    Sign a document with email identification (typical, non-eleg).
@@ -134,3 +139,47 @@ onlyAuthor did action = do
       if not $ isAuthor (doc, user) -- only the author should be allowed in
         then return $ Left DBResourceNotAvailable
         else action
+
+{- |
+ Create a signable from template with logged in user as the author.
+ -}
+signableFromTemplateWithUpdatedAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
+signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
+  Context{ ctxmaybeuser = Just user} <- getContext
+  mcompany <- getCompanyForUser user
+  transActionNotAvailable <$> update (SignableFromDocumentIDWithUpdatedAuthor user mcompany did)
+
+updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [DocumentID] -> [FileID] -> m (Either DBError Document)
+updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
+  transActionNotAvailable <$> update (UpdateDocumentAttachments did adds removes)
+
+attachFile :: (Kontrakcja m) => DocumentID -> BS.ByteString -> BS.ByteString -> m (Either DBError Document)
+attachFile docid filename content = onlyAuthor docid $ do
+  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+  -- we use gs to do that of course
+  ctx <- getContext
+  content14 <- liftIO $ preprocessPDF ctx content docid
+  transActionNotAvailable <$> update (AttachFile docid filename content14)
+
+newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
+newDocument title doctype = withUser $ \user -> do
+  Context{ ctxtime } <- getContext
+  mcompany <- getCompanyForUser user
+  transActionNotAvailable <$> update (NewDocument user mcompany title doctype ctxtime)
+
+-- | Share documents where logged in user is author
+shareDocuments :: Kontrakcja m => [DocumentID] -> m (Either DBError [Document])
+shareDocuments dids = sequence <$> mapM shareDocument dids
+
+shareDocument :: Kontrakcja m => DocumentID -> m (Either DBError Document)
+shareDocument did = onlyAuthor did $ do
+  edoc <- update $ ShareDocument did
+  either (\_ -> return $ Left $ DBResourceNotAvailable)
+         (return . Right)
+         edoc
+
+withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError a)
+withUser action = do
+  Context{ ctxmaybeuser } <- getContext
+  maybe (return $ Left DBNotLoggedIn) action ctxmaybeuser
+

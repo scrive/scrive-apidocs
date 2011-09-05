@@ -6,43 +6,22 @@ require "selenium-webdriver"
 require "selenium-test/src/test_properties.rb"
 require "selenium-test/src/test_context.rb"
 require "selenium-test/src/email_helper.rb"
-include EmailHelper
+require "selenium-test/src/login_helper.rb"
 
 describe "sign view" do
 
   before(:all) do
-    @wait = Selenium::WebDriver::Wait.new(:timeout => 10)
+    @wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 
     @ctx = TestContext.new
     @driver = @ctx.createWebDriver
+
+    @emailhelper = EmailHelper.new(@ctx, @driver, @wait)    
+    @loginhelper = LoginHelper.new(@ctx, @driver, @wait)
   end
   
   append_after(:all) do
     @driver.quit
-  end
-    
-  def login_as(email, password)
-    @driver.get(@ctx.createKontrakcjaURL "/")
-    
-    (@driver.find_element :css => "a.login-button").click
-    @wait.until { @driver.find_element :id => "loginForm" }
-    
-    (@driver.find_element :name => "email").send_keys email
-    (@driver.find_element :name => "password").send_keys password
-    (@driver.find_element :css => "#loginForm a.submit").click
-    @wait.until { @driver.find_element :xpath => "//a[@href='/logout']" }
-    
-    if (@driver.find_elements :id => "toscontainer").length>0 then
-      (@driver.find_element :css => "input#tos").click
-      (@driver.find_element :css => "#toscontainer a.submit").click
-    end
-    
-    @wait.until { @driver.find_element :css => "a.documenticon" }
-  end
-  
-  def logout
-    (@driver.find_element :xpath => "//a[@href='/logout']").click
-    @wait.until { @driver.find_element :css => "a.login-button" }
   end
   
   def useBasicMode
@@ -148,69 +127,65 @@ describe "sign view" do
   
   it "allows users to sign basic contracts if they've checked the sign guard" do
   
-    login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
     begin
       uploadContract      
       useBasicMode
       enterCounterpart(@ctx.props.first_counterpart_fstname, @ctx.props.first_counterpart_sndname, @ctx.props.first_counterpart_email)
       signAndSend
     ensure
-      logout
+      @loginhelper.logout
     end
     
-    signlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.first_counterpart_email
-    
-    @driver.get signlink
+    @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
     
     #make sure it's got the opened icon displayed
-    @driver.find_element :css => "div.status.opened"
+    @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #try and sign the doc without checking the sign guard
-    (@driver.find_element :id => "sign").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     #make sure we get a red flash message
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #sign the doc
     (@driver.find_element :id => "signGuardCBox").click
-    (@driver.find_element :id => "sign").click
-    @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
-    (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
+    @wait.until { @driver.find_element :css => ".modal-container" }
+    (@driver.find_element :css => ".modal-container a.btn-small.float-right").click
     
     #make sure there are two signed icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==2 }
   end
-  
+
   it "allows users to reject basic contracts" do
   
-    login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
     begin
       uploadContract      
       useBasicMode
       enterCounterpart(@ctx.props.first_counterpart_fstname, @ctx.props.first_counterpart_sndname, @ctx.props.first_counterpart_email)
       signAndSend
     ensure
-      logout
+      @loginhelper.logout
     end
     
-    signlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.first_counterpart_email
-    
-    @driver.get signlink
+    @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
     
     #make sure it's got the opened icon displayed
     @driver.find_element :css => "div.icon.status.opened"
     
     #reject the document
-    (@driver.find_element :id => "cancel").click
-    @wait.until { @driver.find_element :id => "dialog-confirm-cancel" }
-    (@driver.find_element :css => "#dialog-confirm-cancel a.submiter").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerLeft a").click
+    @wait.until { @driver.find_element :css => ".modal-container" }
+    (@driver.find_element :css => ".modal-container a.btn-small.float-right").click
     
     #make sure there are two cancelled icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.cancelled").length==2 }
   end
-  
+
   it "allows users to sign advanced contracts if they've filled in fields, uploaded attachments & checked the sign guard" do
   
-    login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
     begin
       uploadContract      
       useAdvancedMode
@@ -247,13 +222,11 @@ describe "sign view" do
       
       signAndSend
     ensure
-      logout
+      @loginhelper.logout
     end
     
     #first sign as the first person
-    firstsignlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.first_counterpart_email
-    
-    @driver.get firstsignlink
+    @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
     
     #make sure it's got the opened icon displayed
     @driver.find_element :css => "div.status.opened"
@@ -267,8 +240,9 @@ describe "sign view" do
     @wait.until { (@driver.find_elements :css => ".multiFileInput").length == 0 }
     
     #sign the doc, but it should fail because we haven't filled in a custom value
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
-    (@driver.find_element :id => "sign").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     #make sure we get a red flash message
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
@@ -276,30 +250,28 @@ describe "sign view" do
     (@driver.find_element :xpath => "//input[@infotext='part1FN2']").send_keys "part1FV2"
     
     #sign the doc, but it should fail because we haven't filled in a custom value
-    (@driver.find_element :id => "sign").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     #make sure we get a red flash message
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #sign the doc for real
     (@driver.find_element :id => "signGuardCBox").click
-    (@driver.find_element :id => "sign").click
-    @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
-    (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
+    @wait.until { @driver.find_element :css => ".modal-container" }
+    (@driver.find_element :css => ".modal-container a.btn-small.float-right").click
     
     #make sure there are two signed icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==2 }
     
     #now sign as the second person
-    secondsignlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.second_counterpart_email
-    
-    @driver.get secondsignlink
+    @emailhelper.follow_link_in_latest_mail_for @ctx.props.second_counterpart_email
     
     #make sure it's got the opened icon displayed
     @driver.find_element :css => "div.status.opened"
     
     #try and sign the doc, but it should fail because we haven't uploaded an attachment
     (@driver.find_element :id => "signGuardCBox").click
-    (@driver.find_element :id => "sign").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     #make sure we get a red flash message
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
@@ -309,7 +281,7 @@ describe "sign view" do
     
     #sign the doc for real
     (@driver.find_element :id => "signGuardCBox").click
-    (@driver.find_element :id => "sign").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
     (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
     
@@ -317,16 +289,14 @@ describe "sign view" do
     @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==3 }
 
     #now sign as the third person
-    thirdsignlink = EmailHelper.get_link_in_latest_mail_for @ctx.props.third_counterpart_email
-    
-    @driver.get thirdsignlink
+    @emailhelper.follow_link_in_latest_mail_for @ctx.props.third_counterpart_email
     
     #make sure it's got the opened icon displayed
     @driver.find_element :css => "div.status.opened"
     
     #sign the doc for real
     (@driver.find_element :id => "signGuardCBox").click
-    (@driver.find_element :id => "sign").click
+    (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
     (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
     

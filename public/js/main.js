@@ -158,7 +158,8 @@ $(document).ready(function() {
                 var emaildomain = email.replace(/.*@/, "");
 
                 /** these two lines are a very temporary hack to satisfy a customer that must start using multiple domains tomorrow
-                    sorry about this - em **/
+                    sorry about this - em, a proper fix is planned (SKRIVAPADEV-578) but it's gonna involve db changes, so leaving until db
+                    migration is done **/
                 var isSpecialCaseDomain = function(domain) {
                   return (domain == "resursbemanning.se") || (domain == "itresurs.se") || (domain == "ekonomresurs.se");
                 };

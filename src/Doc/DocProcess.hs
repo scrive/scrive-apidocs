@@ -69,7 +69,8 @@ data DocProcessInfo =
   , processcancelbyauthormodaltitle :: String
   , processrejectbuttontext :: String
   , processsignatorysignmodaltitle :: String
-  , processsignatorysignmodalcontent :: String
+  , processsignatorysignmodalcontentlast :: String
+  , processsignatorysignmodalcontentnotlast :: String
   , processsignbuttontext :: String
   , processsignatorycancelmodaltitle :: String
   , processsignatorysignedtext :: String
@@ -156,7 +157,8 @@ contractProcess =
   , processcancelbyauthormodaltitle = "contractcancelbyauthormodaltitle"
   , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
+  , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
+  , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
   , processsignatorysignedtext = "signatorysignedcontracttext"
@@ -243,7 +245,8 @@ offerProcess =
   , processcancelbyauthormodaltitle = "offercancelbyauthormodaltitle"
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
+  , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
+  , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
   , processsignbuttontext = "offersignbuttontext"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
   , processsignatorysignedtext = "signatorysignedoffertext"
@@ -330,7 +333,8 @@ orderProcess =
   , processcancelbyauthormodaltitle = "ordercancelbyauthormodaltitle"
   , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
+  , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
+  , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
   , processsignatorysignedtext = "signatorysignedordertext"

@@ -19,7 +19,9 @@ window.Submit = Backbone.Model.extend({
     },
     add: function(k,v)
     {
-        this.set({k : v});
+        var update = {};
+        update[k] = v;
+        this.set(update);
     },
     addInputs : function(v)
     {

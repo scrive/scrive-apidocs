@@ -34,6 +34,7 @@ import MinutesTime
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
+import User.Model
 
 data SendgridEvent =
     SendgridEvent {
@@ -66,7 +67,7 @@ handleSendgridEvent = do
          -- we update SentEmailInfo of given email. if email is reported
          -- delivered, dropped or bounced we remove it from the system.
          -- that way we can keep track of emails that were "lost".
-         Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo}} -> do
+         Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo, seiBackdoorInfo}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
                  Log.debug "Updating SentEmailInfo..."
                  _ <- update $ UpdateActionType actionID $ SentEmailInfo {
@@ -74,6 +75,7 @@ handleSendgridEvent = do
                      , seiMailInfo = seiMailInfo
                      , seiEventType = et
                      , seiLastModification = now
+                     , seiBackdoorInfo = seiBackdoorInfo
                  }
                  let removeAction = case et of
                       Delivered _  -> True

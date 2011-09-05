@@ -1,17 +1,18 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
+import DB.Types
 import Doc.DocState
 import Misc
 import ActionSchedulerState (ActionID)
-import User.UserState
+import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
 import PayEx.PayExState
 import ListUtil
 import Session
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
 
 {- |
    Defines the reason why we are redirected to login page
@@ -75,6 +76,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
+    | LinkCompanyAdmin (Maybe CompanyID)
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
@@ -156,6 +158,8 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
+    showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash

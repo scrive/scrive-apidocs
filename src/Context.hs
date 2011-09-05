@@ -4,10 +4,10 @@ module Context (
 
 import Control.Concurrent.MVar
 import Data.Word
+import Database.HDBC.PostgreSQL
 import Doc.DocState
 import MinutesTime
-import Misc
-import User.UserState
+import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
@@ -16,8 +16,9 @@ import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import qualified MemCache
 import FlashMessage
-import API.Service.ServiceState
-import Company.CompanyState
+import API.Service.Model
+import Company.Model
+import DB.Types
 
 data Context = Context {
       ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -26,10 +27,13 @@ data Context = Context {
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^ 
     , ctxipnumber            :: Word32 -- ^ The ip number of the client.
+    , ctxdbconn              :: Connection -- ^ PostgreSQL database connection
+    , ctxdbconnclose         :: Bool -- ^ Indicates whether we want to close connection explicitly or let it be closed by GC
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^ 
     , ctxgscmd               :: String -- ^ 
     , ctxproduction          :: Bool -- ^ Is this server the production server?
+    , ctxbackdooropen        :: Bool -- ^ Whether the testing backdoor is open?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text
     , ctxesenforcer          :: MVar () -- ^ 
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
