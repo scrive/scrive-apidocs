@@ -443,13 +443,15 @@ companyusagestats=
 	  <table>
             <thead>
               <td style="width:200px">Date</td>
+              <td style="width:200px">User</td>
               <td style="width:200px">Documents Closed That Day</td>
               <td style="width:200px">Total Closed Signatures That Day</td>
               <td style="width:200px">Average Signatures / Doc</td>
               <td style="width:200px">Documents Sent That Day</td>
 	    </thead>
-            $statistics:{stat|<tr>
+            $statistics:{stat|<tr class="$if(stat.istotal)$totalline$endif$">
               <td>$stat.date$</td>
+              <td>$stat.user$</td>
               <td>$stat.closed$ </td>
               <td>$stat.signatures$ </td>
               <td>$stat.avg$ </td>
