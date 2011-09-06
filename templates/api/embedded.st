@@ -106,13 +106,10 @@ $if(logo)$
 .skrivapa-logo {
     background: url("$logoLink$") no-repeat scroll 0 0 transparent;
     margin-left:20px;
-    padding-left:40px;
+}  
 .scrive-logo {
     background: url("$logoLink$") no-repeat scroll 0 0 transparent;
     margin-left:20px;
-    padding-left:40px;
-  
-}  
 }$else$
 .skrivapa-logo {
     display:none;
