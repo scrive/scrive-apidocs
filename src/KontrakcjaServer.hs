@@ -205,7 +205,7 @@ runKontrakcjaServer = Log.withLogger $ do
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler appConf appGlobals)
-                              let scheddata = SchedulerData appConf mailer' templates es_enforcer conn
+                              let scheddata = SchedulerData appConf mailer' templates es_enforcer
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata

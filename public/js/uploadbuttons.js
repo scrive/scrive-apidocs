@@ -100,7 +100,7 @@ var UploadButtonView = Backbone.View.extend({
             list: list,
             onFileAppend: function() {
                 if (model.submitOnUpload()) {
-                    displayLoadingOverlay(localization.loadingFile);
+                    LoadingDialog.open(localization.loadingFile);
                     if (model.hasSubmit())
                     {
                         model.submit().addInputs(list);

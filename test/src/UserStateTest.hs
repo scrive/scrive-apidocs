@@ -134,8 +134,8 @@ test_getInviteInfo = do
   now <- getMinutesTime
   let ii = InviteInfo {
       userinviter = userid
-    , invitetime = now
-    , invitetype = Viral
+    , invitetime = Just now
+    , invitetype = Just Viral
   }
   res1 <- dbUpdate $ SetInviteInfo (Just userid) now Viral userid
   assertBool "InviteInfo created correctly" res1
@@ -144,7 +144,7 @@ test_getInviteInfo = do
   res2 <- dbUpdate $ SetInviteInfo (Just userid) now Admin userid
   assertBool "InviteInfo updated correctly" res2
   Just ii3 <- dbQuery $ GetInviteInfo userid
-  assertBool "Correct updated InviteInfo returned" $ ii { invitetype = Admin } == ii3
+  assertBool "Correct updated InviteInfo returned" $ ii { invitetype = Just Admin } == ii3
   res3 <- dbUpdate $ SetInviteInfo Nothing undefined undefined userid
   assertBool "InviteInfo erased correctly" res3
   noii <- dbQuery $ GetInviteInfo userid

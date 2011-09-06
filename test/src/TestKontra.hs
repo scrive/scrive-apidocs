@@ -199,6 +199,7 @@ mkContext templates = liftIO $ do
         , ctxnormalizeddocuments = docs
         , ctxipnumber = 0
         , ctxdbconn = error "dbconn is not defined"
+        , ctxdbconnclose = False
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""

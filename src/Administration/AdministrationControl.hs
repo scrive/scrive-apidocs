@@ -490,8 +490,8 @@ sumStats = foldl1 addStats1
 -- # of documents sent that date
 newCalculateStatsFromDocuments :: [Document] -> [(Int, Int, Int, Int)]
 newCalculateStatsFromDocuments docs =
-  let cls = [(getLastSignedTime d, 1, countSignatures d, 0) | d <- docs, isClosed d]
-      pds = [(getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d]
+  let cls = [(asInt $ getLastSignedTime d, 1, countSignatures d, 0) | d <- docs, isClosed d]
+      pds = [(asInt $ getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d]
       byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (cls ++ pds)
   in map sumStats byDay
 
@@ -521,7 +521,6 @@ calculateStatsFromDocuments documents =
                 
 showAsDate1 :: Int -> String
 showAsDate1 int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
-
 
 statisticsFieldsForASingleUser :: (Functor m, MonadIO m) => [Document] -> Fields m
 statisticsFieldsForASingleUser ds = 

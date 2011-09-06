@@ -36,6 +36,7 @@ import Session
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
+import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
 import qualified Contacts.ContactsControl as Contacts
@@ -253,15 +254,16 @@ handleRoutes ctxregion ctxlang = msum [
      , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ toK0 $ Administration.showAdminUsersForPayments
      , dir "adminonly" $ dir "useradmin" $ hGet1 $ toK1 $ Administration.showAdminUsers . Just
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
-     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
      , dir "adminonly" $ dir "companyadmin" $ hGet1 $ toK1 $ Administration.showAdminCompanies . Just
      , dir "adminonly" $ dir "companyadmin" $ hGet0 $ toK0 $ Administration.showAdminCompanies Nothing
-     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminCompanyUsageStats
+     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost1 $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
        
+     , dir "adminonly" $ dir "runstatsonalldocs" $ hGet0 $ toK0 $ Stats.addAllDocsToStats
 
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
@@ -548,7 +550,8 @@ appHandler appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
-      liftIO $ disconnect $ ctxdbconn ctx'
+      when (ctxdbconnclose ctx') $
+        liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -600,6 +603,7 @@ appHandler appConf appGlobals = do
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
                 , ctxdbconn = conn
+                , ctxdbconnclose = True
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf

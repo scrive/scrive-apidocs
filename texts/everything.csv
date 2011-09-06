@@ -18,8 +18,7 @@
 "_Bemefit1","Minska kostnaderna",,"Reduce costs"
 "_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är
  ett skräddarsytt redskap som optimerar dina processer. Spara
- 50-250kr/dokument. ","Document handling is time consuming. Time is money. Scrive is
- a tailored tool that optimizes your processes. Save 5-250kr per document.","Document handling is time consuming. Time is money. Scrive is
+ 50-250kr/dokument. ",,"Document handling is time consuming. Time is money. Scrive is
  a tailored tool that optimizes your processes. Save £5-25 per document."
 "_Bemefit2","Snabbare avslut",,"Faster closures"
 "_Bemefit2Body","Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
@@ -2167,7 +2166,7 @@ for creating an account with us. When you have activated your account you will b
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentname","Bilaga      ",,"Attachment"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs","Begär från",,"Request from"
 "_pageDocumentForAuthorHelpersLocalDialogsHead","Begär bilaga",,"Request attachment"
-"_pageDocumentForAuthorHelpersLocalDialogsRecipient","Mottagare",,"Recipient"
+"_pageDocumentForAuthorHelpersLocalDialogsRecipient","Välj",,"Select"
 "_pageDocumentForSignContentElegBody1","Har du ingen e-legitimation? Du kan ladda ned en            e-legitimation från din internetbank eller från              Telia. ",,"No e-ID? You can download an e-ID from your online bank or from Telia."
 "_pageDocumentForSignContentElegBody2ClickHere","Klicka här",,"Click here"
 "_pageDocumentForSignContentElegBody3"," för att läsa mer.",," to read more"

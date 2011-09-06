@@ -80,13 +80,13 @@ countSignatures = length . filter (isJust . maybesigninfo) . documentsignatoryli
 {- |
   Get the time of the last signature as Int. Fails if there is no signature.
 -}
-getLastSignedTime :: Document -> Int
+getLastSignedTime :: Document -> MinutesTime
 getLastSignedTime doc = 
-  maximum [asInt $ signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+  maximum [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
      
 {- |
   Get the Time the document was sent as Int.
  -}
-getInviteTime :: Document -> Int
-getInviteTime = asInt . signtime . fromJust . documentinvitetime
+getInviteTime :: Document -> MinutesTime
+getInviteTime = signtime . fromJust . documentinvitetime
 

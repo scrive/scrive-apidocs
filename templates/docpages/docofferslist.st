@@ -63,7 +63,7 @@ $loadingdialog()$
                              if (docs.length == 1)
                                text = "$_OfferReminderBodySingel()$ "+ docs[0].field("title") + "."
                              else
-                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" _docListTabsOffers().").toLowerCase() + " $_OfferReminderBodyMulti2()$";
+                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" $_docListTabsOffers()$.").toLowerCase() + " $_OfferReminderBodyMulti2()$";
                              var content = jQuery("<p/>").text(text);
                              Confirmation.popup({
                                 submit: submit,
@@ -97,7 +97,7 @@ $loadingdialog()$
                              if (docs.length == 1)
                                text += docs[0].field("title") + "."
                              else
-                               text += docs.length + (" _docListTabsOffers().").toLowerCase();
+                               text += docs.length + (" $_docListTabsOffers()$.").toLowerCase();
                              var content = jQuery("<p/>").text(text);
                              Confirmation.popup({
                                 submit: submit,

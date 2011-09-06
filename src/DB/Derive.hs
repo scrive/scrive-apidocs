@@ -1,13 +1,17 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module DB.Derive (
     Convertible(..)
   , ConvertError(..)
   , newtypeDeriveUnderlyingReadShow
   , newtypeDeriveConvertible
   , enumDeriveConvertible
+  , bitfieldDeriveConvertible
   ) where
 
 import Control.Arrow
 import Control.Monad
+import Data.Bits
+import Data.List
 import Database.HDBC
 import Data.Convertible
 import Language.Haskell.TH
@@ -143,5 +147,56 @@ enumDeriveConvertible t = do
                 ])) []
               ]
             ]
+        ]
+    _ -> error $ "Not a data type declaration: " ++ show info
+
+-- | Derives Convertible instances from/to SqlValue for bitfields, i.e.
+-- data types providing only trivial constructors that don't take any values.
+-- Given data T = C1 | C2 |  ... | CN, it expands to the following code:
+--
+-- instance Convertible [T] SqlValue where
+--   safeConvert = Right . SqlInteger . foldl' (\acc n -> acc + mkInt n) 0
+--     where
+--       mkInt C1 = 2^0
+--       mkInt C2 = 2^1
+--       ...
+--       mkInt CN = 2^n
+--
+-- instance Convertible SqlValue [T] where
+--   safeConvert v = case safeConvert v :: ConvertResult Int of
+--     Right n -> Right [ x | (p, x) <- values, p .&. n /= 0]
+--     Left e -> Left e
+--     where
+--       values = zip (map (shiftL 1) [0..]) [C1, C2, ..., CN]
+--
+bitfieldDeriveConvertible :: Name -> Q [Dec]
+bitfieldDeriveConvertible t = do
+  info <- reify t
+  case info of
+    TyConI (DataD _ name _ cons _) -> do
+      forM_ cons $ \c -> do
+        case c of
+          NormalC _ [] -> return ()
+          _ -> error $ "Data constructor '" ++ show c ++ "' is not trivial"
+      f <- (\[FunD _ c] -> [FunD 'safeConvert c]) `liftM` runQ [d|
+        f v = case safeConvert v :: ConvertResult Int of
+          Right n -> Right [ x | (p, x) <- values, p .&. n /= 0]
+          Left e -> Left e
+          where
+            values = zip (map (shiftL 1) [0..])
+              $ $(return $ ListE $ map (\(NormalC n _) -> ConE n) cons)
+        |]
+      n' <- newName "n"
+      acc' <- newName "acc"
+      mkInt' <- newName "mkInt"
+      return [
+          InstanceD [] (AppT (AppT (ConT ''Convertible) (AppT ListT (ConT name))) (ConT ''SqlValue)) [
+            ValD (VarP 'safeConvert) (NormalB (InfixE (Just (ConE 'Right)) (VarE '(.)) (Just (InfixE (Just (ConE 'SqlInteger)) (VarE '(.)) (Just (AppE (AppE (VarE 'foldl') (LamE [VarP acc', VarP n'] (InfixE (Just (VarE acc')) (VarE '(+)) (Just (AppE (VarE mkInt') (VarE n')))))) (LitE (IntegerL 0)))))))) [
+                FunD mkInt' $ map (\(n, NormalC con _) ->
+                  Clause [ConP con []] (NormalB (LitE (IntegerL n))) [])
+                  $ zip (map (shiftL 1) [0..]) cons
+              ]
+            ]
+        , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) (AppT ListT (ConT name))) f
         ]
     _ -> error $ "Not a data type declaration: " ++ show info

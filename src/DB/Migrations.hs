@@ -19,6 +19,7 @@ import API.Service.Tables
 import Company.Tables
 import User.Migrations
 import User.Tables
+import Stats.Tables
 
 migrationsList :: [Migration]
 migrationsList = [addRegionToUserSettings]
@@ -32,6 +33,8 @@ tablesList = [
   , tableUserInviteInfos
   , tableServices
   , tableCompanies
+  , tableDocStatEvents
+  , tableDocStatCompanyEvents  
   ]
 
 checkDBConsistency :: DB ()
@@ -77,7 +80,9 @@ checkDBConsistency = do
           Log.debug $ "Table structure is invalid, checking version..."
           ver <- checkVersion
           if ver == tblVersion table
-             then error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
+             then do
+             Log.debug $ "Existing table: " ++ show desc
+             error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
              else do
                Log.debug "Table is outdated, scheduling for migration."
                return $ Right $ Just (table, ver)

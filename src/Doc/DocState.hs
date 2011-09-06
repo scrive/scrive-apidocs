@@ -89,13 +89,13 @@ import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
 import Doc.DocUtils
-import Happstack.Data.IxSet as IxSet
+import Happstack.Data.IxSet as IxSet hiding (null)
 import Happstack.State
 import Mails.MailsUtil
 import MinutesTime
 import Misc
 import User.Model
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
@@ -619,10 +619,12 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
                                   } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
         Just signatoryLink = getSigLinkFor document signatorylinkid1
         newsignatorylinks = map maybesign (documentsignatorylinks document)
-        maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} )
+        maybesign link@SignatoryLink{signatorylinkid, signatorydetails = details@SignatoryDetails{signatoryfields}}
           | signatorylinkid == signatorylinkid1 =
             link { maybesigninfo = Just (SignInfo time ipnumber)
-                 , signatorydetails = updateWithFields fields signatorydetails
+                 , signatorydetails = details {
+                     signatoryfields = map (updateSigField fields) signatoryfields
+                   }
                  , signatorysignatureinfo = msiginfo
                  }
         maybesign link = link
@@ -636,17 +638,15 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
         -- ??: We don't use this anymore? -EN
         -- hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
 
-        updateWithFields [] sd = sd
-        updateWithFields ((name, value):fs) sd
-          | name == BS.fromString "sigco"     = updateWithFields fs sd { signatorycompany        = value }
-          | name == BS.fromString "sigpersnr" = updateWithFields fs sd { signatorypersonalnumber = value }
-          | name == BS.fromString "sigcompnr" = updateWithFields fs sd { signatorycompanynumber  = value }
-          | otherwise = updateWithFields fs sd { signatoryotherfields = updateOtherFields name value (signatoryotherfields sd) }
-
-        updateOtherFields _    _     []      = []
-        updateOtherFields name value (f@FieldDefinition { fieldlabel }:fs)
-          | name == fieldlabel = f { fieldvalue = value} : fs
-          | otherwise          = f : updateOtherFields name value fs
+        updateSigField sfields sf =
+          case sfType sf of
+            CompanyFT -> updateF $ BS.pack "sigco"
+            PersonalNumberFT -> updateF $ BS.pack "sigpersnr"
+            CompanyNumberFT -> updateF $ BS.pack "sigcompnr"
+            CustomFT label _ -> updateF label
+            _ -> sf
+          where
+            updateF = maybe sf (\v -> sf { sfValue = v }) . flip lookup sfields
 
         signeddocument2 =
               if isallsigned
@@ -1128,20 +1128,8 @@ setupForDeletion doc = blankDocument {
                            }
   blankSigDetails :: SignatoryDetails
   blankSigDetails = SignatoryDetails {
-      signatoryfstname = BS.empty
-    , signatorysndname = BS.empty
-    , signatorycompany = BS.empty
-    , signatorypersonalnumber = BS.empty
-    , signatorycompanynumber = BS.empty
-    , signatoryemail = BS.empty
-    , signatorysignorder = SignOrder 0
-    , signatoryfstnameplacements = []
-    , signatorysndnameplacements = []
-    , signatorycompanyplacements = []
-    , signatoryemailplacements = []
-    , signatorypersonalnumberplacements = []
-    , signatorycompanynumberplacements = []
-    , signatoryotherfields = []
+      signatorysignorder = SignOrder 0
+    , signatoryfields = []
     }
 
 {- |
@@ -1281,9 +1269,14 @@ changeSignatoryEmailWhenUndelivered did slid mnewuser email = modifySignable did
                                            sl <- find ((== slid) . signatorylinkid) signlinks
                                            when (invitationdeliverystatus sl /= Undelivered && invitationdeliverystatus sl /= Deferred) Nothing
                                            return sl { invitationdeliverystatus = Unknown
-                                                     , signatorydetails = (signatorydetails sl) {signatoryemail = email}
+                                                     , signatorydetails = setEmail $ signatorydetails sl
                                                      , maybesignatory = fmap userid mnewuser
                                                      , maybecompany = mnewuser >>= usercompany }
+                              setEmail sd@SignatoryDetails{signatoryfields} = sd { signatoryfields =
+                                map (\sf -> case sfType sf of
+                                        EmailFT -> sf { sfValue = email }
+                                        _       -> sf) signatoryfields
+                                }
                           in case mnsignlink  of
                            Just nsl -> let sll = for signlinks $ \sl -> if ( slid == signatorylinkid sl) then nsl else sl
                                        in  if (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
@@ -1409,7 +1402,7 @@ replaceSignatoryUser siglink user mcompany =
                        (getCompanyName    mcompany)
                        (getPersonalNumber user)
                        (getCompanyNumber  mcompany)
-                       (map fieldvalue $ signatoryotherfields $ signatorydetails siglink) in
+                       (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
 
@@ -1425,23 +1418,25 @@ replaceSignatoryData :: SignatoryLink
                         -> BS.ByteString
                         -> [BS.ByteString]
                         -> SignatoryLink
-replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues =
-  siglink { signatorydetails = pumpData (signatorydetails siglink) }
+replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname email company personalnumber companynumber fieldvalues =
+  siglink { signatorydetails = signatorydetails { signatoryfields = pumpData (signatoryfields signatorydetails) fieldvalues } }
   where
-    pumpData :: SignatoryDetails -> SignatoryDetails
-    pumpData sd = sd
-                  { signatoryfstname = fstname
-                  , signatorysndname = sndname
-                  , signatorycompany = company
-                  , signatorypersonalnumber = personalnumber
-                  , signatorycompanynumber = companynumber
-                  , signatoryemail = email
-                  , signatoryotherfields = zipWith pumpField (fieldvalues ++ repeat BS.empty) $ signatoryotherfields sd}
-    pumpField :: BS.ByteString -> FieldDefinition -> FieldDefinition
-    pumpField val fd = fd
-                       { fieldvalue = val
-                       , fieldfilledbyauthor = (not $ BS.null val)
-                       }
+    pumpData [] _ = []
+    pumpData (sf:rest) vs = (case sfType sf of
+      FirstNameFT      -> sf { sfValue = fstname }
+      LastNameFT       -> sf { sfValue = sndname }
+      CompanyFT        -> sf { sfValue = company }
+      PersonalNumberFT -> sf { sfValue = personalnumber }
+      CompanyNumberFT  -> sf { sfValue = companynumber }
+      EmailFT          -> sf { sfValue = email }
+      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v })
+        : pumpData rest vs'
+      where
+        (v, vs') = case sfType sf of
+          CustomFT{} -> if null vs
+                           then (BS.empty, [])
+                           else (head vs, tail vs)
+          _          -> (error "you can't use it", vs)
 
 {- |
     Creates a new template document out of a signable document.  This template will have the same process

@@ -37,20 +37,20 @@ import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
 import System.IO hiding (stderr)
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++
-                                  if not (BS.null $ signatorypersonalnumber details)
-                                     then " (" ++ (BS.toString $ signatorypersonalnumber details) ++ ")"
+                                  if not (BS.null $ getPersonalNumber details)
+                                     then " (" ++ (BS.toString $ getPersonalNumber details) ++ ")"
                                      else ""
-                , Seal.company = BS.toString $ signatorycompany details
-                , Seal.email = BS.toString $ signatoryemail details
-                -- FIXME: this should be split to company/personal number
-                , Seal.personalnumber = BS.toString $ signatorypersonalnumber details
-                , Seal.companynumber = BS.toString $ signatorycompanynumber details
+                , Seal.company = BS.toString $ getCompanyName details
+                , Seal.email = BS.toString $ getEmail details
+                , Seal.personalnumber = BS.toString $ getPersonalNumber details
+                , Seal.companynumber = BS.toString $ getCompanyNumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
@@ -97,35 +97,18 @@ personsFromDocument document =
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
-fieldsFromPlacement :: String -> FieldPlacement -> Seal.Field
-fieldsFromPlacement value placement  =
-    Seal.Field { Seal.value = value
-               , Seal.x =  placementx placement
-               , Seal.y =  placementy placement
-               , Seal.page = placementpage placement
-               , Seal.w = placementpagewidth placement
-               , Seal.h = placementpageheight placement
-               }
-
-fieldsFromDefinition :: FieldDefinition -> [Seal.Field]
-fieldsFromDefinition def =
-    map (fieldsFromPlacement (BS.toString (fieldvalue def))) (fieldplacements def)
-
-fieldsFromSignatory::SignatoryDetails -> [Seal.Field]
-fieldsFromSignatory sig =
-    (map (fieldsFromPlacement (BS.toString (signatoryfstname sig))) (signatoryfstnameplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorysndname sig))) (signatorysndnameplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatoryemail sig))) (signatoryemailplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorycompany sig))) (signatorycompanyplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorypersonalnumber sig))) (signatorypersonalnumberplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorycompanynumber sig))) (signatorycompanynumberplacements sig))
-    ++
-    (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))
+fieldsFromSignatory :: SignatoryDetails -> [Seal.Field]
+fieldsFromSignatory SignatoryDetails{signatoryfields} =
+  concatMap (\sf -> map (fieldFromPlacement $ sfValue sf) $ sfPlacements sf) signatoryfields
+  where
+    fieldFromPlacement value placement = Seal.Field {
+        Seal.value = BS.toString value
+      , Seal.x = placementx placement
+      , Seal.y = placementy placement
+      , Seal.page = placementpage placement
+      , Seal.w = placementpagewidth placement
+      , Seal.h = placementpageheight placement
+    }
 
 -- oh boy, this is really network byte order!
 formatIP :: Word32 -> String
