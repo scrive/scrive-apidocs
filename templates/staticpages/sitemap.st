@@ -8,7 +8,7 @@ sitemapPage=
       http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
-$locales:{locale|<
+$locales:{locale|
 <url>
   <loc>$hostpart$$linkhome$</loc>
   <changefreq>daily</changefreq>
@@ -54,6 +54,6 @@ $locales:{locale|<
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
-</urlset>
 }$
+</urlset>
 ###
