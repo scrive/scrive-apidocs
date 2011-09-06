@@ -114,8 +114,8 @@ tableUserInviteInfos = Table {
         runRaw conn $ "CREATE TABLE user_invite_infos ("
           ++ "  user_id BIGINT NOT NULL"
           ++ ", inviter_id BIGINT NOT NULL"
-          ++ ", invite_time TIMESTAMPTZ"
-          ++ ", invite_type SMALLINT"
+          ++ ", invite_time TIMESTAMPTZ NULL"
+          ++ ", invite_type SMALLINT NULL"
           ++ ", CONSTRAINT pk_user_invite_infos PRIMARY KEY (user_id)"
           ++ ")"
         return TVRcreated
