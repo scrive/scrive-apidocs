@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module DB.Derive (
     Convertible(..)
   , ConvertError(..)
