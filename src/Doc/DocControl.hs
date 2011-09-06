@@ -2009,7 +2009,7 @@ jsonDocumentsList = do
     params <- getListParamsNew
     let docs = docSortSearchPage params allDocs
     cttime <- liftIO $ getMinutesTime
-    docsJSONs <- mapM (fmap JSObject . docForListJSON cttime) $ list docs
+    docsJSONs <- mapM (fmap JSObject . docForListJSON cttime user) $ list docs
     return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
                                     ("paging", pagingParamsJSON docs)]
 
