@@ -348,26 +348,31 @@ handleRoutes ctxregion ctxlang = msum [
     Determines the localisation details by checking the user settings,
     the request, and cookies.
 -}
-getLocalization :: (ServerMonad m, Functor m) => Maybe User -> Request -> m (SystemServer, Region, Lang)
-getLocalization muser rq = do
+getLocalization :: (ServerMonad m, MonadIO m, FilterMonad Response m, Functor m, HasRqData m, MonadPlus m) => Maybe User -> m (SystemServer, Region, Lang)
+getLocalization muser = do
+  rq <- askRq
   hostpart <- getHostpart
+  mcurrentlocalecookie <- optional (readCookieValue "locale")
   let systemServer = systemServerFromURL hostpart
-      region = firstOf [ Nothing --TODO EM store the region in the user settings and read from here
-                       , (listToMaybe $ rqPaths rq) >>= regionFromCode
-                       , Nothing -- TODO EM look at cookies
-                       , Just $ defaultRegion systemServer
-                       ]
-      language = firstOf [ lang <$> usersettings <$> muser
-                         , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
-                         , Nothing -- TODO EM look at cookies
-                         , Just $ defaultLang systemServer
-                         ]
-  return (systemServer, region, language)
-   where
-     firstOf opts =
-       case find isJust opts of
-         Just val -> fromJust val
-         Nothing -> defaultValue
+      newregion = firstOf [ Nothing --TODO EM store the region in the user settings and read from here
+                          , (listToMaybe $ rqPaths rq) >>= regionFromCode
+                          , fmap fst mcurrentlocalecookie
+                          , Just $ defaultRegion systemServer
+                          ]
+      newlang = firstOf [ lang <$> usersettings <$> muser
+                        , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
+                        , fmap snd mcurrentlocalecookie
+                        , Just $ defaultLang systemServer
+                        ]
+  let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))
+  addCookie (MaxAge (60*60*24*366)) newlocalecookie
+  return (systemServer, newregion, newlang)
+  where
+    optional c = (liftM Just c) `mplus` (return Nothing)
+    firstOf opts =
+      case find isJust opts of
+        Just val -> fromJust val
+        Nothing -> defaultValue
 
 regionDir :: (ServerMonad m, MonadPlus m) => Region -> m a -> m a
 regionDir = dir . codeFromRegion
@@ -584,7 +589,7 @@ appHandler appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the system, region and language
-      (systemServer, region, language) <- getLocalization muser rq
+      (systemServer, region, language) <- getLocalization muser
 
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -712,8 +717,7 @@ signup vip _freetill =  do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
         Nothing -> do         
-          rq <- askRq
-          (_systemServer, _region, language) <- getLocalization muser rq
+          (_systemServer, _region, language) <- getLocalization muser
           maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip language
           case maccount of
             Just _account ->  do
