@@ -103,7 +103,6 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
                     [ "--user"
                     , (sendgridUser config) ++ ":" ++ (sendgridPassword config)
                     , (sendgridSMTP config)
-                    , "--connect-timeout", "24"
                     , "-k", "--ssl", "--mail-from"
                     , "<" ++ (ourInfoEmail config) ++ ">"
                     ] ++ concatMap mailRcpt to
