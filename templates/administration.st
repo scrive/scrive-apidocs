@@ -611,6 +611,14 @@ pageStats=
             <td><input type="email" name="email"/></td>
           </tr>
           <tr>
+            <td>Service:</td>
+            <td><select name="systemserver">
+                  <option selected="" value="SkrivaPa">SkrivaPå</option>
+                  <option value="Scrive">Scrive</option>
+                </select>
+            </td>
+          </tr>
+          <tr>
             <td>Free till:</td>
             <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox"/>
                  <span id="freetillcontainer">

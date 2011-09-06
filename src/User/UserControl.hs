@@ -385,7 +385,7 @@ handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
     case memail of
       Just email -> do
         mcompany <- getCompanyForUser user
-        muser <- createUser ctx (ctxhostpart ctx) fullname email (Just user) mcompany False defaultValue
+        muser <- createUser ctx fullname email (Just user) mcompany False
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
@@ -451,15 +451,13 @@ randomPassword =
 
 
 createUser :: Kontrakcja m => Context
-                                  -> String
                                   -> (BS.ByteString, BS.ByteString)
                                   -> BS.ByteString
                                   -> Maybe User
                                   -> Maybe Company
                                   -> Bool
-                                  -> Lang
                                   -> m (Maybe User)
-createUser ctx hostpart names email madminuser mcompany' vip lang = do
+createUser ctx names email madminuser mcompany' vip = do
   passwd <- liftIO $ createPassword =<< randomPassword
   -- make sure we don't count the company unless the admin user actually is a company admin user
   let mcompany = case (fmap useriscompanyadmin madminuser,
@@ -468,32 +466,32 @@ createUser ctx hostpart names email madminuser mcompany' vip lang = do
                    (Just True, Just adminusercompanyid, Just company)
                      | adminusercompanyid == companyid company -> mcompany'
                    _ -> Nothing
-  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL $ ctxhostpart ctx)
+  let Context{ctxhostpart, ctxregion, ctxlang} = ctx
+  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) ctxregion ctxlang
   case muser of
     Just user -> do
-      _ <- runDBUpdate $ SetUserSettings (userid user) (usersettings user) {lang = lang}
       let fullname = composeFullName names
       mail <- case (madminuser, mcompany) of
                 (Just adminuser, Just company) -> do
                   al <- newAccountCreatedLink user
-                  inviteCompanyAccountMail hostpart (getSmartName adminuser) (getCompanyName company) email fullname al
+                  inviteCompanyAccountMail ctxhostpart (getSmartName adminuser) (getCompanyName company) email fullname al
                 _ -> do
                   al <- newAccountCreatedLink user
-                  newUserMail hostpart email fullname al vip
+                  newUserMail ctxhostpart email fullname al vip
       scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
       return muser
     Nothing -> return muser
 
-createUserBySigning :: Kontrakcja m => Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> m (Maybe (User, ActionID, MagicHash))
-createUserBySigning ctx _doctitle names email doclinkdata =
-    createInvitedUser names email (systemServerFromURL $ ctxhostpart ctx) >>= maybe (return Nothing) (\user -> do
+createUserBySigning :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> m (Maybe (User, ActionID, MagicHash))
+createUserBySigning names email doclinkdata =
+    createInvitedUser names email Nothing >>= maybe (return Nothing) (\user -> do
         (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
         return $ Just (user, actionid, magichash)
     )
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage = do
-    muser <- createInvitedUser names email (systemServerFromURL $ ctxhostpart ctx)
+createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Region -> Lang -> m (Maybe User)
+createNewUserByAdmin ctx names email _freetill custommessage ss r l = do
+    muser <- createInvitedUser names email (Just (ss, r, l))
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -503,12 +501,14 @@ createNewUserByAdmin ctx names email _freetill custommessage = do
              mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
-         Nothing -> return muser
+         Nothing -> return muser 
 
-createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> SystemServer -> m (Maybe User)
-createInvitedUser names email sserver = do
+createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Region, Lang) -> m (Maybe User)
+createInvitedUser names email mlocale = do
+    Context{ctxhostpart, ctxregion, ctxlang} <- getContext
+    let (ss, r, l) = fromMaybe (systemServerFromURL ctxhostpart, ctxregion, ctxlang) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing sserver
+    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss r l
 
 {- |
    Guard against a POST with no logged in user.
@@ -758,8 +758,7 @@ handleAccountSetupPost aid hash = do
   where
     getUserForViralInvite :: Kontrakcja m => Email -> MinutesTime -> UserID -> m (Maybe User)
     getUserForViralInvite invitedemail invitationtime inviterid = do
-      ctx <- getContext  
-      muser <- createInvitedUser (BS.empty, BS.empty) (unEmail invitedemail) (systemServerFromURL $ ctxhostpart ctx)
+      muser <- createInvitedUser (BS.empty, BS.empty) (unEmail invitedemail) Nothing
       case muser of
         Just user -> do -- user created, we need to fill in some info
           minviter <- runDBQuery $ GetUserByID inviterid

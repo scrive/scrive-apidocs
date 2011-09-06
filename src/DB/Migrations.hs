@@ -17,10 +17,11 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
+import User.Migrations
 import User.Tables
 
 migrationsList :: [Migration]
-migrationsList = []
+migrationsList = [addRegionToUserSettings]
 
 tablesList :: [Table]
 tablesList = [

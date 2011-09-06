@@ -340,6 +340,7 @@ blankUser = User {
                 , usersettings  = UserSettings {
                                     preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
+                                  , region = Misc.defaultValue
                                   , systemserver = Misc.defaultValue
                                   }
               , userservice = Nothing
@@ -390,11 +391,11 @@ addNewCompany = do
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue defaultValue defaultValue
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue defaultValue defaultValue
 
 addNewRandomUser :: DB User
 addNewRandomUser = do

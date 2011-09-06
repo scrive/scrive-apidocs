@@ -86,5 +86,5 @@ withMyTestEnvironment conn f =
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue
+    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue defaultValue defaultValue
     return userid

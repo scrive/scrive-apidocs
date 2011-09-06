@@ -113,7 +113,7 @@ makeAPIRequest handler req = wrapDB $ \conn -> do
 createTestService :: DB ()
 createTestService = do
     pwd <- createPassword $ BS.pack "test_password"
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing defaultValue
+    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing defaultValue defaultValue defaultValue
     _ <- dbUpdate $ CreateService (ServiceID $ BS.pack "test_service") (Just pwd) userid
     return ()
 

@@ -127,6 +127,7 @@ data UserMailAPI = UserMailAPI {
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
   , lang                :: Lang
+  , region              :: Region
   , systemserver        :: SystemServer
   } deriving (Eq, Ord, Show)
 
@@ -250,7 +251,8 @@ instance DBUpdate DeleteUser Bool where
           ++ ", mobile"
           ++ ", email"
           ++ ", lang"
-          ++ ", system_server) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+          ++ ", region"
+          ++ ", system_server) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
             toSql uid
           , toSql True
           , toSql False
@@ -258,14 +260,15 @@ instance DBUpdate DeleteUser Bool where
           , toSql AccountRequest
           ] ++ replicate 7 (toSql "") ++ [
             toSql (defaultValue::Lang)
+          , toSql (defaultValue::Region)
           , toSql (defaultValue::SystemServer)
           ]
         return True
       else return False
 
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer
+data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer Region Lang
 instance DBUpdate AddUser (Maybe User) where
-  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss) = do
+  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss r l) = do
     let handle e = case e of
           NoObject -> return Nothing
           _ -> E.throw e
@@ -295,8 +298,9 @@ instance DBUpdate AddUser (Maybe User) where
             ++ ", email"
             ++ ", preferred_design_mode"
             ++ ", lang"
+            ++ ", region"
             ++ ", system_server"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
                 toSql uid
               , toSql $ pwdHash <$> mpwd
               , toSql $ pwdSalt <$> mpwd
@@ -311,7 +315,8 @@ instance DBUpdate AddUser (Maybe User) where
               ] ++ replicate 4 (toSql "")
                 ++ [toSql email] ++ [
                 SqlNull
-              , toSql (defaultValue::Lang)
+              , toSql l
+              , toSql r
               , toSql ss
               , toSql False
               ]
@@ -439,10 +444,12 @@ instance DBUpdate SetUserSettings Bool where
     r <- run conn ("UPDATE users SET"
       ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
+      ++ ", region = ?"
       ++ ", system_server = ?"
       ++ "  WHERE id = ?") [
         toSql $ preferreddesignmode us
       , toSql $ lang us
+      , toSql $ region us
       , toSql $ systemserver us
       , toSql uid
       ]
@@ -537,6 +544,7 @@ selectUsersSQL = "SELECT "
  ++ ", u.email"
  ++ ", u.preferred_design_mode"
  ++ ", u.lang"
+ ++ ", u.region"
  ++ ", u.system_server"
  ++ "  FROM users u"
  ++ " "
@@ -546,7 +554,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
   (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
    , signup_method, service_id, company_id, first_name
    , last_name, personal_number, company_position, phone, mobile, email
-   , preferred_design_mode, lang, system_server
+   , preferred_design_mode, lang, region, system_server
    ] -> fetchUsers st $ User {
        userid = fromSql uid
      , userpassword = case (fromSql password, fromSql salt) of
@@ -571,6 +579,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
      , usersettings = UserSettings {
          preferreddesignmode = fromSql preferred_design_mode
        , lang = fromSql lang
+       , region = fromSql region
        , systemserver = fromSql system_server
      }
      , userservice = fromSql service_id
@@ -588,6 +597,7 @@ deriving instance Typeable UserInfo
 deriving instance Typeable SignupMethod
 deriving instance Typeable Password
 deriving instance Typeable Lang
+deriving instance Typeable Region
 deriving instance Typeable DesignMode
 deriving instance Typeable Email
 deriving instance Typeable Binary
@@ -599,6 +609,7 @@ instance Version UserInfo
 instance Version SignupMethod
 instance Version Password
 instance Version Lang
+instance Version Region
 instance Version DesignMode
 instance Version Email
 instance Version Binary
@@ -611,6 +622,7 @@ $(deriveSerializeFor [
   , ''SignupMethod
   , ''Password
   , ''Lang
+  , ''Region
   , ''DesignMode
   , ''Email
   , ''Binary

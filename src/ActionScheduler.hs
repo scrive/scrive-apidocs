@@ -28,7 +28,6 @@ import MinutesTime
 import Mails.MailsData
 import Mails.MailsConfig
 import Mails.SendMail
-import Misc
 import Session
 import Templates.LocalTemplates
 import Templates.Templates
@@ -126,8 +125,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                --TODO EM store the region in the user settings so we can do "region $ usersettings user"
-                templates <- getLocalizedTemplates $ (systemserver $ usersettings user, defaultValue, lang $ usersettings user)
+                templates <- getLocalizedTemplates $ (systemserver $ usersettings user, region $ usersettings user, lang $ usersettings user)
                 mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {

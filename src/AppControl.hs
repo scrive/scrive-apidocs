@@ -354,7 +354,7 @@ getLocalization muser = do
   hostpart <- getHostpart
   mcurrentlocalecookie <- optional (readCookieValue "locale")
   let systemServer = systemServerFromURL hostpart
-      newregion = firstOf [ Nothing --TODO EM store the region in the user settings and read from here
+      newregion = firstOf [ region <$> usersettings <$> muser
                           , (listToMaybe $ rqPaths rq) >>= regionFromCode
                           , fmap fst mcurrentlocalecookie
                           , Just $ defaultRegion systemServer
@@ -716,9 +716,8 @@ signup vip _freetill =  do
           else do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
-        Nothing -> do         
-          (_systemServer, _region, language) <- getLocalization muser
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip language
+        Nothing -> do
+          maccount <- UserControl.createUser ctx (BS.empty, BS.empty) email Nothing Nothing vip
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone

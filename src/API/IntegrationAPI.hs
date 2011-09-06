@@ -197,10 +197,10 @@ createAPIDocument _ _ _ _ [] _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
     now <- liftIO $ getMinutesTime
-    company <- setCompanyInfoFromTMP authorTMP company' --TODO EM i added this line to update the company info
-    author <- userFromTMP authorTMP company --TODO EM i added company as an arg here
+    company <- setCompanyInfoFromTMP authorTMP company'
+    author <- userFromTMP authorTMP company
     mdoc <- update $ NewDocument author (Just company) title doctype now
-    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match" --TODO EM can the user and company not match?!
+    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match"
     let doc = fromRight mdoc
     sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
     _ <- update $ SetDocumentTags (documentid doc) tags
@@ -218,7 +218,7 @@ userFromTMP uTMP company = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue --TODO EM is this a user for the company?  if so should they be a company admin?  will users from the past migrate okay?
+                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue defaultValue defaultValue
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
                 tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
@@ -238,7 +238,6 @@ userFromTMP uTMP company = do
 
 setCompanyInfoFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m Company
 setCompanyInfoFromTMP uTMP company = do
-    --TODO EM is this okay?  also users from the past, will they migrate okay
     info_set <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfo company)
                 {
                   companyname = fromMaybe (getCompanyName company) $ API.APICommons.company uTMP
@@ -260,7 +259,7 @@ getDocuments = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     linkeddocuments <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments -- TODO EM is this okay?  it picks out the docs authored by company, rather than just linked to the company (for example those it's been invited to sign)
+    let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
     -- We support only offers and contracts by API calls    
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]

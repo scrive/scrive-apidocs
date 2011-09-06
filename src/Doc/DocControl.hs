@@ -445,7 +445,7 @@ signDocument documentid
     This is factored into it's own function because that way it can be used by eleg too.
 -}
 handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m KontraLink
-handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
+handleAfterSigning document@Document{documentid} signatorylinkid = do
   ctx <- getContext
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
@@ -454,7 +454,7 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       let details = signatorydetails signatorylink
           fullname = (signatoryfstname details, signatorysndname details)
           email = signatoryemail details
-      muser <- createUserBySigning ctx documenttitle fullname email (documentid, signatorylinkid)
+      muser <- createUserBySigning fullname email (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
           _ <- update $ SaveDocumentForUser documentid user signatorylinkid
