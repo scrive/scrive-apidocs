@@ -342,7 +342,7 @@ admincompany=
 	</div>
 	<ul class="tabs">
 	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Usage Stats</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
@@ -436,7 +436,7 @@ companyusagestats=
 	</div>
 	<ul class="tabs">
 	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Usage Stats</a></li>
+	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
       <div class="tab-container">
 	<div class="tab-content account">

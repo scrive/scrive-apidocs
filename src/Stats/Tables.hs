@@ -60,26 +60,26 @@ tableDocStatCompanyEvents = Table {
        ("document_id", SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False})] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE doc_stat_events ("
+        runRaw conn $ "CREATE TABLE doc_stat_company_events ("
           ++ "  company_id  BIGINT      NOT NULL"
           ++ ", user_id     BIGINT      NOT NULL"
           ++ ", time        TIMESTAMPTZ NOT NULL"
           ++ ", quantity    SMALLINT    NOT NULL"
           ++ ", amount      INTEGER     NOT NULL"
           ++ ", document_id BIGINT      NOT NULL"
-          ++ ", CONSTRAINT pk_doc_stat_events PRIMARY KEY (company_id, user_id, quantity, document_id)"
+          ++ ", CONSTRAINT pk_doc_stat_company_events PRIMARY KEY (company_id, user_id, quantity, document_id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = wrapDB $ \conn -> do
     -- we don't want to delete the stats if a user gets deleted
     -- I don't know if we want to restrict user_id, either
-    runRaw conn $ "ALTER TABLE doc_stat_events"
-      ++ " ADD CONSTRAINT fk_doc_stat_events_users FOREIGN KEY(user_id)"
+    runRaw conn $ "ALTER TABLE doc_stat_company_events"
+      ++ " ADD CONSTRAINT fk_doc_stat_company_events_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE doc_stat_events"
-      ++ " ADD CONSTRAINT fk_doc_stat_events_company FOREIGN KEY(company_id)"
+    runRaw conn $ "ALTER TABLE doc_stat_company_events"
+      ++ " ADD CONSTRAINT fk_doc_stat_company_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
