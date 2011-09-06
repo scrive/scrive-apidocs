@@ -33,6 +33,7 @@ tablesList = [
   , tableServices
   , tableCompanies
   , tableDocStatEvents
+  , tableDocStatCompanyEvents  
   ]
 
 checkDBConsistency :: DB ()

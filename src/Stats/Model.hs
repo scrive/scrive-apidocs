@@ -1,9 +1,12 @@
 module Stats.Model 
        (
+         AddDocStatCompanyEvent(..),
          AddDocStatEvent(..),
-         GetDocStatEventsByUserID(..),
+         DocStatCompanyEvent(..),
          DocStatEvent(..),
-         DocStatQuantity(..)
+         DocStatQuantity(..),
+         GetDocStatCompanyEventsByCompanyID(..),
+         GetDocStatEventsByUserID(..)
        )
        
        where
@@ -16,6 +19,7 @@ import DB.Utils
 import MinutesTime
 import User.Model
 import Doc.DocStateData
+import Company.Model
 
 -- | A named quantity in the statistics events
 -- please maintain the order on this
@@ -33,6 +37,16 @@ data DocStatEvent = DocStatEvent { seUserID     :: UserID          -- ^ User who
                                  , seDocumentID :: DocumentID      -- ^ If the event is related to a document, it's this doc
                                  }
 
+-- | An even to be logged for statistical purposes
+data DocStatCompanyEvent = DocStatCompanyEvent { secCompanyID  :: CompanyID
+                                               , secUserID     :: UserID          -- ^ User who generated the event
+                                               , secTime       :: MinutesTime     -- ^ The time of the event
+                                               , secQuantity   :: DocStatQuantity -- ^ The type of event
+                                               , secAmount     :: Int             -- ^ The value of the event
+                                               , secDocumentID :: DocumentID      -- ^ If the event is related to a document, it's this doc
+                                               }
+
+
 selectDocStatEventsSQL :: String
 selectDocStatEventsSQL = "SELECT "
  ++ "  e.user_id"
@@ -43,6 +57,7 @@ selectDocStatEventsSQL = "SELECT "
  ++ "  FROM doc_stat_events e"
  ++ " " -- always end in space to avoid problems
  
+
 data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID
 instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
   dbQuery (GetDocStatEventsByUserID userid) = wrapDB $ \conn -> do
@@ -77,3 +92,52 @@ fetchDocStats st acc = fetchRow st >>= maybe (return acc)
                                     , seAmount     = fromSql amount
                                     , seDocumentID = DocumentID (fromSql documentid)
                                     } : acc)
+
+selectDocStatCompanyEventsSQL :: String
+selectDocStatCompanyEventsSQL = "SELECT "
+ ++ "  e.company_id"
+ ++ ", e.user_id"
+ ++ ", e.time"
+ ++ ", e.quantity"
+ ++ ", e.amount"
+ ++ ", e.document_id"
+ ++ "  FROM doc_stat_company_events e"
+ ++ " " -- always end in space to avoid problems
+
+data GetDocStatCompanyEventsByCompanyID = GetDocStatCompanyEventsByCompanyID CompanyID
+instance DBQuery GetDocStatCompanyEventsByCompanyID [DocStatCompanyEvent] where
+  dbQuery (GetDocStatCompanyEventsByCompanyID companyid) = wrapDB $ \conn -> do
+    st <- prepare conn $ selectDocStatCompanyEventsSQL
+      ++ " WHERE e.company_id = ?"
+    _ <- execute st [toSql companyid]
+    fetchDocStatsCompany st []
+    
+data AddDocStatCompanyEvent = AddDocStatCompanyEvent DocStatCompanyEvent
+instance DBUpdate AddDocStatCompanyEvent Bool where
+  dbUpdate (AddDocStatCompanyEvent event) = wrapDB $ \conn -> do
+    st <- prepare conn $ "INSERT INTO doc_stat_company_events ("
+      ++ "  company_id"
+      ++ ", user_id"
+      ++ ", time"
+      ++ ", quantity"
+      ++ ", amount"
+      ++ ", document_id"
+      ++ ") VALUES (?, ?, to_timestamp(?), ?, ?, ?)"
+    r <- execute st [toSql $ secCompanyID event
+                    ,toSql $ secUserID event
+                    ,toSql $ secTime event
+                    ,toSql $ secQuantity event
+                    ,toSql $ secAmount event
+                    ,toSql $ unDocumentID $ secDocumentID event]
+    oneRowAffectedGuard r
+
+fetchDocStatsCompany :: Statement -> [DocStatCompanyEvent] -> IO [DocStatCompanyEvent]
+fetchDocStatsCompany st acc = fetchRow st >>= maybe (return acc)
+  (\[cid, uid, time, quantity, amount, documentid] -> 
+    fetchDocStatsCompany st $ DocStatCompanyEvent { secCompanyID  = fromSql cid
+                                                  , secUserID     = fromSql uid
+                                                  , secTime       = fromSql time
+                                                  , secQuantity   = fromSql quantity
+                                                  , secAmount     = fromSql amount
+                                                  , secDocumentID = DocumentID (fromSql documentid)
+                                                  } : acc)
