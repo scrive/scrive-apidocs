@@ -110,7 +110,8 @@ $if(logo)$
 .scrive-logo {
     background: url("$logoLink$") no-repeat scroll 0 0 transparent;
     margin-left:20px;
-}$else$
+}
+$else$
 .skrivapa-logo {
     display:none;
 }
