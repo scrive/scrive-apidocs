@@ -114,7 +114,6 @@ addDocumentCloseStatEvents doc = msum [
       let did = documentid doc
           sigs = countSignatures doc
           signtime = getLastSignedTime doc
-      author <- guardJustM $ runDBQuery $ GetUserByID uid
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = signtime
                                                         , seQuantity   = DocStatClose
@@ -129,7 +128,7 @@ addDocumentCloseStatEvents doc = msum [
                                                         , seDocumentID = did
                                                         }
       unless b $ Log.stats $ "Could not save signatures stat for " ++ show did
-      com <- case usercompany author of
+      com <- case maybecompany sl of
         Nothing -> return True
         Just cid -> do
           c <- runDBUpdate $ AddDocStatCompanyEvent $ DocStatCompanyEvent { secCompanyID = cid
@@ -161,7 +160,6 @@ addDocumentSendStatEvents doc = msum [
       uid <- guardJust $ maybesignatory sl
       let did = documentid doc
           sendtime = getInviteTime doc
-      author <- guardJustM $ runDBQuery $ GetUserByID uid
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = DocStatSend
@@ -169,7 +167,7 @@ addDocumentSendStatEvents doc = msum [
                                                         , seDocumentID = did
                                                         }
       unless a $ Log.stats $ "Could not save send stat for " ++ show did
-      com <- case usercompany author of
+      com <- case maybecompany sl of
         Nothing -> return True
         Just cid -> do
           b <- runDBUpdate $ AddDocStatCompanyEvent $ DocStatCompanyEvent { secCompanyID  = cid
