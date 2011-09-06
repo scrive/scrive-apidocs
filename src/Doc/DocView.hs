@@ -475,10 +475,10 @@ fileJSON file =
  
 docForListJSON :: (TemplatesMonad m) => MinutesTime -> User -> Document -> m (JSObject JSValue)
 docForListJSON crtime user doc =
-  let Just sl = getSigLinkFor doc user
-      link    = if isAuthor sl
-                then LinkIssueDoc $ documentid doc 
-                else LinkSignDoc doc sl
+  let sl = getSigLinkFor doc user
+      link = if isJust sl
+             then LinkSignDoc doc (fromJust sl)
+             else LinkIssueDoc $ documentid doc 
   in fmap toJSObject $ propagateMonad  $
     [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
       ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
