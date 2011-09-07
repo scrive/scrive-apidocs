@@ -35,6 +35,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import User.Model
+import Happstack.Server
 
 data SendgridEvent =
     SendgridEvent {
@@ -45,7 +46,7 @@ data SendgridEvent =
         } deriving Show
 
 -- | Handler for receving delivery info from sendgrid
-handleSendgridEvent :: Kontrakcja m => m KontraLink
+handleSendgridEvent :: Kontrakcja m => m Response
 handleSendgridEvent = do
     mid <- readNum "id"
     -- email can be either 'email' or '<email>', so we want to get rid of brackets
@@ -87,7 +88,7 @@ handleSendgridEvent = do
              Log.mail $ "Mail #" ++ show mid ++ " is not known to system, ignoring"
              return ()
     routeToHandler ev
-    return $ LinkMain
+    ok $ toResponse "Thanks"
 
 readEventType :: Kontrakcja m => String -> m SendGridEventType
 readEventType "processed" = return Processed

@@ -249,7 +249,7 @@ handleRoutes ctxregion ctxlang = msum [
      -- super user only
      , dir "stats"      $ hGet0  $ toK0 $ Administration.showStats
      , dir "createuser" $ hPost0 $ toK0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ hPostNoXToken0 $ toK0 $ handleSendgridEvent
+     , dir "sendgrid" $ dir "events" $ handleSendgridEvent
      , dir "adminonly" $ hGet0 $ toK0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ hGet0 $ toK0 $ Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradminforsales" $ hGet0 $ toK0 $ Administration.showAdminUsersForSales
