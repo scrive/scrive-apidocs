@@ -415,14 +415,16 @@ var DocumentStandarView = Backbone.View.extend({
         var document = this.model;
         if (!document.ready())
             return this;
-
+        this.contrainer.empty();
         /* Make title row */
         
         var titlepart = $("<span id='signStepsTitleRowTextContainer'/>");
         titlepart.append($("<span class='title'/>").text(document.process().title() + " #" + document.documentid() + ": "));
         titlepart.append($("<span class='name'/>").text(document.title()));
         var downloadpart = $("<span class='download'/>");
-         downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
+         if (document.mainfile() != undefined) {
+            downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
+         }
 
         /* Make file part */ 
         var bottomparts = $("<div/>");
@@ -457,7 +459,7 @@ var DocumentStandarView = Backbone.View.extend({
           bottomparts.append(this.signForAuthorBox()) ;
         }
         
-        var file = KontraFile.init({file: document.mainfile()});
+        var file = KontraFile.init({file: document.mainfile(), document : document});
         var tabs = KontraTabs.init({
             title : jQuery.merge(titlepart,downloadpart),
             tabs: [
@@ -509,7 +511,7 @@ window.KontraStandardDocument = {
    },
    recall : function()
    {
-       this.model.fetch({data: this.model.viewer().forFetch(),   processData:  true, cache : false});
+       this.model.recall();
    }
 };
 })(window);

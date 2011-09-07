@@ -33,6 +33,7 @@ module Administration.AdministrationControl(
           , handleBackdoorQuery
           , handleFixForBug510
           , resealFile
+          , handleCheckSigLinkIDUniqueness
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -653,3 +654,9 @@ resealFile docid = onlySuperUser $ do
                          Log.debug "Document is not valid for resealing sealing"
                          mzero
 
+handleCheckSigLinkIDUniqueness :: Kontrakcja m => m String
+handleCheckSigLinkIDUniqueness = do
+  siglinkids <- query GetSignatoryLinkIDs
+  if length siglinkids == length (nub siglinkids)
+     then return "Signatory link ids are unique globally."
+     else return "Signatory link ids are NOT unique globally."

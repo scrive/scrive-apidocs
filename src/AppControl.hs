@@ -294,6 +294,8 @@ handleRoutes ctxregion ctxlang = msum [
      -- this stuff is for a fix
      , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
 
+     , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet0 $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
+
      , dir "services" $ hGet0 $ toK0 $ handleShowServiceList
      , dir "services" $ hGet1 $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost1 $ toK1 $ handleChangeServiceUI
