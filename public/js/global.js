@@ -1641,62 +1641,6 @@ function saveOverlay(d, o) {
     });
 }
 
-function xml2string(node) {
-   if (typeof(XMLSerializer) !== 'undefined') {
-      var serializer = new XMLSerializer();
-      return serializer.serializeToString(node);
-   } else if (node.xml) {
-      return node.xml;
-   }
-}
-
-function hasOverrideMimeType() {
-    var req = new XMLHttpRequest();
-    return req.overrideMimeType !== undefined;
-}
-
-$(function () {
-    /* 
-     * We should not be doing this if there is no chance for his to work
-     */
-    
-    if( typeof(XMLSerializer) !== 'undefined' &&
-        hasOverrideMimeType() &&
-        !!(window.history && history.pushState)) {
-
-        $('a[ajaxrel]').live("click", function() {
-            var href = $(this).attr("href");
-            var rel = $(this).attr("ajaxrel");
-            console.log("JavaScript history going to " + href + " using " + rel );
-            var req = new XMLHttpRequest();
-            req.overrideMimeType("text/xml");
-            req.open("GET", href, false);
-            req.send(null);
-            var xml = req.responseXML;
-            if ( !xml ) {
-                var parser = new DOMParser();
-                xml = parser.parseFromString(req.responseText, "text/xml");
-            }
-            var foundNode = $(xml).find(rel)[0];
-            if( foundNode ) {
-                var serializer = new XMLSerializer();
-                var strhtml = serializer.serializeToString(foundNode);
-                $(rel).replaceWith(strhtml);
-                history.pushState("zonk", null, href);
-                return false;
-            }
-            else {
-                console.log("Ajaxrel did not work properly");
-                return true; // means: reload this page once again
-            }
-        });
-        $(window).bind("popstate", function(event) {
-            if( event.originalEvent.state==="zonk" ) {
-                window.location.href = window.location.href;
-            }
-        });
-    }
-});
 
 safeReady(function() {
     $(document).unload(function() {
