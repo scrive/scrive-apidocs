@@ -130,7 +130,7 @@ createSendgridMailer config = createExternalMailer "curl" createargs config
 
 
 createSendmailMailer :: MailsConfig -> Mailer
-createSendmailMailer config = createExternalMailer "curl" createargs config
+createSendmailMailer config = createExternalMailer "sendmail" createargs config
     where
         createargs _mail =
                     [ "-t" -- get the addresses from the content
