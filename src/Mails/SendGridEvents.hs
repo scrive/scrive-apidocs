@@ -61,14 +61,14 @@ handleSendgridEvent = do
     Log.mail $ "Sendgrid event received: " ++ show ev
     now <- liftIO getMinutesTime
     maction <- checkValidity now <$> query (GetAction $ ActionID mid)
-    Log.debug $ show maction
+
     case maction of
          -- we update SentEmailInfo of given email. if email is reported
          -- delivered, dropped or bounced we remove it from the system.
          -- that way we can keep track of emails that were "lost".
          Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo, seiBackdoorInfo}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
-                 Log.debug "Updating SentEmailInfo..."
+                 Log.mail $ "Mail #" ++ show mid ++ " to " ++ show seiEmail ++ " " ++ show et
                  _ <- update $ UpdateActionType actionID $ SentEmailInfo {
                        seiEmail = seiEmail
                      , seiMailInfo = seiMailInfo
@@ -82,9 +82,10 @@ handleSendgridEvent = do
                       Bounce _ _ _ -> True
                       _            -> False
                  when_ removeAction $ do
-                     Log.debug "Removing SentEmailInfo..."
                      update $ UpdateActionEvalTime actionID now
-         _ -> return ()
+         _ -> do
+             Log.mail $ "Mail #" ++ show mid ++ " is not known to system, ignoring"
+             return ()
     routeToHandler ev
     return $ LinkMain
 
