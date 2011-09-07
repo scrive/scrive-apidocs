@@ -145,13 +145,15 @@ calculateDocStatsFromCompanyEvents events =
 addDocumentCloseStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCloseStatEvents doc = msum [
   do
-    if not $ isClosed doc then return False
+    if not (isClosed doc) || none hasSigned (documentsignatorylinks doc) 
+      then return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
       let did = documentid doc
           sigs = countSignatures doc
           signtime = getLastSignedTime doc
+      when (signtime == fromSeconds 0) $ Log.stats ("weird document: "++show (documentid doc))
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = signtime
                                                         , seQuantity   = DocStatClose

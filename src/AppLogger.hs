@@ -5,6 +5,7 @@ module AppLogger ( amazon
                  , error
                  , forkIOLogWhenError
                  , mail
+                 , mailContent
                  , security
                  , server
                  , teardownLogger
@@ -54,6 +55,7 @@ setupLogger = do
     securityLog    <- fileHandler' "log/security.log"    INFO >>= \lh -> return $ setFormatter lh fmt
     elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
+    mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
 
     stdoutLog <- streamHandler stdout NOTICE
 
@@ -68,16 +70,10 @@ setupLogger = do
                      , securityLog
                      , elegLog
                      , statsLog
+                     , mailContentLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
-
-    hSetEncoding (privData accessLog) utf8
-    hSetEncoding (privData mailLog) utf8
-    hSetEncoding (privData debugLog) utf8
-    hSetEncoding (privData errorLog) utf8
-    hSetEncoding (privData amazonLog) utf8
-    hSetEncoding (privData trustWeaverLog) utf8
 
     -- Root Log
     updateGlobalLogger
@@ -93,6 +89,11 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.Mail"
         (setLevel NOTICE . setHandlers [mailLog])
+
+    -- Mail Content Log
+    updateGlobalLogger
+        "Kontrakcja.MailContent"
+        (setLevel NOTICE . setHandlers [mailContentLog])
 
     -- Amazon Log
     updateGlobalLogger
@@ -155,6 +156,9 @@ error msg = liftIO $ noticeM "Kontrakcja.Error" msg
 
 mail :: (MonadIO m) => String -> m ()
 mail msg = liftIO $ noticeM "Kontrakcja.Mail" msg
+
+mailContent :: (MonadIO m) => String -> m ()
+mailContent msg = liftIO $ noticeM "Kontrakcja.MailContent" msg
 
 amazon :: (MonadIO m) => String -> m ()
 amazon msg = liftIO $ noticeM "Kontrakcja.Amazon" msg
