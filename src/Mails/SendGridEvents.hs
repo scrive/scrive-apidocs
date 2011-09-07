@@ -58,8 +58,7 @@ handleSendgridEvent = do
         , event = et
         , info = mi
     }
-    Log.mail $ "Sendgrid event received: " ++ (show ev)
-    Log.debug $ show ev
+    Log.mail $ "Sendgrid event received: " ++ show ev
     now <- liftIO getMinutesTime
     maction <- checkValidity now <$> query (GetAction $ ActionID mid)
     Log.debug $ show maction
