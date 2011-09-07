@@ -153,6 +153,7 @@ addDocumentCloseStatEvents doc = msum [
       let did = documentid doc
           sigs = countSignatures doc
           signtime = getLastSignedTime doc
+      when (signtime == fromSeconds 0) $ Log.stats ("weird document: "++show (documentid doc))
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = signtime
                                                         , seQuantity   = DocStatClose
