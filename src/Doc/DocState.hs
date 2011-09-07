@@ -73,6 +73,7 @@ module Doc.DocState
     , StoreDocumentForTesting(..)
     , SignLinkFromDetailsForTest(..)
     , DeleteSigAttachment(..)
+    , GetSignatoryLinkIDs(..)
     )
 where
 
@@ -1602,6 +1603,10 @@ storeDocumentForTesting doc = do
   d2 <- insertNewDocument doc
   return $ documentid d2
 
+getSignatoryLinkIDs :: Query Documents [SignatoryLinkID]
+getSignatoryLinkIDs =
+  (concatMap (map signatorylinkid . documentsignatorylinks) . toList) `fmap` ask
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -1671,4 +1676,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         --, 'migrateDocumentSigAccounts
                         , 'migrateDocumentSigLinkCompanies
                         , 'fixBug510ForDocument
+                        , 'getSignatoryLinkIDs
                         ])
