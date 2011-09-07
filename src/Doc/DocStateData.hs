@@ -64,6 +64,8 @@ import Misc
 import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import Doc.FileID
+import Doc.JpegPages
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -71,8 +73,6 @@ newtype Author = Author { unAuthor :: UserID }
 newtype DocumentID = DocumentID { unDocumentID :: Int64 }
     deriving (Eq, Ord, Typeable, Data) -- Data needed by PayEx modules
 newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
-    deriving (Eq, Ord, Typeable)
-newtype FileID = FileID { unFileID :: Int }
     deriving (Eq, Ord, Typeable)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
@@ -1274,15 +1274,6 @@ data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile        
 
 
 
-data JpegPages0 = JpegPagesPending0
-               | JpegPages0 [BS.ByteString]
-               | JpegPagesError0 BS.ByteString
-    deriving (Eq, Ord, Typeable)
-
-data JpegPages = JpegPagesPending
-               | JpegPages [(BS.ByteString,Int,Int)]  -- Data + width + height (scaled with some resolution)
-               | JpegPagesError BS.ByteString
-    deriving (Eq, Ord, Typeable)
 
 data FileStorage = FileStorageMemory BS.ByteString
                  | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
@@ -1311,10 +1302,6 @@ instance Ord File where
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
 
-instance Show JpegPages where
-    show JpegPagesPending = "penging"
-    show (JpegPages l) = show l
-    show (JpegPagesError c) = "error " ++ (show c)
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
@@ -1376,21 +1363,12 @@ instance Read SignatoryLinkID where
 instance Show File where
     showsPrec _prec file = (++) (BS.toString (filename file))
 
-instance Show FileID where
-    showsPrec prec (FileID val) = showsPrec prec val
-
-instance Read FileID where
-    readsPrec prec = let make (i,v) = (FileID i,v)
-                     in map make . readsPrec prec
-
 instance FromReqURI DocumentID where
     fromReqURI = readM
 
 instance FromReqURI SignatoryLinkID where
     fromReqURI = readM
 
-instance FromReqURI FileID where
-    fromReqURI = readM
 
 $(deriveSerialize ''AuthorAttachment)
 instance Version AuthorAttachment
@@ -3295,20 +3273,6 @@ instance Version File where
 $(deriveSerialize ''FileStorage)
 instance Version FileStorage where
 
-$(deriveSerialize ''JpegPages0)
-instance Version JpegPages0 where
-
-$(deriveSerialize ''JpegPages)
-instance Version JpegPages where
-    mode = extension 1 (Proxy :: Proxy JpegPages0)
-
-instance Migrate JpegPages0 JpegPages where
-    migrate JpegPagesPending0 = JpegPagesPending
-    migrate (JpegPagesError0 x) = JpegPagesError x
-    migrate (JpegPages0 l) = JpegPages $ map (\x -> (x,943,1335)) l
-
-$(deriveSerialize ''FileID)
-instance Version FileID where
 
 type Documents = IxSet Document
 

@@ -5,7 +5,8 @@ module Context (
 import Control.Concurrent.MVar
 import Data.Word
 import Database.HDBC.PostgreSQL
-import Doc.DocState
+import Doc.FileID
+import Doc.JpegPages
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
