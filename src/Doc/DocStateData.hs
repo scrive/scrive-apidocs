@@ -1179,6 +1179,37 @@ data Document28 = Document28
     , documentui28                     :: DocumentUI
     } deriving Typeable
 
+data Document29 = Document29
+    { documentid29                     :: DocumentID
+    , documenttitle29                  :: BS.ByteString
+    , documentsignatorylinks29         :: [SignatoryLink]
+    , documentfiles29                  :: [File]
+    , documentsealedfiles29            :: [File]
+    , documentstatus29                 :: DocumentStatus
+    , documenttype29                   :: DocumentType
+    , documentfunctionality29          :: DocumentFunctionality
+    , documentctime29                  :: MinutesTime
+    , documentmtime29                  :: MinutesTime
+    , documentdaystosign29             :: Maybe Int
+    , documenttimeouttime29            :: Maybe TimeoutTime
+    , documentinvitetime29             :: Maybe SignInfo
+    , documentlog29                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext29             :: BS.ByteString
+    , documenttrustweaverreference29   :: Maybe BS.ByteString
+    , documentallowedidtypes29         :: [IdentificationType]
+    , documentcsvupload29              :: Maybe CSVUpload
+    , documentcancelationreason29      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing29                :: DocumentSharing
+    , documentrejectioninfo29          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags29                   :: [DocumentTag]
+    , documentservice29                :: Maybe ServiceID
+    , documentattachments29            :: [DocumentID] -- this needs to go away in next migration
+    , documentdeleted29                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
+    , documentauthorattachments29      :: [AuthorAttachment]
+    , documentsignatoryattachments29   :: [SignatoryAttachment]
+    , documentui29                     :: DocumentUI
+    } deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -1208,8 +1239,8 @@ data Document = Document
     , documentauthorattachments      :: [AuthorAttachment]
     , documentsignatoryattachments   :: [SignatoryAttachment]
     , documentui                     :: DocumentUI
+    , documentregion                 :: Region
     }
-
 
 data CancelationReason =  ManualCancel
                         -- The data returned by ELeg server
@@ -2056,9 +2087,13 @@ $(deriveSerialize ''Document28)
 instance Version Document28 where
     mode = extension 28 (Proxy :: Proxy Document27)
 
+$(deriveSerialize ''Document29)
+instance Version Document29 where
+    mode = extension 29 (Proxy :: Proxy Document28)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 29 (Proxy :: Proxy Document28)
+    mode = extension 30 (Proxy :: Proxy Document29)
 
 
 
@@ -3102,7 +3137,7 @@ instance Migrate Document27 Document28 where
                 , documentui28                     = documentui27
                 }
 
-instance Migrate Document28 Document where
+instance Migrate Document28 Document29 where
     migrate ( Document28
                 { documentid28                 
                 , documenttitle28             
@@ -3133,35 +3168,35 @@ instance Migrate Document28 Document where
                 , documentauthorattachments28 
                 , documentsignatoryattachments28
                 , documentui28  
-                }) = Document
-                { documentid                     = documentid28
-                , documenttitle                  = documenttitle28
-                , documentsignatorylinks         = map setOriginalCompanyIfAuthor documentsignatorylinks28
-                , documentfiles                  = documentfiles28
-                , documentsealedfiles            = documentsealedfiles28
-                , documentstatus                 = documentstatus28
-                , documenttype                   = documenttype28
-                , documentfunctionality          = documentfunctionality28
-                , documentctime                  = documentctime28
-                , documentmtime                  = documentmtime28
-                , documentdaystosign             = documentdaystosign28
-                , documenttimeouttime            = documenttimeouttime28
-                , documentinvitetime             = documentinvitetime28
-                , documentlog                    = documentlog28
-                , documentinvitetext             = documentinvitetext28
-                , documenttrustweaverreference   = documenttrustweaverreference28
-                , documentallowedidtypes         = documentallowedidtypes28
-                , documentcsvupload              = documentcsvupload28
-                , documentcancelationreason      = documentcancelationreason28
-                , documentsharing                = documentsharing28
-                , documentrejectioninfo          = documentrejectioninfo28
-                , documenttags                   = documenttags28
-                , documentservice                = documentservice28
-                , documentattachments            = documentattachments28
-                , documentdeleted                = documentdeleted28
-                , documentauthorattachments      = documentauthorattachments28
-                , documentsignatoryattachments   = documentsignatoryattachments28
-                , documentui                     = documentui28
+                }) = Document29
+                { documentid29                     = documentid28
+                , documenttitle29                  = documenttitle28
+                , documentsignatorylinks29         = map setOriginalCompanyIfAuthor documentsignatorylinks28
+                , documentfiles29                  = documentfiles28
+                , documentsealedfiles29            = documentsealedfiles28
+                , documentstatus29                 = documentstatus28
+                , documenttype29                   = documenttype28
+                , documentfunctionality29          = documentfunctionality28
+                , documentctime29                  = documentctime28
+                , documentmtime29                  = documentmtime28
+                , documentdaystosign29             = documentdaystosign28
+                , documenttimeouttime29            = documenttimeouttime28
+                , documentinvitetime29             = documentinvitetime28
+                , documentlog29                    = documentlog28
+                , documentinvitetext29             = documentinvitetext28
+                , documenttrustweaverreference29   = documenttrustweaverreference28
+                , documentallowedidtypes29         = documentallowedidtypes28
+                , documentcsvupload29              = documentcsvupload28
+                , documentcancelationreason29      = documentcancelationreason28
+                , documentsharing29                = documentsharing28
+                , documentrejectioninfo29          = documentrejectioninfo28
+                , documenttags29                   = documenttags28
+                , documentservice29                = documentservice28
+                , documentattachments29            = documentattachments28
+                , documentdeleted29                = documentdeleted28
+                , documentauthorattachments29      = documentauthorattachments28
+                , documentsignatoryattachments29   = documentsignatoryattachments28
+                , documentui29                     = documentui28
                 }
                 where
                   {- |
@@ -3176,6 +3211,67 @@ instance Migrate Document28 Document where
                       then sl { maybecompany = documentoriginalcompany28 }
                       else sl
 
+instance Migrate Document29 Document where
+    migrate ( Document29
+                { documentid29                 
+                , documenttitle29             
+                , documentsignatorylinks29    
+                , documentfiles29            
+                , documentsealedfiles29    
+                , documentstatus29       
+                , documenttype29          
+                , documentfunctionality29  
+                , documentctime29         
+                , documentmtime29         
+                , documentdaystosign29     
+                , documenttimeouttime29    
+                , documentinvitetime29    
+                , documentlog29           
+                , documentinvitetext29       
+                , documenttrustweaverreference29  
+                , documentallowedidtypes29    
+                , documentcsvupload29       
+                , documentcancelationreason29  
+                , documentsharing29        
+                , documentrejectioninfo29    
+                , documenttags29          
+                , documentservice29    
+                , documentattachments29       
+                , documentdeleted29   
+                , documentauthorattachments29 
+                , documentsignatoryattachments29
+                , documentui29  
+                }) = Document
+                { documentid                     = documentid29
+                , documenttitle                  = documenttitle29
+                , documentsignatorylinks         = documentsignatorylinks29
+                , documentfiles                  = documentfiles29
+                , documentsealedfiles            = documentsealedfiles29
+                , documentstatus                 = documentstatus29
+                , documenttype                   = documenttype29
+                , documentfunctionality          = documentfunctionality29
+                , documentctime                  = documentctime29
+                , documentmtime                  = documentmtime29
+                , documentdaystosign             = documentdaystosign29
+                , documenttimeouttime            = documenttimeouttime29
+                , documentinvitetime             = documentinvitetime29
+                , documentlog                    = documentlog29
+                , documentinvitetext             = documentinvitetext29
+                , documenttrustweaverreference   = documenttrustweaverreference29
+                , documentallowedidtypes         = documentallowedidtypes29
+                , documentcsvupload              = documentcsvupload29
+                , documentcancelationreason      = documentcancelationreason29
+                , documentsharing                = documentsharing29
+                , documentrejectioninfo          = documentrejectioninfo29
+                , documenttags                   = documenttags29
+                , documentservice                = documentservice29
+                , documentattachments            = documentattachments29
+                , documentdeleted                = documentdeleted29
+                , documentauthorattachments      = documentauthorattachments29
+                , documentsignatoryattachments   = documentsignatoryattachments29
+                , documentui                     = documentui29
+                , documentregion                 = REGION_SE
+                }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where

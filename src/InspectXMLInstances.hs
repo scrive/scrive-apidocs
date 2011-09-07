@@ -97,3 +97,4 @@ instance InspectXML CompanyID where
 instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
 instance InspectXML FieldType where
+instance InspectXML Region where

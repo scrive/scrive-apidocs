@@ -394,6 +394,7 @@ blankDocument =
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
+          , documentregion               = REGION_SE
           }
 
 
