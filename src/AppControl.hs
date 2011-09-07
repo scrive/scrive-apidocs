@@ -371,6 +371,7 @@ getLocalization muser = do
   return (systemServer, newregion, newlang)
   where
     optional c = (liftM Just c) `mplus` (return Nothing)
+    firstOf :: Bounded a => [Maybe a] -> a
     firstOf opts =
       case find isJust opts of
         Just val -> fromJust val
