@@ -278,6 +278,7 @@ newDocument user mcompany title documenttype ctime =
                   documenttitle                = title
                 , documentsignatorylinks       = [authorlink]
                 , documenttype                 = documenttype
+                , documentregion               = region $ usersettings user
                 , documentfunctionality        = newDocumentFunctionality documenttype user
                 , documentctime                = ctime
                 , documentmtime                = ctime
@@ -324,6 +325,7 @@ blankDocument =
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
+          , documentregion               = defaultValue
           }
 
 fileMovedToAWS :: FileID

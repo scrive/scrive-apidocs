@@ -77,6 +77,7 @@ import ActionSchedulerState (ActionID)
 import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
+import Doc.DocRegion
 import Doc.DocState
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -799,6 +800,7 @@ pageDocumentDesign ctx
        documentAuthorAttachments attachments
        documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
        fieldF "process" processFields
+       documentRegionFields document
    where
      getProcessText = renderTextForProcess document
      getProcessValue = getValueForProcess document
@@ -816,6 +818,14 @@ pageDocumentDesign ctx
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
        fieldM "expirytext" $ getProcessText processexpirytext
 
+documentRegionFields :: (Functor m, MonadIO m) => Document -> Fields m
+documentRegionFields document = do
+  fieldF "region" regionFields
+  where
+    getRegionValue f = f $ getRegionInfo document
+    regionFields = do
+      field "haspeopleids" $ getRegionValue regionhaspeopleids
+      field "iselegavailable" $ getRegionValue regionelegavailable
 
 documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> Fields m
 documentAttachmentDesignFields docid atts = do
