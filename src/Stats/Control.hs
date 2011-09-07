@@ -145,7 +145,7 @@ calculateDocStatsFromCompanyEvents events =
 addDocumentCloseStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCloseStatEvents doc = msum [
   do
-    if not $ isClosed doc || null (filter hasSigned $ documentSignatoryLinks doc) 
+    if not $ isClosed doc || null (filter hasSigned $ documentsignatorylinks doc) 
       then return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
