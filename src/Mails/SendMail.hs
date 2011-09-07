@@ -88,58 +88,55 @@ unsendable mail = all BS.null (email <$> to mail)
 --
 newtype Mailer = Mailer { sendMail :: DBMonad m => ActionID -> Mail -> m Bool }
 
-createSendgridMailer :: MailsConfig -> Mailer
-createSendgridMailer config = Mailer{sendMail = reallySend}
+createExternalMailer :: String -> (Mail -> [String]) -> MailsConfig -> Mailer
+createExternalMailer program createargs config = Mailer{sendMail = reallySend}
     where
         reallySend :: DBMonad m => ActionID -> Mail -> m Bool
-        reallySend aid mail@Mail{to, title, attachments} = do
+        reallySend aid mail@Mail{title, attachments, content} = do
             boundaries <- createBoundaries
             wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
             let mailtos = createMailTos mail
-                mailRcpt MailAddress {email} = [ "--mail-rcpt"
-                                               , "<" ++ BS.toString email ++ ">"
-                                               ]
-                curlargs =
-                    [ "--user"
-                    , (sendgridUser config) ++ ":" ++ (sendgridPassword config)
-                    , (sendgridSMTP config)
-                    , "-k", "--ssl", "--mail-from"
-                    , "<" ++ (ourInfoEmail config) ++ ">"
-                    ] ++ concatMap mailRcpt to
+                args = createargs mail
 
-            Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
-            liftIO $ do
-              (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
-              case code of
+            (code, _, bsstderr) <- liftIO $ readProcessWithExitCode' program args wholeContent
+            case code of
                 ExitFailure retcode -> do
-                  Log.mail $ "Cannot execute ./curl to send emails, code " ++ show retcode ++ " stderr: " ++ BSL.toString bsstderr
+                  Log.mail $ "Sending failed '" ++ BS.toString title ++ "' to " ++ mailtos ++ " (#" ++ show aid ++ "), cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSL.toString bsstderr
                   return False
                 ExitSuccess -> do
-                  Log.mail $ "Curl successfully executed with mail: " ++ (show $ mail {attachments = map (\(x,a) -> (x, BS.fromString ("length " ++ show (BS.length a)))) attachments})
+                  Log.mail $ "Sent '" ++ BS.toString title ++ "' to " ++ mailtos ++ " (#" ++ show aid ++ ")"
+                  Log.mailContent $ 
+                         "Subject: " ++ BS.toString title ++ "\n" ++
+                         "To: " ++ createMailTos mail ++ "\n" ++
+                         "Attachments: " ++ show (length attachments) ++ "\n" ++
+                         "\n" ++
+                         htmlToTxt (BS.toString content)
                   return True
 
-createSendmailMailer :: MailsConfig -> Mailer
-createSendmailMailer config = Mailer{sendMail = reallySend}
+
+createSendgridMailer :: MailsConfig -> Mailer
+createSendgridMailer config = createExternalMailer "curl" createargs config
     where
-        reallySend :: DBMonad m => ActionID -> Mail -> m Bool
-        reallySend aid mail@Mail{title, attachments} = do
-            boundaries <- createBoundaries
-            wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
-            let mailtos = createMailTos mail
-                sendmailargs =
+        mailRcpt MailAddress{email} = [ "--mail-rcpt"
+                                      , "<" ++ BS.toString email ++ ">"
+                                      ]
+        createargs Mail{to} =
+                    [ "--user"
+                    , sendgridUser config ++ ":" ++ sendgridPassword config
+                    , sendgridSMTP config
+                    , "-k", "--ssl", "--mail-from"
+                    , "<" ++ ourInfoEmail config ++ ">"
+                    ] ++ concatMap mailRcpt to
+
+
+createSendmailMailer :: MailsConfig -> Mailer
+createSendmailMailer config = createExternalMailer "curl" createargs config
+    where
+        createargs _mail =
                     [ "-t" -- get the addresses from the content
                     , "-i" -- ignore single dots in input
                     ]
-            Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
-            liftIO $ do
-              (code, _, bsstderr) <- readProcessWithExitCode' "sendmail" sendmailargs wholeContent
-              case code of
-                ExitFailure retcode -> do
-                  Log.mail $ "Cannot execute sendmail to send emails, code " ++ show retcode ++ " stderr: " ++ BSL.toString bsstderr
-                  return False
-                ExitSuccess -> do
-                  Log.mail $ "Successfully executed sendmail with mail: " ++ (show $ mail {attachments = map (\(x,a) -> (x,BS.fromString ("length " ++ show (BS.length a)))) attachments})
-                  return True
+
 
 createLocalOpenMailer :: String -> String -> Mailer
 createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = sendToTempFile}
