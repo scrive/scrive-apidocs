@@ -43,7 +43,7 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
       case checkCSVSigIndex documentsignatorylinks csvsignatoryindex of
         Left msg -> Left msg
         Right _ ->
-          Right $ map fieldlabel . signatoryotherfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
+          Right $ map sfValue . filter isFieldCustom . signatoryfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
 
 {- |
     Cleans up csv contents. You get a list of all the problems alongside all the data

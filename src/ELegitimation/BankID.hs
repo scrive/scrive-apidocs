@@ -125,7 +125,7 @@ handleSignPostBankID docid signid magic = do
     -- request validation
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-    unless (document `allowsIdentification` ELegitimationIdentification) mzero
+    guard (document `allowsIdentification` ELegitimationIdentification)
     siglink <- guardJust $ getSigLinkFor document signid
 
     -- valid transaction?
@@ -159,32 +159,18 @@ handleSignPostBankID docid signid magic = do
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
-            Log.eleg $ "Successfully identified using eleg. (Omitting private information)."
+            Log.eleg "Successfully identified using eleg. (Omitting private information)."
             providerType <- providerStringToType provider
-            let fields = zip fieldnames fieldvalues
             -- compare information from document (and fields) to that obtained from BankID
-            let contractFirst  = getFirstName siglink
-                contractLast   = getLastName siglink
-                contractNumber = getPersonalNumber siglink
-
-                elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
-                elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
-                elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
-
-                mfinal = mergeInfo
-                            (contractFirst, contractLast, contractNumber)
-                            (elegFirst,     elegLast,     elegNumber)
-            case mfinal of
+            case compareSigLinkToElegData siglink attrs of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
                     let Just authorsiglink = getAuthorSigLink document
-                        authorname = getSmartName authorsiglink
-                        authoremail = getEmail authorsiglink
                     Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
                     txt <- renderTemplateFM "signCanceledDataMismatchModal" $ do
-                        field "authorname"  authorname
-                        field "authoremail" authoremail
-                        field "message"     $ concat $ map para $ lines msg
+                        field "authorname"  $ getSmartName authorsiglink
+                        field "authoremail" $ getEmail authorsiglink
+                        field "message"     $ concatMap para $ lines msg
                     -- send to canceled with reason msg
                     addFlash (Modal, txt)
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
@@ -194,15 +180,15 @@ handleSignPostBankID docid signid magic = do
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
-                    let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
-                                                    , signatureinfosignature = signature
+                    let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
+                                                    , signatureinfosignature   = signature
                                                     , signatureinfocertificate = cert
-                                                    , signatureinfoprovider = providerType
+                                                    , signatureinfoprovider    = providerType
                                                     , signaturefstnameverified = bfn
                                                     , signaturelstnameverified = bln
                                                     , signaturepersnumverified = bpn
                                                     }
-
+                        fields = zip fieldnames fieldvalues
                     newdocument <- update $ SignDocument docid
                                                 signid
                                                 ctxtime
@@ -325,7 +311,7 @@ handleIssuePostBankID docid = withUserPost $ do
             addFlash (OperationFailed, "Could not save document.")
             return LinkMain
         Right udoc -> do
-            unless (udoc `allowsIdentification` ELegitimationIdentification) mzero
+            guard (udoc `allowsIdentification` ELegitimationIdentification)
             providerCode <- providerStringToNumber provider
             res <- verifySignature providerCode
                     transactionencodedtbs
@@ -344,28 +330,16 @@ handleIssuePostBankID docid = withUserPost $ do
                 Right (cert, attrs) -> do
                     Log.debug $ show attrs
                     providerType <- providerStringToType provider
+                    authorsl <- guardJust $ getAuthorSigLink udoc
                     -- compare information from document (and fields) to that obtained from BankID
-                    let contractFirst  = getFirstName      author
-                        contractLast   = getLastName       author
-                        contractNumber = getPersonalNumber author
-
-                        elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
-                        elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
-                        elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
-
-                        mfinal = mergeInfo
-                                    (contractFirst, contractLast, contractNumber)
-                                    (elegFirst,     elegLast,     elegNumber)
-                    Log.debug $ show (contractFirst, contractLast, contractNumber)
-                    Log.debug $ show (elegFirst,     elegLast,     elegNumber)
-                    case mfinal of
+                    case compareSigLinkToElegData authorsl attrs of
                         Left (msg, _, _, _) -> do
                             Log.eleg $ "merge failed: " ++ msg
                             addFlash (OperationFailed, "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg)
                             return $ LinkDesignDoc $ DesignStep3 docid signlast
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
-                            Log.eleg $ "author merge succeeded. (details omitted)"
+                            Log.eleg "author merge succeeded. (details omitted)"
                             let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                             , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
@@ -402,7 +376,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                                 Closed  -> addFlashM modalSignAwaitingAuthorLast
                                                 _ -> mzero -- should not be possible but necessary for compiling
                                             return $ LinkIssueDoc (documentid d)
-                                        ([], _) -> return $ LinkContracts 
+                                        ([], _) -> return LinkContracts 
                                         _ -> mzero
                                 Left link -> return link
 
@@ -578,12 +552,10 @@ instance XmlContent (VerifySignatureRequest) where
                                  [mkAttr "xmlns" ""]
                                  (toText signature)) ()
                                  ]
-                                 ++ if isJust mnonce
-                                        then [CElem (Elem "nonce"
+                                 ++ [CElem (Elem "nonce"
                                                 [mkAttr "xmlns" ""]
-                                                (toText $ fromJust mnonce)) ()]
-                                        else [])
-                )
+                                                (toText $ fromJust mnonce)) () | isJust mnonce]
+                ))
          ()]
     parseContents = error "Please do not parse VerifySignatureRequest"
 
@@ -812,3 +784,16 @@ levenshtein' s1 s2 i j
                     $ min (1 + levenshtein' s1 s2 i (j - 1))       --insertion
                           (1 + levenshtein' s1 s2 (i - 1) (j - 1)) --substitution
 
+compareSigLinkToElegData :: SignatoryLink -> [(BS.ByteString, BS.ByteString)] -> Either (String, BS.ByteString, BS.ByteString, BS.ByteString) (Bool, Bool, Bool)
+compareSigLinkToElegData sl attrs =
+  -- compare information from document (and fields) to that obtained from BankID
+  let contractFirst  = getFirstName sl
+      contractLast   = getLastName sl
+      contractNumber = getPersonalNumber sl
+                
+      elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
+      elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
+      elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
+
+  in mergeInfo (contractFirst, contractLast, contractNumber)
+               (elegFirst,     elegLast,     elegNumber)

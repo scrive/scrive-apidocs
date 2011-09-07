@@ -139,6 +139,7 @@ safeReady(function() {
             nextone.toggle();
             nextone = nextone.next();
         }
+        return false;
     });
 });
 
@@ -287,6 +288,7 @@ function makeSelectable(selectable) {
                 row.removeAttr("selected");
             selectRow(row, false, target);
         }
+        return false;
     });
 
     selectable.mousedown(function(event) {
@@ -1572,12 +1574,14 @@ safeReady(function() {
         doctab.show();
         doctabli.addClass("active");
         atttabli.removeClass("active");
+        return false;
     });
     $("#attachtablink").click(function() {
         doctab.hide();
         atttab.show();
         doctabli.removeClass("active");
         atttabli.addClass("active");
+        return false;
     });
 });
 
@@ -1607,6 +1611,7 @@ safeReady(function() {
 safeReady(function() {
     $(".campaign-play-video").click(function(){
         window.open('http://player.vimeo.com/video/22397410','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+        return false;
     })
 });
 /*
@@ -1632,65 +1637,10 @@ function saveOverlay(d, o) {
             o.fixed = false;
             $(this).overlay(o);
         }
+        return false;
     });
 }
 
-function xml2string(node) {
-   if (typeof(XMLSerializer) !== 'undefined') {
-      var serializer = new XMLSerializer();
-      return serializer.serializeToString(node);
-   } else if (node.xml) {
-      return node.xml;
-   }
-}
-
-function hasOverrideMimeType() {
-    var req = new XMLHttpRequest();
-    return req.overrideMimeType !== undefined;
-}
-
-$(function () {
-    /* 
-     * We should not be doing this if there is no chance for his to work
-     */
-    
-    if( typeof(XMLSerializer) !== 'undefined' &&
-        hasOverrideMimeType() &&
-        !!(window.history && history.pushState)) {
-
-        $('a[ajaxrel]').live("click", function() {
-            var href = $(this).attr("href");
-            var rel = $(this).attr("ajaxrel");
-            console.log("JavaScript history going to " + href + " using " + rel );
-            var req = new XMLHttpRequest();
-            req.overrideMimeType("text/xml");
-            req.open("GET", href, false);
-            req.send(null);
-            var xml = req.responseXML;
-            if ( !xml ) {
-                var parser = new DOMParser();
-                xml = parser.parseFromString(req.responseText, "text/xml");
-            }
-            var foundNode = $(xml).find(rel)[0];
-            if( foundNode ) {
-                var serializer = new XMLSerializer();
-                var strhtml = serializer.serializeToString(foundNode);
-                $(rel).replaceWith(strhtml);
-                history.pushState("zonk", null, href);
-                return false;
-            }
-            else {
-                console.log("Ajaxrel did not work properly");
-                return true; // means: reload this page once again
-            }
-        });
-        $(window).bind("popstate", function(event) {
-            if( event.originalEvent.state==="zonk" ) {
-                window.location.href = window.location.href;
-            }
-        });
-    }
-});
 
 safeReady(function() {
     $(document).unload(function() {

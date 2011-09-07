@@ -10,6 +10,8 @@
 module Doc.DocInfo where
 
 import Doc.DocStateData
+import MinutesTime
+import Data.Maybe
 
 -- Predicates on documentstatus
 
@@ -68,3 +70,23 @@ isDocumentError doc = case documentstatus doc of
  -}
 isDocumentShared :: Document -> Bool
 isDocumentShared doc = Shared == documentsharing doc
+
+{- |
+   How many signatures does this document have?
+-}
+countSignatures :: Document -> Int
+countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
+
+{- |
+  Get the time of the last signature as Int. Fails if there is no signature.
+-}
+getLastSignedTime :: Document -> MinutesTime
+getLastSignedTime doc = 
+  maximum [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+     
+{- |
+  Get the Time the document was sent as Int.
+ -}
+getInviteTime :: Document -> MinutesTime
+getInviteTime = signtime . fromJust . documentinvitetime
+

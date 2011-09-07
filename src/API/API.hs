@@ -152,7 +152,7 @@ apiAskInteger s = apiLocal s (fromNumerator <$> askBody)
 
 apiAskBase64 :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe BS.ByteString)
 apiAskBase64 s =  do
-    coded <- (fmap $ BASE64.decode)  <$> apiAskBS s
+    coded <- (fmap BASE64.decode)  <$> apiAskBS s
     case coded of
          Just (Right r) -> return $ Just r
          _ -> return Nothing
@@ -173,7 +173,7 @@ apiAskMap = fromObject <$> askBody
 apiAskList :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe [JSValue])
 apiAskList = fromList <$> askBody
     where
-        fromList (JSArray list) = Just $ list
+        fromList (JSArray list) = Just list
         fromList _ = Nothing
 
 apiLocal :: (APIContext c, Kontrakcja m) => String -> APIFunction m c (Maybe a) -> APIFunction m c (Maybe a)
@@ -185,9 +185,9 @@ apiLocal s digger = do
 
 apiMapLocal :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe a) -> APIFunction m c (Maybe [a])
 apiMapLocal digger = do
-    mdiggers <- (fmap $ map (\nbody -> AF $ withReaderT (newBody nbody) (unAF digger))) <$> apiAskList
+    mdiggers <- fmap (map (\nbody -> AF $ withReaderT (newBody nbody) (unAF digger))) <$> apiAskList
     case mdiggers of
-         Just diggers -> runDiggers $ diggers
+         Just diggers -> runDiggers diggers
          Nothing -> return Nothing
      where
          runDiggers (d:ds) = do

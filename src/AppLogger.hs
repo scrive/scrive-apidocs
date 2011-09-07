@@ -1,4 +1,5 @@
 module AppLogger ( amazon
+                 , stats
                  , eleg
                  , debug
                  , error
@@ -53,6 +54,7 @@ setupLogger = do
     trustWeaverLog <- fileHandler' "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
     securityLog    <- fileHandler' "log/security.log"    INFO >>= \lh -> return $ setFormatter lh fmt
     elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
+    statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
 
     stdoutLog <- streamHandler stdout NOTICE
@@ -67,6 +69,7 @@ setupLogger = do
                      , amazonLog
                      , securityLog
                      , elegLog
+                     , statsLog
                      , mailContentLog
                      ]
 
@@ -125,7 +128,12 @@ setupLogger = do
     -- ELeg Log
     updateGlobalLogger
         "Kontrakcja.Eleg"
-        (setLevel NOTICE . setHandlers [stdoutLog])
+        (setLevel NOTICE . setHandlers [elegLog, stdoutLog])
+
+    -- Stats Log
+    updateGlobalLogger
+        "Kontrakcja.Stats"
+        (setLevel NOTICE . setHandlers [statsLog])
 
     return $ LoggerHandle allLoggers
 
@@ -166,6 +174,9 @@ server msg = liftIO $ noticeM "Happstack.Server" msg
 
 eleg :: (MonadIO m) => String -> m ()
 eleg msg = liftIO $ noticeM "Kontrakcja.Eleg" msg
+
+stats :: (MonadIO m) => String -> m ()
+stats msg = liftIO $ noticeM "Kontrakcja.Stats" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()

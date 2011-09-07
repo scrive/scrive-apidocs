@@ -39,6 +39,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
 import Doc.Invariants
+import Stats.Control
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -91,7 +92,8 @@ postDocumentChangeAction document@Document  { documentstatus
             sendInvitationEmails ctx document
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
-    | oldstatus == Preparation && documentstatus == Pending = do
+    | oldstatus == Preparation && documentstatus == Pending = do 
+        _ <- addDocumentSendStatEvents document  
         ctx <- getContext
         msaveddoc <- saveDocumentForSignatories document
         document' <- case msaveddoc of
@@ -106,6 +108,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
+        _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxtemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- sealDocument ctx document
@@ -124,6 +127,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
+        _ <- addDocumentCloseStatEvents document          
         ctx@Context{ctxtemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- sealDocument ctx document
@@ -189,7 +193,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
     saveDocumentForSignatory :: Kontrakcja m => Document -> SignatoryLink -> m (Either String Document)
     saveDocumentForSignatory doc'@Document{documentid,documentservice}
                              SignatoryLink{signatorylinkid,signatorydetails} = do
-      let sigemail = signatoryemail signatorydetails
+      let sigemail = getValueOfType EmailFT signatorydetails
       muser <- runDBQuery $ GetUserByEmail documentservice (Email sigemail)
       case muser of
         Nothing -> return $ Right doc'
@@ -445,16 +449,16 @@ signDocument documentid
     This is factored into it's own function because that way it can be used by eleg too.
 -}
 handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m KontraLink
-handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
+handleAfterSigning document@Document{documentid} signatorylinkid = do
   ctx <- getContext
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
   case maybeuser of
     Nothing -> do
-      let details = signatorydetails signatorylink
-          fullname = (signatoryfstname details, signatorysndname details)
-          email = signatoryemail details
-      muser <- createUserBySigning ctx documenttitle fullname email (documentid, signatorylinkid)
+      let sfield t = getValueOfType t $ signatorydetails signatorylink
+          fullname = (sfield FirstNameFT, sfield LastNameFT)
+          email = sfield EmailFT
+      muser <- createUserBySigning fullname email (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
           _ <- update $ SaveDocumentForUser documentid user signatorylinkid
@@ -1070,55 +1074,30 @@ fieldDefAndSigID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
                     -> BS.ByteString
                     -> BS.ByteString
                     -> BS.ByteString
-                    -> (BS.ByteString, FieldDefinition)
+                    -> (BS.ByteString, SignatoryField)
 fieldDefAndSigID placements fn fv fid sigid = (sigid,
-                                    FieldDefinition { fieldlabel = fn,
-                                                        fieldvalue = fv,
-                                                        fieldplacements = filterPlacementsByID placements sigid fid,
-                                                        fieldfilledbyauthor = (BS.length fv > 0)
-                                                    })
+  SignatoryField {
+      sfType = CustomFT fn $ BS.length fv > 0
+    , sfValue = fv
+    , sfPlacements = filterPlacementsByID placements sigid fid
+  })
 
 makeFieldDefs :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
               -> [BS.ByteString]
               -> [BS.ByteString]
               -> [BS.ByteString]
               -> [BS.ByteString]
-              -> [(BS.ByteString, FieldDefinition)]
+              -> [(BS.ByteString, SignatoryField)]
 makeFieldDefs placements = zipWith4 (fieldDefAndSigID placements)
 
-filterFieldDefsByID :: [(BS.ByteString, FieldDefinition)]
+filterFieldDefsByID :: [(BS.ByteString, SignatoryField)]
                     -> BS.ByteString
-                    -> [FieldDefinition]
+                    -> [SignatoryField]
 filterFieldDefsByID fielddefs sigid =
     [x | (s, x) <- fielddefs, s == sigid]
 
-makeSignatoryNoPlacements :: BS.ByteString
-                             -> BS.ByteString
-                             -> BS.ByteString
-                             -> SignOrder
-                             -> BS.ByteString
-                             -> BS.ByteString
-                             -> BS.ByteString
-                             -> SignatoryDetails
-makeSignatoryNoPlacements sfn ssn se sso sc spn scn =
-    SignatoryDetails { signatoryfstname = sfn
-                     , signatorysndname = ssn
-                     , signatorycompany = sc
-                     , signatorypersonalnumber = spn
-                     , signatorycompanynumber = scn
-                     , signatoryemail = se
-                     , signatorysignorder = sso
-                     , signatoryfstnameplacements = []
-                     , signatorysndnameplacements = []
-                     , signatorycompanyplacements = []
-                     , signatoryemailplacements = []
-                     , signatorypersonalnumberplacements = []
-                     , signatorycompanynumberplacements = []
-                     , signatoryotherfields = []
-                     }
-
 makeSignatory ::[(BS.ByteString, BS.ByteString, FieldPlacement)]
-                -> [(BS.ByteString, FieldDefinition)]
+                -> [(BS.ByteString, SignatoryField)]
                 -> BS.ByteString
                 -> BS.ByteString
                 -> BS.ByteString
@@ -1128,19 +1107,26 @@ makeSignatory ::[(BS.ByteString, BS.ByteString, FieldPlacement)]
                 -> BS.ByteString
                 -> BS.ByteString
                 -> SignatoryDetails
-makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn =
-    (makeSignatoryNoPlacements sfn ssn se sso sc spn scn)
-    { signatoryfstnameplacements        = filterPlacementsByID pls sid (BS.fromString "fstname")
-    , signatorysndnameplacements        = filterPlacementsByID pls sid (BS.fromString "sndname")
-    , signatorycompanyplacements        = filterPlacementsByID pls sid (BS.fromString "company")
-    , signatoryemailplacements          = filterPlacementsByID pls sid (BS.fromString "email")
-    , signatorypersonalnumberplacements = filterPlacementsByID pls sid (BS.fromString "personalnumber")
-    , signatorycompanynumberplacements  = filterPlacementsByID pls sid (BS.fromString "companynumber")
-    , signatoryotherfields              = filterFieldDefsByID  fds sid
+makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
+    signatorysignorder = sso
+  , signatoryfields = [
+      sf FirstNameFT sfn "fstname"
+    , sf LastNameFT ssn "sndname"
+    , sf EmailFT se "email"
+    , sf CompanyFT sc "company"
+    , sf PersonalNumberFT spn "personalnumber"
+    , sf CompanyNumberFT scn "companynumber"
+    ] ++ filterFieldDefsByID fds sid
+  }
+  where
+    sf ftype value texttype = SignatoryField {
+        sfType = ftype
+      , sfValue = value
+      , sfPlacements = filterPlacementsByID pls sid (BS.fromString texttype)
     }
 
 makeSignatories :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                   -> [(BS.ByteString, FieldDefinition)]
+                   -> [(BS.ByteString, SignatoryField)]
                    -> [BS.ByteString]
                    -> [BS.ByteString]
                    -> [SignOrder]
@@ -1159,42 +1145,40 @@ makeSignatories placements fielddefs
                 signatoriescompanynumbers
                 signatoriesfstnames
                 signatoriessndnames
-    | sigids == [] = zipWith7 makeSignatoryNoPlacements
-                        signatoriesfstnames
-                        signatoriessndnames
-                        signatoriesemails
-                        signatoriessignorders
-                        signatoriescompanies
-                        signatoriespersonalnumbers
-                        signatoriescompanynumbers
-    | otherwise    = zipWith8 (makeSignatory placements fielddefs)
-                        sigids
-                        signatoriesfstnames
-                        signatoriessndnames
-                        signatoriesemails
-                        signatoriessignorders
-                        signatoriescompanies
-                        signatoriespersonalnumbers
-                        signatoriescompanynumbers
+  = zipWith8 (makeSignatory placements fielddefs)
+    sigids
+    signatoriesfstnames
+    signatoriessndnames
+    signatoriesemails
+    signatoriessignorders
+    signatoriescompanies
+    signatoriespersonalnumbers
+    signatoriescompanynumbers
     where
         zipWith8 z (a:as) (b:bs) (c:cs) (d:ds) (e:es) (f:fs) (g:gs) (h:hs)
             = z a b c d e f g h : zipWith8 z as bs cs ds es fs gs hs
         zipWith8 _ _ _ _ _ _ _ _ _ = []
 
 makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                     -> [(BS.ByteString, FieldDefinition)]
+                     -> [(BS.ByteString, SignatoryField)]
                      -> SignatoryDetails
                      -> SignatoryDetails
-makeAuthorDetails pls fielddefs authorsigdetails =
-  authorsigdetails
-    { signatoryemailplacements          = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "email")
-    , signatoryfstnameplacements        = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "fstname")
-    , signatorysndnameplacements        = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "sndname")
-    , signatorycompanyplacements        = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "company")
-    , signatorypersonalnumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "personalnumber")
-    , signatorycompanynumberplacements  = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "companynumber")
-    , signatoryotherfields = filterFieldDefsByID fielddefs (BS.fromString "author")
-    }
+makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = sigfields} =
+  sigdetails {
+    signatoryfields =
+      map f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
+  }
+  where
+    f sf = case sfType sf of
+      EmailFT -> g "email"
+      FirstNameFT -> g "fstname"
+      LastNameFT -> g "sndname"
+      CompanyFT -> g "company"
+      PersonalNumberFT -> g "personalnumber"
+      CompanyNumberFT -> g "companynumber"
+      CustomFT _ _ -> sf
+      where
+        g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }
 
 asValidDocumentFunctionality :: User -> DocumentFunctionality -> String -> Result DocumentFunctionality
 asValidDocumentFunctionality user oldfunc input =
@@ -1837,7 +1821,7 @@ handleCreateFromTemplate = withUserPost $ do
       let haspermission = maybe False 
                                 (\sl -> isSigLinkFor (userid user) sl
                                         || (isSigLinkFor (usercompany user) sl
-                                              && documentsharing document == Shared))
+                                              && isShared document))
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do

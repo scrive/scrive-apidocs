@@ -458,7 +458,6 @@ currentLinkBody = do
                      else a2
   return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
 
-
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 
@@ -638,3 +637,10 @@ unescapeEntities ('&':xs) =
              head a == ';' ->  c  : unescapeEntities (tail a)    
     _                      -> '&' : unescapeEntities xs
 unescapeEntities (x:xs) = x : unescapeEntities xs
+
+sortWith :: Ord b => (a -> b) -> [a] -> [a]
+sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
+
+groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
+groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
+

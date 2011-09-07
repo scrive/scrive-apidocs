@@ -36,6 +36,7 @@ import Session
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
+import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
 import qualified Contacts.ContactsControl as Contacts
@@ -104,21 +105,32 @@ data AppGlobals
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
+handleRoutes :: Region -> Lang -> Kontra Response
+handleRoutes ctxregion ctxlang = msum [
+     -- static pages  --TODO EM make this nice!
+       regionDir ctxregion $ langDir ctxlang $ hGetAllowHttp0 $ handleHomepage
+     , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome ctxregion ctxlang
 
-handleRoutes :: Kontra Response
-handleRoutes = msum [
-       hGetAllowHttp0 $ handleHomepage
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
+     , dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
+     , dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
+     , dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
+     , dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
+     , dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ handleAboutPage
+     , dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
+     , dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
+     , dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients ctxregion ctxlang
 
-     -- static pages
+     -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
-     , dir "priser"          $ hGetAllowHttp0 $ handlePriceplanPage
-     , dir "sakerhet"        $ hGetAllowHttp0 $ handleSecurityPage
-     , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage
-     , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
-     , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage
-     , dir "om-skrivapa"     $ hGetAllowHttp0 $ handleAboutPage
-     , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage
-     , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
+     , dir "sitemap"         $ hGetAllowHttp0 $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
      , mailAPI
@@ -242,15 +254,16 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradminforpayments" $ hGet0 $ toK0 $ Administration.showAdminUsersForPayments
      , dir "adminonly" $ dir "useradmin" $ hGet1 $ toK1 $ Administration.showAdminUsers . Just
      , dir "adminonly" $ dir "useradmin" $ hGet0 $ toK0 $ Administration.showAdminUsers Nothing
-     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminUserUsageStats
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
      , dir "adminonly" $ dir "companyadmin" $ hGet1 $ toK1 $ Administration.showAdminCompanies . Just
      , dir "adminonly" $ dir "companyadmin" $ hGet0 $ toK0 $ Administration.showAdminCompanies Nothing
-     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Administration.showAdminCompanyUsageStats
+     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost1 $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
        
+     , dir "adminonly" $ dir "runstatsonalldocs" $ hGet0 $ toK0 $ Stats.addAllDocsToStats
 
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
@@ -332,6 +345,47 @@ handleRoutes = msum [
      , allowHttp $ serveHTMLFiles
      , allowHttp $ serveDirectory DisableBrowsing [] "public"
      ]
+
+{- |
+    Determines the localisation details by checking the user settings,
+    the request, and cookies.
+-}
+getLocalization :: (ServerMonad m, MonadIO m, FilterMonad Response m, Functor m, HasRqData m, MonadPlus m) => Maybe User -> m (SystemServer, Region, Lang)
+getLocalization muser = do
+  rq <- askRq
+  hostpart <- getHostpart
+  mcurrentlocalecookie <- optional (readCookieValue "locale")
+  let systemServer = systemServerFromURL hostpart
+      newregion = firstOf [ region <$> usersettings <$> muser
+                          , (listToMaybe $ rqPaths rq) >>= regionFromCode
+                          , fmap fst mcurrentlocalecookie
+                          , Just $ defaultRegion systemServer
+                          ]
+      newlang = firstOf [ lang <$> usersettings <$> muser
+                        , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
+                        , fmap snd mcurrentlocalecookie
+                        , Just $ defaultLang systemServer
+                        ]
+  let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))
+  addCookie (MaxAge (60*60*24*366)) newlocalecookie
+  return (systemServer, newregion, newlang)
+  where
+    optional c = (liftM Just c) `mplus` (return Nothing)
+    firstOf :: Bounded a => [Maybe a] -> a
+    firstOf opts =
+      case find isJust opts of
+        Just val -> fromJust val
+        Nothing -> defaultValue
+
+regionDir :: (ServerMonad m, MonadPlus m) => Region -> m a -> m a
+regionDir = dir . codeFromRegion
+
+langDir :: (ServerMonad m, MonadPlus m) => Lang -> m a -> m a
+langDir = dir . codeFromLang
+
+dirByLang :: (ServerMonad m, MonadPlus m) => Lang -> String -> String -> m a -> m a
+dirByLang LANG_SE swedishdir _englishdir = dir swedishdir
+dirByLang LANG_EN _swedishdir englishdir = dir englishdir
 
 {- |
    Goes to the front page, or to the main document upload page,
@@ -482,7 +536,7 @@ appHandler appConf appGlobals = do
     handle rq session ctx = do
       (res,ctx') <- toIO ctx . runKontra $
          do
-          res <- (handleRoutes) `mplus` do
+          res <- handleRoutes (ctxregion ctx) (ctxlang ctx) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
@@ -520,7 +574,6 @@ appHandler appConf appGlobals = do
       let peerip = case addrAddress addr of
                      SockAddrInet _ hostip -> hostip
                      _ -> 0
-      let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
 
       conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       minutestime <- liftIO getMinutesTime
@@ -538,8 +591,10 @@ appHandler appConf appGlobals = do
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
-      let language = (fromMaybe browserLang $ lang <$> usersettings <$> muser )
-      let systemServer = systemServerFromURL hostpart    
+
+      -- work out the system, region and language
+      (systemServer, region, language) <- getLocalization muser
+
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
@@ -555,7 +610,7 @@ appHandler appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,language) templates2
+                , ctxtemplates = localizedVersion (systemServer,region,language) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -571,6 +626,8 @@ appHandler appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
+                , ctxregion = region
+                , ctxlang = language
                 }
       return ctx
 
@@ -664,10 +721,8 @@ signup vip _freetill =  do
           else do
             addFlashM flashMessageUserWithSameEmailExists
             return LoopBack
-        Nothing -> do         
-          rq <- askRq
-          let browserLang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-          maccount <- UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing Nothing vip browserLang
+        Nothing -> do
+          maccount <- UserControl.createUser ctx (BS.empty, BS.empty) email Nothing Nothing vip
           case maccount of
             Just _account ->  do
               addFlashM flashMessageUserSignupDone
@@ -711,19 +766,18 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            Log.debug $ "Logging " ++ show email
             maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just User{userpassword}
                     | verifyPassword userpassword passwd -> do
-                        Log.debug $ "Logging: User logged in"
+                        Log.debug $ "User " ++ show email ++ " logged in"
                         logUserToContext maybeuser
                         return BackToReferer
                 Just _ -> do
-                        Log.debug $ "Logging: User found, Not verified password"
+                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> do
-                    Log.debug $ "Logging: No user matching the email found"  
+                    Log.debug $ "User " ++ show email ++ " login failed (user not found)"
                     return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
 

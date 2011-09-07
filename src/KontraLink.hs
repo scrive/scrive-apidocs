@@ -42,7 +42,15 @@ instance Show DesignStep where
    All the links available for responses
 -}
 data KontraLink
-    = LinkAbout
+    = LinkHome Region Lang
+    | LinkPriceplan Region Lang
+    | LinkSecurity Region Lang
+    | LinkLegal Region Lang
+    | LinkPrivacyPolicy Region Lang
+    | LinkTerms Region Lang
+    | LinkAbout Region Lang
+    | LinkPartners Region Lang
+    | LinkClients Region Lang
     | LinkLogin LoginRedirectReason
     | LinkLogout
     | LinkSignup
@@ -56,7 +64,7 @@ data KontraLink
     | LinkMain
     | LinkNew (Maybe DocumentProcess) Bool
     | LinkAccount
-    | LinkSecurity
+    | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
@@ -108,7 +116,23 @@ data KontraLink
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-    showsPrec _ LinkAbout = (++) "/about"
+    showsPrec _ (LinkHome region lang) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang
+    showsPrec _ (LinkPriceplan region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/priser"
+    showsPrec _ (LinkPriceplan region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/pricing"
+    showsPrec _ (LinkSecurity region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/sakerhet"
+    showsPrec _ (LinkSecurity region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/security"
+    showsPrec _ (LinkLegal region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/juridik"
+    showsPrec _ (LinkLegal region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/legal"
+    showsPrec _ (LinkPrivacyPolicy region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/sekretesspolicy"
+    showsPrec _ (LinkPrivacyPolicy region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/privacy-policy"
+    showsPrec _ (LinkTerms region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/allmana-villkor"
+    showsPrec _ (LinkTerms region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/terms"
+    showsPrec _ (LinkAbout region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/om-skrivapa"
+    showsPrec _ (LinkAbout region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/about"
+    showsPrec _ (LinkPartners region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/partners"
+    showsPrec _ (LinkPartners region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/partners"
+    showsPrec _ (LinkClients region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/kunder"
+    showsPrec _ (LinkClients region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/clients"
     showsPrec _ (LinkLogin LoginTry) = (++) "/login"
     showsPrec _ (LinkLogin (InvalidLoginInfo email)) = (++) $ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
     showsPrec _ (LinkLogin _) = (++) "/?logging"
@@ -127,7 +151,7 @@ instance Show KontraLink where
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
-    showsPrec _ LinkSecurity = (++) "/account/security"
+    showsPrec _ LinkAccountSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
     showsPrec _ (LinkLandpageSaved document signatorylink) =
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)

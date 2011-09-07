@@ -26,6 +26,7 @@ module Templates.TemplatesLoader
 
 import Text.StringTemplate
 import Text.StringTemplate.Classes
+import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Map as Map
@@ -37,6 +38,7 @@ import System.Time
 import Templates.TemplatesFiles
 import Misc
 import User.Lang
+import User.Region
 import Templates.TextTemplates
 import Templates.SystemTemplates
 import User.SystemServer
@@ -47,22 +49,24 @@ import User.SystemServer
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
 type KontrakcjaGlobalTemplates = Map.Map Localization KontrakcjaTemplates
-type Localization = (SystemServer,Lang)
+type Localization = (SystemServer,Region,Lang)
 
 localizedVersion::Localization -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion localization mtemplates = mtemplates ! localization
 
 -- Fixme: Make this do only one read of all files !!
 readGlobalTemplates :: (Functor m, MonadIO m) => m KontrakcjaGlobalTemplates
-readGlobalTemplates = fmap Map.fromList $ forM allValues $ \localization -> do
+readGlobalTemplates =
+  let alllocalizations = (\s r l -> (s,r,l)) <$> allValues <*> allValues <*> allValues in
+  fmap Map.fromList $ forM alllocalizations $ \localization -> do
     templates <- liftIO $ readTemplates localization
     return (localization,templates)
 
 readTemplates :: Localization -> IO KontrakcjaTemplates
-readTemplates localization = do
+readTemplates (system, region, lang) = do
     ts <- mapM getTemplates templatesFilesPath
-    texts <- getTextTemplates $ snd localization
-    stemplates <- getSystemTemplates $ fst localization
+    texts <- getTextTemplates region lang
+    stemplates <- getSystemTemplates system
     return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ stemplates ++ (concat ts) ++ texts
 
 --This is avaible only for special cases

@@ -2993,3 +2993,9 @@ a#attachmentback {
     margin-top: -16px;
 }
 
+.totalline {
+    font-weight: 900;
+    border-top: solid 1px black;
+    border-bottom: solid 1px black;
+    height: 2em;
+}

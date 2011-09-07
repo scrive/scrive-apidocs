@@ -78,6 +78,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Redirect
 import ActionSchedulerState
+import Doc.DocInfo
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -155,7 +156,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
   content <- adminUserUsageStatsPage user mcompany $ do
-    fieldsFromStats [user] documents
+    statisticsFieldsForASingleUser documents
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
@@ -273,7 +274,8 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
+    systemserver <- guardJustM $ readField "systemserver"
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
     when (isNothing muser) $
         addFlashM flashMessageUserWithSameEmailExists
 
@@ -475,8 +477,23 @@ addStats :: DocStatsL -> DocStatsL -> DocStatsL
 addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14) =
       DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11) (a12+b12) (a13+b13) (a14+b14)
 
-countSignatures :: Document -> Int
-countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
+addStats1 :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
+addStats1 (_, t1, s1, i1) (t, t2, s2, i2) = (t, t1+t2, s1+s2, i1+i2)
+
+sumStats :: [(Int, Int, Int, Int)] -> (Int, Int, Int, Int)
+sumStats = foldl1 addStats1
+
+-- Stats are very simple:
+-- Date
+-- # of documents Closed that date
+-- # of signatures on documents closed that date
+-- # of documents sent that date
+newCalculateStatsFromDocuments :: [Document] -> [(Int, Int, Int, Int)]
+newCalculateStatsFromDocuments docs =
+  let cls = [(asInt $ getLastSignedTime d, 1, countSignatures d, 0) | d <- docs, isClosed d]
+      pds = [(asInt $ getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d]
+      byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (cls ++ pds)
+  in map sumStats byDay
 
 calculateStatsFromDocuments :: [Document] -> IntMap.IntMap DocStatsL
 calculateStatsFromDocuments documents =
@@ -501,6 +518,21 @@ calculateStatsFromDocuments documents =
                       --_ -> docStatsZero  -- catch all to make it run in case somebody adds new status
                       )
                 ]
+                
+showAsDate1 :: Int -> String
+showAsDate1 int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
+
+statisticsFieldsForASingleUser :: (Functor m, MonadIO m) => [Document] -> Fields m
+statisticsFieldsForASingleUser ds = 
+  let stats = newCalculateStatsFromDocuments ds in
+  fieldFL "statistics" $ for stats (\(ct, c, s, i) -> do
+                                       field "date" $ showAsDate1 ct
+                                       field "closed" c
+                                       field "signatures" s
+                                       field "sent" i
+                                       field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
+                                                                     
+                                    
 
 fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats _users documents = do

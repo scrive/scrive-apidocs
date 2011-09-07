@@ -172,7 +172,7 @@ sendNewDocument = do
   _msignedcallback <- apiAskBS "signed_callback"
   _mnotsignedcallback <- apiAskBS "notsigned_callback"
   ctx <- getContext
-  mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx) --TODO EM i don't know about this
+  mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx)
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
   liftIO $ print newdoc

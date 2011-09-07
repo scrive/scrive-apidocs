@@ -39,6 +39,7 @@ clearTables = wrapDB $ \conn -> do
   runRaw conn "UPDATE users SET service_id = NULL, company_id = NULL"
   runRaw conn "DELETE FROM companies"
   runRaw conn "DELETE FROM services"
+  runRaw conn "DELETE FROM doc_stat_events"  
   runRaw conn "DELETE FROM users"
   return ()
 
