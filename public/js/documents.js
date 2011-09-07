@@ -56,10 +56,12 @@ window.Document = Backbone.Model.extend({
         return this.get("signatories");
     },
     mainfile: function(){
-        if (this.get("sealedfiles").length > 0)
-            return this.get("sealedfiles")[0];
+        var file;
+        if (this.closed())
+            file =  this.get("sealedfiles")[0];
         else
-            return this.get("files")[0];
+            file = this.get("files")[0];
+        return file;
     },
     authorattachments: function(){
         return this.get("authorattachments");
@@ -189,11 +191,26 @@ window.Document = Backbone.Model.extend({
           return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current(); 
         });
     },
+    recall : function() {
+       this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});  
+    },
+    needRecall : function() {
+        return this.mainfile() == undefined;
+        {   var document = this;
+            setTimeout(function() {
+                        document.fetch({data: document.viewer().forFetch(),   processData:  true, cache : false});
+                        }, 1000);
+        }
+    },
     parse: function(args) {
      var document = this;   
+     setTimeout(function() {
+         if (document.needRecall())
+            document.recall();
+     },1000);                                              
      var extendedWithDocument = function(hash){
                 hash.document = document;
-                return hash; };
+                return hash; };     
      return {
       title : args.title,
       files : _.map(args.files, function(fileargs) {
