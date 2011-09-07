@@ -1660,7 +1660,7 @@ $(function () {
      * We should not be doing this if there is no chance for his to work
      */
     
-    if( false && typeof(XMLSerializer) !== 'undefined' &&
+    if( typeof(XMLSerializer) !== 'undefined' &&
         hasOverrideMimeType() &&
         !!(window.history && history.pushState)) {
 
@@ -1672,15 +1672,28 @@ $(function () {
             req.overrideMimeType("text/xml");
             req.open("GET", href, false);
             req.send(null);
-            var foundNode = $(req.responseXML).find(rel)[0];
-            var serializer = new XMLSerializer();
-            var strhtml = serializer.serializeToString(foundNode);
-            $(rel).replaceWith(strhtml);
-            history.pushState("zonk", null, href);
-            return false;
+            var xml = req.responseXML;
+            if ( !xml ) {
+                var parser = new DOMParser();
+                xml = parser.parseFromString(req.responseText, "text/xml");
+            }
+            var foundNode = $(xml).find(rel)[0];
+            if( foundNode ) {
+                var serializer = new XMLSerializer();
+                var strhtml = serializer.serializeToString(foundNode);
+                $(rel).replaceWith(strhtml);
+                history.pushState("zonk", null, href);
+                return false;
+            }
+            else {
+                console.log("Ajaxrel did not work properly");
+                return true; // means: reload this page once again
+            }
         });
         $(window).bind("popstate", function(event) {
-            window.location.href = window.location.href;
+            if( event.originalEvent.state==="zonk" ) {
+                window.location.href = window.location.href;
+            }
         });
     }
 });
