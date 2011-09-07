@@ -111,6 +111,8 @@ handleRoutes ctxregion ctxlang = msum [
        regionDir ctxregion $ langDir ctxlang $ hGetAllowHttp0 $ handleHomepage
      , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome ctxregion ctxlang
 
+     , dir "upload" $ hGetAllowHttp0 $ handleUploadpage
+
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
      , dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan ctxregion ctxlang
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
@@ -393,6 +395,20 @@ dirByLang LANG_EN _swedishdir englishdir = dir englishdir
 -}
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
+  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
+  loginOn <- isFieldSet "logging"
+  referer <- getField "referer"
+  email   <- getField "email"
+  case (ctxmaybeuser, ctxservice) of
+    (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
+    (Nothing, Nothing) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
+    _ -> Left <$> embeddedErrorPage
+
+handleUploadpage :: Kontra (Either Response (Either KontraLink String))
+handleUploadpage = do
   ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
