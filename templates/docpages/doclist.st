@@ -12,6 +12,7 @@ $loadingdialog()$
 </div>
 <script>
 var documentsTable = KontraList.init({
+    name : "Contracts Table",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Contract" },

@@ -13,6 +13,7 @@ $loadingdialog()$
 
 <script>
 var documentsTable = KontraList.init({
+    name : "Trash table",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Rubbish" },
