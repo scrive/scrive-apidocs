@@ -29,6 +29,7 @@ module Administration.AdministrationControl(
           , handleCompanyChange
           , handleDatabaseCleanup
           , handleCreateUser
+          , handleCreateCompanyUser
           , handleCreateService
           , handleStatistics
           , handleBackdoorQuery
@@ -57,7 +58,7 @@ import KontraLink
 import MinutesTime
 import System.Directory
 import DB.Classes
-import User.UserControl
+import User.UserControl hiding (handleCreateCompanyUser)
 import User.UserView
 import User.Model
 import Data.Maybe
@@ -81,6 +82,7 @@ import Util.SignatoryLinkUtils
 import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
+import InputValidation
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -292,6 +294,25 @@ handleCreateUser = onlySuperUser $ do
     -- FIXME: where to redirect?
     return LinkStats
     
+handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m KontraLink
+handleCreateCompanyUser companyid = onlySuperUser $ do
+  ctx <- getContext
+  email <- getCriticalField asValidEmail "email"
+  fstname <- getCriticalField asValidName "fstname"
+  sndname <- getCriticalField asValidName "sndname"
+  custommessage <- getField "custommessage"
+  systemserver <- guardJustM $ readField "systemserver"
+  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
+  case muser of
+    Just (User{userid}) -> do
+      _ <- runDBUpdate $ SetUserCompany userid companyid
+      when (fromMaybe False madmin) $ do
+        _ <- runDBUpdate $ MakeUserCompanyAdmin userid
+        return ()
+    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  return $ LinkCompanyUserAdmin companyid
+
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
 getCompanyInfoChange = do
