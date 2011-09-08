@@ -77,7 +77,6 @@ import InspectXMLInstances ()
 import InspectXML
 import Util.MonadUtils
 import ForkAction
-import Happstack.Server.FileServe.BuildingBlocks
 
 {- |
   Global application data
@@ -308,7 +307,7 @@ handleRoutes ctxregion ctxlang = msum [
      -- never ever use this
      , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
        
-     , dir "adminonly" $ dir "log" $ onlySuperUser $ serveLogDirectory "log"
+     , dir "adminonly" $ dir "log" $ onlySuperUser $ hGet1 $ toK1 $ serveLogDirectory
 
   
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
@@ -857,14 +856,12 @@ sysdump = onlySuperUserGet $ do
 
 
 serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
-                   FilePath    -- ^ file/directory to serve
+                   String
                   -> m Response
-serveLogDirectory localPath = 
-    fileServe' serveFn mimeFn indexFn localPath
-        where
-          serveFn = filePathSendFile
-          mimeFn  = guessContentTypeM $ Map.fromList [("log","text/plain")]
-          indexFn fp =
-              msum [ tryIndex filePathSendFile mimeFn [] fp
-                   , browseIndex renderDirectoryContents filePathSendFile mimeFn [] fp
-                   ]
+serveLogDirectory filename = do
+    contents <- liftIO $ getDirectoryContents "log"
+    when (filename `notElem` contents) $ do
+        Log.debug $ "Log '" ++ filename ++ "' not found"
+        mzero
+    (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
+    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
