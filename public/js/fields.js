@@ -139,27 +139,34 @@ window.FieldStandardView = Backbone.View.extend({
         {
             this.el.addClass("dragfield");
             var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
+            if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
+                field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));
+            }
             var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
                                  cssClass :'fieldvalue',       
                                  onChange : function(value) {
                                     field.setValue(value);    
+                                    SessionStorage.set(signatory.document().documentid(),field.name(),value) 
                                   }
                             }).input();
             this.redborderhere = input;                            
             input.attr("autocomplete","off");                
             wrapper.append(input);
             this.el.append(wrapper);    
+            
         }
         
         return this;
     },
     redborder : function() {
-        this.redborderhere.css("border","1px solid red");
+        if (this.redborderhere != undefined)
+            this.redborderhere.css("border","1px solid red");
     },
     cleanredborder : function() {
-        this.redborderhere.css("border","");
+        if (this.redborderhere != undefined)
+            this.redborderhere.css("border","");
     }
 });
 

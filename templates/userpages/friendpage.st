@@ -2,6 +2,7 @@
 viewFriends =
 <script>
   var friendsTable = KontraList.init({
+  name : "FriendsTable",
   schema: new Schema({
   url: "/friends",
   sorting: new Sorting({ fields: ["email"]}),
