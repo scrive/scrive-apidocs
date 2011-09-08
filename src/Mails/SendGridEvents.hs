@@ -121,7 +121,7 @@ routeToHandler :: Kontrakcja m => SendgridEvent -> m ()
 routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, event}) = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     let signemail = fromMaybe "" (BS.toString . getEmail <$> getSignatoryLinkFromDocumentByID doc signlinkid)
-    liftIO $ putStrLn $ signemail ++ " == " ++ mailAddress
+    Log.debug $ signemail ++ " == " ++ mailAddress
     -- since when email is reported deferred author has a possibility to change
     -- email address, we don't want to send him emails reporting success/failure
     -- for old signatory address, so we need to compare addresses here.
