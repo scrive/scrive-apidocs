@@ -13,7 +13,8 @@ $(function(){
 window.Tab = Backbone.Model.extend({
   defaults: {
     active : false,
-    disabled : false
+    disabled : false,
+    clickable : true
     }  
   ,
   name : function() {
@@ -30,6 +31,9 @@ window.Tab = Backbone.Model.extend({
   },
   disabled : function() {
         return this.get("disabled");
+  },
+  clickable : function() {
+        return this.get("clickable");
   }
 });
 
@@ -40,7 +44,8 @@ var Tabs = Backbone.Model.extend({
      return this.get("title");
     },
    initialize : function(args){
-       args.tabs[0].setActive(true);
+       if (_.all(args.tabs,function(t) {return !t.active(); }))
+          args.tabs[0].setActive(true);
    }, 
    activate: function(newtab)
    {
@@ -96,7 +101,7 @@ var TabsView = Backbone.View.extend({
         })
     },
     render: function () {
-        this.toprow.empty();
+        this.toprow.children().detach();
 
 
         // Top part , with title and the tabs
@@ -107,11 +112,12 @@ var TabsView = Backbone.View.extend({
         _.each(this.model.tabs(), function(tab) 
         {
             if (tab.disabled()) return;
-            var li = $("<li/>").append($("<a href='#'/>").text(tab.name()));
+            var li = $("<li/>").append($("<a href='#'/>").html(tab.name()));
             if (tab.active())
                 li.addClass("active");
             li.click(function() {
-                    model.activate(tab);
+                    if (tab.clickable())
+                        model.activate(tab);
                     return false;
                     });
             tabsrow.append(li);

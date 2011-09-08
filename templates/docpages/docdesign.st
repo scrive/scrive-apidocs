@@ -1,5 +1,20 @@
 #####
 pageDocumentDesign=
+
+<script>
+
+jQuery(function(){
+var docview = KontraDesignDocument.init({
+    id:"$documentid$",
+    basic : $if(isbasic)$ true $else$ false $endif$
+
+});
+jQuery("#body-container").replaceWith(docview.view.el)
+})
+</script>
+
+
+<!--
 <div style="display: none">
   <script type="text/javascript"> 
     var documentid = "$documentid$";
@@ -47,7 +62,7 @@ pageDocumentDesign=
         </a>  
       </div>
       $if(!isbasic)$
-      <!-- Basic stuff doesn't have step 3 -->
+   
       <div id="step3select" class="$if(step3)$current$endif$">
         <a href="#" class="step3select clickArea"></a>
         <a href="#" class="step3select step3icon"> </a>
@@ -108,19 +123,18 @@ pageDocumentDesign=
                   </ol>
                 </div>
                 
-                <!--<div class="signStepsBodyAddField partCount">
+             
                     <span>Visa</span>
                     <a href="">11-20</a>,
                     <a href="">21-30</a>
                 </div>
-                -->
+
               </div>
             </div>
             $endif$
             
             <div id="personpane">
               <span class="persondetails authordetails">
-                <!-- 008 change/new -->
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">$_personpanePart1()$</span>
                   $if(!isbasic)$
@@ -138,7 +152,7 @@ pageDocumentDesign=
                   $endif$
                 </div>
                 
-                <!-- 013 changed -->
+     
                 <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
                   <span class="fields">
                     $if(authorfstname)$
@@ -329,17 +343,7 @@ pageDocumentDesign=
                 </p>
                 
                 
-                <!-- 
-                     <p class="signStepsBodySaveMethods">
-                       <label for="c">Lagring</label> 
-                       <select id="c">
-                         <option value="1">Standard</option>
-                         <option value="2">Trustweaver</option>
-                         
-                         <option value="3">Option 3</option>
-                       </select> 
-                     </p>
-                     -->
+            
               </div>
               <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">$_editinvitetextlink()$</a></small>
@@ -369,23 +373,12 @@ pageDocumentDesign=
             
             <div class="border"></div>   
             <div id="signStepsBodyRight" class="step3">      
-              <!-- 015 new -->
+
             </div>
             <div class="border"></div>
 
             <div id="signStepsBodyFunctions" class="step3">
               <div class="signStepsBodyFunctionsBox options">
-                <!--
-                    <p>
-                      <label for="d">Metod</label> 
-                      <select id="d">
-                        <option value="1">e-post</option>
-                        <option value="2">e-legitimation</option>
-                        <option value="3">Option 3</option>
-                      </select>
-                    </p>
-                    -->
-                <!-- 013 changed sign button tag -->
                 
                 
               </div>
@@ -473,7 +466,7 @@ pageDocumentDesign=
   <span class="csvfileinfo"><a href="#" class="csvinfo$if(!isvalidcsv)$ csvinvalid$endif$" rel="#dialog-csvupload-2">Granska data</a></span>
   <span class="persondetails">
     
-    <!-- 008 change/new -->
+
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       $if(isbasic)$
@@ -494,7 +487,6 @@ pageDocumentDesign=
       $endif$
     </div>
     
-    <!-- 013 changed -->
     <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
 
       <input type="hidden" name="sigid" value="" />
@@ -550,6 +542,8 @@ pageDocumentDesign=
     </div>
   </span>
 </div>
+
+-->
 ####
 docname=
 <span class="docname">

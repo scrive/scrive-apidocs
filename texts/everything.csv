@@ -610,27 +610,11 @@
 "_daystosigncheckboxActivateExpDate","Aktivera förfallodatum","Activate expiration date"
 "_daystosigncheckboxExpDate","Förfallodatum","Expiration date"
 "_delete","Radera","Delete"
-"_dialogConfirmAdvancedBody","Du kan byta till avancerad process för att ta del av mer avancerade
- funktioner så som förfallodatum, mallar, massutskick mm. Denna
- process tillhör betalplanerna Business och Enterprise, även
- vid fri testperiod.","Change to advanced process to enjoy more advanced features such
- as expiration date, templates, multi send etc. You can use the
- advanced process if you have price plan Business or Enterprise,
- or if you are in a trial period."
+"_dialogConfirmAdvancedBody","Du kan byta till avancerad process för att ta del av mer avancerade funktioner så som förfallodatum, mallar, massutskick mm. Denna process tillhör betalplanerna Business och Enterprise, även vid fri testperiod.","Change to advanced process to enjoy more advanced features such as expiration date, templates, multi send etc. You can use the advanced process if you have price plan Business or Enterprise, or if you are in a trial period."
 "_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt process","Change process"
 "_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad process?","Do you want to change to advanced process?"
-"_dialogConfirmBasicChangeToBody","Du kan byta till förenklad process för att göra processen ännu
- smidigare.            Vid betalplan Business eller Enterprise
- kan du givetvis byta tillbaks när du vill, även vid fri testperiod.
-           ","Change to simplified process to make the process even smoother.
- You can of course change back whenever you want to if you have
- price plan Business or Enterprise, or if you are in a trial period.
-           "
-"_dialogConfirmBasicChangeToBody2","När du byter kommer alla ändringar du gjort förutom de för part
- 1 och part 2 att försvinna.             Är du säker att du vill
- byta process          ","When you change process, all data you have filled in, except that
- for party 1 and party 2, will disappear.             Are you
- sure you want to change process?"
+"_dialogConfirmBasicChangeToBody","Du kan byta till förenklad process för att göra processen ännu smidigare.  Vid betalplan Business eller Enterprisekan du givetvis byta tillbaks när du vill, även vid fri testperiod.        ","Change to simplified process to make the process even smoother. You can of course change back whenever you want to if you have price plan Business or Enterprise, or if you are in a trial period.    "
+"_dialogConfirmBasicChangeToBody2","När du byter kommer alla ändringar du gjort förutom de för part 1 och part 2 att försvinna.             Är du säker att du vill byta process       ","When you change process, all data you have filled in, except that for party 1 and party 2, will disappear.             Are you sure you want to change process?"
 "_dialogConfirmBasicChangeToChangeProcess","Byt process","Change process"
 "_dialogConfirmBasicChangeToHead","Vill du byta till förenklad process?","Do you want to change to simplified process?"
 "_dialogConfirmSendinviteBody","Du har valt att vara Ej undertecknande part och kommer själv inte att underteckna.

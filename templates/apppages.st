@@ -93,6 +93,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/docview.js"
                 type="text/javascript"></script>  
+        <script src="$prefix$/js/docdesignview.js"
+                type="text/javascript"></script>  
         <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>  
        $if(publicsafe)$

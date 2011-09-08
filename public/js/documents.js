@@ -37,7 +37,8 @@ window.Document = Backbone.Model.extend({
         ready: false,
         viewer: new DocumentViewer(),
         infotext: "",
-        authorization: "email"
+        authorization: "email",
+        template : false
         
     },
     initialize: function (args) {
@@ -79,6 +80,9 @@ window.Document = Backbone.Model.extend({
     title : function(){
         return this.get("title");
     },
+    setTitle : function(title) {
+        this.set({title: title}, {silent: true});
+    },
     infotext : function(){
         return this.get("infotext");
     },
@@ -118,6 +122,20 @@ window.Document = Backbone.Model.extend({
               fieldname : fieldnames,
               fieldvalue : fieldvalues
           });
+    },
+    save : function() {
+         return new Submit({
+              method: "POST"
+          });
+    },
+    switchToAdvanced : function() {
+          return save.add("changefunctionality","true").add("toadvanced","true");
+    },
+    switchToBasic : function() {
+          return save.add("changefunctionality","true").add("tobasic","true");
+    },
+    saveAsTemplate : function() {
+          return this.save().add("template", "YES");
     },
     status : function() {
           return this.get("status");  
@@ -189,6 +207,9 @@ window.Document = Backbone.Model.extend({
           return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current(); 
         });
     },
+    isTemplate: function() {
+      return this.get("template") == true
+    },
     parse: function(args) {
      var document = this;   
      var extendedWithDocument = function(hash){
@@ -215,6 +236,7 @@ window.Document = Backbone.Model.extend({
       timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
       signorder : args.signorder,
       authorization : args.authorization,
+      template : args.template,
       ready: true
       };
     }
