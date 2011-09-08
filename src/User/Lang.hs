@@ -1,30 +1,22 @@
 module User.Lang (
     Lang(..)
-  , langDir
-  , langFromHTTPHeader
+  , codeFromLang
+  , langFromCode
   ) where
 
-import Data.Maybe
-import Data.Foldable hiding (find)
 import Data.List
-
 import DB.Derive
 import Misc
 
-data Lang = LANG_SE
+data Lang = LANG_SE --according to IANA this really should be LANG_SV - em
           | LANG_EN
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 $(enumDeriveConvertible ''Lang)
 
-langDir :: Lang -> String
-langDir LANG_EN = "texts/en"
-langDir LANG_SE = "texts/se"
+codeFromLang :: Lang -> String
+codeFromLang LANG_SE = "sv"
+codeFromLang LANG_EN = "en"
 
-langHTTPValue :: Lang -> String
-langHTTPValue LANG_SE = "se"
-langHTTPValue LANG_EN = "en"
+langFromCode :: String -> Maybe Lang
+langFromCode s = find ((== s) . codeFromLang) allValues
 
-langFromHTTPHeader :: String -> Lang
-langFromHTTPHeader s = fromMaybe defaultValue $ msum $ map langCode (splitOver "," s)
-  where
-    langCode str = find ((`isInfixOf` str) . langHTTPValue) allValues

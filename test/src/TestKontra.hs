@@ -37,6 +37,8 @@ import KontraMonad
 import MinutesTime
 import Templates.Templates
 import qualified MemCache
+import User.Region
+import User.Lang
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
@@ -197,6 +199,7 @@ mkContext templates = liftIO $ do
         , ctxnormalizeddocuments = docs
         , ctxipnumber = 0
         , ctxdbconn = error "dbconn is not defined"
+        , ctxdbconnclose = False
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""
@@ -220,4 +223,6 @@ mkContext templates = liftIO $ do
         , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
+        , ctxregion = REGION_SE
+        , ctxlang = LANG_SE
     }

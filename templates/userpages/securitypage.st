@@ -33,9 +33,11 @@ showUserSecurity =
                        </tr>
                    </table>
                </div>
+
            </div>
 
            <div class="col">
+
                <div class="account-header">
                   <h2>$_LanguageSettings()$</h2>
                </div>

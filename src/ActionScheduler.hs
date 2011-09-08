@@ -14,6 +14,7 @@ import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
+import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -40,11 +41,11 @@ import Doc.Invariants
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
-newtype ActionScheduler a = AS (ReaderT SchedulerData' IO a)
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance DBMonad ActionScheduler where
-    getConnection = sdDBConnection <$> ask
+    getConnection = AS $ lift ask
     handleDBError = E.throw
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
@@ -54,7 +55,8 @@ instance DBMonad ActionScheduler where
 -- appropriate language version of templates, we need to do that manually.
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler (AS sched) sd = runReaderT sched sd
+runScheduler sched sd =
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT (unAS sched) sd)
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -70,11 +72,12 @@ runEnforceableScheduler interval enforcer sched sd = listen 0
 actionScheduler :: ActionImportance -> ActionScheduler ()
 actionScheduler imp = do
     sd <- ask
+    conn <- getConnection
+    let runAction a = runReaderT (runReaderT (unAS $ evaluateAction a) sd) conn `E.catch` catchEverything a
     liftIO $ getMinutesTime
          >>= query . GetExpiredActions imp
-         >>= sequence_ . map (run sd)
+         >>= sequence_ . map runAction
     where
-        run sd a = runScheduler (evaluateAction a) sd `E.catch` catchEverything a
         catchEverything :: Action -> E.SomeException -> IO ()
         catchEverything a e =
             Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
@@ -125,7 +128,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                templates <- getLocalizedTemplates $ systemserver &&& lang $ usersettings user
+                templates <- getLocalizedTemplates $ (systemserver $ usersettings user, region $ usersettings user, lang $ usersettings user)
                 mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {

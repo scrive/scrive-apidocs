@@ -12,6 +12,7 @@ $loadingdialog()$
 
 <script>
 var documentsTable = KontraList.init({
+    name : "Attachments Table",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Attachment" },
@@ -60,7 +61,7 @@ var documentsTable = KontraList.init({
                              if (docs.length == 1)
                                text += docs[0].field("title") + "."
                              else
-                               text += docs.length + (" _docListTabsAttachemtns().").toLowerCase();
+                               text += docs.length + (" $_docListTabsAttachemtns()$.").toLowerCase();
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",

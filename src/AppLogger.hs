@@ -1,9 +1,11 @@
 module AppLogger ( amazon
+                 , stats
                  , eleg
                  , debug
                  , error
                  , forkIOLogWhenError
                  , mail
+                 , mailContent
                  , security
                  , server
                  , teardownLogger
@@ -52,6 +54,8 @@ setupLogger = do
     trustWeaverLog <- fileHandler' "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
     securityLog    <- fileHandler' "log/security.log"    INFO >>= \lh -> return $ setFormatter lh fmt
     elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
+    statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
+    mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
 
     stdoutLog <- streamHandler stdout NOTICE
 
@@ -65,16 +69,11 @@ setupLogger = do
                      , amazonLog
                      , securityLog
                      , elegLog
+                     , statsLog
+                     , mailContentLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
-
-    hSetEncoding (privData accessLog) utf8
-    hSetEncoding (privData mailLog) utf8
-    hSetEncoding (privData debugLog) utf8
-    hSetEncoding (privData errorLog) utf8
-    hSetEncoding (privData amazonLog) utf8
-    hSetEncoding (privData trustWeaverLog) utf8
 
     -- Root Log
     updateGlobalLogger
@@ -90,6 +89,11 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.Mail"
         (setLevel NOTICE . setHandlers [mailLog])
+
+    -- Mail Content Log
+    updateGlobalLogger
+        "Kontrakcja.MailContent"
+        (setLevel NOTICE . setHandlers [mailContentLog])
 
     -- Amazon Log
     updateGlobalLogger
@@ -124,7 +128,12 @@ setupLogger = do
     -- ELeg Log
     updateGlobalLogger
         "Kontrakcja.Eleg"
-        (setLevel NOTICE . setHandlers [stdoutLog])
+        (setLevel NOTICE . setHandlers [elegLog, stdoutLog])
+
+    -- Stats Log
+    updateGlobalLogger
+        "Kontrakcja.Stats"
+        (setLevel NOTICE . setHandlers [statsLog])
 
     return $ LoggerHandle allLoggers
 
@@ -148,6 +157,9 @@ error msg = liftIO $ noticeM "Kontrakcja.Error" msg
 mail :: (MonadIO m) => String -> m ()
 mail msg = liftIO $ noticeM "Kontrakcja.Mail" msg
 
+mailContent :: (MonadIO m) => String -> m ()
+mailContent msg = liftIO $ noticeM "Kontrakcja.MailContent" msg
+
 amazon :: (MonadIO m) => String -> m ()
 amazon msg = liftIO $ noticeM "Kontrakcja.Amazon" msg
 
@@ -162,6 +174,9 @@ server msg = liftIO $ noticeM "Happstack.Server" msg
 
 eleg :: (MonadIO m) => String -> m ()
 eleg msg = liftIO $ noticeM "Kontrakcja.Eleg" msg
+
+stats :: (MonadIO m) => String -> m ()
+stats msg = liftIO $ noticeM "Kontrakcja.Stats" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()

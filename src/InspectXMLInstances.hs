@@ -38,6 +38,7 @@ $(deriveInspectXML ''FieldDefinition)
 $(deriveInspectXML ''FieldPlacement)
 $(deriveInspectXML ''User)
 $(deriveInspectXML ''SignatoryLink)
+$(deriveInspectXML ''SignatoryField)
 $(deriveInspectXML ''SignatoryDetails)
 
 
@@ -95,4 +96,5 @@ instance InspectXML Company where
 instance InspectXML CompanyID where
 instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
-
+instance InspectXML FieldType where
+instance InspectXML Region where

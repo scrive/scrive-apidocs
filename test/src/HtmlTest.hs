@@ -2,6 +2,7 @@ module HtmlTest (htmlTests) where
 
 import Data.Char
 import Data.List
+import Control.Applicative
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
@@ -14,8 +15,11 @@ import Control.Monad
 import Misc
 import Templates.TemplatesFiles
 import Templates.Templates (renderTemplate)
+import Templates.Templates (Localization)
 import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion)
 import Templates.TextTemplates
+import User.Lang
+import User.Region
 
 htmlTests :: Test
 htmlTests = testGroup "HTML"
@@ -31,10 +35,17 @@ excludedTemplates = ["paymentsadminpagesuperuser"]
 isIncluded :: (String, String) -> Bool
 isIncluded (name, _) = not $ name `elem` excludedTemplates
 
+allRegionsAndLangs :: [(Region, Lang)]
+allRegionsAndLangs = (\r l -> (r,l)) <$> allValues <*> allValues
+
+allLocalizations :: [Localization]
+allLocalizations = (\s r l -> (s,r,l)) <$> allValues <*> allValues <*> allValues
+
+
 testValidXml :: Assertion
 testValidXml = do
   ts <- mapM getTemplates templatesFilesPath
-  texts <- mapM getTextTemplates allValues
+  texts <- mapM (uncurry getTextTemplates) allRegionsAndLangs
   _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat ts ++ concat texts
   assertSuccess
 
@@ -54,9 +65,9 @@ testNoNestedP :: Assertion
 testNoNestedP = do
   langtemplates <- readGlobalTemplates
   ts <- mapM getTemplates templatesFilesPath
-  texts <- forM allValues getTextTemplates
+  texts <- forM allRegionsAndLangs (uncurry getTextTemplates)
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM allValues $ \localization -> do
+  _ <- forM allLocalizations $ \localization -> do
     let templates = localizedVersion localization langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates

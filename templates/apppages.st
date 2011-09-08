@@ -23,7 +23,7 @@ doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.
 ####
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta http-equiv="content-language" content="sv" />
+        <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen"/>
@@ -52,6 +52,8 @@ standardHeaderContents=
         <script src="$prefix$/js/underscore.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/backbone.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/storage.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/livequery.js"
                 type="text/javascript"></script>
@@ -215,24 +217,24 @@ pageFooter=
       <ul>
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
-        <li><a href="/priser">$_pageFooterPrices()$</a></li>
+        <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
       </ul>
       <br />
       <strong>$_pageFooterTerms()$</strong>
       <ul>
-        <li><a href="/sakerhet">$_pageFooterSecurity()$</a></li>
-        <li><a href="/juridik">$_pageFooterLaw()$</a></li>
-        <li><a href="/sekretesspolicy">$_pageFooterPrivacy()$</a></li>
-        <li><a href="/allmana-villkor">$_pageFooterTOS()$</a></li>
+        <li><a href="$linksecurity$">$_pageFooterSecurity()$</a></li>
+        <li><a href="$linklegal$">$_pageFooterLaw()$</a></li>
+        <li><a href="$linkprivacypolicy$">$_pageFooterPrivacy()$</a></li>
+        <li><a href="$linkterms$">$_pageFooterTOS()$</a></li>
       </ul>
       <br />
       <strong style='text-transform:uppercase'>$ourServiceName()$</strong>
       <ul>
-        <li><a href="/">$_pageFooterHome()$</a></li>
-        <li><a href="/om-skrivapa">$_pageFooterAbout()$</a></li>
+        <li><a href="$linkhome$">$_pageFooterHome()$</a></li>
+        <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
         <li><a href="http://support.skrivapa.se">$_pageFooterSupportFeedback()$</a></li>
-        <li><a href="/partners">$_pageFooterPartners()$</a></li>
-        <li><a href="/kunder">$_pageFooterCustomers()$</a></li>
+        <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
+        <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
       </ul>
     </div>
@@ -311,7 +313,7 @@ loginBox=
 header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
-                                <a href="/" class="$ourLogoClass()$"></a>
+                                <a href="$linkhome$" class="$ourLogoClass()$"></a>
                                 $if(logged)$
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">

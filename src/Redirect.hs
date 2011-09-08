@@ -1,4 +1,4 @@
-module Redirect (sendRedirect,sendSecureLoopBack,guardRight,guardRightM,guardLoggedIn) where
+module Redirect (sendRedirect,sendSecureLoopBack,redirectKontraResponse,guardRight,guardRightM,guardLoggedIn) where
 
 
 import Control.Applicative ((<$>))
@@ -50,6 +50,11 @@ sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
     link <- getSecureLink
     seeOther link =<< setRsCode 303 (seeOtherXML link)
+
+redirectKontraResponse :: KontraLink -> Kontra Response
+redirectKontraResponse link = do
+  let linkstr = show link
+  seeOther linkstr =<< setRsCode 303 (seeOtherXML linkstr)
 
 -- moved here because of dependency problems
 

@@ -24,7 +24,7 @@ wrapHTML=
     <html>
       <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-        <meta http-equiv="content-language" content="sv"/>
+        <meta http-equiv="content-language" content="$ctxlang$"/>
       </head>
       <body>
         $body:noescape()$

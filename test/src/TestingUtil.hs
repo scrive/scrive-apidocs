@@ -130,9 +130,7 @@ class ExtendWithRandomnes a where
           return $ unGen (moreRandom a) stdgen 10
 
 instance ExtendWithRandomnes SignatoryDetails where
-    moreRandom sl = do
-        ofields <- arbitrary
-        return $ sl {signatoryotherfields = ofields}
+    moreRandom sl = return sl
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = do
@@ -241,31 +239,49 @@ nonemptybs :: Gen BS.ByteString
 nonemptybs = do
   s <- arbString 1 10
   return $ BS.fromString s
+  
+-- | Remove fields from duplicate types
+filterSingleFieldType :: [SignatoryField] -> [SignatoryField]
+filterSingleFieldType [] = []
+filterSingleFieldType (f:fs) = f : filterSingleFieldType (filter (\h-> sfType f /= sfType h) fs)
 
 instance Arbitrary SignatoryDetails where
   arbitrary = do
     fn <- nonemptybs
     ln <- nonemptybs
-    cn <- arbitrary
-    pn <- arbitrary
-    cm <- arbitrary
     em <- arbEmail
-    ofields <- arbitrary
-    return $ SignatoryDetails { signatoryfstname        = fn
-                              , signatorysndname        = ln
-                              , signatorycompany        = cn
-                              , signatorypersonalnumber = pn
-                              , signatorycompanynumber  = cm
-                              , signatoryemail          = em
-                              , signatorysignorder = SignOrder 1
-                              , signatoryfstnameplacements        = []
-                              , signatorysndnameplacements        = []
-                              , signatorycompanyplacements        = []
-                              , signatoryemailplacements          = []
-                              , signatorypersonalnumberplacements = []
-                              , signatorycompanynumberplacements  = []
-                              , signatoryotherfields              = ofields
-                              }
+    fields <- filterSingleFieldType <$> arbitrary
+    return $ SignatoryDetails { signatorysignorder = SignOrder 1
+                              , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields 
+                                                  ++ [ SignatoryField FirstNameFT fn []
+                                                     , SignatoryField LastNameFT  ln []
+                                                     , SignatoryField EmailFT     em []]}
+      
+instance Arbitrary FieldPlacement where
+  arbitrary = do
+    (a,b,c,d,e) <- arbitrary
+    return $ FieldPlacement { placementx = a
+                            , placementy = b
+                            , placementpage = c
+                            , placementpagewidth = d
+                            , placementpageheight = e      
+                            }
+    
+instance Arbitrary FieldType where
+  arbitrary = do
+    fieldlabel <- arbitrary
+    filled <- arbitrary
+    elements [FirstNameFT, LastNameFT, EmailFT, CompanyFT, CompanyNumberFT, PersonalNumberFT, CustomFT fieldlabel filled]
+  
+instance Arbitrary SignatoryField where
+  arbitrary = do
+    t <- arbitrary
+    v <- arbitrary
+    p <- arbitrary
+    return $ SignatoryField { sfType = t
+                            , sfValue = v
+                            , sfPlacements = p
+                            }
 
 instance Arbitrary FieldDefinition where
    arbitrary = do
@@ -340,6 +356,7 @@ blankUser = User {
                 , usersettings  = UserSettings {
                                     preferreddesignmode = Nothing
                                   , lang = Misc.defaultValue
+                                  , region = Misc.defaultValue
                                   , systemserver = Misc.defaultValue
                                   }
               , userservice = Nothing
@@ -377,6 +394,7 @@ blankDocument =
           , documentdeleted              = False
           , documentsignatoryattachments = []
           , documentattachments          = []
+          , documentregion               = REGION_SE
           }
 
 
@@ -390,11 +408,11 @@ addNewCompany = do
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue defaultValue defaultValue
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue defaultValue defaultValue
 
 addNewRandomUser :: DB User
 addNewRandomUser = do
@@ -421,20 +439,8 @@ addService name uid =
 
 emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails
-    { signatoryfstname        = ""
-    , signatorysndname        = ""
-    , signatorycompany        = ""
-    , signatorypersonalnumber = ""
-    , signatorycompanynumber  = ""
-    , signatoryemail          = ""
+    { signatoryfields = []
     , signatorysignorder = SignOrder 1
-    , signatoryfstnameplacements        = []
-    , signatorysndnameplacements        = []
-    , signatorycompanyplacements        = []
-    , signatoryemailplacements          = []
-    , signatorypersonalnumberplacements = []
-    , signatorycompanynumberplacements  = []
-    , signatoryotherfields              = []
     }
 
 addRandomDocumentWithAuthor :: User -> DB DocumentID

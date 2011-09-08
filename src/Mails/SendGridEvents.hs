@@ -35,6 +35,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import User.Model
+import Happstack.Server
 
 data SendgridEvent =
     SendgridEvent {
@@ -45,7 +46,7 @@ data SendgridEvent =
         } deriving Show
 
 -- | Handler for receving delivery info from sendgrid
-handleSendgridEvent :: Kontrakcja m => m KontraLink
+handleSendgridEvent :: Kontrakcja m => m Response
 handleSendgridEvent = do
     mid <- readNum "id"
     -- email can be either 'email' or '<email>', so we want to get rid of brackets
@@ -58,18 +59,17 @@ handleSendgridEvent = do
         , event = et
         , info = mi
     }
-    Log.mail $ "Sendgrid event received: " ++ (show ev)
-    Log.debug $ show ev
+    Log.mail $ "Sendgrid event received: " ++ show ev
     now <- liftIO getMinutesTime
     maction <- checkValidity now <$> query (GetAction $ ActionID mid)
-    Log.debug $ show maction
+
     case maction of
          -- we update SentEmailInfo of given email. if email is reported
          -- delivered, dropped or bounced we remove it from the system.
          -- that way we can keep track of emails that were "lost".
          Just Action{actionID, actionType = SentEmailInfo{seiEmail, seiMailInfo, seiBackdoorInfo}} -> do
              when (seiEmail == (Email $ BS.fromString maddr)) $ do
-                 Log.debug "Updating SentEmailInfo..."
+                 Log.mail $ "Mail #" ++ show mid ++ " to " ++ show seiEmail ++ " " ++ show et
                  _ <- update $ UpdateActionType actionID $ SentEmailInfo {
                        seiEmail = seiEmail
                      , seiMailInfo = seiMailInfo
@@ -83,11 +83,12 @@ handleSendgridEvent = do
                       Bounce _ _ _ -> True
                       _            -> False
                  when_ removeAction $ do
-                     Log.debug "Removing SentEmailInfo..."
                      update $ UpdateActionEvalTime actionID now
-         _ -> return ()
+         _ -> do
+             Log.mail $ "Mail #" ++ show mid ++ " is not known to system, ignoring"
+             return ()
     routeToHandler ev
-    return $ LinkMain
+    ok $ toResponse "Thanks"
 
 readEventType :: Kontrakcja m => String -> m SendGridEventType
 readEventType "processed" = return Processed
@@ -119,8 +120,8 @@ readString name = fromMaybe "" <$> getField name
 routeToHandler :: Kontrakcja m => SendgridEvent -> m ()
 routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, event}) = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
-    let signemail = fromMaybe "" (BS.toString . signatoryemail . signatorydetails <$> getSignatoryLinkFromDocumentByID doc signlinkid)
-    liftIO $ putStrLn $ signemail ++ " == " ++ mailAddress
+    let signemail = fromMaybe "" (BS.toString . getEmail <$> getSignatoryLinkFromDocumentByID doc signlinkid)
+    Log.debug $ signemail ++ " == " ++ mailAddress
     -- since when email is reported deferred author has a possibility to change
     -- email address, we don't want to send him emails reporting success/failure
     -- for old signatory address, so we need to compare addresses here.

@@ -58,7 +58,7 @@ $if(!isprocessselected)$
   $processes:{process |
   <td>
     <div class="documentTypeBox $if(process.selected)$selected$endif$"> 
-       <a class="documenticon" href="/?doctype=$process.id$">$process.name$</a>    
+       <a class="documenticon" href="/upload?doctype=$process.id$">$process.name$</a>    
     </div>
   </td>
   }$
@@ -102,7 +102,7 @@ $elseif(!showTemplates)$
         <span class="text">$_signStepsBodyUploadBoxStep1TemplateSaved()$</span>
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
-        <a class="btn-small green selectTemplateButton" href="/?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
+        <a class="btn-small green selectTemplateButton" href="/upload?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
           <div class="left"> </div>
           <div class="label" style="width:100px">$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$</div>
           <div class="right"> </div>
@@ -121,6 +121,7 @@ $else$
 
 <script>
 var documentsTable = KontraList.init({
+    name : "Templates table",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Template|$processid$" },
@@ -146,7 +147,7 @@ var documentsTable = KontraList.init({
     }),
     headerExtras : jQuery("<div class='float-left basicinfo'>" +
                             "<p>$_InfoSelectTemplate()$</p>" +
-                            "<a class='backicon float-left' href='/?doctype=$processid$'></a>" +
+                            "<a class='backicon float-left' href='/upload?doctype=$processid$'></a>" +
                           "</div>")
 
 });

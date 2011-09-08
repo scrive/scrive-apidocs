@@ -125,7 +125,7 @@ initDatabaseEntries conn = do
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue
+              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue defaultValue defaultValue
               return ()
           Just _ -> return () -- user exist, do not add it
 
@@ -205,7 +205,7 @@ runKontrakcjaServer = Log.withLogger $ do
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler appConf appGlobals)
-                              let scheddata = SchedulerData appConf mailer' templates es_enforcer conn
+                              let scheddata = SchedulerData appConf mailer' templates es_enforcer
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata

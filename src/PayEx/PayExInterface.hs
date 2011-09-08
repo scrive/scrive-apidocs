@@ -204,7 +204,7 @@ checkIfPaymentIsComplete :: MonadIO m => Payment -> m Payment
 checkIfPaymentIsComplete payment = runWhenState payment Send $
                                     do
                                     result <- sendCompleteRequest payment
-                                    liftIO $ putStrLn $ show result
+                                    Log.debug $ show result
                                     let npayment = updatePayment result payment
                                     now <- liftIO getMinutesTime
                                     update $ UpdatePayment npayment {completeAttempts = now:(completeAttempts npayment)}

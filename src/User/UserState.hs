@@ -1570,6 +1570,7 @@ initialInsertUsersIntoPG :: DB ()
 initialInsertUsersIntoPG = wrapDB $ \conn -> do
   users <- query GetAllUsersForDBMigration
   forM_ users $ \u -> do
+    Log.debug $ show u
     let (salt, hash) = case userpassword u of
          NoPassword -> (Nothing, Nothing)
          Password salt' hash' -> (Just $ B64.encode $ BS.pack salt', Just $ B64.encode $ BS.pack hash')
@@ -1605,7 +1606,7 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
       , toSql $ usercompanyposition $ userinfo u
       , toSql $ userphone $ userinfo u
       , toSql $ usermobile $ userinfo u
-      , toSql $ useremail $ userinfo u
+      , toSql $ BS.filter (<128) $ unEmail $ useremail $ userinfo u
       , toSql $ preferreddesignmode $ usersettings u
       , toSql $ lang $ usersettings u
       , toSql $ systemserver $ usersettings u
@@ -1651,9 +1652,11 @@ finalizeInsertUsersIntoPG = wrapDB $ \conn -> do
         , toSql $ invitetype ii
         ]
       return ()
-    forM_ (userfriends u) $ \f -> do
-      _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
-        [toSql $ userid u, toSql f]
+    forM_ (nub $ userfriends u) $ \f -> do
+      when (isJust $ find (\u2 -> unUserID (userid u2) == unFriend f) users) $ do
+                 _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
+                      [toSql $ userid u, toSql f]
+                 return ()
       return ()
     return ()
 

@@ -118,7 +118,7 @@ mailInvitationToSignOfferContent=
      <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
      $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
      $whohadsignedinfo:noescape()$<br/>
-     $_mailInvitationToSignOfferContentSender()$<strong>$creatorname$</strong><br/>
+     $_mailInvitationToSignOfferContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
      $sigattachlist()$
@@ -140,7 +140,7 @@ mailInvitationToSignOrderContent=
      <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
      $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
      $whohadsignedinfo:noescape()$<br/>
-     $_mailInvitationToSignOrderContentSender()$<strong>$creatorname$</strong><br/>
+     $_mailInvitationToSignOrderContentSender()$ <strong>$creatorname$</strong><br/>
      $timetosigninfo:noescape()$
      $appendixList()$
      $sigattachlist()$
@@ -159,22 +159,27 @@ mailInvitationToSignOrderContent=
 mailInvitationToSignContractDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong>$_mailInvitationToSignContractDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToSignContractDefaultHeaderBody2()$</p>
+      <strong>$creatorname$</strong> $_mailInvitationToSignContractDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
+      $_mailInvitationToSignContractDefaultHeaderBody2()$</p>
 ####
 mailInvitationToSignOfferDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong>$_mailInvitationToSignOfferDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToSignOfferDefaultHeaderBody2()$</p>
+      <strong>$creatorname$</strong> $_mailInvitationToSignOfferDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
+      $_mailInvitationToSignOfferDefaultHeaderBody2()$</p>
 ####
 mailInvitationToSignOrderDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong>$_mailInvitationToSignOrderDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToSignOrderDefaultHeaderBody2()$</p>
+      <strong>$creatorname$</strong> $_mailInvitationToSignOrderDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
+      $_mailInvitationToSignOrderDefaultHeaderBody2()$</p>
 ####
 mailInvitationToViewDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> $_mailInvitationToViewDefaultHeaderBody1()$<strong>$documenttitle$</strong>$_mailInvitationToViewDefaultHeaderBody2()$</p>
+      <strong>$creatorname$</strong>
+      $_mailInvitationToViewDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
+      $_mailInvitationToViewDefaultHeaderBody2()$</p>
 ####
 remindMailSignedTitle=$documenttitle$
 ###
@@ -237,7 +242,7 @@ remindMailNotSignedOfferContent=
         <i>$_remindMailNotSignedOfferContentInfo()$</i><br/>
         $_remindMailNotSignedOfferContentPartys()$ $partnersinfo:noescape()$<br/>
         $whohadsignedinfo:noescape()$<br/>
-        $_remindMailNotSignedOfferContentSender()$<strong>$creatorname$</strong><br/>
+        $_remindMailNotSignedOfferContentSender()$ <strong>$creatorname$</strong><br/>
         $timetosigninfo:noescape()$
         $appendixList()$
         $sigattachlist()$
@@ -264,7 +269,7 @@ remindMailNotSignedOrderContent=
 signupLinkEmailPart=
     <p>$_signupLinkEmailPartUserName()$ $email$</p>
     
-    <p>$_signupLinkEmailPartClickLink()$<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_signupLinkEmailPartClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 
@@ -341,7 +346,7 @@ mailViralInviteContent=
 
     <p>$_mailViralInviteContentBodySecond()$</p>
 
-    <p>$_mailViralInviteContentBodyUserName()$$email$</p>
+    <p>$_mailViralInviteContentBodyUserName()$ $email$</p>
     
     <p>$_mailViralInviteContentBodyThird()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
@@ -376,7 +381,7 @@ invitationMailDeferredContent=
     <span>
       <p>$_hi()$ $authorname$,</p>
       <p>$_invitationMailDeferredContentBodyFirst()$</p>
-      <p>$_invitationMailDeferredContentBodySecond()$<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
+      <p>$_invitationMailDeferredContentBodySecond()$ <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
       $poweredBySkrivaPaPara()$
     </span>
 ###
@@ -446,7 +451,7 @@ whohadsignedorderinfoformail=
 ####
 whohadsignedofferinfoformail=
     $if(signedlist)$	$_whohadsignedofferinfoformailIfConfirmed()$$signedlist:noescape()$
-    $else$	$_whohadsignedofferinfoformailIfNotConfirmed()$$noonehadsignedtext()$
+    $else$	$_whohadsignedofferinfoformailIfNotConfirmed()$ $noonehadsignedtext()$
     $endif$
 ####
 whohadsignedinfoforpreview=

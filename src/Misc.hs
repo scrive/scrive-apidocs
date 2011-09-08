@@ -355,7 +355,6 @@ whenMaybe False _ = return Nothing
 getFileField:: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
 getFileField name = do
     finput <- getDataFn (lookInput name)
-    liftIO $ putStrLn $ show finput
     case finput of
         Right (Input contentspec _ _)->
             case contentspec of
@@ -404,7 +403,7 @@ eitherLog action = do
   value <- action
   case value of
     Left errmsg -> do
-      putStrLn errmsg
+      Log.error errmsg
       error errmsg
     Right val -> return val
 
@@ -457,7 +456,6 @@ currentLinkBody = do
                      then drop 1 a2
                      else a2
   return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
-
 
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"

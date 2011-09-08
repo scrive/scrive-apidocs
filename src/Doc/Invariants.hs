@@ -61,6 +61,7 @@ documentInvariants = [ documentHasOneAuthor
                      , hasFirstName
                      , hasLastName
                      , hasValidEmail
+                     , hasAtMostOneOfEachTypeOfField
                      ]
 
 {- |
@@ -170,37 +171,17 @@ maxLengthOnFields _ document =
   let maxlength = 512 
       assertMaxLength s = BS.length s <= maxlength in
   assertInvariant ("some fields were too long. max is " ++ show maxlength) $
-    all (\sl -> let sd = signatorydetails sl in
-          assertMaxLength (signatoryfstname sd) &&
-          assertMaxLength (signatorysndname sd) &&
-          assertMaxLength (signatorycompany sd) &&
-          assertMaxLength (signatorypersonalnumber sd) &&
-          assertMaxLength (signatorycompanynumber sd) &&
-          assertMaxLength (signatoryemail sd) &&
-          all (\fd -> assertMaxLength (fieldlabel fd) &&
-                      assertMaxLength (fieldvalue fd))
-              (signatoryotherfields sd))
-        (documentsignatorylinks document)
+    all (all (assertMaxLength . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
     
 {- |
    max number of placements per field
  -}
 maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
-  let maxlength = 25 * totalfields
-      totalfields = sum (map countplacements (documentsignatorylinks document))
-      countplacements sl =
-        let sd = signatorydetails sl in
-        length (signatoryfstnameplacements sd) +
-        length (signatorysndnameplacements sd) +
-        length (signatorycompanyplacements sd) +
-        length (signatoryemailplacements sd) +
-        length (signatorypersonalnumberplacements sd) +
-        length (signatorycompanynumberplacements sd) +
-        sum (map (length . fieldplacements) (signatoryotherfields sd))
-  in
-   assertInvariant ("document had too many placements. max is " ++ show maxlength ++ " (25 * number of fields)") $
-   totalfields <= maxlength
+  let maxlength = 25
+      assertMaxLength fs = length fs <= maxlength in
+  assertInvariant ("document had too many placements. max is " ++ show maxlength ++ " (25 * number of fields)") $
+    all (all (assertMaxLength . sfPlacements) . signatoryfields . signatorydetails) (documentsignatorylinks document)
     
 {- |
    AwaitingAuthor implies Author has not signed
@@ -232,11 +213,11 @@ notSignatoryNotSigned _ document =
  -}
 maxCustomFields :: MinutesTime -> Document -> Maybe String
 maxCustomFields _ document =
-  let maxfields = 250 
-      assertMaximum sl = length (signatoryotherfields $ signatorydetails sl) <= maxfields in
+  let maxfields = 250
+      assertMaximum fs = length fs <= maxfields in
   assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
-    all assertMaximum (documentsignatorylinks document)
-    
+    all (assertMaximum . filter isFieldCustom . signatoryfields . signatorydetails) (documentsignatorylinks document)
+
 {- |
     Author is unable to sign processes which are author send only.
     This includes offers and orders.
@@ -288,7 +269,7 @@ basicDocsDontHaveCustomFields :: MinutesTime -> Document -> Maybe String
 basicDocsDontHaveCustomFields _ Document{documentfunctionality,documentsignatorylinks} =
   assertInvariant ("basic doc has custom fields")
                   ((documentfunctionality == BasicFunctionality) =>> 
-                    (all (null . signatoryotherfields . signatorydetails) documentsignatorylinks))
+                    (all (null . filter isFieldCustom . signatoryfields . signatorydetails) documentsignatorylinks))
                    
 {- |
     Documents in basic mode don't have any placements
@@ -297,17 +278,11 @@ basicDocsDontHavePlacements :: MinutesTime -> Document -> Maybe String
 basicDocsDontHavePlacements _ Document{documentfunctionality,documentsignatorylinks} =
   assertInvariant ("basic doc has placement")
                   ((documentfunctionality == BasicFunctionality) =>> 
-                    (not $ any hasPlacement documentsignatorylinks))
+                    (not $ any (hasPlacement . signatorydetails) documentsignatorylinks))
   where
-    hasPlacement :: SignatoryLink -> Bool
-    hasPlacement SignatoryLink{signatorydetails} =
-      all hasNo [ signatoryfstnameplacements
-                , signatorysndnameplacements
-                , signatorycompanyplacements
-                , signatoryemailplacements
-                , signatorypersonalnumberplacements
-                , signatorycompanynumberplacements ]
-      where hasNo f = null $ f signatorydetails
+    hasPlacement :: SignatoryDetails -> Bool
+    hasPlacement SignatoryDetails{signatoryfields} =
+      all (null . sfPlacements) signatoryfields
 
 {- |
     Documents in basic mode don't have a special sign order
@@ -358,13 +333,24 @@ hasValidEmail _ document =
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
                 (isGood $ asValidEmail $ BS.toString $ getEmail sl))
         (documentsignatorylinks document)
-
+    
+-- | Has only one of each type of field
+hasAtMostOneOfEachTypeOfField :: MinutesTime -> Document -> Maybe String
+hasAtMostOneOfEachTypeOfField _ document =
+ nothingIfEmpty $ intercalate ";" $ catMaybes $ 
+   for [FirstNameFT, LastNameFT, CompanyFT, PersonalNumberFT, CompanyNumberFT, EmailFT] $ \t ->
+    assertInvariant ("signatory with more than one " ++ show t) $
+      all (\sl -> 1 >= length (filter (fieldIsOfType t) (signatoryfields $ signatorydetails sl)))
+        (documentsignatorylinks document)
+      
 -- some helpers  
        
 assertInvariant :: String -> Bool -> Maybe String
 assertInvariant _ True = Nothing
 assertInvariant s False  = Just s
 
+fieldIsOfType :: FieldType -> SignatoryField -> Bool
+fieldIsOfType t f = t == sfType f
 
 -- | Given the time now, is doc older than minutes.
 olderThan :: MinutesTime -> Document -> Int -> Bool

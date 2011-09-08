@@ -131,7 +131,7 @@ userFields user = do
 
 showUserSecurity :: TemplatesMonad m => User -> m String
 showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
-    field "linksecurity" $ show LinkSecurity
+    field "linksecurity" $ show LinkAccountSecurity
     field "fstname" $ getFirstName user
     field "sndname" $ getLastName user
     field "userimagelink" False
