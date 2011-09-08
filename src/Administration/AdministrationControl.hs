@@ -14,6 +14,7 @@ module Administration.AdministrationControl(
           , showAdminUserAdvanced
           , showAdminUsers
           , showAdminCompanies
+          , showAdminCompanyUsers
           , showAdminUsersForSales
           , showAdminUsersForPayments
           , showAdminUserUsageStats
@@ -126,6 +127,14 @@ showAdminCompanies (Just companyid) = onlySuperUser $ do
   content <- adminCompanyPage company
   renderFromBody TopEmpty kontrakcja content
 
+showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m Response
+showAdminCompanyUsers companyid = onlySuperUser $ do
+  company <- guardJustM . runDBQuery $ GetCompany companyid
+  users <- runDBQuery $ GetCompanyAccounts companyid
+  params <- getAdminListPageParams
+  content <- adminCompanyUsersPage company users params
+  renderFromBody TopEmpty kontrakcja content
+
 showAdminUsersForSales :: Kontrakcja m => m Response
 showAdminUsersForSales = onlySuperUser $ do
   users <- getUsersAndStats
@@ -166,7 +175,7 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   userdocs <- mapM (query . GetDocumentsByAuthor . userid) users
   let documents = concat userdocs
   Log.debug $ "There are " ++ (show $ length documents) ++ " docs related to company " ++ (show companyid)
-  content <- adminCompanyUsageStatsPage $ do
+  content <- adminCompanyUsageStatsPage companyid $ do
     fieldsFromStats [] documents
   renderFromBody TopEmpty kontrakcja content
 

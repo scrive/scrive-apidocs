@@ -13,6 +13,7 @@ module Administration.AdministrationView(
           , adminUsersAdvancedPage
           , adminUsersPage
           , adminCompaniesPage
+          , adminCompanyUsersPage
           , adminUsersPageForSales
           , adminUsersPageForPayments
           , adminUserPage
@@ -74,7 +75,17 @@ adminCompaniesPage :: TemplatesMonad m => [Company] -> AdminListPageParams -> m 
 adminCompaniesPage companies params =
     renderTemplateFM "admincompanies" $ do
         fieldFL "companies" $ map (companyFields . Just) $ visibleItems params companies
-        adminListFields LinkCompanyAdmin companies params   
+        adminListFields LinkCompanyAdmin companies params
+
+{- | Manage company users page - can find a company user here -}
+adminCompanyUsersPage :: TemplatesMonad m => Company -> [User] -> AdminListPageParams -> m String
+adminCompanyUsersPage company users params =
+    renderTemplateFM "admincompanyusers" $ do
+        field "companyid" $ show $ companyid company
+        field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+        field "adminuserslink" $ show $ LinkUserAdmin Nothing
+        fieldFL "users" $ map (uncurry userBasicFields) . visibleItems params $ zip users (repeat $ Just company)
+        adminListFields (const $ LinkCompanyUserAdmin (companyid company)) users params 
 
 {-| Manage users page - can find user here -}
 adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
@@ -129,11 +140,12 @@ adminUserUsageStatsPage user mcompany morefields =
         morefields
         
 {-| The company stats page -}
-adminCompanyUsageStatsPage :: TemplatesMonad m => Fields m -> m String
-adminCompanyUsageStatsPage morefields =
+adminCompanyUsageStatsPage :: TemplatesMonad m => CompanyID -> Fields m -> m String
+adminCompanyUsageStatsPage companyid morefields =
     renderTemplateFM "companyusagestats" $ do
-        field "admincompanieslink" $ show $ LinkUserAdmin Nothing
+        field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
         field "adminlink" $ show $ LinkAdminOnly
+        field "companyid" $ show companyid
         morefields
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String

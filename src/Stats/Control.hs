@@ -52,7 +52,7 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   statCompanyEvents <- runDBQuery $ GetDocStatCompanyEventsByCompanyID companyid
   let stats = calculateDocStatsFromCompanyEvents statCompanyEvents
   fullnames <- convertUserIDToFullName [] stats
-  content <- adminCompanyUsageStatsPage $ do
+  content <- adminCompanyUsageStatsPage companyid $ do
     statisticsCompanyFieldsForASingleUser fullnames
   renderFromBody TopEmpty kontrakcja content
 
