@@ -396,7 +396,6 @@ admincompanyusers=
 <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
 <br/>
 <br/>
-<form action="" method="POST">
 <div id="tab-viewer">
 	<div class="tab-header">
 	</div>
@@ -407,6 +406,43 @@ admincompanyusers=
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
+	    <form method="post" action="$admincompanieslink$/users/$companyid$">
+        Create user:<br/>
+        <table style="width:600px">
+          <tr>
+            <td>First name:</td>
+            <td><input type="text" name="fstname"/></td>
+          </tr>
+          <tr>
+            <td>Second name:</td>
+            <td><input type="text" name="sndname"/></td>
+          </tr>
+          <tr>
+            <td>Email address:</td>
+            <td><input type="email" name="email"/></td>
+          </tr>
+          <tr>
+            <td>Is Admin?:</td>
+            <td>
+              <input type="checkbox" name="iscompanyadmin"/></td>
+            </td>
+          <tr>
+            <td>Service:</td>
+            <td><select name="systemserver">
+                  <option selected="" value="SkrivaPa">SkrivaPå</option>
+                  <option value="Scrive">Scrive</option>
+                </select>
+            </td>
+          </tr>
+         <tr>
+            <td>Header:</td>
+            <td> <input type="button" class="editer" value="Default"/>
+                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
+           </td>
+          </tr>
+        </table><br/>
+        <input type="submit" value="Add User" />
+      </form>
 	    $adminlistfilter(link=adminlistlink;item="user";items="users")$
       $adminlistpaging()$
       <br/><br/>
@@ -425,7 +461,6 @@ admincompanyusers=
 	  </div>
 	</div>
 </div>
-</form>
 ####
 userusagestats=
    <a href="$adminlink$">Go back to main admin page</a>
