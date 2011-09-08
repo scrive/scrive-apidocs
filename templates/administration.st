@@ -342,6 +342,7 @@ admincompany=
 	</div>
 	<ul class="tabs">
 	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
 	<div class="tab-container">
@@ -390,6 +391,42 @@ admincompany=
       </div>
     </form>
 ####
+admincompanyusers=
+<a href="$adminlink$">Go back to main admin page</a>
+<a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+<br/>
+<br/>
+<form action="" method="POST">
+<div id="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	</ul>
+	<div class="tab-container">
+	  <div class="tab-content account">
+	    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+      $adminlistpaging()$
+      <br/><br/>
+      <table>
+        <thead>
+          <td style="width:200px">Username</td>
+          <td style="width:200px">Email</td>
+          <td style="width:200px">Role</td>
+        </thead>
+        $users:{user|<tr>
+          <td><a href="$adminuserslink$/$user.id$">$user.fullname$</a> </td>
+          <td><a href="$adminuserslink$/$user.id$">$user.email$</a> </td>
+          <td> $if(user.iscompanyadmin)$ Admin $else$ Standard $endif$ </td>
+        </tr>}$
+      </table>
+	  </div>
+	</div>
+</div>
+</form>
+####
 userusagestats=
    <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
@@ -436,6 +473,7 @@ companyusagestats=
 	</div>
 	<ul class="tabs">
 	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
       <div class="tab-container">
