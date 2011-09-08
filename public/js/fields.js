@@ -148,7 +148,7 @@ window.FieldStandardView = Backbone.View.extend({
                                  cssClass :'fieldvalue',       
                                  onChange : function(value) {
                                     field.setValue(value);    
-                                    SessionStorage.set(signatory.document().documentid(),field.name(),value) 
+                                    SessionStorage.set(signatory.document().documentid(),field.name(),value);
                                   }
                             }).input();
             this.redborderhere = input;                            

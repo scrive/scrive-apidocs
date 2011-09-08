@@ -18,6 +18,6 @@ window.SessionStorage = {
             return window.sessionStorage.getItem(namespace + " " + field);
         
     }
-}
+};
 
 })(window); 
