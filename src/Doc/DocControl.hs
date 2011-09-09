@@ -1259,7 +1259,10 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
   validmethods <- getAndConcat "validationmethod"
 
-  let docallowedidtypes = mapJust (idmethodFromString . BS.toString) validmethods
+  let docallowedidtypes =
+        case mapJust (idmethodFromString . BS.toString) validmethods of
+          [] -> [EmailIdentification]
+          ims -> ims
 
   placements <- makePlacements placedsigids
                                 placedfieldids
