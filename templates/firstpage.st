@@ -64,7 +64,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="rightMain">
-                                        <a href="#" class="login-button"><p>$_login()$</p></a>
+                                        $if(logged)$
+                                        <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
+                                        $else$
+                                        <a href="#" class="enter-button login-button"><p>$_login()$</p></a>
+                                        $endif$
                                         <div class="campaign-container">
                                                 <div class="campaign-play campaign-play-video"></div>
                                                 <div class="campaign-text campaign-play-video">

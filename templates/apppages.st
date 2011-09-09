@@ -330,7 +330,7 @@ header=
      <a href="$linklogout$" class="document-button">$_headerLogOut()$</a>
      <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
      <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
-     <a href="$linkmain$" class="document-button">$_headerSend()$</a>
+     <a href="$linkupload$" class="document-button">$_headerSend()$</a>
 
                                 $else$
                                 <a href="#" class="login-button"><p>$_login()$</p></a>

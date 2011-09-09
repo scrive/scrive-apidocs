@@ -40,6 +40,7 @@ import Data.Either (lefts, rights)
 import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
@@ -200,7 +201,7 @@ handleSignPostBankID docid signid magic = do
                         Left message -> do
                             Log.eleg $ "SignDocument failed: " ++ message
                             addFlash (OperationFailed, message)
-                            return LinkMain -- where should we go?
+                            getHomeOrUploadLink -- where should we go?
                         Right document2 -> do
                             postDocumentChangeAction document2 document (Just signid)
                             handleAfterSigning document2 signid
@@ -309,7 +310,7 @@ handleIssuePostBankID docid = withUserPost $ do
         Left msg -> do
             Log.eleg $ "updateDocument failed: " ++ msg
             addFlash (OperationFailed, "Could not save document.")
-            return LinkMain
+            getHomeOrUploadLink
         Right udoc -> do
             guard (udoc `allowsIdentification` ELegitimationIdentification)
             providerCode <- providerStringToNumber provider

@@ -228,4 +228,4 @@ addAllDocsToStats = onlySuperUser $ do
   _ <- mapM addDocumentSendStatEvents docs
   _ <- mapM addDocumentCloseStatEvents docs
   addFlash (OperationDone, "Added all docs to stats")
-  return LinkMain
+  return LinkUpload
