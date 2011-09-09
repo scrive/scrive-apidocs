@@ -85,6 +85,7 @@ data KontraLink
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
+    | LinkCompanyUserAdmin CompanyID
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
@@ -184,6 +185,7 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
     showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
+    showsPrec _ (LinkCompanyUserAdmin companyid) = (++) $ "/adminonly/companyadmin/users/" ++ show companyid
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash

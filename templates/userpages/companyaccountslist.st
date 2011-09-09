@@ -2,6 +2,7 @@
 viewCompanyAccounts =
 <script>
   var companyAccountsTable = KontraList.init({
+  name : "CompanyAccountsTable",
   schema: new Schema({
   url: "/companyaccounts",
   sorting: new Sorting({ fields: ["firstname",

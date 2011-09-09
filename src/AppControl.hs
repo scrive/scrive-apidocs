@@ -260,6 +260,8 @@ handleRoutes ctxregion ctxlang = msum [
      , dir "adminonly" $ dir "useradmin" $ hPost1 $ toK1 $ Administration.handleUserChange
      , dir "adminonly" $ dir "companyadmin" $ hGet1 $ toK1 $ Administration.showAdminCompanies . Just
      , dir "adminonly" $ dir "companyadmin" $ hGet0 $ toK0 $ Administration.showAdminCompanies Nothing
+     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet1 $ toK1 $ Administration.showAdminCompanyUsers
+     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost1 $ toK1 $ Administration.handleCreateCompanyUser
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost1 $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
@@ -524,10 +526,7 @@ appHandler appConf appGlobals = do
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
   rq <- askRq
-  --liftIO $ do
-  --    bi <- readInputsBody rq
-  --    putStrLn $ show rq
-  --    putStrLn $ "INPUTS BODY: " ++ show bi
+
   session <- handleSession
   ctx <- createContext rq session
   response <- handle rq session ctx

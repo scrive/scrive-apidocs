@@ -15,6 +15,7 @@ $loadingdialog()$
 
 <script>
 var documentsTable = KontraList.init({
+    name : "OrdersTable",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Order" },
