@@ -1630,6 +1630,7 @@
 "_listyou","du",,"you"
 "_loadingFile","Laddar upp . . .",,"Uploading . . ."
 "_loadingTweets","Laddar tweets..",,"Loading tweets.."
+"_enter","Enter",,"Enter"
 "_login","Logga in",,"Log in"
 "_loginModalForgotPasswordSendNewPassword","Skicka nytt lösenord",,"Send new password"
 "_mailAccountBySigningContractReminderContentBody","Du har inte bekräftat att du vill spara ditt dokument ""$documenttitle$""

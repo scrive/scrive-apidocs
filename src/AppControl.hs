@@ -49,6 +49,7 @@ import qualified TrustWeaver as TW
 import qualified User.UserControl as UserControl
 import Util.FlashUtil
 import Util.HasSomeUserInfo
+import Util.KontraLinkUtils
 
 import Control.Concurrent
 import Control.Monad.Error
@@ -111,8 +112,6 @@ handleRoutes ctxregion ctxlang = msum [
        regionDir ctxregion $ langDir ctxlang $ hGetAllowHttp0 $ handleHomepage
      , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome ctxregion ctxlang
 
-     , dir "upload" $ hGetAllowHttp0 $ handleUploadpage
-
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
      , dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan ctxregion ctxlang
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
@@ -164,6 +163,7 @@ handleRoutes ctxregion ctxlang = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
+     , dir "upload" $ hGetAllowHttp0 $ handleUploadPage
      , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
      , dir "a" $ param "share"     $ hPost0 $ toK0 $ DocControl.handleAttachmentShare
@@ -319,8 +319,8 @@ handleRoutes ctxregion ctxlang = msum [
 
      -- account stuff
      , dir "logout"      $ hGet0  $ toK0 $ handleLogout
-     , dir "login"       $ hGet0  $ toK0 $ handleLoginGet
-     , dir "login"       $ hPostNoXToken0 $ toK0 $ handleLoginPost
+     , regionDir ctxregion $ langDir ctxlang $ dir "login" $ hGet0  $ toK0 $ handleLoginGet
+     , regionDir ctxregion $ langDir ctxlang $ dir "login" $ hPostNoXToken0 $ toK0 $ handleLoginPost
      --, dir "signup"      $ hGet0  $ signupPageGet
      , dir "signup"      $ hPostAllowHttp0 $ toK0 $ signupPagePost
      --, dir "vip"         $ hGet0  $ signupVipPageGet
@@ -393,36 +393,23 @@ dirByLang :: (ServerMonad m, MonadPlus m) => Lang -> String -> String -> m a -> 
 dirByLang LANG_SE swedishdir _englishdir = dir swedishdir
 dirByLang LANG_EN _swedishdir englishdir = dir englishdir
 
-{- |
-   Goes to the front page, or to the main document upload page,
-   depending on whether there is a logged in user.
--}
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
+  ctx@Context{ ctxmaybeuser } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
-  case (ctxmaybeuser, ctxservice) of
-    (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
-    (Nothing, Nothing) -> do
-      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
-      clearFlashMsgs
-      return $ Left response
-    _ -> Left <$> embeddedErrorPage
+  response <- case ctxmaybeuser of
+                Just _ -> V.simpleResponse =<< firstPage ctx False Nothing Nothing
+                Nothing -> V.simpleResponse =<< firstPage ctx loginOn referer email
+  clearFlashMsgs
+  return $ Left response
 
-handleUploadpage :: Kontra (Either Response (Either KontraLink String))
-handleUploadpage = do
-  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
-  loginOn <- isFieldSet "logging"
-  referer <- getField "referer"
-  email   <- getField "email"
+handleUploadPage :: Kontra (Either Response (Either KontraLink String))
+handleUploadPage = do
+  Context{ ctxmaybeuser,ctxservice } <- getContext
   case (ctxmaybeuser, ctxservice) of
     (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
-    (Nothing, Nothing) -> do
-      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
-      clearFlashMsgs
-      return $ Left response
     _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
@@ -468,7 +455,8 @@ handleError = do
     case (ctxservice ctx) of
          Nothing -> do
             addFlashM V.modalError
-            sendRedirect LinkMain
+            linkmain <- getHomeOrUploadLink
+            sendRedirect linkmain
          Just _ -> embeddedErrorPage
 
 {- |
@@ -684,7 +672,7 @@ forgotPasswordPagePost = do
               link <- newPasswordReminderLink user
               sendResetPasswordMail ctx link user
           addFlashM flashMessageChangePasswordEmailSend
-          return LinkMain
+          return LinkUpload
 
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
@@ -768,7 +756,7 @@ handleLoginGet :: Kontrakcja m => m Response
 handleLoginGet = do
   ctx <- getContext
   case ctxmaybeuser ctx of
-       Just _  -> sendRedirect LinkMain
+       Just _  -> sendRedirect LinkUpload
        Nothing -> do
          referer <- getField "referer"
          email   <- getField "email"
@@ -780,6 +768,7 @@ handleLoginGet = do
 -}
 handleLoginPost :: Kontrakcja m => m KontraLink
 handleLoginPost = do
+    Context{ctxregion, ctxlang} <- getContext
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
     let linkemail = maybe "" BS.toString memail
@@ -795,19 +784,20 @@ handleLoginPost = do
                         return BackToReferer
                 Just _ -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin $ InvalidLoginInfo linkemail
+                        return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
+                    return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
+        _ -> return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
 
 {- |
    Handles the logout, and sends user back to main page.
 -}
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
+    Context{ctxregion, ctxlang} <- getContext
     logUserToContext Nothing
-    sendRedirect LinkMain
+    sendRedirect $ LinkHome ctxregion ctxlang
 
 {- |
    Serves out the static html files.
@@ -826,10 +816,10 @@ serveHTMLFiles =  do
 -}
 onlySuperUserGet :: Kontrakcja m => m Response -> m Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
+    Context{ ctxadminaccounts, ctxmaybeuser, ctxregion, ctxlang } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
-        else sendRedirect $ LinkLogin NotLoggedAsSuperUser
+        else sendRedirect $ LinkLogin ctxregion ctxlang NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.

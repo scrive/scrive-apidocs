@@ -35,6 +35,7 @@ import qualified AppLogger as Log
 import Templates.Templates
 import Templates.LocalTemplates
 import Util.FlashUtil
+import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
@@ -435,10 +436,10 @@ signDocument documentid
   case edoc of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      return $ LinkMain
+      getHomeOrUploadLink
     Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      return $ LinkMain
+      getHomeOrUploadLink
     Left _ -> mzero
     Right (doc, olddoc) -> do
       postDocumentChangeAction doc olddoc (Just signatorylinkid1)
@@ -470,9 +471,11 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
         _ -> return ()
     Just user -> do
      _ <- update $ SaveDocumentForUser documentid user signatorylinkid
+     let userregion = region $ usersettings user
+         userlang = lang $ usersettings user
      if isClosed document
-       then addFlashM $ modalSignedClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
-       else addFlashM $ modalSignedNotClosedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
+       then addFlashM $ modalSignedClosedHasAccount userregion userlang document signatorylink (isJust $ ctxmaybeuser ctx)
+       else addFlashM $ modalSignedNotClosedHasAccount userregion userlang document signatorylink (isJust $ ctxmaybeuser ctx)
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -494,10 +497,10 @@ rejectDocument documentid
   case edocs of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      return $ LinkMain
+      getHomeOrUploadLink
     Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      return $ LinkMain
+      getHomeOrUploadLink
     Left _ -> mzero
     Right (document, olddocument) -> do
       postDocumentChangeAction document olddocument (Just signatorylinkid1)
@@ -674,7 +677,7 @@ handleIssueSign document = do
                         Signable Contract -> return $ LinkContracts
                         Signable Offer    -> return $ LinkOffers                    
                         Signable Order    -> return $ LinkOrders
-                        _                 -> return $ LinkMain
+                        _                 -> return $ LinkUpload
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
@@ -717,7 +720,7 @@ handleIssueSend document = do
                         Signable Contract -> return $ LinkContracts
                         Signable Offer    -> return $ LinkOffers                  
                         Signable Order    -> return $ LinkOrders 
-                        _ -> return $ LinkMain
+                        _ -> return $ LinkUpload
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
@@ -1493,7 +1496,7 @@ handleIssueNewDocument = withUserPost $ do
     mdoc <- makeDocumentFromFile (Signable docprocess) input
     liftIO $ print mdoc
     case mdoc of
-      Nothing -> return LinkMain
+      Nothing -> return LinkUpload
       (Just doc) -> return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewTemplate:: Kontrakcja m => m KontraLink

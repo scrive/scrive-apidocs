@@ -327,9 +327,9 @@ a.new-btn-small.black p {
 	width: 200px;
 }
 
-/* Login Container */
+/* Login Container & Enter Button */
 
-#top-container .login-button {
+#top-container .enter-button {
 	background: url(../img/btn-login.png);
 	color: #b3b3b3;
 	display: block;
@@ -346,7 +346,7 @@ a.new-btn-small.black p {
         z-index: 10;
 }
 
-#top-container .login-button:hover {
+#top-container .enter-button:hover {
 	color: #fff;
 }
 

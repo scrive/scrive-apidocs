@@ -195,7 +195,7 @@ standardPageFields :: TemplatesMonad m => Context -> String -> Bool -> Bool -> B
 standardPageFields ctx title publicpage showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
-    mainLinksFields
+    mainLinksFields (ctxregion ctx) (ctxlang ctx)
     staticLinksFields (ctxregion ctx) (ctxlang ctx)
     contextInfoFields ctx
     publicSafeFlagField ctx loginOn publicpage
@@ -237,22 +237,22 @@ firstPage ctx loginOn referer email =
     renderTemplateFM "firstPage" $ do
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
-        mainLinksFields
+        mainLinksFields (ctxregion ctx) (ctxlang ctx)
         staticLinksFields (ctxregion ctx) (ctxlang ctx)
         loginModal loginOn referer email
 
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields :: MonadIO m =>  Fields m
-mainLinksFields = do
+mainLinksFields :: MonadIO m => Region -> Lang -> Fields m
+mainLinksFields region lang = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show LinkContracts
-    field "linklogin"            $ show (LinkLogin LoginTry)
+    field "linklogin"            $ show (LinkLogin region lang LoginTry)
     field "linklogout"           $ show LinkLogout
-    field "linkmain"             $ show LinkMain
+    field "linkupload"           $ show LinkUpload
     field "linkquestion"         $ show LinkAskQuestion
     field "linksignup"           $ show LinkSignup
 

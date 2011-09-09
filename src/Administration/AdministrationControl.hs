@@ -627,7 +627,7 @@ handleFixForBug510 :: Kontrakcja m => m Response
 handleFixForBug510 = onlySuperUser $ do
   services <- runDBQuery $ GetServices
   mapM_ fixForService $ Nothing : map (Just . serviceid) services
-  sendRedirect LinkMain
+  sendRedirect LinkUpload
   where
     fixForService :: Kontrakcja m => Maybe ServiceID -> m ()
     fixForService service = do
