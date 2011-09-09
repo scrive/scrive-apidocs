@@ -422,10 +422,11 @@ admincompanyusers=
             <td><input type="email" name="email"/></td>
           </tr>
           <tr>
-            <td>Is Admin?:</td>
+            <td>Is Admin?</td>
             <td>
-              <input type="checkbox" name="iscompanyadmin"/></td>
+              <input type="checkbox" name="iscompanyadmin"/>
             </td>
+          </tr>
           <tr>
             <td>Service:</td>
             <td><select name="systemserver">
