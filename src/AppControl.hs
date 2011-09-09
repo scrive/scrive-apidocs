@@ -268,6 +268,7 @@ handleRoutes ctxregion ctxlang = msum [
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
        
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet0 $ toK0 $ Stats.addAllDocsToStats
+     , dir "adminonly" $ dir "stats1to2" $ hGet0 $ toK0 $ Stats.handleMigrate1To2
 
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup

@@ -1660,3 +1660,7 @@ safeReady(function () {
         return false;
     });
 });
+
+safeReady(function() {
+    $(".dateinput").datepicker();
+});

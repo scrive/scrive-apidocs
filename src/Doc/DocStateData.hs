@@ -42,6 +42,7 @@ module Doc.DocStateData
     , getValueOfType
     , documentHistoryToDocumentLog
     , emptyDocumentUI
+    , doctypeFromString
     ) where
 
 import API.Service.Model
@@ -469,6 +470,18 @@ data DocumentProcess = Contract | Offer | Order
 
 data DocumentType = Signable DocumentProcess | Template DocumentProcess | Attachment | AttachmentTemplate
     deriving (Eq, Ord, Typeable)
+             
+-- | Terrible, I know. Better idea?
+doctypeFromString :: String -> DocumentType
+doctypeFromString "Signable Contract"  = Signable Contract
+doctypeFromString "Signable Offer"     = Signable Offer
+doctypeFromString "Signable Order"     = Signable Order
+doctypeFromString "Template Contract"  = Template Contract
+doctypeFromString "Template Offer"     = Template Offer
+doctypeFromString "Template Order"     = Template Order
+doctypeFromString "Attachment"         = Attachment
+doctypeFromString "AttachmentTemplate" = AttachmentTemplate
+doctypeFromString _                    = error "Bad document type"
 
 {- |
     This is no longer used because there's no quarantine anymore, it's been replaced
