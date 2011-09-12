@@ -202,12 +202,12 @@ handlePostUserSecurity = do
         _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
+      mregion <- readField "region"
       mlang <- readField "lang"
-      case (mlang) of
-          Just lang -> do
-              _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
-              return ()
-          Nothing -> return ()
+      _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+             region = fromMaybe (region $ usersettings user) mregion
+           , lang = fromMaybe (lang $ usersettings user) mlang
+           }
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
