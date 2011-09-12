@@ -1499,7 +1499,9 @@ handleIssueNewDocument = withUserPost $ do
     liftIO $ print mdoc
     case mdoc of
       Nothing -> return LinkUpload
-      (Just doc) -> return $ LinkIssueDoc $ documentid doc
+      Just doc -> do
+        _ <- addDocumentCreateStatEvents doc
+        return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewTemplate:: Kontrakcja m => m KontraLink
 handleCreateNewTemplate = withUserPost $ do
@@ -1507,12 +1509,17 @@ handleCreateNewTemplate = withUserPost $ do
   mdoc <- makeDocumentFromFile (Template Contract) input
   case mdoc of
     Nothing -> return $ LinkTemplates
-    (Just doc) -> return $ LinkIssueDoc $ documentid doc
+    Just doc -> do
+      _ <- addDocumentCreateStatEvents doc
+      return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewAttachment:: Kontrakcja m => m KontraLink
 handleCreateNewAttachment = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
-  _ <- makeDocumentFromFile Attachment input
+  mdoc <- makeDocumentFromFile Attachment input
+  when (isJust mdoc) $ do
+    _<- addDocumentCreateStatEvents $ fromJust mdoc
+    return ()
   return LinkAttachments
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
@@ -1837,8 +1844,9 @@ handleCreateFromTemplate = withUserPost $ do
                     else mzero
       case enewdoc of
         Right newdoc -> do
-            Log.debug $ show "Document created from template"                               
-            return $ LinkIssueDoc $ documentid newdoc
+          _ <- addDocumentCreateStatEvents newdoc  
+          Log.debug $ show "Document created from template"                               
+          return $ LinkIssueDoc $ documentid newdoc
         Left _ -> mzero
     Nothing -> mzero
 

@@ -206,19 +206,20 @@ bitfieldDeriveConvertible t = do
 
 -- | Derives Convertible instances from/to SqlValue for types that will
 -- be stored in DB as JSON (Data/Typeable instances are required)
-jsonableDeriveConvertible :: Name -> Q [Dec]
-jsonableDeriveConvertible t = do
+jsonableDeriveConvertible :: TypeQ -> Q [Dec]
+jsonableDeriveConvertible tq = do
+  t <- tq
   f <- rename `liftM` runQ [d|
     f v = Right . SqlString $ encodeJSON v
     |]
   g <- rename `liftM` runQ [d|
     f v = case safeConvert v :: ConvertResult String of
-      Right s -> safeDecodeJSON $(stringE $ show t) s
+      Right s -> safeDecodeJSON $(stringE $ pprint t) s
       Left e -> Left e
     |]
   return [
-      InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT t)) (ConT ''SqlValue)) f
-    , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) (ConT t)) g
+      InstanceD [] (AppT (AppT (ConT ''Convertible) t) (ConT ''SqlValue)) f
+    , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) t) g
     ]
   where
     rename = \[FunD _ c] -> [FunD 'safeConvert c]
