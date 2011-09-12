@@ -171,19 +171,19 @@ maxLengthOnFields _ document =
   let maxlength = 512 :: Int
       lengths :: [Int] 
       lengths = concatMap (map (BS.length . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
-      maxLength = maximum (0 : lengths) in
-  assertInvariant ("some fields were too long: " ++ show maxLength ++ ". max is " ++ show maxlength) $ maxLength <= maxLength
-    -- all (all (assertMaxLength . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      m = maximum (0 : lengths) in
+  assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
     
 {- |
    max number of placements per field
  -}
 maxNumberOfPlacements :: MinutesTime -> Document -> Maybe String
 maxNumberOfPlacements _ document =
-  let maxlength = 25
-      assertMaxLength fs = length fs <= maxlength in
-  assertInvariant ("document had too many placements. max is " ++ show maxlength ++ " (25 * number of fields)") $
-    all (all (assertMaxLength . sfPlacements) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+  let maxlength = 25 :: Int
+      lengths :: [Int] 
+      lengths = concatMap (map (length . sfPlacements) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      m = maximum (0 : lengths) in
+  assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
     
 {- |
    AwaitingAuthor implies Author has not signed
@@ -215,10 +215,11 @@ notSignatoryNotSigned _ document =
  -}
 maxCustomFields :: MinutesTime -> Document -> Maybe String
 maxCustomFields _ document =
-  let maxfields = 250
-      assertMaximum fs = length fs <= maxfields in
-  assertInvariant ("there are signatories with too many custom fields. maximum is " ++ show maxfields) $
-    all (assertMaximum . filter isFieldCustom . signatoryfields . signatorydetails) (documentsignatorylinks document)
+  let maxfields = 250 :: Int
+      fields = map (length . filter isFieldCustom . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      m = maximum (0 : fields) in
+  assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
+    m <= maxfields
 
 {- |
     Author is unable to sign processes which are author send only.
