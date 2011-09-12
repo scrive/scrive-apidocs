@@ -35,6 +35,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
+import Util.KontraLinkUtils
 import Util.MonadUtils
 
 
@@ -64,7 +65,7 @@ handleUserGet = do
          Just user -> do
            mcompany <- getCompanyForUser user
            showUser user mcompany >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
@@ -82,7 +83,7 @@ handleUserPost = do
                _ -> return ()
              addFlashM flashMessageUserDetailsSaved
              return LinkAccount
-         Nothing -> return $ LinkLogin NotLogged
+         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -176,7 +177,7 @@ handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
@@ -208,7 +209,7 @@ handlePostUserSecurity = do
               return ()
           Nothing -> return ()
       return LinkAccountSecurity
-    Nothing -> return $ LinkLogin NotLogged
+    Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
@@ -277,7 +278,7 @@ handlePostSharing = do
                       return $ LinkSharing emptyListParams
                   (_,True) -> return $ LinkSharing emptyListParams
                   _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin NotLogged
+         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
@@ -304,7 +305,7 @@ handlePostCompanyAccounts = do
                       handleTakeOverUserForCompany (fromJust memail)
                       return $ LinkCompanyAccounts emptyListParams
                   _ -> LinkCompanyAccounts <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin NotLogged
+         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
 handleDeleteCompanyUser user = do
@@ -519,7 +520,7 @@ withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
-         Nothing -> return $ LinkLogin NotLogged
+         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -530,7 +531,7 @@ withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin NotLogged
+    Nothing -> return $ Left $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 {- |
    Runs an action only if currently logged in user is a company admin
@@ -565,7 +566,7 @@ checkUserTOSGet action = do
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> case (ctxcompany ctx) of
              Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin NotLogged
+             Nothing -> return $ Left $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
 
 
@@ -581,7 +582,7 @@ handleAcceptTOSPost = withUserPost $ do
     Just True -> do
       _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
       addFlashM flashMessageUserDetailsSaved
-      return LinkMain
+      return LinkUpload
     Just False -> do
       addFlashM flashMessageMustAcceptTOS
       return LinkAcceptTOS
@@ -667,7 +668,7 @@ handleAccountSetupGet aid hash = do
                                   activationPage (Just user) mcompany
                                 else do
                                   addFlashM flashMessageUserAlreadyActivated
-                                  sendRedirect LinkMain)
+                                  sendRedirect LinkUpload)
                          else mzero
                   _  -> mzero
          Nothing -> do
@@ -685,7 +686,8 @@ handleAccountSetupGet aid hash = do
       activationPage muser mcompany = do
         extendActionEvalTimeToOneDayMinimum aid
         addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        sendRedirect LinkMain
+        linkmain <- getHomeOrUploadLink
+        sendRedirect linkmain
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
@@ -721,7 +723,7 @@ handleAccountSetupPost aid hash = do
          then do
            _ <- (getUserForViralInvite email invtime inviterid)
                  >>= maybe mzero (handleActivate aid hash ViralInvitation)
-           return LinkMain
+           getHomeOrUploadLink
          else mzero
     Just (AccountCreatedBySigning _ uid _ token) ->
       if token == hash
@@ -729,7 +731,7 @@ handleAccountSetupPost aid hash = do
           _ <- (runDBQuery $ GetUserByID uid)
                   >>= maybe mzero (handleActivate aid hash BySigning)
           addFlashM modalWelcomeToSkrivaPa
-          return LinkMain
+          getHomeOrUploadLink
         else mzero
     Just (AccountCreated uid token) ->
       if token == hash
@@ -737,10 +739,10 @@ handleAccountSetupPost aid hash = do
           if isNothing $ userhasacceptedtermsofservice user
             then do
               _ <- handleActivate aid hash AccountRequest user
-              return LinkMain
+              getHomeOrUploadLink
             else do
               addFlashM flashMessageUserAlreadyActivated
-              return LinkMain)
+              getHomeOrUploadLink)
         else mzero
     Just _ -> mzero
     Nothing -> do -- try to generate another activation link
@@ -753,7 +755,7 @@ handleAccountSetupPost aid hash = do
               mail <- newUserMail (ctxhostpart ctx) email email al False
               scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
               addFlashM flashMessageNewActivationLinkSend
-              return LinkMain
+              getHomeOrUploadLink
             else mzero))
   where
     getUserForViralInvite :: Kontrakcja m => Email -> MinutesTime -> UserID -> m (Maybe User)
@@ -921,10 +923,11 @@ handlePasswordReminderGet aid hash = do
          Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
              addFlashM $ modalNewPasswordView aid hash
-             sendRedirect LinkMain
+             sendRedirect LinkUpload
          Nothing -> do
              addFlashM flashMessagePasswordChangeLinkNotValid
-             sendRedirect LinkMain
+             linkmain <- getHomeOrUploadLink
+             sendRedirect linkmain
 
 handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePasswordReminderPost aid hash = do
@@ -933,7 +936,7 @@ handlePasswordReminderPost aid hash = do
          Just user -> handleChangePassword user
          Nothing   -> do
              addFlashM flashMessagePasswordChangeLinkNotValid
-             return LinkMain
+             getHomeOrUploadLink
     where
         handleChangePassword user = do
             mpassword <- getRequiredField asValidPassword "password"
@@ -947,14 +950,14 @@ handlePasswordReminderPost aid hash = do
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
                               addFlashM flashMessageUserPasswordChanged
                               logUserToContext $ Just user
-                              return LinkMain
+                              return LinkUpload
                           Left flash -> do
                               addFlashM flash
                               addFlashM $ modalNewPasswordView aid hash
-                              return LinkMain
+                              getHomeOrUploadLink
                  _ -> do
                    addFlashM $ modalNewPasswordView aid hash
-                   return LinkMain
+                   getHomeOrUploadLink
 
 handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountRemovalGet aid hash = do
@@ -976,7 +979,7 @@ handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLin
 handleAccountRemovalPost aid hash = do
   doc <- handleAccountRemoval' aid hash
   addFlashM $ modalAccountRemoved $ documenttitle doc
-  return LinkMain
+  getHomeOrUploadLink
 
 {- |
     Helper function for performing account removal (these are accounts setup

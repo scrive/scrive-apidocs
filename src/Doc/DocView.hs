@@ -135,17 +135,17 @@ modalRejectedView document = do
 modalLoginForSaveView :: TemplatesMonad m => m FlashMessage
 modalLoginForSaveView = toModal <$> renderTemplateM "modalLoginForSaveView" ()
 
-modalSignedClosedHasAccount :: TemplatesMonad m => Document -> SignatoryLink -> Bool -> m FlashMessage
-modalSignedClosedHasAccount document signatorylink isloggedin = do
+modalSignedClosedHasAccount :: TemplatesMonad m => Region -> Lang -> Document -> SignatoryLink -> Bool -> m FlashMessage
+modalSignedClosedHasAccount region lang document signatorylink isloggedin = do
   toModal <$> (renderTemplateForProcess document processmodalsignedviewclosedhasaccount $ do
     modalSignedFields document
-    loginFields document signatorylink isloggedin)
+    loginFields region lang document signatorylink isloggedin)
 
-modalSignedNotClosedHasAccount :: TemplatesMonad m => Document -> SignatoryLink -> Bool -> m FlashMessage
-modalSignedNotClosedHasAccount document signatorylink isloggedin = do
+modalSignedNotClosedHasAccount :: TemplatesMonad m => Region -> Lang -> Document -> SignatoryLink -> Bool -> m FlashMessage
+modalSignedNotClosedHasAccount region lang document signatorylink isloggedin = do
   toModal <$> (renderTemplateForProcess document processmodalsignedviewnotclosedhasaccount $ do
     modalSignedFields document
-    loginFields document signatorylink isloggedin)
+    loginFields region lang document signatorylink isloggedin)
 
 modalSignedClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> ActionID -> MagicHash -> m FlashMessage
 modalSignedClosedNoAccount document signatorylink actionid magichash = do
@@ -166,12 +166,12 @@ modalSignedFields document@Document{ documenttitle } = do
   field "signatory" . listToMaybe $ map (BS.toString . getEmail ) $ partyList document
   field "documenttitle" $ BS.toString documenttitle
 
-loginFields :: MonadIO m => Document -> SignatoryLink -> Bool -> Fields m
-loginFields document signatorylink isloggedin = do
+loginFields :: MonadIO m => Region -> Lang -> Document -> SignatoryLink -> Bool -> Fields m
+loginFields region lang document signatorylink isloggedin = do
     field "isloggedin" isloggedin
     field "referer" $ show (LinkSignDoc document signatorylink)
     field "email" $ getEmail signatorylink
-    field "linklogin" $ show (LinkLogin LoginTry)
+    field "linklogin" $ show (LinkLogin region lang LoginTry)
 
 accountFromSignFields :: MonadIO m => Document -> SignatoryLink -> ActionID -> MagicHash -> Fields m
 accountFromSignFields document signatorylink actionid magichash = do

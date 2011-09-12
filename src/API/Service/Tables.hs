@@ -11,7 +11,20 @@ tableServices = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-         [("id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("admin_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("location", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("email_from_address", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("button1", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("button2", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("buttons_text_color", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("overlay_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})] -> return TVRvalid
+         [  ("id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+          , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+          , ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+          , ("admin_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+          , ("location", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+          , ("email_from_address", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+          , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+          , ("button1", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+          , ("button2", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+          , ("buttons_text_color", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+          , ("background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("overlay_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+          , ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+          , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+          ] -> return TVRvalid
          [] -> do
            runRaw conn $ "CREATE TABLE services ("
              ++ "  id TEXT NOT NULL"

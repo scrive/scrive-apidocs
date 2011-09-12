@@ -20,9 +20,11 @@ import Company.Tables
 import User.Migrations
 import User.Tables
 import Stats.Tables
+import Stats.Migrations
 
 migrationsList :: [Migration]
-migrationsList = [addRegionToUserSettings]
+migrationsList = [addRegionToUserSettings
+                 ,addServiceAndCompanyToStats]
 
 tablesList :: [Table]
 tablesList = [
@@ -34,7 +36,6 @@ tablesList = [
   , tableServices
   , tableCompanies
   , tableDocStatEvents
-  , tableDocStatCompanyEvents  
   ]
 
 checkDBConsistency :: DB ()

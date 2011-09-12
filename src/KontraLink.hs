@@ -51,17 +51,17 @@ data KontraLink
     | LinkAbout Region Lang
     | LinkPartners Region Lang
     | LinkClients Region Lang
-    | LinkLogin LoginRedirectReason
+    | LinkLogin Region Lang LoginRedirectReason
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
+    | LinkUpload
     | LinkContracts
     | LinkTemplates
     | LinkOffers
     | LinkOrders
     | LinkAttachments 
     | LinkRubbishBin
-    | LinkMain
     | LinkNew (Maybe DocumentProcess) Bool
     | LinkAccount
     | LinkAccountSecurity
@@ -85,6 +85,7 @@ data KontraLink
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
+    | LinkCompanyUserAdmin CompanyID
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
@@ -133,19 +134,19 @@ instance Show KontraLink where
     showsPrec _ (LinkPartners region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/partners"
     showsPrec _ (LinkClients region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/kunder"
     showsPrec _ (LinkClients region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/clients"
-    showsPrec _ (LinkLogin LoginTry) = (++) "/login"
-    showsPrec _ (LinkLogin (InvalidLoginInfo email)) = (++) $ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
-    showsPrec _ (LinkLogin _) = (++) "/?logging"
+    showsPrec _ (LinkLogin region lang LoginTry) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang ++ "/login"
+    showsPrec _ (LinkLogin region lang (InvalidLoginInfo email)) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
+    showsPrec _ (LinkLogin region lang _) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang ++ "/?logging"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
+    showsPrec _ LinkUpload = (++) "/upload"
     showsPrec _ (LinkContracts) = (++) $ "/d"
     showsPrec _ (LinkTemplates) = (++) $ "/t" 
     showsPrec _ (LinkOffers) = (++) $ "/o" 
     showsPrec _ (LinkOrders) = (++) $ "/or" 
     showsPrec _ (LinkAttachments) = (++) $ "/a" 
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
-    showsPrec _ LinkMain = (++) "/"
     showsPrec _ (LinkNew mdocprocess templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess)
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
@@ -184,6 +185,7 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
     showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
+    showsPrec _ (LinkCompanyUserAdmin companyid) = (++) $ "/adminonly/companyadmin/users/" ++ show companyid
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash

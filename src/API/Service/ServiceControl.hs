@@ -37,6 +37,7 @@ import DB.Classes
 import DB.Types
 import User.Model
 import Util.FlashUtil
+import Util.KontraLinkUtils
 import Util.MonadUtils
 
 handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
@@ -117,7 +118,7 @@ handleChangeServicePasswordAdminOnly sid passwordString = do
        pwd <- liftIO $ createPassword password
        _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
        addFlash (OperationDone, "Password changed")
-       return LinkMain
+       getHomeOrUploadLink
      _ -> mzero
 
 handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
@@ -151,7 +152,9 @@ handleShowService sid = do
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
             || isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)))
        then Right <$> serviceAdminPage conn (isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
-       else return $ Left LinkMain
+       else do
+              linkmain <- getHomeOrUploadLink
+              return $ Left linkmain
 
 handleShowServiceList :: Kontrakcja m => m String
 handleShowServiceList = do
