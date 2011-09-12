@@ -56,6 +56,14 @@ adminsmain=
           <td style="height:50px;width:200px"><!--<a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> --> </td>
         </tr>
     </tbody></table>
+    <br/>
+    <br/>
+    <strong> Log Files </strong>
+    <ul>
+      <li><a href="/adminonly/log/debug.log">debug.log</a></li>
+      <li><a href="/adminonly/log/mail.log">mail.log</a></li>
+      <li><a href="/adminonly/log/error.log">error.log</a></li>
+    </ul>
 ###
 adminsmanageall =
     $backtoadminmainlink()$
