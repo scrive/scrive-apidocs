@@ -350,6 +350,23 @@ a.new-btn-small.black p {
 	color: #fff;
 }
 
+.regionAndLangSwitcher {
+  float: right;
+  display: inline-block;
+  width: 76px;
+  position: relative;
+  top: 20px;
+}
+
+#top-container .regionAndLangSwitcher {
+  top: 35px;
+  right: 135px;
+}
+
+.regionAndLangSwitcher div {
+  display: inline-block;
+}
+
 .login-container .body, .recovery-container .body {
     margin:auto;
     min-height: 122px;

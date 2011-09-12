@@ -334,11 +334,20 @@ header=
      <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
      <a href="$linkupload$" class="document-button">$_headerSend()$</a>
 
-                                $else$
+                                $else$l in
                                 <a href="#" class="login-button"><p>$_login()$</p></a>
+                                $regionAndLangSwitcher()$
                                 $endif$
                             </div>
                            
             <div class="clearboth"></div>
           </div>
+####
+regionAndLangSwitcher=
+  $if(!logged)$
+  <div class="regionAndLangSwitcher">
+    <div><a href="$linksesv$" class="icon flag swedish $if(langsv)$active$endif$"></a></div>
+    <div><a href="$linkgben$" class="icon flag british $if(langen)$active$endif$"></a></div>
+  </div>
+  $endif$
 ####

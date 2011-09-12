@@ -221,6 +221,27 @@
     height: 16px;
     width: 16px;
 }
+
+.icon.flag {
+    display: inline-block;
+    height: 11px;
+    width: 16px;
+}
+
+.icon.flag.active {
+    border-color: white;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.icon.flag.british {
+    background: url(../img/british-flag.png) 0 0 no-repeat;
+}
+
+.icon.flag.swedish {
+    background: url(../img/swedish-flag.png) 0 0 no-repeat;
+}
+
 /* Lightbox Icons */
 
 .modal-icon {
