@@ -81,7 +81,7 @@ documentHasOneAuthor _ document =
 oldishDocumentHasFiles :: MinutesTime -> Document -> Maybe String
 oldishDocumentHasFiles now document =
   assertInvariant "document must have files if older than one hour" $
-    olderThan now document 60 =>> (length (documentfiles document) > 0)
+    olderThan now document 60 =>> (length (documentfiles document ++ documentsealedfiles document) > 0)
 
 {- |
    We don't expect to find any deleted documents in Pending or AwaitingAuthor
