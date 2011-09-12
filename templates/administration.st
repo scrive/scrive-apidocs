@@ -306,6 +306,24 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
+    <tr> <td>Service:</td>
+      <td><select name="usersystemserver">
+        <option $if(user.serviceskrivapa)$selected=""$endif$ value="SkrivaPa">SkrivaPå</option>
+        <option $if(user.servicescrive)$selected=""$endif$ value="Scrive">Scrive</option>
+      </select></td>
+    </tr>
+    <tr> <td>Region:</td>
+      <td><select name="userregion">
+        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden</option>
+        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain</option>
+      </select></td>
+    </tr>
+    <tr> <td>Language:</td>
+      <td><select name="userlang">
+        <option $if(user.langsv)$selected=""$endif$ value="LANG_SE">Swedish</option>
+        <option $if(user.langen)$selected=""$endif$ value="LANG_EN">English</option>
+      </select></td>
+    </tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>

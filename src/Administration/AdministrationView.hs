@@ -268,6 +268,12 @@ userFields u =  do
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u
+        field "serviceskrivapa" $ SkrivaPa == (systemserver $ usersettings u)
+        field "servicescrive" $ Scrive == (systemserver $ usersettings u)
+        field "regionse" $ REGION_SE == (region $ usersettings u)
+        field "regiongb" $ REGION_GB == (region $ usersettings u)
+        field "langsv" $ LANG_SE == (lang $ usersettings u)
+        field "langen" $ LANG_EN == (lang $ usersettings u)
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin" $ useriscompanyadmin u
 {-
