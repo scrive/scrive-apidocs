@@ -362,8 +362,13 @@ getLocalization muser = do
   rq <- askRq
   hostpart <- getHostpart
   mcurrentlocalecookie <- optional (readCookieValue "locale")
+  -- try and get the locale from the current doc by checking the path for document ids, and giving them a go
+  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+  mdoclocales <- mapM (DocControl.getDocumentLocalisation . DocumentID) docids
+  let mdoclocale = listToMaybe $ catMaybes mdoclocales
   let systemServer = systemServerFromURL hostpart
-      newregion = firstOf [ region <$> usersettings <$> muser
+      newregion = firstOf [ mdoclocale
+                          , region <$> usersettings <$> muser
                           , (listToMaybe $ rqPaths rq) >>= regionFromCode
                           , fmap fst mcurrentlocalecookie
                           , Just $ defaultRegion systemServer
@@ -371,6 +376,10 @@ getLocalization muser = do
       newlang = firstOf [ lang <$> usersettings <$> muser
                         , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
                         , fmap snd mcurrentlocalecookie
+                        , case mdoclocale of -- TODO EM put a lang on the doc and use it here
+                            Just REGION_SE -> Just LANG_SE
+                            Just REGION_GB -> Just LANG_EN
+                            _ -> Nothing
                         , Just $ defaultLang systemServer
                         ]
   let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))

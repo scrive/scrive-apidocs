@@ -506,6 +506,11 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
+getDocumentLocalisation :: MonadIO m => DocumentID -> m (Maybe Region)
+getDocumentLocalisation documentid = do
+  mdoc <- query $ GetDocumentByDocumentID documentid
+  return $ fmap documentregion mdoc
+
 {- |
    Show the document to be signed
  -}
