@@ -142,7 +142,7 @@ closedWhenAllSigned _ document =
   assertInvariant "all signatories signed but doc is not closed" $
   (any isSignatory (documentsignatorylinks document) && 
    all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)) =>> 
-  (isClosed document || isPreparation document)
+  (isClosed document || isPreparation document || isDocumentError document)
 
   
 {- | If a sig has signed, all his attachments are uploaded
@@ -168,10 +168,12 @@ seenWhenSigned _ document =
  -}
 maxLengthOnFields :: MinutesTime -> Document -> Maybe String
 maxLengthOnFields _ document =
-  let maxlength = 512 
-      assertMaxLength s = BS.length s <= maxlength in
-  assertInvariant ("some fields were too long. max is " ++ show maxlength) $
-    all (all (assertMaxLength . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+  let maxlength = 512 :: Int
+      lengths :: [Int] 
+      lengths = concatMap (map (BS.length . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      maxLength = maximum (0 : lengths) in
+  assertInvariant ("some fields were too long: " ++ show maxLength ++ ". max is " ++ show maxlength) $ maxLength <= maxLength
+    -- all (all (assertMaxLength . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
     
 {- |
    max number of placements per field
