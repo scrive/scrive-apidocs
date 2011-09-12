@@ -3,8 +3,10 @@ module Stats.Control
          showAdminCompanyUsageStats,
          showAdminUserUsageStats,
          addDocumentCloseStatEvents,
+         addDocumentCreateStatEvents,
          addDocumentSendStatEvents,
-         addAllDocsToStats
+         addAllDocsToStats,
+         handleMigrate1To2
        )
        
        where
@@ -30,7 +32,7 @@ import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Data.List
 import Util.HasSomeUserInfo
-
+import API.Service.Model
 
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
@@ -49,10 +51,10 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySuperUser $ do
-  statCompanyEvents <- runDBQuery $ GetDocStatCompanyEventsByCompanyID companyid
+  statCompanyEvents <- runDBQuery $ GetDocStatEventsByCompanyID companyid
   let stats = calculateDocStatsFromCompanyEvents statCompanyEvents
   fullnames <- convertUserIDToFullName [] stats
-  content <- adminCompanyUsageStatsPage $ do
+  content <- adminCompanyUsageStatsPage companyid $ do
     statisticsCompanyFieldsForASingleUser fullnames
   renderFromBody TopEmpty kontrakcja content
 
@@ -95,20 +97,18 @@ sumCStats = foldl1 addCStats
 statEventToDocStatTuple :: DocStatEvent -> Maybe (Int, Int, Int, Int)
 statEventToDocStatTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
   DocStatClose       -> Just (asInt seTime, seAmount, 0, 0)
-  DocStatSignatures  -> Just (asInt seTime, 0, seAmount, 0)
+  DocStatEmailSignatures  -> Just (asInt seTime, 0, seAmount, 0)
+  DocStatElegSignatures   -> Just (asInt seTime, 0, seAmount, 0)
   DocStatSend        -> Just (asInt seTime, 0, 0, seAmount)
-  -- add more here when they exist, probably returning Nothing if they aren't about docs
-  -- one day, this may be needed:
-  -- _                       -> Nothing
+  _                       -> Nothing
 
-statCompanyEventToDocStatTuple :: DocStatCompanyEvent -> Maybe (Int, UserID, Int, Int, Int)
-statCompanyEventToDocStatTuple (DocStatCompanyEvent {secTime, secUserID, secQuantity, secAmount}) = case secQuantity of
-  DocStatClose       -> Just (asInt secTime, secUserID, secAmount, 0, 0)
-  DocStatSignatures  -> Just (asInt secTime, secUserID, 0, secAmount, 0)
-  DocStatSend        -> Just (asInt secTime, secUserID, 0, 0, secAmount)
-  -- add more here when they exist, probably returning Nothing if they aren't about docs
-  -- one day, this may be needed:
-  -- _                       -> Nothing
+statCompanyEventToDocStatTuple :: DocStatEvent -> Maybe (Int, UserID, Int, Int, Int)
+statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAmount}) = case seQuantity of
+  DocStatClose       -> Just (asInt seTime, seUserID, seAmount, 0, 0)
+  DocStatEmailSignatures  -> Just (asInt seTime, seUserID, 0, seAmount, 0)
+  DocStatElegSignatures   -> Just (asInt seTime, seUserID, 0, seAmount, 0)
+  DocStatSend        -> Just (asInt seTime, seUserID, 0, 0, seAmount)
+  _                       -> Nothing
 
 
 -- | Stats are very simple:
@@ -126,7 +126,7 @@ calculateDocStatsFromEvents events =
 -- # of documents Closed that date
 -- # of signatures on documents closed that date
 -- # of documents sent that date
-calculateDocStatsFromCompanyEvents :: [DocStatCompanyEvent] -> [(Int, UserID, Int, Int, Int)]
+calculateDocStatsFromCompanyEvents :: [DocStatEvent] -> [(Int, UserID, Int, Int, Int)]
 calculateDocStatsFromCompanyEvents events =
   let byDay = groupWith (\(a,_,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_,_)->a) (catMaybes $ map statCompanyEventToDocStatTuple events)
       byUser = map (groupWith (\(_,a,_,_,_)->a) . sortWith (\(_,a,_,_,_)->a)) byDay
@@ -153,42 +153,33 @@ addDocumentCloseStatEvents doc = msum [
       let did = documentid doc
           sigs = countSignatures doc
           signtime = getLastSignedTime doc
+          
       when (signtime == fromSeconds 0) $ Log.stats ("weird document: "++show (documentid doc))
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = signtime
                                                         , seQuantity   = DocStatClose
                                                         , seAmount     = 1
                                                         , seDocumentID = did
+                                                        , seCompanyID  = maybecompany sl
+                                                        , seServiceID  = documentservice doc
+                                                        , seDocumentType = documenttype doc
                                                         }
       unless a $ Log.stats $ "Could not save close stat for " ++ show did
+      let q = case documentallowedidtypes doc of
+            [EmailIdentification] -> DocStatEmailSignatures
+            [ELegitimationIdentification] -> DocStatElegSignatures
+            _ -> DocStatEmailSignatures
       b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = signtime
-                                                        , seQuantity   = DocStatSignatures
+                                                        , seQuantity   = q
                                                         , seAmount     = sigs
+                                                        , seCompanyID  = maybecompany sl
+                                                        , seServiceID  = documentservice doc
+                                                        , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         }
       unless b $ Log.stats $ "Could not save signatures stat for " ++ show did
-      com <- case maybecompany sl of
-        Nothing -> return True
-        Just cid -> do
-          c <- runDBUpdate $ AddDocStatCompanyEvent $ DocStatCompanyEvent { secCompanyID = cid
-                                                                          , secUserID     = uid
-                                                                          , secTime       = signtime
-                                                                          , secQuantity   = DocStatClose
-                                                                          , secAmount     = 1
-                                                                          , secDocumentID = did
-                                                                          }
-          unless c $ Log.stats $ "Could not save company close stat for " ++ show did
-          d <- runDBUpdate $ AddDocStatCompanyEvent $ DocStatCompanyEvent { secCompanyID = cid
-                                                                          , secUserID     = uid
-                                                                          , secTime       = signtime
-                                                                          , secQuantity   = DocStatSignatures
-                                                                          , secAmount     = sigs
-                                                                          , secDocumentID = did
-                                                                          }
-          unless d $ Log.stats $ "Could not save company signatures stat for " ++ show did
-          return (c && d)
-      return (a && b && com)
+      return (a && b)
   , return False]
          
 addDocumentSendStatEvents :: Kontrakcja m => Document -> m Bool
@@ -205,27 +196,53 @@ addDocumentSendStatEvents doc = msum [
                                                         , seQuantity   = DocStatSend
                                                         , seAmount     = 1
                                                         , seDocumentID = did
+                                                        , seCompanyID  = maybecompany sl
+                                                        , seServiceID  = documentservice doc
+                                                        , seDocumentType = documenttype doc
                                                         }
       unless a $ Log.stats $ "Could not save send stat for " ++ show did
-      com <- case maybecompany sl of
-        Nothing -> return True
-        Just cid -> do
-          b <- runDBUpdate $ AddDocStatCompanyEvent $ DocStatCompanyEvent { secCompanyID  = cid
-                                                                          , secUserID     = uid
-                                                                          , secTime       = sendtime
-                                                                          , secQuantity   = DocStatSend
-                                                                          , secAmount     = 1
-                                                                          , secDocumentID = did
-                                                                          }
-          unless b $ Log.stats $ "Could not save company send stat for " ++ show did
-          return b
-      return (a && com)
+      return (a)
+  , return False]
+                                
+addDocumentCreateStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentCreateStatEvents doc = msum [
+  do
+    if isNothing $ documentinvitetime doc then return False
+      else do
+      sl  <- guardJust $ getAuthorSigLink doc
+      uid <- guardJust $ maybesignatory sl
+      let did = documentid doc
+          sendtime = getInviteTime doc
+      a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
+                                                        , seTime       = sendtime
+                                                        , seQuantity   = DocStatCreate
+                                                        , seAmount     = 1
+                                                        , seDocumentID = did
+                                                        , seCompanyID  = maybecompany sl
+                                                        , seServiceID  = documentservice doc
+                                                        , seDocumentType = documenttype doc
+                                                        }
+      unless a $ Log.stats $ "Could not save create stat for " ++ show did
+      return (a)
   , return False]
 
 addAllDocsToStats :: Kontrakcja m => m KontraLink
 addAllDocsToStats = onlySuperUser $ do
-  docs <- query $ GetDocuments Nothing
-  _ <- mapM addDocumentSendStatEvents docs
-  _ <- mapM addDocumentCloseStatEvents docs
+  services <- runDBQuery GetServices
+  let allservices = Nothing : map (Just . serviceid) services
+  _ <- forM allservices $ \s -> do
+    docs <- query $ GetDocuments s
+    _ <- mapM addDocumentSendStatEvents docs
+    _ <- mapM addDocumentCloseStatEvents docs
+    _ <- mapM addDocumentCreateStatEvents docs
+    return ()
   addFlash (OperationDone, "Added all docs to stats")
-  return LinkMain
+  return LinkUpload
+
+handleMigrate1To2 :: Kontrakcja m => m KontraLink
+handleMigrate1To2 = onlySuperUser $ do
+  _ <- runDBUpdate FlushStats
+  _ <- addAllDocsToStats
+  addFlash (OperationDone, "Table migrated")
+  return LinkUpload
+

@@ -13,6 +13,7 @@ $loadingdialog()$
 
 <script>
 var documentsTable = KontraList.init({
+    name : "Templatesarchive table",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Template" },

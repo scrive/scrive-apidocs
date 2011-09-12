@@ -314,6 +314,24 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
+    <tr> <td>Service:</td>
+      <td><select name="usersystemserver">
+        <option $if(user.serviceskrivapa)$selected=""$endif$ value="SkrivaPa">SkrivaPå</option>
+        <option $if(user.servicescrive)$selected=""$endif$ value="Scrive">Scrive</option>
+      </select></td>
+    </tr>
+    <tr> <td>Region:</td>
+      <td><select name="userregion">
+        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden</option>
+        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain</option>
+      </select></td>
+    </tr>
+    <tr> <td>Language:</td>
+      <td><select name="userlang">
+        <option $if(user.langsv)$selected=""$endif$ value="LANG_SE">Swedish</option>
+        <option $if(user.langen)$selected=""$endif$ value="LANG_EN">English</option>
+      </select></td>
+    </tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>
@@ -350,6 +368,7 @@ admincompany=
 	</div>
 	<ul class="tabs">
 	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
 	<div class="tab-container">
@@ -398,6 +417,78 @@ admincompany=
       </div>
     </form>
 ####
+admincompanyusers=
+<a href="$adminlink$">Go back to main admin page</a>
+<a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+<br/>
+<br/>
+<div id="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	</ul>
+	<div class="tab-container">
+	  <div class="tab-content account">
+	    <form method="post" action="$admincompanieslink$/users/$companyid$">
+        Create user:<br/>
+        <table style="width:600px">
+          <tr>
+            <td>First name:</td>
+            <td><input type="text" name="fstname"/></td>
+          </tr>
+          <tr>
+            <td>Second name:</td>
+            <td><input type="text" name="sndname"/></td>
+          </tr>
+          <tr>
+            <td>Email address:</td>
+            <td><input type="email" name="email"/></td>
+          </tr>
+          <tr>
+            <td>Is Admin?</td>
+            <td>
+              <input type="checkbox" name="iscompanyadmin"/>
+            </td>
+          </tr>
+          <tr>
+            <td>Service:</td>
+            <td><select name="systemserver">
+                  <option selected="" value="SkrivaPa">SkrivaPå</option>
+                  <option value="Scrive">Scrive</option>
+                </select>
+            </td>
+          </tr>
+         <tr>
+            <td>Header:</td>
+            <td> <input type="button" class="editer" value="Default"/>
+                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
+           </td>
+          </tr>
+        </table><br/>
+        <input type="submit" value="Add User" />
+      </form>
+	    $adminlistfilter(link=adminlistlink;item="user";items="users")$
+      $adminlistpaging()$
+      <br/><br/>
+      <table>
+        <thead>
+          <td style="width:200px">Username</td>
+          <td style="width:200px">Email</td>
+          <td style="width:200px">Role</td>
+        </thead>
+        $users:{user|<tr>
+          <td><a href="$adminuserslink$/$user.id$">$user.fullname$</a> </td>
+          <td><a href="$adminuserslink$/$user.id$">$user.email$</a> </td>
+          <td> $if(user.iscompanyadmin)$ Admin $else$ Standard $endif$ </td>
+        </tr>}$
+      </table>
+	  </div>
+	</div>
+</div>
+####
 userusagestats=
    <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
@@ -414,6 +505,18 @@ userusagestats=
       </ul>
       <div class="tab-container">
 	<div class="tab-content account">
+      <p>Current date range: Always</p>
+      <p>NOTE: The date boxes do not work yet!!</p>
+      <form method="GET">
+        <label for="startdate">Start date</label>
+        <input id="startdate" name="startdate" class="dateinput"
+               type="text"></input>
+        -
+        <label for="enddate">End date</label>
+        <input id="enddate" name="enddate" type="text"
+               class="dateinput"></input>
+        <input type="submit" value="Filter date range"></input>
+      </form>
 	  <table>
             <thead>
               <td style="width:200px">Date</td>
@@ -444,6 +547,7 @@ companyusagestats=
 	</div>
 	<ul class="tabs">
 	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
       <div class="tab-container">

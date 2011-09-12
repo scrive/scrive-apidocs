@@ -180,6 +180,7 @@ pageDocumentDesign=
                     </span>
                     $endif$
                     $if(authorpersonnumber)$
+                    $if(region.haspeopleids)$
                     <span class='dragtext authorpersnum inputWrapper'>
                       <span style="display:none;" class="fieldid">personalnumber</span>
                       <span style="display:none;" class="fieldsigid">author</span>
@@ -188,6 +189,7 @@ pageDocumentDesign=
                       <span class="fieldvalue">$authorpersonnumber$</span>
                       $dragndropIcon()$
                     </span>
+                    $endif$
                     $endif$
                     $if(authorcompanynumber)$
                     <span class='dragtext authorcompnum inputWrapper'>
@@ -235,6 +237,7 @@ pageDocumentDesign=
               $else$
               <div id="signStepsBodyFunctionsBox" style="padding-left:17px;">
                 $if(process.isvalidationchoiceforbasic)$
+                $if(region.iselegavailable)$
                 <div>
                   <div style="padding-bottom:2px;padding-left:1px;">$_signStepsBodyFunctionsBoxChooseVerification()$</div>
                   <select name="validationmethod"
@@ -243,6 +246,7 @@ pageDocumentDesign=
                     <option value="eleg" $if(elegselected)$selected="selected"$endif$>$_eleg()$</option>
                   </select>
                 </div>
+                $endif$
                 $endif$
                 $if(process.isexpiryforbasic)$
                 <div>
@@ -399,10 +403,12 @@ pageDocumentDesign=
                 <div class="right"></div>
               </a>
               $else$
-              <div> 
+              <div>
+                $if(region.iselegavailable)$
                 $validationdropdown()$
+                $endif$
                 $if(!process.isauthorsend)$
-                <div style="padding-bottom:8px; padding-top: 2px;">
+                <div style="padding-bottom:8px; $if(region.iselegavailable)$padding-top: 2px;$else$padding-top: 20px;$endif$">
                   <input id="switchercheckbox"
                   style="position:relative;top:2px" type="checkbox"
                   class="sendcheckbox" on=".sendbutton"
@@ -525,12 +531,16 @@ pageDocumentDesign=
           <input type="text" infotext="$_company()$" name="signatorycompany" autocomplete="off" />
           $dragndropIcon()$
         </span>
+        $if(region.haspeopleids)$
         <span class='dragfield sigpersnum inputWrapper'>
           <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="$_personnumber()$" name="signatorypersonalnumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
+        $else$
+          <input type="hidden" name="signatorypersonalnumber" value=""/>
+        $endif$
         <span class='dragfield sigcompnum inputWrapper'>
           <span style="display:none;" class="fieldid">companynumber</span>
           <span style="display:none;" class="type">sig</span>

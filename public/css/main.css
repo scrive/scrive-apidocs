@@ -327,9 +327,9 @@ a.new-btn-small.black p {
 	width: 200px;
 }
 
-/* Login Container */
+/* Login Container & Enter Button */
 
-#top-container .login-button {
+#top-container .enter-button {
 	background: url(../img/btn-login.png);
 	color: #b3b3b3;
 	display: block;
@@ -346,8 +346,25 @@ a.new-btn-small.black p {
         z-index: 10;
 }
 
-#top-container .login-button:hover {
+#top-container .enter-button:hover {
 	color: #fff;
+}
+
+.regionAndLangSwitcher {
+  float: right;
+  display: inline-block;
+  width: 76px;
+  position: relative;
+  top: 20px;
+}
+
+#top-container .regionAndLangSwitcher {
+  top: 35px;
+  right: 135px;
+}
+
+.regionAndLangSwitcher div {
+  display: inline-block;
 }
 
 .login-container .body, .recovery-container .body {

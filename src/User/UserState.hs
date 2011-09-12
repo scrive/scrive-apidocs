@@ -82,6 +82,7 @@ import Payments.PaymentsState as Payments
 import User.OldPassword
 import User.OldLang
 import User.OldSystemServer
+import User.Region
 import qualified AppLogger as Log
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
@@ -1591,6 +1592,7 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
       ++ ", email"
       ++ ", preferred_design_mode"
       ++ ", lang"
+      ++ ", region"
       ++ ", system_server"
       ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
         toSql $ userid u
@@ -1609,6 +1611,7 @@ initialInsertUsersIntoPG = wrapDB $ \conn -> do
       , toSql $ BS.filter (<128) $ unEmail $ useremail $ userinfo u
       , toSql $ preferreddesignmode $ usersettings u
       , toSql $ lang $ usersettings u
+      , toSql $ (Misc.defaultValue :: Region)
       , toSql $ systemserver $ usersettings u
       , toSql $ userdeleted u
       ]

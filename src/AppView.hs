@@ -98,7 +98,7 @@ pageFromBody ctx
              bodytext = do
     renderTemplateFM "wholePage" $ do
         field "content" bodytext
-        standardPageFields ctx title False showCreateAccount loginOn referer email
+        standardPageFields ctx title Nothing showCreateAccount loginOn referer email
 
 embeddedPage :: String -> Kontra Response
 embeddedPage pb = do
@@ -106,7 +106,7 @@ embeddedPage pb = do
     bdy <- renderTemplateFM "embeddedPage" $ do
         field "content" pb
         serviceFields (ctxservice ctx) (ctxlocation ctx)
-        standardPageFields ctx "" False False False Nothing Nothing
+        standardPageFields ctx "" Nothing False False Nothing Nothing
     res <- simpleResponse bdy
     clearFlashMsgs
     return res
@@ -143,39 +143,39 @@ sitemapPage = do
         fieldFL "locales" $ map (uncurry staticLinksFields) . targetedLocales $ systemServerFromURL hostpart
 
 priceplanPage :: Kontra String
-priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True True
+priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True
 
 securityPage :: Kontra String
-securityPage = getContext >>= \ctx -> renderTemplateAsPage ctx "securityPage" True True
+securityPage = getContext >>= \ctx -> renderTemplateAsPage ctx "securityPage" (Just LinkSecurity) True
 
 legalPage :: Kontra String
-legalPage = getContext >>= \ctx -> renderTemplateAsPage ctx "legalPage" True True
+legalPage = getContext >>= \ctx -> renderTemplateAsPage ctx "legalPage" (Just LinkLegal) True
 
 privacyPolicyPage :: Kontra String
-privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True True
+privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" (Just LinkPrivacyPolicy) True
 
 termsPage :: Kontra String
-termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" True True
+termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" (Just LinkTerms) True
 
 aboutPage :: Kontra String
-aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True True
+aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" (Just LinkAbout) True
 
 partnersPage :: Kontra String
-partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True True
+partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" (Just LinkPartners) True
 
 clientsPage :: Kontra String
-clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True True
+clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" (Just LinkClients) True
 
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Kontrakcja m => Context -> String -> Bool -> Bool -> m String
-renderTemplateAsPage ctx templateName publicpage showCreateAccount = do
+renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Region -> Lang -> KontraLink) -> Bool -> m String
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     wholePage <- renderTemplateFM templateName $ do
-        standardPageFields ctx kontrakcja publicpage showCreateAccount2 loginOn loginreferer Nothing
+        standardPageFields ctx kontrakcja mpubliclink showCreateAccount2 loginOn loginreferer Nothing
     return wholePage
 
 getLoginOn :: Kontrakcja m => m Bool
@@ -191,14 +191,17 @@ getLoginReferer = do
     let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
     return loginreferer
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Bool -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m
-standardPageFields ctx title publicpage showCreateAccount loginOn referer email = do
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Region -> Lang -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m
+standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
-    mainLinksFields
+    mainLinksFields (ctxregion ctx) (ctxlang ctx)
     staticLinksFields (ctxregion ctx) (ctxlang ctx)
+    case mpubliclink of
+      Just publiclink -> regionAndLangFields ctx publiclink
+      Nothing -> return ()
     contextInfoFields ctx
-    publicSafeFlagField ctx loginOn publicpage
+    publicSafeFlagField ctx loginOn (isJust mpubliclink)
     loginModal loginOn referer email
 
 {- |
@@ -237,24 +240,32 @@ firstPage ctx loginOn referer email =
     renderTemplateFM "firstPage" $ do
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
-        mainLinksFields
+        mainLinksFields (ctxregion ctx) (ctxlang ctx)
         staticLinksFields (ctxregion ctx) (ctxlang ctx)
+        regionAndLangFields ctx LinkHome
         loginModal loginOn referer email
 
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields :: MonadIO m =>  Fields m
-mainLinksFields = do
+mainLinksFields :: MonadIO m => Region -> Lang -> Fields m
+mainLinksFields region lang = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show LinkContracts
-    field "linklogin"            $ show (LinkLogin LoginTry)
+    field "linklogin"            $ show (LinkLogin region lang LoginTry)
     field "linklogout"           $ show LinkLogout
-    field "linkmain"             $ show LinkMain
+    field "linkupload"           $ show LinkUpload
     field "linkquestion"         $ show LinkAskQuestion
     field "linksignup"           $ show LinkSignup
+
+regionAndLangFields :: MonadIO m => Context -> (Region -> Lang -> KontraLink) -> Fields m
+regionAndLangFields Context{ctxlang} link = do
+  field "langsv" $ ctxlang == LANG_SE
+  field "langen" $ ctxlang == LANG_EN
+  field "linksesv" $ show $ link REGION_SE LANG_SE
+  field "linkgben" $ show $ link REGION_GB LANG_EN
 
 {- |
     Defines the static links which are region and language sensitive.

@@ -11,7 +11,16 @@ tableCompanies = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("address", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("zip", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("city", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})] -> return TVRvalid
+      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("address", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("zip", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("city", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE companies ("
           ++ "  id BIGINT NOT NULL"

@@ -135,6 +135,9 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "fstname" $ getFirstName user
     field "sndname" $ getLastName user
     field "userimagelink" False
+    fieldF "region" $ do
+        field "se" $ REGION_SE == (region $ usersettings user)
+        field "gb" $ REGION_GB == (region $ usersettings user)
     fieldF "lang" $ do
         field "en" $ LANG_EN == (lang $ usersettings user)
         field "se" $ LANG_SE == (lang $ usersettings user)
@@ -470,6 +473,7 @@ userBasicFields u mc = do
     field "email" $ getEmail u
     field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
+    field "iscompanyadmin" $ useriscompanyadmin u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
 
 -- list stuff for friends

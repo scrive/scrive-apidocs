@@ -6,6 +6,7 @@ module DB.Derive (
   , newtypeDeriveConvertible
   , enumDeriveConvertible
   , bitfieldDeriveConvertible
+  , jsonableDeriveConvertible
   ) where
 
 import Control.Arrow
@@ -15,6 +16,8 @@ import Data.List
 import Database.HDBC
 import Data.Convertible
 import Language.Haskell.TH
+import Text.JSON.Generic
+import Text.JSON.String
 
 -- | Derives Read/Show instances for a given newtype
 -- that behave like the ones of underlying type.
@@ -200,3 +203,37 @@ bitfieldDeriveConvertible t = do
         , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) (AppT ListT (ConT name))) f
         ]
     _ -> error $ "Not a data type declaration: " ++ show info
+
+-- | Derives Convertible instances from/to SqlValue for types that will
+-- be stored in DB as JSON (Data/Typeable instances are required)
+jsonableDeriveConvertible :: TypeQ -> Q [Dec]
+jsonableDeriveConvertible tq = do
+  t <- tq
+  f <- rename `liftM` runQ [d|
+    f v = Right . SqlString $ encodeJSON v
+    |]
+  g <- rename `liftM` runQ [d|
+    f v = case safeConvert v :: ConvertResult String of
+      Right s -> safeDecodeJSON $(stringE $ pprint t) s
+      Left e -> Left e
+    |]
+  return [
+      InstanceD [] (AppT (AppT (ConT ''Convertible) t) (ConT ''SqlValue)) f
+    , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) t) g
+    ]
+  where
+    rename = \[FunD _ c] -> [FunD 'safeConvert c]
+
+safeDecodeJSON :: Data a => String -> String -> ConvertResult a
+safeDecodeJSON t s = case runGetJSON readJSValue s of
+  Right j -> case fromJSON j of
+    Error msg -> err msg
+    Ok x -> Right x
+  Left msg -> err msg
+  where
+    err msg = Left ConvertError {
+        convSourceValue = s
+      , convSourceType = "String"
+      , convDestType = t
+      , convErrorMessage = msg
+    }

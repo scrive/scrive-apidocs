@@ -11,7 +11,9 @@ tableUserFriends = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("friend_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})] -> return TVRvalid
+      [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("friend_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE user_friends ("
           ++ "  user_id BIGINT NOT NULL"
@@ -37,7 +39,27 @@ tableUsers = Table {
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True}), ("is_company_admin", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True}), ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True}), ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("company_position", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("phone", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("mobile", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True}), ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False}), ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False}), ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})] -> return TVRvalid
+      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("is_company_admin", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
+       , ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
+       , ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("personal_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("company_position", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("phone", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("mobile", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
+       , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE users ("
           ++ "  id BIGINT NOT NULL"
@@ -85,7 +107,12 @@ tableUserMailAPIs = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("key", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("daily_limit", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("sent_today", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("last_sent_date", SqlColDesc {colType = SqlDateT, colNullable = Just False})] -> return TVRvalid
+      [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("key", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("daily_limit", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("sent_today", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("last_sent_date", SqlColDesc {colType = SqlDateT, colNullable = Just False})
+       ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE user_mail_apis ("
           ++ "  user_id BIGINT NOT NULL"
@@ -110,7 +137,11 @@ tableUserInviteInfos = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("inviter_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False}), ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True}), ("invite_type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})] -> return TVRvalid
+      [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("inviter_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
+       , ("invite_type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
+       ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE user_invite_infos ("
           ++ "  user_id BIGINT NOT NULL"

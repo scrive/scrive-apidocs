@@ -17,6 +17,7 @@ import Misc
 import Util.FlashUtil
 import DBError
 import User.UserView
+import Util.KontraLinkUtils
 
 seeOtherXML :: String -> Response
 seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString $ "<a href='"++url++"' alt='303 see other'>"++ url ++ "</a>"
@@ -27,16 +28,18 @@ seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.f
 sendRedirect :: Kontrakcja m => KontraLink -> m Response
 sendRedirect LoopBack = do
   referer <- fmap BS.toString <$> getHeaderM "referer"
-  let link = fromMaybe (show LinkMain) referer
+  mainlink <- getHomeOrUploadLink
+  let link = fromMaybe (show mainlink) referer
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
 sendRedirect BackToReferer = do
   referer <- getField "referer"
-  let link' = fromMaybe (show LinkMain) referer
-  let link  = if (null link') then (show LinkMain) else link'
+  mainlink <- getHomeOrUploadLink
+  let link' = fromMaybe (show mainlink) referer
+  let link  = if (null link') then (show mainlink) else link'
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
-sendRedirect link@(LinkLogin reason) = do
+sendRedirect link@(LinkLogin _region _lang reason) = do
   curr <- rqUri <$> askRq
   referer <- getField "referer"
   addFlashM $ flashMessageLoginRedirectReason reason
@@ -70,7 +73,8 @@ instance GuardRight String where
 instance GuardRight DBError where
   guardRight (Right b)            = return b
   guardRight (Left DBNotLoggedIn) = do
-    r <- sendRedirect $ LinkLogin NotLogged
+    Context{ctxregion, ctxlang} <- getContext
+    r <- sendRedirect $ LinkLogin ctxregion ctxlang NotLogged
     finishWith r
   guardRight _                    = mzero
   
@@ -85,6 +89,7 @@ guardLoggedIn = do
   Context{ ctxmaybeuser } <- getContext
   case ctxmaybeuser of
     Nothing -> do
-      r <- sendRedirect $ LinkLogin NotLogged
+      Context{ctxregion, ctxlang} <- getContext
+      r <- sendRedirect $ LinkLogin ctxregion ctxlang NotLogged
       finishWith r
     Just _ -> return ()

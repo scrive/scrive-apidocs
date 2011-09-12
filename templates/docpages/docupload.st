@@ -121,6 +121,7 @@ $else$
 
 <script>
 var documentsTable = KontraList.init({
+    name : "Templates table",
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Template|$processid$" },

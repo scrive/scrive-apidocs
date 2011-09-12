@@ -93,14 +93,33 @@
             return _.any(this.fields(), function(f){return f == field; });
         },
         sortOn : function(field){
-            if (this.isCurrent(field))
+            if (this.isCurrent(field)){
                 this.set({order : !this.get("order") });
-            else
+                this.updateSessionStorage();
+            }
+            else {
                 this.set({order : true, current : field});
+                this.updateSessionStorage();
+            }    
         },
         sortOnFunction : function(field){
             var sorting = this;
             return function(){sorting.sortOn(field);};
+        },
+        updateSessionStorage : function() {
+            SessionStorage.set(this.get("namespace"),"sorting", this.current());
+            SessionStorage.set(this.get("namespace"),"sorting_order", this.isAsc() + "");
+        },
+        setSessionStorageNamespace: function(namespace) {
+            this.set({namespace: namespace});
+            if (SessionStorage.get(namespace,"sorting") != undefined 
+                && SessionStorage.get(namespace,"sorting_order") != undefined 
+                && !this.disabled())
+                    this.set({
+                        current: SessionStorage.get(namespace,"sorting"),
+                        order :  SessionStorage.get(namespace,"sorting_order") == "true"
+                    });
+                    
         }
     });
 
@@ -112,10 +131,16 @@
             return this.get("text");
         },
         searchText: function(text){
+            SessionStorage.set(this.get("namespace"),"filtering",text);
             this.set({text:text});
         },
         infotext: function(){
             return this.get("infotext");
+        },
+        setSessionStorageNamespace: function(namespace) {
+            this.set({namespace: namespace});
+            if (SessionStorage.get(namespace,"filtering") != undefined && ! this.disabled())
+                this.searchText(SessionStorage.get(namespace,"filtering"));
         }
     });
 
@@ -266,6 +291,10 @@
         },
         url : function(){
             return this.get("url");
+        },
+        setSessionStorageNamespace : function(name){
+            this.filtering().setSessionStorageNamespace(name);
+            this.sorting().setSessionStorageNamespace(name);
         },
         getSchemaUrlParams : function() {
             var params = this.extraParams();
@@ -625,6 +654,8 @@
         init : function(args){
             _.bindAll(this, 'recall');
             this.schema = args.schema
+            if (args.name != undefined)
+                this.schema.setSessionStorageNamespace(args.name);
             this.model = new List({
                 schema : args.schema
             })

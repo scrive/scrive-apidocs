@@ -14,6 +14,7 @@ module Administration.AdministrationControl(
           , showAdminUserAdvanced
           , showAdminUsers
           , showAdminCompanies
+          , showAdminCompanyUsers
           , showAdminUsersForSales
           , showAdminUsersForPayments
           , showAdminUserUsageStats
@@ -28,6 +29,7 @@ module Administration.AdministrationControl(
           , handleCompanyChange
           , handleDatabaseCleanup
           , handleCreateUser
+          , handleCreateCompanyUser
           , handleCreateService
           , handleStatistics
           , handleBackdoorQuery
@@ -56,7 +58,7 @@ import KontraLink
 import MinutesTime
 import System.Directory
 import DB.Classes
-import User.UserControl
+import User.UserControl hiding (handleCreateCompanyUser)
 import User.UserView
 import User.Model
 import Data.Maybe
@@ -80,6 +82,7 @@ import Util.SignatoryLinkUtils
 import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
+import InputValidation
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -126,6 +129,14 @@ showAdminCompanies (Just companyid) = onlySuperUser $ do
   content <- adminCompanyPage company
   renderFromBody TopEmpty kontrakcja content
 
+showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m Response
+showAdminCompanyUsers companyid = onlySuperUser $ do
+  company <- guardJustM . runDBQuery $ GetCompany companyid
+  users <- runDBQuery $ GetCompanyAccounts companyid
+  params <- getAdminListPageParams
+  content <- adminCompanyUsersPage company users params
+  renderFromBody TopEmpty kontrakcja content
+
 showAdminUsersForSales :: Kontrakcja m => m Response
 showAdminUsersForSales = onlySuperUser $ do
   users <- getUsersAndStats
@@ -166,7 +177,7 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   userdocs <- mapM (query . GetDocumentsByAuthor . userid) users
   let documents = concat userdocs
   Log.debug $ "There are " ++ (show $ length documents) ++ " docs related to company " ++ (show companyid)
-  content <- adminCompanyUsageStatsPage $ do
+  content <- adminCompanyUsageStatsPage companyid $ do
     fieldsFromStats [] documents
   renderFromBody TopEmpty kontrakcja content
 
@@ -234,6 +245,8 @@ handleUserChange uid = onlySuperUser $ do
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+  settingsChange <- getUserSettingsChange
+  _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid
   
 {- | Handling company details change. It reads user info change -}
@@ -283,6 +296,25 @@ handleCreateUser = onlySuperUser $ do
     -- FIXME: where to redirect?
     return LinkStats
     
+handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m KontraLink
+handleCreateCompanyUser companyid = onlySuperUser $ do
+  ctx <- getContext
+  email <- getCriticalField asValidEmail "email"
+  fstname <- getCriticalField asValidName "fstname"
+  sndname <- getCriticalField asValidName "sndname"
+  custommessage <- getField "custommessage"
+  systemserver <- guardJustM $ readField "systemserver"
+  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
+  case muser of
+    Just (User{userid}) -> do
+      _ <- runDBUpdate $ SetUserCompany userid companyid
+      when (fromMaybe False madmin) $ do
+        _ <- runDBUpdate $ MakeUserCompanyAdmin userid
+        return ()
+    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  return $ LinkCompanyUserAdmin companyid
+
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
 getCompanyInfoChange = do
@@ -307,6 +339,24 @@ getCompanyInfoChange = do
       , companycity  = fromMaybe companycity mcompanycity
       , companycountry = fromMaybe companycountry mcompanycountry
     }
+
+{- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
+getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
+getUserSettingsChange = do
+  msystemserver <- readField "usersystemserver"
+  mregion <- readField "userregion"
+  mlang <- readField "userlang"
+  return $ \UserSettings {
+    preferreddesignmode
+  , systemserver
+  , region
+  , lang
+  } -> UserSettings {
+    preferreddesignmode
+  , systemserver = fromMaybe systemserver msystemserver
+  , region = fromMaybe region mregion
+  , lang = fromMaybe lang mlang
+  }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
 getUserInfoChange :: Kontrakcja m => m (UserInfo -> UserInfo)
@@ -597,7 +647,7 @@ handleFixForBug510 :: Kontrakcja m => m Response
 handleFixForBug510 = onlySuperUser $ do
   services <- runDBQuery $ GetServices
   mapM_ fixForService $ Nothing : map (Just . serviceid) services
-  sendRedirect LinkMain
+  sendRedirect LinkUpload
   where
     fixForService :: Kontrakcja m => Maybe ServiceID -> m ()
     fixForService service = do

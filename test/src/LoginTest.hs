@@ -36,7 +36,7 @@ testSuccessfulLogin conn = withTestEnvironment conn $ do
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     assertBool "Response code is 303" $ rsCode res == 303
-    assertBool "Location is /" $ T.getHeader "location" (rsHeaders res) == Just "/"
+    assertBool "Location is /upload" $ T.getHeader "location" (rsHeaders res) == Just "/upload"
     assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
     assertBool "No flash messages were added" $ null $ ctxflashmessages ctx'
 
@@ -61,7 +61,7 @@ testCantLoginWithInvalidPassword conn = withTestEnvironment conn $ do
 loginFailureChecks :: Response -> Context -> DB ()
 loginFailureChecks res ctx = do
     assertBool "Response code is 303" $ rsCode res == 303
-    assertBool "Location starts with /?logging" $ (isPrefixOf "/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
+    assertBool "Location starts with /se/sv/?logging" $ (isPrefixOf "/se/sv/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
     assertBool "User wasn't logged into context" $ ctxmaybeuser ctx == Nothing
     assertBool "One flash message was added" $ length (ctxflashmessages ctx) == 1
     assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx) `isFlashOfType` OperationFailed
