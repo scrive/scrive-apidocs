@@ -1,6 +1,7 @@
 module API.MailAPI (
       handleMailCommand
     , mailAPI
+    , parseSimpleEmail
     ) where
 
 import DB.Classes
@@ -32,6 +33,9 @@ import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import API.API
 import API.APICommons
+import Data.Char
+
+import Data.String.Utils
 
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , icontent :: BS.ByteString
@@ -104,22 +108,24 @@ parseEmailMessage content = runErrorT $ do
   let plains = filter isPlain allParts
   pdf <- case pdfs of
     [pdf] -> return pdf
-    _ -> fail $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
+    _ -> throwError $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
   plain <- case plains of
     [plain] -> return plain
-    _ -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
+    _ -> throwError $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
   let pdfBinary = snd pdf
   let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
   let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
-
+  let subject = maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
   let charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
   let recode mimetype content' =
         case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
           Left result' -> return $ BS.concat (BSL.toChunks (result'))
-          Right errmsg -> fail (show $ IConv.reportConversionError errmsg)
+          Right errmsg -> throwError (show $ IConv.reportConversionError errmsg)
   recodedPlain <- recode (fst plain) (snd plain)
 
   json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
+                              `mplus`
+                              parseSimpleEmail (BS.toString subject) (BS.toString recodedPlain)
   return (json,pdfBinary,from,to)
 
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
@@ -208,3 +214,27 @@ handleMailCommand = do
                                                  ]
     return rjson
 
+-- Simple Mail API
+parseSimpleEmail :: String -> String -> Either String APIRequestBody
+parseSimpleEmail subject mailbody = 
+  if mailbody == ""
+  then Left "Email body cannot be empty."
+  else let ls = lines mailbody
+           pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
+           fstname = lookup "first name" pairs
+           sndname = lookup "last name" pairs
+           email   = lookup "email" pairs
+       in
+        case (fstname, sndname, email) of
+          (Just fn, Just ln, Just em) -> Right $ JSObject $ toJSObject [("title", JSString $ toJSString subject),
+                                                                        ("involved", 
+                                                                         JSArray [ 
+                                                                           JSObject $ toJSObject [
+                                                                              ("fstname", JSString $ toJSString $ fn),
+                                                                              ("sndname", JSString $ toJSString $ ln),
+                                                                              ("email"  , JSString $ toJSString $ em)
+                                                                              ]
+                                                                           ]
+                                                                        )]
+          _ -> error "One of the required fields is blank"
+                           
