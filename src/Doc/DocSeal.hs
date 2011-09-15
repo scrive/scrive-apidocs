@@ -12,9 +12,7 @@ module Doc.DocSeal(sealDocument) where
 import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
-import Data.Bits
 import Data.List
-import Data.Word
 import Data.Ord
 import Debug.Trace
 import Doc.DocProcess
@@ -109,15 +107,6 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
     }
-
--- oh boy, this is really network byte order!
-formatIP :: Word32 -> String
-formatIP 0 = ""
--- formatIP 0x7f000001 = ""
-formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document inputpath outputpath =

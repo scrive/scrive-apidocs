@@ -48,7 +48,6 @@ module Doc.DocStateData
 import API.Service.Model
 import Company.Model
 import Control.Monad
-import Data.Bits
 import Data.Data (Data)
 import Data.Int
 import Data.Maybe
@@ -573,14 +572,6 @@ getFieldOfType t (sf:rest) =
 getValueOfType :: FieldType -> SignatoryDetails -> BS.ByteString
 getValueOfType t = fromMaybe BS.empty . fmap sfValue . getFieldOfType t . signatoryfields
 
--- oh boy, this is really network byte order!
-formatIP :: Word32 -> String
-formatIP 0 = ""
--- formatIP 0x7f000001 = ""
-formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
 documentHistoryToDocumentLog :: DocumentHistoryEntry -> DocumentLogEntry
 documentHistoryToDocumentLog DocumentHistoryCreated
