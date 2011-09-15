@@ -6,6 +6,7 @@ module Stats.Control
          addDocumentCreateStatEvents,
          addDocumentSendStatEvents,
          addAllDocsToStats,
+         handleDocStatsCSV,
          handleMigrate1To2
        )
        
@@ -57,6 +58,13 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   content <- adminCompanyUsageStatsPage companyid $ do
     statisticsCompanyFieldsForASingleUser fullnames
   renderFromBody TopEmpty kontrakcja content
+
+handleDocStatsCSV :: Kontrakcja m => m Response
+handleDocStatsCSV = onlySuperUser $ do
+  stats <- runDBQuery GetDocStatEvents
+  ok $ setHeader "Content-disposition" "attachment;filename=stats.csv"
+     $ setHeader "Content-type" "text/csv" 
+     $ toResponse (statisticsCSV stats)
 
 {- |
    What a beast! This must be stopped! Oh, the humanity!

@@ -4,6 +4,7 @@ module Stats.Model
          DocStatEvent(..),
          DocStatQuantity(..),
          FlushStats(..),
+         GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..)
        )
@@ -55,6 +56,12 @@ selectDocStatEventsSQL = "SELECT "
  ++ "  FROM doc_stat_events e"
  ++ " " -- always end in space to avoid problems
  
+data GetDocStatEvents = GetDocStatEvents
+instance DBQuery GetDocStatEvents [DocStatEvent] where
+  dbQuery GetDocStatEvents = wrapDB $ \conn -> do
+    st <- prepare conn $ selectDocStatEventsSQL
+    _ <- execute st []
+    fetchDocStats st []
 
 data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID
 instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
