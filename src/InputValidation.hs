@@ -61,7 +61,8 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
-import Kontra
+import KontraMonad
+import Context
 import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
