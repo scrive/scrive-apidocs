@@ -52,7 +52,7 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
 cleanCSVContents :: [IdentificationType] -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
 cleanCSVContents allowedidtypes customfieldcount contents =
   let mincols = (if isEleg then 5 else 3) :: Int
-      maxcols = 5 + customfieldcount
+      maxcols = 6 + customfieldcount
       cleanData = zipWith (cleanRow mincols maxcols) [0..]
       mheader = lookForHeader . cleanData $ take 1 contents
       bodyrows = if isJust mheader then drop 1 contents else contents
