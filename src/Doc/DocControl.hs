@@ -46,6 +46,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
+import Data.Char
 import Data.CSV
 import Data.Either
 import Data.List
@@ -912,7 +913,7 @@ getCSVFile fieldname = do
             else do
               let title = BS.fromString (basename filename)
                   --there's a bug in the Data.CSV library I think, it wants a newline at the end of everything!
-                  mcontents = fmap (filter (\r->(not $ isEmptyRow r))) . parse csvFile "" . (++"\n") . decodeByteString $ content
+                  mcontents = fmap (map dropTrailingEmptyCells . filter (not . isEmptyRow)) . parse csvFile "" . (++"\n") . decodeByteString $ content
               case mcontents of
                  Left _ -> return $ Bad flashMessageFailedToParseCSV
                  Right contents
@@ -920,9 +921,9 @@ getCSVFile fieldname = do
                    | otherwise -> return $ Good (title, map (map BS.fromString) contents)
         _ -> return Empty
     rowlimit :: Int = 500
-    isEmptyRow [] = True
-    isEmptyRow [""] = True
-    isEmptyRow _ = False
+    dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
+    isEmptyRow = all isEmptyCell
+    isEmptyCell = null . dropWhile isSpace . reverse . dropWhile isSpace
     {- |
         Excel especially will chuck out data in funky char encodings
         so we're going to look to see if some alternative ones "work better"
