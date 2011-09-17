@@ -44,6 +44,8 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
 
+import Util.StringUtil
+
 {- |
    Handle the Ajax request for initiating a BankID transaction.
    URL: /s/{provider}/{docid}/{signid}/{magic}
@@ -797,18 +799,4 @@ compareLastNames lnContract lnEleg
 -- import GHC.Unicode ( toLower )
 --import qualified Data.ByteString.Lazy.Char8 as B
 
-{- |
-    Calculate the Levenshtein distance (edit distance) between two strings
- -}
-levenshtein :: String -> String -> Int
-levenshtein s1 s2 = levenshtein' (' ':s1) (' ':s2) (length s1) (length s2)
-
-levenshtein' :: String -> String -> Int -> Int -> Int
-levenshtein' s1 s2 i j
-    | i == 0 = j
-    | j == 0 = i
-    | (s1 !! i) == (s2 !! j) = levenshtein' s1 s2 (i - 1) (j - 1)
-    | otherwise = min     (1 + levenshtein' s1 s2 (i - 1) j)       --deletion
-                    $ min (1 + levenshtein' s1 s2 i (j - 1))       --insertion
-                          (1 + levenshtein' s1 s2 (i - 1) (j - 1)) --substitution
 

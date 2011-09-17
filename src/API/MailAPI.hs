@@ -38,6 +38,7 @@ import Data.Char
 import Text.Regex
 
 import Data.String.Utils
+import Util.StringUtil
 
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , icontent :: BS.ByteString
@@ -125,9 +126,9 @@ parseEmailMessage content = runErrorT $ do
           Right errmsg -> throwError (show $ IConv.reportConversionError errmsg)
   recodedPlain <- recode (fst plain) (snd plain)
 
-  json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
-                              `mplus`
-                              parseSimpleEmail (BS.toString subject) (BS.toString recodedPlain)
+  json <- (ErrorT . return) $ if '{' == (head $ strip $ BS.toString recodedPlain)
+                              then runGetJSON readJSObject (BS.toString recodedPlain)
+                              else parseSimpleEmail (BS.toString subject) (BS.toString recodedPlain)
   return (json,pdfBinary,from,to)
 
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
@@ -218,16 +219,22 @@ handleMailCommand = do
 
 -- Simple Mail API
 
+levLookup :: String -> [(String, a)] -> Maybe a
+levLookup _ []                                    = Nothing
+--levLookup k1 ((k2, v):_) | levenshtein k1 k2 <= 2 = Just v
+levLookup k1 ((k2, v):_) | maxLev k1 k2 2         = Just v
+levLookup k1 (_:ps)                               = levLookup k1 ps
+  
 parseSignatory :: String -> Either String APIRequestBody
 parseSignatory sig = 
   let ls = lines sig
       pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
-      fstname = lookup "first name" pairs
-      sndname = lookup "last name" pairs
-      email   = lookup "email" pairs
-      company = lookup "company" pairs
-      cmpnr   = lookup "organization number" pairs
-      prsnr   = lookup "personal number" pairs
+      fstname = levLookup "first name"          pairs
+      sndname = levLookup "last name"           pairs
+      email   = levLookup "email"               pairs
+      company = levLookup "company"             pairs
+      cmpnr   = levLookup "organization number" pairs
+      prsnr   = levLookup "personal number"     pairs
   in
    case (fstname, sndname, email) of
      (Just fn, Just ln, Just em) -> let ss = ([("fstname", JSString $ toJSString fn),
