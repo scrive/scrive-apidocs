@@ -9,10 +9,11 @@ import Text.JSON.String
 
 simpleMailTests :: Test
 simpleMailTests = testGroup "Simple Mail Tests" [
-  testCase "Testing test framework" (return ()),
-  --testCase "Testing failing" (error "oops"),
   blankEmailTest
   ,singleMinimalSignatory
+  ,doubleMinimalSignatory
+  ,doubleOptionalFieldsSignatory
+  ,doubleOptionalFieldsBadFieldSignatory
   ]
 -- TestName
 -- Assertion
@@ -33,3 +34,48 @@ singleMinimalSignatory = testCase "Single Minimal Signatory" $ do
         "\"sndname\":\"Rak\"," ++
         "\"email\":\"mariusz@skrivapa.se\"}]}") -> return ()
     _ -> error "Did not return correct json"
+
+doubleMinimalSignatory :: Test
+doubleMinimalSignatory = testCase "Double Minimal Signatory" $ do
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\n\n" ++ 
+        "First name: Eric\nLast name: Normand\nemail: eric@skrivapa.se") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"}," ++
+        "{\"fstname\":\"Eric\"," ++
+        "\"sndname\":\"Normand\"," ++
+        "\"email\":\"eric@skrivapa.se\"}" ++
+        "]}") -> return ()
+    _ -> error "Did not return correct json"
+
+doubleOptionalFieldsSignatory :: Test
+doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrganization number : 78765554\n \n" ++ 
+        "personal number: 78676545464  \nFirst name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"," ++
+        "\"companynr\":\"78765554\"" ++
+        "}," ++
+        "{" ++
+        "\"fstname\":\"Eric\"," ++
+        "\"sndname\":\"Normand\"," ++
+        "\"email\":\"eric@skrivapa.se\"," ++
+        "\"company\":\"Hello\"," ++
+        "\"personalnr\": \"78676545464\"}" ++
+        "]}") -> return ()
+    _ -> error "Did not return correct json"
+
+doubleOptionalFieldsBadFieldSignatory :: Test
+doubleOptionalFieldsBadFieldSignatory = testCase "Double Optional Fields Bad Field Signatory" $ do
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrganization number : 78765554\nJones : 9090 \n \n" ++ 
+        "personal number: 78676545464  \nFirst name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
+    Left msg -> return ()
+    _ -> error "Did not fail with bad field name"
