@@ -219,11 +219,63 @@ handleMailCommand = do
 
 levLookup :: String -> [(String, a)] -> Maybe a
 levLookup _ []                                    = Nothing
---levLookup k1 ((k2, v):_) | levenshtein k1 k2 <= 2 = Just v
 levLookup k1 ((k2, v):_) | maxLev k1 k2 2         = Just v
 levLookup k1 (_:ps)                               = levLookup k1 ps
   
-parseSignatory :: String -> Either String APIRequestBody
+data SimpleMailError = NoColon String
+                     | UnknownKey String
+                     | MissingField String
+                     | NoSignatory
+                       
+instance Show SimpleMailError where
+  show (NoColon l) = "Each line must be of the form key:value; this line had no colon " ++ l
+  show (UnknownKey k) = "This key was not recognized: " ++ k
+  show (MissingField k) = "This required key was missing: " ++ k
+  show NoSignatory = "The body of the email was empty; we cannot send a contract with no signatories"
+
+noColonCheck :: String -> Maybe SimpleMailError
+noColonCheck l | isNothing $ find (== ':') l = Just $ NoColon l
+noColonCheck _ = Nothing
+
+unknownKeyCheck :: String -> Maybe SimpleMailError
+unknownKeyCheck l | isJust $ find (== ':') l = 
+  let (k, _) = break (== ':') l
+  in if none (\a -> maxLev (map toLower k) a 2) ["first name"
+                                           ,"last name"
+                                           ,"email"
+                                           ,"company"
+                                           ,"organization number"
+                                           ,"personal number"] 
+     then Just $ UnknownKey k
+     else Nothing
+unknownKeyCheck _ = Nothing
+
+-- | Takes one line of a simple email and returns the errors                                                    
+-- in that line
+getParseErrorsLine :: String -> [SimpleMailError]
+getParseErrorsLine l = catMaybes $ map ($ l) [unknownKeyCheck
+                                             ,noColonCheck
+                                             ]
+                       
+getParseErrorsSig :: [String] -> [SimpleMailError]
+getParseErrorsSig ls = concatMap getParseErrorsLine ls ++
+                       let pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
+                           fstname = levLookup "first name"          pairs
+                           sndname = levLookup "last name"           pairs
+                           email   = levLookup "email"               pairs
+                       in [MissingField s | (s, Nothing) <- [("First name", fstname), 
+                                                             ("Last name",  sndname),
+                                                             ("Email",      email)]]
+
+getParseErrorsEmail :: String -> [SimpleMailError]
+getParseErrorsEmail mailbody = 
+  if strip mailbody == ""
+  then [NoSignatory]
+  else let sigstrings = splitRegex (mkRegex "\n\\s*\n") $ strip mailbody
+           lss = map lines sigstrings
+       in concatMap getParseErrorsSig lss
+
+parseSignatory :: String -> Maybe APIRequestBody
 parseSignatory sig = 
   let ls = lines sig
       pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
@@ -234,27 +286,25 @@ parseSignatory sig =
       cmpnr   = levLookup "organization number" pairs
       prsnr   = levLookup "personal number"     pairs
   in
-   case (fstname, sndname, email) of
-     (Just fn, Just ln, Just em) -> let ss = ([("fstname", JSString $ toJSString fn),
-                                               ("sndname", JSString $ toJSString ln),
-                                               ("email"  , JSString $ toJSString em)] ++ 
-                                              [("company"   , JSString $ toJSString a) | Just a <- [company]] ++ 
-                                              [("companynr" , JSString $ toJSString a) | Just a <- [cmpnr]] ++ 
-                                              [("personalnr", JSString $ toJSString a) | Just a <- [prsnr]]) 
-                                    in if length ss == length pairs 
-                                       then Right $ JSObject $ toJSObject ss
-                                       else Left "Weird field was found"
-     _ -> Left "One of the required fields is blank"
+   if all isJust [fstname, sndname, email]
+   then let ss = ([("fstname", JSString $ toJSString $ fromJust fstname),
+                   ("sndname", JSString $ toJSString $ fromJust sndname),
+                   ("email"  , JSString $ toJSString $ fromJust email)] ++ 
+                  [("company"   , JSString $ toJSString a) | Just a <- [company]] ++ 
+                  [("companynr" , JSString $ toJSString a) | Just a <- [cmpnr]] ++ 
+                  [("personalnr", JSString $ toJSString a) | Just a <- [prsnr]]) 
+        in if length ss == length pairs 
+           then Just $ JSObject $ toJSObject ss
+           else Nothing
+   else Nothing
        
 parseSimpleEmail :: String -> String -> Either String APIRequestBody
 parseSimpleEmail subject mailbody = 
-  if mailbody == ""
-  then Left "Email body cannot be empty."
-  else let sigstrings = splitRegex (mkRegex "\n\\s*\n") $ strip mailbody
-           sigs = [parseSignatory $ strip sig | sig <- sigstrings, strip sig /= ""]
-       in if none isLeft sigs
-          then Right $ JSObject $ toJSObject [("title", JSString $ toJSString subject),
-                                              ("involved", 
-                                               JSArray (map fromRight sigs))]
-          else Left "Error parsing email"
+  case getParseErrorsEmail mailbody of
+    [] -> let sigstrings = splitRegex (mkRegex "\n\\s*\n") $ strip mailbody
+              sigs = [parseSignatory $ strip sig | sig <- sigstrings, strip sig /= ""]
+          in Right $ JSObject $ toJSObject [("title", JSString $ toJSString subject),
+                                            ("involved", 
+                                             JSArray (catMaybes sigs))]
+    es -> Left $ intercalate "\n" (map show es)
                            

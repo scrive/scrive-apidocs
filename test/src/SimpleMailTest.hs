@@ -6,6 +6,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import Text.JSON.String
+import Data.List
 
 simpleMailTests :: Test
 simpleMailTests = testGroup "Simple Mail Tests" [
@@ -14,6 +15,7 @@ simpleMailTests = testGroup "Simple Mail Tests" [
   ,doubleMinimalSignatory
   ,doubleOptionalFieldsSignatory
   ,doubleOptionalFieldsBadFieldSignatory
+  ,doubleOptionalFieldsNoFirstNameSignatory
   ]
 -- TestName
 -- Assertion
@@ -77,5 +79,17 @@ doubleOptionalFieldsBadFieldSignatory = testCase "Double Optional Fields Bad Fie
   case parseSimpleEmail "Contract Title"
        ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrganization number : 78765554\nJones : 9090 \n \n" ++ 
         "personal number: 78676545464  \nFirst name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
-    Left msg -> return ()
+    Left msg | "Jones" `isInfixOf` msg -> return ()
+    Left _ -> error "Did not talk about bad field name: Jones"
     _ -> error "Did not fail with bad field name"
+    
+doubleOptionalFieldsNoFirstNameSignatory :: Test
+doubleOptionalFieldsNoFirstNameSignatory = testCase "Double Optional Fields Bad Field Signatory" $ do
+  case parseSimpleEmail "Contract Title"
+       ("Last name: Rak\nemail: mariusz@skrivapa.se\nOrganization number : 78765554\n\n \n" ++ 
+        "personal number: 78676545464  \nFirst name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
+    Left msg | "First name" `isInfixOf` msg -> return ()
+    Left _ -> error "Did not talk about missing field: First name"
+    _ -> error "Did not fail with mssing field "
+
+
