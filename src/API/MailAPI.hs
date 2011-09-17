@@ -2,6 +2,7 @@ module API.MailAPI (
       handleMailCommand
     , mailAPI
     , parseSimpleEmail
+    , parseSignatory
     ) where
 
 import DB.Classes
@@ -34,6 +35,7 @@ import InspectXMLInstances ()
 import API.API
 import API.APICommons
 import Data.Char
+import Text.Regex
 
 import Data.String.Utils
 
@@ -213,26 +215,39 @@ handleMailCommand = do
     return rjson
 
 -- Simple Mail API
+
+parseSignatory :: String -> Either String APIRequestBody
+parseSignatory sig = 
+  let ls = lines sig
+      pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
+      fstname = lookup "first name" pairs
+      sndname = lookup "last name" pairs
+      email   = lookup "email" pairs
+      company = lookup "company" pairs
+      cmpnr   = lookup "organization number" pairs
+      prsnr   = lookup "personal number" pairs
+  in
+   case (fstname, sndname, email) of
+     (Just fn, Just ln, Just em) -> let ss = ([("fstname", JSString $ toJSString fn),
+                                               ("sndname", JSString $ toJSString ln),
+                                               ("email"  , JSString $ toJSString em)] ++ 
+                                              [("company"   , JSString $ toJSString a) | Just a <- [company]] ++ 
+                                              [("companynr" , JSString $ toJSString a) | Just a <- [cmpnr]] ++ 
+                                              [("personalnr", JSString $ toJSString a) | Just a <- [prsnr]]) 
+                                    in if length ss == length pairs 
+                                       then Right $ JSObject $ toJSObject ss
+                                       else Left "Weird field was found"
+     _ -> Left "One of the required fields is blank"
+       
 parseSimpleEmail :: String -> String -> Either String APIRequestBody
 parseSimpleEmail subject mailbody = 
   if mailbody == ""
   then Left "Email body cannot be empty."
-  else let ls = lines mailbody
-           pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
-           fstname = lookup "first name" pairs
-           sndname = lookup "last name" pairs
-           email   = lookup "email" pairs
-       in
-        case (fstname, sndname, email) of
-          (Just fn, Just ln, Just em) -> Right $ JSObject $ toJSObject [("title", JSString $ toJSString subject),
-                                                                        ("involved", 
-                                                                         JSArray [ 
-                                                                           JSObject $ toJSObject [
-                                                                              ("fstname", JSString $ toJSString $ fn),
-                                                                              ("sndname", JSString $ toJSString $ ln),
-                                                                              ("email"  , JSString $ toJSString $ em)
-                                                                              ]
-                                                                           ]
-                                                                        )]
-          _ -> error "One of the required fields is blank"
+  else let sigstrings = splitRegex (mkRegex "\n\\s*\n") $ strip mailbody
+           sigs = [parseSignatory $ strip sig | sig <- sigstrings, strip sig /= ""]
+       in if none isLeft sigs
+          then Right $ JSObject $ toJSObject [("title", JSString $ toJSString subject),
+                                              ("involved", 
+                                               JSArray (map fromRight sigs))]
+          else Left "Error parsing email"
                            
