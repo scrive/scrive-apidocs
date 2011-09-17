@@ -116,7 +116,7 @@ handleRoutes = msum [
      , dir "juridik"         $ hGetAllowHttp0 $ handleLegalPage
      , dir "sekretesspolicy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
      , dir "allmana-villkor" $ hGetAllowHttp0 $ handleTermsPage
-     , dir "om-skrivapa"     $ hGetAllowHttp0 $ handleAboutPage
+     , dir "om-scrive"       $ hGetAllowHttp0 $ handleAboutPage
      , dir "partners"        $ hGetAllowHttp0 $ handlePartnersPage
      , dir "kunder"          $ hGetAllowHttp0 $ handleClientsPage
 

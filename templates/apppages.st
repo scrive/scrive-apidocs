@@ -227,7 +227,7 @@ pageFooter=
       <strong style='text-transform:uppercase'>$ourServiceName()$</strong>
       <ul>
         <li><a href="/">$_pageFooterHome()$</a></li>
-        <li><a href="/om-skrivapa">$_pageFooterAbout()$</a></li>
+        <li><a href="/om-scrive">$_pageFooterAbout()$</a></li>
         <li><a href="http://support.skrivapa.se">$_pageFooterSupportFeedback()$</a></li>
         <li><a href="/partners">$_pageFooterPartners()$</a></li>
         <li><a href="/kunder">$_pageFooterCustomers()$</a></li>
