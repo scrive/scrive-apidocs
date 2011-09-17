@@ -17,7 +17,7 @@ customFooter= <span/>
 ###
 poweredBySkrivaPaPara=
     <p>
-      <small> $_poweredBySkrivaPaPara()$ <br/><a href="$ctxhostpart$">SkrivaPå</a></small>
+      <small> $_poweredBySkrivaPaPara()$ <br/><a href="$ctxhostpart$">Scrive</a></small>
     </p>
 #####
 wrapHTML=

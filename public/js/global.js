@@ -49,7 +49,12 @@ function enableInfoTextOnce(where) {
     function setInfoText(obj) {
         var input = $(obj);
         if (input.val() == "") {
-            input = input.not($(document.activeElement));
+            if ($.browser.msie && $.browser.version >= 9) {
+                input = input.not(":focus");
+            }
+            else {
+                input = input.not($(document.activeElement));
+            }
             input.addClass("grayed");
             input.val(input.attr("infotext"));
         }

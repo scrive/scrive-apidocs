@@ -122,8 +122,8 @@ handleRoutes ctxregion ctxlang = msum [
      , dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy ctxregion ctxlang
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
      , dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ handleAboutPage
-     , dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout ctxregion ctxlang
+     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "om-scrive" "about" $ hGetAllowHttp0 $ handleAboutPage
+     , dirByLang ctxlang "om-scrive" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout ctxregion ctxlang
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
      , dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners ctxregion ctxlang
      , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage

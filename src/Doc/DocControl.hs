@@ -1331,10 +1331,12 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
+  mysigdocs <- query $ GetDocumentsBySignatory user
   mydocuments <- if useriscompanyadmin user
-                   then query $ GetDocumentsByCompany user
-                   else query $ GetDocumentsBySignatory user
-  
+                   then do
+                     mycompanydocs <- query $ GetDocumentsByCompany user
+                     return $ union mysigdocs mycompanydocs
+                   else return mysigdocs
   usersICanView <- runDBQuery $ GetUsersByFriendUserID $ userid user
   friends'Documents <- mapM (query . GetDocumentsBySignatory) usersICanView
   
@@ -2010,6 +2012,7 @@ jsonDocumentsList = do
         _ -> do
             Log.error "Documents list : No valid document type provided"
             return []
+    Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs) 
     params <- getListParamsNew
     let docs = docSortSearchPage params allDocs
     cttime <- liftIO $ getMinutesTime

@@ -224,14 +224,6 @@ a img
     background-color: #b3b5bd;
 }
 
-#bigLogoPlaceholder
-{
-    width: 100%;
-    /* 002 new height */
-    height: 67px;
-    background: url(images/logolarge1.png) no-repeat 0 0;
-}
-
 .bodycolorbg 
 {
     background-color: #fafafa;
