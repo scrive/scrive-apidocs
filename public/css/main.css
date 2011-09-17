@@ -590,6 +590,10 @@ a.new-btn-small.black p {
 	font: 14px/22px "Copse";
 }
 
+#footer-container .centre strong {
+	text-transform: uppercase;
+}
+
 #footer-container .left {
 	width: 240px;
 }
