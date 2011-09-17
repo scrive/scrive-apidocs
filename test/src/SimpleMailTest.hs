@@ -55,7 +55,7 @@ doubleOptionalFieldsSignatory :: Test
 doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
   case parseSimpleEmail "Contract Title"
        ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrganization number : 78765554\n \n" ++ 
-        "personal number: 78676545464  \nFirst name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
+        "personal number: 78676545464  \nFirs name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
     Left msg -> error msg
     a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
         "\"involved\":[{\"fstname\":\"Mariusz\"," ++
