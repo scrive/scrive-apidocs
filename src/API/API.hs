@@ -220,6 +220,7 @@ apiBody = runGetJSON readJSObject <$> getFieldWithDefault "" "body"
 apiError :: API_ERROR -> String -> APIResponse
 apiError code message= toJSObject [
       ("error" , showJSON $ fromSafeEnum code)
+    , ("status" , showJSON $ "error")
     , ("error_message", showJSON message)
     ]
 
