@@ -138,6 +138,8 @@ Executable kontrakcja-server
   Build-depends: text
   Build-depends: transformers
   Build-depends: unix
+  Build-depends: spreadsheet
+  Build-depends: explicit-exception
 
   Main-Is: Main.hs
 

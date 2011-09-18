@@ -34,6 +34,7 @@ import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
 import Templates.LocalTemplates
+import Util.CSVUtil
 import Util.FlashUtil
 import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
@@ -42,20 +43,16 @@ import Util.MonadUtils
 import Doc.Invariants
 import Stats.Control
 
-import Codec.Text.IConv
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
-import Data.Char
-import Data.CSV
 import Data.Either
 import Data.List
 import Data.Maybe
 import Data.Word
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import Text.ParserCombinators.Parsec
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
@@ -920,46 +917,13 @@ getCSVFile fieldname = do
             then return Empty
             else do
               let title = BS.fromString (basename filename)
-                  --there's a bug in the Data.CSV library I think, it wants a newline at the end of everything!
-                  mcontents = fmap (map dropTrailingEmptyCells . filter (not . isEmptyRow)) . parse csvFile "" . (++"\n") . decodeByteString $ content
-              case mcontents of
+              case parseCSV content of
                  Left _ -> return $ Bad flashMessageFailedToParseCSV
                  Right contents
                    | length contents > rowlimit -> return $ Bad $ flashMessageCSVHasTooManyRows rowlimit
                    | otherwise -> return $ Good (title, map (map BS.fromString) contents)
         _ -> return Empty
     rowlimit :: Int = 500
-    dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
-    isEmptyRow = all isEmptyCell
-    isEmptyCell = null . dropWhile isSpace . reverse . dropWhile isSpace
-    {- |
-        Excel especially will chuck out data in funky char encodings
-        so we're going to look to see if some alternative ones "work better"
-        than UTF-8.  Otherwise we'll use UTF-8.  The problem is determining
-        which "works better" because they will normally all decode without an error,
-        it's just it'll be a load of rubbish for a human.
-    -}
-    decodeByteString :: BSL.ByteString -> String
-    decodeByteString bs =
-      guessBest . map  (BS.toString . concatChunks) . lefts $ (Left bs) : map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
-    {- |
-        I picked these because these seem to be what Excel 2007 is outputting on my Windows machine if you choose to Save As ...
-         CSV (Comma delimited) -> ISO8859-1
-         CSV (MS-DOS) -> CP437
-         CSV (Macintosh) -> MAC
-        The MAC encoding seemed to cover the files Viktor sent me from his Mac too.
-    -}
-    alternativeEncodings = ["ISO8859-1","CP437","MAC"]
-    {- |
-        Guesses the best string by looking at it, there's not much else you can do really.
-        This goes for the one with the most nordic chars in.  This also goes for things
-        earlier in the list over those later in the list, because of the way maximumBy works.
-    -}
-    guessBest :: [String] -> String
-    guessBest = maximumBy nordicCharCountOrdering
-    nordicCharCountOrdering :: String -> String -> Ordering
-    nordicCharCountOrdering a b = compare (nordicCharCount a) (nordicCharCount b)
-    nordicCharCount = length . filter (\c -> c `elem` "äÄöÖåÅ")
 
 handleIssueSave :: Kontrakcja m => Document -> m KontraLink
 handleIssueSave document = do
