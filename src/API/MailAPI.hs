@@ -151,6 +151,8 @@ handleMailCommand = do
         k | (show $ umapiKey mailapi) == k -> return ()
         k -> fail $ "Apikey '" ++ k ++ "' invalid for account '" ++ username ++ "'"
 
+    modifyContext (\ctx -> ctx {ctxmaybeuser = Just user})
+
     let toStr = BS.toString to
     mdoctype <- apiAskString "doctype"
     doctype <- case mdoctype of
