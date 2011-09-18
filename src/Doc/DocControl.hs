@@ -1472,12 +1472,12 @@ handlePageOfDocument' documentid mtokens = do
 
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
-  Log.debug "Uploading doc"
+  Log.debug $ "Uploading file for doc " ++ show docid
   Context{ctxdocstore, ctxs3action} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
-      liftIO $ print ("Got an error: " ++ show err)
+      Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
         _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
