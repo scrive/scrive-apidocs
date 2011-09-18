@@ -35,7 +35,6 @@ import InspectXMLInstances ()
 import API.API
 import API.APICommons
 import Data.Char
-import Text.Regex
 
 import Data.String.Utils
 import Util.StringUtil
@@ -271,13 +270,13 @@ getParseErrorsEmail :: String -> [SimpleMailError]
 getParseErrorsEmail mailbody = 
   if strip mailbody == ""
   then [NoSignatory]
-  else let sigstrings = splitRegex (mkRegex "\n\\s*\n") $ strip mailbody
-           lss = map lines sigstrings
+  else let sigstrings = map strip $ lines $ strip mailbody
+           lss = filter (/= []) $ split [""] sigstrings
        in concatMap getParseErrorsSig lss
 
-parseSignatory :: String -> Maybe APIRequestBody
+parseSignatory :: [String] -> Maybe APIRequestBody
 parseSignatory sig = 
-  let ls = lines sig
+  let ls = sig
       pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
       fstname = levLookup "first name"          pairs
       sndname = levLookup "last name"           pairs
@@ -301,10 +300,13 @@ parseSignatory sig =
 parseSimpleEmail :: String -> String -> Either String APIRequestBody
 parseSimpleEmail subject mailbody = 
   case getParseErrorsEmail mailbody of
-    [] -> let sigstrings = splitRegex (mkRegex "\n\\s*\n") $ strip mailbody
-              sigs = [parseSignatory $ strip sig | sig <- sigstrings, strip sig /= ""]
-          in Right $ JSObject $ toJSObject [("title", JSString $ toJSString subject),
-                                            ("involved", 
-                                             JSArray (catMaybes sigs))]
+    [] -> if strip subject == ""
+          then Left "The subject of the email becomes the title. The subject you sent was blank. Please add a subject."
+          else let maillines = map strip $ lines $ strip mailbody
+                   sigsecs = split [""] maillines
+                   sigs = [parseSignatory sig | sig <- sigsecs, sig /= []]
+               in Right $ JSObject $ toJSObject [("title", JSString $ toJSString $ strip subject),
+                                                 ("involved", 
+                                                  JSArray (catMaybes sigs))]
     es -> Left $ intercalate "\n" (map show es)
                            

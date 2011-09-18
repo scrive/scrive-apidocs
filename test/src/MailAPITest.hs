@@ -30,6 +30,7 @@ mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
       testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn
     , testCase "fail if user doesn't exist" $ testFailureNoSuchUser conn
+    , testCase "Create simple email document with one signatory" $ testSuccessfulSimpleEmailDocCreation conn
     ]
 
 testSuccessfulDocCreation :: Connection -> Assertion
@@ -47,6 +48,23 @@ testSuccessfulDocCreation conn = withMyTestEnvironment conn $ \tmpdir -> do
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
     wrapDB rollback
     successChecks $ jsonToStringList res
+
+testSuccessfulSimpleEmailDocCreation :: Connection -> Assertion
+testSuccessfulSimpleEmailDocCreation conn = withMyTestEnvironment conn $ \tmpdir -> do
+    req <- mkRequest POST [("mail", inFile "test/mailapi/email_simple_onesig.eml")]
+    uid <- createTestUser
+    muser <- dbQuery $ GetUserByID uid
+    ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir, ctxmaybeuser = muser })
+      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    _ <- dbUpdate $ SetUserMailAPI uid $ Just UserMailAPI {
+          umapiKey = read "ef545848bcd3f7d8"
+        , umapiDailyLimit = 1
+        , umapiSentToday = 0
+    }
+    (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
+    wrapDB rollback
+    successChecks $ jsonToStringList res
+
 
 testFailureNoSuchUser :: Connection -> Assertion
 testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
