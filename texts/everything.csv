@@ -725,7 +725,7 @@
  sig var vänlig kontakta ","We are sorry, a problem occurred when rendering the seal on the
  PDF. Please upload the document again. If the problem reoccurs,
  please contact"
-"_documentInfoTextElseBodyMailSupport","support@scrive.com","support@$ourServiceName()$.com"
+"_documentInfoTextElseBodyMailSupport","support@scrive.com","support@scrive.com"
 "_documentInfoTextElseHead","Problem","Problem"
 "_documentInfoTextNotsignedbymeAwaitingauthorBody","Vänligen kontrollera dokumentet och parternas uppgifter och underteckna
  längst ned.","Please control the document and the party data, and sign at the
