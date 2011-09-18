@@ -148,9 +148,9 @@ whitelabel = true;
 var bodyHeight = 0;
 function propagateHeight() {
 var h = jQuery("body").height();
-if (h == null) h= 400;
+if (h == undefined) h= 400;
 if (bodyHeight != h) {
-jQuery.pm({
+pm({
   target: window.parent,
   url: "$location$",
   type:"height", 

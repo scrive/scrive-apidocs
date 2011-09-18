@@ -247,7 +247,7 @@ documentInfoText=
                              $_documentInfoTextElseHead()$
                         </span><br/>
                         <span class="text">
-                        $_documentInfoTextElseBody()$<a href="mailto:support@skrivapa.se">$_documentInfoTextElseBodyMailSupport()$</a>
+                        $_documentInfoTextElseBody()$<a href="mailto:support@scrive.com">$_documentInfoTextElseBodyMailSupport()$</a>
                         </span>
                   
                   $endif$

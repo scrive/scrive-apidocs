@@ -47,6 +47,7 @@ import Data.List
 import API.Service.Model
 import DB.Classes
 import Util.MonadUtils
+import InputValidation
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
@@ -83,7 +84,11 @@ emptyMail = Mail
 
 -- Mail is unsendable if there is no to adress provided
 unsendable :: Mail -> Bool
-unsendable mail = all BS.null (email <$> to mail)
+unsendable mail = any (not . valid) (email <$> to mail)
+    where
+        valid x = case asValidEmail (BS.toString x) of
+                        Good _ -> True
+                        _ -> False
 
 --
 newtype Mailer = Mailer { sendMail :: DBMonad m => ActionID -> Mail -> m Bool }

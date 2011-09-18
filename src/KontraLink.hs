@@ -128,7 +128,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPrivacyPolicy region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/privacy-policy"
     showsPrec _ (LinkTerms region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/allmana-villkor"
     showsPrec _ (LinkTerms region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/terms"
-    showsPrec _ (LinkAbout region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/om-skrivapa"
+    showsPrec _ (LinkAbout region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/om-scrive"
     showsPrec _ (LinkAbout region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/about"
     showsPrec _ (LinkPartners region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/partners"
     showsPrec _ (LinkPartners region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/partners"
