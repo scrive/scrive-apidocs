@@ -200,7 +200,10 @@ runKontrakcjaServer = Log.withLogger $ do
                   E.bracket
                            (do
                               -- populate db with entries from happstack-state
-                              ioRunDB conn U.populateDBWithUsersIfEmpty
+                              ioRunDB conn $ do
+                                U.populateDBWithUsersIfEmpty
+                                -- this is not ready yet
+                                --populateDBWithDocumentsIfEmpty
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })

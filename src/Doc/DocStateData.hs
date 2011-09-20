@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData
     ( Author(..)
     , CSVUpload(..)
@@ -51,6 +52,7 @@ import Data.Data (Data)
 import Data.Int
 import Data.Maybe
 import Data.Word
+import DB.Derive
 import DB.Types
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
@@ -72,7 +74,7 @@ newtype Author = Author { unAuthor :: UserID }
 newtype DocumentID = DocumentID { unDocumentID :: Int64 }
     deriving (Eq, Ord, Typeable, Data) -- Data needed by PayEx modules
 newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Typeable, Data)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
 newtype SignOrder = SignOrder { unSignOrder :: Integer }
@@ -127,13 +129,13 @@ data FieldDefinition = FieldDefinition
 data FieldType =
     FirstNameFT | LastNameFT | CompanyFT | PersonalNumberFT
   | CompanyNumberFT | EmailFT | CustomFT BS.ByteString Bool -- label filledbyauthor
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Data, Typeable)
 
 data SignatoryField = SignatoryField {
     sfType       :: FieldType
   , sfValue      :: BS.ByteString
   , sfPlacements :: [FieldPlacement]
-  } deriving (Eq, Ord, Typeable)
+  } deriving (Eq, Ord, Data, Typeable)
 
 -- defines where a field is placed
 data FieldPlacement = FieldPlacement
@@ -143,7 +145,7 @@ data FieldPlacement = FieldPlacement
     , placementpagewidth :: Int
     , placementpageheight :: Int
     }
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Data, Typeable)
 -- end of updates for template system
 
 data SignatoryDetails0 = SignatoryDetails0
@@ -458,7 +460,7 @@ data DocumentStatus = Preparation
                     | Rejected
                     | AwaitingAuthor
                     | DocumentError String
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Typeable, Data)
 
 data DocumentType0 = Contract0 | ContractTemplate0 | Offer0 | OfferTemplate0 | Attachment0 | AttachmentTemplate0
     deriving (Eq, Ord, Typeable)
@@ -503,7 +505,7 @@ data DocumentSharing = Private
 data DocumentTag = DocumentTag {
         tagname :: BS.ByteString
      ,  tagvalue :: BS.ByteString
-     } deriving (Eq, Ord, Typeable)
+     } deriving (Eq, Ord, Typeable, Data)
 
 data DocumentUI = DocumentUI {
         documentmailfooter :: Maybe BS.ByteString
@@ -558,7 +560,7 @@ data DocumentHistoryEntry
     deriving (Eq, Ord, Typeable)
 
 data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
-    deriving (Typeable, Show)
+    deriving (Typeable, Show, Data)
 
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
@@ -867,7 +869,7 @@ data CancelationReason =  ManualCancel
                         -- The data returned by ELeg server
                         --                 msg                    fn            ln            num
                         | ELegDataMismatch String SignatoryLinkID BS.ByteString BS.ByteString BS.ByteString
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Typeable, Data)
 
 
 {- | Watch out. This instance is a bit special. It has to be
@@ -930,7 +932,7 @@ data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile        
 data FileStorage = FileStorageMemory BS.ByteString
                  | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
                  | FileStorageDisk FilePath -- ^ filepath
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Typeable, Data)
 
 
 
@@ -2260,3 +2262,23 @@ instance Component Documents where
 
 $(deriveSerialize ''SignatoryRole)
 
+-- stuff for converting to pgsql
+
+$(newtypeDeriveConvertible ''FileID)
+$(jsonableDeriveConvertible [t| FileStorage |])
+$(bitfieldDeriveConvertible ''SignatoryRole)
+$(enumDeriveConvertible ''SignatureProvider)
+$(enumDeriveConvertible ''MailsDeliveryStatus)
+$(newtypeDeriveConvertible ''SignOrder)
+$(jsonableDeriveConvertible [t| [SignatoryField] |])
+$(jsonableDeriveConvertible [t| [DocumentLogEntry] |])
+$(enumDeriveConvertible ''DocumentFunctionality)
+$(enumDeriveConvertible ''DocumentProcess)
+$(jsonableDeriveConvertible [t| DocumentStatus |])
+$(bitfieldDeriveConvertible ''IdentificationType)
+$(newtypeDeriveConvertible ''DocumentID)
+$(enumDeriveConvertible ''DocumentSharing)
+$(newtypeDeriveConvertible ''SignatoryLinkID)
+$(jsonableDeriveConvertible [t| [DocumentTag] |])
+$(jsonableDeriveConvertible [t| CancelationReason |])
+$(jsonableDeriveConvertible [t| [[BS.ByteString ]] |])

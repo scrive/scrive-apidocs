@@ -17,6 +17,7 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
+--import Doc.Tables
 import User.Migrations
 import User.Tables
 import Stats.Tables
@@ -36,6 +37,12 @@ tablesList = [
   , tableServices
   , tableCompanies
   , tableDocStatEvents
+  -- this is not ready yet
+  {-, tableDocuments
+  , tableFiles
+  , tableAuthorAttachments
+  , tableSignatoryAttachments
+  , tableSignatoryLinks-}
   ]
 
 checkDBConsistency :: DB ()
