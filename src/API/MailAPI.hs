@@ -160,7 +160,7 @@ handleMailCommand = do
         k | (show $ umapiKey mailapi) == k -> return ()
         k -> fail $ "Apikey '" ++ k ++ "' invalid for account '" ++ username ++ "'"
 
-    modifyContext (\ctx -> ctx {ctxmaybeuser = Just user})
+    
 
     let toStr = BS.toString to
     mdoctype <- apiAskString "doctype"
@@ -196,7 +196,7 @@ handleMailCommand = do
     (doc :: Document) <- case eitherdoc of
                            Left errmsg -> return (error errmsg)
                            Right document -> return document
-    (_ :: ()) <- liftKontra $ DocControl.handleDocumentUpload (documentid doc) content title
+    (_ :: ()) <- liftKontra $ DocControl.handleDocumentUploadNoLogin (documentid doc) content title
     (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
                                      signatories Nothing BS.empty
                                     (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)

@@ -24,6 +24,7 @@ simpleMailTests = testGroup "Simple Mail Tests" [
   ,looksLikeSignature
   ,doubleOptionalFieldsWeirdSignatory
   ,testMinimumDistance
+  ,testWackySignature
   ]
 -- TestName
 -- Assertion
@@ -184,3 +185,35 @@ testMinimumDistance = testCase "Test minimum distance between keys" $
     [] -> return ()
     a -> error $ "These strings are too close: " ++ intercalate ";" (map show a)
     
+testWackySignature :: Test
+testWackySignature = testCase "Test wacky signature (rtf)" $
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrg num : 78765554\n \n" ++ 
+        "=20" ++
+        " Marcus Thomasson\n" ++
+        "=20\n" ++
+        " <image001.gif>\n" ++
+        "=20\n" ++
+        "=20\n" ++
+        " marcus.thomasson@fortnox.se\n" ++
+        " Mobil: 0704 40 28 86\n" ++
+        " Skype: matho80\n" ++
+        "=20\n" ++
+        " Fortnox AB (publ)\n" ++
+        " Box 427, 351 06 V=E4xj=F6\n" ++
+        " Tel vxl:  0470-78 50 00\n" ++
+        " Fax: 0470-78 50 01\n" ++
+        " www.fortnox.se\n" ++
+        " =20\n" ++
+        " =20\n") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"," ++
+        "\"companynr\":\"78765554\"" ++
+        "}]}") -> return ()
+    a ->  do
+      Log.debug $ "JSON returned from parse: " ++ show a
+      error "Did not return correct json"
+                  

@@ -54,6 +54,9 @@ import TrustWeaverTest
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
+#ifndef NO_SIMPLEEMAIL
+import SimpleMailTest
+#endif
 
 allTests :: Connection -> [Test]
 allTests conn = tail tests
@@ -97,6 +100,9 @@ allTests conn = tail tests
 #ifndef NO_USERSTATE
       , userStateTests conn
 #endif
+#ifndef NO_SIMPLEEMAIL
+      , simpleMailTests 
+#endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
@@ -139,6 +145,9 @@ testsToRun conn (t:ts) =
 #endif
 #ifndef NO_USERSTATE
     "userstate"       -> Right (userStateTests conn) : rest
+#endif
+#ifndef NO_SIMPLEMAIL  
+    "simplemail"      -> Right simpleMailTests : rest
 #endif
     _                 -> Left t : rest
   where

@@ -29,11 +29,11 @@ import TestKontra as T
 mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
       testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_ok.eml"
-    , testCase "fail if user doesn't exist" $ testFailureNoSuchUser conn "test/mailapi/email_simple_onesig_ok.eml"
-    , testCase "Create simple email document with one signatory" $ testSuccessfulSimpleEmailDocCreation conn
+    , testCase "fail if user doesn't exist" $ testFailureNoSuchUser conn
+    , testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_simple_onesig.eml"
     ]
 
-testSuccessfulDocCreation :: Connection -> Assertion
+testSuccessfulDocCreation :: Connection -> String -> Assertion
 testSuccessfulDocCreation conn emlfile = withMyTestEnvironment conn $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
