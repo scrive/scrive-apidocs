@@ -197,7 +197,7 @@ Executable kontrakcja-test
 
   Hs-source-dirs: test/src src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fhpc
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if !os(windows)
