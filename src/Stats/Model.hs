@@ -91,7 +91,7 @@ instance DBUpdate AddDocStatEvent Bool where
                     ,toSql $ unDocumentID $ seDocumentID event
                     ,toSql $ seServiceID event
                     ,toSql $ seCompanyID event
-                    ,toSql $ show $ seDocumentType]
+                    ,toSql $ show $ seDocumentType event]
     oneRowAffectedGuard r
 
 fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]

@@ -12,8 +12,11 @@ import Text.Printf
 import Misc
 import Stats.Model
 import MinutesTime
+import API.Service.Model
 
 import Data.List
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+
 
 statisticsFieldsForASingleUser :: (Functor m, MonadIO m) => [(Int, Int, Int, Int)] -> Fields m
 statisticsFieldsForASingleUser stats = 
@@ -47,7 +50,7 @@ statisticsCSV events =
                           , show $ seQuantity event
                           , show $ seAmount event
                           , show $ seDocumentID event
-                          , maybe "" show $ seServiceID event
+                          , maybe "" (BS.toString . unServiceID) $ seServiceID event
                           , maybe "" show $ seCompanyID event
                           , show $ seDocumentType event
                           ]
