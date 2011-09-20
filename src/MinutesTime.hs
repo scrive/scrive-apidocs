@@ -49,7 +49,7 @@ data MinutesTime1 = MinutesTime1
     deriving (Eq, Ord, Typeable)
 
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
-newtype MinutesTime = MinutesTime { _unMinutesTime :: Int }
+newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable, Data)
 $(newtypeDeriveConvertible ''MinutesTime)
 

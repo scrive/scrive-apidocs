@@ -12,11 +12,13 @@ tableDocuments = Table {
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
+       , ("sealed_file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("title", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("status", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
-       , ("process", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("process", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("functionality", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("ctime", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("mtime", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
@@ -29,7 +31,7 @@ tableDocuments = Table {
        , ("trust_weaver_reference", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("allowed_id_types", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("csv_contents", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("cancelation_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("sharing", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
@@ -44,11 +46,13 @@ tableDocuments = Table {
       [] -> do
         runRaw conn $ "CREATE TABLE documents ("
           ++ "  id BIGINT NOT NULL"
-          ++ ", service_id TEXT NOT NULL"
+          ++ ", service_id TEXT NULL"
+          ++ ", file_id BIGINT NULL"
+          ++ ", sealed_file_id BIGINT NULL"
           ++ ", title TEXT NOT NULL"
           ++ ", status TEXT NOT NULL"
           ++ ", type SMALLINT NOT NULL"
-          ++ ", process SMALLINT NOT NULL"
+          ++ ", process SMALLINT NULL"
           ++ ", functionality SMALLINT NOT NULL"
           ++ ", ctime TIMESTAMPTZ NOT NULL"
           ++ ", mtime TIMESTAMPTZ NOT NULL"
@@ -61,7 +65,7 @@ tableDocuments = Table {
           ++ ", trust_weaver_reference TEXT NULL"
           ++ ", allowed_id_types INTEGER NOT NULL"
           ++ ", csv_title TEXT NULL"
-          ++ ", csv_contents BYTEA NULL"
+          ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
           ++ ", cancelation_reason TEXT NULL"
           ++ ", sharing SMALLINT NOT NULL"
@@ -82,35 +86,97 @@ tableDocuments = Table {
       ++ " ADD CONSTRAINT fk_documents_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE documents"
+      ++ " ADD CONSTRAINT fk_documents_file_id FOREIGN KEY(file_id)"
+      ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE documents"
+      ++ " ADD CONSTRAINT fk_documents_sealed_file_id FOREIGN KEY(sealed_file_id)"
+      ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
-tableDocumentFiles :: Table
-tableDocumentFiles = Table {
-    tblName = "document_files"
+tableFiles :: Table
+tableFiles = Table {
+    tblName = "files"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("type", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("storage", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE document_files ("
+        runRaw conn $ "CREATE TABLE files ("
           ++ "  id BIGINT NOT NULL"
-          ++ ", document_id BIGINT NOT NULL"
-          ++ ", type TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", storage TEXT NULL"
-          ++ ", CONSTRAINT pk_document_files PRIMARY KEY (id)"
+          ++ ", content BYTEA NULL"
+          ++ ", CONSTRAINT pk_files PRIMARY KEY (id)"
+          ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = return ()
+  }
+
+tableAuthorAttachments :: Table
+tableAuthorAttachments = Table {
+    tblName = "author_attachments"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
+    case desc of
+      [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        runRaw conn $ "CREATE TABLE author_attachments ("
+          ++ "  file_id BIGINT NOT NULL"
+          ++ ", document_id BIGINT NOT NULL"
+          ++ ", CONSTRAINT pk_author_attachments PRIMARY KEY (file_id, document_id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "CREATE INDEX idx_document_files_document_id ON document_files(document_id)"
-    runRaw conn $ "ALTER TABLE document_files"
-      ++ " ADD CONSTRAINT fk_document_files_documents FOREIGN KEY(document_id)"
+    runRaw conn $ "ALTER TABLE author_attachments"
+      ++ " ADD CONSTRAINT fk_author_attachments_files FOREIGN KEY(file_id)"
+      ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE author_attachments"
+      ++ " ADD CONSTRAINT fk_author_attachments_documents FOREIGN KEY(document_id)"
+      ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+tableSignatoryAttachments :: Table
+tableSignatoryAttachments = Table {
+    tblName = "signatory_attachments"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
+    case desc of
+      [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        runRaw conn $ "CREATE TABLE signatory_attachments ("
+          ++ "  file_id BIGINT NOT NULL"
+          ++ ", document_id BIGINT NOT NULL"
+          ++ ", email TEXT NOT NULL"
+          ++ ", description TEXT NOT NULL"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (file_id)"
+          ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = wrapDB $ \conn -> do
+    runRaw conn $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
+    runRaw conn $ "ALTER TABLE signatory_attachments"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
+      ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE signatory_attachments"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_documents FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

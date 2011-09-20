@@ -75,6 +75,7 @@ module Doc.DocState
     , SignLinkFromDetailsForTest(..)
     , DeleteSigAttachment(..)
     , GetSignatoryLinkIDs(..)
+    , populateDBWithDocumentsIfEmpty
     )
 where
 
@@ -82,10 +83,13 @@ import API.Service.Model
 import Company.Model
 import Control.Monad
 import Control.Monad.Reader (ask)
+import Database.HDBC
 import Data.List (find)
 import Data.Maybe
 import Data.Word
+import DB.Classes
 import DB.Types
+import DB.Utils
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
@@ -101,6 +105,9 @@ import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import qualified AppLogger as Log
+import qualified Doc.Model as D
+import qualified Doc.Tables as D
 
 {- |
     All documents for the given service.  This does not include
@@ -1605,6 +1612,9 @@ getSignatoryLinkIDs :: Query Documents [SignatoryLinkID]
 getSignatoryLinkIDs =
   (concatMap (map signatorylinkid . documentsignatorylinks) . toList) `fmap` ask
 
+getAllDocuments :: Query Documents [Document]
+getAllDocuments = return . toList =<< ask
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -1675,4 +1685,189 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'migrateDocumentSigLinkCompanies
                         , 'fixBug510ForDocument
                         , 'getSignatoryLinkIDs
+                        , 'getAllDocuments
                         ])
+
+-- stuff for converting to pgsql
+
+populateDBWithDocumentsIfEmpty :: DB ()
+populateDBWithDocumentsIfEmpty = do
+  [docsnumber] :: [Int] <- wrapDB $ \conn -> quickQuery' conn "SELECT COUNT(*) FROM documents" [] >>= return . map fromSql . join
+  when (docsnumber == 0) $ do
+    Log.debug "No documents in database, populating with values from happstack-state..."
+    docs <- query GetAllDocuments
+    _ <- wrapDB $ \conn -> runRaw conn "SET CONSTRAINTS ALL DEFERRED"
+    forM_ docs $ \doc -> do
+      Log.debug $ show doc
+      let (doctype, docprocess) = case documenttype doc of
+            Signable p -> (D.Signable, Just p)
+            Template p -> (D.Template, Just p)
+            Attachment -> (D.Attachment, Nothing)
+            AttachmentTemplate -> (D.AttachmentTemplate, Nothing)
+          mdocfile = listToMaybe $ documentfiles doc
+          mdocsealedfile = listToMaybe $ documentsealedfiles doc
+      insertFile mdocfile
+      insertFile mdocsealedfile
+      _ <- wrapDB $ \conn -> run conn ("INSERT INTO documents ("
+        ++ "  id"
+        ++ ", service_id"
+        ++ ", file_id"
+        ++ ", sealed_file_id"
+        ++ ", title"
+        ++ ", status"
+        ++ ", type"
+        ++ ", process"
+        ++ ", functionality"
+        ++ ", ctime"
+        ++ ", mtime"
+        ++ ", days_to_sign"
+        ++ ", timeout_time"
+        ++ ", invite_time"
+        ++ ", invite_ip"
+        ++ ", log"
+        ++ ", invite_text"
+        ++ ", trust_weaver_reference"
+        ++ ", allowed_id_types"
+        ++ ", csv_title"
+        ++ ", csv_contents"
+        ++ ", csv_signatory_index"
+        ++ ", cancelation_reason"
+        ++ ", sharing"
+        ++ ", rejection_time"
+        ++ ", rejection_signatory_link_id"
+        ++ ", rejection_reason"
+        ++ ", tags"
+        ++ ", mail_footer"
+        ++ ", region"
+        ++ ", deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), to_timestamp(?), ?, to_timestamp(?), to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?)") [
+            toSql $ documentid doc
+          , toSql $ documentservice doc
+          , toSql $ fileid `fmap` mdocfile
+          , toSql $ fileid `fmap` mdocsealedfile
+          , toSql $ documenttitle doc
+          , toSql $ documentstatus doc
+          , toSql doctype
+          , toSql docprocess
+          , toSql $ documentfunctionality doc
+          , toSql $ documentctime doc
+          , toSql $ documentmtime doc
+          , toSql $ documentdaystosign doc
+          , toSql $ unTimeoutTime `fmap` documenttimeouttime doc
+          , toSql $ signtime `fmap` documentinvitetime doc
+          , toSql $ signipnumber `fmap` documentinvitetime doc
+          , toSql $ documentlog doc
+          , toSql $ documentinvitetext doc
+          , toSql $ documenttrustweaverreference doc
+          , toSql $ documentallowedidtypes doc
+          , toSql $ csvtitle `fmap` documentcsvupload doc
+          , toSql $ csvcontents `fmap` documentcsvupload doc
+          , toSql $ csvsignatoryindex `fmap` documentcsvupload doc
+          , toSql $ documentcancelationreason doc
+          , toSql $ documentsharing doc
+          , toSql $ fst3 `fmap` documentrejectioninfo doc
+          , toSql $ snd3 `fmap` documentrejectioninfo doc
+          , toSql $ thd3 `fmap` documentrejectioninfo doc
+          , toSql $ documenttags doc
+          , toSql $ documentmailfooter $ documentui doc
+          , toSql $ documentregion doc
+          , toSql $ documentdeleted doc
+          ]
+      forM_ (documentsignatorylinks doc) $ \sl -> do
+        _ <- wrapDB $ \conn -> run conn ("INSERT INTO signatory_links ("
+          ++ "  id"
+          ++ ", document_id"
+          ++ ", user_id"
+          ++ ", company_id"
+          ++ ", fields"
+          ++ ", sign_order"
+          ++ ", token"
+          ++ ", sign_time"
+          ++ ", sign_ip"
+          ++ ", seen_time"
+          ++ ", seen_ip"
+          ++ ", read_invitation"
+          ++ ", invitation_delivery_status"
+          ++ ", signinfo_text"
+          ++ ", signinfo_signature"
+          ++ ", signinfo_certificate"
+          ++ ", signinfo_provider"
+          ++ ", signinfo_first_name_verified"
+          ++ ", signinfo_last_name_verified"
+          ++ ", signinfo_personal_number_verified"
+          ++ ", roles"
+          ++ ", deleted"
+          ++ ", really_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, to_timestamp(?), ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
+              toSql $ signatorylinkid sl
+            , toSql $ documentid doc
+            , toSql $ maybesignatory sl
+            , toSql $ maybecompany sl
+            , toSql $ signatoryfields $ signatorydetails sl
+            , toSql $ signatorysignorder $ signatorydetails sl
+            , toSql $ signatorymagichash sl
+            , toSql $ signtime `fmap` maybesigninfo sl
+            , toSql $ signipnumber `fmap` maybesigninfo sl
+            , toSql $ signtime `fmap` maybeseeninfo sl
+            , toSql $ signipnumber `fmap` maybeseeninfo sl
+            , toSql $ maybereadinvite sl
+            , toSql $ invitationdeliverystatus sl
+            , toSql $ signatureinfotext `fmap` signatorysignatureinfo sl
+            , toSql $ signatureinfosignature `fmap` signatorysignatureinfo sl
+            , toSql $ signatureinfocertificate `fmap` signatorysignatureinfo sl
+            , toSql $ signatureinfoprovider `fmap` signatorysignatureinfo sl
+            , toSql $ signaturelstnameverified `fmap` signatorysignatureinfo sl
+            , toSql $ signaturelstnameverified `fmap` signatorysignatureinfo sl
+            , toSql $ signaturepersnumverified `fmap` signatorysignatureinfo sl
+            , toSql $ signatoryroles sl
+            , toSql $ signatorylinkdeleted sl
+            , toSql $ signatorylinkreallydeleted sl
+            ]
+        return ()
+      forM_ (documentauthorattachments doc) $ \(AuthorAttachment file) -> do
+        _ <- wrapDB $ \conn -> run conn ("INSERT INTO author_attachments ("
+          ++ "  file_id"
+          ++ ", document_id) VALUES (?, ?)") [
+              toSql $ fileid file
+            , toSql $ documentid doc
+            ]
+        return ()
+      forM_ (documentsignatoryattachments doc) $ \file -> do
+        let msigfile = signatoryattachmentfile file
+        insertFile msigfile
+        fid <- D.FileID `fmap` getUniqueID D.tableFiles
+        when (isNothing msigfile) $ do
+          _ <- wrapDB $ \conn -> run conn ("INSERT INTO files ("
+            ++ "  id"
+            ++ ", name) VALUES (?, ?)") [
+                toSql fid
+              , toSql $ signatoryattachmentname file
+              ]
+          return ()
+        _ <- wrapDB $ \conn -> run conn ("INSERT INTO signatory_attachments ("
+          ++ "  file_id"
+          ++ ", document_id"
+          ++ ", email"
+          ++ ", description) VALUES (?, ?, ?, ?)") [
+              toSql $ maybe fid (D.FileID . fromIntegral . unFileID . fileid) msigfile
+            , toSql $ documentid doc
+            , toSql $ signatoryattachmentemail file
+            , toSql $ signatoryattachmentdescription file
+            ]
+        return ()
+      return ()
+  where
+    insertFile Nothing = return ()
+    insertFile (Just file) = do
+      let (storage, content) = case filestorage file of
+            FileStorageMemory s -> (Nothing, Just $ Binary s)
+            fs -> (Just fs, Nothing)
+      _ <- wrapDB $ \conn -> run conn ("INSERT INTO files ("
+        ++ "  id"
+        ++ ", name"
+        ++ ", content"
+        ++ ", storage) VALUES (?, ?, ?, ?)") [
+            toSql $ fileid file
+          , toSql $ filename file
+          , toSql content
+          , toSql storage
+          ]
+      return ()

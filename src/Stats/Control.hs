@@ -62,8 +62,9 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
 handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySuperUser $ do
   stats <- runDBQuery GetDocStatEvents
-  ok $ setHeader "Content-disposition" "attachment;filename=stats.csv"
-     $ setHeader "Content-type" "text/csv" 
+  Log.debug $ "All doc stats length: " ++ (show $ length stats)
+  ok $ setHeader "Content-Disposition" "attachment;filename=stats.csv"
+     $ setHeader "Content-Type" "text/csv"
      $ toResponse (statisticsCSV stats)
 
 {- |

@@ -1,4 +1,33 @@
-module Doc.Model where
+module Doc.Model (
+    module Doc.File
+  , AuthorAttachment(..)
+  , DocumentID(..)
+  , SignatoryAttachment(..)
+  , SignatoryLinkID(..)
+  , SignOrder(..)
+  , CancelationReason(..)
+  , DocumentFunctionality(..)
+  , DocumentLogEntry(..)
+  , DocumentProcess(..)
+  , DocumentStatus(..)
+  , DocumentSharing(..)
+  , DocumentType(..)
+  , FieldType(..)
+  , IdentificationType(..)
+  , MailsDeliveryStatus(..)
+  , SignatoryRole(..)
+  , SignatureProvider(..)
+  , CSVUpload(..)
+  , DocumentTag(..)
+  , DocumentUI(..)
+  , FieldPlacement(..)
+  , SignatoryDetails(..)
+  , SignatoryField(..)
+  , SignatureInfo(..)
+  , SignInfo(..)
+  , SignatoryLink(..)
+  , Document(..)
+  ) where
 
 import API.Service.Model
 import DB.Derive
