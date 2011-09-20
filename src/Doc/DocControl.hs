@@ -373,6 +373,22 @@ sendRejectEmails customMessage ctx document signalink = do
     scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
 
+sendMailAPIConfirmEmail :: TemplatesMonad m 
+                           => Context -> Document -> m ()
+sendMailAPIConfirmEmail ctx document =
+  case getAuthorSigLink document of
+    Nothing -> error "No author in Document"
+    Just authorsl -> do
+      mail <- mailMailAPIConfirm
+              document
+              (BS.toString $ getEmail authorsl)
+              (BS.toString $ getFullName authorsl)
+              (ctxhostpart ctx ++ (show $ LinkIssueDoc $ documentid document))
+      scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsl] }
+
+
+
+
 -- END EMAILS
 
 {- |
