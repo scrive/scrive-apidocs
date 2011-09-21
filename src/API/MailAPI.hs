@@ -358,5 +358,5 @@ parseSimpleEmail subject mailbody =
                in Right $ JSObject $ toJSObject [("title", JSString $ toJSString $ strip subject),
                                                  ("involved", 
                                                   JSArray (catMaybes sigs))]
-    es -> Left $ intercalate "\n" (map show es)
+    es -> Left $ intercalate "<br />\n" (map show es)
                            
