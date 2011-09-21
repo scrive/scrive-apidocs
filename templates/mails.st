@@ -522,3 +522,28 @@ appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $
 ###
 sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ $_from()$ $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###
+####
+mailMailAPIConfirmTitle=$_mailInvitationToSignTitle()$
+###
+mailMailAPIConfirmContent=
+    $header:noescape()$
+    <p>
+     <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
+     $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
+     $whohadsignedinfo:noescape()$<br/>
+     $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
+     $timetosigninfo:noescape()$
+     $appendixList()$
+     $sigattachlist()$
+    </p>
+    $if(issignatory)$
+    <p>$_mailInvitationToSignContractContentIfSignatoryInstruction()$</p>
+    $else$
+    $_mailInvitationToSignContractContentIfNotSignatoryInstruction()$
+    <br/> 
+    <a href="$link$">$link$</a> <br/>
+    <br/>
+    $endif$
+    $footer:noescape()$
+    $legalparagraph()$
+###

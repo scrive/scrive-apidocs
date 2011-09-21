@@ -25,6 +25,7 @@ simpleMailTests = testGroup "Simple Mail Tests" [
   ,doubleOptionalFieldsWeirdSignatory
   ,testMinimumDistance
   ,testWackySignature
+  ,testForwardMessage
   ]
 -- TestName
 -- Assertion
@@ -217,3 +218,22 @@ testWackySignature = testCase "Test wacky signature (rtf)" $
       Log.debug $ "JSON returned from parse: " ++ show a
       error "Did not return correct json"
                   
+testForwardMessage :: Test
+testForwardMessage = testCase "Test forward message" $
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrg num : 78765554\n \n" ++ 
+        "On 09/19/2011 03:08 PM, Eric Normand wrote:\n\n" ++
+        "hello"
+        ) of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"," ++
+        "\"companynr\":\"78765554\"" ++
+        "}]}") -> return ()
+    a ->  do
+      Log.debug $ "JSON returned from parse: " ++ show a
+      error "Did not return correct json"
+
+

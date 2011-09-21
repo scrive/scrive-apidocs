@@ -305,7 +305,9 @@ getParseErrorsSig ls = concatMap getParseErrorsLine ls ++
 splitSignatories :: String -> [[String]]
 splitSignatories mailbody =
   let sigstrings' = map strip $ lines $ strip mailbody
-      sigstrings  = takeWhile ((== "") ||^ (elem ':')) sigstrings'           
+      sigstrings  = takeWhile (\s -> let s' = strip s 
+                                     in (s' == "") || 
+                                        (elem ':' $ strip (take (length s' - 1) s'))) sigstrings'           
       lss = filter (/= []) $ split [""] sigstrings
   in lss
 
