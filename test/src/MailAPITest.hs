@@ -88,6 +88,7 @@ successChecks res = do
     let doc = fromJust mdoc
     assertBool "document has two signatories" $ length (documentsignatorylinks doc) == 2
     assertBool "document status is pending" $ documentstatus doc == Pending
+    assertBool "document has file attached" $ (length $ documentfiles doc) == 1
 
 equalsKey :: (a -> Bool) -> String -> [(String, a)] -> Bool
 equalsKey f k list = (f <$> lookup k list) == Just True
