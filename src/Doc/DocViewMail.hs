@@ -468,19 +468,38 @@ makeFullLink ctx doc link = do
          Nothing -> return $ ctxhostpart ctx ++ link
 
 mailMailAPIConfirm :: TemplatesMonad m
-                      => Document
-                      -> String
-                      -> String
-                      -> String
+                      => Context 
+                      -> Document
+                      -> SignatoryLink
                       -> m Mail
-mailMailAPIConfirm document authoremail authorname doclink = do
+mailMailAPIConfirm ctx document siglink = do
+  let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
+  let issignatory = (elem SignatoryPartner . signatoryroles) siglink
   title <- renderTemplateFM "mailMailAPIConfirmTitle" $ do
-    field "documenttitle" $ BS.toString $ documenttitle document
-  content <- wrapHTML' =<< (renderTemplateFM "mailMailAPIConfirmContent" $ do
-                               field "documenttitle" $ BS.toString $ documenttitle document
-                               field "authorname" authorname
-                               field "authoremail" authoremail
-                               field "doclink" doclink)
+     field "documenttitle" $ BS.toString $ documenttitle document
+  content <- wrapHTML' =<< (renderTemplateForProcess document processmailconfirmbymailapi $ do
+        fieldM "footer" $ mailFooter ctx document
+        fieldM "timetosigninfo" $ do
+            case (documenttimeouttime document) of
+                 Just time -> renderTemplateFM "timetosigninfo" $ do
+                                  field "time" $ show time
+                 Nothing -> return ""
+        fieldM "partnersinfo" $ do
+             renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
+        fieldM "whohadsignedinfo" $ do
+             do
+                   signedlist <- if (not $ null $ partySignedList document)
+                                    then fmap Just $ renderListTemplate $  map (BS.toString . getSmartName) $ partySignedList document
+                                    else return Nothing
+                   renderTemplateForProcess document processwhohadsignedinfoformail $ do
+                       field "signedlist" signedlist
+        field "documenttitle" $ BS.toString $ documenttitle document
+        field "issignatory" $ issignatory 
+        field "creatorname" creatorname
+        field "isattachments" $ False
+        field "hassigattachments" $ False
+        field "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
+       )            
   return $ emptyMail  { title   = BS.fromString title
                       , content = BS.fromString content
                       }

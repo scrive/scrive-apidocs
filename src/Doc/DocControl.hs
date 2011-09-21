@@ -379,12 +379,12 @@ sendMailAPIConfirmEmail ctx document =
   case getAuthorSigLink document of
     Nothing -> error "No author in Document"
     Just authorsl -> do
-      mail <- mailMailAPIConfirm
-              document
-              (BS.toString $ getEmail authorsl)
-              (BS.toString $ getFullName authorsl)
-              (ctxhostpart ctx ++ (show $ LinkIssueDoc $ documentid document))
+      mail <-   mailMailAPIConfirm ctx  document authorsl
+      Log.debug $ show $ mail { to = [getMailAddress authorsl] }
       scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsl] }
+
+
+
 
 
 
