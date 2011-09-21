@@ -373,6 +373,22 @@ sendRejectEmails customMessage ctx document signalink = do
     scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
 
+sendMailAPIConfirmEmail :: TemplatesMonad m 
+                           => Context -> Document -> m ()
+sendMailAPIConfirmEmail ctx document =
+  case getAuthorSigLink document of
+    Nothing -> error "No author in Document"
+    Just authorsl -> do
+      mail <-   mailMailAPIConfirm ctx  document authorsl
+      Log.debug $ show $ mail { to = [getMailAddress authorsl] }
+      scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsl] }
+
+
+
+
+
+
+
 -- END EMAILS
 
 {- |
@@ -1495,6 +1511,23 @@ handleDocumentUpload docid content1 filename = do
         _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
         return ()
   return ()
+
+handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
+handleDocumentUploadNoLogin docid content1 filename = do
+  Log.debug $ "Uploading file for doc " ++ show docid
+  Context{ctxdocstore, ctxs3action} <- getContext
+  ctx <- getContext
+  content14 <- liftIO $ preprocessPDF ctx content1 docid
+  fileresult <- update (AttachFile docid filename content14)
+  case fileresult of
+    Left err -> do
+      Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
+      return ()
+    Right document -> do
+        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
+        return ()
+  return ()
+
 
 basename :: String -> String
 basename filename =

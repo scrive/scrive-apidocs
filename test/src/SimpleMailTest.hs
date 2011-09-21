@@ -4,6 +4,10 @@ import API.MailAPI
 
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
+import qualified AppLogger as Log
+import Util.StringUtil
+
+import Data.Maybe
 
 import Text.JSON.String
 import Data.List
@@ -16,6 +20,11 @@ simpleMailTests = testGroup "Simple Mail Tests" [
   ,doubleOptionalFieldsSignatory
   ,doubleOptionalFieldsBadFieldSignatory
   ,doubleOptionalFieldsNoFirstNameSignatory
+  ,stupidEmailSignature
+  ,looksLikeSignature
+  ,doubleOptionalFieldsWeirdSignatory
+  ,testMinimumDistance
+  ,testWackySignature
   ]
 -- TestName
 -- Assertion
@@ -72,7 +81,9 @@ doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
         "\"company\":\"Hello\"," ++
         "\"personalnr\": \"78676545464\"}" ++
         "]}") -> return ()
-    _ -> error "Did not return correct json"
+    a -> do
+      Log.debug $ "JSON returned from parse: " ++ show a
+      error "Did not return correct json"
 
 doubleOptionalFieldsBadFieldSignatory :: Test
 doubleOptionalFieldsBadFieldSignatory = testCase "Double Optional Fields Bad Field Signatory" $ do
@@ -92,4 +103,117 @@ doubleOptionalFieldsNoFirstNameSignatory = testCase "Double Optional Fields Bad 
     Left _ -> error "Did not talk about missing field: First name"
     _ -> error "Did not fail with mssing field "
 
+stupidEmailSignature :: Test
+stupidEmailSignature = testCase "Stupid email signature" $ do
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\n\n \n" ++ 
+        "First name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\n"
+        ++"________________________________________\n"
+        ++"\n"
+        ++"Lukas Duczko, CEO\n"
+        ++"\n"
+        ++"SkrivaP=E5 CM AB\n"
+        ++"Phone: +46 (0)70 456 04 04\n"
+        ++"E-mail: lukas@skrivapa.se\n"
+        ++"Homepage: https://skrivapa.se\n"
+        ++"________________________________________\n") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"}," ++
+        "{\"fstname\":\"Eric\"," ++
+        "\"sndname\":\"Normand\"," ++
+        "\"email\":\"eric@skrivapa.se\"}" ++
+        "]}") -> return ()
+    _ -> error "Did not return correct json"
 
+looksLikeSignature :: Test
+looksLikeSignature = testCase "Stupid email signature" $ do
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\n\n \n" ++ 
+        "First name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\n\n\n"
+        ++"________________________________________\n"
+        ++"Phone: +46 (0)70 456 04 04\n"
+        ++"E-mail: lukas@skrivapa.se\n"
+        ++"Homepage: https://skrivapa.se\n"
+        ++"________________________________________\n") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"}," ++
+        "{\"fstname\":\"Eric\"," ++
+        "\"sndname\":\"Normand\"," ++
+        "\"email\":\"eric@skrivapa.se\"}" ++
+        "]}") -> return ()
+    _ -> error "Did not return correct json"
+
+doubleOptionalFieldsWeirdSignatory :: Test
+doubleOptionalFieldsWeirdSignatory = testCase "Double Optional Fields Weird Signatory" $ do
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrg num : 78765554\n \n" ++ 
+        "pers number: 78676545464  \nFirs name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"," ++
+        "\"companynr\":\"78765554\"" ++
+        "}," ++
+        "{" ++
+        "\"fstname\":\"Eric\"," ++
+        "\"sndname\":\"Normand\"," ++
+        "\"email\":\"eric@skrivapa.se\"," ++
+        "\"company\":\"Hello\"," ++
+        "\"personalnr\": \"78676545464\"}" ++
+        "]}") -> return ()
+    a ->  do
+      Log.debug $ "JSON returned from parse: " ++ show a
+      error "Did not return correct json"
+
+testMinimumDistance :: Test
+testMinimumDistance = testCase "Test minimum distance between keys" $ 
+  case catMaybes [if maxLev a' b' 2
+                  then Just (a', b')
+                  else Nothing
+                 |a <- allStrings
+                 ,b <- allStrings
+                 ,a /= b
+                 ,a' <- a
+                 ,b' <- b] of
+    [] -> return ()
+    a -> error $ "These strings are too close: " ++ intercalate ";" (map show a)
+    
+testWackySignature :: Test
+testWackySignature = testCase "Test wacky signature (rtf)" $
+  case parseSimpleEmail "Contract Title"
+       ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrg num : 78765554\n \n" ++ 
+        "=20" ++
+        " Marcus Thomasson\n" ++
+        "=20\n" ++
+        " <image001.gif>\n" ++
+        "=20\n" ++
+        "=20\n" ++
+        " marcus.thomasson@fortnox.se\n" ++
+        " Mobil: 0704 40 28 86\n" ++
+        " Skype: matho80\n" ++
+        "=20\n" ++
+        " Fortnox AB (publ)\n" ++
+        " Box 427, 351 06 V=E4xj=F6\n" ++
+        " Tel vxl:  0470-78 50 00\n" ++
+        " Fax: 0470-78 50 01\n" ++
+        " www.fortnox.se\n" ++
+        " =20\n" ++
+        " =20\n") of
+    Left msg -> error msg
+    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
+        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
+        "\"sndname\":\"Rak\"," ++
+        "\"email\":\"mariusz@skrivapa.se\"," ++
+        "\"companynr\":\"78765554\"" ++
+        "}]}") -> return ()
+    a ->  do
+      Log.debug $ "JSON returned from parse: " ++ show a
+      error "Did not return correct json"
+                  
