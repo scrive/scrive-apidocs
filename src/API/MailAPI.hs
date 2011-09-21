@@ -141,7 +141,7 @@ handleMailCommand = do
     -- extension and can be used as for example password
     let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
 
-    Context { ctxtime, ctxipnumber } <- getContext
+    ctxx@Context { ctxtime, ctxipnumber } <- getContext
     user <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString username))
       >>= maybeFail ("User '" ++ username ++ "' not found")
 
@@ -210,14 +210,20 @@ handleMailCommand = do
     (_ :: ()) <- liftKontra $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
     (_ :: ()) <- liftKontra $ DocControl.postDocumentChangeAction newdocument doc Nothing
     let docid = documentid doc
+
+    _ <- DocControl.sendMailAPIConfirmEmail ctxx newdocument
+
     let (rjson :: JSObject JSValue) = toJSObject [ ("status", JSString (toJSString "success"))
                                                  , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))
                                                  , ("documentid", JSString (toJSString (show docid)))
                                                  ]
     return rjson
 
+
 -- Simple Mail API
 
+-- | like lookup, but compares with maxLev 2 instead
+--     of ==
 levLookup :: String -> [(String, a)] -> Maybe a
 levLookup _ []                                    = Nothing
 levLookup k1 ((k2, v):_) | maxLev k1 k2 2         = Just v
