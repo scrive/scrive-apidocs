@@ -15,6 +15,7 @@ module Doc.DocViewMail (
     , mailMismatchSignatory
     , mailRejectMailContent
     , mailMailAPIConfirm
+    , mailMailApiError
     ) where
 
 import API.Service.Model
@@ -503,3 +504,10 @@ mailMailAPIConfirm ctx document siglink = do
   return $ emptyMail  { title   = BS.fromString title
                       , content = BS.fromString content
                       }
+
+mailMailApiError:: MailAddress -> String -> Mail
+mailMailApiError from err = 
+      emptyMail  {  to = [from]
+                  , title   = BS.fromString "Error while parsing request"
+                  , content = BS.fromString err
+                 }

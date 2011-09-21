@@ -15,7 +15,7 @@ import Misc
 import qualified AppLogger as Log (debug)
 import qualified Doc.DocControl as DocControl
 import Control.Monad.Reader
-
+import InputValidation
 import Control.Monad.Error
 import Data.Functor
 import Data.List
@@ -36,9 +36,10 @@ import InspectXMLInstances ()
 import API.API
 import API.APICommons
 import Data.Char
-
+import Mails.MailsData as MD
 import Data.String.Utils
 import Util.StringUtil
+import Doc.DocViewMail
 
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , icontent :: BS.ByteString
@@ -55,6 +56,7 @@ instance APIContext MailAPIContext where
 
 apiContextForMail :: Kontrakcja m => m (Either (API_ERROR, String) MailAPIContext)
 apiContextForMail = do
+    ctx <- getContext
     Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
@@ -64,8 +66,11 @@ apiContextForMail = do
     -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
     eresult <- parseEmailMessage (concatChunks content)
     case eresult of
-      Left msg -> do
+      Left (from,msg) -> do
         Log.debug $ "handleMailAPI: " ++ msg
+        case (asValidEmail $ BS.toString from ) of 
+             Good _ -> scheduleEmailSendout (ctxesenforcer ctx) $ mailMailApiError (MD.MailAddress {MD.fullname=BS.empty, MD.email = from}) msg
+             _ -> return ()
         return $ Left (API_ERROR_PARSING, "Cannot parse email API call: " ++ msg)
       Right (json, pdf, from, to) -> do
                         return $ Right $ MailAPIContext { ibody = json
@@ -101,14 +106,27 @@ parseEmailMessageToParts content = (mime, parts mime)
         MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
         MIME.Multi more -> concatMap parts more
 
-parseEmailMessage :: (Monad m, MonadIO m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
-parseEmailMessage content = runErrorT $ do
-  let (mime, allParts) = parseEmailMessageToParts content
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
-      isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
-      typesOfParts = map fst allParts
-  let pdfs = filter isPDF allParts
-  let plains = filter isPlain allParts
+parseEmailMessage :: (Monad m, MonadIO m) => BS.ByteString -> m (Either (BS.ByteString,String) (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
+parseEmailMessage content = 
+  let 
+  (mime, allParts) = parseEmailMessageToParts content
+  isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
+  isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
+  typesOfParts = map fst allParts
+  pdfs = filter isPDF allParts
+  plains = filter isPlain allParts
+  from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
+  to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
+  subject = maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
+  charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
+  recode mimetype content' =
+        case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
+          Left result' -> return $ BS.concat (BSL.toChunks (result'))
+          Right errmsg -> throwError (show $ IConv.reportConversionError errmsg)
+  extendWithFrom (Left l) = Left (from,l)
+  extendWithFrom (Right r) = Right r
+  in
+ liftM extendWithFrom $ runErrorT $ do        
   pdf <- case pdfs of
     [pdf] -> return pdf
     _ -> throwError $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
@@ -116,14 +134,6 @@ parseEmailMessage content = runErrorT $ do
     [plain] -> return plain
     _ -> throwError $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
   let pdfBinary = snd pdf
-  let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
-  let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
-  let subject = maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
-  let charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
-  let recode mimetype content' =
-        case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
-          Left result' -> return $ BS.concat (BSL.toChunks (result'))
-          Right errmsg -> throwError (show $ IConv.reportConversionError errmsg)
   recodedPlain <- recode (fst plain) (snd plain)
 
   json <- (ErrorT . return) $ if '{' == (head $ strip $ BS.toString recodedPlain)
