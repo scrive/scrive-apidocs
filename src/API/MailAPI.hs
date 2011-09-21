@@ -68,8 +68,9 @@ apiContextForMail = do
     case eresult of
       Left (from,msg) -> do
         Log.debug $ "handleMailAPI: " ++ msg
-        case (asValidEmail $ BS.toString from ) of 
-             Good _ -> scheduleEmailSendout (ctxesenforcer ctx) $ mailMailApiError (MD.MailAddress {MD.fullname=BS.empty, MD.email = from}) msg
+        let from' = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
+        case (asValidEmail from') of 
+             Good _ -> scheduleEmailSendout (ctxesenforcer ctx) $ mailMailApiError (MD.MailAddress {MD.fullname=BS.empty, MD.email = BS.fromString from'}) msg
              _ -> return ()
         return $ Left (API_ERROR_PARSING, "Cannot parse email API call: " ++ msg)
       Right (json, pdf, from, to) -> do
