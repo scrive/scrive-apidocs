@@ -3,7 +3,6 @@ module User.SystemServer (
   , systemServerFromURL
   ) where
 
-import Data.List
 
 import DB.Derive
 
@@ -12,9 +11,7 @@ data SystemServer = SkrivaPa | Scrive
 $(enumDeriveConvertible ''SystemServer)
 
 systemServerFromURL :: String -> SystemServer
-systemServerFromURL url =  if ("scrive" `isInfixOf` url)
-                             then Scrive
-                             else SkrivaPa
-
+systemServerFromURL _url =   Scrive
+                           
 
 
