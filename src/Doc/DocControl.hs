@@ -141,6 +141,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> Rejected
     -- main action: sendRejectAuthorEmail
     | oldstatus == Pending && documentstatus == Rejected = do
+        _ <- addDocumentRejectStatEvents document
         ctx <- getContext
         customMessage <- getCustomTextField "customtext"
         -- we don't need to forkIO here since we only schedule emails here
@@ -153,6 +154,7 @@ postDocumentChangeAction document@Document  { documentstatus
         documentstatus == Canceled &&
         isJust documentcancelationreason &&
         isELegDataMismatch (fromJust documentcancelationreason) = do
+            _ <- addDocumentCancelStatEvents document
             ctx <- getContext
             Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
             sendElegDataMismatchEmails ctx document
