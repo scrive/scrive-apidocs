@@ -260,9 +260,9 @@ basicDocsDontHaveMultipleCounterparts _ Document{documentfunctionality, document
     Contracts in basic mode don't have viewing counterparts
 -}
 basicDocsDontHaveViewingCounterparts :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveViewingCounterparts _ Document{documentfunctionality, documentsignatorylinks, documentstatus} =
+basicDocsDontHaveViewingCounterparts _ Document{documentfunctionality, documentsignatorylinks, documenttype} =
   assertInvariant ("basic doc has viewing counterparts")
-                  ((documentstatus == Signable Contract && documentfunctionality == BasicFunctionality) =>> 
+                  ((documenttype == Signable Contract && documentfunctionality == BasicFunctionality) =>> 
                     (not . any isViewer $ filter (not . isAuthor) documentsignatorylinks))
                     
 {- |
@@ -278,9 +278,9 @@ basicDocsDontHaveCustomFields _ Document{documentfunctionality,documentsignatory
     Documents in basic mode don't have any placements
 -}
 basicDocsDontHavePlacements :: MinutesTime -> Document -> Maybe String
-basicDocsDontHavePlacements _ Document{documentfunctionality,documentsignatorylinks} =
+basicDocsDontHavePlacements _ Document{documentfunctionality,documentsignatorylinks,documenttype} =
   assertInvariant ("basic doc has placement")
-                  ((documentfunctionality == BasicFunctionality) =>> 
+                  ((documenttype == Signable Contract && documentfunctionality == BasicFunctionality) =>> 
                     (all (hasNoPlacement . signatorydetails) documentsignatorylinks))
   where
     hasNoPlacement :: SignatoryDetails -> Bool
