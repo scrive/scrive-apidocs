@@ -57,6 +57,9 @@ import TrustWeaverTest
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
+#ifndef NO_CSVUTIL
+import CSVUtilTest
+#endif
 #ifndef NO_SIMPLEEMAIL
 import SimpleMailTest
 #endif
@@ -106,6 +109,9 @@ allTests conn = tail tests
 #ifndef NO_USERSTATE
       , userStateTests conn
 #endif
+#ifndef NO_CSVUTIL
+      , csvUtilTests
+#endif
 #ifndef NO_SIMPLEEMAIL
       , simpleMailTests 
 #endif
@@ -154,6 +160,9 @@ testsToRun conn (t:ts) =
 #endif
 #ifndef NO_USERSTATE
     "userstate"       -> Right (userStateTests conn) : rest
+#endif
+#ifndef NO_CSVUTIL
+    "csvutil"         -> Right csvUtilTests : rest
 #endif
 #ifndef NO_SIMPLEMAIL  
     "simplemail"      -> Right simpleMailTests : rest

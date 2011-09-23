@@ -70,6 +70,10 @@ Flag test-userstate
   Description: Build userstate testsuite
   Default: True
 
+Flag test-csvutil
+  Description: Build csvutil testsuite
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
   Default: False
@@ -226,6 +230,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_TRUSTWEAVER
   if !flag(test-userstate)
     cpp-options: -DNO_USERSTATE
+  if !flag(test-csvutil)
+    cpp-options: -DNO_CSVUTIL
   if !flag(test-redirect)
     cpp-options: -DNO_REDIRECT
   if !flag(test-docstatequery)

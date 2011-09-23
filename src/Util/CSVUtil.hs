@@ -32,7 +32,7 @@ parseCSV csvcontents =
     This splits up the csv contents, it makes an effort to guess separators
 -}
 splitCSVContents :: String -> Exceptional String [[String]]
-splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator x
+splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator (x ++ "\n")
   where
     guessedQuoteMark = '"'
     guessedSeparator = maximumBy (comparing charOccurenceCount) alternativeSeparators

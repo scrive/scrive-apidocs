@@ -23,14 +23,14 @@ showUserMailAPI =
                <div style="margin-top: 10px">
                  $_MailAPIActiveEmail()$
                  <ul id="mailapiemailslist">
-                  <li><a href="mailto:contract+$mailapikey$@api.skrivapa.se">
-                    contract+$mailapikey$@api.skrivapa.se
+                  <li><a href="mailto:contract+$mailapikey$@api.scrive.com">
+                    contract+$mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:offer+$mailapikey$@api.skrivapa.se">
-                     offer+$mailapikey$@api.skrivapa.se
+                   <li><a href="mailto:offer+$mailapikey$@api.scrive.com">
+                     offer+$mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:order+$mailapikey$@api.skrivapa.se">
-                     order+$mailapikey$@api.skrivapa.se
+                   <li><a href="mailto:order+$mailapikey$@api.scrive.com">
+                     order+$mailapikey$@api.scrive.com
                    </a></li>
                  </ul>
                  <input type="checkbox" id="resetapikeycbox" name="reset_key" />
