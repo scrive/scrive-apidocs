@@ -41,6 +41,10 @@ class DBUpdate q r | q -> r where
 -- handling such case may vary in different monads, hence this function.
 class (Functor m, MonadIO m) => DBMonad m where
   getConnection :: m Connection
+  -- | From the point of view of the implementor of instances of
+  -- 'DBMonad': handle a database error.  However, code that uses
+  -- 'handleDBError' throws an exception - compare with 'throw', or
+  -- 'fail'.
   handleDBError :: DBException -> m a
 
 -- | Wrapper for calling db related functions in controlled environment
