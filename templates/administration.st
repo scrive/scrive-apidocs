@@ -1,5 +1,9 @@
 ###
 adminsmain=
+<strong>Stats CSVs</strong>
+<p><a href="/adminonly/allstatscsv">Download the CSV containing
+        all signature stats</a></p>
+
     <strong>Sales Tools</strong>
     <table><tbody>
         <tr>
@@ -505,18 +509,6 @@ userusagestats=
       </ul>
       <div class="tab-container">
 	<div class="tab-content account">
-      <p>Current date range: Always</p>
-      <p>NOTE: The date boxes do not work yet!!</p>
-      <form method="GET">
-        <label for="startdate">Start date</label>
-        <input id="startdate" name="startdate" class="dateinput"
-               type="text"></input>
-        -
-        <label for="enddate">End date</label>
-        <input id="enddate" name="enddate" type="text"
-               class="dateinput"></input>
-        <input type="submit" value="Filter date range"></input>
-      </form>
 	  <table>
             <thead>
               <td style="width:200px">Date</td>
