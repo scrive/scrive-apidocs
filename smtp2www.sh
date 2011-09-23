@@ -12,7 +12,7 @@ echo ${URI} >> ${LOG}
 chmod 600 ${LOG}
 
 #Step one, send the request
-tee ${REQUEST} | curl -v -k --fail -X POST -F "magic=${MAGIC-}" -F "extension=${EXTENSION-}" -F "mail=@-" "${URI}" 2>> ${LOG} | (echo "Subject: SkrivaPa API" && echo "From: api@api.skrivapa.se" && echo "To: ${SENDER}" && echo "" && cat - ) | tee -a ${RESPONSE}
+tee ${REQUEST} | curl -v -k --fail -X POST -F "magic=${MAGIC-}" -F "extension=${EXTENSION-}" -F "mail=@-" "${URI}" 2>> ${LOG} | (echo "Subject: SkrivaPa API" && echo "From: api@api.skrivapa.se" && echo "To: ${SENDER}" && echo "" && cat - && echo "" && echo "") | tee -a ${RESPONSE} 
 
 rv="$?"
 

@@ -88,6 +88,7 @@ data DocProcessInfo =
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
   , processmailremindnotsignedcontent :: String
+  , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
@@ -176,6 +177,7 @@ contractProcess =
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmContractContent"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
@@ -264,6 +266,7 @@ offerProcess =
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOfferContent"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
@@ -352,6 +355,7 @@ orderProcess =
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOrderContent" 
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages
