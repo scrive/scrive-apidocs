@@ -14,6 +14,7 @@ module Doc.DocViewMail (
     , mailMismatchAuthor
     , mailMismatchSignatory
     , mailRejectMailContent
+    , mailMailAPIConfirm
     ) where
 
 import API.Service.Model
@@ -466,3 +467,20 @@ makeFullLink ctx doc link = do
          Just (ServiceLocation location) -> return $ BS.toString location ++ link
          Nothing -> return $ ctxhostpart ctx ++ link
 
+mailMailAPIConfirm :: TemplatesMonad m
+                      => Document
+                      -> String
+                      -> String
+                      -> String
+                      -> m Mail
+mailMailAPIConfirm document authoremail authorname doclink = do
+  title <- renderTemplateFM "mailMailAPIConfirmTitle" $ do
+    field "documenttitle" $ BS.toString $ documenttitle document
+  content <- wrapHTML' =<< (renderTemplateFM "mailMailAPIConfirmContent" $ do
+                               field "documenttitle" $ BS.toString $ documenttitle document
+                               field "authorname" authorname
+                               field "authoremail" authoremail
+                               field "doclink" doclink)
+  return $ emptyMail  { title   = BS.fromString title
+                      , content = BS.fromString content
+                      }

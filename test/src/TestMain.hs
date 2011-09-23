@@ -60,6 +60,9 @@ import UserStateTest
 #ifndef NO_CSVUTIL
 import CSVUtilTest
 #endif
+#ifndef NO_SIMPLEEMAIL
+import SimpleMailTest
+#endif
 
 allTests :: Connection -> [Test]
 allTests conn = tail tests
@@ -109,6 +112,9 @@ allTests conn = tail tests
 #ifndef NO_CSVUTIL
       , csvUtilTests
 #endif
+#ifndef NO_SIMPLEEMAIL
+      , simpleMailTests 
+#endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
@@ -157,6 +163,9 @@ testsToRun conn (t:ts) =
 #endif
 #ifndef NO_CSVUTIL
     "csvutil"         -> Right csvUtilTests : rest
+#endif
+#ifndef NO_SIMPLEMAIL  
+    "simplemail"      -> Right simpleMailTests : rest
 #endif
     _                 -> Left t : rest
   where
