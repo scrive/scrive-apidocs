@@ -54,7 +54,7 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
    and this is the pretty public name)
 -}
 kontrakcja :: String
-kontrakcja = "SkrivaPå"
+kontrakcja = "Scrive"
 
 -- * Main Implementation
 

@@ -522,3 +522,35 @@ appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $
 ###
 sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ $_from()$ $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###
+mailMailAPIConfirmTitle= $_mailMailAPIConfirmTitle()$
+###
+mailMailAPIConfirmContractContent= 
+   $_mailMailAPIConfirmContractHeader()$
+    <p>
+     <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
+     $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
+     $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
+     $timetosigninfo:noescape()$
+    </p>
+    $footer:noescape()$
+####
+mailMailAPIConfirmOrderContent= 
+   $_mailMailAPIConfirmOrderHeader()$
+   <p>
+     <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
+     $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
+     $_mailInvitationToSignOrderContentSender()$ <strong>$creatorname$</strong><br/>
+     $timetosigninfo:noescape()$
+    </p>
+    $footer:noescape()$
+####
+mailMailAPIConfirmOfferContent= 
+   $_mailMailAPIConfirmOfferHeader()$
+    <p>
+     <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
+     $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
+     $_mailInvitationToSignOfferContentSender()$ <strong>$creatorname$</strong><br/>
+     $timetosigninfo:noescape()$
+    </p>
+    $footer:noescape()$
+####

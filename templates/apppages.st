@@ -216,6 +216,7 @@ pageFooter=
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
         <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
+        <li><a href="http://api.scrive.com/index.php?title=Scrive_by_Mail">Scrive by Mail</a></li>
       </ul>
       <br />
       <strong>$_pageFooterTerms()$</strong>
