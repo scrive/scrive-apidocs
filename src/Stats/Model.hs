@@ -23,7 +23,7 @@ import Company.Model
 import API.Service.Model
 
 -- | A named quantity in the statistics events
--- please maintain the order on this
+-- please maintain the order on this (only add to the bottom)
 data DocStatQuantity = DocStatClose       -- ^ A Close Document event
                      | DocStatEmailSignatures  -- ^ The number of email signatories in a closed document
                      | DocStatSend        -- ^ A Send Document event

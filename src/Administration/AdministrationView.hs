@@ -25,6 +25,7 @@ module Administration.AdministrationView(
           , adminTranslationsPage
           , adminUserUsageStatsPage
           , adminCompanyUsageStatsPage
+          , adminUserStatisticsPage
           , AdminListPageParams(..)
           , StatsView(..)) where
 
@@ -127,6 +128,10 @@ adminCompanyPage company =
     field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
     field "adminlink" $ show $ LinkAdminOnly
+    
+adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
+adminUserStatisticsPage morefields =
+  renderTemplateFM "statisticsPage" morefields
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String

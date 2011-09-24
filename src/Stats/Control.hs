@@ -2,6 +2,7 @@ module Stats.Control
        (
          showAdminCompanyUsageStats,
          showAdminUserUsageStats,
+         showAdminSystemUsageStats,
          addDocumentCloseStatEvents,
          addDocumentCreateStatEvents,
          addDocumentSendStatEvents,
@@ -14,10 +15,12 @@ module Stats.Control
        
        where
 
+import API.Service.Model
 import Administration.AdministrationView
 import AppView
 import Company.Model
 import DB.Classes
+import Data.List
 import Data.Maybe
 import Doc.DocInfo
 import Doc.DocState
@@ -27,15 +30,14 @@ import MinutesTime
 import Misc
 import Stats.Model
 import Stats.View
+import Templates.Templates
 import User.Model
 import User.UserControl
 import Util.FlashUtil
+import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
-import Data.List
-import Util.HasSomeUserInfo
-import API.Service.Model
 
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
@@ -47,9 +49,9 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   statEvents <- runDBQuery $ GetDocStatEventsByUserID userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
-  let stats = calculateDocStatsFromEvents statEvents
+  let stats = calculateDocStatsFromEventsByDay statEvents
   content <- adminUserUsageStatsPage user mcompany $ do
-    statisticsFieldsForASingleUser stats
+    fieldFL "statistics" $ statisticsFieldsByDay stats
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
@@ -58,7 +60,20 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   let stats = calculateDocStatsFromCompanyEvents statCompanyEvents
   fullnames <- convertUserIDToFullName [] stats
   content <- adminCompanyUsageStatsPage companyid $ do
-    statisticsCompanyFieldsForASingleUser fullnames
+    fieldFL "statistics" $ statisticsCompanyFieldsByDay fullnames
+  renderFromBody TopEmpty kontrakcja content
+
+showAdminSystemUsageStats :: Kontrakcja m => m Response
+showAdminSystemUsageStats = onlySuperUser $ do
+  Context{ctxtime} <- getContext
+  let today = asInt ctxtime
+      som = 100 * (today `div` 100)
+  statEvents <- runDBQuery $ GetDocStatEvents
+  let statsByDay = calculateDocStatsFromEventsByDay $ filter (\s -> asInt (seTime s) >= som) statEvents
+      statsByMonth = calculateDocStatsFromEventsByMonth statEvents
+  content <- adminUserStatisticsPage $ do
+    fieldFL "statisticsbyday" $ statisticsFieldsByDay statsByDay
+    fieldFL "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
   renderFromBody TopEmpty kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
@@ -122,18 +137,32 @@ statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAm
   _                       -> Nothing
 
 
--- | Stats are very simple:
+-- | User Stats are very simple:
 -- Date
 -- # of documents Closed that date
 -- # of signatures on documents closed that date
 -- # of documents sent that date
-calculateDocStatsFromEvents :: [DocStatEvent] -> [(Int, Int, Int, Int)]
-calculateDocStatsFromEvents events =
+calculateDocStatsFromEventsByDay :: [DocStatEvent] -> [(Int, Int, Int, Int)]
+calculateDocStatsFromEventsByDay events =
   let byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (catMaybes $ map statEventToDocStatTuple events)
   in map sumStats byDay
 
--- | Stats are very simple:
+-- | User Stats are very simple:
 -- Date
+-- # of documents Closed that date
+-- # of signatures on documents closed that date
+-- # of documents sent that date
+calculateDocStatsFromEventsByMonth :: [DocStatEvent] -> [(Int, Int, Int, Int)]
+calculateDocStatsFromEventsByMonth events =
+  let stats  = catMaybes $ map statEventToDocStatTuple events
+      monthOnly = [(100 * (a `div` 100), b, c, d) | (a, b, c, d) <- stats]
+      byMonth = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) monthOnly
+  in map sumStats byMonth
+
+
+-- | Company Stats are very simple:
+-- Date
+-- UserID
 -- # of documents Closed that date
 -- # of signatures on documents closed that date
 -- # of documents sent that date
@@ -145,6 +174,7 @@ calculateDocStatsFromCompanyEvents events =
       setUID0 (a,_,c,d,e) = (a,UserID 0,c,d,e)
       totalByDay = map (setUID0 . sumCStats) byDay
   in concat $ zipWith (\a b->a++[b]) userTotalsByDay totalByDay
+
 
 -- some utility functions
 

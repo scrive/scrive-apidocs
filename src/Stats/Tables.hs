@@ -37,7 +37,7 @@ tableDocStatEvents = Table {
           ++ ", service_id    TEXT            NULL"
           ++ ", company_id    BIGINT          NULL"
           ++ ", document_type TEXT        NOT NULL"
-          ++ ", CONSTRAINT pk_doc_stat_events PRIMARY KEY (user_id, quantity, document_id)"
+          ++ ", CONSTRAINT pk_doc_stat_events PRIMARY KEY (quantity, document_id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
