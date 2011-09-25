@@ -1,6 +1,7 @@
 DBNAME=kontratest
 DBUSER=kontra
 DBPASSWORD=kontra
+TESTS=all
 
 
 .PHONY : all
@@ -18,7 +19,7 @@ dist/dbmodel/$(DBNAME).png:
 test:
 	cabal install -f-server
 	rm -f dist/hpc/*.tix
-	HPCTIXDIR=dist/hpc time dist/build/kontrakcja-test/kontrakcja-test all
+	HPCTIXDIR=dist/hpc time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
 # Create coverage pages from test run
 .PHONY : hpc
