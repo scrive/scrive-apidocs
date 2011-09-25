@@ -52,7 +52,7 @@ import RedirectTest
 import ServiceStateTest
 #endif
 #ifndef NO_TRUSTWEAVER
-import TrustWeaverTest
+--import TrustWeaverTest
 #endif
 #ifndef NO_USERSTATE
 import UserStateTest
@@ -64,111 +64,68 @@ import CSVUtilTest
 import SimpleMailTest
 #endif
 
-allTests :: Connection -> [Test]
+allTests :: Connection -> [(String,Test)]
 allTests conn = tail tests
   where
     tests = [
         undefined
 #ifndef NO_COMPANYSTATE
-      , companyStateTests conn
+      , ("companystate", companyStateTests conn)
 #endif
 #ifndef NO_DOCSTATE
-      , docStateTests conn
+      , ("docstate", docStateTests conn)
 #endif
 #ifndef NO_DOCCONTROL
-      , docControlTests conn
+      , ("doccontrol", docControlTests conn)
 #endif
 #ifndef NO_DOCSTATEQUERY
-      , docStateQueryTests
+      , ("docstatequery", docStateQueryTests)
 #endif
 #ifndef NO_HTML
-      , htmlTests
+      , ("html", htmlTests)
 #endif
 #ifndef NO_INPUTVALIDATION
-      , inputValidationTests
+      , ("inputvalidation", inputValidationTests)
 #endif
 #ifndef NO_INTEGRATIONAPI
-      , integrationAPITests conn
+      , ("integrationapi", integrationAPITests conn)
 #endif
 #ifndef NO_LOGIN
-      , loginTests conn
+      , ("login", loginTests conn)
 #endif
 #ifndef NO_MAILAPI
-      , mailApiTests conn
+      , ("mailapi", mailApiTests conn)
 #endif
 #ifndef NO_REDIRECT
-      , redirectTests
+      , ("redirect", redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
-      , serviceStateTests conn
+      , ("servicestate", serviceStateTests conn)
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
-      --, trustWeaverTest
+      --("trustweaver", trustWeaverTest)
 #endif
 #ifndef NO_USERSTATE
-      , userStateTests conn
+      , ("userstate", userStateTests conn)
 #endif
 #ifndef NO_CSVUTIL
-      , csvUtilTests
+      , ("csvutil", csvUtilTests)
 #endif
 #ifndef NO_SIMPLEEMAIL
-      , simpleMailTests 
+      , ("simplemail", simpleMailTests)
 #endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
-testsToRun conn (t:ts) =
-  case map toLower t of
-    "all"             -> map Right (allTests conn) ++ rest
-#ifndef NO_COMPANYSTATE
-    "companystate"    -> Right (companyStateTests conn) : rest
-#endif
-#ifndef NO_DOCSTATE
-    "docstate"        -> Right (docStateTests conn) : rest
-#endif
-#ifndef NO_DOCCONTROL
-    "doccontrol"        -> Right (docControlTests conn) : rest
-#endif
-#ifndef NO_DOCSTATEQUERY
-    "docstatequery"   -> Right docStateQueryTests : rest
-#endif
-#ifndef NO_HTML
-    "html"            -> Right htmlTests : rest
-#endif
-#ifndef NO_INPUTVALIDATION
-    "inputvalidation" -> Right inputValidationTests : rest
-#endif
-#ifndef NO_INTEGRATIONAPI
-    "integrationapi"  -> Right (integrationAPITests conn) : rest
-#endif
-#ifndef NO_LOGIN
-    "login"           -> Right (loginTests conn) : rest
-#endif
-#ifndef NO_MAILAPI
-    "mailapi"         -> Right (mailApiTests conn) : rest
-#endif
-#ifndef NO_REDIRECT
-    "redirect"        -> Right redirectTests : rest
-#endif
-#ifndef NO_SERVICESTATE
-    "servicestate"    -> Right (serviceStateTests conn) : rest
-#endif
-#ifndef NO_TRUSTWEAVER
-    "trustweaver"     -> Right trustWeaverTests : rest
-#endif
-#ifndef NO_USERSTATE
-    "userstate"       -> Right (userStateTests conn) : rest
-#endif
-#ifndef NO_CSVUTIL
-    "csvutil"         -> Right csvUtilTests : rest
-#endif
-#ifndef NO_SIMPLEMAIL  
-    "simplemail"      -> Right simpleMailTests : rest
-#endif
-    _                 -> Left t : rest
+testsToRun conn (t:ts) 
+  | lt == "all" = map (Right . snd) (allTests conn) ++ rest
+  | otherwise = case lookup lt (allTests conn) of
+                  Just testcase -> Right testcase : rest
+                  Nothing       -> Left t : rest
   where
+    lt = map toLower t
     rest = testsToRun conn ts
 
 main :: IO ()
