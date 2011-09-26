@@ -689,10 +689,13 @@ handleAccountSetupGet aid hash = do
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
+  Log.debug "Account setup after signing document"  
   muserid <- getUserIDFromAction
+  Log.debug $ "Account setup after signing document: UserID->"  ++ (show muserid)
   case muserid of
     Just userid -> do
       user <- runDBOrFail $ dbQuery $ GetUserByID userid
+      Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)    
       handleActivate aid hash BySigning user
     Nothing -> return Nothing
   where
@@ -770,21 +773,26 @@ handleAccountSetupPost aid hash = do
 
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
-  iscompanyaccount <- getCriticalField asValidAccountType "accounttype"
+  Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
+  iscompanyaccount <- getOptionalField asValidAccountType "accounttype"
   mcompany <- getCompanyForUser actvuser
   case (iscompanyaccount, mcompany) of
-    (False, Just _company) -> do
+    (Nothing, _) -> do
+      Log.debug "Activating user account: No account type set"
+      addFlashM flashMessageNoAccountType
+      return Nothing
+    (Just False, Just _company) -> do
       -- accounts setup as part of a company can't just switch to being private
       -- we have protected against this on the client, but this should provide an extra server check
       addFlashM flashMessageNoAccountType
       returnToAccountSetup actvuser Nothing
-    (False, Nothing) ->
+    (Just False, Nothing) ->
       -- this is just a simple private account activation
       finalizePrivateActivation actvuser
-    (True, Just company) -> do
+    (Just True, Just company) -> do
       -- this is an account for an existing company
       finalizeCompanyActivation actvuser company
-    (True, Nothing) -> do
+    (Just True, Nothing) -> do
       -- we need to make a new company, because one doesn't already exist - this user should be the admin too
       (user, company) <- runDB $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
