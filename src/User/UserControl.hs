@@ -216,10 +216,10 @@ handlePostUserSecurity = do
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
-      mlang <- readField "lang"
+      let newregion = fromMaybe (region $ usersettings user) mregion
       _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              region = fromMaybe (region $ usersettings user) mregion
-           , lang = fromMaybe (lang $ usersettings user) mlang
+           , lang = defaultRegionLang newregion
            }
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
