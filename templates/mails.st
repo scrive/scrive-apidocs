@@ -159,46 +159,71 @@ mailInvitationToSignOrderContent=
 mailInvitationToSignContractDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> $_mailInvitationToSignContractDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
-      $_mailInvitationToSignContractDefaultHeaderBody2()$</p>
+      $if(!service)$
+        $_mailInvitationToSignContractDefaultHeader()$ 
+      $else$
+        $_mailInvitationToSignContractDefaultHeaderWithService()$
+      $endif$
+   </p>
 ####
 mailInvitationToSignOfferDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> $_mailInvitationToSignOfferDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
-      $_mailInvitationToSignOfferDefaultHeaderBody2()$</p>
+      $_mailInvitationToSignOfferDefaultHeader()$ 
+    </p>
 ####
 mailInvitationToSignOrderDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> $_mailInvitationToSignOrderDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
-      $_mailInvitationToSignOrderDefaultHeaderBody2()$</p>
+      $_mailInvitationToSignOrderDefaultHeader()$ 
+    </p>
 ####
 mailInvitationToViewDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong>
-      $_mailInvitationToViewDefaultHeaderBody1()$ <strong>$documenttitle$</strong>
-      $_mailInvitationToViewDefaultHeaderBody2()$</p>
+      $if(!service)$
+       $_mailInvitationToViewDefaultHeader()$
+      $else$
+       $_mailInvitationToViewDefaultHeaderWithService()$  
+      $endif$
+     </p>
 ####
 remindMailSignedTitle=$documenttitle$
 ###
 remindMailSignedContractStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailSignedContractStandardHeaderSendRequest()$</p>
+      <p>
+       $if(!service)$
+        $_remindMailSignedContractStandardHeaderSendRequest()$
+       $else$ 
+        $_remindMailSignedContractStandardHeaderSendRequestWithService()$
+       $endif$
+      </p>
     </span>
 ####
 remindMailSignedOfferStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailSignedOfferStandardHeaderSendRequest()$</p>
+      <p>
+       $if(!service)$
+        $_remindMailSignedOfferStandardHeaderSendRequest()$
+       $else$ 
+        $_remindMailSignedOfferStandardHeaderSendRequestWithService()$
+       $endif$
+     </p>
     </span>
 ####
 remindMailSignedOrderStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailSignedOrderStandardHeaderSendRequest()$</p>
+      <p>
+        $if(!service)$
+         $_remindMailSignedOrderStandardHeaderSendRequest()$
+        $else$ 
+         $_remindMailSignedOrderStandardHeaderSendRequestWithService()$
+       $endif$
+      </p>
     </span>
 ####
 remindMailNotSignedTitle=$_remindMailNotSignedTitle()$

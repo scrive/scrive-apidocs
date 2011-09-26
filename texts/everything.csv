@@ -1723,8 +1723,8 @@
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignContractContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignContractDefaultHeaderBody1","har bjudit in dig att underteckna dokumentet",,"has invited you to sign the document"
-"_mailInvitationToSignContractDefaultHeaderBody2","online via tjänsten $ourServiceName()$.",,"online via $ourServiceName()$."
+"_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten $ourServiceName()$.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online via $ourServiceName()$."
+"_mailInvitationToSignContractDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online."
 "_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOfferContentIfSignatoryInstruction","1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
@@ -1735,9 +1735,8 @@
 "_mailInvitationToSignOfferContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOfferContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOfferContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignOfferDefaultHeaderBody1","har skickat offerten",,"has sent the offer"
-"_mailInvitationToSignOfferDefaultHeaderBody2","till dig och önskar din accept.      Acceptera eller avvisa offerten genom
- att följa instruktionerna nedan.",,"to you and wants you to accept it.     To accept or reject the offer:"
+"_mailInvitationToSignOfferDefaultHeader","<strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong> till dig och önskar din accept.      Acceptera eller avvisa offerten genom
+ att följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the offer <strong>$documenttitle$</strong> to you and wants you to accept it.     To accept or reject the offer:"
 "_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  Nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOrderContentIfSignatoryInstruction","1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
@@ -1748,12 +1747,11 @@
 "_mailInvitationToSignOrderContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOrderContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOrderContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignOrderDefaultHeaderBody1","har skickat orderbekräftelsen",,"has sent the order confirmation"
-"_mailInvitationToSignOrderDefaultHeaderBody2","till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
- följa instruktionerna nedan.",,"to you and wants your confirmation. To confirm or reject the order:"
+"_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
+ följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or reject the order:"
 "_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-"_mailInvitationToViewDefaultHeaderBody1","har bjudit in dig att se dokumentet",,"has invited you to view the document"
-"_mailInvitationToViewDefaultHeaderBody2","online via tjänsten $ourServiceName()$.",,"online via $ourServiceName()$."
+"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten $ourServiceName()$.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong> online via $ourServiceName()$."
+"_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong> online."
 "_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
 "_mailInviteUserAsCompanyAccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
  huvudkonto till ditt konto. Om du accepterar blir ditt konto
@@ -2753,14 +2751,26 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten $ourServiceName()$. Dokumentet bifogas
  med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using $ourServiceName()$. Please find it attached."
+"_remindMailSignedContractStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
+ <strong>$documenttitle$</strong>  till dig. Dokumentet
+ har undertecknats av dig. Dokumentet bifogas
+ med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document. Please find it attached."
 "_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig via tjänsten $ourServiceName()$. Den accepterade
  offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using $ourServiceName()$. Please find it attached."
+"_remindMailSignedOfferStandardHeaderSendRequestWithService","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
+  <strong>$documenttitle$</strong>        till dig. Offerten
+ har accepterats av dig. Den accepterade
+ offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer.. Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  bekräftat via tjänsten $ourServiceName()$. Orderbekräftelsen bifogas med
  detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using $ourServiceName()$.  Please find it attached."
+"_remindMailSignedOrderStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
+ <strong>$documenttitle$</strong>        till dig som du har
+ Bekräftat. Orderbekräftelsen bifogas med
+ detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>. Please find it attached."
 "_reminderFormFooterOwnMessage"," Skriv eget meddelande ",,"Write own message"
 "_reminderFormHead","Skicka påminnelse ",,"Send reminder"
 "_reminderFormSendReminder","Skicka påminnelse ",,"Send reminder"
