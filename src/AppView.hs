@@ -38,7 +38,6 @@ import Happstack.Server.SimpleHTTP
 import Templates.Templates
 import User.Lang
 import User.Region
-import User.SystemServer
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
 
@@ -140,7 +139,7 @@ sitemapPage = do
         field "hostpart" $ case hostpart of
                                 ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                                 xs -> xs
-        fieldFL "locales" $ map (uncurry staticLinksFields) . targetedLocales $ systemServerFromURL hostpart
+        fieldFL "locales" $ map (\r -> staticLinksFields r (defaultRegionLang r)) allValues
 
 priceplanPage :: Kontra String
 priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True

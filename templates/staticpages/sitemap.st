@@ -10,47 +10,47 @@ sitemapPage=
 
 $locales:{locale|
 <url>
-  <loc>$hostpart$$linkhome$</loc>
+  <loc>$hostpart$$locale.linkhome$</loc>
   <changefreq>daily</changefreq>
   <priority>1.00</priority>
 </url>
 <url>
-  <loc>$hostpart$$linkpartners$</loc>
+  <loc>$hostpart$$locale.linkpartners$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linkpriceplan$</loc>
+  <loc>$hostpart$$locale.linkpriceplan$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linksecurity$</loc>
+  <loc>$hostpart$$locale.linksecurity$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linklegal$</loc>
+  <loc>$hostpart$$locale.linklegal$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linkprivacypolicy$</loc>
+  <loc>$hostpart$$locale.linkprivacypolicy$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linkterms$</loc>
+  <loc>$hostpart$$locale.linkterms$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linkabout$</loc>
+  <loc>$hostpart$$locale.linkabout$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$linkclients$</loc>
+  <loc>$hostpart$$locale.linkclients$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
