@@ -159,6 +159,7 @@ remindMailSignedStandardHeader document signlink =
         field "documenttitle" $ BS.toString $ documenttitle document
         field "author" $ BS.toString creatorname
         field "personname" $ BS.toString $ getSmartName signlink
+        field "service" $ isJust $ documentservice document
 
 remindMailNotSignedStandardHeader :: TemplatesMonad m
                                   => Document
@@ -171,6 +172,7 @@ remindMailNotSignedStandardHeader document signlink =
         field "documenttitle" $ BS.toString $ documenttitle document
         field "author" $ BS.toString creatorname
         field "personname" $ BS.toString $ getSmartName signlink
+        field "service" $ isJust $ documentservice document
 
 mailDocumentRejected :: TemplatesMonad m
                      => Maybe String
@@ -232,12 +234,14 @@ mailInvitationToSignOrViewContent forMail
                          then if issignatory || not forMail
                                  then renderTemplateForProcess document processmailinvitationtosigndefaultheader $ do
                                      field "creatorname" $ creatorname
-                                     field"personname" $ personname
+                                     field "personname" $ personname
                                      field "documenttitle" $ BS.toString documenttitle
+                                     field "service" $ isJust $ documentservice document
                                  else renderTemplateFM "mailInvitationToViewDefaultHeader" $ do
                                      field "creatorname" creatorname
                                      field "personname" personname
                                      field "documenttitle" $ BS.toString documenttitle
+                                     field "service" $ isJust $ documentservice document
                          else return $ BS.toString documentinvitetext
             makeEditable "customtext" header
         fieldM "footer" $ do
