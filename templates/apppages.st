@@ -348,8 +348,12 @@ header=
 localeSwitcher=
   <div class="localeSwitcher">
     $if(!logged)$
+    $if(linksesv)$
+    $if(linkgben)$
     <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
     <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
+    $endif$
+    $endif$
     $else$
     <div><form action="$linklocaleswitch$" method="POST">
            <input type="hidden" name="region" value="REGION_SE"/>
