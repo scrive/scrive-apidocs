@@ -288,8 +288,9 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    systemserver <- guardJustM $ readField "systemserver"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
+    region <- guardJustM $ readField "region"
+    let lang = defaultRegionLang region
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage Scrive region lang
     when (isNothing muser) $
         addFlashM flashMessageUserWithSameEmailExists
 

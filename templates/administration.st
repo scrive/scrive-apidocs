@@ -657,10 +657,10 @@ pageStats=
             <td><input type="email" name="email"/></td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
             </td>
           </tr>
