@@ -344,19 +344,16 @@ getCompanyInfoChange = do
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
-  msystemserver <- readField "usersystemserver"
   mregion <- readField "userregion"
-  mlang <- readField "userlang"
   return $ \UserSettings {
     preferreddesignmode
   , systemserver
   , region
-  , lang
   } -> UserSettings {
     preferreddesignmode
-  , systemserver = fromMaybe systemserver msystemserver
+  , systemserver
   , region = fromMaybe region mregion
-  , lang = fromMaybe lang mlang
+  , lang = defaultRegionLang $ fromMaybe region mregion
   }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
