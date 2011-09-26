@@ -131,7 +131,7 @@
                                    <li class=""bottom"">      
                                                           <h4>30
  kr/signatur</h4>                                           
-                     <a href=""/priser"">Detaljerad prisplan</a>
+                     <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
                                                            </li></ul>","<ul class=""highlight-rows"">                                 
                        <li class=""top"">                     
                                            <h3>Business</h3>
@@ -149,7 +149,7 @@
           <li class=""bottom"">                               
                                  <h4>30 kr/signature</h4>
                                                             
- <a href=""/priser"">Detailed priceplan</a>                   
+ <a href=""$linkpriceplan$"">Detailed priceplan</a>                   
                                         </li></ul>","<ul class=""highlight-rows"">                                 
                        <li class=""top"">                     
                                            <h3>Business</h3>
@@ -167,65 +167,65 @@
           <li class=""bottom"">                               
                                  <h4>£3/signature</h4>
                                                             
- <a href=""/priser"">Detailed priceplan</a>                   
+ <a href=""$linkpriceplan$"">Detailed priceplan</a>                   
                                         </li></ul>"
 "_PriceTablePriceRow","<td>                                                        
         <h4>35 kr/signatur</h4>                             
-                                   <a href=""/priser"">Detaljerad
+                                   <a href=""$linkpriceplan$"">Detaljerad
  prisplan</a>                                               
          </td>                                              
           <td>                                              
                   <h4>32.50 kr/signatur</h4>                
-                                                <a href=""/priser"">Detaljerad
+                                                <a href=""$linkpriceplan$"">Detaljerad
  prisplan</a>                                               
          </td>                                              
           <td>                                              
                   <h4>30 kr/signatur</h4>                   
-                                             <a href=""/priser"">Detaljerad
+                                             <a href=""$linkpriceplan$"">Detaljerad
  prisplan</a>                                               
                                                             </td>
                                                         <td>
                                                             
     <h4>Offert</h4>                                         
-                       <a href=""/priser"">Detaljerad prisplan</a>
+                       <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
                                                         </td>","<td>                                                        
         <h4>35 kr/signature</h4>
-                                    <a href=""/priser"">Detailed
+                                    <a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>                                             
            <td>                                             
                    <h4>32.50 kr/signature</h4>
-                                                  <a href=""/priser"">Detailed
+                                                  <a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>                                             
            <td>                                             
                    <h4>30 kr/signature</h4>
-                                               <a href=""/priser"">Detailed
+                                               <a href=""$linkpriceplan$"">Detailed
  price plan</a>
                                                             
  </td>                                                      
   <td>                                                      
           <h4>Offer</h4>                                    
-                            <a href=""/priser"">Detailed price plan</a>
+                            <a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>","<td>                                                        
         <h4>£3.50/signature</h4>
-                                    <a href=""/priser"">Detailed
+                                    <a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>                                             
            <td>                                             
                    <h4>£3.25/signature</h4>
-                                                  <a href=""/priser"">Detailed
+                                                  <a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>                                             
            <td>                                             
                    <h4>£3/signature</h4>
-                                               <a href=""/priser"">Detailed
+                                               <a href=""$linkpriceplan$"">Detailed
  price plan</a>
                                                             
  </td>                                                      
   <td>                                                      
           <h4>Offer</h4>                                    
-                            <a href=""/priser"">Detailed price plan</a>
+                            <a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>"
 "_PriceTableRow1","<td>5 användare</td>                                        
                 <td>15 användare</td>                       
@@ -431,8 +431,8 @@
  eachother at the Swedish credit company Klarna.</p>"
 "_accountFromSignFooterNoThx","Nej tack",,"No thanks"
 "_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes please, store"
-"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""/allmana-villkor"">$ourServiceName()$
- Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""/allmana-villkor"">$ourServiceName()$
+"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
+ Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
  Terms of Service</a>"
 "_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? $ourServiceName()$ kan även arkivera
  ett original för din säkerhet. Det kostar ingenting.       

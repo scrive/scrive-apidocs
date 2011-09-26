@@ -213,9 +213,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="bubble">
                                                 <h2>$_PartnersHead()$</h2>
                                                 <ul>
-                                                        <li><a href="/partners"><img src="/img/partner-trustweaver.png"  /></a></li>
-                                                        <li><a href="/partners"><img src="/img/partner-logica.png" /></a></li>
-                                                        <li><a href="/partners"><img src="/img/partner-chalmers.png" /></a></li>
+                                                        <li><a href="$linkpartners$"><img src="/img/partner-trustweaver.png"  /></a></li>
+                                                        <li><a href="$linkpartners$"><img src="/img/partner-logica.png" /></a></li>
+                                                        <li><a href="$linkpartners$"><img src="/img/partner-chalmers.png" /></a></li>
                                                 </ul>
                                         </div>
                                 </div>
