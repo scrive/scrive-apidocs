@@ -261,6 +261,8 @@ localeSwitcherFields :: MonadIO m => Context -> Maybe (Region -> Lang -> KontraL
 localeSwitcherFields Context{ctxlang} mlink = do
   field "localesweden" $ ctxlang == LANG_SE
   field "localebritain" $ ctxlang == LANG_EN
+  field "langsv" $ ctxlang == LANG_SE
+  field "langen" $ ctxlang == LANG_EN
   case mlink of
     Just link -> do
       field "linksesv" $ show $ link REGION_SE LANG_SE

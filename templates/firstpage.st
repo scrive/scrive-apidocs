@@ -243,7 +243,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                         </table>
                                         <div class="highlight-container">
-                                                <div class="ribbon"></div>
+                                                <div class="ribbon $if(langen)$english$else$swedish$endif$"></div>
                                                 $_PriceTableHighlightedColumn()$
                                         </div>
                                 </div>
