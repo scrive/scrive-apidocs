@@ -273,7 +273,7 @@ handleRoutes ctxregion ctxlang = msum [
 
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Administration.handleStatistics
+     , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Stats.showAdminSystemUsageStats
      , dir "adminonly" $ dir "skrivapausers.csv" $ hGet0  $ toK0 $ Administration.getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hGet0  $ toK0 $ Payments.handlePaymentsModelForViewView
      , dir "adminonly" $ dir "advpayments"       $ hGet0  $ toK0 $ Payments.handlePaymentsModelForEditView

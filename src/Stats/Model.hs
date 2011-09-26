@@ -23,12 +23,20 @@ import Company.Model
 import API.Service.Model
 
 -- | A named quantity in the statistics events
--- please maintain the order on this
+-- please maintain the order on this (only add to the bottom)
 data DocStatQuantity = DocStatClose       -- ^ A Close Document event
                      | DocStatEmailSignatures  -- ^ The number of email signatories in a closed document
                      | DocStatSend        -- ^ A Send Document event
                      | DocStatElegSignatures
                      | DocStatCreate                       
+                     | DocStatEmailSignaturePending
+                     | DocStatElegSignaturePending
+                     | DocStatCancel
+                     | DocStatEmailSignatureCancel
+                     | DocStatElegSignatureCancel
+                     | DocStatReject
+                     | DocStatEmailSignatureReject
+                     | DocStatElegSignatureReject
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''DocStatQuantity)
 
@@ -74,25 +82,35 @@ instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
 data AddDocStatEvent = AddDocStatEvent DocStatEvent
 instance DBUpdate AddDocStatEvent Bool where
   dbUpdate (AddDocStatEvent event) = wrapDB $ \conn -> do
-    st <- prepare conn $ "INSERT INTO doc_stat_events ("
-      ++ "  user_id"
-      ++ ", time"
-      ++ ", quantity"
-      ++ ", amount"
-      ++ ", document_id"
-      ++ ", service_id"
-      ++ ", company_id"
-      ++ ", document_type"
-      ++ ") VALUES (?, to_timestamp(?), ?, ?, ?, ?, ?, ?)"
-    r <- execute st [toSql $ seUserID event
-                    ,toSql $ seTime event
-                    ,toSql $ seQuantity event
-                    ,toSql $ seAmount event
-                    ,toSql $ unDocumentID $ seDocumentID event
-                    ,toSql $ seServiceID event
-                    ,toSql $ seCompanyID event
-                    ,toSql $ show $ seDocumentType event]
-    oneRowAffectedGuard r
+    runRaw conn "LOCK TABLE doc_stat_events IN ACCESS EXCLUSIVE MODE"
+    selectSt <- prepare conn $ selectDocStatEventsSQL
+      ++ " WHERE e.document_id = ? "
+      ++ " AND   e.quantity    = ? "
+    _ <- execute selectSt [toSql $ seDocumentID event
+                          ,toSql $ seQuantity event]
+    stats <- fetchDocStats selectSt []
+    case stats of
+      [] -> do
+        st <- prepare conn $ "INSERT INTO doc_stat_events ("
+              ++ "  user_id"
+              ++ ", time"
+              ++ ", quantity"
+              ++ ", amount"
+              ++ ", document_id"
+              ++ ", service_id"
+              ++ ", company_id"
+              ++ ", document_type"
+              ++ ") VALUES (?, to_timestamp(?), ?, ?, ?, ?, ?, ?)"
+        r <- execute st [toSql $ seUserID event
+                        ,toSql $ seTime event
+                        ,toSql $ seQuantity event
+                        ,toSql $ seAmount event
+                        ,toSql $ unDocumentID $ seDocumentID event
+                        ,toSql $ seServiceID event
+                        ,toSql $ seCompanyID event
+                        ,toSql $ show $ seDocumentType event]
+        oneRowAffectedGuard r
+      _ -> return False
 
 fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]
 fetchDocStats st acc = fetchRow st >>= maybe (return acc)
