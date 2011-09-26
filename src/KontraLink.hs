@@ -56,6 +56,7 @@ data KontraLink
     | LinkSignup
     | LinkForgotPassword
     | LinkUpload
+    | LinkLocaleSwitch
     | LinkContracts
     | LinkTemplates
     | LinkOffers
@@ -141,6 +142,7 @@ instance Show KontraLink where
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
     showsPrec _ LinkUpload = (++) "/upload"
+    showsPrec _ LinkLocaleSwitch = (++) "/locale"
     showsPrec _ (LinkContracts) = (++) $ "/d"
     showsPrec _ (LinkTemplates) = (++) $ "/t" 
     showsPrec _ (LinkOffers) = (++) $ "/o" 

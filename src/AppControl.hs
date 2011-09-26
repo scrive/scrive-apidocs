@@ -163,6 +163,7 @@ handleRoutes ctxregion ctxlang = msum [
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGetAllowHttp0 $ handleUploadPage
+     , dir "locale" $ hPost0 $ toK0 $ UserControl.handlePostUserLocale
      , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
      , dir "a" $ param "share"     $ hPost0 $ toK0 $ DocControl.handleAttachmentShare
@@ -358,35 +359,59 @@ handleRoutes ctxregion ctxlang = msum [
     Determines the localisation details by checking the user settings,
     the request, and cookies.
 -}
-getLocalization :: (ServerMonad m, MonadIO m, FilterMonad Response m, Functor m, HasRqData m, MonadPlus m) => Maybe User -> m (SystemServer, Region, Lang)
-getLocalization muser = do
+getLocalization :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
+                   Connection -> Maybe User -> m (SystemServer, Region, Lang)
+getLocalization conn muser = do
   rq <- askRq
   hostpart <- getHostpart
-  mcurrentlocalecookie <- optional (readCookieValue "locale")
-  -- try and get the locale from the current doc by checking the path for document ids, and giving them a go
-  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-  mdoclocales <- mapM (DocControl.getDocumentLocalisation . DocumentID) docids
-  let mdoclocale = listToMaybe $ catMaybes mdoclocales
+  currentcookielocale <- optional (readCookieValue "locale")
+  doclocale <- getDocumentLocale rq
+  activationlocale <- getActivationLocale rq
+  let browserlocale = getBrowserLocale rq
   let systemServer = systemServerFromURL hostpart
-      newregion = firstOf [ mdoclocale
+      newregion = firstOf [ regionFrom doclocale
+                          , regionFrom activationlocale
                           , region <$> usersettings <$> muser
                           , (listToMaybe $ rqPaths rq) >>= regionFromCode
-                          , fmap fst mcurrentlocalecookie
-                          , Just $ defaultRegion systemServer
+                          , regionFrom currentcookielocale
+                          , regionFrom $ Just browserlocale
                           ]
-      newlang = firstOf [ lang <$> usersettings <$> muser
+      newlang = firstOf [ langFrom activationlocale
+                        , lang <$> usersettings <$> muser
                         , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
-                        , fmap snd mcurrentlocalecookie
-                        , case mdoclocale of -- TODO EM put a lang on the doc and use it here
-                            Just REGION_SE -> Just LANG_SE
-                            Just REGION_GB -> Just LANG_EN
-                            _ -> Nothing
-                        , Just $ defaultLang systemServer
+                        , langFrom currentcookielocale
+                        , langFrom doclocale
+                        , langFrom $ Just browserlocale
                         ]
   let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return (systemServer, newregion, newlang)
   where
+    regionFrom (Just (region, _lang)) = Just region
+    regionFrom _ = Nothing
+    langFrom (Just (_region, lang)) = Just lang
+    langFrom _ = Nothing
+    getBrowserLocale rq =
+      let browserregion = regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      in (browserregion, defaultRegionLang browserregion)
+    -- try and get the locale from the current doc by checking the path for document ids, and giving them a go
+    getDocumentLocale rq = do
+      let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      mdoclocales <- mapM (DocControl.getDocumentLocalisation . DocumentID) docids
+      let mregion = listToMaybe $ catMaybes mdoclocales --TODO: look up doc lang
+      return $ fmap (\r -> (r, defaultRegionLang r)) mregion
+    -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
+    getActivationLocale rq = do
+      let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      mactionlocales <- mapM (getActivationLocalisation . ActionID) actionids
+      return . listToMaybe $ catMaybes mactionlocales
+    getActivationLocalisation aid = do
+      maction <- query $ GetAction aid
+      mactionuser <- case fmap actionType maction of
+                       Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB conn . dbQuery $ GetUserByID uid
+                       Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
+                       _ -> return Nothing
+      return $ fmap (\u -> (region $ usersettings u, lang $ usersettings u)) mactionuser
     optional c = (liftM Just c) `mplus` (return Nothing)
     firstOf :: Bounded a => [Maybe a] -> a
     firstOf opts =
@@ -609,7 +634,7 @@ appHandler appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the system, region and language
-      (systemServer, region, language) <- getLocalization muser
+      (systemServer, region, language) <- getLocalization conn muser
 
       let elegtrans = getELegTransactions session
           ctx = Context

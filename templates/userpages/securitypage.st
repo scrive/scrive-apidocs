@@ -51,6 +51,7 @@ showUserSecurity =
                                </select>
                             </td>
                        </tr>
+                       <!--
                        <tr>
                            <td>$_UserLanguage()$</td>
                            <td><select name="lang">
@@ -59,6 +60,7 @@ showUserSecurity =
                                </select>
                             </td>
                        </tr>
+                       -->
                    </table>
                </div> 
 

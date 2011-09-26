@@ -318,22 +318,10 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
-    <tr> <td>Service:</td>
-      <td><select name="usersystemserver">
-        <option $if(user.serviceskrivapa)$selected=""$endif$ value="SkrivaPa">SkrivaPå</option>
-        <option $if(user.servicescrive)$selected=""$endif$ value="Scrive">Scrive</option>
-      </select></td>
-    </tr>
     <tr> <td>Region:</td>
       <td><select name="userregion">
-        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden</option>
-        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain</option>
-      </select></td>
-    </tr>
-    <tr> <td>Language:</td>
-      <td><select name="userlang">
-        <option $if(user.langsv)$selected=""$endif$ value="LANG_SE">Swedish</option>
-        <option $if(user.langen)$selected=""$endif$ value="LANG_EN">English</option>
+        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
       </select></td>
     </tr>
 		<tr>
@@ -458,16 +446,16 @@ admincompanyusers=
             </td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
             </td>
           </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
+            <td> <input type="button" class="editer required" value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
            </td>
           </tr>
@@ -657,10 +645,10 @@ pageStats=
             <td><input type="email" name="email"/></td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
             </td>
           </tr>
@@ -673,7 +661,7 @@ pageStats=
          </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
+            <td> <input type="button" class="editer required" value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
 
            </td>

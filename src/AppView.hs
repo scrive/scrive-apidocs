@@ -38,7 +38,6 @@ import Happstack.Server.SimpleHTTP
 import Templates.Templates
 import User.Lang
 import User.Region
-import User.SystemServer
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
 
@@ -140,7 +139,7 @@ sitemapPage = do
         field "hostpart" $ case hostpart of
                                 ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                                 xs -> xs
-        fieldFL "locales" $ map (uncurry staticLinksFields) . targetedLocales $ systemServerFromURL hostpart
+        fieldFL "locales" $ map (\r -> staticLinksFields r (defaultRegionLang r)) allValues
 
 priceplanPage :: Kontra String
 priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True
@@ -197,9 +196,7 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
     field "showCreateAccount" showCreateAccount
     mainLinksFields (ctxregion ctx) (ctxlang ctx)
     staticLinksFields (ctxregion ctx) (ctxlang ctx)
-    case mpubliclink of
-      Just publiclink -> regionAndLangFields ctx publiclink
-      Nothing -> return ()
+    localeSwitcherFields ctx mpubliclink
     contextInfoFields ctx
     publicSafeFlagField ctx loginOn (isJust mpubliclink)
     loginModal loginOn referer email
@@ -242,7 +239,7 @@ firstPage ctx loginOn referer email =
         publicSafeFlagField ctx loginOn True
         mainLinksFields (ctxregion ctx) (ctxlang ctx)
         staticLinksFields (ctxregion ctx) (ctxlang ctx)
-        regionAndLangFields ctx LinkHome
+        localeSwitcherFields ctx (Just LinkHome)
         loginModal loginOn referer email
 
 {- |
@@ -260,12 +257,18 @@ mainLinksFields region lang = do
     field "linkquestion"         $ show LinkAskQuestion
     field "linksignup"           $ show LinkSignup
 
-regionAndLangFields :: MonadIO m => Context -> (Region -> Lang -> KontraLink) -> Fields m
-regionAndLangFields Context{ctxlang} link = do
+localeSwitcherFields :: MonadIO m => Context -> Maybe (Region -> Lang -> KontraLink) -> Fields m
+localeSwitcherFields Context{ctxlang} mlink = do
+  field "localesweden" $ ctxlang == LANG_SE
+  field "localebritain" $ ctxlang == LANG_EN
   field "langsv" $ ctxlang == LANG_SE
   field "langen" $ ctxlang == LANG_EN
-  field "linksesv" $ show $ link REGION_SE LANG_SE
-  field "linkgben" $ show $ link REGION_GB LANG_EN
+  case mlink of
+    Just link -> do
+      field "linksesv" $ show $ link REGION_SE LANG_SE
+      field "linkgben" $ show $ link REGION_GB LANG_EN
+    Nothing -> do
+      field "linklocaleswitch" $ show LinkLocaleSwitch
 
 {- |
     Defines the static links which are region and language sensitive.

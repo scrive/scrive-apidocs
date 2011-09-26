@@ -288,8 +288,9 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    systemserver <- guardJustM $ readField "systemserver"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
+    region <- guardJustM $ readField "region"
+    let lang = defaultRegionLang region
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage Scrive region lang
     when (isNothing muser) $
         addFlashM flashMessageUserWithSameEmailExists
 
@@ -303,9 +304,10 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- getField "custommessage"
-  systemserver <- guardJustM $ readField "systemserver"
+  region <- guardJustM $ readField "region"
+  let lang = defaultRegionLang region
   madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
+  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage Scrive region lang
   case muser of
     Just (User{userid}) -> do
       _ <- runDBUpdate $ SetUserCompany userid companyid
@@ -343,19 +345,16 @@ getCompanyInfoChange = do
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
-  msystemserver <- readField "usersystemserver"
   mregion <- readField "userregion"
-  mlang <- readField "userlang"
   return $ \UserSettings {
     preferreddesignmode
   , systemserver
   , region
-  , lang
   } -> UserSettings {
     preferreddesignmode
-  , systemserver = fromMaybe systemserver msystemserver
+  , systemserver
   , region = fromMaybe region mregion
-  , lang = fromMaybe lang mlang
+  , lang = defaultRegionLang $ fromMaybe region mregion
   }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}

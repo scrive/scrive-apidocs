@@ -94,7 +94,7 @@ priceplanPageContents=
                         </tbody>
                     </table>
                     <div class="highlight-container ppfix">
-                        <div class="ribbon"></div>
+                        <div class="ribbon  $if(langen)$english$else$swedish$endif$"></div>
                         <ul class="highlight-rows">$_priceplanPageTableHighlightedColumn()$
                         </ul>
                     </div>

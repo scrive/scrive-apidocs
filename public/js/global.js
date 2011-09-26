@@ -550,6 +550,11 @@ safeReady(function() {
 });
 
 safeReady(function() {
+    prepareForEdit($(".editer.required").parents("form"));
+    $(".editer.required").hide();
+});
+
+safeReady(function() {
     $("#addattachmentlink").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
