@@ -179,6 +179,19 @@ handleGetUserSecurity = do
          Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
          Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
 
+handlePostUserLocale :: Kontrakcja m => m KontraLink
+handlePostUserLocale = do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  mregion <- readField "region"
+  let newregion = fromMaybe (region $ usersettings user) mregion
+  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+           region = newregion
+         , lang = defaultRegionLang newregion
+         }
+  return LoopBack
+  
+
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
   ctx <- getContext

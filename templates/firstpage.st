@@ -46,6 +46,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         <div class="content">
                                 <img src="$ourFirstPageLogo()$" alt="$ourServiceName()$" class="logo" />
                                 <div class="leftMain">
+                                        
+                                        $localeSwitcher()$
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>
                                                 <p class="introtext">$_h1Body()$ 
@@ -68,7 +70,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
                                         $else$
                                         <a href="#" class="enter-button login-button"><p>$_login()$</p></a>
-                                        $regionAndLangSwitcher()$
                                         $endif$
                                         <div class="campaign-container">
                                                 <div class="campaign-play campaign-play-video"></div>

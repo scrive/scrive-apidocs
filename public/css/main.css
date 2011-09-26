@@ -350,20 +350,20 @@ a.new-btn-small.black p {
 	color: #fff;
 }
 
-.regionAndLangSwitcher {
-  float: right;
+.localeSwitcher {
+  float: left;
   display: inline-block;
   width: 76px;
   position: relative;
   top: 20px;
 }
 
-#top-container .regionAndLangSwitcher {
+#top-container .localeSwitcher {
   top: 35px;
-  right: 135px;
+  left: 200px;
 }
 
-.regionAndLangSwitcher div {
+.localeSwitcher div {
   display: inline-block;
 }
 
