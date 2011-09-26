@@ -304,9 +304,10 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- getField "custommessage"
-  systemserver <- guardJustM $ readField "systemserver"
+  region <- guardJustM $ readField "region"
+  let lang = defaultRegionLang region
   madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
+  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage Scrive region lang
   case muser of
     Just (User{userid}) -> do
       _ <- runDBUpdate $ SetUserCompany userid companyid

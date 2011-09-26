@@ -446,16 +446,16 @@ admincompanyusers=
             </td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
             </td>
           </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
+            <td> <input type="button" class="editer required" value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
            </td>
           </tr>
