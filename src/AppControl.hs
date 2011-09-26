@@ -364,40 +364,47 @@ getLocalization :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response 
 getLocalization conn muser = do
   rq <- askRq
   hostpart <- getHostpart
-  mcurrentlocalecookie <- optional (readCookieValue "locale")
-  -- try and get the locale from the current doc by checking the path for document ids, and giving them a go
-  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-  mdoclocales <- mapM (DocControl.getDocumentLocalisation . DocumentID) docids
-  let mdoclocale = listToMaybe $ catMaybes mdoclocales
-  -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
-  let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-  mactionlocales <- mapM (getActivationLocalisation . ActionID) actionids
-  let mactionlocale = listToMaybe $ catMaybes mactionlocales
+  currentcookielocale <- optional (readCookieValue "locale")
+  doclocale <- getDocumentLocale rq
+  activationlocale <- getActivationLocale rq
+  let browserlocale = getBrowserLocale rq
   let systemServer = systemServerFromURL hostpart
-      newregion = firstOf [ mdoclocale
+      newregion = firstOf [ regionFrom doclocale
+                          , regionFrom activationlocale
                           , region <$> usersettings <$> muser
-                          , fmap fst mactionlocale
                           , (listToMaybe $ rqPaths rq) >>= regionFromCode
-                          , fmap fst mcurrentlocalecookie
-                          , Just $ defaultRegion systemServer --TODO: remove this
+                          , regionFrom currentcookielocale
+                          , regionFrom $ Just browserlocale
                           ]
-      newlang = firstOf [ lang <$> usersettings <$> muser
-                        , fmap snd mactionlocale
+      newlang = firstOf [ langFrom activationlocale
+                        , lang <$> usersettings <$> muser
                         , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
-                        , fmap snd mcurrentlocalecookie
-                        , fmap defaultRegionLang mdoclocale
-                        , Just $ defaultLang systemServer --TODO: remove this
+                        , langFrom currentcookielocale
+                        , langFrom doclocale
+                        , langFrom $ Just browserlocale
                         ]
   let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return (systemServer, newregion, newlang)
   where
-    optional c = (liftM Just c) `mplus` (return Nothing)
-    firstOf :: Bounded a => [Maybe a] -> a
-    firstOf opts =
-      case find isJust opts of
-        Just val -> fromJust val
-        Nothing -> defaultValue
+    regionFrom (Just (region, _lang)) = Just region
+    regionFrom _ = Nothing
+    langFrom (Just (_region, lang)) = Just lang
+    langFrom _ = Nothing
+    getBrowserLocale rq =
+      let browserregion = regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      in (browserregion, defaultRegionLang browserregion)
+    -- try and get the locale from the current doc by checking the path for document ids, and giving them a go
+    getDocumentLocale rq = do
+      let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      mdoclocales <- mapM (DocControl.getDocumentLocalisation . DocumentID) docids
+      let mregion = listToMaybe $ catMaybes mdoclocales --TODO: look up doc lang
+      return $ fmap (\r -> (r, defaultRegionLang r)) mregion
+    -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
+    getActivationLocale rq = do
+      let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      mactionlocales <- mapM (getActivationLocalisation . ActionID) actionids
+      return . listToMaybe $ catMaybes mactionlocales
     getActivationLocalisation aid = do
       maction <- query $ GetAction aid
       mactionuser <- case fmap actionType maction of
@@ -405,6 +412,12 @@ getLocalization conn muser = do
                        Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
                        _ -> return Nothing
       return $ fmap (\u -> (region $ usersettings u, lang $ usersettings u)) mactionuser
+    optional c = (liftM Just c) `mplus` (return Nothing)
+    firstOf :: Bounded a => [Maybe a] -> a
+    firstOf opts =
+      case find isJust opts of
+        Just val -> fromJust val
+        Nothing -> defaultValue
 
 regionDir :: (ServerMonad m, MonadPlus m) => Region -> m a -> m a
 regionDir = dir . codeFromRegion

@@ -3,9 +3,12 @@ module User.Region (
   , codeFromRegion
   , regionFromCode
   , defaultRegionLang
+  , regionFromHTTPHeader
   ) where
 
+import Data.Foldable hiding (find)
 import Data.List
+import Data.Maybe
 import DB.Derive
 import Misc
 import User.Lang
@@ -25,4 +28,9 @@ regionFromCode s = find ((== s) . codeFromRegion) allValues
 defaultRegionLang :: Region -> Lang
 defaultRegionLang REGION_SE = LANG_SE
 defaultRegionLang REGION_GB = LANG_EN
+
+regionFromHTTPHeader :: String -> Region
+regionFromHTTPHeader s = fromMaybe defaultValue $ msum $ map findRegion (splitOver "," s)
+  where
+    findRegion str = find ((`isInfixOf` str) . codeFromLang . defaultRegionLang) allValues
 
