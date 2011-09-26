@@ -193,19 +193,37 @@ remindMailSignedTitle=$documenttitle$
 remindMailSignedContractStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailSignedContractStandardHeaderSendRequest()$</p>
+      <p>
+       $if(!service)$
+        $_remindMailSignedContractStandardHeaderSendRequest()$
+       $else$ 
+        $_remindMailSignedContractStandardHeaderSendRequestWithService()$
+       $endif$
+      </p>
     </span>
 ####
 remindMailSignedOfferStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailSignedOfferStandardHeaderSendRequest()$</p>
+      <p>
+       $if(!service)$
+        $_remindMailSignedOfferStandardHeaderSendRequest()$
+       $else$ 
+        $_remindMailSignedOfferStandardHeaderSendRequestWithService()$
+       $endif$
+     </p>
     </span>
 ####
 remindMailSignedOrderStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
-      <p>$_remindMailSignedOrderStandardHeaderSendRequest()$</p>
+      <p>
+        $if(!service)$
+         $_remindMailSignedOrderStandardHeaderSendRequest()$
+        $else$ 
+         $_remindMailSignedOrderStandardHeaderSendRequestWithService()$
+       $endif$
+      </p>
     </span>
 ####
 remindMailNotSignedTitle=$_remindMailNotSignedTitle()$

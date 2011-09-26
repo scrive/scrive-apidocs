@@ -159,6 +159,7 @@ remindMailSignedStandardHeader document signlink =
         field "documenttitle" $ BS.toString $ documenttitle document
         field "author" $ BS.toString creatorname
         field "personname" $ BS.toString $ getSmartName signlink
+        field "service" $ isJust $ documentservice document
 
 remindMailNotSignedStandardHeader :: TemplatesMonad m
                                   => Document
@@ -171,6 +172,7 @@ remindMailNotSignedStandardHeader document signlink =
         field "documenttitle" $ BS.toString $ documenttitle document
         field "author" $ BS.toString creatorname
         field "personname" $ BS.toString $ getSmartName signlink
+        field "service" $ isJust $ documentservice document
 
 mailDocumentRejected :: TemplatesMonad m
                      => Maybe String

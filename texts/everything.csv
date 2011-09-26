@@ -2752,14 +2752,26 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten $ourServiceName()$. Dokumentet bifogas
  med detta mail.","<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using $ourServiceName()$. Please find it attached."
+"_remindMailSignedContractStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
+ <strong>$documenttitle$</strong>  till dig. Dokumentet
+ har undertecknats av dig. Dokumentet bifogas
+ med detta mail.","<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document. Please find it attached."
 "_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig via tjänsten $ourServiceName()$. Den accepterade
  offerten bifogas med detta mail.","<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using $ourServiceName()$. Please find it attached."
+"_remindMailSignedOfferStandardHeaderSendRequestWithService","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
+  <strong>$documenttitle$</strong>        till dig. Offerten
+ har accepterats av dig. Den accepterade
+ offerten bifogas med detta mail.","<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer.. Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  bekräftat via tjänsten $ourServiceName()$. Orderbekräftelsen bifogas med
  detta mail.","<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using $ourServiceName()$.  Please find it attached."
+"_remindMailSignedOrderStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
+ <strong>$documenttitle$</strong>        till dig som du har
+ Bekräftat. Orderbekräftelsen bifogas med
+ detta mail.","<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>. Please find it attached."
 "_reminderFormFooterOwnMessage"," Skriv eget meddelande ","Write own message"
 "_reminderFormHead","Skicka påminnelse ","Send reminder"
 "_reminderFormSendReminder","Skicka påminnelse ","Send reminder"
