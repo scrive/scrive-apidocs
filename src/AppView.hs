@@ -265,12 +265,9 @@ localeSwitcherFields ctx mlink = do
   field "localebritain" $ getLang ctx == LANG_EN
   field "langsv" $ getLang ctx == LANG_SE
   field "langen" $ getLang ctx == LANG_EN
-  case mlink of
-    Just link -> do
-      field "linksesv" $ show $ link (mkLocale REGION_SE LANG_SE)
-      field "linkgben" $ show $ link (mkLocale REGION_GB LANG_EN)
-    Nothing -> do
-      field "linklocaleswitch" $ show LinkLocaleSwitch
+  field "linklocaleswitch" $ show LinkLocaleSwitch
+  field "linksesv" $ fmap (\l -> show $ l (mkLocale REGION_SE LANG_SE)) mlink
+  field "linkgben" $ fmap (\l -> show $ l (mkLocale REGION_GB LANG_EN)) mlink
 
 {- |
     Defines the static links which are region and language sensitive.
