@@ -1,6 +1,3 @@
-######
-mailCancelDocumentByAuthorTitle=$_mailCancelDocumentByAuthorTitle()$
-####
 mailCancelContractByAuthorStandardHeader=
     <p>$_hi()$,</p>
 ######
@@ -10,32 +7,33 @@ mailCancelOfferByAuthorStandardHeader=
 mailCancelOrderByAuthorStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelContractByAuthorContent=
+mailCancelContractByAuthor=
+    $_mailCancelDocumentByAuthorTitle()$
     $header:noescape()$
     <p>$_mailCancelContractByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
-mailCancelOfferByAuthorContent=
+mailCancelOfferByAuthor=
+    $_mailCancelDocumentByAuthorTitle()$
     $header:noescape()$
     <p>$_mailCancelOfferByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
-mailCancelOrderByAuthorContent=
+mailCancelOrderByAuthor=
+    $_mailCancelDocumentByAuthorTitle()$
     $header:noescape()$
     <p>$_mailCancelOrderByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
-mailDocumentAwaitingForAuthorTitle=$_mailDocumentAwaitingForAuthorTitle()$
-######
 mailDocumentAwaitingForAuthorContent=
+    $_mailDocumentAwaitingForAuthorTitle()$
     <p>$_hi()$,</p>
     <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
     <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
     $footer:noescape()$
 #####
-mailDocumentClosedTitle=$_mailDocumentClosedTitle()$
-#####
-mailContractClosedContent=
+mailContractClosed=
+    $_mailDocumentClosedTitle()$
     <span>
       <p>$_hi()$,</p>
       <p>$_mailContractClosedContentSignedBy()$</p>
@@ -43,7 +41,8 @@ mailContractClosedContent=
       $footer:noescape()$
     </span>
 ####
-mailOfferClosedContent=
+mailOfferClosed=
+    $_mailDocumentClosedTitle()$
     <span>
       <p>$_hi()$,</p>
       <p>
@@ -57,7 +56,8 @@ mailOfferClosedContent=
       $footer:noescape()$
     </span>
 ####
-mailOrderClosedContent=
+mailOrderClosed=
+    $_mailDocumentClosedTitle()$
     <span>
       <p>$_hi()$,</p>
 

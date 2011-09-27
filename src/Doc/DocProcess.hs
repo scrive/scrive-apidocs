@@ -80,8 +80,8 @@ data DocProcessInfo =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader :: String
-  , processmailcancelbyauthorcontent :: String
-  , processmailclosedcontent :: String
+  , processmailcancelbyauthor :: String
+  , processmailclosed :: String
   , processmailrejectcontent :: String
   , processmailinvitationtosigncontent :: String
   , processmailinvitationtosigndefaultheader :: String
@@ -169,8 +169,8 @@ contractProcess =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelContractByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelContractByAuthorContent"
-  , processmailclosedcontent = "mailContractClosedContent"
+  , processmailcancelbyauthor = "mailCancelContractByAuthor"
+  , processmailclosed= "mailContractClosed"
   , processmailrejectcontent = "mailRejectContractMailContent"
   , processmailinvitationtosigncontent = "mailInvitationToSignContractContent"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
@@ -258,8 +258,8 @@ offerProcess =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelOfferByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelOfferByAuthorContent"
-  , processmailclosedcontent = "mailOfferClosedContent"
+  , processmailcancelbyauthor = "mailCancelOfferByAuthor"
+  , processmailclosed = "mailOfferClosed"
   , processmailrejectcontent = "mailRejectOfferMailContent"
   , processmailinvitationtosigncontent = "mailInvitationToSignOfferContent"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
@@ -347,8 +347,8 @@ orderProcess =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelOrderByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelOrderByAuthorContent"
-  , processmailclosedcontent = "mailOrderClosedContent"
+  , processmailcancelbyauthor = "mailCancelOrderByAuthor"
+  , processmailclosed = "mailOrderClosed"
   , processmailrejectcontent = "mailRejectOrderMailContent"
   , processmailinvitationtosigncontent = "mailInvitationToSignOrderContent"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"

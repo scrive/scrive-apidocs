@@ -337,28 +337,22 @@ mailInvitationToView ctx document@Document{documenttitle} signaturelink = do
 
 mailDocumentClosed :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentClosed ctx document@Document{documenttitle} = do
-    title <- renderTemplateFM "mailDocumentClosedTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-    partylist <- renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
-    content <- wrapHTML' =<< (renderTemplateForProcess document processmailclosedcontent $ do
+   partylist <- renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
+   kontramail (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         field "documenttitle" $ BS.toString documenttitle
         field "partylist" $ partylist
         fieldM "footer" $ mailFooter ctx document
-        field "service" $ isJust $ documentservice document)
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+        field "service" $ isJust $ documentservice document
 
 mailDocumentAwaitingForAuthor :: TemplatesMonad m => Context -> BS.ByteString -> Document  -> m Mail
 mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle,documentid} = do
     signatories <- renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
-    title <- renderTemplateFM "mailDocumentAwaitingForAuthorTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-    content <- wrapHTML' =<< (renderTemplateFM "mailDocumentAwaitingForAuthorContent" $ do
+    kontramail "mailDocumentAwaitingForAuthor" $ do
         field "authorname" $ BS.toString authorname
         field "documenttitle" $ BS.toString  documenttitle
         field "ctxhostpart" ctxhostpart
         field "documentlink" $ ctxhostpart ++ (show $ LinkIssueDoc documentid)
-        field "partylist" signatories)
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+        field "partylist" signatories
 
 mailCancelDocumentByAuthorContent :: TemplatesMonad m
                                   => Bool
@@ -366,8 +360,18 @@ mailCancelDocumentByAuthorContent :: TemplatesMonad m
                                   -> Context
                                   -> Document
                                   -> m String
-mailCancelDocumentByAuthorContent forMail customMessage ctx document = do
-    renderTemplateForProcess document processmailcancelbyauthorcontent $ do
+mailCancelDocumentByAuthorContent forMail customMessage ctx document = 
+    (BS.toString . content) <$> mailCancelDocumentByAuthor forMail customMessage ctx document
+
+mailCancelDocumentByAuthor :: TemplatesMonad m
+                           => Bool 
+                           -> Maybe BS.ByteString
+                           -> Context
+                           -> Document
+                           -> m Mail
+mailCancelDocumentByAuthor forMail customMessage ctx document = do
+    mail <- kontramail (fromMaybe "" $ getValueForProcess document processmailcancelbyauthor) $ do
+        let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
         fieldM "header" $ do
             header <- case customMessage of
                            Just c -> return $ BS.toString c
@@ -387,20 +391,7 @@ mailCancelDocumentByAuthorContent forMail customMessage ctx document = do
                         replaceOnEdit this with
         field "creatorname" creatorname
         field "documenttitle" $ BS.toString $ documenttitle document
-    where
-        creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
-
-mailCancelDocumentByAuthor :: TemplatesMonad m
-                           => Maybe BS.ByteString
-                           -> Context
-                           -> Document
-                           -> SignatoryLink
-                           -> m Mail
-mailCancelDocumentByAuthor customMessage ctx document@Document{documenttitle} signlink = do
-    title <- renderTemplateFM "mailCancelDocumentByAuthorTitle" $ do
-        field "documenttitle" documenttitle
-    content <- wrapHTML' =<< mailCancelDocumentByAuthorContent True customMessage ctx document
-    return $ emptyMail { title = BS.fromString title, to = [getMailAddress signlink], content = BS.fromString content, from = documentservice document}
+    return $ mail { from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
                         => Document

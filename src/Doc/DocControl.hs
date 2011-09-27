@@ -1792,7 +1792,10 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
 sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
-  forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor customMessage ctx document))
+  forM_ activated_signatories $ \slnk -> do
+      m <- mailCancelDocumentByAuthor True customMessage ctx document
+      let mail = m {to = [getMailAddress slnk]}
+      scheduleEmailSendout (ctxesenforcer ctx) mail
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))
