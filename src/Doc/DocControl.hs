@@ -524,7 +524,7 @@ rejectDocument documentid
 getDocumentLocale :: MonadIO m => DocumentID -> m (Maybe Locale)
 getDocumentLocale documentid = do
   mdoc <- query $ GetDocumentByDocumentID documentid
-  return $ fmap (mkLocaleFromRegion . documentregion) mdoc --TODO: store lang on doc
+  return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |
    Show the document to be signed

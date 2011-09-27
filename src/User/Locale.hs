@@ -16,10 +16,10 @@ data Locale = Locale Region Lang
   deriving (Bounded, Show, Read, Ord, Eq)
 
 mkLocale :: Region -> Lang -> Locale
-mkLocale region lang = Locale region lang
+mkLocale region _locale = mkLocaleFromRegion region --implemented like this to restrict the regions and langs allowed
 
 mkLocaleFromRegion :: Region -> Locale
-mkLocaleFromRegion region = mkLocale region (defaultRegionLang region)
+mkLocaleFromRegion region = Locale region (defaultRegionLang region)
 
 class HasLocale a where
   getLocale :: a -> Locale
