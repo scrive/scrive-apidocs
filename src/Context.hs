@@ -3,6 +3,7 @@ module Context (
     ) where
 
 import Control.Concurrent.MVar
+import Data.Maybe
 import Data.Word
 import Database.HDBC.PostgreSQL
 import Doc.FileID
@@ -45,6 +46,13 @@ data Context = Context {
     , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^ 
     , ctxadminaccounts       :: [Email] -- ^
-    , ctxregion              :: Region
-    , ctxlang                :: Lang
+    , ctxuserlocale          :: Locale
+    , ctxdoclocale           :: Maybe Locale
 }
+
+{- |
+    If there is a doc locale then we want to use it, but otherwise we
+    use the user's locale
+-}
+instance HasLocale Context where
+  getLocale Context{ctxuserlocale, ctxdoclocale} = fromMaybe ctxuserlocale ctxdoclocale

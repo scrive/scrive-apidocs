@@ -486,11 +486,10 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
         _ -> return ()
     Just user -> do
      _ <- update $ SaveDocumentForUser documentid user signatorylinkid
-     let userregion = region $ usersettings user
-         userlang = lang $ usersettings user
+     let userlocale = locale $ usersettings user
      if isClosed document
-       then addFlashM $ modalSignedClosedHasAccount userregion userlang document signatorylink (isJust $ ctxmaybeuser ctx)
-       else addFlashM $ modalSignedNotClosedHasAccount userregion userlang document signatorylink (isJust $ ctxmaybeuser ctx)
+       then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+       else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -522,10 +521,10 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocalisation :: MonadIO m => DocumentID -> m (Maybe Region)
-getDocumentLocalisation documentid = do
+getDocumentLocale :: MonadIO m => DocumentID -> m (Maybe Locale)
+getDocumentLocale documentid = do
   mdoc <- query $ GetDocumentByDocumentID documentid
-  return $ fmap documentregion mdoc
+  return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |
    Show the document to be signed
@@ -1994,7 +1993,7 @@ handleSigAttach docid siglinkid mh = do
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
     Just user <- ctxmaybeuser <$> getContext
-    lang <- ctxlang <$> getContext
+    lang <- getLang <$> getContext
     doctype <- getFieldWithDefault "" "documentType"
     allDocs <- case (doctype) of
         "Contract" -> getDocumentsForUserByType (Signable Contract) user

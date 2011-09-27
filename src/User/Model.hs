@@ -2,6 +2,7 @@
 module User.Model (
     module User.Lang
   , module User.Region
+  , module User.Locale
   , module User.Password
   , module User.SystemServer
   , module User.UserID
@@ -58,6 +59,7 @@ import DB.Utils
 import MinutesTime
 import Misc
 import User.Lang
+import User.Locale
 import User.Password
 import User.Region
 import User.SystemServer
@@ -126,10 +128,15 @@ data UserMailAPI = UserMailAPI {
 
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
-  , lang                :: Lang
-  , region              :: Region
+  , locale              :: Locale
   , systemserver        :: SystemServer
   } deriving (Eq, Ord, Show)
+
+instance HasLocale User where
+  getLocale = getLocale . usersettings
+
+instance HasLocale UserSettings where
+  getLocale = locale
 
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
@@ -266,9 +273,9 @@ instance DBUpdate DeleteUser Bool where
         return True
       else return False
 
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer Region Lang
+data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer Locale
 instance DBUpdate AddUser (Maybe User) where
-  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss r l) = do
+  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss l) = do
     let handle e = case e of
           NoObject -> return Nothing
           _ -> E.throw e
@@ -315,8 +322,8 @@ instance DBUpdate AddUser (Maybe User) where
               ] ++ replicate 4 (toSql "")
                 ++ [toSql email] ++ [
                 SqlNull
-              , toSql l
-              , toSql r
+              , toSql $ getLang l
+              , toSql $ getRegion l
               , toSql ss
               , toSql False
               ]
@@ -448,8 +455,8 @@ instance DBUpdate SetUserSettings Bool where
       ++ ", system_server = ?"
       ++ "  WHERE id = ?") [
         toSql $ preferreddesignmode us
-      , toSql $ lang us
-      , toSql $ region us
+      , toSql $ getLang us
+      , toSql $ getRegion us
       , toSql $ systemserver us
       , toSql uid
       ]
@@ -578,8 +585,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
      }
      , usersettings = UserSettings {
          preferreddesignmode = fromSql preferred_design_mode
-       , lang = fromSql lang
-       , region = fromSql region
+       , locale = mkLocale (fromSql region) (fromSql lang)
        , systemserver = fromSql system_server
      }
      , userservice = fromSql service_id
@@ -598,6 +604,7 @@ deriving instance Typeable SignupMethod
 deriving instance Typeable Password
 deriving instance Typeable Lang
 deriving instance Typeable Region
+deriving instance Typeable Locale
 deriving instance Typeable DesignMode
 deriving instance Typeable Email
 deriving instance Typeable Binary
@@ -610,6 +617,7 @@ instance Version SignupMethod
 instance Version Password
 instance Version Lang
 instance Version Region
+instance Version Locale
 instance Version DesignMode
 instance Version Email
 instance Version Binary
@@ -623,6 +631,7 @@ $(deriveSerializeFor [
   , ''Password
   , ''Lang
   , ''Region
+  , ''Locale
   , ''DesignMode
   , ''Email
   , ''Binary

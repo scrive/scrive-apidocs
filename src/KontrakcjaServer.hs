@@ -125,7 +125,7 @@ initDatabaseEntries conn = do
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue defaultValue defaultValue
+              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
               return ()
           Just _ -> return () -- user exist, do not add it
 

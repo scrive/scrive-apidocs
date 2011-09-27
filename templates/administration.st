@@ -451,6 +451,7 @@ admincompanyusers=
               <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
               <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
+              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
          <tr>
@@ -650,6 +651,7 @@ pageStats=
               <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
               <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
+              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
           <tr>

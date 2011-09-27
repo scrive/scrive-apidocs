@@ -347,13 +347,10 @@ header=
 ####
 localeSwitcher=
   <div class="localeSwitcher">
+    $if(!isdoclocale)$
     $if(!logged)$
-    $if(linksesv)$
-    $if(linkgben)$
     <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
     <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
-    $endif$
-    $endif$
     $else$
     <div><form action="$linklocaleswitch$" method="POST">
            <input type="hidden" name="region" value="REGION_SE"/>
@@ -363,6 +360,7 @@ localeSwitcher=
            <input type="hidden" name="region" value="REGION_GB"/>
            <a href="" class="submit icon flag british $if(localebritain)$active$endif$"></a>
          </form></div>
+    $endif$
     $endif$
   </div>
 ####
