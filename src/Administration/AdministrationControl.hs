@@ -289,10 +289,13 @@ handleCreateUser = onlySuperUser $ do
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
     region <- guardJustM $ readField "region"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage Scrive (mkLocaleFromRegion region)
-    when (isNothing muser) $
-        addFlashM flashMessageUserWithSameEmailExists
-
+    if region == getRegion ctx
+      then do
+        muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage Scrive (mkLocaleFromRegion region)
+        when (isNothing muser) $
+          addFlashM flashMessageUserWithSameEmailExists
+      else do
+        addFlashM $ toFlashMsg OperationFailed <$> (const $ return "Sorry please change your region to match the new user's --em") ()
     -- FIXME: where to redirect?
     return LinkStats
     
@@ -304,15 +307,19 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- getField "custommessage"
   region <- guardJustM $ readField "region"
-  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage Scrive (mkLocaleFromRegion region)
-  case muser of
-    Just (User{userid}) -> do
-      _ <- runDBUpdate $ SetUserCompany userid companyid
-      when (fromMaybe False madmin) $ do
-        _ <- runDBUpdate $ MakeUserCompanyAdmin userid
-        return ()
-    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  if region == getRegion ctx
+    then do
+      madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+      muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage Scrive (mkLocaleFromRegion region)
+      case muser of
+        Just (User{userid}) -> do
+          _ <- runDBUpdate $ SetUserCompany userid companyid
+          when (fromMaybe False madmin) $ do
+            _ <- runDBUpdate $ MakeUserCompanyAdmin userid
+            return ()
+        Nothing -> addFlashM flashMessageUserWithSameEmailExists
+    else do
+      addFlashM $ toFlashMsg OperationFailed <$> (const $ return "Sorry please change your region to match the new user's --em") ()
   return $ LinkCompanyUserAdmin companyid
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
