@@ -65,7 +65,7 @@ handleUserGet = do
          Just user -> do
            mcompany <- getCompanyForUser user
            showUser user mcompany >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
@@ -83,7 +83,7 @@ handleUserPost = do
                _ -> return ()
              addFlashM flashMessageUserDetailsSaved
              return LinkAccount
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -177,17 +177,15 @@ handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
 
 handlePostUserLocale :: Kontrakcja m => m KontraLink
 handlePostUserLocale = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   mregion <- readField "region"
-  let newregion = fromMaybe (region $ usersettings user) mregion
   _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-           region = newregion
-         , lang = defaultRegionLang newregion
+           locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
          }
   return LoopBack
   
@@ -216,13 +214,11 @@ handlePostUserSecurity = do
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
-      let newregion = fromMaybe (region $ usersettings user) mregion
       _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             region = fromMaybe (region $ usersettings user) mregion
-           , lang = defaultRegionLang newregion
+             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
            }
       return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+    Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
@@ -291,7 +287,7 @@ handlePostSharing = do
                       return $ LinkSharing emptyListParams
                   (_,True) -> return $ LinkSharing emptyListParams
                   _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
@@ -318,7 +314,7 @@ handlePostCompanyAccounts = do
                       handleTakeOverUserForCompany (fromJust memail)
                       return $ LinkCompanyAccounts emptyListParams
                   _ -> LinkCompanyAccounts <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
 handleDeleteCompanyUser user = do
@@ -480,8 +476,8 @@ createUser ctx names email madminuser mcompany' vip = do
                    (Just True, Just adminusercompanyid, Just company)
                      | adminusercompanyid == companyid company -> mcompany'
                    _ -> Nothing
-  let Context{ctxhostpart, ctxregion, ctxlang} = ctx
-  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) ctxregion ctxlang
+  let Context{ctxhostpart} = ctx
+  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) (getLocale ctx)
   case muser of
     Just user -> do
       let fullname = composeFullName names
@@ -503,9 +499,9 @@ createUserBySigning names email doclinkdata =
         return $ Just (user, actionid, magichash)
     )
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Region -> Lang -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage ss r l = do
-    muser <- createInvitedUser names email (Just (ss, r, l))
+createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Locale -> m (Maybe User)
+createNewUserByAdmin ctx names email _freetill custommessage ss l = do
+    muser <- createInvitedUser names email (Just (ss, l))
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -517,12 +513,12 @@ createNewUserByAdmin ctx names email _freetill custommessage ss r l = do
              return muser
          Nothing -> return muser 
 
-createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Region, Lang) -> m (Maybe User)
+createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Locale) -> m (Maybe User)
 createInvitedUser names email mlocale = do
-    Context{ctxhostpart, ctxregion, ctxlang} <- getContext
-    let (ss, r, l) = fromMaybe (systemServerFromURL ctxhostpart, ctxregion, ctxlang) mlocale
+    ctx <- getContext
+    let (ss, l) = fromMaybe (systemServerFromURL $ ctxhostpart ctx, getLocale ctx) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss r l
+    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss l
 
 {- |
    Guard against a POST with no logged in user.
@@ -533,7 +529,7 @@ withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -544,7 +540,7 @@ withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+    Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
 
 {- |
    Runs an action only if currently logged in user is a company admin
@@ -579,7 +575,7 @@ checkUserTOSGet action = do
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> case (ctxcompany ctx) of
              Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+             Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
 
 
 

@@ -136,11 +136,11 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "sndname" $ getLastName user
     field "userimagelink" False
     fieldF "region" $ do
-        field "se" $ REGION_SE == (region $ usersettings user)
-        field "gb" $ REGION_GB == (region $ usersettings user)
+        field "se" $ REGION_SE == (getRegion user)
+        field "gb" $ REGION_GB == (getRegion user)
     fieldF "lang" $ do
-        field "en" $ LANG_EN == (lang $ usersettings user)
-        field "se" $ LANG_SE == (lang $ usersettings user)
+        field "en" $ LANG_EN == (getLang user)
+        field "se" $ LANG_SE == (getLang user)
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String

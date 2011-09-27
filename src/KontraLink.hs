@@ -42,16 +42,16 @@ instance Show DesignStep where
    All the links available for responses
 -}
 data KontraLink
-    = LinkHome Region Lang
-    | LinkPriceplan Region Lang
-    | LinkSecurity Region Lang
-    | LinkLegal Region Lang
-    | LinkPrivacyPolicy Region Lang
-    | LinkTerms Region Lang
-    | LinkAbout Region Lang
-    | LinkPartners Region Lang
-    | LinkClients Region Lang
-    | LinkLogin Region Lang LoginRedirectReason
+    = LinkHome Locale
+    | LinkPriceplan Locale
+    | LinkSecurity Locale
+    | LinkLegal Locale
+    | LinkPrivacyPolicy Locale
+    | LinkTerms Locale
+    | LinkAbout Locale
+    | LinkPartners Locale
+    | LinkClients Locale
+    | LinkLogin Locale LoginRedirectReason
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
@@ -114,30 +114,41 @@ data KontraLink
     | LinkCSVLandPage Int
     deriving (Eq)
 
+localeFolder :: Locale -> String
+localeFolder locale = "/" ++ (codeFromRegion $ getRegion locale) ++ "/" ++ (codeFromLang $ getLang locale)
+
 {- |
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-    showsPrec _ (LinkHome region lang) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang
-    showsPrec _ (LinkPriceplan region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/priser"
-    showsPrec _ (LinkPriceplan region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/pricing"
-    showsPrec _ (LinkSecurity region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/sakerhet"
-    showsPrec _ (LinkSecurity region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/security"
-    showsPrec _ (LinkLegal region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/juridik"
-    showsPrec _ (LinkLegal region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/legal"
-    showsPrec _ (LinkPrivacyPolicy region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/sekretesspolicy"
-    showsPrec _ (LinkPrivacyPolicy region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/privacy-policy"
-    showsPrec _ (LinkTerms region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/allmana-villkor"
-    showsPrec _ (LinkTerms region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/terms"
-    showsPrec _ (LinkAbout region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/om-scrive"
-    showsPrec _ (LinkAbout region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/about"
-    showsPrec _ (LinkPartners region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/partners"
-    showsPrec _ (LinkPartners region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/partners"
-    showsPrec _ (LinkClients region LANG_SE) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_SE ++ "/kunder"
-    showsPrec _ (LinkClients region LANG_EN) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang LANG_EN ++ "/clients"
-    showsPrec _ (LinkLogin region lang LoginTry) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang ++ "/login"
-    showsPrec _ (LinkLogin region lang (InvalidLoginInfo email)) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
-    showsPrec _ (LinkLogin region lang _) = (++) $ "/" ++ codeFromRegion region ++ "/" ++ codeFromLang lang ++ "/?logging"
+    showsPrec _ (LinkHome locale) = (++) $ localeFolder locale
+    showsPrec _ (LinkPriceplan locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/priser"
+      | otherwise = (++) $ localeFolder locale ++ "/pricing"
+    showsPrec _ (LinkSecurity locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/sakerhet"
+      | otherwise = (++) $ localeFolder locale ++ "/security"
+    showsPrec _ (LinkLegal locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/juridik"
+      | otherwise = (++) $ localeFolder locale ++ "/legal"
+    showsPrec _ (LinkPrivacyPolicy locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/sekretesspolicy"
+      | otherwise = (++) $ localeFolder locale ++ "/privacy-policy"
+    showsPrec _ (LinkTerms locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/allmana-villkor"
+      | otherwise = (++) $ localeFolder locale ++ "/terms"
+    showsPrec _ (LinkAbout locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/om-scrive"
+      | otherwise = (++) $ localeFolder locale ++ "/about"
+    showsPrec _ (LinkPartners locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/partners"
+      | otherwise = (++) $ localeFolder locale ++ "/partners"
+    showsPrec _ (LinkClients locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kunder"
+      | otherwise = (++) $ localeFolder locale ++ "/clients"
+    showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login"
+    showsPrec _ (LinkLogin locale (InvalidLoginInfo email)) = (++) $ localeFolder locale ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
+    showsPrec _ (LinkLogin locale _) = (++) $ localeFolder locale ++ "/?logging"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
