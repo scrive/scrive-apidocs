@@ -487,9 +487,8 @@ legalparagraph=
 <p style="width:90%;font-size:8pt;font-style:italic;">$_legalparagraphBody()$ </p>
 <BR/>
 ####
-mailMismatchSignatoryTitle=$_mailMismatchSignatoryTitle()$
-####
-mailMismatchSignatoryContent=
+mailMismatchSignatory=
+$_mailMismatchSignatoryTitle()$
 <p>$_hi()$ $signame$,</p>
 
 <p>$_mailMismatchSignatoryContentBodyFirst()$</p>
@@ -504,9 +503,8 @@ $endif$
 <p>$_mailMismatchSignatoryContentBestRegards()$</p>
 <p>$_skrivapa()$</p>
 ####
-mailMismatchAuthorTitle=$_mailMismatchAuthorTitle()$
-####
-mailMismatchAuthorContent=
+mailMismatchAuthor=
+$_mailMismatchAuthorTitle()$
 <p>$_hi()$ $authorname$,</p>
 
 <p>$_mailMismatchAuthorContentBodyFirst()$</p>
@@ -547,9 +545,8 @@ appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $
 ###
 sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ $_from()$ $sa.sigs:noescape()$};separator="; "$ <br />$endif$
 ###
-mailMailAPIConfirmTitle= $_mailMailAPIConfirmTitle()$
-###
-mailMailAPIConfirmContractContent= 
+mailMailAPIConfirmContract= 
+   $_mailMailAPIConfirmTitle()$
    $_mailMailAPIConfirmContractHeader()$
     <p>
      <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
@@ -559,7 +556,8 @@ mailMailAPIConfirmContractContent=
     </p>
     $footer:noescape()$
 ####
-mailMailAPIConfirmOrderContent= 
+mailMailAPIConfirmOrder=
+   $_mailMailAPIConfirmTitle()$ 
    $_mailMailAPIConfirmOrderHeader()$
    <p>
      <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
@@ -569,7 +567,8 @@ mailMailAPIConfirmOrderContent=
     </p>
     $footer:noescape()$
 ####
-mailMailAPIConfirmOfferContent= 
+mailMailAPIConfirmOffer= 
+   $_mailMailAPIConfirmTitle()$
    $_mailMailAPIConfirmOfferHeader()$
     <p>
      <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>

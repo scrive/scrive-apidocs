@@ -32,7 +32,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import DB.Classes
-
+import Data.Char
 import Control.Monad
 import Data.Functor
 import Data.Maybe
@@ -412,27 +412,19 @@ mailMismatchSignatory :: TemplatesMonad m
                         -> Bool
                         -> m Mail
 mailMismatchSignatory document authoremail authorname doclink signame badname msg isbad = do
-    title <- renderTemplateFM "mailMismatchSignatoryTitle" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document
-    content <- wrapHTML' =<< (renderTemplateFM "mailMismatchSignatoryContent" $ do
+   kontramail "mailMismatchSignatory" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
         field "authorname" authorname
         field "signame" signame
         field "badname" badname
         field "authoremail" authoremail
         field "doclink" doclink
-        field "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing))
-
-    return $ emptyMail  { title = BS.fromString title
-                        , content = BS.fromString content
-                        }
+        field "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
 
 mailMismatchAuthor :: TemplatesMonad m => Context -> Document -> String -> String -> String -> m Mail
 mailMismatchAuthor ctx document authorname badname bademail = do
     let Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
-    title <- renderTemplateFM "mailMismatchAuthorTitle" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document
-    content <- wrapHTML' =<< (renderTemplateFM "mailMismatchAuthorContent" $ do
+    kontramail "mailMismatchAuthor" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
         field "messages" $ concat $ map para $ lines msg
         field "authorname" authorname
@@ -441,8 +433,7 @@ mailMismatchAuthor ctx document authorname badname bademail = do
                                                                     Nothing
                                                                     (not (hasSigned (getAuthorSigLink document))))
         field "bademail" bademail
-        field "badname" badname)
-    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
+        field "badname" badname
 
 -- helpers
 
@@ -480,9 +471,7 @@ mailMailAPIConfirm :: TemplatesMonad m
 mailMailAPIConfirm ctx document siglink = do
   let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
   let issignatory = (elem SignatoryPartner . signatoryroles) siglink
-  title <- renderTemplateFM "mailMailAPIConfirmTitle" $ do
-     field "documenttitle" $ BS.toString $ documenttitle document
-  content <- wrapHTML' =<< (renderTemplateForProcess document processmailconfirmbymailapi $ do
+  kontramail (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
         fieldM "footer" $ mailFooter ctx document
         fieldM "timetosigninfo" $ do
             case (documenttimeouttime document) of
@@ -504,10 +493,7 @@ mailMailAPIConfirm ctx document siglink = do
         field "isattachments" $ False
         field "hassigattachments" $ False
         field "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
-       )            
-  return $ emptyMail  { title   = BS.fromString title
-                      , content = BS.fromString content
-                      }
+                   
 
 mailMailApiError:: MailAddress -> String -> Mail
 mailMailApiError from err = 
@@ -515,3 +501,13 @@ mailMailApiError from err =
                   , title   = BS.fromString "Error while parsing request"
                   , content = BS.fromString err
                  }
+                 
+                 
+kontramail :: TemplatesMonad m => String -> Fields m -> m Mail
+kontramail tname fields = do
+    wholemail <- renderTemplateFM tname fields
+    let (title,content) = span (== '\n') $ dropWhile (not . isAlphaNum) wholemail
+    content' <- wrapHTML' content
+    return $ emptyMail  {   title   = BS.fromString title
+                          , content = BS.fromString content'
+                        }

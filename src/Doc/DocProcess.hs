@@ -177,7 +177,7 @@ contractProcess =
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmContractContent"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
@@ -266,7 +266,7 @@ offerProcess =
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmOfferContent"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
@@ -355,7 +355,7 @@ orderProcess =
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmOrderContent" 
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOrder" 
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages
