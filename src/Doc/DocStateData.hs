@@ -865,6 +865,9 @@ data Document = Document
     , documentregion                 :: Region
     }
 
+instance HasLocale Document where
+  getLocale = mkLocaleFromRegion . documentregion
+
 data CancelationReason =  ManualCancel
                         -- The data returned by ELeg server
                         --                 msg                    fn            ln            num

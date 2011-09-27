@@ -3,11 +3,12 @@ module Util.KontraLinkUtils where
 import Context
 import KontraLink
 import KontraMonad
+import User.Locale
 
 getHomeOrUploadLink :: KontraMonad m => m KontraLink
 getHomeOrUploadLink = do
-  Context{ctxmaybeuser, ctxregion, ctxlang} <- getContext
-  case ctxmaybeuser of
+  ctx <- getContext
+  case ctxmaybeuser ctx of
     Just _ -> return LinkUpload
-    Nothing -> return $ LinkHome ctxregion ctxlang 
+    Nothing -> return $ LinkHome (getLocale ctx) 
 

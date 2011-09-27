@@ -105,28 +105,28 @@ data AppGlobals
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
-handleRoutes :: Region -> Lang -> Kontra Response
-handleRoutes ctxregion ctxlang = msum [
+handleRoutes :: Locale -> Kontra Response
+handleRoutes locale = msum [
      -- static pages  --TODO EM make this nice!
-       regionDir ctxregion $ langDir ctxlang $ hGetAllowHttp0 $ handleHomepage
-     , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome ctxregion ctxlang
+       regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
+     , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome locale
 
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
-     , dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
-     , dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
-     , dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
-     , dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
-     , dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "om-scrive" "about" $ hGetAllowHttp0 $ handleAboutPage
-     , dirByLang ctxlang "om-scrive" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
-     , dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
-     , dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients ctxregion ctxlang
+     , regionDir locale $ langDir locale $ dirByLang locale "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
+     , dirByLang locale "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan locale
+     , regionDir locale $ langDir locale $ dirByLang locale "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
+     , dirByLang locale "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity locale
+     , regionDir locale $ langDir locale $ dirByLang locale "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
+     , dirByLang locale "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal locale
+     , regionDir locale $ langDir locale $ dirByLang locale "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
+     , dirByLang locale "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy locale
+     , regionDir locale $ langDir locale $ dirByLang locale "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
+     , dirByLang locale "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms locale
+     , regionDir locale $ langDir locale $ dirByLang locale "om-scrive" "about" $ hGetAllowHttp0 $ handleAboutPage
+     , dirByLang locale "om-scrive" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout locale
+     , regionDir locale $ langDir locale $ dirByLang locale "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
+     , dirByLang locale "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners locale
+     , regionDir locale $ langDir locale $ dirByLang locale "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
+     , dirByLang locale "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients locale
 
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -322,8 +322,8 @@ handleRoutes ctxregion ctxlang = msum [
 
      -- account stuff
      , dir "logout"      $ hGet0  $ toK0 $ handleLogout
-     , regionDir ctxregion $ langDir ctxlang $ dir "login" $ hGet0  $ toK0 $ handleLoginGet
-     , regionDir ctxregion $ langDir ctxlang $ dir "login" $ hPostNoXToken0 $ toK0 $ handleLoginPost
+     , regionDir locale $ langDir locale $ dir "login" $ hGet0  $ toK0 $ handleLoginGet
+     , regionDir locale $ langDir locale $ dir "login" $ hPostNoXToken0 $ toK0 $ handleLoginPost
      --, dir "signup"      $ hGet0  $ signupPageGet
      , dir "signup"      $ hPostAllowHttp0 $ toK0 $ signupPagePost
      --, dir "vip"         $ hGet0  $ signupVipPageGet
@@ -356,62 +356,60 @@ handleRoutes ctxregion ctxlang = msum [
      ]
 
 {- |
-    Determines the localisation details by checking the user settings,
-    the request, and cookies.
+    If the current request is referring to a document then this will
+    return the locale of that document.
 -}
-getLocalization :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
-                   Connection -> Maybe User -> m (SystemServer, Region, Lang)
-getLocalization conn muser = do
+getDocumentLocale :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
+                       m (Maybe Locale)
+getDocumentLocale = do
   rq <- askRq
-  hostpart <- getHostpart
+  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+  mdoclocales <- mapM (DocControl.getDocumentLocale . DocumentID) docids
+  return . listToMaybe $ catMaybes mdoclocales
+
+{- |
+    Determines the locale of the current user (whether they are logged in or not), by checking
+    their settings, the request, and cookies.
+-}
+getUserLocale :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
+                   Connection -> Maybe User -> m Locale
+getUserLocale conn muser = do
+  rq <- askRq
   currentcookielocale <- optional (readCookieValue "locale")
-  doclocale <- getDocumentLocale rq
   activationlocale <- getActivationLocale rq
+  let userlocale = locale <$> usersettings <$> muser
+      urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
+      urllang = (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
+      urllocale = case (urlregion, urllang) of
+                    (Just region, Just lang) -> Just $ mkLocale region lang
+                    _ -> Nothing
+  doclocale <- getDocumentLocale
   let browserlocale = getBrowserLocale rq
-  let systemServer = systemServerFromURL hostpart
-      newregion = firstOf [ regionFrom doclocale
-                          , regionFrom activationlocale
-                          , region <$> usersettings <$> muser
-                          , (listToMaybe $ rqPaths rq) >>= regionFromCode
-                          , regionFrom currentcookielocale
-                          , regionFrom $ Just browserlocale
+  let newlocale = firstOf [ activationlocale
+                          , userlocale
+                          , urllocale
+                          , currentcookielocale
+                          , doclocale
+                          , Just browserlocale
                           ]
-      newlang = firstOf [ langFrom activationlocale
-                        , lang <$> usersettings <$> muser
-                        , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
-                        , langFrom currentcookielocale
-                        , langFrom doclocale
-                        , langFrom $ Just browserlocale
-                        ]
-  let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))
+  let newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
-  return (systemServer, newregion, newlang)
+  return newlocale
   where
-    regionFrom (Just (region, _lang)) = Just region
-    regionFrom _ = Nothing
-    langFrom (Just (_region, lang)) = Just lang
-    langFrom _ = Nothing
     getBrowserLocale rq =
-      let browserregion = regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-      in (browserregion, defaultRegionLang browserregion)
-    -- try and get the locale from the current doc by checking the path for document ids, and giving them a go
-    getDocumentLocale rq = do
-      let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-      mdoclocales <- mapM (DocControl.getDocumentLocalisation . DocumentID) docids
-      let mregion = listToMaybe $ catMaybes mdoclocales --TODO: look up doc lang
-      return $ fmap (\r -> (r, defaultRegionLang r)) mregion
+      mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
     -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
     getActivationLocale rq = do
       let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-      mactionlocales <- mapM (getActivationLocalisation . ActionID) actionids
+      mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
       return . listToMaybe $ catMaybes mactionlocales
-    getActivationLocalisation aid = do
+    getActivationLocaleFromAction aid = do
       maction <- query $ GetAction aid
       mactionuser <- case fmap actionType maction of
                        Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB conn . dbQuery $ GetUserByID uid
                        Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
                        _ -> return Nothing
-      return $ fmap (\u -> (region $ usersettings u, lang $ usersettings u)) mactionuser
+      return $ fmap (locale . usersettings) mactionuser
     optional c = (liftM Just c) `mplus` (return Nothing)
     firstOf :: Bounded a => [Maybe a] -> a
     firstOf opts =
@@ -419,15 +417,16 @@ getLocalization conn muser = do
         Just val -> fromJust val
         Nothing -> defaultValue
 
-regionDir :: (ServerMonad m, MonadPlus m) => Region -> m a -> m a
-regionDir = dir . codeFromRegion
+regionDir :: (ServerMonad m, MonadPlus m) => Locale -> m a -> m a
+regionDir = dir . codeFromRegion . getRegion
 
-langDir :: (ServerMonad m, MonadPlus m) => Lang -> m a -> m a
-langDir = dir . codeFromLang
+langDir :: (ServerMonad m, MonadPlus m) => Locale -> m a -> m a
+langDir = dir . codeFromLang . getLang
 
-dirByLang :: (ServerMonad m, MonadPlus m) => Lang -> String -> String -> m a -> m a
-dirByLang LANG_SE swedishdir _englishdir = dir swedishdir
-dirByLang LANG_EN _swedishdir englishdir = dir englishdir
+dirByLang :: (ServerMonad m, MonadPlus m) => Locale -> String -> String -> m a -> m a
+dirByLang locale swedishdir englishdir
+  | getLang locale == LANG_SE = dir swedishdir
+  | otherwise = dir englishdir
 
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
@@ -577,7 +576,7 @@ appHandler appConf appGlobals = do
     handle rq session ctx = do
       (res,ctx') <- toIO ctx . runKontra $
          do
-          res <- handleRoutes (ctxregion ctx) (ctxlang ctx) `mplus` do
+          res <- handleRoutes (getLocale ctx) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
@@ -634,7 +633,10 @@ appHandler appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the system, region and language
-      (systemServer, region, language) <- getLocalization conn muser
+      let systemServer = systemServerFromURL hostpart
+      doclocale <- getDocumentLocale
+      userlocale <- getUserLocale conn muser
+      let ctxlocale = fromMaybe userlocale doclocale
 
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -651,7 +653,7 @@ appHandler appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,region,language) templates2
+                , ctxtemplates = localizedVersion (systemServer,getRegion ctxlocale, getLang ctxlocale) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -667,8 +669,8 @@ appHandler appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
-                , ctxregion = region
-                , ctxlang = language
+                , ctxdoclocale = doclocale
+                , ctxuserlocale = userlocale
                 }
       return ctx
 
@@ -801,7 +803,7 @@ handleLoginGet = do
 -}
 handleLoginPost :: Kontrakcja m => m KontraLink
 handleLoginPost = do
-    Context{ctxregion, ctxlang} <- getContext
+    ctx <- getContext
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
     let linkemail = maybe "" BS.toString memail
@@ -817,20 +819,20 @@ handleLoginPost = do
                         return BackToReferer
                 Just _ -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
+                        return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
+                    return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
+        _ -> return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
 
 {- |
    Handles the logout, and sends user back to main page.
 -}
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
-    Context{ctxregion, ctxlang} <- getContext
+    ctx <- getContext
     logUserToContext Nothing
-    sendRedirect $ LinkHome ctxregion ctxlang
+    sendRedirect $ LinkHome (getLocale ctx)
 
 {- |
    Serves out the static html files.
@@ -849,10 +851,10 @@ serveHTMLFiles =  do
 -}
 onlySuperUserGet :: Kontrakcja m => m Response -> m Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser, ctxregion, ctxlang } <- getContext
+    ctx@Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
-        else sendRedirect $ LinkLogin ctxregion ctxlang NotLoggedAsSuperUser
+        else sendRedirect $ LinkLogin (getLocale ctx) NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.
