@@ -1782,12 +1782,17 @@
  $partylist:noescape()$ och $ourServiceName()$ har utfärdat ett verifikat
  för accepten.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
  and $ourServiceName()$ has verified the confirmation."
+"_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
+ $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$."
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$  och $ourServiceName()$ har utfärdat ett verifikat
  för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$  and $ourServiceName()$ has verified the confirmation."
+"_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
+ av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$."
 "_mailRejectContractMailContentContractRejected","<strong>$rejectorName$</strong> har avvisat att underteckna
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
  är därmed avbruten.",,"<strong>$rejectorName$</strong> has  rejected
