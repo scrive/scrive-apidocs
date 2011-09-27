@@ -1994,6 +1994,7 @@ handleSigAttach docid siglinkid mh = do
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
     Just user <- ctxmaybeuser <$> getContext
+    lang <- ctxlang <$> getContext
     doctype <- getFieldWithDefault "" "documentType"
     allDocs <- case (doctype) of
         "Contract" -> getDocumentsForUserByType (Signable Contract) user
@@ -2031,7 +2032,7 @@ jsonDocumentsList = do
     params <- getListParamsNew
     let docs = docSortSearchPage params allDocs
     cttime <- liftIO $ getMinutesTime
-    docsJSONs <- mapM (fmap JSObject . docForListJSON cttime user) $ list docs
+    docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
     return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
                                     ("paging", pagingParamsJSON docs)]
 

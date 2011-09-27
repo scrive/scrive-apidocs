@@ -465,22 +465,22 @@ fileJSON file =
        ("name", BS.toString $ filename file)
     ] 
  
-docForListJSON :: (TemplatesMonad m) => MinutesTime -> User -> Document -> m (JSObject JSValue)
-docForListJSON crtime user doc =
+docForListJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> User -> Document -> m (JSObject JSValue)
+docForListJSON tl crtime user doc =
   let link = case getSigLinkFor doc user of 
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc 
   in fmap toJSObject $ propagateMonad  $
-    [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
-      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
+    [ ("fields" , jsonPack <$> docFieldsListForJSON tl crtime doc),
+      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON tl crtime doc) (documentsignatorylinks doc)),
       ("link", return $ JSString $ toJSString $  show link)
     ]
 
 jsonPack :: [(String,String)] -> JSValue
 jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
 
-docFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m [(String,String)]
-docFieldsListForJSON crtime doc =  propagateMonad [
+docFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document -> m [(String,String)]
+docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $  BS.toString $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
@@ -488,7 +488,7 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
-    ("time", return $ showDateAbbrev crtime (documentmtime doc)),
+    ("time", return $ showDateAbbrev tl crtime (documentmtime doc)),
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
     ("shared", return $ show $ (documentsharing doc)==Shared)
@@ -503,11 +503,11 @@ docFieldsListForJSON crtime doc =  propagateMonad [
         Template _ -> renderTemplateFM "docListTemplateLabel" $ do field "processname" pn
         Signable _ -> return pn
 
-signatoryFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
-signatoryFieldsListForJSON crtime doc sl = propagateMonad [
+signatoryFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
+signatoryFieldsListForJSON tl crtime doc sl = propagateMonad [
     ("status", return $ show $ signatoryStatusClass doc sl ),
     ("name", return $ BS.toString $ getSmartName sl ),
-    ("time", return $ fromMaybe "" $ (showDateAbbrev crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
+    ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
     ]
     where
         sign = signtime <$> maybesigninfo sl
