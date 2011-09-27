@@ -231,7 +231,7 @@ userFromTMP uTMP company = do
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
             }
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
-    company_set <- runDBUpdate $ SetUserCompany (userid user) (companyid company)
+    company_set <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
     when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
     Just user' <- runDBQuery $ GetUserByID $ userid user
     return user'
