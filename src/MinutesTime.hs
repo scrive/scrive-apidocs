@@ -64,7 +64,7 @@ instance Migrate MinutesTime1 MinutesTime where
       migrate (MinutesTime1 m s) = fromSeconds (m*60 + s)
 
 instance Show MinutesTime where
-    showsPrec _prec mt = (++) $ formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S" mt
+    showsPrec _prec mt = (++) $ formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z" mt
 
 -- | Show time in %Y-%m-%d %H:%M format. Warning: system needs to run in UTC time!
 showMinutesTimeForAPI :: MinutesTime -> String
@@ -130,7 +130,7 @@ swedishTimeLocale = defaultTimeLocale { months = [ ("januari","jan")
 showDateAbbrev :: KontraTimeLocale -> MinutesTime -> MinutesTime -> String
 showDateAbbrev locale current time
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
-                   formatMinutesTime locale "%H:%M" time
+                   formatMinutesTime locale "%H:%M %Z" time
                | ctYear ct1 == ctYear ct =
                    formatMinutesTime locale "%d %b" time
                | otherwise =
