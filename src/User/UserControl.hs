@@ -623,7 +623,7 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
   supervisor <- fromMaybe user <$> (runDBQuery $ GetUserByID supervisorid)
   case (userid user /= supervisorid, usercompany supervisor) of
      (True, Just companyid) -> do
-          setcompanyresult <- runDBUpdate $ SetUserCompany (userid user) companyid
+          setcompanyresult <- runDBUpdate $ SetUserCompany (userid user) (Just companyid)
           if setcompanyresult
             then do
               addFlashM $ flashMessageUserHasBecomeCompanyAccount supervisor
@@ -796,8 +796,8 @@ handleActivate aid hash signupmethod actvuser = do
       -- we need to make a new company, because one doesn't already exist - this user should be the admin too
       (user, company) <- runDB $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
-        _ <- dbUpdate $ SetUserCompany (userid actvuser) (companyid company)
-        _ <- dbUpdate $ MakeUserCompanyAdmin (userid actvuser)
+        _ <- dbUpdate $ SetUserCompany (userid actvuser) (Just $ companyid company)
+        _ <- dbUpdate $ SetUserCompanyAdmin (userid actvuser) True
         Just user <- dbQuery $ GetUserByID $ userid actvuser
         return (user, company)
       finalizeCompanyActivation user company

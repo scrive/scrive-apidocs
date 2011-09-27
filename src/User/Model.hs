@@ -35,7 +35,7 @@ module User.Model (
   , AddViewerByEmail(..)
   , AcceptTermsOfService(..)
   , SetSignupMethod(..)
-  , MakeUserCompanyAdmin(..)
+  , SetUserCompanyAdmin(..)
   , composeFullName
   ) where
 
@@ -217,12 +217,18 @@ instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
 
-data SetUserCompany = SetUserCompany UserID CompanyID
+data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
 instance DBUpdate SetUserCompany Bool where
-  dbUpdate (SetUserCompany uid cid) = wrapDB $ \conn -> do
-    st <- prepare conn "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
-    r <- execute st [toSql cid, toSql uid]
-    oneRowAffectedGuard r
+  dbUpdate (SetUserCompany uid mcid) = wrapDB $ \conn -> do
+    case mcid of
+      Nothing -> do
+        st <- prepare conn "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
+        r <- execute st [toSql uid]
+        oneRowAffectedGuard r
+      Just cid -> do
+        st <- prepare conn "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
+        r <- execute st [toSql cid, toSql uid]
+        oneRowAffectedGuard r
 
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
@@ -490,16 +496,16 @@ instance DBUpdate SetSignupMethod Bool where
       [toSql signupmethod, toSql uid]
     oneRowAffectedGuard r
 
-data MakeUserCompanyAdmin = MakeUserCompanyAdmin UserID
-instance DBUpdate MakeUserCompanyAdmin Bool where
-  dbUpdate (MakeUserCompanyAdmin uid) = wrapDB $ \conn -> do
+data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
+instance DBUpdate SetUserCompanyAdmin Bool where
+  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = wrapDB $ \conn -> do
     mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
       >>= oneObjectReturnedGuard . join
       >>= return . join . fmap fromSql
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> do
-        run conn "UPDATE users SET is_company_admin = TRUE WHERE id = ? AND deleted = FALSE" [toSql uid]
+        run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
           >>= oneRowAffectedGuard
 
 -- helpers

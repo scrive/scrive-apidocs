@@ -218,23 +218,61 @@ getUsersDetailsToCSV = onlySuperUser $ do
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySuperUser $ do
   _ <- getAsStrictBS "change"
-  mupgradetocompany  <- getFieldUTF "upgradetocompany"
+  museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
-  -- if the "upgrade to company" box was checked, and this is
-  -- a single user then create a new company, and make this person
-  -- the admin of it
-  user <- case (mupgradetocompany, usercompany olduser) of
-    (Just upgradeval, Nothing) | (toString upgradeval) == "on" -> do
-      runDBOrFail $ do
-        company <- dbUpdate $ CreateCompany Nothing Nothing
-        _ <- dbUpdate $ SetUserCompany uid (companyid company)
-        _ <- dbUpdate $ MakeUserCompanyAdmin uid
+  user <- case (fmap toString museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
+    (Just "companyadminaccount", Just _companyid, False) -> do
+      --then we just want to make this account an admin
+      newuser <- runDBOrFail $ do
+        _ <- dbUpdate $ SetUserCompanyAdmin uid True
         dbQuery $ GetUserByID uid
+      return newuser
+    (Just "companyadminaccount", Nothing, False) -> do
+      --then we need to create a company and make this account an admin
+      --we also need to tie all the existing docs to the company
+      newuser <- runDBOrFail $ do
+        company <- dbUpdate $ CreateCompany Nothing Nothing
+        _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        dbQuery $ GetUserByID uid
+      _ <- resaveDocsForUser uid
+      return newuser
+    (Just "companystandardaccount", Just _companyid, True) -> do
+      --then we just want to downgrade this account to a standard
+      newuser <- runDBOrFail $ do
+        _ <- dbUpdate $ SetUserCompanyAdmin uid False
+        dbQuery $ GetUserByID uid
+      return newuser
+    (Just "companystandardaccount", Nothing, False) -> do
+      --then we need to create a company and make this account a standard user
+      --we also need to tie all the existing docs to the company
+      newuser <- runDBOrFail $ do
+        company <- dbUpdate $ CreateCompany Nothing Nothing
+        _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        dbQuery $ GetUserByID uid
+      _ <- resaveDocsForUser uid
+      return newuser
+    (Just "privateaccount", Just _companyid, _) -> do
+      --then we need to downgrade this user and possibly delete their company
+      --we also need to untie all their existing docs from the company
+      --we may also need to delete the company if it's empty, but i haven't implemented this bit
+      newuser <- runDBOrFail $ do
+        _ <- dbUpdate $ SetUserCompany uid Nothing
+        dbQuery $ GetUserByID uid
+      _ <-resaveDocsForUser uid
+      return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
   return $ LinkUserAdmin $ Just uid
-  
+
+resaveDocsForUser :: Kontrakcja m => UserID -> m ()
+resaveDocsForUser uid = onlySuperUser $ do
+  user <- runDBOrFail $ dbQuery $ GetUserByID uid
+  userdocs <- query $ GetDocumentsByUser user
+  mapM_ (\doc -> update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  return ()
+
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyChange companyid = onlySuperUser $ do

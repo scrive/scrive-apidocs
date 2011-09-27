@@ -74,6 +74,7 @@ module Doc.DocState
     , SignLinkFromDetailsForTest(..)
     , DeleteSigAttachment(..)
     , GetSignatoryLinkIDs(..)
+    , AdminOnlySaveForUser(..)
     )
 where
 
@@ -1456,6 +1457,24 @@ templateFromDocument docid = modifySignable docid $ \doc ->
           documentstatus = Preparation
         , documenttype =  Template process
         }
+
+{- |
+    The existance of this function is wrong.  What it means is that storing
+    maybesignatory and maybecompany on the signatory links is the wrong way of doing it,
+    and there should be something else for hooking accounts to sig links that doesn't
+    involve editing all the docs as a user moves between private and company accounts.
+-}
+adminOnlySaveForUser :: DocumentID -> User -> Update Documents (Either String Document)
+adminOnlySaveForUser docid user =
+  modifyDocumentWithActionTime False (const True) docid $ \doc ->
+    return . Right $ doc {
+      documentsignatorylinks = map maybeSaveSigLink $ documentsignatorylinks doc
+    }
+  where
+    maybeSaveSigLink :: SignatoryLink -> SignatoryLink
+    maybeSaveSigLink siglink@SignatoryLink{maybesignatory}
+      | maybesignatory == Just (userid user) = siglink { maybecompany = usercompany user }
+      | otherwise = siglink
         
 
 fixBug510ForDocument :: DocumentID -> Update Documents (Either String Document)
@@ -1637,6 +1656,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentStatsByUser
                         , 'fileModTime
                         , 'saveDocumentForUser
+                        , 'adminOnlySaveForUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
