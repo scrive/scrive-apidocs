@@ -331,13 +331,16 @@ adminuser=
 		<tr> <td>Account type:</td>
 		  <td>
 		    $if(user.iscompanyaccount)$
-		    <a href="/adminonly/companyadmin/$company.companyid$">
-		      $company.companyname$ $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
-		    </a>
-		    $else$
-		    Private Account<br/>
-		    <input type="checkbox" name="upgradetocompany"/> Upgrade to Company
-		    $endif$
+        <p><a href="/adminonly/companyadmin/$company.companyid$">
+         view company $company.companyname$
+        </a></p>
+        $endif$
+
+		    <select name="useraccounttype">
+		      <option $if(user.iscompanyaccount)$$if(user.iscompanyadmin)$selected=""$endif$$endif$ value="companyadminaccount">$company.companyname$ Admin Company Account $if(!user.iscompanyaccount)$(Creates a new company)$endif$</option>
+		      <option $if(user.iscompanyaccount)$$if(!user.iscompanyadmin)$selected=""$endif$$endif$ value="companystandardaccount">$company.companyname$ Standard Company Account $if(!user.iscompanyaccount)$(Creates a new company)$endif$</option>
+		      <option $if(!user.iscompanyaccount)$selected=""$endif$value="privateaccount">Private Account $if(user.iscompanyaccount)$(May leave an empty company)$endif$</option>
+		    </select>
 		  </td>
 		</tr>
 	    </tbody></table>
