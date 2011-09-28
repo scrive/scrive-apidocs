@@ -343,7 +343,8 @@ mailDocumentClosed ctx document@Document{documenttitle} = do
     content <- wrapHTML' =<< (renderTemplateForProcess document processmailclosedcontent $ do
         field "documenttitle" $ BS.toString documenttitle
         field "partylist" $ partylist
-        fieldM "footer" $ mailFooter ctx document)
+        fieldM "footer" $ mailFooter ctx document
+        field "service" $ isJust $ documentservice document)
     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 mailDocumentAwaitingForAuthor :: TemplatesMonad m => Context -> BS.ByteString -> Document  -> m Mail
