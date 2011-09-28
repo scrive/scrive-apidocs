@@ -46,7 +46,13 @@ mailContractClosedContent=
 mailOfferClosedContent=
     <span>
       <p>$_hi()$,</p>
-      <p>$_mailOfferClosedContentOfferAccepted()$</p>
+      <p>
+       $if(!service)$
+        $_mailOfferClosedContentOfferAccepted()$
+       $else$
+        $_mailOfferClosedContentOfferAcceptedWithService()$
+       $endif$
+       </p>
       <p>$_mailOfferClosedContentAttached()$</p>
       $footer:noescape()$
     </span>
@@ -54,7 +60,15 @@ mailOfferClosedContent=
 mailOrderClosedContent=
     <span>
       <p>$_hi()$,</p>
-      <p>$_mailOrderClosedContentViewed()$</p>
+
+      <p>
+        
+       $if(!service)$
+        $_mailOrderClosedContentViewed()$
+       $else$
+        $_mailOrderClosedContentViewedWithService()$
+       $endif$
+      </p>
       <p>$_mailOrderClosedContentAttached()$</p>
       $footer:noescape()$
     </span>
