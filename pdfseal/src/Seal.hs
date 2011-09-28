@@ -413,7 +413,7 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
  intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
  "0.546 0.469 0.454 0.113 k " ++
  "10 0 0 10 46.5522 31.5469 Tm " ++
- "(Sida 1 av 1)Tj " ++
+ "(1/1)Tj " ++
  "ET " ++ rightcornerseal2 
 
 rightcornerseal2 :: String
