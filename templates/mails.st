@@ -202,7 +202,10 @@ mailInvitationToViewDefaultHeader=
       $endif$
      </p>
 ####
-remindMailSignedTitle=$documenttitle$
+remindMailSigned=
+    $documenttitle$
+    $header:noescape()$
+    $footer:noescape()$
 ###
 remindMailSignedContractStandardHeader=
     <span>
@@ -240,8 +243,6 @@ remindMailSignedOrderStandardHeader=
       </p>
     </span>
 ####
-remindMailNotSignedTitle=$_remindMailNotSignedTitle()$
-########
 remindMailNotSignedContractStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
@@ -260,7 +261,8 @@ remindMailNotSignedOrderStandardHeader=
       <p>$_remindMailNotSignedOrderStandardHeaderRemind()$</p>
     </span>
 #####
-remindMailNotSignedContractContent=
+remindMailNotSignedContract=
+    $_remindMailNotSignedTitle()$
     $header:noescape()$
     <span>
       <p><i>$_remindMailNotSignedContractContentInfo()$</i><br/>
@@ -274,7 +276,8 @@ remindMailNotSignedContractContent=
     $footer:noescape()$
     $legalparagraph()$
 #####
-remindMailNotSignedOfferContent=
+remindMailNotSignedOffer=
+    $_remindMailNotSignedTitle()$
     $header:noescape()$
     <span>
       <p>
@@ -291,7 +294,8 @@ remindMailNotSignedOfferContent=
     $footer:noescape()$
     $legalparagraph()$
 #####
-remindMailNotSignedOrderContent=
+remindMailNotSignedOrder=
+    $_remindMailNotSignedTitle()$
     $header:noescape()$
     <span>
       <p><i>$_remindMailNotSignedOrderContentInfo()$</i><br/>

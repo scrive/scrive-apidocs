@@ -47,8 +47,8 @@ mailDocumentRemind :: TemplatesMonad m
                    -> m Mail
 mailDocumentRemind cm c d s =
     case s of
-         SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned cm c d s
-         _                                       -> remindMailSigned    cm c d s
+         SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm c d s
+         _                                       -> remindMailSigned    True cm c d s
 
 mailDocumentRemindContent :: TemplatesMonad m
                           => Maybe BS.ByteString
@@ -59,41 +59,19 @@ mailDocumentRemindContent :: TemplatesMonad m
 mailDocumentRemindContent cm c d s =
     case s of
          SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s
-         _                                       -> remindMailSignedContent cm c d s
+         _                                       -> remindMailSignedContent False cm c d s
 
 remindMailNotSigned :: TemplatesMonad m
-                    => Maybe BS.ByteString
+                    => Bool 
+                    -> Maybe BS.ByteString
                     -> Context
                     -> Document
                     -> SignatoryLink
                     -> m Mail
-remindMailNotSigned customMessage ctx document@Document{documenttitle} signlink = do
-    title <- renderTemplateFM "remindMailNotSignedTitle" $ do
-        field "documenttitle" $ BS.toString $ documenttitle
-    content <- wrapHTML' =<< remindMailNotSignedContent True customMessage ctx document signlink
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-remindMailSigned :: TemplatesMonad m
-                 => Maybe BS.ByteString
-                 -> Context
-                 -> Document
-                 -> SignatoryLink
-                 -> m Mail
-remindMailSigned customMessage ctx document@Document{documenttitle}  signlink = do
-    title <- renderTemplateFM "remindMailSignedTitle" $ do
-        field "documenttitle" documenttitle
-    content <- wrapHTML' =<< remindMailSignedContent customMessage ctx  document signlink
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-remindMailNotSignedContent :: TemplatesMonad m
-                           => Bool
-                           -> Maybe BS.ByteString
-                           -> Context
-                           -> Document
-                           -> SignatoryLink
-                           -> m String
-remindMailNotSignedContent forMail customMessage ctx document signlink = do
-    renderTemplateForProcess document processmailremindnotsignedcontent $ do
+remindMailNotSigned forMail customMessage ctx document signlink = do
+    let creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
+    kontramail (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
+        field "documenttitle" $ documenttitle document
         fieldM "header" $ do
             header <- if isNothing customMessage
                          then remindMailNotSignedStandardHeader document signlink
@@ -131,22 +109,41 @@ remindMailNotSignedContent forMail customMessage ctx document signlink = do
                else makeFullLink ctx document $ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
-    where
-        creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
 
+remindMailSigned :: TemplatesMonad m
+                 => Bool
+                 -> Maybe BS.ByteString
+                 -> Context
+                 -> Document
+                 -> SignatoryLink
+                 -> m Mail
+remindMailSigned _forMail customMessage ctx document signlink = do
+    sheader <- remindMailSignedStandardHeader document signlink
+    kontramail "remindMailSigned" $ do
+            field "documenttitle" $ documenttitle document
+            fieldM "header" $ makeEditable "customtext" $  fromMaybe sheader (BS.toString <$> customMessage)
+            fieldM "footer" $ mailFooter ctx document
+    
+
+remindMailNotSignedContent :: TemplatesMonad m
+                           => Bool
+                           -> Maybe BS.ByteString
+                           -> Context
+                           -> Document
+                           -> SignatoryLink
+                           -> m String
+remindMailNotSignedContent forMail customMessage ctx document signlink =
+    (BS.toString . content) <$> remindMailNotSigned  forMail customMessage ctx document signlink
+    
 remindMailSignedContent :: TemplatesMonad m
-                        => (Maybe BS.ByteString)
+                        => Bool 
+                        -> (Maybe BS.ByteString)
                         -> Context
                         -> Document
                         -> SignatoryLink
                         -> m String
-remindMailSignedContent customMessage ctx document signlink = do
-    header <- if (isNothing customMessage)
-                 then remindMailSignedStandardHeader document signlink
-                 else return . BS.toString $ fromJust customMessage
-    editableheader <- makeEditable "customtext" header
-    footer <- mailFooter ctx document
-    return $ editableheader ++ footer
+remindMailSignedContent forMail customMessage ctx document signlink = do
+    (BS.toString . content) <$> remindMailSigned forMail customMessage ctx document signlink
 
 remindMailSignedStandardHeader :: TemplatesMonad m
                                => Document
@@ -498,7 +495,7 @@ mailMailApiError from err =
 kontramail :: TemplatesMonad m => String -> Fields m -> m Mail
 kontramail tname fields = do
     wholemail <- renderTemplateFM tname fields
-    let (title,content) = span (== '\n') $ dropWhile (not . isAlphaNum) wholemail
+    let (title,content) = span (== '\n') $ dropWhile (isControl &&^ isSpace) wholemail
     content' <- wrapHTML' content
     return $ emptyMail  {   title   = BS.fromString title
                           , content = BS.fromString content'

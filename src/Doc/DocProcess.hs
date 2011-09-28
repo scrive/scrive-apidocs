@@ -87,7 +87,7 @@ data DocProcessInfo =
   , processmailinvitationtosigndefaultheader :: String
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
-  , processmailremindnotsignedcontent :: String
+  , processmailremindnotsigned :: String
   , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
 
@@ -176,7 +176,7 @@ contractProcess =
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
+  , processmailremindnotsigned = "remindMailNotSignedContract"
   , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
@@ -265,7 +265,7 @@ offerProcess =
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
+  , processmailremindnotsigned= "remindMailNotSignedOffer"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
@@ -354,7 +354,7 @@ orderProcess =
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+  , processmailremindnotsigned = "remindMailNotSignedOrder"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOrder" 
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
