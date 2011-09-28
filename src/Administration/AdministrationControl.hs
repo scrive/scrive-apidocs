@@ -344,9 +344,9 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
   muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
   case muser of
     Just (User{userid}) -> do
-      _ <- runDBUpdate $ SetUserCompany userid companyid
+      _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
       when (fromMaybe False madmin) $ do
-        _ <- runDBUpdate $ MakeUserCompanyAdmin userid
+        _ <- runDBUpdate $ SetUserCompanyAdmin userid True
         return ()
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
   return $ LinkCompanyUserAdmin companyid
