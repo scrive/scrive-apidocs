@@ -34,7 +34,7 @@ userStateTests conn = testGroup "UserState" [
     ]
   , testThat "AddViewerByEmail/GetUserFriends works" conn test_addViewerByEmail
   , testThat "GetUsersByFriendUserID works" conn test_getUsersByFriendUserID
-  , testThat "MakeUserCompanyAdmin/GetCompanyAccounts works" conn test_getCompanyAccounts
+  , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" conn test_getCompanyAccounts
   , testThat "GetInviteInfo/SetInviteInfo works" conn test_getInviteInfo
   , testThat "GetUserMailAPI/SetUserMailAPI works" conn test_getUserMailAPI
   , testThat "ExportUsersDetailsToCSV works" conn test_exportUsersDetailsToCSV
@@ -183,7 +183,7 @@ test_setUserCompany :: DB ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Company{companyid} <- dbUpdate $ CreateCompany Nothing Nothing
-  res <- dbUpdate $ SetUserCompany userid companyid
+  res <- dbUpdate $ SetUserCompany userid (Just $ companyid)
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID userid
   assertBool "Returned user has proper companyid" $ usercompany user == Just companyid
