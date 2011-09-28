@@ -40,8 +40,7 @@ module Doc.DocView (
   , mailDocumentClosed
   , mailDocumentRejected
   , mailDocumentRemind
-  , mailInvitationToSend
-  , mailInvitationToSign
+  , mailInvitation
   , modalSignedClosedHasAccount
   , modalSignedNotClosedHasAccount
   , modalSignedClosedNoAccount
@@ -786,7 +785,7 @@ pageDocumentDesign ctx
        fieldM "authorOtherFields" $ authorotherfields $ filter isFieldCustom $ signatoryfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
-       fieldM "invitationMailContent" $ mailInvitationToSignOrViewContent False ctx document Nothing
+       fieldM "invitationMailContent" $ mailInvitationContent False ctx Sign document Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildDocState (signatorydetails authorsiglink) documentsignatorylinks)
        field "fromservice" (isJust $ ctxservice ctx)

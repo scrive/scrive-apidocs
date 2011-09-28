@@ -299,11 +299,10 @@ sendInvitationEmail1 ctx document signatorylink = do
       Document { documentid } = document
       authorsiglink = fromJust $ getAuthorSigLink document
       hasAuthorSigned = isJust $ maybesigninfo authorsiglink
-  mail <- if isSignatory signatorylink
-          then if hasAuthorSigned
-               then mailInvitationToSign ctx document signatorylink
-               else mailInvitationToSend ctx document signatorylink
-          else mailInvitationToView ctx document signatorylink
+  mail <- case (isSignatory signatorylink, hasAuthorSigned) of
+          (True, True)  -> mailInvitation True ctx Sign document (Just signatorylink)
+          (True, False) -> mailInvitation True ctx Send document (Just signatorylink)
+          (False, _)    -> mailInvitation True ctx View document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
   _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
@@ -1792,7 +1791,10 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
 sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
-  forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor customMessage ctx document))
+  forM_ activated_signatories $ \slnk -> do
+      m <- mailCancelDocumentByAuthor True customMessage ctx document
+      let mail = m {to = [getMailAddress slnk]}
+      scheduleEmailSendout (ctxesenforcer ctx) mail
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))

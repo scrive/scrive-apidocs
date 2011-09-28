@@ -57,7 +57,7 @@
 "_HeadUserInfo","Användaruppgifter",,"User info"
 "_InfoSelectTemplate"," Klicka på den mall du vill använda för att starta processen",,"  Click a template you want to use to start the process"
 "_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
-"_LanguageSettings","Språkinställningar",,"Language settings"
+"_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
 "_MailAPIEnable","Aktivera Mail API",,"Enable Mail API"
 "_MailAPILimitHead","Begränsningar",,"Limits"
@@ -316,8 +316,8 @@
 "_StepsH3StoreBody","Vi sparar dina dokument<br />tryggt och säkert.",,"We keep your documents<br />safe and secure."
 "_Swedish"," Svenska ",,"Swedish"
 "_UserLanguage","Användarspråk:",,"User language:"
-"_Sweden","Sweden",,"Sweden"
-"_Britain","Britain",,"Britain"
+"_Sweden","Sverige",,"Sweden"
+"_Britain","Storbritanien",,"Britain"
 "_UserRegion","User Region:",,"User Region:"
 "_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. $ourServiceName()$ är skapat
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. $ourServiceName()$ is made
@@ -1804,12 +1804,17 @@
  $partylist:noescape()$ och $ourServiceName()$ har utfärdat ett verifikat
  för accepten.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
  and $ourServiceName()$ has verified the confirmation."
+"_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
+ $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$."
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$  och $ourServiceName()$ har utfärdat ett verifikat
  för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$  and $ourServiceName()$ has verified the confirmation."
+"_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
+ av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$."
 "_mailRejectContractMailContentContractRejected","<strong>$rejectorName$</strong> har avvisat att underteckna
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
  är därmed avbruten.",,"<strong>$rejectorName$</strong> has  rejected
