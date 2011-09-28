@@ -413,11 +413,26 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
  intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
  "0.546 0.469 0.454 0.113 k " ++
  "10 0 0 10 46.5522 31.5469 Tm " ++
- "(Sida 1 av 1)Tj " ++
+ "(1/1)Tj " ++
  "ET " ++ rightcornerseal2 
 
+-- To emulate a near perfect circle of radius r with cubic Bézier
+-- curves, draw four curves such that one of the line segments
+-- connecting the starting point with the nearest control point, or
+-- the ending point with its nearest control point, is vertical, while
+-- the other one is horizontal. The length l of each such segment
+-- equals r multiplied by kappa. kappa is 0.5522847498 in our case we
+-- need: 45 + 25 = 70, 45 - 25 = 20
 rightcornerseal2 :: String
-rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm /SealMarkerForm Do Q" 
+rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm " ++
+                   "1 g 1 G " ++
+                   "0 45 m " ++
+                   "0  20 20 0  45 0  c " ++
+                   "70 0  90 20 90 45 c " ++
+                   "90 70 70 90 45 90 c " ++
+                   "20 90 0  70 0  45 c " ++
+                   "f " ++
+                   "/SealMarkerForm Do Q" 
 
 pageToForm :: RefID -> State Document RefID
 pageToForm refid' = do
