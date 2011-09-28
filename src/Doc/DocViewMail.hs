@@ -7,10 +7,9 @@ module Doc.DocViewMail (
     , mailDocumentRejected
     , mailDocumentRemind
     , mailDocumentRemindContent
-    , mailInvitationToSend
-    , mailInvitationToSign
-    , mailInvitationToSignOrViewContent
-    , mailInvitationToView
+    , InvitationTo(..)
+    , mailInvitation
+    , mailInvitationContent
     , mailMismatchAuthor
     , mailMismatchSignatory
     , mailRejectMailContent
@@ -32,7 +31,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import DB.Classes
-import Data.Char
 import Control.Monad
 import Data.Functor
 import Data.Maybe
@@ -178,11 +176,13 @@ mailDocumentRejected :: TemplatesMonad m
                      -> Document
                      -> SignatoryLink
                      -> m Mail
-mailDocumentRejected customMessage ctx username document@Document{documenttitle}  rejector = do
-    title <- renderTemplateFM "mailRejectMailTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-    content <- wrapHTML' =<< mailRejectMailContent customMessage ctx username document rejector
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+mailDocumentRejected customMessage ctx username document rejector = do
+    kontramail (fromMaybe "" $ getValueForProcess document processmailreject) $ do
+        field "username" username
+        field "documenttitle" $ documenttitle document
+        field "rejectorName" $ getSmartName rejector
+        fieldM "footer" $ mailFooter ctx document
+        field "customMessage" $ customMessage
 
 mailRejectMailContent :: TemplatesMonad m
                       => Maybe String
@@ -192,40 +192,41 @@ mailRejectMailContent :: TemplatesMonad m
                       -> SignatoryLink
                       -> m String
 mailRejectMailContent customMessage ctx  username  document  rejector =
-    renderTemplateForProcess document processmailrejectcontent $ do
-        field "username" username
-        field "documenttitle" $ documenttitle document
-        field "rejectorName" $ getSmartName rejector
-        fieldM "footer" $ mailFooter ctx document
-        field "customMessage" $ customMessage
-
+     (BS.toString . content) <$> mailDocumentRejected customMessage ctx username document rejector
+     
 mailDocumentError :: TemplatesMonad m => Context -> Document -> m Mail
-mailDocumentError ctx document@Document{documenttitle} = do
-    title <- renderTemplateFM "mailDocumentErrorTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-    content <- wrapHTML' =<< mailDocumentErrorContent ctx document
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-mailDocumentErrorContent :: TemplatesMonad m => Context -> Document -> m String
-mailDocumentErrorContent ctx document =
-    -- FIXME: should have author name here also
-    renderTemplateFM "mailDocumentErrorContent" $ do
-        -- field "authorname" $ BS.toString $ authorname
+mailDocumentError ctx document = do
+    kontramail "mailDocumentError" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
         field "ctxhostpart" $ ctxhostpart ctx
 
-mailInvitationToSignOrViewContent :: TemplatesMonad m
+
+data InvitationTo = Sign | Send | View deriving (Eq,Show)
+
+fieldsInvitationTo :: (TemplatesMonad m) => InvitationTo -> Fields m
+fieldsInvitationTo a = do
+    field "sign" (a == Sign)
+    field "send" (a == Send)
+    field "view" (a == View)
+    
+mailInvitation :: TemplatesMonad m
                                   => Bool
                                   -> Context
+                                  -> InvitationTo
                                   -> Document
                                   -> Maybe SignatoryLink
-                                  -> m String
-mailInvitationToSignOrViewContent forMail
-                                  ctx
-                                  document@Document{ documenttimeouttime, documentinvitetext, documenttitle }
-                                  msiglink = do
+                                  -> m Mail
+mailInvitation forMail
+               ctx
+               invitationto
+               document@Document{ documenttimeouttime, documentinvitetext, documenttitle }
+               msiglink = do
     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
-    renderTemplateForProcess document processmailinvitationtosigncontent $ do
+    let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
+    let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
+    let personname = maybe "" (BS.toString . getSmartName) msiglink
+    kontramail (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
+        fieldsInvitationTo invitationto
         fieldM "header" $ do
             header <- if BS.null documentinvitetext
                          then if issignatory || not forMail
@@ -285,52 +286,17 @@ mailInvitationToSignOrViewContent forMail
                 (\(n, _, sigs) -> do
                     field "name" n
                     fieldM "sigs" $ renderListTemplate (map (BS.toString . fst) sigs))
-        where
-            creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
-            issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
-            personname = maybe "" (BS.toString . getSmartName) msiglink
-
-mailInvitationToSign :: TemplatesMonad m
-                     => Context
+            
+            
+mailInvitationContent :: TemplatesMonad m
+                     => Bool 
+                     -> Context
+                     -> InvitationTo
                      -> Document
-                     -> SignatoryLink
-                     -> m Mail
-mailInvitationToSign ctx document@Document{documenttitle} siglink = do
-    let Just authorsiglink = getAuthorSigLink document
-        authorname = getSmartName authorsiglink
-    title <- renderTemplateFM "mailInvitationToSignTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-        field "creatorname" $ BS.toString authorname
-    content <- wrapHTML' =<< mailInvitationToSignOrViewContent True ctx document (Just siglink)
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-mailInvitationToSend :: TemplatesMonad m
-                     => Context
-                     -> Document
-                     -> SignatoryLink
-                     -> m Mail
-mailInvitationToSend ctx document@Document{documenttitle} signaturelink = do
-    let Just authorsiglink = getAuthorSigLink document
-        authorname = getSmartName authorsiglink
-    title <- renderTemplateFM "mailInvitationToSignTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-        field "creatorname" $ BS.toString authorname
-    content <- wrapHTML' =<< mailInvitationToSignOrViewContent True ctx document (Just signaturelink)
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-mailInvitationToView :: TemplatesMonad m
-                     => Context
-                     -> Document
-                     -> SignatoryLink
-                     -> m Mail
-mailInvitationToView ctx document@Document{documenttitle} signaturelink = do
-    let Just authorsiglink = getAuthorSigLink document
-        authorname = getSmartName authorsiglink
-    title <- renderTemplateFM "mailInvitationToViewTitle" $ do
-        field "documenttitle" $ BS.toString documenttitle
-        field "creatorname" $ BS.toString authorname
-    content <- wrapHTML' =<< mailInvitationToSignOrViewContent True ctx document (Just signaturelink)
-    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+                     -> Maybe SignatoryLink
+                     -> m String
+mailInvitationContent  forMail ctx invitationto document msiglink = do
+     (BS.toString . content) <$> mailInvitation forMail ctx invitationto document msiglink
 
 mailDocumentClosed :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentClosed ctx document@Document{documenttitle} = do
@@ -491,12 +457,3 @@ mailMailApiError from err =
                   , content = BS.fromString err
                  }
                  
-                 
-kontramail :: TemplatesMonad m => String -> Fields m -> m Mail
-kontramail tname fields = do
-    wholemail <- renderTemplateFM tname fields
-    let (title,content) = span (== '\n') $ dropWhile (isControl &&^ isSpace) wholemail
-    content' <- wrapHTML' content
-    return $ emptyMail  {   title   = BS.fromString title
-                          , content = BS.fromString content'
-                        }

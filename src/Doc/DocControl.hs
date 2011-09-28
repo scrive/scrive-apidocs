@@ -299,11 +299,10 @@ sendInvitationEmail1 ctx document signatorylink = do
       Document { documentid } = document
       authorsiglink = fromJust $ getAuthorSigLink document
       hasAuthorSigned = isJust $ maybesigninfo authorsiglink
-  mail <- if isSignatory signatorylink
-          then if hasAuthorSigned
-               then mailInvitationToSign ctx document signatorylink
-               else mailInvitationToSend ctx document signatorylink
-          else mailInvitationToView ctx document signatorylink
+  mail <- case (isSignatory signatorylink, hasAuthorSigned) of
+          (True, True)  -> mailInvitation True ctx Sign document (Just signatorylink)
+          (True, False) -> mailInvitation True ctx Send document (Just signatorylink)
+          (False, _)    -> mailInvitation True ctx View document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
   _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {

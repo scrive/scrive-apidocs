@@ -82,8 +82,8 @@ data DocProcessInfo =
   , processmailcancelbyauthorstandardheader :: String
   , processmailcancelbyauthor :: String
   , processmailclosed :: String
-  , processmailrejectcontent :: String
-  , processmailinvitationtosigncontent :: String
+  , processmailreject :: String
+  , processmailinvitationtosign :: String
   , processmailinvitationtosigndefaultheader :: String
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
@@ -171,8 +171,8 @@ contractProcess =
   , processmailcancelbyauthorstandardheader = "mailCancelContractByAuthorStandardHeader"
   , processmailcancelbyauthor = "mailCancelContractByAuthor"
   , processmailclosed= "mailContractClosed"
-  , processmailrejectcontent = "mailRejectContractMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignContractContent"
+  , processmailreject = "mailRejectContractMail"
+  , processmailinvitationtosign = "mailInvitationToSignContract"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
@@ -260,8 +260,8 @@ offerProcess =
   , processmailcancelbyauthorstandardheader = "mailCancelOfferByAuthorStandardHeader"
   , processmailcancelbyauthor = "mailCancelOfferByAuthor"
   , processmailclosed = "mailOfferClosed"
-  , processmailrejectcontent = "mailRejectOfferMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignOfferContent"
+  , processmailreject = "mailRejectOfferMail"
+  , processmailinvitationtosign = "mailInvitationToSignOffer"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
@@ -349,8 +349,8 @@ orderProcess =
   , processmailcancelbyauthorstandardheader = "mailCancelOrderByAuthorStandardHeader"
   , processmailcancelbyauthor = "mailCancelOrderByAuthor"
   , processmailclosed = "mailOrderClosed"
-  , processmailrejectcontent = "mailRejectOrderMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignOrderContent"
+  , processmailreject = "mailRejectOrderMail"
+  , processmailinvitationtosign = "mailInvitationToSignOrder"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
