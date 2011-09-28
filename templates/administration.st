@@ -2,7 +2,9 @@
 adminsmain=
 <strong>Stats CSVs</strong>
 <p><a href="/adminonly/allstatscsv">Download the CSV containing
-        all signature stats</a></p>
+    all signature stats</a></p>
+<p><a href="/adminonly/userstatscsv">Download the CSV containing
+    all user stats</a></p>
 
     <strong>Sales Tools</strong>
     <table><tbody>

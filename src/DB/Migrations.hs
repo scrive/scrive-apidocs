@@ -37,6 +37,7 @@ tablesList = [
   , tableServices
   , tableCompanies
   , tableDocStatEvents
+  , tableUserStatEvents
   -- this is not ready yet
   {-, tableDocuments
   , tableFiles

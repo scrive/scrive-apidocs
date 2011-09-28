@@ -6,6 +6,7 @@ module MinutesTime
        , getMinuteTimeDB
        , getMinutesTime
        , minutesAfter
+       , minutesBefore
        , parseMinutesTimeDMY
        , showDateAbbrev
        , showDateDMY
@@ -212,6 +213,9 @@ showDateYMD = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d"
 -- > 5 `minutesAfter` midnight
 minutesAfter :: Int -> MinutesTime -> MinutesTime
 minutesAfter i (MinutesTime s) = MinutesTime (s + i*60)
+
+minutesBefore :: Int -> MinutesTime -> MinutesTime
+minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will bee 20100612. Useful in IntMap for

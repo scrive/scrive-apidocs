@@ -83,6 +83,7 @@ import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
 import InputValidation
+import User.Utils
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
