@@ -738,7 +738,7 @@
 	z-index: 1000;
 }
 .modal-container.email-preview {
-    width: 900px;
+    width: 780px;
 }
 
 .modal-container:after {

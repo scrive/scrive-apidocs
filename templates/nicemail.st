@@ -2,22 +2,22 @@
 nicemail= 
 <div style="font-family:'Lucida Grande', sans-serif;margin:0px;padding:0px;">
 
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="f5f5f5" ><tr><td>
-
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="f5f5f5" style="border:1px solid #DDDDDD; margin: auto;"><tr><td>
+    <!--
     <table id="top-message" cellpadding="0" cellspacing="0" width="600" align="center" style="font-family:sans-serif;font-weight:bold;color:#aaaaaa;font-size:10px;">
         <tr>
             <td align="center" height="30">
-                $if(mailtop)$ $mailtom$ $endif$ <!--<p>Kan du inte läsa detta brev? <a href="#">Öppna det i din webbläsare här.</a></p> -->
+                $if(mailtop)$ $mailtom$ $endif$ <p>Kan du inte läsa detta brev? <a href="#">Öppna det i din webbläsare här.</a></p> 
             </td>
         </tr>
-    </table><!-- top message -->
-
-    <table id="main" cellpadding="0" cellspacing="15" width="600" align="center" bgcolor="fff">
+    </table>
+    -->
+    <table id="main" cellpadding="0" cellspacing="15" width="600" align="center" style="margin: auto;">
         <tr>
-            <td>
-                <table id="header" width="580" cellpadding="9" bgcolor="212121" cellspacing="0" align="center" style="color:#fff;text-align:center;">
+            <td style="padding:10px; margin: auto;">
+                <table id="header" width="580" cellpadding="9" bgcolor="212121" cellspacing="0" align="center" style="color:#fff;text-align:center;margin:auto;">
                     <tr>
-                        <td style="text-align:left;"><img src="$ctxhostpart$/img/email-logo.png" width="70" height="22" /></td>
+                        <td style="text-align:left; margin: auto;padding:10px;"><img src="$ctxhostpart$/img/email-logo.png" width="70" height="22" /></td>
                     </tr>
                     <tr>
                     <td>
@@ -45,9 +45,9 @@ nicemail=
         </tr><!-- header -->
         <tr>
             <td>
-                <table id="content" width="560" cellpadding="10" cellspacing="0" align="center" style="color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
+                <table id="content" width="560" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
                     <tr>
-                        <td><img src="$ctxhostpart$/img/email-line.jpg" alt="email-linje" width="540" height="10" /></td>
+                        <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
                     </tr>
                     $if(mailp1)$ $nicemailparagraph(p=mailp1)$ $endif$
                     $if(mailp2)$ $nicemailparagraph(p=mailp2)$ $endif$
@@ -68,9 +68,9 @@ nicemail=
 #####
 nicemailparagraph = 
       <tr>
-        <td>$p:noescape()$</td>
+        <td style="padding:5px; margin: auto;">$p:noescape()$</td>
       </tr>
       <tr>
-         <td><img src="$ctxhostpart$/img/email-line.jpg" alt="email-linje" width="540" height="10" /></td>
+         <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
       </tr>
 ####
