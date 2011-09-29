@@ -63,6 +63,9 @@ import CSVUtilTest
 #ifndef NO_SIMPLEEMAIL
 import SimpleMailTest
 #endif
+#ifndef NO_LOCALE
+import LocaleTest
+#endif
 
 allTests :: Connection -> [Test]
 allTests conn = tail tests
@@ -115,6 +118,9 @@ allTests conn = tail tests
 #ifndef NO_SIMPLEEMAIL
       , simpleMailTests 
 #endif
+#ifndef NO_LOCALE
+      , localeTests conn
+#endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
@@ -166,6 +172,9 @@ testsToRun conn (t:ts) =
 #endif
 #ifndef NO_SIMPLEMAIL  
     "simplemail"      -> Right simpleMailTests : rest
+#endif
+#ifndef NO_LOCALE
+    "locale"          -> Right (localeTests conn) : rest
 #endif
     _                 -> Left t : rest
   where

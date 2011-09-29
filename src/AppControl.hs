@@ -7,6 +7,8 @@ module AppControl
     , AppGlobals(..)
     , defaultAWSAction
     , handleLoginPost
+    , getDocumentLocale
+    , getUserLocale
     ) where
 
 import AppConf
@@ -361,8 +363,7 @@ handleRoutes locale = msum [
     If the current request is referring to a document then this will
     return the locale of that document.
 -}
-getDocumentLocale :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
-                       m (Maybe Locale)
+getDocumentLocale :: (ServerMonad m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
@@ -373,7 +374,7 @@ getDocumentLocale = do
     Determines the locale of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getUserLocale :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
+getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
                    Connection -> Maybe User -> m Locale
 getUserLocale conn muser = do
   rq <- askRq
@@ -597,7 +598,6 @@ appHandler appConf appGlobals = do
         liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
-    createContext :: Request -> Session -> ServerPartT IO Context
     createContext rq session = do
       hostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
