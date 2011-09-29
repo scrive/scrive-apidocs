@@ -342,8 +342,8 @@ parseSignatory sig =
                    ("sndname", JSString $ toJSString $ fromJust sndname),
                    ("email"  , JSString $ toJSString $ fromJust email)] ++ 
                   [("company"   , JSString $ toJSString a) | Just a <- [company]] ++ 
-                  [("companynr" , JSString $ toJSString a) | Just a <- [cmpnr]] ++ 
-                  [("personalnr", JSString $ toJSString a) | Just a <- [prsnr]]) 
+                  [("companynumber" , JSString $ toJSString a) | Just a <- [cmpnr]] ++ 
+                  [("personalnumber", JSString $ toJSString a) | Just a <- [prsnr]]) 
         in if length ss == length pairs 
            then Just $ JSObject $ toJSObject ss
            else Nothing
