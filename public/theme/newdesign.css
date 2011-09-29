@@ -737,6 +737,9 @@
 	width: 640px;
 	z-index: 1000;
 }
+.modal-container.email-preview {
+    width: 900px;
+}
 
 .modal-container:after {
 	border: 10px solid #000;

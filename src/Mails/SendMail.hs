@@ -217,9 +217,9 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
                      [ BSL.fromString headerEmail
                      , BSL.fromString headerContent
                      , BSL.fromString headerContentText
-                     , BSL.fromString $ htmlToTxt $ BS.toString content
+                     , BSL.fromString $ htmlToTxt $ BS.toString $ content
                      , BSL.fromString headerContentHtml
-                     , BSL.fromChunks [content]
+                     , BSL.fromChunks [BS.fromString $ wrapMail $ BS.toString content]
                      , BSL.fromString footerContent
                      ] ++ map attach attachments ++
                      [ BSL.fromString footerEmail
@@ -298,3 +298,15 @@ htmlToTxt = dropWhile isSpace . unescapeEntities . toText . removeWSAfterNL . re
                 f t = t
 
                 lowerCase = map toLower
+
+
+wrapMail :: String -> String
+wrapMail body = "<html>"++
+                    "<head>" ++
+                      "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>" ++
+                            -- "<meta http-equiv='content-language' content='$ctxlang$'/>" ++
+                    "</head>" ++
+                    "<body>" ++
+                       body ++ 
+                    "</body>" ++ 
+                "</html>"          

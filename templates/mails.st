@@ -272,18 +272,23 @@ remindMailNotSignedOrderStandardHeader=
 #####
 remindMailNotSignedContract=
     $_remindMailNotSignedTitle()$
-    $header:noescape()$
-    <span>
-      <p><i>$_remindMailNotSignedContractContentInfo()$</i><br/>
-        $_remindMailNotSignedContractContentPartys()$ $partnersinfo:noescape()$<br/>
-        $whohadsignedinfo:noescape()$<br/> 
-        $timetosigninfo:noescape()$
-        $appendixList()$
-      </p>
-      <p>$_remindMailNotSignedContractContentInstruction()$</p>
-    </span>
+
+    $nicemail(
+        mailheader=_remindMailNotSignedTitle();
+        mailp1=header;
+        mailp2=remindMailNotSignedContractMainP();
+        mailp3= legalparagraph()
+    )$
+#####
+remindMailNotSignedContractMainP=
+<p>
+    <i>$_remindMailNotSignedContractContentInfo()$</i><br/>
+    $_remindMailNotSignedContractContentPartys()$ $partnersinfo:noescape()$<br/>
+    $whohadsignedinfo:noescape()$<br/>
+    $timetosigninfo()$
+    $appendixList()$
     $footer:noescape()$
-    $legalparagraph()$
+</p>
 #####
 remindMailNotSignedOffer=
     $_remindMailNotSignedTitle()$

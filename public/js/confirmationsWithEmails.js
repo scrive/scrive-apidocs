@@ -138,6 +138,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        this.el.addClass("modal-container");
+       this.el.addClass("email-preview");
 	   
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
@@ -213,7 +214,7 @@ window.ConfirmationWithEmail = {
                            speed : 0,
                            mask: standardDialogMask,
                            top: standardDialogTop,
-                           fixed: false      
+                           fixed: false,
                           });
           });
    }
