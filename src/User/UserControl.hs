@@ -227,7 +227,8 @@ friendsSortSearchPage  =
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
 handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
     Context{ctxmaybeuser = Just user} <- getContext
-    companyaccounts <- runDBQuery $ GetCompanyAccounts companyid
+    companyaccounts' <- runDBQuery $ GetCompanyAccounts companyid
+    let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
     params <- getListParams
     content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
@@ -1080,7 +1081,7 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
   Context{ctxmaybeuser = Just user} <- getContext
   companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
   -- filter out the current user, they don't want to see themselves in the list
-  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
+  let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",
