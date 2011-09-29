@@ -293,6 +293,7 @@ handleRoutes locale = msum [
 
      -- this stuff is for a fix
      , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
+     , dir "adminonly" $ dir "adminonlybugfix" $ hGet0 $ toK0 $ Administration.handleFixForAdminOnlyBug
 
      , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet0 $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
 
