@@ -109,26 +109,17 @@ data AppGlobals
 -}
 handleRoutes :: Locale -> Kontra Response
 handleRoutes locale = msum [
-     -- static pages  --TODO EM make this nice!
        regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
      , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome locale
-
-     , regionDir locale $ langDir locale $ dirByLang locale "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
-     , dirByLang locale "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan locale
-     , regionDir locale $ langDir locale $ dirByLang locale "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
-     , dirByLang locale "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity locale
-     , regionDir locale $ langDir locale $ dirByLang locale "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
-     , dirByLang locale "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal locale
-     , regionDir locale $ langDir locale $ dirByLang locale "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
-     , dirByLang locale "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy locale
-     , regionDir locale $ langDir locale $ dirByLang locale "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
-     , dirByLang locale "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms locale
-     , regionDir locale $ langDir locale $ dirByLang locale "om-scrive" "about" $ hGetAllowHttp0 $ handleAboutPage
-     , dirByLang locale "om-scrive" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout locale
-     , regionDir locale $ langDir locale $ dirByLang locale "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
-     , dirByLang locale "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners locale
-     , regionDir locale $ langDir locale $ dirByLang locale "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
-     , dirByLang locale "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients locale
+     
+     , publicDir locale "priser" "pricing" LinkPriceplan handlePriceplanPage
+     , publicDir locale "sakerhet" "security" LinkSecurity handleSecurityPage
+     , publicDir locale "juridik" "legal" LinkLegal handleLegalPage
+     , publicDir locale "sekretesspolicy" "privacy-policy" LinkPrivacyPolicy handlePrivacyPolicyPage
+     , publicDir locale "allmana-villkor" "terms" LinkTerms handleTermsPage
+     , publicDir locale "om-scrive" "about" LinkAbout handleAboutPage
+     , publicDir locale "partners" "partners" LinkPartners handlePartnersPage
+     , publicDir locale "kunder" "clients" LinkClients handleClientsPage
 
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -358,6 +349,21 @@ handleRoutes locale = msum [
      , allowHttp $ serveHTMLFiles
      , allowHttp $ serveDirectory DisableBrowsing [] "public"
      ]
+
+{- |
+    This is a helper function for routing a public dir.
+-}
+publicDir :: Locale -> String -> String -> (Locale -> KontraLink) -> Kontra Response -> Kontra Response
+publicDir locale swedish english link handler = msum [
+    -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
+    regionDir locale $ langDir locale $ dirByLang locale swedish english $ hGetAllowHttp0 $ handler
+    
+    -- if they use the swedish name without region/lang we should redirect to the correct swedish locale
+  , dir swedish $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_SE)
+  
+    -- if they use the english name without region/lang we should redirect to the correct british locale
+  , dir english $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
+  ]
 
 {- |
     If the current request is referring to a document then this will
