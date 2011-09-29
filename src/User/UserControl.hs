@@ -176,8 +176,10 @@ handlePostUserLocale = do
   _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
          }
-  return LoopBack
-  
+  referer <- getField "referer"
+  case referer of
+    Just _ -> return BackToReferer
+    Nothing -> return LoopBack
 
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do

@@ -354,10 +354,16 @@ localeSwitcher=
     $else$
     <div><form action="$linklocaleswitch$" method="POST">
            <input type="hidden" name="region" value="REGION_SE"/>
+           $if(linksesv)$
+           <input type="hidden" name="referer" value="$linksesv$"/>
+           $endif$
            <a href="" class="submit icon flag swedish $if(localesweden)$active$endif$"></a>
          </form></div>
     <div><form action="$linklocaleswitch$" method="POST">
            <input type="hidden" name="region" value="REGION_GB"/>
+           $if(linkgben)$
+           <input type="hidden" name="referer" value="$linkgben$"/>
+           $endif$
            <a href="" class="submit icon flag british $if(localebritain)$active$endif$"></a>
          </form></div>
     $endif$
