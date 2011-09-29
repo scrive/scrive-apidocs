@@ -64,7 +64,7 @@ import CSVUtilTest
 import SimpleMailTest
 #endif
 #ifndef NO_LOCALE
-import LocaleTest
+--import LocaleTest
 #endif
 
 allTests :: Connection -> [Test]
