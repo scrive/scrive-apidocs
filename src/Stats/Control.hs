@@ -8,9 +8,13 @@ module Stats.Control
          addDocumentSendStatEvents,
          addDocumentCancelStatEvents,
          addDocumentRejectStatEvents,
+         addUserIDSignTOSStatEvent,
+         addUserSignTOSStatEvent,
          addAllDocsToStats,
+         addAllUsersToStats,
          handleDocStatsCSV,
-         handleMigrate1To2
+         handleMigrate1To2,
+         handleUserStatsCSV
        )
        
        where
@@ -32,7 +36,6 @@ import Stats.Model
 import Stats.View
 import Templates.Templates
 import User.Model
-import User.UserControl
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -43,6 +46,8 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
 import Happstack.State
 import Control.Monad
+
+import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
@@ -80,7 +85,7 @@ handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySuperUser $ do
   stats <- runDBQuery GetDocStatEvents
   Log.debug $ "All doc stats length: " ++ (show $ length stats)
-  ok $ setHeader "Content-Disposition" "attachment;filename=stats.csv"
+  ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (statisticsCSV stats)
 
@@ -373,8 +378,49 @@ addAllDocsToStats = onlySuperUser $ do
 
 handleMigrate1To2 :: Kontrakcja m => m KontraLink
 handleMigrate1To2 = onlySuperUser $ do
-  _ <- runDBUpdate FlushStats
+  _ <- runDBUpdate FlushDocStats
   _ <- addAllDocsToStats
   addFlash (OperationDone, "Table migrated")
   return LinkUpload
 
+addAllUsersToStats :: Kontrakcja m => m KontraLink
+addAllUsersToStats = onlySuperUser $ do
+  docs <- runDBQuery $ GetUsers
+  _ <- mapM addUserSignTOSStatEvent docs
+  return ()
+  addFlash (OperationDone, "Added all users to stats")
+  return LinkUpload
+
+addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool
+addUserSignTOSStatEvent user = msum [
+  do
+    if isNothing $ userhasacceptedtermsofservice user then return False
+      else do
+      Context{ctxtime} <- getContext
+      mt  <- guardJust $ userhasacceptedtermsofservice user
+      let mt' = if mt == fromSeconds 0
+                then (60 * 24) `minutesBefore` ctxtime -- one day before running stats
+                else mt
+      addUserIDSignTOSStatEvent (userid user) mt' (usercompany user) (userservice user)
+  , return False]
+
+addUserIDSignTOSStatEvent :: (DBMonad m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserIDSignTOSStatEvent uid mt mcid msid =  do
+    a <- runDBUpdate $ AddUserStatEvent $ UserStatEvent { usUserID     = uid
+                                                        , usTime       = mt
+                                                        , usQuantity   = UserSignTOS
+                                                        , usAmount     = 1
+                                                        , usCompanyID  = mcid
+                                                        , usServiceID  = msid
+                                                        }
+    unless a $ Log.stats $ "Skipping existing user stat for userid: " ++ show uid ++ " and quantity: " ++ show UserSignTOS
+    return a
+
+
+handleUserStatsCSV :: Kontrakcja m => m Response
+handleUserStatsCSV = onlySuperUser $ do
+  stats <- runDBQuery GetUserStatEvents
+  Log.debug $ "All user stats length: " ++ (show $ length stats)
+  ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (userStatisticsCSV stats)

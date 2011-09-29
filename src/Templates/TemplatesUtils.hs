@@ -10,11 +10,16 @@
 -- standard data wrappers.
 -----------------------------------------------------------------------------
 module Templates.TemplatesUtils
-    (wrapHTML,wrapHTML',option,soption,Option(..),markParity) where
+    (wrapHTML,wrapHTML',option,soption,Option(..),markParity,kontramail) where
 
 import Control.Monad.IO.Class
 import Data.Data
 import Templates.Templates
+import Mails.SendMail
+import Misc
+import Data.Char
+import qualified AppLogger as Log
+import qualified Data.ByteString.UTF8 as BS
 
 {- Common templates - should be shared and it seams like a good place for them -}
 
@@ -68,3 +73,13 @@ markOdd f = do
     field "even" False
     field "odd"  True
 
+kontramail :: TemplatesMonad m => String -> Fields m -> m Mail
+kontramail tname fields = do
+    Log.debug "Mail rendering by kontramail"
+    wholemail <- renderTemplateFM tname fields
+    let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
+    Log.debug $ "kontramail->Title:" ++ title
+    content' <- wrapHTML' content
+    return $ emptyMail  {   title   = BS.fromString title
+                          , content = BS.fromString content'
+                        }

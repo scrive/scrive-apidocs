@@ -80,14 +80,14 @@ data DocProcessInfo =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader :: String
-  , processmailcancelbyauthorcontent :: String
-  , processmailclosedcontent :: String
-  , processmailrejectcontent :: String
-  , processmailinvitationtosigncontent :: String
+  , processmailcancelbyauthor :: String
+  , processmailclosed :: String
+  , processmailreject :: String
+  , processmailinvitationtosign :: String
   , processmailinvitationtosigndefaultheader :: String
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
-  , processmailremindnotsignedcontent :: String
+  , processmailremindnotsigned :: String
   , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
 
@@ -169,14 +169,14 @@ contractProcess =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelContractByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelContractByAuthorContent"
-  , processmailclosedcontent = "mailContractClosedContent"
-  , processmailrejectcontent = "mailRejectContractMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignContractContent"
+  , processmailcancelbyauthor = "mailCancelContractByAuthor"
+  , processmailclosed= "mailContractClosed"
+  , processmailreject = "mailRejectContractMail"
+  , processmailinvitationtosign = "mailInvitationToSignContract"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
+  , processmailremindnotsigned = "remindMailNotSignedContract"
   , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
@@ -258,14 +258,14 @@ offerProcess =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelOfferByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelOfferByAuthorContent"
-  , processmailclosedcontent = "mailOfferClosedContent"
-  , processmailrejectcontent = "mailRejectOfferMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignOfferContent"
+  , processmailcancelbyauthor = "mailCancelOfferByAuthor"
+  , processmailclosed = "mailOfferClosed"
+  , processmailreject = "mailRejectOfferMail"
+  , processmailinvitationtosign = "mailInvitationToSignOffer"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
+  , processmailremindnotsigned= "remindMailNotSignedOffer"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
@@ -347,14 +347,14 @@ orderProcess =
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelOrderByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelOrderByAuthorContent"
-  , processmailclosedcontent = "mailOrderClosedContent"
-  , processmailrejectcontent = "mailRejectOrderMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignOrderContent"
+  , processmailcancelbyauthor = "mailCancelOrderByAuthor"
+  , processmailclosed = "mailOrderClosed"
+  , processmailreject = "mailRejectOrderMail"
+  , processmailinvitationtosign = "mailInvitationToSignOrder"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+  , processmailremindnotsigned = "remindMailNotSignedOrder"
   , processmailconfirmbymailapi = "mailMailAPIConfirmOrder" 
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 

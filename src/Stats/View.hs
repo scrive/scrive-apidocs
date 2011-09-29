@@ -2,6 +2,7 @@ module Stats.View
        (
          statisticsCompanyFieldsByDay,
          statisticsCSV,
+         userStatisticsCSV,
          statisticsFieldsByDay,
          statisticsFieldsByMonth         
        )
@@ -66,6 +67,23 @@ statisticsCSV events =
                           , show $ seDocumentType event
                           ]
                           ++ "\"\n"
+
+userStatisticsCSV :: [UserStatEvent] -> String
+userStatisticsCSV events = 
+  "\"" ++ intercalate "\",\""  
+  ["userid", "date", "event", "count", "serviceid", "companyid"]
+  ++ "\"\n" ++
+  (concat $ map csvline events)
+    where csvline event = "\"" ++ intercalate "\",\""
+                          [ show                                 $ usUserID    event                                    
+                          , showDateYMD                          $ usTime      event                               
+                          , show                                 $ usQuantity  event                                  
+                          , show                                 $ usAmount    event                                    
+                          , maybe "" (BS.toString . unServiceID) $ usServiceID event 
+                          , maybe "" show                        $ usCompanyID event                        
+                          ]
+                          ++ "\"\n"
+
 
 showAsDate :: Int -> String
 showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)

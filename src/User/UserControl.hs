@@ -37,7 +37,8 @@ import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Util.KontraLinkUtils
 import Util.MonadUtils
-
+import Stats.Control
+import User.Utils
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -45,18 +46,6 @@ checkPasswordsMatch p1 p2 =
        then Right ()
        else Left flashMessagePasswordsDontMatch
 
-{- |
-    This is really a util function that I couldn't figure out a better
-    place for.  TODO put in better place!
-    
-    This looks up the company for the given user, if the user doesn't
-    have a company then it returns Nothing.
--}
-getCompanyForUser :: Kontrakcja m => User -> m (Maybe Company)
-getCompanyForUser user =
-  case usercompany user of
-    Just companyid -> runDBQuery $ GetCompany companyid
-    _ -> return Nothing
 
 handleUserGet :: Kontrakcja m => m Response
 handleUserGet = do
@@ -590,6 +579,8 @@ handleAcceptTOSPost = withUserPost $ do
   case tos of
     Just True -> do
       _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
+      user <- guardJustM $ runDBQuery $ GetUserByID userid
+      _ <- addUserSignTOSStatEvent user
       addFlashM flashMessageUserDetailsSaved
       return LinkUpload
     Just False -> do
@@ -916,6 +907,8 @@ handleActivate aid hash signupmethod actvuser = do
                     _ <- dbUpdate $ AcceptTermsOfService (userid user) (ctxtime ctx)
                     _ <- dbUpdate $ SetSignupMethod (userid user) signupmethod
                     return ()
+                  tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
+                  _ <- addUserSignTOSStatEvent tosuser
                   dropExistingAction actionid
                   logUserToContext $ Just user
                   return $ Just user
