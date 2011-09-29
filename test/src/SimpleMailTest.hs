@@ -72,14 +72,14 @@ doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
         "\"involved\":[{\"fstname\":\"Mariusz\"," ++
         "\"sndname\":\"Rak\"," ++
         "\"email\":\"mariusz@skrivapa.se\"," ++
-        "\"companynr\":\"78765554\"" ++
+        "\"companynumber\":\"78765554\"" ++
         "}," ++
         "{" ++
         "\"fstname\":\"Eric\"," ++
         "\"sndname\":\"Normand\"," ++
         "\"email\":\"eric@skrivapa.se\"," ++
         "\"company\":\"Hello\"," ++
-        "\"personalnr\": \"78676545464\"}" ++
+        "\"personalnumber\": \"78676545464\"}" ++
         "]}") -> return ()
     a -> do
       Log.debug $ "JSON returned from parse: " ++ show a
@@ -129,7 +129,7 @@ stupidEmailSignature = testCase "Stupid email signature" $ do
     _ -> error "Did not return correct json"
 
 looksLikeSignature :: Test
-looksLikeSignature = testCase "Stupid email signature" $ do
+looksLikeSignature = testCase "Stupid email looks like signatory signature" $ do
   case parseSimpleEmail "Contract Title"
        ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\n\n \n" ++ 
         "First name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\n\n\n"
@@ -159,18 +159,18 @@ doubleOptionalFieldsWeirdSignatory = testCase "Double Optional Fields Weird Sign
         "\"involved\":[{\"fstname\":\"Mariusz\"," ++
         "\"sndname\":\"Rak\"," ++
         "\"email\":\"mariusz@skrivapa.se\"," ++
-        "\"companynr\":\"78765554\"" ++
+        "\"companynumber\":\"78765554\"" ++
         "}," ++
         "{" ++
         "\"fstname\":\"Eric\"," ++
         "\"sndname\":\"Normand\"," ++
         "\"email\":\"eric@skrivapa.se\"," ++
         "\"company\":\"Hello\"," ++
-        "\"personalnr\": \"78676545464\"}" ++
+        "\"personalnumber\": \"78676545464\"}" ++
         "]}") -> return ()
     a ->  do
       Log.debug $ "JSON returned from parse: " ++ show a
-      error "Did not return correct json"
+      error $ "Did not return correct json" ++ show a
 
 testMinimumDistance :: Test
 testMinimumDistance = testCase "Test minimum distance between keys" $ 
@@ -211,9 +211,9 @@ testWackySignature = testCase "Test wacky signature (rtf)" $
         "\"involved\":[{\"fstname\":\"Mariusz\"," ++
         "\"sndname\":\"Rak\"," ++
         "\"email\":\"mariusz@skrivapa.se\"," ++
-        "\"companynr\":\"78765554\"" ++
+        "\"companynumber\":\"78765554\"" ++
         "}]}") -> return ()
     a ->  do
       Log.debug $ "JSON returned from parse: " ++ show a
-      error "Did not return correct json"
+      error ("Did not return correct json; got: " ++ show a) 
                   
