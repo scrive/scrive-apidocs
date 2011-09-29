@@ -119,7 +119,7 @@ allTests conn = tail tests
       , simpleMailTests 
 #endif
 #ifndef NO_LOCALE
-      , localeTests conn
+--      , localeTests conn
 #endif
       ]
 
@@ -174,7 +174,7 @@ testsToRun conn (t:ts) =
     "simplemail"      -> Right simpleMailTests : rest
 #endif
 #ifndef NO_LOCALE
-    "locale"          -> Right (localeTests conn) : rest
+--    "locale"          -> Right (localeTests conn) : rest
 #endif
     _                 -> Left t : rest
   where
