@@ -686,8 +686,8 @@ handleAccountSetupGet aid hash = do
       activationPage muser mcompany = do
         extendActionEvalTimeToOneDayMinimum aid
         addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        linkmain <- getHomeOrUploadLink
-        sendRedirect linkmain
+        ctx <- getContext
+        sendRedirect $ LinkHome (getLocale ctx)
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do

@@ -164,7 +164,7 @@ handleRoutes locale = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "upload" $ hGetAllowHttp0 $ handleUploadPage
+     , dir "upload" $ hGet0 $ toK0 $ DocControl.mainPage
      , dir "locale" $ hPost0 $ toK0 $ UserControl.handlePostUserLocale
      , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
@@ -433,21 +433,19 @@ dirByLang locale swedishdir englishdir
 
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser } <- getContext
+  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
-  response <- case ctxmaybeuser of
-                Just _ -> V.simpleResponse =<< firstPage ctx False Nothing Nothing
-                Nothing -> V.simpleResponse =<< firstPage ctx loginOn referer email
-  clearFlashMsgs
-  return $ Left response
-
-handleUploadPage :: Kontra (Either Response (Either KontraLink String))
-handleUploadPage = do
-  Context{ ctxmaybeuser,ctxservice } <- getContext
   case (ctxmaybeuser, ctxservice) of
-    (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
+    (Just _user, _) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
+    (Nothing, Nothing) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
     _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
