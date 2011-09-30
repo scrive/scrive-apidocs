@@ -12,6 +12,7 @@ module Doc.DocInfo where
 import Doc.DocStateData
 import MinutesTime
 import Data.Maybe
+import Util.SignatoryLinkUtils
 
 -- Predicates on documentstatus
 
@@ -76,6 +77,9 @@ isDocumentShared doc = Shared == documentsharing doc
 -}
 countSignatures :: Document -> Int
 countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks
+
+countSignatories :: Document -> Int
+countSignatories = length . filter isSignatory . documentsignatorylinks
 
 {- |
   Get the time of the last signature as Int. Returns MinutesTime 0 when there are no signatures.

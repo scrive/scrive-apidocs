@@ -237,7 +237,7 @@ addDocumentSendStatEvents doc = msum [
       uid <- guardJust $ maybesignatory sl
       let did = documentid doc
           sendtime = getInviteTime doc
-          sigs = countSignatures doc          
+          sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = DocStatSend
@@ -274,7 +274,7 @@ addDocumentCancelStatEvents doc = msum [
       uid <- guardJust $ maybesignatory sl
       let did = documentid doc
           sendtime = getInviteTime doc
-          sigs = countSignatures doc          
+          sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = DocStatCancel
@@ -311,7 +311,7 @@ addDocumentRejectStatEvents doc = msum [
       uid <- guardJust $ maybesignatory sl
       let did = documentid doc
           sendtime = getInviteTime doc
-          sigs = countSignatures doc          
+          sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = DocStatCancel
