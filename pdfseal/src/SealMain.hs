@@ -327,10 +327,10 @@ worddoc = SealSpec
      , staticTexts = sampleSealingTexts                  
     }
 
-formatB5 :: SealSpec
-formatB5 = SealSpec 
-    { input = "pdfseal/flowchart.pdf"
-    , output = "pdfseal/flowchart_sealed.pdf"
+comhem :: SealSpec
+comhem = SealSpec 
+    { input = "testfiles/comhem.pdf"
+    , output = "testfiles/comhem_sealed.pdf"
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , fields = []
@@ -383,6 +383,7 @@ formatB5 = SealSpec
                   ]
      , staticTexts = sampleSealingTexts                  
     }
+
 
 sampleSealingTexts::SealingTexts
 sampleSealingTexts = SealingTexts

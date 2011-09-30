@@ -2,6 +2,7 @@
 module User.Model (
     module User.Lang
   , module User.Region
+  , module User.Locale
   , module User.Password
   , module User.SystemServer
   , module User.UserID
@@ -36,7 +37,7 @@ module User.Model (
   , AddViewerByEmail(..)
   , AcceptTermsOfService(..)
   , SetSignupMethod(..)
-  , MakeUserCompanyAdmin(..)
+  , SetUserCompanyAdmin(..)
   , composeFullName
   ) where
 
@@ -58,6 +59,7 @@ import DB.Utils
 import MinutesTime
 import Misc
 import User.Lang
+import User.Locale
 import User.Password
 import User.Region
 import User.SystemServer
@@ -126,10 +128,15 @@ data UserMailAPI = UserMailAPI {
 
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
-  , lang                :: Lang
-  , region              :: Region
+  , locale              :: Locale
   , systemserver        :: SystemServer
   } deriving (Eq, Ord, Show)
+
+instance HasLocale User where
+  getLocale = getLocale . usersettings
+
+instance HasLocale UserSettings where
+  getLocale = locale
 
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
@@ -220,12 +227,18 @@ instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
 
-data SetUserCompany = SetUserCompany UserID CompanyID
+data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
 instance DBUpdate SetUserCompany Bool where
-  dbUpdate (SetUserCompany uid cid) = wrapDB $ \conn -> do
-    st <- prepare conn "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
-    r <- execute st [toSql cid, toSql uid]
-    oneRowAffectedGuard r
+  dbUpdate (SetUserCompany uid mcid) = wrapDB $ \conn -> do
+    case mcid of
+      Nothing -> do
+        st <- prepare conn "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
+        r <- execute st [toSql uid]
+        oneRowAffectedGuard r
+      Just cid -> do
+        st <- prepare conn "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
+        r <- execute st [toSql cid, toSql uid]
+        oneRowAffectedGuard r
 
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
@@ -266,9 +279,9 @@ instance DBUpdate DeleteUser Bool where
         return True
       else return False
 
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer Region Lang
+data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer Locale
 instance DBUpdate AddUser (Maybe User) where
-  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss r l) = do
+  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss l) = do
     let handle e = case e of
           NoObject -> return Nothing
           _ -> E.throw e
@@ -315,8 +328,8 @@ instance DBUpdate AddUser (Maybe User) where
               ] ++ replicate 4 (toSql "")
                 ++ [toSql email] ++ [
                 SqlNull
-              , toSql l
-              , toSql r
+              , toSql $ getLang l
+              , toSql $ getRegion l
               , toSql ss
               , toSql False
               ]
@@ -448,8 +461,8 @@ instance DBUpdate SetUserSettings Bool where
       ++ ", system_server = ?"
       ++ "  WHERE id = ?") [
         toSql $ preferreddesignmode us
-      , toSql $ lang us
-      , toSql $ region us
+      , toSql $ getLang us
+      , toSql $ getRegion us
       , toSql $ systemserver us
       , toSql uid
       ]
@@ -499,16 +512,16 @@ instance DBUpdate SetSignupMethod Bool where
       [toSql signupmethod, toSql uid]
     oneRowAffectedGuard r
 
-data MakeUserCompanyAdmin = MakeUserCompanyAdmin UserID
-instance DBUpdate MakeUserCompanyAdmin Bool where
-  dbUpdate (MakeUserCompanyAdmin uid) = wrapDB $ \conn -> do
+data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
+instance DBUpdate SetUserCompanyAdmin Bool where
+  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = wrapDB $ \conn -> do
     mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
       >>= oneObjectReturnedGuard . join
       >>= return . join . fmap fromSql
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> do
-        run conn "UPDATE users SET is_company_admin = TRUE WHERE id = ? AND deleted = FALSE" [toSql uid]
+        run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
           >>= oneRowAffectedGuard
 
 -- helpers
@@ -578,8 +591,7 @@ fetchUsers st acc = fetchRow st >>= maybe (return acc)
      }
      , usersettings = UserSettings {
          preferreddesignmode = fromSql preferred_design_mode
-       , lang = fromSql lang
-       , region = fromSql region
+       , locale = mkLocale (fromSql region) (fromSql lang)
        , systemserver = fromSql system_server
      }
      , userservice = fromSql service_id
@@ -598,6 +610,7 @@ deriving instance Typeable SignupMethod
 deriving instance Typeable Password
 deriving instance Typeable Lang
 deriving instance Typeable Region
+deriving instance Typeable Locale
 deriving instance Typeable DesignMode
 deriving instance Typeable Email
 deriving instance Typeable Binary
@@ -610,6 +623,7 @@ instance Version SignupMethod
 instance Version Password
 instance Version Lang
 instance Version Region
+instance Version Locale
 instance Version DesignMode
 instance Version Email
 instance Version Binary
@@ -623,6 +637,7 @@ $(deriveSerializeFor [
   , ''Password
   , ''Lang
   , ''Region
+  , ''Locale
   , ''DesignMode
   , ''Email
   , ''Binary

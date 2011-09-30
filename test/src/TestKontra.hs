@@ -37,8 +37,8 @@ import KontraMonad
 import MinutesTime
 import Templates.Templates
 import qualified MemCache
+import User.Locale
 import User.Region
-import User.Lang
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
@@ -223,6 +223,6 @@ mkContext templates = liftIO $ do
         , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
-        , ctxregion = REGION_SE
-        , ctxlang = LANG_SE
+        , ctxdoclocale = Nothing
+        , ctxuserlocale = mkLocaleFromRegion REGION_SE
     }

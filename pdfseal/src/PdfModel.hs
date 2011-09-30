@@ -136,6 +136,7 @@ array x = Array . map value $ x
 
 unpsname :: Value -> BS.ByteString
 unpsname (Name x ) = x
+unpsname _ = error "Value is not a Name in unpsname"
 
 string :: IsName a => a -> Value
 string x = String False . unpsname . name $ x
@@ -194,8 +195,8 @@ floatToDigits2 x =
         -- Haskell promises that p-1 <= logBase b f < p.
         (p - 1 + e0) * 3 `div` 10
      else
-        ceiling ((log (fromInteger (f+1)) +
-                 fromIntegral (e) * log (fromInteger b)) /
+        ceiling ((log (fromInteger (f+1) :: Double) +
+                 fromIntegral (e) * log (fromInteger b :: Double)) /
                    log 10)
 --WAS:            fromInt e * log (fromInteger b))
 
@@ -314,6 +315,11 @@ binarizeValue (Operator x) = do
     maybeSpace
     tell $ bin_builder_bytestring x
     put True
+binarizeValue (Comment x) = do
+    tell $ bin_builder_char '%'
+    tell $ bin_builder_bytestring x
+    tell $ bin_builder_char '\n'
+    put False
 
 
 bin_builder_word8 :: Word8 -> Bin.Builder
@@ -439,6 +445,7 @@ upgrade = modify upgradeF
 
 trailerF :: DictData -> Document -> Document
 trailerF v (Document ver ((Body _ objs):bodies)) = Document ver ((Body v objs):bodies)
+trailerF _ (Document _ []) = error "Document needs to have at least one body"
 
 trailer :: DictData -> State Document ()
 trailer x = modify (trailerF x)
@@ -464,6 +471,7 @@ addIndirF object doc@(Document ver ((Body trailer' objs):bodies)) = (ndoc,refid'
         value' = UsedEntry (gener refid') object
         newbody = Body trailer' (IntMap.insert (objno refid') value' objs)
         ndoc = (Document ver (newbody:bodies))
+addIndirF _ _ = error "Document needs to have at least one body"
 
 setIndir :: RefID -> Indir -> State Document ()
 setIndir refid' indir = modify (setIndirF refid' indir)
@@ -475,6 +483,7 @@ setIndirF refid' object (Document ver ((Body trailer' objs):bodies)) = ndoc
         value' = UsedEntry (gener refid') object
         newbody = Body trailer' (IntMap.insert key value' objs)
         ndoc = (Document ver (newbody:bodies))
+setIndirF _ _ _ = error "Document needs to have at least one body"
 
 setObject :: RefID -> Value -> State Document ()
 setObject refid' value' = setIndir refid' (Indir value' Nothing)
@@ -663,6 +672,7 @@ importObjects doc refids = do
 
 ext :: Value -> [(BS.ByteString, Value)] -> Value
 ext (Dict d) r = Dict (r ++ d)
+ext _ _ = error "ext can be used only for Dict"
 
 trailer_dict :: IsValue b => b -> [(BS.ByteString, Value)]
 trailer_dict catalog = [ entry "Root" catalog ]
@@ -688,7 +698,7 @@ standard_font_dict basefont = dict [ entry "Type" "Font"
                                             , entry "BaseFont" basefont
                                             ]
 
-function_dict :: (Real b, Real a1) => b -> [a1] -> Value
+function_dict :: (Real a1) => Int -> [a1] -> Value
 function_dict typex domain = dict [ entryn "FunctionType" typex, entryna "Domain" domain ]
 
 function_type4_dict :: (Real a1, Real a11) => [a1] -> [a11] -> Value
@@ -700,7 +710,7 @@ function_type2_dict domain c0 c1 n = function_dict 2 domain `ext` [ entryna "C0"
                                                                   , entryn "N" n
                                                                   ]
 
-shading_dict :: (Real b, IsValue b1) => b -> b1 -> Value
+shading_dict :: (IsValue b1) => Int -> b1 -> Value
 shading_dict typex colorspace = dict [ entryn "ShadingType" typex
                               , entry  "ColorSpace" colorspace
                               ]
@@ -787,7 +797,7 @@ parse bin = do
           l300 = BS.drop (l-300) bin
 
 -- parseBodyList :: IntSet.IntSet -> BinaryData -> Int -> Maybe [(Body,IntSet.IntSet)]
-parseBodyList :: Integral a => BS.ByteString -> a -> Maybe [Body]
+parseBodyList :: BS.ByteString -> Int -> Maybe [Body]
 parseBodyList bin start = do
     body <- parseBody bin start
     let Body trailer' _ = body
@@ -1046,6 +1056,7 @@ parseHexString = do
         hexvalue x | x>=c '0' && x<=c '9' = fromIntegral (x - c '0')
         hexvalue x | x>=c 'A' && x<=c 'F' = fromIntegral (10 + x - c 'A')
         hexvalue x | x>=c 'a' && x<=c 'f' = fromIntegral (10 + x - c 'a')
+        hexvalue x = error ("hexvalue cannot know value of " ++ show x)
         c = BSB.c2w
 
 -- | Parse array [ ]

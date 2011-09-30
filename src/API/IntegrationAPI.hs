@@ -54,6 +54,7 @@ import Util.HasSomeUserInfo
 import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
+import Stats.Control
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (debug)
@@ -218,12 +219,19 @@ userFromTMP uTMP company = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue defaultValue defaultValue
+                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
                 tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
                 when (not tos_accepted) $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
-                return u
+                mtosuser <- runDBQuery $ GetUserByID (userid u)                
+                when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
+                let tosuser = fromJust mtosuser
+
+                Context{ctxtime} <- getContext
+                _ <- addUserIDSignTOSStatEvent (userid u) ctxtime (usercompany u) (userservice u)
+
+                return tosuser
     info_set <- runDBUpdate $ SetUserInfo (userid user) (userinfo user)
             {
               userfstname = fromMaybe (getFirstName user) $ fstname uTMP
@@ -231,7 +239,7 @@ userFromTMP uTMP company = do
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
             }
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
-    company_set <- runDBUpdate $ SetUserCompany (userid user) (companyid company)
+    company_set <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
     when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
     Just user' <- runDBQuery $ GetUserByID $ userid user
     return user'

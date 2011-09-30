@@ -313,7 +313,9 @@ header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
                                 <a href="$linkhome$" class="$ourLogoClass()$"></a>
+                                $localeSwitcher()$
                                 $if(logged)$
+                                
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
@@ -335,20 +337,36 @@ header=
      <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
      <a href="$linkupload$" class="document-button">$_headerSend()$</a>
 
-                                $else$l in
+                                $else$
                                 <a href="#" class="login-button"><p>$_login()$</p></a>
-                                $regionAndLangSwitcher()$
                                 $endif$
                             </div>
                            
             <div class="clearboth"></div>
           </div>
 ####
-regionAndLangSwitcher=
-  $if(!logged)$
-  <div class="regionAndLangSwitcher">
-    <div><a href="$linksesv$" class="icon flag swedish $if(langsv)$active$endif$"></a></div>
-    <div><a href="$linkgben$" class="icon flag british $if(langen)$active$endif$"></a></div>
+localeSwitcher=
+  <div class="localeSwitcher">
+    $if(!isdoclocale)$
+    $if(!logged)$
+    <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
+    <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
+    $else$
+    <div><form action="$linklocaleswitch$" method="POST">
+           <input type="hidden" name="region" value="REGION_SE"/>
+           $if(linksesv)$
+           <input type="hidden" name="referer" value="$linksesv$"/>
+           $endif$
+           <a href="" class="submit icon flag swedish $if(localesweden)$active$endif$"></a>
+         </form></div>
+    <div><form action="$linklocaleswitch$" method="POST">
+           <input type="hidden" name="region" value="REGION_GB"/>
+           $if(linkgben)$
+           <input type="hidden" name="referer" value="$linkgben$"/>
+           $endif$
+           <a href="" class="submit icon flag british $if(localebritain)$active$endif$"></a>
+         </form></div>
+    $endif$
+    $endif$
   </div>
-  $endif$
 ####

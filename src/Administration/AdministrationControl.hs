@@ -34,6 +34,7 @@ module Administration.AdministrationControl(
           , handleStatistics
           , handleBackdoorQuery
           , handleFixForBug510
+          , handleFixForAdminOnlyBug
           , resealFile
           , handleCheckSigLinkIDUniqueness
           ) where
@@ -83,6 +84,7 @@ import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
 import InputValidation
+import User.Utils
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -230,25 +232,63 @@ getUsersDetailsToCSV = onlySuperUser $ do
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySuperUser $ do
   _ <- getAsStrictBS "change"
-  mupgradetocompany  <- getFieldUTF "upgradetocompany"
+  museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
-  -- if the "upgrade to company" box was checked, and this is
-  -- a single user then create a new company, and make this person
-  -- the admin of it
-  user <- case (mupgradetocompany, usercompany olduser) of
-    (Just upgradeval, Nothing) | (toString upgradeval) == "on" -> do
-      runDBOrFail $ do
-        company <- dbUpdate $ CreateCompany Nothing Nothing
-        _ <- dbUpdate $ SetUserCompany uid (companyid company)
-        _ <- dbUpdate $ MakeUserCompanyAdmin uid
+  user <- case (fmap toString museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
+    (Just "companyadminaccount", Just _companyid, False) -> do
+      --then we just want to make this account an admin
+      newuser <- runDBOrFail $ do
+        _ <- dbUpdate $ SetUserCompanyAdmin uid True
         dbQuery $ GetUserByID uid
+      return newuser
+    (Just "companyadminaccount", Nothing, False) -> do
+      --then we need to create a company and make this account an admin
+      --we also need to tie all the existing docs to the company
+      newuser <- runDBOrFail $ do
+        company <- dbUpdate $ CreateCompany Nothing Nothing
+        _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        dbQuery $ GetUserByID uid
+      _ <- resaveDocsForUser uid
+      return newuser
+    (Just "companystandardaccount", Just _companyid, True) -> do
+      --then we just want to downgrade this account to a standard
+      newuser <- runDBOrFail $ do
+        _ <- dbUpdate $ SetUserCompanyAdmin uid False
+        dbQuery $ GetUserByID uid
+      return newuser
+    (Just "companystandardaccount", Nothing, False) -> do
+      --then we need to create a company and make this account a standard user
+      --we also need to tie all the existing docs to the company
+      newuser <- runDBOrFail $ do
+        company <- dbUpdate $ CreateCompany Nothing Nothing
+        _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        dbQuery $ GetUserByID uid
+      _ <- resaveDocsForUser uid
+      return newuser
+    (Just "privateaccount", Just _companyid, _) -> do
+      --then we need to downgrade this user and possibly delete their company
+      --we also need to untie all their existing docs from the company
+      --we may also need to delete the company if it's empty, but i haven't implemented this bit
+      newuser <- runDBOrFail $ do
+        _ <- dbUpdate $ SetUserCompany uid Nothing
+        dbQuery $ GetUserByID uid
+      _ <-resaveDocsForUser uid
+      return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
   settingsChange <- getUserSettingsChange
   _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid
-  
+
+resaveDocsForUser :: Kontrakcja m => UserID -> m ()
+resaveDocsForUser uid = onlySuperUser $ do
+  user <- runDBOrFail $ dbQuery $ GetUserByID uid
+  userdocs <- query $ GetDocumentsByUser user
+  mapM_ (\doc -> update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  return ()
+
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyChange companyid = onlySuperUser $ do
@@ -288,11 +328,14 @@ handleCreateUser = onlySuperUser $ do
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
-    systemserver <- guardJustM $ readField "systemserver"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
-    when (isNothing muser) $
-        addFlashM flashMessageUserWithSameEmailExists
-
+    region <- guardJustM $ readField "region"
+    if region == getRegion ctx
+      then do
+        muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage Scrive (mkLocaleFromRegion region)
+        when (isNothing muser) $
+          addFlashM flashMessageUserWithSameEmailExists
+      else do
+        addFlashM $ toFlashMsg OperationFailed <$> (const $ return "Sorry please change your region to match the new user's --em") ()
     -- FIXME: where to redirect?
     return LinkStats
     
@@ -303,16 +346,20 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- getField "custommessage"
-  systemserver <- guardJustM $ readField "systemserver"
-  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage systemserver (defaultRegion systemserver) (defaultLang systemserver)
-  case muser of
-    Just (User{userid}) -> do
-      _ <- runDBUpdate $ SetUserCompany userid companyid
-      when (fromMaybe False madmin) $ do
-        _ <- runDBUpdate $ MakeUserCompanyAdmin userid
-        return ()
-    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  region <- guardJustM $ readField "region"
+  if region == getRegion ctx
+    then do
+      madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+      muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage Scrive (mkLocaleFromRegion region)
+      case muser of
+        Just (User{userid}) -> do
+          _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
+          when (fromMaybe False madmin) $ do
+            _ <- runDBUpdate $ SetUserCompanyAdmin userid True
+            return ()
+        Nothing -> addFlashM flashMessageUserWithSameEmailExists
+    else do
+      addFlashM $ toFlashMsg OperationFailed <$> (const $ return "Sorry please change your region to match the new user's --em") ()
   return $ LinkCompanyUserAdmin companyid
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
@@ -343,19 +390,15 @@ getCompanyInfoChange = do
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
-  msystemserver <- readField "usersystemserver"
   mregion <- readField "userregion"
-  mlang <- readField "userlang"
   return $ \UserSettings {
     preferreddesignmode
   , systemserver
-  , region
-  , lang
+  , locale
   } -> UserSettings {
     preferreddesignmode
-  , systemserver = fromMaybe systemserver msystemserver
-  , region = fromMaybe region mregion
-  , lang = fromMaybe lang mlang
+  , systemserver
+  , locale = maybe locale mkLocaleFromRegion mregion
   }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
@@ -638,6 +681,34 @@ handleBackdoorQuery email = onlySuperUser $ onlyBackdoorOpen $ do
   minfo <- query $ GetBackdoorInfoByEmail (Email $ fromString email)
   let mailcontent = maybe "No email found" (toString . bdContent) minfo
   renderFromBody TopEmpty kontrakcja mailcontent
+
+{- |
+    There was a bug where the adminonly upgrade from private to company user
+    wasn't connecting the new company to the user's existing docs.
+    This should fix any of those docs affected by that bug.
+-}
+handleFixForAdminOnlyBug :: Kontrakcja m => m Response
+handleFixForAdminOnlyBug = onlySuperUser $ do
+  users <- runDBQuery GetUsers
+  mapM_ maybeFixForUser users
+  Log.debug $ "finished adminonly bug fix"
+  sendRedirect LinkUpload
+  where
+    maybeFixForUser user = do
+      userdocs <- query $ GetDocumentsByUser user
+      mapM_ (maybeFixForUserAndDoc user) userdocs
+      return ()
+    maybeFixForUserAndDoc user doc =
+      if isFixNeeded user doc
+        then do
+          Log.debug $ "fixing for doc " ++ (show $ documentid doc) ++ " and user " ++ (show $ userid user) ++ " " ++ (show $ getEmail user)
+          _ <- update $ AdminOnlySaveForUser (documentid doc) user
+          return ()
+        else return ()
+    isFixNeeded user doc =
+      any (isBadSigLink user) (documentsignatorylinks doc)
+    isBadSigLink user siglink =
+      Just (userid user) == maybesignatory siglink && usercompany user /= maybecompany siglink
 
 {- |
     This handles fixing of documents broken by bug 510, which means

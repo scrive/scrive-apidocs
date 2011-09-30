@@ -46,6 +46,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         <div class="content">
                                 <img src="$ourFirstPageLogo()$" alt="$ourServiceName()$" class="logo" />
                                 <div class="leftMain">
+                                        
+                                        $localeSwitcher()$
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>
                                                 <p class="introtext">$_h1Body()$ 
@@ -68,7 +70,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
                                         $else$
                                         <a href="#" class="enter-button login-button"><p>$_login()$</p></a>
-                                        $regionAndLangSwitcher()$
                                         $endif$
                                         <div class="campaign-container">
                                                 <div class="campaign-play campaign-play-video"></div>
@@ -212,9 +213,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="bubble">
                                                 <h2>$_PartnersHead()$</h2>
                                                 <ul>
-                                                        <li><a href="/partners"><img src="/img/partner-trustweaver.png"  /></a></li>
-                                                        <li><a href="/partners"><img src="/img/partner-logica.png" /></a></li>
-                                                        <li><a href="/partners"><img src="/img/partner-chalmers.png" /></a></li>
+                                                        <li><a href="$linkpartners$"><img src="/img/partner-trustweaver.png"  /></a></li>
+                                                        <li><a href="$linkpartners$"><img src="/img/partner-logica.png" /></a></li>
+                                                        <li><a href="$linkpartners$"><img src="/img/partner-chalmers.png" /></a></li>
                                                 </ul>
                                         </div>
                                 </div>
@@ -242,7 +243,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                         </table>
                                         <div class="highlight-container">
-                                                <div class="ribbon"></div>
+                                                <div class="ribbon $if(langen)$english$else$swedish$endif$"></div>
                                                 $_PriceTableHighlightedColumn()$
                                         </div>
                                 </div>

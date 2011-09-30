@@ -2,7 +2,9 @@
 adminsmain=
 <strong>Stats CSVs</strong>
 <p><a href="/adminonly/allstatscsv">Download the CSV containing
-        all signature stats</a></p>
+    all signature stats</a></p>
+<p><a href="/adminonly/userstatscsv">Download the CSV containing
+    all user stats</a></p>
 
     <strong>Sales Tools</strong>
     <table><tbody>
@@ -318,22 +320,10 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
-    <tr> <td>Service:</td>
-      <td><select name="usersystemserver">
-        <option $if(user.serviceskrivapa)$selected=""$endif$ value="SkrivaPa">SkrivaPå</option>
-        <option $if(user.servicescrive)$selected=""$endif$ value="Scrive">Scrive</option>
-      </select></td>
-    </tr>
     <tr> <td>Region:</td>
       <td><select name="userregion">
-        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden</option>
-        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain</option>
-      </select></td>
-    </tr>
-    <tr> <td>Language:</td>
-      <td><select name="userlang">
-        <option $if(user.langsv)$selected=""$endif$ value="LANG_SE">Swedish</option>
-        <option $if(user.langen)$selected=""$endif$ value="LANG_EN">English</option>
+        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
       </select></td>
     </tr>
 		<tr>
@@ -343,13 +333,16 @@ adminuser=
 		<tr> <td>Account type:</td>
 		  <td>
 		    $if(user.iscompanyaccount)$
-		    <a href="/adminonly/companyadmin/$company.companyid$">
-		      $company.companyname$ $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
-		    </a>
-		    $else$
-		    Private Account<br/>
-		    <input type="checkbox" name="upgradetocompany"/> Upgrade to Company
-		    $endif$
+        <p><a href="/adminonly/companyadmin/$company.companyid$">
+         view company $company.companyname$
+        </a></p>
+        $endif$
+
+		    <select name="useraccounttype">
+		      <option $if(user.iscompanyaccount)$$if(user.iscompanyadmin)$selected=""$endif$$endif$ value="companyadminaccount">$company.companyname$ Admin Company Account $if(!user.iscompanyaccount)$(Creates a new company)$endif$</option>
+		      <option $if(user.iscompanyaccount)$$if(!user.iscompanyadmin)$selected=""$endif$$endif$ value="companystandardaccount">$company.companyname$ Standard Company Account $if(!user.iscompanyaccount)$(Creates a new company)$endif$</option>
+		      <option $if(!user.iscompanyaccount)$selected=""$endif$value="privateaccount">Private Account $if(user.iscompanyaccount)$(May leave an empty company)$endif$</option>
+		    </select>
 		  </td>
 		</tr>
 	    </tbody></table>
@@ -458,16 +451,17 @@ admincompanyusers=
             </td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
+              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
+            <td> <input type="button" class="editer " value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
            </td>
           </tr>
@@ -657,11 +651,12 @@ pageStats=
             <td><input type="email" name="email"/></td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
+              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
           <tr>

@@ -42,6 +42,7 @@ import Doc.DocInfo
 import Util.MonadUtils
 import Doc.Invariants
 import Stats.Control
+import User.Utils
 
 import Control.Applicative
 import Control.Concurrent
@@ -299,11 +300,10 @@ sendInvitationEmail1 ctx document signatorylink = do
       Document { documentid } = document
       authorsiglink = fromJust $ getAuthorSigLink document
       hasAuthorSigned = isJust $ maybesigninfo authorsiglink
-  mail <- if isSignatory signatorylink
-          then if hasAuthorSigned
-               then mailInvitationToSign ctx document signatorylink
-               else mailInvitationToSend ctx document signatorylink
-          else mailInvitationToView ctx document signatorylink
+  mail <- case (isSignatory signatorylink, hasAuthorSigned) of
+          (True, True)  -> mailInvitation True ctx Sign document (Just signatorylink)
+          (True, False) -> mailInvitation True ctx Send document (Just signatorylink)
+          (False, _)    -> mailInvitation True ctx View document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
   _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
@@ -486,11 +486,10 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
         _ -> return ()
     Just user -> do
      _ <- update $ SaveDocumentForUser documentid user signatorylinkid
-     let userregion = region $ usersettings user
-         userlang = lang $ usersettings user
+     let userlocale = locale $ usersettings user
      if isClosed document
-       then addFlashM $ modalSignedClosedHasAccount userregion userlang document signatorylink (isJust $ ctxmaybeuser ctx)
-       else addFlashM $ modalSignedNotClosedHasAccount userregion userlang document signatorylink (isJust $ ctxmaybeuser ctx)
+       then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+       else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -522,10 +521,10 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocalisation :: MonadIO m => DocumentID -> m (Maybe Region)
-getDocumentLocalisation documentid = do
+getDocumentLocale :: MonadIO m => DocumentID -> m (Maybe Locale)
+getDocumentLocale documentid = do
   mdoc <- query $ GetDocumentByDocumentID documentid
-  return $ fmap documentregion mdoc
+  return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |
    Show the document to be signed
@@ -1793,7 +1792,10 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
 sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
-  forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor customMessage ctx document))
+  forM_ activated_signatories $ \slnk -> do
+      m <- mailCancelDocumentByAuthor True customMessage ctx document
+      let mail = m {to = [getMailAddress slnk]}
+      scheduleEmailSendout (ctxesenforcer ctx) mail
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))
@@ -1806,6 +1808,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
 
 mainPage :: Kontrakcja m => m String
 mainPage =  do
+    guardLoggedIn
     showTemplates <- isFieldSet "showTemplates"
     tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess
@@ -1994,6 +1997,7 @@ handleSigAttach docid siglinkid mh = do
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
     Just user <- ctxmaybeuser <$> getContext
+    lang <- getLang <$> getContext
     doctype <- getFieldWithDefault "" "documentType"
     allDocs <- case (doctype) of
         "Contract" -> getDocumentsForUserByType (Signable Contract) user
@@ -2031,7 +2035,7 @@ jsonDocumentsList = do
     params <- getListParamsNew
     let docs = docSortSearchPage params allDocs
     cttime <- liftIO $ getMinutesTime
-    docsJSONs <- mapM (fmap JSObject . docForListJSON cttime user) $ list docs
+    docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
     return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
                                     ("paging", pagingParamsJSON docs)]
 

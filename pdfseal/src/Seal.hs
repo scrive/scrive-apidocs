@@ -27,9 +27,11 @@ listPageRefIDSFromPages document' pagesrefid =
     let
        Just (Indir (Dict pages) _) = PdfModel.lookup pagesrefid document'
        unKids (Ref r) = r
+       unKids _ = error "unKids only for Ref"
        list = case Prelude.lookup (BS.pack "Kids") pages of
                 Just (Array kids) -> concatMap (listPageRefIDSFromPages document' . unKids) kids
                 Nothing -> [pagesrefid]
+                _ -> error "Broken case in listPageRefIDSFromPages"
     in list
 
 addPageToDocument :: Value -> State Document RefID
@@ -46,16 +48,17 @@ addPageToDocument (Dict newpagevalue) = do
 --      unKids (Ref r) = r
         newkids = case Prelude.lookup (BS.pack "Kids") pages of
                 Just (Array kids) -> Array (kids ++ [Ref newpageid])
-                Nothing -> error "this never happens"
+                _ -> error "/Kids key must be there and must be an array"
         newcount = case Prelude.lookup (BS.pack "Count") pages of
                 Just (Number count) -> count + 1
-                Nothing -> error "this never happens either"
+                _ -> error "/Count key must be there and must be an array"
         skipkeys list = filter (\(a,_) -> a/=BS.pack "Count" && a/=BS.pack "Kids") list
         skipkeys2 list = filter (\(a,_) -> a/=BS.pack "Parent") list
         newpagesindir = Indir (Dict ([(BS.pack "Count", Number newcount),(BS.pack "Kids",newkids)] ++ skipkeys pages)) Nothing
     setIndir pagesrefid newpagesindir
     newpageid <- addObject (Dict (skipkeys2 newpagevalue ++ [(BS.pack "Parent", Ref pagesrefid)]))
   return newpageid
+addPageToDocument _ = error "addPageToDocument only for Dict"
 
 listPageRefIDs :: Document -> [RefID]
 listPageRefIDs document' =
@@ -81,6 +84,7 @@ getResDict doc pageid =
           Just (Ref refid') -> case PdfModel.lookup refid' doc of
                                 Just (Indir (Dict value') _) -> value'
                                 _ -> error "2"
+          _ -> error "/Resources key is totally bogus"
     in resource
         
 mergeResourceBranch :: Document -> DictData -> DictData -> DictData
@@ -127,6 +131,7 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         contentlist = case contentvalue of
                         Ref{} -> [contentvalue]
                         Array arr -> arr
+                        _ -> error "/Contents must be either ref or array of refs"
 
         ([q,qQ,rr], docx) = flip runState document' $ do
             q' <- addStream (Dict []) $ BSL.pack "q "
@@ -201,8 +206,8 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    , y
                    , w
                    , h
-                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w) ++ " " ++ 
-                       show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline) ++ " cm " ++
+                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w :: Double) ++ " " ++ 
+                       show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline :: Double) ++ " cm " ++
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
 
 
@@ -216,7 +221,7 @@ placeSeals fields sealrefid sealtext paginrefid pagintext' sealmarkerformrefid =
     let findFields pageno = filter (\x -> page x == pageno) fields
     let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)++ 
                      pagintext' ++ 
-                     " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
+                     " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2 :: Double) ++ " 14 cm /SealMarkerForm Do Q "
 
     modify $ \document' -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document'
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
@@ -233,7 +238,9 @@ contentsValueListFromPageID document' pagerefid =
         contentlist = case contentvalue of
                         Ref r -> [r]
                         Array arr -> map unRefID arr
+                        _ -> error "/Contents must be ref or an array of refs"
         unRefID (Ref r) = r
+        unRefID _ = error "unRefID not on ref"
     in contentlist
 
 pagintext :: SealSpec -> String
@@ -261,7 +268,7 @@ pagintext (SealSpec{documentNumber,initials,staticTexts }) =
  "0.863 0.43 0.152 0.004 K " ++
  "0.4 w " ++
  "60 18 m " ++ show (docnroffset-10) ++ " 18 l S " ++
- show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60) ++ " 18 l S " ++
+ show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60 :: Int) ++ " 18 l S " ++
  "Q "
 
 signatorybox :: SealingTexts -> Person -> String
@@ -327,7 +334,7 @@ logentry (HistEntry {histdate,histcomment}) =
 
 
 lastpage :: SealSpec -> String
-lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart,staticTexts}) = 
+lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
  "0.4 G " ++
@@ -406,11 +413,26 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart,staticTe
  intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
  "0.546 0.469 0.454 0.113 k " ++
  "10 0 0 10 46.5522 31.5469 Tm " ++
- "(Sida 1 av 1)Tj " ++
+ "(1/1)Tj " ++
  "ET " ++ rightcornerseal2 
 
+-- To emulate a near perfect circle of radius r with cubic Bézier
+-- curves, draw four curves such that one of the line segments
+-- connecting the starting point with the nearest control point, or
+-- the ending point with its nearest control point, is vertical, while
+-- the other one is horizontal. The length l of each such segment
+-- equals r multiplied by kappa. kappa is 0.5522847498 in our case we
+-- need: 45 + 25 = 70, 45 - 25 = 20
 rightcornerseal2 :: String
-rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm /SealMarkerForm Do Q" 
+rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm " ++
+                   "1 g 1 G " ++
+                   "0 45 m " ++
+                   "0  20 20 0  45 0  c " ++
+                   "70 0  90 20 90 45 c " ++
+                   "90 70 70 90 45 90 c " ++
+                   "20 90 0  70 0  45 c " ++
+                   "f " ++
+                   "/SealMarkerForm Do Q" 
 
 pageToForm :: RefID -> State Document RefID
 pageToForm refid' = do
@@ -418,6 +440,7 @@ pageToForm refid' = do
     let contentsrefid = case Prelude.lookup (BS.pack "Contents") page of
                           Just (Array [Ref contentsrefid']) -> contentsrefid'
                           Just (Ref contentsrefid') -> contentsrefid'
+                          _ -> error "/Contents must be a ref or an array of refs"
     Just (Indir (Dict contentsdict) (Just streamdata)) <- gets $ PdfModel.lookup contentsrefid
     
     let changekeys (k,v)

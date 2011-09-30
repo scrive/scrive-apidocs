@@ -275,10 +275,10 @@ userFields u =  do
         field "email" $ getEmail u
         field "serviceskrivapa" $ SkrivaPa == (systemserver $ usersettings u)
         field "servicescrive" $ Scrive == (systemserver $ usersettings u)
-        field "regionse" $ REGION_SE == (region $ usersettings u)
-        field "regiongb" $ REGION_GB == (region $ usersettings u)
-        field "langsv" $ LANG_SE == (lang $ usersettings u)
-        field "langen" $ LANG_EN == (lang $ usersettings u)
+        field "regionse" $ REGION_SE == getRegion u
+        field "regiongb" $ REGION_GB == getRegion u
+        field "langsv" $ LANG_SE == getLang u
+        field "langen" $ LANG_EN == getLang u
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin" $ useriscompanyadmin u
 {-

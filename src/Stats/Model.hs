@@ -3,10 +3,14 @@ module Stats.Model
          AddDocStatEvent(..),
          DocStatEvent(..),
          DocStatQuantity(..),
-         FlushStats(..),
+         FlushDocStats(..),
          GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
-         GetDocStatEventsByUserID(..)
+         GetDocStatEventsByUserID(..),
+         UserStatEvent(..),
+         AddUserStatEvent(..),
+         GetUserStatEvents(..),
+         UserStatQuantity(..)
        )
        
        where
@@ -51,6 +55,18 @@ data DocStatEvent = DocStatEvent { seUserID     :: UserID          -- ^ User who
                                  , seDocumentType :: DocumentType
                                  }
 
+data UserStatQuantity = UserSignTOS  -- When user signs TOS
+                      deriving (Eq, Ord, Show)
+$(enumDeriveConvertible ''UserStatQuantity)
+
+data UserStatEvent = UserStatEvent { usUserID    :: UserID
+                                   , usTime      :: MinutesTime
+                                   , usQuantity  :: UserStatQuantity
+                                   , usAmount    :: Int
+                                   , usServiceID :: Maybe ServiceID
+                                   , usCompanyID :: Maybe CompanyID
+                                   }
+
 selectDocStatEventsSQL :: String
 selectDocStatEventsSQL = "SELECT "
  ++ "  e.user_id"
@@ -64,6 +80,18 @@ selectDocStatEventsSQL = "SELECT "
  ++ "  FROM doc_stat_events e"
  ++ " " -- always end in space to avoid problems
  
+selectUserStatEventsSQL :: String
+selectUserStatEventsSQL = "SELECT "
+ ++ "  e.user_id"
+ ++ ", e.time"
+ ++ ", e.quantity"
+ ++ ", e.amount"
+ ++ ", e.service_id"
+ ++ ", e.company_id"
+ ++ "  FROM user_stat_events e"
+ ++ " " -- always end in space to avoid problems
+
+
 data GetDocStatEvents = GetDocStatEvents
 instance DBQuery GetDocStatEvents [DocStatEvent] where
   dbQuery GetDocStatEvents = wrapDB $ \conn -> do
@@ -112,6 +140,42 @@ instance DBUpdate AddDocStatEvent Bool where
         oneRowAffectedGuard r
       _ -> return False
 
+data GetUserStatEvents = GetUserStatEvents
+instance DBQuery GetUserStatEvents [UserStatEvent] where
+  dbQuery GetUserStatEvents = wrapDB $ \conn -> do
+    st <- prepare conn $ selectUserStatEventsSQL
+    _ <- execute st []
+    fetchUserStats st []
+
+data AddUserStatEvent = AddUserStatEvent UserStatEvent
+instance DBUpdate AddUserStatEvent Bool where
+  dbUpdate (AddUserStatEvent event) = wrapDB $ \conn -> do
+    runRaw conn "LOCK TABLE user_stat_events IN ACCESS EXCLUSIVE MODE"
+    selectSt <- prepare conn $ selectUserStatEventsSQL
+      ++ " WHERE e.user_id = ? "
+      ++ " AND   e.quantity    = ? "
+    _ <- execute selectSt [toSql $ usUserID event
+                          ,toSql $ usQuantity event]
+    stats <- fetchUserStats selectSt []
+    case stats of
+      [] -> do
+        st <- prepare conn $ "INSERT INTO user_stat_events ("
+              ++ "  user_id"
+              ++ ", time"
+              ++ ", quantity"
+              ++ ", amount"
+              ++ ", service_id"
+              ++ ", company_id"
+              ++ ") VALUES (?, to_timestamp(?), ?, ?, ?, ?)"
+        r <- execute st [toSql $ usUserID event
+                        ,toSql $ usTime event
+                        ,toSql $ usQuantity event
+                        ,toSql $ usAmount event
+                        ,toSql $ usServiceID event
+                        ,toSql $ usCompanyID event]
+        oneRowAffectedGuard r
+      _ -> return False
+
 fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]
 fetchDocStats st acc = fetchRow st >>= maybe (return acc)
   (\[uid, time, quantity, amount, documentid, serviceid, companyid, documenttype] -> 
@@ -125,6 +189,18 @@ fetchDocStats st acc = fetchRow st >>= maybe (return acc)
                                     , seDocumentType = doctypeFromString $ fromSql documenttype
                                     } : acc)
 
+fetchUserStats :: Statement -> [UserStatEvent] -> IO [UserStatEvent]
+fetchUserStats st acc = fetchRow st >>= maybe (return acc)
+  (\[uid, time, quantity, amount, serviceid, companyid] -> 
+    fetchUserStats st $ UserStatEvent { usUserID       = fromSql uid
+                                      , usTime         = fromSql time
+                                      , usQuantity     = fromSql quantity
+                                      , usAmount       = fromSql amount
+                                      , usServiceID    = fromSql serviceid
+                                      , usCompanyID    = fromSql companyid
+                                      } : acc)
+
+
 data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID
 instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
   dbQuery (GetDocStatEventsByCompanyID companyid) = wrapDB $ \conn -> do
@@ -133,9 +209,9 @@ instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
     _ <- execute st [toSql companyid]
     fetchDocStats st []
 
-data FlushStats = FlushStats
-instance DBUpdate FlushStats Bool where
-  dbUpdate FlushStats = wrapDB $ \conn -> do
+data FlushDocStats = FlushDocStats
+instance DBUpdate FlushDocStats Bool where
+  dbUpdate FlushDocStats = wrapDB $ \conn -> do
     st <- prepare conn $ "DELETE FROM doc_stat_events"
     _ <- execute st []
     return True
