@@ -13,6 +13,7 @@ import Control.Arrow
 import Control.Monad
 import Data.Bits
 import Data.List
+import Data.Typeable(typeOf)
 import Database.HDBC
 import Data.Convertible
 import Language.Haskell.TH
@@ -117,26 +118,26 @@ enumDeriveConvertible t = do
   info <- reify t
   case info of
     TyConI (DataD _ name _ cons _) -> do
-      forM_ cons $ \c -> do
+      ncons <- forM cons $ \c -> do
         case c of
-          NormalC _ [] -> return ()
+          NormalC con [] -> return con
           _ -> error $ "Data constructor '" ++ show c ++ "' is not trivial"
       v' <- newName "v"
       n' <- newName "n"
       e' <- newName "e"
       return [
           InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT name)) (ConT ''SqlValue)) [
-            FunD 'safeConvert $ map (\(n, NormalC con _) ->
+            FunD 'safeConvert $ map (\(n, con) ->
               Clause [ConP con []]
                 (NormalB (AppE (ConE 'Right) (AppE (ConE 'SqlInteger) (LitE (IntegerL n))))) [])
-              $ zip [1..] cons
+              $ zip [1..] ncons
             ]
         , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) (ConT name)) [
             FunD 'safeConvert [Clause [VarP v']
               (NormalB (CaseE (SigE (AppE (VarE 'safeConvert) (VarE v')) (AppT (ConT ''ConvertResult) (ConT ''Integer))) $
-                  map (\(n, NormalC con _) ->
+                  map (\(n, con) ->
                     Match (ConP 'Right [LitP (IntegerL n)]) (NormalB (AppE (ConE 'Right) (ConE con))) [])
-                    (zip [1..] cons)
+                    (zip [1..] ncons)
                 ++ [
                   Match (ConP 'Right [VarP n'])
                     (NormalB (AppE (ConE 'Left) (RecConE 'ConvertError [
@@ -172,6 +173,15 @@ enumDeriveConvertible t = do
 --     where
 --       values = zip (map (shiftL 1) [0..]) [C1, C2, ..., CN]
 --
+
+bitFieldToSqlValue :: Enum a => [a] -> ConvertResult SqlValue
+bitFieldToSqlValue = Right . SqlInteger . foldl' (\acc n -> acc + 2^fromEnum n) 0
+ 
+bitFieldFromSqlValue :: (Bounded a, Enum a) => SqlValue -> ConvertResult [a]
+bitFieldFromSqlValue = fmap conv . (safeConvert :: SqlValue -> ConvertResult Integer)
+  where conv n = [x | (p, x) <- values, p.&. n /= 0]
+        values = [(shiftL 1 (fromEnum c),c) | c <- [minBound..maxBound]]
+
 bitfieldDeriveConvertible :: Name -> Q [Dec]
 bitfieldDeriveConvertible t = do
   info <- reify t
@@ -181,48 +191,23 @@ bitfieldDeriveConvertible t = do
         case c of
           NormalC _ [] -> return ()
           _ -> error $ "Data constructor '" ++ show c ++ "' is not trivial"
-      f <- (\[FunD _ c] -> [FunD 'safeConvert c]) `liftM` runQ [d|
-        f v = case safeConvert v :: ConvertResult Int of
-          Right n -> Right [ x | (p, x) <- values, p .&. n /= 0]
-          Left e -> Left e
-          where
-            values = zip (map (shiftL 1) [0..])
-              $ $(return $ ListE $ map (\(NormalC n _) -> ConE n) cons)
-        |]
-      n' <- newName "n"
-      acc' <- newName "acc"
-      mkInt' <- newName "mkInt"
-      return [
-          InstanceD [] (AppT (AppT (ConT ''Convertible) (AppT ListT (ConT name))) (ConT ''SqlValue)) [
-            ValD (VarP 'safeConvert) (NormalB (InfixE (Just (ConE 'Right)) (VarE '(.)) (Just (InfixE (Just (ConE 'SqlInteger)) (VarE '(.)) (Just (AppE (AppE (VarE 'foldl') (LamE [VarP acc', VarP n'] (InfixE (Just (VarE acc')) (VarE '(+)) (Just (AppE (VarE mkInt') (VarE n')))))) (LitE (IntegerL 0)))))))) [
-                FunD mkInt' $ map (\(n, NormalC con _) ->
-                  Clause [ConP con []] (NormalB (LitE (IntegerL n))) [])
-                  $ zip (map (shiftL 1) [0..]) cons
-              ]
-            ]
-        , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) (AppT ListT (ConT name))) f
-        ]
+      [d|instance Convertible [$(conT name)] SqlValue where safeConvert = bitFieldToSqlValue
+         instance Convertible SqlValue [$(conT name)] where safeConvert = bitFieldFromSqlValue|]
     _ -> error $ "Not a data type declaration: " ++ show info
 
 -- | Derives Convertible instances from/to SqlValue for types that will
 -- be stored in DB as JSON (Data/Typeable instances are required)
+
+jsonToSqlValue :: Data a => a -> ConvertResult SqlValue
+jsonToSqlValue = Right . SqlString . encodeJSON
+
+jsonFromSqlValue :: forall a. (Data a, Typeable a) => SqlValue -> ConvertResult a
+jsonFromSqlValue v = safeDecodeJSON (show (typeOf (undefined :: a))) =<< safeConvert v
+
 jsonableDeriveConvertible :: TypeQ -> Q [Dec]
-jsonableDeriveConvertible tq = do
-  t <- tq
-  f <- rename `liftM` runQ [d|
-    f v = Right . SqlString $ encodeJSON v
-    |]
-  g <- rename `liftM` runQ [d|
-    f v = case safeConvert v :: ConvertResult String of
-      Right s -> safeDecodeJSON $(stringE $ pprint t) s
-      Left e -> Left e
-    |]
-  return [
-      InstanceD [] (AppT (AppT (ConT ''Convertible) t) (ConT ''SqlValue)) f
-    , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) t) g
-    ]
-  where
-    rename = \[FunD _ c] -> [FunD 'safeConvert c]
+jsonableDeriveConvertible tq = 
+  [d|instance Convertible $(tq) SqlValue where safeConvert = jsonToSqlValue
+     instance Convertible SqlValue $(tq) where safeConvert = jsonFromSqlValue|]
 
 safeDecodeJSON :: Data a => String -> String -> ConvertResult a
 safeDecodeJSON t s = case runGetJSON readJSValue s of
