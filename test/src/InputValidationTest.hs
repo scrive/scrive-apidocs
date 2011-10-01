@@ -262,7 +262,7 @@ propValidCompanyNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyName
  
 propValidCompanyNameRestrictsChars :: String -> Property
 propValidCompanyNameRestrictsChars =
-   propJustAllowed asValidCompanyName (isAlphaNum : map (==) " &\'@():,!.-?")
+   propJustAllowed asValidCompanyName (isAlphaNum : map (==) "\t &\'@():,!.-?")
 
 propValidCompanyNameGoodExamples :: [CompanyNameChar] -> Property
 propValidCompanyNameGoodExamples ns =
