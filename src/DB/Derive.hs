@@ -187,6 +187,7 @@ bitfieldDeriveConvertible t = do
   info <- reify t
   case info of
     TyConI (DataD _ name _ cons _) -> do
+      let _ = name -- workaround for bug in ghc 6.12.3 for unused variable warning
       forM_ cons $ \c -> do
         case c of
           NormalC _ [] -> return ()
@@ -205,7 +206,8 @@ jsonFromSqlValue :: forall a. (Data a, Typeable a) => SqlValue -> ConvertResult 
 jsonFromSqlValue v = safeDecodeJSON (show (typeOf (undefined :: a))) =<< safeConvert v
 
 jsonableDeriveConvertible :: TypeQ -> Q [Dec]
-jsonableDeriveConvertible tq = 
+jsonableDeriveConvertible tq = do
+  let _ = tq -- workaround for bug in ghc 6.12.3 for unused variable warning
   [d|instance Convertible $(tq) SqlValue where safeConvert = jsonToSqlValue
      instance Convertible SqlValue $(tq) where safeConvert = jsonFromSqlValue|]
 
