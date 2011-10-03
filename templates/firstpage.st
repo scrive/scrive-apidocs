@@ -283,7 +283,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
             var peJsHost = "https://";
             document.write(unescape("%3Cscript src='https://tr.prospecteye.com/track.js' type='text/javascript'%3E%3C/script%3E"));
             </script>
-            <noscript><img src="https://tr.prospecteye.com/?id=8d72086524" style="border:0;display:none;"></noscript>
+            <noscript><img src="https://tr.prospecteye.com/?id=8d72086524" style="border:0;display:none;"/></noscript>
        <!-- End of snoobi -->
        $endif$
         </body>
