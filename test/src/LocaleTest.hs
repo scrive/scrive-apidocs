@@ -84,6 +84,7 @@ testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
       muser <- dbQuery $ GetUserByID uid
       (userlocale, _) <- runTestKontra emptyReq ctx $ getUserLocale conn muser
       assertLocale userlocale region lang
+    assertLocale :: HasLocale a => a -> Region -> Lang -> DB ()
     assertLocale locale region lang = do
       assertEqual "Region" region (getRegion locale)
       assertEqual "Lang" lang (getLang locale)
