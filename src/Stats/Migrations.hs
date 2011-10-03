@@ -18,7 +18,7 @@ addServiceAndCompanyToStats =
   , mgrFrom = 1
   , mgrDo = wrapDB $ \conn -> do
       _ <- run conn "ALTER TABLE doc_stat_events DROP CONSTRAINT pk_doc_stat_events" []
---      _ <- run conn "ALTER TABLE doc_stat_events ADD CONSTRAINT pk_doc_stat_events (quantity, document_id)" []
+      _ <- run conn "ALTER TABLE doc_stat_events ADD CONSTRAINT pk_doc_stat_events PRIMARY KEY (quantity, document_id)" []
       _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN service_id    TEXT       NULL" []
       _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN company_id    BIGINT     NULL" []
       _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN document_type TEXT       NULL" []
