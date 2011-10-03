@@ -306,7 +306,7 @@ wrapMail body = "<html>"++
                       "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>" ++
                             -- "<meta http-equiv='content-language' content='$ctxlang$'/>" ++
                     "</head>" ++
-                    "<body>" ++
+                    "<body style='background-color: #f5f5f5;'>" ++
                        body ++ 
                     "</body>" ++ 
                 "</html>"          

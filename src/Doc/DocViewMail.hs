@@ -70,7 +70,6 @@ remindMailNotSigned :: TemplatesMonad m
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
     kontramail (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
-        field "documenttitle" $ documenttitle document
         fieldM "header" $ do
             header <- if isNothing customMessage
                          then remindMailNotSignedStandardHeader document signlink
@@ -100,8 +99,6 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                     if not $ null $ partySignedList document
                        then fmap Just $ renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
                        else return Nothing
-        field "creatorname" creatorname
-        field "documenttitle" $ BS.toString $ documenttitle document
         fieldM "link" $ do
             if forMail
                then makeFullLink ctx document $ show $ LinkSignDoc document signlink
@@ -120,7 +117,6 @@ remindMailSigned :: TemplatesMonad m
 remindMailSigned _forMail customMessage ctx document signlink = do
     sheader <- remindMailSignedStandardHeader document signlink
     kontramail "remindMailSigned" $ do
-            field "documenttitle" $ documenttitle document
             fieldM "header" $ makeEditable "customtext" $  fromMaybe sheader (BS.toString <$> customMessage)
             fieldM "footer" $ mailFooter ctx document
             contextFields ctx
@@ -182,11 +178,10 @@ mailDocumentRejected :: TemplatesMonad m
 mailDocumentRejected customMessage ctx username document rejector = do
     kontramail (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         field "username" username
-        field "documenttitle" $ documenttitle document
         field "rejectorName" $ getSmartName rejector
         fieldM "footer" $ mailFooter ctx document
         field "customMessage" $ customMessage
-        contextFields ctx
+        documentMailFields True ctx document Nothing
 
 mailRejectMailContent :: TemplatesMonad m
                       => Maybe String
@@ -201,8 +196,7 @@ mailRejectMailContent customMessage ctx  username  document  rejector =
 mailDocumentError :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentError ctx document = do
     kontramail "mailDocumentError" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document
-        contextFields ctx
+        documentMailFields True ctx document Nothing
 
 
 data InvitationTo = Sign | Send | View deriving (Eq,Show)
@@ -275,13 +269,11 @@ mailInvitation forMail
                    renderTemplateForProcess document processwhohadsignedinfoformail $ do
                        field "signedlist" signedlist
                else renderTemplateM "whohadsignedinfoforpreview" ()
-        field "documenttitle" $ BS.toString documenttitle
         fieldM "link" $ do
             case msiglink of
                  Just siglink -> makeFullLink ctx document $ show (LinkSignDoc document siglink)
                  Nothing -> makeFullLink ctx document "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         field "issignatory" $ issignatory || not forMail
-        field "creatorname" creatorname
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
         field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
@@ -290,7 +282,7 @@ mailInvitation forMail
                 (\(n, _, sigs) -> do
                     field "name" n
                     fieldM "sigs" $ renderListTemplate (map (BS.toString . fst) sigs))
-        contextFields ctx
+        documentMailFields True ctx document msiglink
             
             
 mailInvitationContent :: TemplatesMonad m
@@ -358,9 +350,7 @@ mailCancelDocumentByAuthor forMail customMessage ctx document = do
                         with <- renderTemplateFM "customFooter" $
                             field "creatorname" creatorname
                         replaceOnEdit this with
-        field "creatorname" creatorname
-        field "documenttitle" $ BS.toString $ documenttitle document
-        contextFields ctx
+        documentMailFields True ctx document Nothing
     return $ mail { from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
@@ -376,20 +366,18 @@ mailMismatchSignatory :: TemplatesMonad m
                         -> m Mail
 mailMismatchSignatory ctx document authoremail authorname doclink signame badname msg isbad = do
    kontramail "mailMismatchSignatory" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document
         field "authorname" authorname
         field "signame" signame
         field "badname" badname
         field "authoremail" authoremail
         field "doclink" doclink
         field "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
-        contextFields ctx
+        documentMailFields True ctx document Nothing
 
 mailMismatchAuthor :: TemplatesMonad m => Context -> Document -> String -> String -> String -> m Mail
 mailMismatchAuthor ctx document authorname badname bademail = do
     let Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
     kontramail "mailMismatchAuthor" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document
         field "messages" $ concat $ map para $ lines msg
         field "authorname" authorname
         field "doclink" $ ctxhostpart ctx ++ (show $ LinkDesignDoc $ DesignStep2 (documentid document)
@@ -398,7 +386,7 @@ mailMismatchAuthor ctx document authorname badname bademail = do
                                                                     (not (hasSigned (getAuthorSigLink document))))
         field "bademail" bademail
         field "badname" badname
-        contextFields ctx
+        documentMailFields True ctx document Nothing
 
 -- helpers
 

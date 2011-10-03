@@ -1,3 +1,10 @@
+#####
+##### MAILS - Separated in sections
+#####
+#####
+##### CANCEL MAIL
+#####
+####
 mailCancelContractByAuthorStandardHeader=
     <p>$_hi()$,</p>
 ######
@@ -9,42 +16,76 @@ mailCancelOrderByAuthorStandardHeader=
 ######
 mailCancelContractByAuthor=
     $_mailCancelDocumentByAuthorTitle()$
-    $header:noescape()$
-    <p>$_mailCancelContractByAuthorContentBody()$</p>
-    $footer:noescape()$
+    $nicemail(
+        mailheader= mailInvitationTitle();
+        mailp1 = header;
+        mailp2 = _mailCancelContractByAuthorContentBody();
+        mailp3 = footer
+    )$
 #####
 mailCancelOfferByAuthor=
     $_mailCancelDocumentByAuthorTitle()$
-    $header:noescape()$
-    <p>$_mailCancelOfferByAuthorContentBody()$</p>
-    $footer:noescape()$
+    $nicemail(
+        mailheader= mailInvitationTitle();
+        mailp1 = header;
+        mailp2 = _mailCancelOfferByAuthorContentBody();
+        mailp3 = footer
+    )$
 #####
 mailCancelOrderByAuthor=
     $_mailCancelDocumentByAuthorTitle()$
-    $header:noescape()$
-    <p>$_mailCancelOrderByAuthorContentBody()$</p>
-    $footer:noescape()$
+    $nicemail(
+        mailheader= mailInvitationTitle();
+        mailp1 = header;
+        mailp2 = _mailCancelOrderByAuthorContentBody();
+        mailp3 = footer
+    )$
+#####
+#####
+##### MAIL AWAITING AUTHOR
+#####
 #####
 mailDocumentAwaitingForAuthorContent=
     $_mailDocumentAwaitingForAuthorTitle()$
-    <p>$_hi()$,</p>
-    <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
-    <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
-    $footer:noescape()$
+    $nicemail(
+        mailheader= _mailDocumentAwaitingForAuthorTitle();
+        mailp1 = mailDocumentAwaitingForAuthorContentMainP();
+        mailp3 = footer
+    )$
+#####
+mailDocumentAwaitingForAuthorContentMainP = 
+   <p>$_hi()$,</p>
+   <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
+   <p>$_mailDocumentAwaitingForAuthorContentInstruction()$</p>
+#####
+##### CLOSED MAIL
 #####
 mailContractClosed=
     $_mailDocumentClosedTitle()$
-    <span>
+    $nicemail(
+        mailheader = _mailDocumentClosedTitle();
+        mailp1 = mailContractClosedMainP();
+        mailp2 = footer
+    )$
+    
+####
+mailContractClosedMainP = 
       <p>$_hi()$,</p>
       <p>$_mailContractClosedContentSignedBy()$</p>
       <p>$_mailContractClosedContentAttached()$</p> 
-      $footer:noescape()$
-    </span>
+    
 ####
 mailOfferClosed=
     $_mailDocumentClosedTitle()$
-    <span>
-      <p>$_hi()$,</p>
+    $nicemail(
+        mailheader = _mailDocumentClosedTitle();
+        mailp1 = mailOfferClosedMainP();
+        mailp2 = footer
+    )$
+    $footer:noescape()$
+####
+mailOfferClosedMainP = 
+    <p>$_hi()$,</p>
       <p>
        $if(!service)$
         $_mailOfferClosedContentOfferAccepted()$
@@ -53,16 +94,18 @@ mailOfferClosed=
        $endif$
        </p>
       <p>$_mailOfferClosedContentAttached()$</p>
-      $footer:noescape()$
-    </span>
 ####
 mailOrderClosed=
     $_mailDocumentClosedTitle()$
-    <span>
+    $nicemail(
+        mailheader = _mailDocumentClosedTitle();
+        mailp1 = mailOrderClosedMainP();
+        mailp2 = footer
+    )$
+####
+mailOrderClosedMainP=
       <p>$_hi()$,</p>
-
       <p>
-        
        $if(!service)$
         $_mailOrderClosedContentViewed()$
        $else$
@@ -70,27 +113,35 @@ mailOrderClosed=
        $endif$
       </p>
       <p>$_mailOrderClosedContentAttached()$</p>
-      $footer:noescape()$
-    </span>
+####
+#### REJECTED MAIL
 ####
 mailRejectContractMail=
       $_mailRejectMailTitle()$
-      $mailRejectMailContentHeader()$
-      <p>$_mailRejectContractMailContentContractRejected()$</p>
-      $footer:noescape()$
+      $nicemail(
+        mailheader = _mailDocumentClosedTitle();
+        mailp1 = mailRejectMailContentHeader();
+        mailp2 = _mailRejectContractMailContentContractRejected();
+        mailp3 = footer
+      )$
 ####
 mailRejectOfferMail=
       $_mailRejectMailTitle()$
-      $mailRejectMailContentHeader()$
-      <p>$_mailRejectOfferMailContentOfferRejected()$</p>
-      $footer:noescape()$
+      $nicemail(
+        mailheader = _mailDocumentClosedTitle();
+        mailp1 = mailRejectMailContentHeader();
+        mailp2 = _mailRejectOfferMailContentOfferRejected();
+        mailp3 = footer
+      )$
 ###
 mailRejectOrderMail=
       $_mailRejectMailTitle()$
-      $mailRejectMailContentHeader()$
-      <p>$_mailRejectOrderMailContentHasRejected()$
-      </p>
-      $footer:noescape()$
+    $nicemail(
+        mailheader = _mailDocumentClosedTitle();
+        mailp1 = mailRejectMailContentHeader();
+        mailp2 = _mailRejectOrderMailContentHasRejected();
+        mailp3 = footer
+      )$
 ###
 mailRejectMailContentHeader=
       $if(customMessage)$
@@ -100,6 +151,8 @@ mailRejectMailContentHeader=
       <p>$_hi()$,</p>
       </div>
       $endif$
+####
+#### INVITATION MAILS
 ####
 mailInvitationTitle=
     $if(sign)$
@@ -112,8 +165,16 @@ mailInvitationTitle=
 ###
 mailInvitationToSignContract=
     $mailInvitationTitle()$
-    $header:noescape()$
-    <p>
+     $nicemail(
+        mailheader= mailInvitationTitle();
+        mailp1 = header;
+        mailp2 = mailInvitationToSignContractMainP();
+        mailp3 = mailInvitationToSignContractIntructions();
+        mailp4 = legalparagraph()
+    )$
+###
+mailInvitationToSignContractMainP=
+<p>
      <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
      $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
      $whohadsignedinfo:noescape()$<br/>
@@ -121,7 +182,9 @@ mailInvitationToSignContract=
      $timetosigninfo:noescape()$
      $appendixList()$
      $sigattachlist()$
-    </p>
+</p>
+###
+mailInvitationToSignContractIntructions=
     $if(issignatory)$
     <p>$_mailInvitationToSignContractContentIfSignatoryInstruction()$</p>
     $else$
@@ -130,12 +193,21 @@ mailInvitationToSignContract=
     <a href="$link$">$link$</a> <br/>
     <br/>
     $endif$
-    $footer:noescape()$
-    $legalparagraph()$
-###
+    <BR/>
+    $footer:noescape()$ 
+
+####
 mailInvitationToSignOffer=
-    $mailInvitationTitle()$
-    $header:noescape()$
+     $mailInvitationTitle()$
+     $nicemail(
+        mailheader= mailInvitationTitle();
+        mailp1 = header;
+        mailp2 = mailInvitationToSignOfferMainP();
+        mailp3 = mailInvitationToSignOfferIntructions();
+        mailp4 = legalparagraph()
+    )$
+###
+mailInvitationToSignOfferMainP=
     <p>
      <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
      $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
@@ -145,6 +217,8 @@ mailInvitationToSignOffer=
      $appendixList()$
      $sigattachlist()$
     </p>
+###
+mailInvitationToSignOfferIntructions=
     $if(issignatory)$
     <p>$_mailInvitationToSignOfferContentIfSignatoryInstruction()$</p>
     $else$
@@ -154,11 +228,18 @@ mailInvitationToSignOffer=
     <br/>
     $endif$
     $footer:noescape()$
-    $legalparagraph()$
 ###
 mailInvitationToSignOrder=
     $mailInvitationTitle()$
-    $header:noescape()$
+    $nicemail(
+        mailheader= mailInvitationTitle();
+        mailp1 = header;
+        mailp2 = mailInvitationToSignOrderMainP();
+        mailp3 = mailInvitationToSignOrderIntructions();
+        mailp4 = legalparagraph()
+    )$
+####
+mailInvitationToSignOrderMainP=
     <p>
      <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
      $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
@@ -168,6 +249,8 @@ mailInvitationToSignOrder=
      $appendixList()$
      $sigattachlist()$
     </p>
+####
+mailInvitationToSignOrderIntructions=
     $if(issignatory)$
     <p>$_mailInvitationToSignOrderContentIfSignatoryInstruction()$</p>
     $else$
@@ -177,8 +260,7 @@ mailInvitationToSignOrder=
     <br/>
     $endif$
     $footer:noescape()$
-    $legalparagraph()$
-###
+####
 mailInvitationToSignContractDefaultHeader=
     <p>$_hi()$ $personname$,
       <br/><br/>
@@ -210,11 +292,18 @@ mailInvitationToViewDefaultHeader=
        $_mailInvitationToViewDefaultHeaderWithService()$  
       $endif$
      </p>
-####
+###
+###
+### Reminding mails - SIGNED
+###
+###
 remindMailSigned=
     $documenttitle$
-    $header:noescape()$
-    $footer:noescape()$
+    $nicemail(
+        mailheader= documenttitle;
+        mailp1 = header;
+        mailp2 = footer
+    )$
 ###
 remindMailSignedContractStandardHeader=
     <span>
@@ -251,7 +340,11 @@ remindMailSignedOrderStandardHeader=
        $endif$
       </p>
     </span>
-####
+###
+###
+### Reminding mails - NOT SIGNED
+###
+###
 remindMailNotSignedContractStandardHeader=
     <span>
       <p>$_hi()$ <strong>$personname$</strong></p>
@@ -277,7 +370,9 @@ remindMailNotSignedContract=
         mailheader=_remindMailNotSignedTitle();
         mailp1=header;
         mailp2=remindMailNotSignedContractMainP();
-        mailp3= legalparagraph()
+        mailp3=_remindMailNotSignedContractContentInstruction();
+        mailp4=footer;
+        mailp5= legalparagraph()
     )$
 #####
 remindMailNotSignedContractMainP=
@@ -287,12 +382,20 @@ remindMailNotSignedContractMainP=
     $whohadsignedinfo:noescape()$<br/>
     $timetosigninfo()$
     $appendixList()$
-    $footer:noescape()$
 </p>
 #####
 remindMailNotSignedOffer=
     $_remindMailNotSignedTitle()$
-    $header:noescape()$
+    $nicemail(
+        mailheader=_remindMailNotSignedTitle();
+        mailp1=header;
+        mailp2=remindMailNotSignedOfferMainP();
+        mailp3=_remindMailNotSignedOfferContentInstruction();
+        mailp4=footer;
+        mailp5= legalparagraph()
+    )$
+#####
+remindMailNotSignedOfferMainP=
     <span>
       <p>
         <i>$_remindMailNotSignedOfferContentInfo()$</i><br/>
@@ -305,12 +408,19 @@ remindMailNotSignedOffer=
       </p>
       <p>$_remindMailNotSignedOfferContentInstruction()$</p>
     </span>
-    $footer:noescape()$
-    $legalparagraph()$
-#####
+###
 remindMailNotSignedOrder=
     $_remindMailNotSignedTitle()$
-    $header:noescape()$
+    $nicemail(
+        mailheader=_remindMailNotSignedTitle();
+        mailp1=header;
+        mailp2=remindMailNotSignedOrderMainP();
+        mailp3=_remindMailNotSignedOrderContentInstruction();
+        mailp4=footer;
+        mailp5= legalparagraph()
+    )$
+###
+remindMailNotSignedOrderMainP=
     <span>
       <p><i>$_remindMailNotSignedOrderContentInfo()$</i><br/>
         $_remindMailNotSignedOrderContentPartys()$ $partnersinfo:noescape()$<br/>
@@ -320,8 +430,9 @@ remindMailNotSignedOrder=
       </p>
       <p>$_remindMailNotSignedOrderContentInstruction()$</p>
     </span>
-    $footer:noescape()$
-    $legalparagraph()$
+###
+###
+###
 ###
 signupLinkEmailPart=
     <p>$_signupLinkEmailPartUserName()$ $email$</p>

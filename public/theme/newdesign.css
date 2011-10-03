@@ -740,6 +740,9 @@
 .modal-container.email-preview {
     width: 780px;
 }
+.email-preview  .modal-body{
+    background-color: #f5f5f5;
+}
 
 .modal-container:after {
 	border: 10px solid #000;

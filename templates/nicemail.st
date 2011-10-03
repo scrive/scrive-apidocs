@@ -1,8 +1,8 @@
 ######
 nicemail= 
-<div style="font-family:'Lucida Grande', sans-serif;margin:0px;padding:0px;">
+<div style="font-family:'Lucida Grande', sans-serif;margin-top:0px;padding:0px;">
 
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="f5f5f5" style="border:1px solid #DDDDDD; margin: auto;"><tr><td>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin: auto;"><tr><td>
     <!--
     <table id="top-message" cellpadding="0" cellspacing="0" width="600" align="center" style="font-family:sans-serif;font-weight:bold;color:#aaaaaa;font-size:10px;">
         <tr>
@@ -12,10 +12,10 @@ nicemail=
         </tr>
     </table>
     -->
-    <table id="main" cellpadding="0" cellspacing="15" width="600" align="center" style="margin: auto;">
+    <table id="main" cellpadding="0" cellspacing="15" width="600" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
         <tr>
             <td style="padding:10px; margin: auto;">
-                <table id="header" width="580" cellpadding="9" bgcolor="212121" cellspacing="0" align="center" style="color:#fff;text-align:center;margin:auto;">
+                <table id="header" width="580" cellpadding="9" bgcolor="212121" cellspacing="0" align="center" style="color:#ffffff;text-align:center;margin:auto;">
                     <tr>
                         <td style="text-align:left; margin: auto;padding:10px;"><img src="$ctxhostpart$/img/email-logo.png" width="70" height="22" /></td>
                     </tr>
@@ -53,6 +53,7 @@ nicemail=
                     $if(mailp2)$ $nicemailparagraph(p=mailp2)$ $endif$
                     $if(mailp3)$ $nicemailparagraph(p=mailp3)$ $endif$
                     $if(mailp4)$ $nicemailparagraph(p=mailp4)$ $endif$
+                    $if(mailp5)$ $nicemailparagraph(p=mailp5)$ $endif$
                 </table>
             </td>
         </tr>
