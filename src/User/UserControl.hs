@@ -37,7 +37,8 @@ import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Util.KontraLinkUtils
 import Util.MonadUtils
-
+import Stats.Control
+import User.Utils
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -45,18 +46,6 @@ checkPasswordsMatch p1 p2 =
        then Right ()
        else Left flashMessagePasswordsDontMatch
 
-{- |
-    This is really a util function that I couldn't figure out a better
-    place for.  TODO put in better place!
-    
-    This looks up the company for the given user, if the user doesn't
-    have a company then it returns Nothing.
--}
-getCompanyForUser :: Kontrakcja m => User -> m (Maybe Company)
-getCompanyForUser user =
-  case usercompany user of
-    Just companyid -> runDBQuery $ GetCompany companyid
-    _ -> return Nothing
 
 handleUserGet :: Kontrakcja m => m Response
 handleUserGet = do
@@ -187,8 +176,10 @@ handlePostUserLocale = do
   _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
          }
-  return LoopBack
-  
+  referer <- getField "referer"
+  case referer of
+    Just _ -> return BackToReferer
+    Nothing -> return LoopBack
 
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
@@ -236,7 +227,8 @@ friendsSortSearchPage  =
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
 handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
     Context{ctxmaybeuser = Just user} <- getContext
-    companyaccounts <- runDBQuery $ GetCompanyAccounts companyid
+    companyaccounts' <- runDBQuery $ GetCompanyAccounts companyid
+    let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
     params <- getListParams
     content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
@@ -590,6 +582,8 @@ handleAcceptTOSPost = withUserPost $ do
   case tos of
     Just True -> do
       _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
+      user <- guardJustM $ runDBQuery $ GetUserByID userid
+      _ <- addUserSignTOSStatEvent user
       addFlashM flashMessageUserDetailsSaved
       return LinkUpload
     Just False -> do
@@ -695,8 +689,8 @@ handleAccountSetupGet aid hash = do
       activationPage muser mcompany = do
         extendActionEvalTimeToOneDayMinimum aid
         addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        linkmain <- getHomeOrUploadLink
-        sendRedirect linkmain
+        ctx <- getContext
+        sendRedirect $ LinkHome (getLocale ctx)
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
@@ -916,6 +910,8 @@ handleActivate aid hash signupmethod actvuser = do
                     _ <- dbUpdate $ AcceptTermsOfService (userid user) (ctxtime ctx)
                     _ <- dbUpdate $ SetSignupMethod (userid user) signupmethod
                     return ()
+                  tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
+                  _ <- addUserSignTOSStatEvent tosuser
                   dropExistingAction actionid
                   logUserToContext $ Just user
                   return $ Just user
@@ -1089,7 +1085,7 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
   Context{ctxmaybeuser = Just user} <- getContext
   companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
   -- filter out the current user, they don't want to see themselves in the list
-  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
+  let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",

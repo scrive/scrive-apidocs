@@ -6,6 +6,7 @@ import DB.Classes
 import User.Model
 import Doc.DocState
 import Doc.DocUtils
+import Doc.DocStateData()
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
@@ -16,10 +17,13 @@ import MinutesTime
 
 import Happstack.State
 import Data.Maybe
+import Data.Convertible(convert)
+import Database.HDBC(SqlValue)
 import Database.HDBC.PostgreSQL
 import Control.Monad
 import Data.List
 import Test.Framework
+import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
 
 docStateTests :: Connection -> Test
@@ -111,7 +115,9 @@ docStateTests conn = testGroup "DocState" [
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
   testThat "documentFromSignatoryData succeeds when document exists" conn testDocumentFromSignatoryDataSucceedsExists,
-  testThat "TimeoutDocument fails when document is not signable" conn testTimeoutDocumentNonSignableLeft
+  testThat "TimeoutDocument fails when document is not signable" conn testTimeoutDocumentNonSignableLeft,
+  testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId,
+  testProperty "jsonableDeriveConvertibleId" propjsonableDeriveConvertibleId
   ]
 
 testNewDocumentDependencies :: DB ()
@@ -749,3 +755,11 @@ assertInvariants document = do
   case invariantProblems now document of
     Nothing -> assertSuccess
     Just a  -> assertFailure a
+
+propbitfieldDeriveConvertibleId :: [SignatoryRole] -> Bool
+propbitfieldDeriveConvertibleId ss =
+  let ss' = nub (sort ss)
+  in ss' == convert (convert ss' :: SqlValue)
+
+propjsonableDeriveConvertibleId :: DocumentStatus -> Bool
+propjsonableDeriveConvertibleId ss = ss == convert (convert ss :: SqlValue)

@@ -42,6 +42,7 @@ import Doc.DocInfo
 import Util.MonadUtils
 import Doc.Invariants
 import Stats.Control
+import User.Utils
 
 import Control.Applicative
 import Control.Concurrent
@@ -1808,6 +1809,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
 
 mainPage :: Kontrakcja m => m String
 mainPage =  do
+    guardLoggedIn
     showTemplates <- isFieldSet "showTemplates"
     tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess

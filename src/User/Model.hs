@@ -195,13 +195,15 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
     is <- fetchInviteInfos st []
     oneObjectReturnedGuard is
     where
-      fetchInviteInfos st acc = fetchRow st >>= maybe (return acc)
-        (\[inviter_id, invite_time, invite_type
-         ] -> fetchInviteInfos st $ InviteInfo {
-             userinviter = fromSql inviter_id
-           , invitetime = fromSql invite_time
-           , invitetype = fromSql invite_type
-         } : acc)
+      fetchInviteInfos st acc = fetchRow st >>= maybe (return acc) f
+        where f [inviter_id, invite_time, invite_type
+               ] = fetchInviteInfos st $ InviteInfo {
+                   userinviter = fromSql inviter_id
+                 , invitetime = fromSql invite_time
+                 , invitetype = fromSql invite_type
+               } : acc
+              f l = error $ "fetchInviteInfos: unexpected row: "++show l
+              
 
 data GetUserMailAPI = GetUserMailAPI UserID
 instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
@@ -211,13 +213,14 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
     mapis <- fetchUserMailAPIs st []
     oneObjectReturnedGuard mapis
     where
-      fetchUserMailAPIs st acc = fetchRow st >>= maybe (return acc)
-        (\[key, daily_limit, sent_today
-         ] -> fetchUserMailAPIs st $ UserMailAPI {
-             umapiKey = fromSql key
-           , umapiDailyLimit = fromSql daily_limit
-           , umapiSentToday = fromSql sent_today
-         } : acc)
+      fetchUserMailAPIs st acc = fetchRow st >>= maybe (return acc) f
+        where f [key, daily_limit, sent_today
+                ] = fetchUserMailAPIs st $ UserMailAPI {
+                    umapiKey = fromSql key
+                  , umapiDailyLimit = fromSql daily_limit
+                  , umapiSentToday = fromSql sent_today
+                } : acc
+              f l = error $ "fetchUserMailAPIs: unexpected row: "++show l
 
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
@@ -563,40 +566,41 @@ selectUsersSQL = "SELECT "
  ++ " "
 
 fetchUsers :: Statement -> [User] -> IO [User]
-fetchUsers st acc = fetchRow st >>= maybe (return acc)
-  (\[uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
-   , signup_method, service_id, company_id, first_name
-   , last_name, personal_number, company_position, phone, mobile, email
-   , preferred_design_mode, lang, region, system_server
-   ] -> fetchUsers st $ User {
-       userid = fromSql uid
-     , userpassword = case (fromSql password, fromSql salt) of
-                           (Just pwd, Just salt') -> Just Password {
-                               pwdHash = pwd
-                             , pwdSalt = salt'
-                           }
-                           _ -> Nothing
-     , useriscompanyadmin = fromSql is_company_admin
-     , useraccountsuspended = fromSql account_suspended
-     , userhasacceptedtermsofservice = fromSql has_accepted_terms_of_service
-     , usersignupmethod = fromSql signup_method
-     , userinfo = UserInfo {
-         userfstname = fromSql first_name
-       , usersndname = fromSql last_name
-       , userpersonalnumber = fromSql personal_number
-       , usercompanyposition = fromSql company_position
-       , userphone = fromSql phone
-       , usermobile = fromSql mobile
-       , useremail = fromSql email
-     }
-     , usersettings = UserSettings {
-         preferreddesignmode = fromSql preferred_design_mode
-       , locale = mkLocale (fromSql region) (fromSql lang)
-       , systemserver = fromSql system_server
-     }
-     , userservice = fromSql service_id
-     , usercompany = fromSql company_id
-   } : acc)
+fetchUsers st acc = fetchRow st >>= maybe (return acc) f
+  where f [uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
+          , signup_method, service_id, company_id, first_name
+          , last_name, personal_number, company_position, phone, mobile, email
+          , preferred_design_mode, lang, region, system_server
+          ] = fetchUsers st $ User {
+              userid = fromSql uid
+            , userpassword = case (fromSql password, fromSql salt) of
+                                  (Just pwd, Just salt') -> Just Password {
+                                      pwdHash = pwd
+                                    , pwdSalt = salt'
+                                  }
+                                  _ -> Nothing
+            , useriscompanyadmin = fromSql is_company_admin
+            , useraccountsuspended = fromSql account_suspended
+            , userhasacceptedtermsofservice = fromSql has_accepted_terms_of_service
+            , usersignupmethod = fromSql signup_method
+            , userinfo = UserInfo {
+                userfstname = fromSql first_name
+              , usersndname = fromSql last_name
+              , userpersonalnumber = fromSql personal_number
+              , usercompanyposition = fromSql company_position
+              , userphone = fromSql phone
+              , usermobile = fromSql mobile
+              , useremail = fromSql email
+            }
+            , usersettings = UserSettings {
+                preferreddesignmode = fromSql preferred_design_mode
+              , locale = mkLocale (fromSql region) (fromSql lang)
+              , systemserver = fromSql system_server
+            }
+            , userservice = fromSql service_id
+            , usercompany = fromSql company_id
+          } : acc
+        f l = error $ "fetchUsers: unexpected row: "++show l
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take

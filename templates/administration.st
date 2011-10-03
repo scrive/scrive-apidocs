@@ -2,7 +2,9 @@
 adminsmain=
 <strong>Stats CSVs</strong>
 <p><a href="/adminonly/allstatscsv">Download the CSV containing
-        all signature stats</a></p>
+    all signature stats</a></p>
+<p><a href="/adminonly/userstatscsv">Download the CSV containing
+    all user stats</a></p>
 
     <strong>Sales Tools</strong>
     <table><tbody>
@@ -459,7 +461,7 @@ admincompanyusers=
           </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer required" value="Default"/>
+            <td> <input type="button" class="editer " value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
            </td>
           </tr>
@@ -666,7 +668,7 @@ pageStats=
          </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer required" value="Default"/>
+            <td> <input type="button" class="editer" value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
 
            </td>

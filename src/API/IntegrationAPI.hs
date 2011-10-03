@@ -54,6 +54,7 @@ import Util.HasSomeUserInfo
 import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
+import Stats.Control
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (debug)
@@ -223,7 +224,14 @@ userFromTMP uTMP company = do
                 let u = fromJust mu
                 tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
                 when (not tos_accepted) $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
-                return u
+                mtosuser <- runDBQuery $ GetUserByID (userid u)                
+                when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
+                let tosuser = fromJust mtosuser
+
+                Context{ctxtime} <- getContext
+                _ <- addUserIDSignTOSStatEvent (userid u) ctxtime (usercompany u) (userservice u)
+
+                return tosuser
     info_set <- runDBUpdate $ SetUserInfo (userid user) (userinfo user)
             {
               userfstname = fromMaybe (getFirstName user) $ fstname uTMP

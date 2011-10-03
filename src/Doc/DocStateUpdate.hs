@@ -27,9 +27,9 @@ import qualified Data.ByteString as BS
 import Doc.DocUtils
 import Control.Applicative
 import User.Model
-import User.UserControl
 import Control.Monad.Trans
 import Doc.DocStorage
+import User.Utils
 
 {- |
    Mark document seen securely.

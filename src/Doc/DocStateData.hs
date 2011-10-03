@@ -85,7 +85,7 @@ instance Show SignOrder where
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Bounded, Enum, Typeable)
 
 data SignatureProvider = BankIDProvider
                        | TeliaProvider
@@ -390,7 +390,7 @@ data SignatoryLink = SignatoryLink
     deriving (Eq, Ord, Typeable)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
-    deriving (Eq, Ord, Typeable, Show)
+    deriving (Eq, Ord, Bounded, Enum, Typeable, Show)
 
 instance Version SignatoryRole
 

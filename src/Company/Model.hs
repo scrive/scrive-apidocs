@@ -149,21 +149,22 @@ selectCompaniesSQL = "SELECT"
   ++ " "
 
 fetchCompanies :: Statement -> [Company] -> IO [Company]
-fetchCompanies st acc = fetchRow st >>= maybe (return acc)
-  (\[cid, eid, sid, name, number, address, zip', city, country
-   ] -> fetchCompanies st $ Company {
-       companyid = fromSql cid
-     , companyexternalid = fromSql eid
-     , companyservice = fromSql sid
-     , companyinfo = CompanyInfo {
-         companyname = fromSql name
-       , companynumber = fromSql number
-       , companyaddress = fromSql address
-       , companyzip = fromSql zip'
-       , companycity = fromSql city
-       , companycountry = fromSql country
-     }
-   } : acc)
+fetchCompanies st acc = fetchRow st >>= maybe (return acc) f
+  where f [cid, eid, sid, name, number, address, zip', city, country
+         ] = fetchCompanies st $ Company {
+             companyid = fromSql cid
+           , companyexternalid = fromSql eid
+           , companyservice = fromSql sid
+           , companyinfo = CompanyInfo {
+               companyname = fromSql name
+             , companynumber = fromSql number
+             , companyaddress = fromSql address
+             , companyzip = fromSql zip'
+             , companycity = fromSql city
+             , companycountry = fromSql country
+           }
+         } : acc
+        f l = error $ "fetchCompanies: unexpected row: "++show l
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take

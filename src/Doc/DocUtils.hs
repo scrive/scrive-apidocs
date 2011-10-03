@@ -317,6 +317,11 @@ isCurrentSignatory signorder siglink =
   (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
+type CustomSignatoryField = (SignatoryField, BS.ByteString, Bool)
+
+filterCustomField :: [SignatoryField] -> [CustomSignatoryField]
+filterCustomField l = [(sf, cs, cb) | sf@SignatoryField{sfType = CustomFT cs cb} <- l]
+
 isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True
 isFieldCustom _ = False
