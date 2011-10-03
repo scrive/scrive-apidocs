@@ -34,6 +34,7 @@ module Administration.AdministrationControl(
           , handleStatistics
           , handleBackdoorQuery
           , handleFixForBug510
+          , handleFixForAdminOnlyBug
           , resealFile
           , handleCheckSigLinkIDUniqueness
           ) where
@@ -680,6 +681,34 @@ handleBackdoorQuery email = onlySuperUser $ onlyBackdoorOpen $ do
   minfo <- query $ GetBackdoorInfoByEmail (Email $ fromString email)
   let mailcontent = maybe "No email found" (toString . bdContent) minfo
   renderFromBody TopEmpty kontrakcja mailcontent
+
+{- |
+    There was a bug where the adminonly upgrade from private to company user
+    wasn't connecting the new company to the user's existing docs.
+    This should fix any of those docs affected by that bug.
+-}
+handleFixForAdminOnlyBug :: Kontrakcja m => m Response
+handleFixForAdminOnlyBug = onlySuperUser $ do
+  users <- runDBQuery GetUsers
+  mapM_ maybeFixForUser users
+  Log.debug $ "finished adminonly bug fix"
+  sendRedirect LinkUpload
+  where
+    maybeFixForUser user = do
+      userdocs <- query $ GetDocumentsByUser user
+      mapM_ (maybeFixForUserAndDoc user) userdocs
+      return ()
+    maybeFixForUserAndDoc user doc =
+      if isFixNeeded user doc
+        then do
+          Log.debug $ "fixing for doc " ++ (show $ documentid doc) ++ " and user " ++ (show $ userid user) ++ " " ++ (show $ getEmail user)
+          _ <- update $ AdminOnlySaveForUser (documentid doc) user
+          return ()
+        else return ()
+    isFixNeeded user doc =
+      any (isBadSigLink user) (documentsignatorylinks doc)
+    isBadSigLink user siglink =
+      Just (userid user) == maybesignatory siglink && usercompany user /= maybecompany siglink
 
 {- |
     This handles fixing of documents broken by bug 510, which means

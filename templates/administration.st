@@ -461,7 +461,7 @@ admincompanyusers=
           </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer required" value="Default"/>
+            <td> <input type="button" class="editer " value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
            </td>
           </tr>
@@ -668,7 +668,7 @@ pageStats=
          </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer required" value="Default"/>
+            <td> <input type="button" class="editer" value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
 
            </td>

@@ -1808,6 +1808,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
 
 mainPage :: Kontrakcja m => m String
 mainPage =  do
+    guardLoggedIn
     showTemplates <- isFieldSet "showTemplates"
     tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess

@@ -18,6 +18,10 @@ Flag server
   Description: Build server
   Default: True
 
+Flag server-coverage
+  Description: Build server with coverage instrumentation
+  Default: False
+
 Flag test
   Description: Build tests
   Default: True
@@ -74,6 +78,10 @@ Flag test-csvutil
   Description: Build csvutil testsuite
   Default: True
 
+Flag test-locale
+  Description: Build locale testsuite
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
   Default: False
@@ -89,6 +97,8 @@ Executable kontrakcja-server
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
     GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded
@@ -232,6 +242,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_USERSTATE
   if !flag(test-csvutil)
     cpp-options: -DNO_CSVUTIL
+  if !flag(test-locale)
+    cpp-options: -DNO_LOCALE
   if !flag(test-redirect)
     cpp-options: -DNO_REDIRECT
   if !flag(test-docstatequery)

@@ -7,6 +7,8 @@ module AppControl
     , AppGlobals(..)
     , defaultAWSAction
     , handleLoginPost
+    , getDocumentLocale
+    , getUserLocale
     ) where
 
 import AppConf
@@ -107,26 +109,17 @@ data AppGlobals
 -}
 handleRoutes :: Locale -> Kontra Response
 handleRoutes locale = msum [
-     -- static pages  --TODO EM make this nice!
        regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
      , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome locale
-
-     , regionDir locale $ langDir locale $ dirByLang locale "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
-     , dirByLang locale "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan locale
-     , regionDir locale $ langDir locale $ dirByLang locale "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
-     , dirByLang locale "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity locale
-     , regionDir locale $ langDir locale $ dirByLang locale "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
-     , dirByLang locale "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal locale
-     , regionDir locale $ langDir locale $ dirByLang locale "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
-     , dirByLang locale "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy locale
-     , regionDir locale $ langDir locale $ dirByLang locale "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
-     , dirByLang locale "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms locale
-     , regionDir locale $ langDir locale $ dirByLang locale "om-scrive" "about" $ hGetAllowHttp0 $ handleAboutPage
-     , dirByLang locale "om-scrive" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout locale
-     , regionDir locale $ langDir locale $ dirByLang locale "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
-     , dirByLang locale "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners locale
-     , regionDir locale $ langDir locale $ dirByLang locale "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
-     , dirByLang locale "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients locale
+     
+     , publicDir locale "priser" "pricing" LinkPriceplan handlePriceplanPage
+     , publicDir locale "sakerhet" "security" LinkSecurity handleSecurityPage
+     , publicDir locale "juridik" "legal" LinkLegal handleLegalPage
+     , publicDir locale "sekretesspolicy" "privacy-policy" LinkPrivacyPolicy handlePrivacyPolicyPage
+     , publicDir locale "allmana-villkor" "terms" LinkTerms handleTermsPage
+     , publicDir locale "om-scrive" "about" LinkAbout handleAboutPage
+     , publicDir locale "partners" "partners" LinkPartners handlePartnersPage
+     , publicDir locale "kunder" "clients" LinkClients handleClientsPage
 
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -162,7 +155,7 @@ handleRoutes locale = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "upload" $ hGetAllowHttp0 $ handleUploadPage
+     , dir "upload" $ hGet0 $ toK0 $ DocControl.mainPage
      , dir "locale" $ hPost0 $ toK0 $ UserControl.handlePostUserLocale
      , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
@@ -300,6 +293,7 @@ handleRoutes locale = msum [
 
      -- this stuff is for a fix
      , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
+     , dir "adminonly" $ dir "adminonlybugfix" $ hGet0 $ toK0 $ Administration.handleFixForAdminOnlyBug
 
      , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet0 $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
 
@@ -358,11 +352,25 @@ handleRoutes locale = msum [
      ]
 
 {- |
+    This is a helper function for routing a public dir.
+-}
+publicDir :: Locale -> String -> String -> (Locale -> KontraLink) -> Kontra Response -> Kontra Response
+publicDir locale swedish english link handler = msum [
+    -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
+    regionDir locale $ langDir locale $ dirByLang locale swedish english $ hGetAllowHttp0 $ handler
+    
+    -- if they use the swedish name without region/lang we should redirect to the correct swedish locale
+  , dir swedish $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_SE)
+  
+    -- if they use the english name without region/lang we should redirect to the correct british locale
+  , dir english $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
+  ]
+
+{- |
     If the current request is referring to a document then this will
     return the locale of that document.
 -}
-getDocumentLocale :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
-                       m (Maybe Locale)
+getDocumentLocale :: (ServerMonad m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
@@ -373,7 +381,7 @@ getDocumentLocale = do
     Determines the locale of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getUserLocale :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) => 
+getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
                    Connection -> Maybe User -> m Locale
 getUserLocale conn muser = do
   rq <- askRq
@@ -432,21 +440,19 @@ dirByLang locale swedishdir englishdir
 
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser } <- getContext
+  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
-  response <- case ctxmaybeuser of
-                Just _ -> V.simpleResponse =<< firstPage ctx False Nothing Nothing
-                Nothing -> V.simpleResponse =<< firstPage ctx loginOn referer email
-  clearFlashMsgs
-  return $ Left response
-
-handleUploadPage :: Kontra (Either Response (Either KontraLink String))
-handleUploadPage = do
-  Context{ ctxmaybeuser,ctxservice } <- getContext
   case (ctxmaybeuser, ctxservice) of
-    (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
+    (Just _user, _) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
+    (Nothing, Nothing) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
     _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
@@ -597,7 +603,6 @@ appHandler appConf appGlobals = do
         liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
-    createContext :: Request -> Session -> ServerPartT IO Context
     createContext rq session = do
       hostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any

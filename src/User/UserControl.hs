@@ -176,8 +176,10 @@ handlePostUserLocale = do
   _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
          }
-  return LoopBack
-  
+  referer <- getField "referer"
+  case referer of
+    Just _ -> return BackToReferer
+    Nothing -> return LoopBack
 
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
@@ -225,7 +227,8 @@ friendsSortSearchPage  =
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
 handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
     Context{ctxmaybeuser = Just user} <- getContext
-    companyaccounts <- runDBQuery $ GetCompanyAccounts companyid
+    companyaccounts' <- runDBQuery $ GetCompanyAccounts companyid
+    let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
     params <- getListParams
     content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
@@ -686,8 +689,8 @@ handleAccountSetupGet aid hash = do
       activationPage muser mcompany = do
         extendActionEvalTimeToOneDayMinimum aid
         addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        linkmain <- getHomeOrUploadLink
-        sendRedirect linkmain
+        ctx <- getContext
+        sendRedirect $ LinkHome (getLocale ctx)
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
@@ -1082,7 +1085,7 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
   Context{ctxmaybeuser = Just user} <- getContext
   companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
   -- filter out the current user, they don't want to see themselves in the list
-  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
+  let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",

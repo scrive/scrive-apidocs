@@ -204,31 +204,32 @@ selectServicesSQL = "SELECT"
   ++ " "
 
 fetchServices :: Statement -> [Service] -> IO [Service]
-fetchServices st acc = fetchRow st >>= maybe (return acc)
-  (\[sid, password, salt, admin_id, location, email_from_address, mail_footer, button1
-   , button2, buttons_text_color, background, overlay_background, bars_background, logo
-   ] -> fetchServices st $ Service {
-       serviceid = fromSql sid
-     , servicesettings = ServiceSettings {
-         servicepassword = case (fromSql password, fromSql salt) of
-                                (Just pwd, Just salt') -> Just Password {
-                                    pwdHash = pwd
-                                  , pwdSalt = salt'
-                                }
-                                _ -> Nothing
-         , serviceadmin = fromSql admin_id
-         , servicelocation = fromSql location
-         , servicemailfromaddress = fromSql email_from_address
-       }
-     , serviceui = ServiceUI {
-         servicemailfooter = fromSql mail_footer
-       , servicebuttons = case (fromSql button1, fromSql button2) of
-                               (Just b1, Just b2) -> Just (b1, b2)
-                               _ -> Nothing
-       , servicebuttonstextcolor = fromSql buttons_text_color
-       , servicebackground = fromSql background
-       , serviceoverlaybackground = fromSql overlay_background
-       , servicebarsbackground = fromSql bars_background
-       , servicelogo = fromSql logo
-     }
-   } : acc)
+fetchServices st acc = fetchRow st >>= maybe (return acc) f
+  where f [sid, password, salt, admin_id, location, email_from_address, mail_footer, button1
+          , button2, buttons_text_color, background, overlay_background, bars_background, logo
+          ] = fetchServices st $ Service {
+             serviceid = fromSql sid
+           , servicesettings = ServiceSettings {
+               servicepassword = case (fromSql password, fromSql salt) of
+                                      (Just pwd, Just salt') -> Just Password {
+                                          pwdHash = pwd
+                                        , pwdSalt = salt'
+                                      }
+                                      _ -> Nothing
+               , serviceadmin = fromSql admin_id
+               , servicelocation = fromSql location
+               , servicemailfromaddress = fromSql email_from_address
+             }
+           , serviceui = ServiceUI {
+               servicemailfooter = fromSql mail_footer
+             , servicebuttons = case (fromSql button1, fromSql button2) of
+                                     (Just b1, Just b2) -> Just (b1, b2)
+                                     _ -> Nothing
+             , servicebuttonstextcolor = fromSql buttons_text_color
+             , servicebackground = fromSql background
+             , serviceoverlaybackground = fromSql overlay_background
+             , servicebarsbackground = fromSql bars_background
+             , servicelogo = fromSql logo
+           }
+         } : acc
+        f l = error $ "fetchServices: unexpected row: "++show l
