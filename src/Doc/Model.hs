@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches#-}
+{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches #-}
+{-# LANGUAGE CPP #-}
 
 module Doc.Model (
     module File.File
@@ -329,6 +330,7 @@ instance DBQuery FileModTime MinutesTime where
   dbQuery (FileModTime fid) = wrapDB $ \conn -> do
     unimplemented "FileModTime"
 
+#if 0
 data FileMovedToAWS = FileMovedToAWS FileID BS.ByteString BS.ByteString
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate FileMovedToAWS Document where
@@ -340,6 +342,7 @@ data FileMovedToDisk = FileMovedToDisk FileID FilePath
 instance DBUpdate FileMovedToDisk Document where
   dbUpdate (FileMovedToDisk fid filepath) = wrapDB $ \conn -> do
     unimplemented "FileMovedToDisk"
+#endif
 
 data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
                                     deriving (Eq, Ord, Show, Typeable)
@@ -433,11 +436,13 @@ instance DBQuery GetDocumentsSharedInCompany [Document] where
   dbQuery (GetDocumentsSharedInCompany user) = wrapDB $ \conn -> do
     unimplemented "GetDocumentsSharedInCompany"
 
+#if 0
 data GetFilesThatShouldBeMovedToAmazon = GetFilesThatShouldBeMovedToAmazon
                                          deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetFilesThatShouldBeMovedToAmazon [File] where
   dbQuery (GetFilesThatShouldBeMovedToAmazon) = wrapDB $ \conn -> do
     unimplemented "GetFilesThatShouldBeMovedToAmazon"
+#endif
 
 data GetMagicHash = GetMagicHash
                     deriving (Eq, Ord, Show, Typeable)

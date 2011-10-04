@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE CPP #-}
 
 module Doc.DocState
     ( module Doc.DocStateData
@@ -18,8 +19,8 @@ module Doc.DocState
     , AuthorSendDocument(..)
     , RejectDocument(..)
     , FileModTime(..)
-    , FileMovedToAWS(..)
-    , FileMovedToDisk(..)
+    -- , FileMovedToAWS(..)
+    -- , FileMovedToDisk(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
@@ -31,7 +32,7 @@ module Doc.DocState
     , GetDocumentsByUser(..)
     , GetDeletedDocumentsByCompany(..)
     , GetDeletedDocumentsByUser(..)
-    , GetFilesThatShouldBeMovedToAmazon(..)
+    -- , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
     , MarkDocumentSeen(..)
@@ -337,6 +338,7 @@ blankDocument =
           , documentregion               = defaultValue
           }
 
+#if 0
 fileMovedToAWS :: FileID
                -> BS.ByteString
                -> BS.ByteString
@@ -367,6 +369,8 @@ fileMovedTo fid fstorage = do
     movedsig sa@SignatoryAttachment{signatoryattachmentfile=Just file} = sa {signatoryattachmentfile = Just (moved1 file)}
     movedsig sa = sa
     movedaut aa@AuthorAttachment{authorattachmentfile = file} = aa {authorattachmentfile = moved1 file}
+
+#endif
 
 {- |
     Gets the document for the given FileID.  This includes documents where
@@ -1207,6 +1211,7 @@ cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
         AwaitingAuthor -> Right canceledDocument
         _ -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
+#if 0
 {- |
     Gathers together all the files in the system attached to documents.
     This excludes all documents where documentdeleted is True.
@@ -1223,6 +1228,7 @@ getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
       getID file@File{ filestorage = FileStorageMemory _ } = [file]
       getID _ = [] in
   concatMap getID allFiles
+#endif
 
 
 {- |
@@ -1682,11 +1688,11 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
-                        , 'fileMovedToAWS
-                        , 'fileMovedToDisk
+                        -- , 'fileMovedToAWS
+                        -- , 'fileMovedToDisk
                         , 'deleteSigAttachment
                           -- admin only area follows
-                        , 'getFilesThatShouldBeMovedToAmazon
+                        -- , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
                         , 'getUniqueSignatoryLinkID

@@ -19,7 +19,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import Doc.DocState
+import File.File
 import Misc (concatChunks)
 import qualified AppLogger as Log
 

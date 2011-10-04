@@ -43,7 +43,6 @@ import qualified Control.Exception as E
 import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
-import Doc.DocState
 import User.Model
 import qualified User.UserState as U
 import qualified Amazon as AWS
@@ -53,6 +52,7 @@ import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Kontra
 import Misc
 import qualified MemCache
+import File.File
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
