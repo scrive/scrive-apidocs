@@ -1161,6 +1161,7 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
     field "showTemplates" showTemplates
     fieldFL "processes" $ map processFields [Contract,Offer,Order]
     field "processid" $ show <$> mdocprocess
+    field "linkupload" $ show LinkUpload
     case mdocprocess of
       Just selecteprocess -> do
         fieldF "selectedprocess" $ processFields selecteprocess
