@@ -18,15 +18,14 @@ dist/dbmodel/$(DBNAME).png:
 .PHONY : test
 test:
 	cabal install -f-server
-	rm -f dist/hpc/*.tix
-	HPCTIXDIR=dist/hpc time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
+	rm -f kontrakcja-test.tix
+	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
 # Create coverage pages from test run
 .PHONY : hpc
 hpc:
-	hpc markup --destdir=dist/hpc dist/hpc/kontrakcja-test*.tix
-	hpc report dist/hpc/kontrakcja-test*.tix
-#       Now browse dist/hpc/hpc_index.html
+	build-scripts/createCoverageReports.sh
+	echo "Now open coverage-reports/hpc_index.html"
 
 # Restore the test database to its original condition
 .PHONY : reset-test-db

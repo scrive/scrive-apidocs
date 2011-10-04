@@ -167,9 +167,9 @@ api_signatory sl = JSObject $ toJSObject $ fields
     ++
     [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]
     ++
-    [("fields", JSArray $ for (filter isFieldCustom $ signatoryfields $ signatorydetails sl) $ \SignatoryField{sfType = CustomFT label _, sfValue} -> JSObject $ toJSObject [
+    [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
         ("name",  JSString $ toJSString $ BS.toString label)
-      , ("value", JSString $ toJSString $ BS.toString sfValue)
+      , ("value", JSString $ toJSString $ BS.toString (sfValue s))
       ]
     )]
     where

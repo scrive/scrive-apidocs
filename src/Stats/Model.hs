@@ -177,28 +177,30 @@ instance DBUpdate AddUserStatEvent Bool where
       _ -> return False
 
 fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]
-fetchDocStats st acc = fetchRow st >>= maybe (return acc)
-  (\[uid, time, quantity, amount, documentid, serviceid, companyid, documenttype] -> 
-    fetchDocStats st $ DocStatEvent { seUserID       = fromSql uid
-                                    , seTime         = fromSql time
-                                    , seQuantity     = fromSql quantity
-                                    , seAmount       = fromSql amount
-                                    , seDocumentID   = DocumentID (fromSql documentid)
-                                    , seServiceID    = fromSql serviceid
-                                    , seCompanyID    = fromSql companyid
-                                    , seDocumentType = doctypeFromString $ fromSql documenttype
-                                    } : acc)
+fetchDocStats st acc = fetchRow st >>= maybe (return acc) f
+  where f [uid, time, quantity, amount, documentid, serviceid, companyid, documenttype] =
+          fetchDocStats st $ DocStatEvent { seUserID       = fromSql uid
+                                          , seTime         = fromSql time
+                                          , seQuantity     = fromSql quantity
+                                          , seAmount       = fromSql amount
+                                          , seDocumentID   = DocumentID (fromSql documentid)
+                                          , seServiceID    = fromSql serviceid
+                                          , seCompanyID    = fromSql companyid
+                                          , seDocumentType = doctypeFromString $ fromSql documenttype
+                                          } : acc
+        f l = error $ "fetchDocStats: unexpected row: "++show l
 
 fetchUserStats :: Statement -> [UserStatEvent] -> IO [UserStatEvent]
-fetchUserStats st acc = fetchRow st >>= maybe (return acc)
-  (\[uid, time, quantity, amount, serviceid, companyid] -> 
-    fetchUserStats st $ UserStatEvent { usUserID       = fromSql uid
-                                      , usTime         = fromSql time
-                                      , usQuantity     = fromSql quantity
-                                      , usAmount       = fromSql amount
-                                      , usServiceID    = fromSql serviceid
-                                      , usCompanyID    = fromSql companyid
-                                      } : acc)
+fetchUserStats st acc = fetchRow st >>= maybe (return acc) f
+  where f [uid, time, quantity, amount, serviceid, companyid] =
+          fetchUserStats st $ UserStatEvent { usUserID       = fromSql uid
+                                            , usTime         = fromSql time
+                                            , usQuantity     = fromSql quantity
+                                            , usAmount       = fromSql amount
+                                            , usServiceID    = fromSql serviceid
+                                            , usCompanyID    = fromSql companyid
+                                            } : acc
+        f l = error $ "fetchUserStats: unexpected row: "++show l
 
 
 data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID

@@ -939,11 +939,11 @@ getDocumentStatsByUser user time = do
     Sets the document's timeout time.  This will return a Left if the document isn't a signable,
     or if the document doesn't exist.
 -}
-setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents (Either String Document)
+setDocumentTimeoutTime :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
 setDocumentTimeoutTime documentid timeouttime = do
   -- check if document status change is a legal transition
   modifySignable documentid $ \doc ->
-      Right $ doc{ documenttimeouttime = Just timeouttime }
+      Right $ doc{ documenttimeouttime = Just (TimeoutTime timeouttime) }
 
 {- |
     Sets tags on a document.  This will return a Left if the document doesn't exist.

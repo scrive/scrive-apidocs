@@ -770,9 +770,9 @@ pageDocumentDesign ctx
    let
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        authorotherfields fields = sequence .
-         map (\(SignatoryField{sfType = CustomFT label _, sfValue}, i) ->
+         map (\((s, label, _), i) -> 
            renderTemplateFM "customfield" $ do
-             field "otherFieldValue" $ sfValue
+             field "otherFieldValue" $ sfValue s
              field "otherFieldName"  $ label
              field "otherFieldID"    $ "field" ++ show i
              field "otherFieldOwner" "author")
@@ -782,7 +782,7 @@ pageDocumentDesign ctx
      csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
      csvfields <- documentCsvFields document
      renderTemplateFM "pageDocumentDesign" $ do
-       fieldM "authorOtherFields" $ authorotherfields $ filter isFieldCustom $ signatoryfields $ signatorydetails authorsiglink
+       fieldM "authorOtherFields" $ authorotherfields $ filterCustomField $ signatoryfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
        fieldM "invitationMailContent" $ mailInvitationContent False ctx Sign document Nothing
@@ -972,10 +972,10 @@ signatoryLinkFields
         CompanyNumberFT -> field "companynumber" $ packToMString sfValue
         EmailFT -> field "email" $ packToMString sfValue
         CustomFT _ _ -> return ()
-      fieldFL "fields" $ for (filter isFieldCustom signatoryfields) $
-        \SignatoryField{sfType = CustomFT label _, sfValue} -> do
+      fieldFL "fields" $ for (filterCustomField signatoryfields) $
+        \(s, label, _) -> do
           field "fieldlabel" label
-          field "fieldvalue" sfValue
+          field "fieldvalue" (sfValue s)
       field "signorder" $ unSignOrder $ signatorysignorder sigdetails
       field "allowRemindForm" $ isEligibleForReminder muser document siglnk
       field "linkremind" $ show (LinkRemind document siglnk)
