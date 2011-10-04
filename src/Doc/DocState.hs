@@ -1853,7 +1853,7 @@ populateDBWithDocumentsIfEmpty = do
       forM_ (documentsignatoryattachments doc) $ \file -> do
         let msigfile = signatoryattachmentfile file
         insertFile msigfile
-        fid <- D.FileID `fmap` getUniqueID D.tableFiles
+        fid <- FileID `fmap` getUniqueID D.tableFiles
         when (isNothing msigfile) $ do
           _ <- wrapDB $ \conn -> run conn ("INSERT INTO files ("
             ++ "  id"
@@ -1867,7 +1867,7 @@ populateDBWithDocumentsIfEmpty = do
           ++ ", document_id"
           ++ ", email"
           ++ ", description) VALUES (?, ?, ?, ?)") [
-              toSql $ maybe fid (D.FileID . fromIntegral . unFileID . fileid) msigfile
+              toSql $ maybe fid (FileID . fromIntegral . unFileID . fileid) msigfile
             , toSql $ documentid doc
             , toSql $ signatoryattachmentemail file
             , toSql $ signatoryattachmentdescription file

@@ -1,6 +1,5 @@
 module File.File 
     ( File(..)
-    , module File.FileID
     , FileStorage(..)
     ) where
 
