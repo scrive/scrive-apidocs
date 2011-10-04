@@ -100,7 +100,6 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                        then fmap Just $ renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
                        else return Nothing
         field "creatorname" creatorname
-        field "documenttitle" $ BS.toString $ documenttitle document
         fieldM "link" $ do
             if forMail
                then makeFullLink ctx document $ show $ LinkSignDoc document signlink
