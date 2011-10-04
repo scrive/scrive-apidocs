@@ -21,10 +21,10 @@ addServiceAndCompanyToStats =
       _ <- run conn "ALTER TABLE doc_stat_events ADD CONSTRAINT pk_doc_stat_events (quantity, document_id)" []
       _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN service_id    TEXT       NULL" []
       _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN company_id    BIGINT     NULL" []
-      _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN document_type TEXT   NOT NULL" []
+      _ <- run conn "ALTER TABLE doc_stat_events ADD COLUMN document_type TEXT       NULL" []
       _ <- run conn "UPDATE doc_stat_events SET service_id = NULL, company_id = NULL, document_type = ? " 
            [toSql $ show $ Signable Contract]
-           
+      _ <- run conn "ALTER TABLE doc_stat_events ALTER COLUMN document_type SET   NOT NULL" []           
       _ <- runRaw conn $ "ALTER TABLE doc_stat_events"
            ++ " ADD CONSTRAINT fk_doc_stat_events_company FOREIGN KEY(company_id)"
            ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
