@@ -148,6 +148,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #sign the doc
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :css => ".modal-container" }
@@ -255,6 +256,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #sign the doc for real
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :css => ".modal-container" }
@@ -270,6 +272,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #try and sign the doc, but it should fail because we haven't uploaded an attachment
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     #make sure we get a red flash message
@@ -280,6 +283,7 @@ describe "sign view" do
     @wait.until { (@driver.find_elements :css => ".multiFileInput").length == 0 }
     
     #sign the doc for real
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :css => ".modal-container" }
@@ -295,6 +299,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #sign the doc for real
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :css => ".modal-container" }
