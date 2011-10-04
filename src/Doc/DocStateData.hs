@@ -65,7 +65,7 @@ import Misc
 import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Doc.FileID
+import File.FileID
 import Doc.JpegPages
 
 newtype Author = Author { unAuthor :: UserID }

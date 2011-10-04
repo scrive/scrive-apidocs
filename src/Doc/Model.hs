@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches#-}
 
 module Doc.Model (
-    module Doc.File
+    module File.File
   , AuthorAttachment(..)
   , DocumentID(..)
   , SignatoryAttachment(..)
@@ -36,7 +36,7 @@ import DB.Classes
 import DB.Derive
 import DB.Types
 --import DB.Utils
-import Doc.File
+import File.File
 import User.Region
 import User.UserID
 import User.Model

@@ -1,24 +1,13 @@
-module Doc.File 
+module File.File 
     ( File(..)
-    , FileID(..)
+    , module File.FileID
     , FileStorage(..)
     ) where
 
 import DB.Derive
-
-import Data.Int
+import File.FileID
 import Data.Data
-import Happstack.Server
-import Happstack.Util.Common
 import qualified Data.ByteString.Char8 as BS
-
-newtype FileID = FileID { unFileID :: Int64 }
-  deriving (Eq, Ord, Data, Typeable)
-$(newtypeDeriveConvertible ''FileID)
-$(newtypeDeriveUnderlyingReadShow ''FileID)
-
-instance FromReqURI FileID where
-  fromReqURI = readM
 
 data FileStorage =
     FileStorageMemory BS.ByteString

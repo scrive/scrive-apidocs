@@ -390,7 +390,7 @@ attachFile :: DocumentID
            -> Update Documents (Either String Document)
 attachFile documentid filename1 content = do
   documents <- ask
-  fileid2 <- getUnique documents FileID
+  fileid2 <- getUnique64 documents FileID
   modifySignableOrTemplate documentid $ \document ->
       let nfile = File { fileid = fileid2
                        , filename = filename1
@@ -410,7 +410,7 @@ attachSealedFile :: DocumentID
                  -> Update Documents (Either String Document)
 attachSealedFile documentid filename1 content = do
   documents <- ask
-  fileid2 <- getUnique documents FileID
+  fileid2 <- getUnique64 documents FileID
   modifySignable documentid $ \document ->
       let nfile = File { fileid = fileid2
                        , filename = filename1
@@ -1587,7 +1587,7 @@ updateSigAttachments docid sigatts =
 saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Update Documents (Either String Document)
 saveSigAttachment docid name email content = do
   documents <- ask
-  fileid <- getUnique documents FileID
+  fileid <- getUnique64 documents FileID
   modifySignable docid $ \doc ->
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
       False -> Left "Only attach when the document is signable."

@@ -6,7 +6,7 @@ import Control.Concurrent.MVar
 import Data.Maybe
 import Data.Word
 import Database.HDBC.PostgreSQL
-import Doc.FileID
+import File.FileID
 import Doc.JpegPages
 import MinutesTime
 import User.Model
