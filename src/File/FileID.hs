@@ -3,6 +3,7 @@ module File.FileID
     )
 where
 
+import DB.Derive
 import Happstack.Data
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
@@ -24,3 +25,4 @@ instance FromReqURI FileID where
 $(deriveSerialize ''FileID)
 instance Version FileID where
 
+$(newtypeDeriveConvertible ''FileID)

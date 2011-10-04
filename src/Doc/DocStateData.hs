@@ -66,6 +66,7 @@ import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import File.FileID
+import File.File
 import Doc.JpegPages
 
 newtype Author = Author { unAuthor :: UserID }
@@ -888,35 +889,6 @@ data CSVUpload = CSVUpload
     }
     deriving (Eq, Ord, Typeable)
 
-data File0 = File0
-    { fileid0       :: FileID
-    , filename0     :: BS.ByteString
-    , filepdf0      :: BS.ByteString
-    , filejpgpages0 :: [BS.ByteString]
-    }
-    deriving (Eq, Ord, Typeable)
-
-data File1 = File1
-    { fileid1       :: FileID
-    , filename1     :: BS.ByteString
-    , filepdf1      :: BS.ByteString
-    , filejpgpages1 :: JpegPages
-    }
-    deriving (Eq, Ord, Typeable)
-
-data File2 = File2
-    { fileid2       :: FileID
-    , filename2     :: BS.ByteString
-    , filepdf2      :: BS.ByteString
-    }
-    deriving (Eq, Ord, Typeable)
-
-data File = File
-    { fileid          :: FileID
-    , filename        :: BS.ByteString
-    , filestorage     :: FileStorage
-    }
-    deriving (Typeable)
 
 -- for Author Attachment and Signatory Attachments, obviously -EN
 data AuthorAttachment = AuthorAttachment { authorattachmentfile :: File }
@@ -932,13 +904,6 @@ data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile        
 
 
 
-data FileStorage = FileStorageMemory BS.ByteString
-                 | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
-                 | FileStorageDisk FilePath -- ^ filepath
-    deriving (Eq, Ord, Typeable, Data)
-
-
-
 instance Eq Document where
     a == b = documentid a == documentid b
 
@@ -947,14 +912,6 @@ instance Ord Document where
                 | otherwise = compare (documentmtime b,documenttitle a,documentid a)
                                       (documentmtime a,documenttitle b,documentid b)
                               -- see above: we use reverse time here!
-
-instance Eq File where
-    a == b = fileid a == fileid b
-
-instance Ord File where
-    compare a b | fileid a == fileid b = EQ
-                | otherwise = compare (fileid a,filename a)
-                                      (fileid b,filename b)
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
@@ -1016,9 +973,6 @@ instance Read DocumentID where
 instance Read SignatoryLinkID where
     readsPrec prec = let make (i,v) = (SignatoryLinkID i,v)
                      in map make . readsPrec prec
-
-instance Show File where
-    showsPrec _prec file = (++) (BS.toString (filename file))
 
 instance FromReqURI DocumentID where
     fromReqURI = readM
@@ -2167,58 +2121,6 @@ instance Version DocumentUI where
 $(deriveSerialize ''DocStats)
 instance Version DocStats where
 
-$(deriveSerialize ''File0)
-instance Version File0 where
-
-instance Migrate File0 File1 where
-    migrate (File0
-             { fileid0
-             , filename0
-             , filepdf0
-             , filejpgpages0
-             }) = File1
-                { fileid1 = fileid0
-                , filename1 = filename0
-                , filepdf1 = filepdf0
-                , filejpgpages1 = JpegPages $ map (\x -> (x,1000,1000)) filejpgpages0
-                }
-
-$(deriveSerialize ''File1)
-instance Version File1 where
-    mode = extension 1 (Proxy :: Proxy File0)
-
-instance Migrate File1 File2 where
-    migrate (File1
-                { fileid1
-                , filename1
-                , filepdf1
-                }) = File2
-                { fileid2 = fileid1
-                , filename2 = filename1
-                , filepdf2 = filepdf1
-                }
-
-$(deriveSerialize ''File2)
-instance Version File2 where
-    mode = extension 2 (Proxy :: Proxy File1)
-
-instance Migrate File2 File where
-    migrate (File2
-                { fileid2
-                , filename2
-                , filepdf2
-                }) = File
-                { fileid = fileid2
-                , filename = filename2
-                , filestorage = FileStorageMemory filepdf2
-                }
-
-$(deriveSerialize ''File)
-instance Version File where
-    mode = extension 3 (Proxy :: Proxy File2)
-
-$(deriveSerialize ''FileStorage)
-instance Version FileStorage where
 
 
 type Documents = IxSet Document
@@ -2267,8 +2169,6 @@ $(deriveSerialize ''SignatoryRole)
 
 -- stuff for converting to pgsql
 
-$(newtypeDeriveConvertible ''FileID)
-$(jsonableDeriveConvertible [t| FileStorage |])
 $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''SignatureProvider)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
