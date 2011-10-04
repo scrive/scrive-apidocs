@@ -21,4 +21,4 @@ data File = File {
     fileid      :: FileID
   , filename    :: BS.ByteString
   , filestorage :: FileStorage
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show, Typeable)
