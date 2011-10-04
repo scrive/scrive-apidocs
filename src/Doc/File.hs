@@ -1,4 +1,8 @@
-module Doc.File where
+module Doc.File 
+    ( File(..)
+    , FileID(..)
+    , FileStorage(..)
+    ) where
 
 import DB.Derive
 
