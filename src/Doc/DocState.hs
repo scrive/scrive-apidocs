@@ -77,7 +77,7 @@ module Doc.DocState
     , DeleteSigAttachment(..)
     , GetSignatoryLinkIDs(..)
     , AdminOnlySaveForUser(..)
-    , populateDBWithDocumentsIfEmpty
+    -- , populateDBWithDocumentsIfEmpty
     )
 where
 
@@ -85,13 +85,13 @@ import API.Service.Model
 import Company.Model
 import Control.Monad
 import Control.Monad.Reader (ask)
-import Database.HDBC
+--import Database.HDBC
 import Data.List (find)
 import Data.Maybe
 import Data.Word
-import DB.Classes
+--import DB.Classes
 import DB.Types
-import DB.Utils
+--import DB.Utils
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
@@ -107,9 +107,9 @@ import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import qualified AppLogger as Log
-import qualified Doc.Model as D
-import qualified Doc.Tables as D
+--import qualified AppLogger as Log
+--import qualified Doc.Model as D
+--import qualified Doc.Tables as D
 
 {- |
     All documents for the given service.  This does not include
@@ -321,7 +321,7 @@ blankDocument =
           , documentlog                  = []
           , documentinvitetext           = BS.empty
           , documentsealedfiles          = []
-          , documenttrustweaverreference = Nothing
+          -- , documenttrustweaverreference = Nothing
           , documentallowedidtypes       = []
           , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
@@ -334,7 +334,7 @@ blankDocument =
           , documentauthorattachments    = []
           , documentdeleted              = False
           , documentsignatoryattachments = []
-          , documentattachments          = []
+          -- , documentattachments          = []
           , documentregion               = defaultValue
           }
 
@@ -388,6 +388,7 @@ getDocumentByFileID fileid' = queryDocs $ \documents ->
     If there is a problem, such as the document not existing,
     then a Left is returned.
 -}
+#if 0
 attachFile :: DocumentID
            -> BS.ByteString
            -> BS.ByteString
@@ -401,13 +402,20 @@ attachFile documentid filename1 content = do
                        , filestorage = FileStorageMemory content
                        }
       in Right $ document { documentfiles = documentfiles document ++ [nfile] }
+#endif
+attachFile :: DocumentID
+           -> FileID
+           -> Update Documents (Either String Document)
+attachFile documentid fid = do
+  modifySignableOrTemplate documentid $ \document ->
+    Right $ document { documentfiles = documentfiles document ++ [fid] }
 
 {- |
     Attaches a sealed file to the indicated document.
     If there is a problem, such as the document not existing,
     or the document not being a signable then a Left is returned.
 -}
-
+#if 0
 attachSealedFile :: DocumentID
                  -> BS.ByteString
                  -> BS.ByteString
@@ -421,6 +429,13 @@ attachSealedFile documentid filename1 content = do
                        , filestorage = FileStorageMemory content
                        }
       in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
+#endif
+attachSealedFile :: DocumentID
+                 -> FileID
+                 -> Update Documents (Either String Document)
+attachSealedFile documentid fid = do
+  modifySignable documentid $ \document ->
+    Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] }
 
 {- |
     Updates an existing document, typically this stores information collected
@@ -454,9 +469,12 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                                (Just cu, Just (Right newsigindex))
                                  -> Just cu{csvsignatoryindex=newsigindex}
                                _ -> Nothing
+                 updatedFstFileName  = documentfiles document
+#if 0
                  updatedFstFileName  = case (documentfiles document) of
-                                         (f:fs) -> (f {filename= docname} :fs)
+                                         (f:fs) -> (f {filename = docname} :fs)
                                          fs -> fs
+#endif
                  isbasic = BasicFunctionality == docfunctionality
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
@@ -542,7 +560,9 @@ updateDocumentAttachments :: DocumentID
                           -> [DocumentID]
                           -> [FileID]
                           -> Update Documents (Either String Document)
-updateDocumentAttachments docid idstoadd idstoremove = do
+updateDocumentAttachments _docid _idstoadd _idstoremove = do
+  error "updateDocumentAttachments not implemented"
+#if 0
   documents <- ask
   let addattachments   = toList $ documents @+ idstoadd
       foundattachments = length idstoadd == length addattachments
@@ -561,6 +581,7 @@ updateDocumentAttachments docid idstoadd idstoremove = do
                                       addfiles
                                  }
         _ -> Left "Can only attach to document in Preparation"
+#endif
 
 {- |
     Creates a new document by copying an existing document pumping some values into a particular signatory.
@@ -1116,12 +1137,12 @@ setupForDeletion :: Document -> Document
 setupForDeletion doc = blankDocument {
                          documentid = documentid doc,
                          documentdeleted = True,
-                         documentfiles = map (blankFile . fileid) (documentfiles doc),
-                         documentsealedfiles = map (blankFile . fileid) (documentsealedfiles doc),
+                         --documentfiles = map (blankFile . fileid) (documentfiles doc),
+                         --documentsealedfiles = map (blankFile . fileid) (documentsealedfiles doc),
                          documentsignatorylinks = map (blankSigLink . signatorylinkid) (documentsignatorylinks doc) }
   where
-  blankFile :: FileID -> File
-  blankFile fid = File { fileid = fid,
+  _blankFile :: FileID -> File
+  _blankFile fid = File { fileid = fid,
                          filename = BS.empty,
                          filestorage = FileStorageMemory BS.empty }
   blankSigLink :: SignatoryLinkID -> SignatoryLink
@@ -1344,11 +1365,14 @@ getUniqueSignatoryLinkID = do
     If the document doesn't exist, or isn't a signable, then this will return a Left.
 -}
 setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
-setDocumentTrustWeaverReference documentid reference = do
+setDocumentTrustWeaverReference _documentid _reference = do
+  error "kill it"  
+#if 0
   modifySignable documentid $ \document ->
       let
           newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
       in Right newdocument
+#endif
 
 {- |
     Turns the document status into DocumentError with the error given.
@@ -1715,7 +1739,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         ])
 
 -- stuff for converting to pgsql
-
+#if 0
 populateDBWithDocumentsIfEmpty :: DB ()
 populateDBWithDocumentsIfEmpty = do
   [docsnumber] :: [Int] <- wrapDB $ \conn -> quickQuery' conn "SELECT COUNT(*) FROM documents" [] >>= return . map fromSql . join
@@ -1783,7 +1807,7 @@ populateDBWithDocumentsIfEmpty = do
           , toSql $ signipnumber `fmap` documentinvitetime doc
           , toSql $ documentlog doc
           , toSql $ documentinvitetext doc
-          , toSql $ documenttrustweaverreference doc
+          , toSql $ "" -- documenttrustweaverreference doc
           , toSql $ documentallowedidtypes doc
           , toSql $ csvtitle `fmap` documentcsvupload doc
           , toSql $ csvcontents `fmap` documentcsvupload doc
@@ -1897,3 +1921,4 @@ populateDBWithDocumentsIfEmpty = do
           , toSql storage
           ]
       return ()
+#endif

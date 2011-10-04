@@ -289,15 +289,16 @@ flashMessagePleaseSignWithEleg =
 flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
-
-
-documentJSON :: (TemplatesMonad m,KontraMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
+ 
+documentJSON :: (TemplatesMonad m, KontraMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do
     ctx <- getContext
+    files <- documentfilesM doc
+    sealedfiles <- documentsealedfilesM doc
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
-       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> documentfiles doc ),
-       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> documentsealedfiles doc ),
+       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
+       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
@@ -379,7 +380,7 @@ placementJSON doc placement = JSObject $ toJSObject $
     [   ("x", JSRational True (toRational $ placementx  placement))
       , ("y", JSRational True (toRational $ placementy  placement))
       , ("page", JSRational True (toRational $ placementpage  placement))
-      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> fileid <$> (listToMaybe $ documentfiles doc))
+      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc))
     ]
 
 
@@ -665,7 +666,7 @@ pageList' templatename currentlink user  =
     field "linkrubbishbinlist" $ show $ LinkRubbishBin
     field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
 
-showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> m String
+showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
   renderTemplateM "showFileImagesPending" ()
 
@@ -673,7 +674,7 @@ showFileImages _ _ _ (JpegPagesError normalizelog) =
   renderTemplateFM "showFileImagesError" $ do
     field "normalizelog" $ BS.toString normalizelog
 
-showFileImages docid mtokens File{fileid} (JpegPages jpgpages) =
+showFileImages docid mtokens fileid (JpegPages jpgpages) =
   renderTemplateFM "showFileImagesReady" $ do
     field "pageurl" $ "/pages/" ++ pageurl mtokens
     fieldFL "images" . map page $ zip ([1..]::[Int]) jpgpages
@@ -687,7 +688,7 @@ showFileImages docid mtokens File{fileid} (JpegPages jpgpages) =
       field "width" w
       field "height" h
 
-showFilesImages2 :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(File, JpegPages)] -> m String
+showFilesImages2 :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(FileID, JpegPages)] -> m String
 showFilesImages2 docid mtokens files = do
   filesPages <- sequence $ map (uncurry (showFileImages docid mtokens)) files
   renderTemplateFM "spanNoEscape" $ field "it" (concat filesPages)

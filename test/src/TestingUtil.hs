@@ -379,7 +379,7 @@ blankDocument =
           , documentlog                  = []
           , documentinvitetext           = BS.empty
           , documentsealedfiles          = []
-          , documenttrustweaverreference = Nothing
+          -- , documenttrustweaverreference = Nothing
           , documentallowedidtypes       = []
           , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
@@ -392,7 +392,7 @@ blankDocument =
           , documentauthorattachments    = []
           , documentdeleted              = False
           , documentsignatoryattachments = []
-          , documentattachments          = []
+          -- , documentattachments          = []
           , documentregion               = REGION_SE
           }
 

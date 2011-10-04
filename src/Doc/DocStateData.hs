@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE CPP #-}
 module Doc.DocStateData
     ( Author(..)
     , CSVUpload(..)
@@ -68,6 +69,8 @@ import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
 import Doc.JpegPages
+
+import System.IO.Unsafe
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -834,12 +837,44 @@ data Document29 = Document29
     , documentui29                     :: DocumentUI
     } deriving Typeable
 
+data Document30 = Document30
+    { documentid30                     :: DocumentID
+    , documenttitle30                  :: BS.ByteString
+    , documentsignatorylinks30         :: [SignatoryLink]
+    , documentfiles30                  :: [File]
+    , documentsealedfiles30            :: [File]
+    , documentstatus30                 :: DocumentStatus
+    , documenttype30                   :: DocumentType
+    , documentfunctionality30          :: DocumentFunctionality
+    , documentctime30                  :: MinutesTime
+    , documentmtime30                  :: MinutesTime
+    , documentdaystosign30             :: Maybe Int
+    , documenttimeouttime30            :: Maybe TimeoutTime
+    , documentinvitetime30             :: Maybe SignInfo
+    , documentlog30                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext30             :: BS.ByteString
+    , documenttrustweaverreference30   :: Maybe BS.ByteString
+    , documentallowedidtypes30         :: [IdentificationType]
+    , documentcsvupload30              :: Maybe CSVUpload
+    , documentcancelationreason30      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing30                :: DocumentSharing
+    , documentrejectioninfo30          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags30                   :: [DocumentTag]
+    , documentservice30                :: Maybe ServiceID
+    , documentattachments30            :: [DocumentID] -- this needs to go away in next migration
+    , documentdeleted30                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
+    , documentauthorattachments30      :: [AuthorAttachment]
+    , documentsignatoryattachments30   :: [SignatoryAttachment]
+    , documentui30                     :: DocumentUI
+    , documentregion30                 :: Region
+    } deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
     , documentsignatorylinks         :: [SignatoryLink]
-    , documentfiles                  :: [File]
-    , documentsealedfiles            :: [File]
+    , documentfiles                  :: [FileID]
+    , documentsealedfiles            :: [FileID]
     , documentstatus                 :: DocumentStatus
     , documenttype                   :: DocumentType
     , documentfunctionality          :: DocumentFunctionality
@@ -850,7 +885,6 @@ data Document = Document
     , documentinvitetime             :: Maybe SignInfo
     , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
     , documentinvitetext             :: BS.ByteString
-    , documenttrustweaverreference   :: Maybe BS.ByteString
     , documentallowedidtypes         :: [IdentificationType]
     , documentcsvupload              :: Maybe CSVUpload
     , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
@@ -858,7 +892,6 @@ data Document = Document
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
-    , documentattachments            :: [DocumentID] -- this needs to go away in next migration
     , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
     , documentauthorattachments      :: [AuthorAttachment]
     , documentsignatoryattachments   :: [SignatoryAttachment]
@@ -1624,10 +1657,13 @@ $(deriveSerialize ''Document29)
 instance Version Document29 where
     mode = extension 29 (Proxy :: Proxy Document28)
 
-$(deriveSerialize ''Document)
-instance Version Document where
+$(deriveSerialize ''Document30)
+instance Version Document30 where
     mode = extension 30 (Proxy :: Proxy Document29)
 
+$(deriveSerialize ''Document)
+instance Version Document where
+    mode = extension 31 (Proxy :: Proxy Document30)
 
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
@@ -2016,7 +2052,7 @@ instance Migrate Document28 Document29 where
                       then sl { maybecompany = documentoriginalcompany28 }
                       else sl
 
-instance Migrate Document29 Document where
+instance Migrate Document29 Document30 where
     migrate ( Document29
                 { documentid29                 
                 , documenttitle29             
@@ -2033,7 +2069,7 @@ instance Migrate Document29 Document where
                 , documentinvitetime29    
                 , documentlog29           
                 , documentinvitetext29       
-                , documenttrustweaverreference29  
+                , documenttrustweaverreference29
                 , documentallowedidtypes29    
                 , documentcsvupload29       
                 , documentcancelationreason29  
@@ -2041,42 +2077,103 @@ instance Migrate Document29 Document where
                 , documentrejectioninfo29    
                 , documenttags29          
                 , documentservice29    
-                , documentattachments29       
+                , documentattachments29
                 , documentdeleted29   
                 , documentauthorattachments29 
                 , documentsignatoryattachments29
                 , documentui29  
-                }) = Document
-                { documentid                     = documentid29
-                , documenttitle                  = documenttitle29
-                , documentsignatorylinks         = documentsignatorylinks29
-                , documentfiles                  = documentfiles29
-                , documentsealedfiles            = documentsealedfiles29
-                , documentstatus                 = documentstatus29
-                , documenttype                   = documenttype29
-                , documentfunctionality          = documentfunctionality29
-                , documentctime                  = documentctime29
-                , documentmtime                  = documentmtime29
-                , documentdaystosign             = documentdaystosign29
-                , documenttimeouttime            = documenttimeouttime29
-                , documentinvitetime             = documentinvitetime29
-                , documentlog                    = documentlog29
-                , documentinvitetext             = documentinvitetext29
-                , documenttrustweaverreference   = documenttrustweaverreference29
-                , documentallowedidtypes         = documentallowedidtypes29
-                , documentcsvupload              = documentcsvupload29
-                , documentcancelationreason      = documentcancelationreason29
-                , documentsharing                = documentsharing29
-                , documentrejectioninfo          = documentrejectioninfo29
-                , documenttags                   = documenttags29
-                , documentservice                = documentservice29
-                , documentattachments            = documentattachments29
-                , documentdeleted                = documentdeleted29
-                , documentauthorattachments      = documentauthorattachments29
-                , documentsignatoryattachments   = documentsignatoryattachments29
-                , documentui                     = documentui29
-                , documentregion                 = REGION_SE
+                }) = Document30
+                { documentid30                     = documentid29
+                , documenttitle30                  = documenttitle29
+                , documentsignatorylinks30         = documentsignatorylinks29
+                , documentfiles30                  = documentfiles29
+                , documentsealedfiles30            = documentsealedfiles29
+                , documentstatus30                 = documentstatus29
+                , documenttype30                   = documenttype29
+                , documentfunctionality30          = documentfunctionality29
+                , documentctime30                  = documentctime29
+                , documentmtime30                  = documentmtime29
+                , documentdaystosign30             = documentdaystosign29
+                , documenttimeouttime30            = documenttimeouttime29
+                , documentinvitetime30             = documentinvitetime29
+                , documentlog30                    = documentlog29
+                , documentinvitetext30             = documentinvitetext29
+                , documenttrustweaverreference30   = documenttrustweaverreference29
+                , documentallowedidtypes30         = documentallowedidtypes29
+                , documentcsvupload30              = documentcsvupload29
+                , documentcancelationreason30      = documentcancelationreason29
+                , documentsharing30                = documentsharing29
+                , documentrejectioninfo30          = documentrejectioninfo29
+                , documenttags30                   = documenttags29
+                , documentservice30                = documentservice29
+                , documentattachments30            = documentattachments29
+                , documentdeleted30                = documentdeleted29
+                , documentauthorattachments30      = documentauthorattachments29
+                , documentsignatoryattachments30   = documentsignatoryattachments29
+                , documentui30                     = documentui29
+                , documentregion30                 = REGION_SE
                 }
+
+instance Migrate Document30 Document where
+    migrate ( Document30
+        { documentid30                     
+        , documenttitle30                  
+        , documentsignatorylinks30         
+        , documentfiles30                  
+        , documentsealedfiles30            
+        , documentstatus30                 
+        , documenttype30                   
+        , documentfunctionality30          
+        , documentctime30                  
+        , documentmtime30                  
+        , documentdaystosign30             
+        , documenttimeouttime30            
+        , documentinvitetime30             
+        , documentlog30                    
+        , documentinvitetext30             
+        , documenttrustweaverreference30 = _ -- dropped     
+        , documentallowedidtypes30         
+        , documentcsvupload30              
+        , documentcancelationreason30      
+        , documentsharing30                
+        , documentrejectioninfo30          
+        , documenttags30                   
+        , documentservice30                
+        , documentattachments30 = _ -- dropped              
+        , documentdeleted30                
+        , documentauthorattachments30      
+        , documentsignatoryattachments30   
+        , documentui30                     
+        , documentregion30                 
+        }) = Document
+        { documentid                     = documentid30
+        , documenttitle                  = documenttitle30
+        , documentsignatorylinks         = documentsignatorylinks30
+        , documentfiles                  = map (unsafePerformIO . update . PutFileUnchecked) documentfiles30
+        , documentsealedfiles            = map (unsafePerformIO . update . PutFileUnchecked) documentsealedfiles30
+        , documentstatus                 = documentstatus30
+        , documenttype                   = documenttype30
+        , documentfunctionality          = documentfunctionality30
+        , documentctime                  = documentctime30
+        , documentmtime                  = documentmtime30
+        , documentdaystosign             = documentdaystosign30
+        , documenttimeouttime            = documenttimeouttime30
+        , documentinvitetime             = documentinvitetime30
+        , documentlog                    = documentlog30
+        , documentinvitetext             = documentinvitetext30
+        , documentallowedidtypes         = documentallowedidtypes30
+        , documentcsvupload              = documentcsvupload30
+        , documentcancelationreason      = documentcancelationreason30
+        , documentsharing                = documentsharing30
+        , documentrejectioninfo          = documentrejectioninfo30
+        , documenttags                   = documenttags30
+        , documentservice                = documentservice30
+        , documentdeleted                = documentdeleted30
+        , documentauthorattachments      = documentauthorattachments30
+        , documentsignatoryattachments   = documentsignatoryattachments30
+        , documentui                     = documentui30
+        , documentregion                 = documentregion30
+        }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
@@ -2132,11 +2229,12 @@ instance Indexable Document where
             -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
             -- the scope of a single document! FIXME
           , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])           
+#if 0
           , ixFun (\x -> map fileid (documentfiles x
                                        ++ documentsealedfiles x
                                        ++ map authorattachmentfile (documentauthorattachments x)
                                        ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
-          
+#endif          
           , ixFun $ ifDocumentNotDeleted (maybeToList . documenttimeouttime)
           , ixFun $ ifDocumentNotDeleted (\x -> [documenttype x] :: [DocumentType])
           , ixFun $ ifDocumentNotDeleted (\x -> documenttags x :: [DocumentTag])

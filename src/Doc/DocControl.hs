@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
@@ -19,6 +20,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocProcess
 import InputValidation
+import File.File
 import Kontra
 import KontraLink
 import ListUtil
@@ -305,7 +307,7 @@ sendInvitationEmail1 ctx document signatorylink = do
           (True, False) -> mailInvitation True ctx Send document (Just signatorylink)
           (False, _)    -> mailInvitation True ctx View document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
-  _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
+  -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
         to = [getMailAddress signatorydetails]
       , mailInfo = Invitation documentid signatorylinkid
@@ -356,9 +358,10 @@ sendAwaitingEmail ctx document = do
 
 makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
 makeMailAttachments ctx document = do
-  let mainfile = head $ case documentsealedfiles document of
-        [] -> documentfiles document
-        fs -> fs
+  mainfile <- liftM head $ case documentsealedfiles document of
+        [] -> documentfilesM document
+        _ -> documentsealedfilesM document
+  let
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles = [mainfile] ++ aattachments ++ sattachments
@@ -985,7 +988,7 @@ handleIssueShowTitleGet' docid _title = do
           Closed -> documentsealedfiles document
           _      -> documentfiles document
     when (null files) mzero
-    contents <- liftIO $ getFileContents ctx $ head files
+    contents <- liftIO $ getFileIDContents ctx $ head files
     let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
         res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
     return res2
@@ -1005,6 +1008,15 @@ handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Respon
 handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
+   contents <- liftIO $ getFileIDContents ctx fileid'
+   if BS.null contents
+      then mzero
+      else do
+          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+          let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+          return res2
+
+#if 0
    document <- guardRightM $ query $ GetDocumentByFileID $ fileid'
 
    let allfiles = documentsealedfiles document ++ documentfiles document
@@ -1018,6 +1030,7 @@ handleFileGet fileid' _title = do
        Log.debug $ "We found a document for file id but then there was no such file in there. docid "++
          show (documentid document) ++ ", fileid " ++ show fileid'
        mzero
+#endif
 
 {- |
    Get multiple post/get params and return them in an array
@@ -1362,7 +1375,9 @@ someArchivePage page = checkUserTOSGet $ do
     page user 
     
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
-handleAttachmentViewForViewer docid siglinkid mh = do
+handleAttachmentViewForViewer _docid _siglinkid _mh = do
+  error "handleAttachmentViewForViewer not implemented"
+#if 0
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   let pending JpegPagesPending = True
       pending _                = False
@@ -1376,9 +1391,12 @@ handleAttachmentViewForViewer docid siglinkid mh = do
         else do
         pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
         simpleResponse pages
+#endif
 
 handleAttachmentViewForAuthor :: Kontrakcja m => DocumentID -> m Response
-handleAttachmentViewForAuthor docid = do
+handleAttachmentViewForAuthor _docid = do
+  error "handleAttachmentViewForAuthor not implemented"
+#if 0
   doc <- guardRightM $ getDocByDocID docid
   let pending JpegPagesPending = True
       pending _                = False
@@ -1392,7 +1410,7 @@ handleAttachmentViewForAuthor docid = do
         else do
         pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
         simpleResponse pages
-
+#endif
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
@@ -1400,11 +1418,11 @@ handleFilePages did fid = do
   (mdoc,_) <- jsonDocumentGetterWithPermissionCheck did
   when (isNothing mdoc ) mzero
   let doc = fromJust mdoc
-  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc) ++ (authorattachmentfile <$> documentauthorattachments doc)
-  case (find (((==) fid) . fileid) $ allfiles) of
-    Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No file found")]
-    Just file  -> do
-      jpages <- maybeScheduleRendering file did
+  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  -- ++ (authorattachmentfile <$> documentauthorattachments doc)
+  case find (== fid) allfiles of
+    Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "File #" ++ show fid ++ " not found in document #" ++ show did)]
+    Just _  -> do
+      jpages <- maybeScheduleRendering fid did
       case jpages of
        JpegPagesPending -> return $ JSObject $ toJSObject [("wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
        JpegPagesError _ -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "rendering failed")]
@@ -1413,7 +1431,6 @@ handleFilePages did fid = do
       pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
                                                          ("height",JSRational True $ toRational height)
                                                         ]
-
 
 -- get rid of duplicates
 -- FIXME: nub is very slow
@@ -1469,7 +1486,8 @@ handleDocumentUpload docid content1 filename = do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
-        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
+        files <- documentfilesM document
+        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
         return ()
   return ()
 
@@ -1479,13 +1497,15 @@ handleDocumentUploadNoLogin docid content1 filename = do
   Context{ctxdocstore, ctxs3action} <- getContext
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content1 docid
-  fileresult <- update (AttachFile docid filename content14)
+  file <- update $ NewFile filename content14
+  fileresult <- update (AttachFile docid (fileid file))
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
-        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
+        files <- documentfilesM document
+        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
         return ()
   return ()
 
@@ -1924,8 +1944,10 @@ handleDownloadFileNotLogged did sid mh fid _nameForBrowser= do
 
   
 respondWithFile :: Kontrakcja m =>  Document -> FileID -> m Response  
-respondWithFile doc fid =  do
+respondWithFile _doc fid =  do
     ctx <- getContext
+    respondWithPDF =<< liftIO (getFileIDContents ctx fid)
+#if 0
     case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
       Just AuthorAttachment{ authorattachmentfile } ->
         respondWithPDF =<< liftIO (getFileContents ctx authorattachmentfile)
@@ -1935,7 +1957,7 @@ respondWithFile doc fid =  do
         _ -> case find (((==) fid) . fileid) (documentfiles doc ++ documentsealedfiles doc) of
            Just file ->   respondWithPDF =<< liftIO (getFileContents ctx file)
            Nothing   -> mzero
-  
+#endif
         
 respondWithPDF :: Kontrakcja m => BS.ByteString -> m Response
 respondWithPDF contents = do
@@ -2108,3 +2130,4 @@ handleCSVLandpage :: Kontrakcja m => Int -> m String
 handleCSVLandpage c = do
   text <- csvLandPage c
   return text
+

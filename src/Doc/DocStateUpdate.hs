@@ -30,6 +30,7 @@ import User.Model
 import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
+import File.File
 
 {- |
    Mark document seen securely.
@@ -159,7 +160,8 @@ attachFile docid filename content = onlyAuthor docid $ do
   -- we use gs to do that of course
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content docid
-  transActionNotAvailable <$> update (AttachFile docid filename content14)
+  file <- update $ NewFile filename content14
+  transActionNotAvailable <$> update (AttachFile docid (fileid file))
 
 newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
 newDocument title doctype = withUser $ \user -> do

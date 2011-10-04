@@ -22,10 +22,14 @@ import Doc.DocInfo
 import Company.Model
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.List hiding (insert)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import File.File
+import Happstack.State
+
 
 {- |
     Checks whether the document is deletable, this is not the case for live documents.
@@ -358,7 +362,17 @@ sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
 isAuthoredByCompany :: CompanyID -> Document -> Bool
 isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
 
-getFilesByStatus :: Document -> [File]
+getFilesByStatus :: Document -> IO [File]
 getFilesByStatus doc 
-  | isClosed doc = documentsealedfiles doc
-  | otherwise    = documentfiles doc
+  | isClosed doc = liftM catMaybes $ mapM doGet $ documentsealedfiles doc
+  | otherwise    = liftM catMaybes $ mapM doGet $ documentfiles doc
+  where
+      doGet fid = query $ GetFileByFileID fid
+
+documentfilesM :: (MonadIO m) => Document -> m [File]
+documentfilesM Document{documentfiles} = do
+    liftM catMaybes $ mapM (query . GetFileByFileID) documentfiles
+
+documentsealedfilesM :: (MonadIO m) => Document -> m [File]
+documentsealedfilesM Document{documentsealedfiles} = do
+    liftM catMaybes $ mapM (query . GetFileByFileID) documentsealedfiles

@@ -55,6 +55,7 @@ import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
+import File.File
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (debug)
@@ -203,7 +204,10 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
     mdoc <- update $ NewDocument author (Just company) title doctype now
     when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match"
     let doc = fromRight mdoc
-    sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
+    let addAndAttachFile name content = do
+            file <- update $ NewFile name content
+            update $ AttachFile (documentid doc) (fileid file)
+    mapM_ (uncurry addAndAttachFile) files
     _ <- update $ SetDocumentTags (documentid doc) tags
     doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"

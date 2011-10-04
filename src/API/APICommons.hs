@@ -203,7 +203,7 @@ api_document :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction 
 api_document addFiles doc = do
     files <- if addFiles
               then do
-               files <- mapM api_document_file $ getFilesByStatus doc
+               files <- mapM api_document_file =<< liftIO (getFilesByStatus doc)
                return [("files", JSArray files)]
               else return []
     return $ JSObject $ toJSObject $ [

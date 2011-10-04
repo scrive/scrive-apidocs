@@ -19,6 +19,7 @@ import Doc.DocProcess
 import Doc.DocState
 import Doc.DocStorage
 import Doc.DocView
+import Doc.DocUtils
 import Happstack.State (update, query)
 import Misc
 import System.Directory
@@ -38,6 +39,7 @@ import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import File.File
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -204,13 +206,14 @@ sealDocument :: MonadIO m
              -> m (Either String Document)
 sealDocument ctx@Context{ctxdocstore, ctxs3action}
              document = do
-  let files = documentfiles document
+  files <- documentfilesM document
   Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
   Log.debug $ "Sealing should be done now"
   Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
   Log.debug $ "Reselecting document after update - time for upload to amazon"
-  _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
+  sealedfiles <- documentsealedfilesM newdocument 
+  _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) sealedfiles
   Log.debug $ "Upload to amazon is done"
   Log.debug $ show newdocument
   return $ Right newdocument
@@ -276,7 +279,8 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              res <- update $ AttachSealedFile documentid filename newfilepdf
+              File{fileid = sealedfileid} <- update $ NewFile filename newfilepdf
+              res <- update $ AttachSealedFile documentid sealedfileid
               return res
       ExitFailure _ ->
           do
