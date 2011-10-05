@@ -46,6 +46,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
 import Happstack.State
 import Control.Monad
+import Control.Applicative
 
 import User.Utils
 
@@ -84,10 +85,56 @@ showAdminSystemUsageStats = onlySuperUser $ do
 handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySuperUser $ do
   stats <- runDBQuery GetDocStatEvents
+  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
+  csvstrings <- docStatsToString stats [] []
+  let csv = toCSV docstatsheader csvstrings
   Log.debug $ "All doc stats length: " ++ (show $ length stats)
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
-     $ toResponse (statisticsCSV stats)
+     $ toResponse csv
+     
+docStatsToString :: Kontrakcja m => [DocStatEvent] -> [(UserID, String)] -> [(CompanyID, String)] -> m [[String]]
+docStatsToString [] _ _ = return []
+docStatsToString (e:es) usernames companynames = do
+  (username, usernames') <- dbUserIDLookup (seUserID e) usernames
+  (companyname, companynames') <- maybe (return ("none", companynames)) 
+                                  (\i -> dbCompanyIDLookup i companynames) 
+                                  (seCompanyID e)
+  let servicename = maybe "scrive" (BS.toString . unServiceID) (seServiceID e)
+  rest <- docStatsToString es usernames' companynames'
+  return $ [ show $ seUserID e
+           , username
+           , showDateYMD $ seTime e
+           , show $ seQuantity e
+           , show $ seAmount e
+           , show $ seDocumentID e
+           , servicename
+           , companyname
+           , maybe "" show $ seCompanyID e
+           , show $ seDocumentType e
+           ] : rest
+      
+dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [(UserID, String)])
+dbUserIDLookup uid tbl =
+  case lookup uid tbl of
+    Nothing -> do
+      name <- maybe "Unknown user" (BS.toString . getSmartName) <$> (runDBQuery $ GetUserByID uid)
+      return (name, (uid, name):tbl)
+    Just name -> return (name, tbl)
+
+dbCompanyIDLookup :: (Kontrakcja m) => CompanyID -> [(CompanyID, String)] -> m (String, [(CompanyID, String)])
+dbCompanyIDLookup cid tbl =
+  case lookup cid tbl of
+    Nothing -> do
+      name <- maybe "unknown company" (BS.toString . companyname . companyinfo) <$> (runDBQuery $ GetCompany cid)
+      return (name, (cid, name):tbl)
+    Just name -> return (name, tbl)
+
+
+toCSV :: [String] -> [[String]] -> String
+toCSV header ls =
+  concatMap csvline (header:ls)
+    where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"
 
 {- |
    What a beast! This must be stopped! Oh, the humanity!

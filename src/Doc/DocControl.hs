@@ -1150,6 +1150,9 @@ makeSignatories placements fielddefs
             = z a b c d e f g h : zipWith8 z as bs cs ds es fs gs hs
         zipWith8 _ _ _ _ _ _ _ _ _ = []
 
+
+-- NEED FIX !!!!  Reverse engineering is not a good design pattern | MR
+-- I will fix this when doing backbone anyway.
 makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
                      -> [(BS.ByteString, SignatoryField)]
                      -> SignatoryDetails
@@ -1157,17 +1160,17 @@ makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
 makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = sigfields} =
   sigdetails {
     signatoryfields =
-      map f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
+      concatMap f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
   }
   where
     f sf = case sfType sf of
-      EmailFT -> g "email"
-      FirstNameFT -> g "fstname"
-      LastNameFT -> g "sndname"
-      CompanyFT -> g "company"
-      PersonalNumberFT -> g "personalnumber"
-      CompanyNumberFT -> g "companynumber"
-      CustomFT _ _ -> sf
+      EmailFT -> [g "email"]
+      FirstNameFT -> [g "fstname"]
+      LastNameFT -> [g "sndname"]
+      CompanyFT -> [g "company"]
+      PersonalNumberFT -> [g "personalnumber"]
+      CompanyNumberFT -> [g "companynumber"]
+      CustomFT _ _ -> []
       where
         g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }
 

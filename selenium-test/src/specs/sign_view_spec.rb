@@ -43,7 +43,7 @@ describe "sign view" do
   end
   
   def uploadContract
-    (@driver.find_element :xpath => "//a[@href='/?doctype=Contract']").click
+    (@driver.find_element :xpath => "//a[@href='/upload?doctype=Contract']").click
     @wait.until { @driver.find_element :css => "input.multiFileInput" }
     (@driver.find_element :css => "input.multiFileInput").send_keys @ctx.props.contract_pdf_path
     @wait.until { @driver.find_element :css => "form.stepForm" }
@@ -148,6 +148,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #sign the doc
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :css => ".modal-container" }
@@ -229,7 +230,7 @@ describe "sign view" do
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
     
     #make sure it's got the opened icon displayed
-    @driver.find_element :css => "div.status.opened"
+    @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #upload the first sig attachment
     (@driver.find_elements :css => ".multiFileInput").first.send_keys @ctx.props.first_sig_attachment_pdf_path
@@ -247,7 +248,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #fill in the unfilled field
-    (@driver.find_element :xpath => "//input[@infotext='part1FN2']").send_keys "part1FV2"
+    (@driver.find_element :css => ".signViewBodyBox.float-left input.fieldvalue.grayed").send_keys "part1FV2"
     
     #sign the doc, but it should fail because we haven't filled in a custom value
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
@@ -255,6 +256,7 @@ describe "sign view" do
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     
     #sign the doc for real
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     @wait.until { @driver.find_element :css => ".modal-container" }
@@ -267,9 +269,10 @@ describe "sign view" do
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.second_counterpart_email
     
     #make sure it's got the opened icon displayed
-    @driver.find_element :css => "div.status.opened"
+    @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #try and sign the doc, but it should fail because we haven't uploaded an attachment
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
     #make sure we get a red flash message
@@ -280,10 +283,11 @@ describe "sign view" do
     @wait.until { (@driver.find_elements :css => ".multiFileInput").length == 0 }
     
     #sign the doc for real
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
-    @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
-    (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
+    @wait.until { @driver.find_element :css => ".modal-container" }
+    (@driver.find_element :css => ".modal-container a.btn-small.float-right").click
     
     #make sure there are three signed icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==3 }
@@ -292,13 +296,14 @@ describe "sign view" do
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.third_counterpart_email
     
     #make sure it's got the opened icon displayed
-    @driver.find_element :css => "div.status.opened"
+    @wait.until { @driver.find_element :css => "div.status.opened" }
     
     #sign the doc for real
+    @wait.until { @driver.find_element :id => "signGuardCBox" }
     (@driver.find_element :id => "signGuardCBox").click
     (@driver.find_element :css => "#signViewBottomBoxContainerRight a").click
-    @wait.until { @driver.find_element :id => "dialog-confirm-sign" }
-    (@driver.find_element :css => "#dialog-confirm-sign a.submiter").click
+    @wait.until { @driver.find_element :css => ".modal-container" }
+    (@driver.find_element :css => ".modal-container a.btn-small.float-right").click
     
     #make sure there are four signed icons
     @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==4 }
