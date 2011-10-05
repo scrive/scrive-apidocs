@@ -66,73 +66,81 @@ import SimpleMailTest
 #ifndef NO_LOCALE
 import LocaleTest
 #endif
+#ifndef NO_MAILS
+import MailsTest
+#endif
 
-allTests :: Connection -> [(String,Test)]
+allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
     tests = [
         undefined
 #ifndef NO_COMPANYSTATE
-      , ("companystate", companyStateTests conn)
+      , ("companystate", const $ companyStateTests conn)
 #endif
 #ifndef NO_DOCSTATE
-      , ("docstate", docStateTests conn)
+      , ("docstate", const $ docStateTests conn)
 #endif
 #ifndef NO_DOCCONTROL
-      , ("doccontrol", docControlTests conn)
+      , ("doccontrol", const $ docControlTests conn)
 #endif
 #ifndef NO_DOCSTATEQUERY
-      , ("docstatequery", docStateQueryTests)
+      , ("docstatequery", const $ docStateQueryTests)
 #endif
 #ifndef NO_HTML
-      , ("html", htmlTests)
+      , ("html", const $ htmlTests)
 #endif
 #ifndef NO_INPUTVALIDATION
-      , ("inputvalidation", inputValidationTests)
+      , ("inputvalidation", const $ inputValidationTests)
 #endif
 #ifndef NO_INTEGRATIONAPI
-      , ("integrationapi", integrationAPITests conn)
+      , ("integrationapi", const $ integrationAPITests conn)
 #endif
 #ifndef NO_LOGIN
-      , ("login", loginTests conn)
+      , ("login", const $ loginTests conn)
 #endif
 #ifndef NO_MAILAPI
-      , ("mailapi", mailApiTests conn)
+      , ("mailapi", const $ mailApiTests conn)
 #endif
 #ifndef NO_REDIRECT
-      , ("redirect", redirectTests)
+      , ("redirect", const $ redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
-      , ("servicestate", serviceStateTests conn)
+      , ("servicestate", const $ serviceStateTests conn)
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
       --("trustweaver", trustWeaverTest)
 #endif
 #ifndef NO_USERSTATE
-      , ("userstate", userStateTests conn)
+      , ("userstate", const $ userStateTests conn)
 #endif
 #ifndef NO_CSVUTIL
-      , ("csvutil", csvUtilTests)
+      , ("csvutil", const $ csvUtilTests)
 #endif
 #ifndef NO_SIMPLEEMAIL
-      , ("simplemail", simpleMailTests)
+      , ("simplemail", const $ simpleMailTests)
 #endif
 #ifndef NO_LOCALE
-      , ("locale", localeTests conn)
+      , ("locale", const $ localeTests conn)
+#endif
+#ifndef NO_MAILS
+      , ("mails", mailsTests conn )
 #endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
 testsToRun conn (t:ts) 
-  | lt == "all" = map (Right . snd) (allTests conn) ++ rest
+  | lt == "$" = []
+  | lt == "all" = map (\(_,f) -> Right $ f params) (allTests conn) ++ rest
   | otherwise = case lookup lt (allTests conn) of
-                  Just testcase -> Right testcase : rest
+                  Just testcase -> Right (testcase params) : rest
                   Nothing       -> Left t : rest
   where
     lt = map toLower t
     rest = testsToRun conn ts
+    params = drop 1 $ dropWhile (/= ("$")) ts
 
 main :: IO ()
 main = do
