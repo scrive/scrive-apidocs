@@ -73,7 +73,7 @@ mailingContext conn = do
     ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
     return $ ctx {
                 ctxdbconn = conn,
-                ctxhostpart = "http://dev.skrivapa.se/"
+                ctxhostpart = "http://dev.skrivapa.se"
               }
 
 
