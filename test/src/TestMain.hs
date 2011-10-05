@@ -132,7 +132,7 @@ allTests conn = tail tests
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
 testsToRun conn (t:ts) 
-  | lt == "->" = []
+  | lt == "$" = []
   | lt == "all" = map (\(_,f) -> Right $ f params) (allTests conn) ++ rest
   | otherwise = case lookup lt (allTests conn) of
                   Just testcase -> Right (testcase params) : rest
@@ -140,7 +140,7 @@ testsToRun conn (t:ts)
   where
     lt = map toLower t
     rest = testsToRun conn ts
-    params = drop 1 $ dropWhile (/= ("->")) ts
+    params = drop 1 $ dropWhile (/= ("$")) ts
 
 main :: IO ()
 main = do
