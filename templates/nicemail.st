@@ -63,7 +63,7 @@ nicemail=
     <table id="bottom-message" cellpadding="20" cellspacing="0" width="600" align="center">
     </table><!-- bottom message -->
 
-</tr></td></table><!-- wrapper -->
+</td></tr></table><!-- wrapper -->
 
 </div>
 
