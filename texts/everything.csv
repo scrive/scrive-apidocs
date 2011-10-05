@@ -8,11 +8,9 @@
  alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
  möjlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
  vi ett supportfritt konto för alla mindre användare. 1 användare,
- 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"                    <h3>Free for private persons and proprietors</h3>
-                    <p>There are a thousand reasons for everyone
- to start signing their documents electronically. Our ambition
- is to work closely and cooperate with our customers. Unfortunately,
- we are not able to help all our target groups actively. Therefore,
+ 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"                    <h3>Free for personal use</h3>
+                    <p>Our ambition
+ is to work closely and cooperate with our customers but we don't have time to help all our target groups actively. Therefore,
  we offer a support-free account for small users. 1 user, 5 free
  signatures per month and storage of 50 documents.</p>"
 "_Bemefit1","Minska kostnaderna",,"Reduced costs"
@@ -246,7 +244,7 @@
 "_PriceTableRow3","<td>500 dok laging</td>                                     
                    <td>Obegränsad lagring</td>              
                                           <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>",,"<td>500 doc storage</td>                                    
+                                                        <td>Offert</td>",,"<td>Storage for 500 documents</td>                                    
                     <td>Unlimited storage</td>              
                                           <td>Unlimited storage</td>
                                                         <td>Offer</td>"
@@ -367,7 +365,7 @@
  tidigare arbetat åt ett av Polens största IT-konsultföretag.
  Fritiden spenderar Mariusz helst med att fördjupa sig inom avancerad
  logik och nya teorier inom funktionell programmering. ",,"Mariusz has his background at Warszaw Technical University where
- he has graduated in functional programming languages. He has
+ he graduated in functional programming languages. He has
  previously been working at one of Poland's largest IT consultant
  firms. Mariusz prefers spending his free time immersing in advanced
  logic and new theories about functional programming."
@@ -389,10 +387,10 @@
 "_aboutPagePerson6Body","Emily har en bakgrund från University of Bristol och har tidigare
  arbetat som utvecklare på ett flertal finansbanker i London.
  Hon lämnade sin post som systemutvecklare på HSBC för att arbeta
- heltid med $ourServiceName()$ på distans.",,"Emily has her background at University of Bristol and has previously
- been working as a devloper at several different finance banks
- in London. Se left her position as system developer at HSBC
- to work full time at $ourServiceName()$ at distance."
+ heltid med $ourServiceName()$ på distans.",,"Emily has her background at University of Bristol and has
+ worked as a developer at several different finance banks
+ in London. Se left her position as systems developer at HSBC
+ to work full time at $ourServiceName()$ in London."
 "_aboutPagePerson6Contact","emily@scrive.com",,"emily@scrive.com"
 "_aboutPagePerson6Position","Development and Testing",,"Development and Testing"
 "_aboutPagePerson7","Oskar Wallin Berglin",,"Oskar Wallin Berglin"
@@ -400,8 +398,8 @@
  100 % med $ourServiceName()$ parallellt med sina studier. Entreprenörskap
  är ett stort intresse och han har tidigare bland annat drivit
  entreprenörsprojektet Snäll Skuldhjälp.",,"Oskar is a student at Stocholm School of Economics, and works
- 50 % at $ourServiceName()$ parallel to his studies. Entrepreneurship is a
- major interest if his, and he has  previously run an entrepreneurship
+ 50% at $ourServiceName()$ parallel to his studies. Entrepreneurship is a
+ major interest of his and he has previously run an entrepreneurship
  project called Snäll Skuldhjälp."
 "_aboutPagePerson7Contact","oskar@scrive.com<br />									+46 709 85 08 67",,"oskar@scrive.com<br />									+46 709 85 08 67"
 "_aboutPagePerson7Position","Business Development",,"Business Development"
@@ -420,15 +418,15 @@
  lärde känna varandra under sin tid på kreditbolaget Klarna.</p>",,"<p>$ourServiceName()$ is a service for signing and storing contracts electronically.
  We help our customers to reduce their costs, increase their
  turnover and save frustration.</p>							<br />							<p>Electronic
- document signing is a relatively young industry that grows fast
+ document signing is a relatively young industry that is growing fast
  both in Sweden and internationally. We are a young company in
- rapid growth with about 10 eployees today. We are confident
+ rapid growth with about 10 employees today. We are confident
  that our greatest strengths are our ability to detect customer
  needs, our customer-oriented approach, and our ability to solve
- complex legal and securityrelated issues in a way that seems
+ complex legal and security-related issues in a way that seems
  simple and appealing to the end customer.</p> 							<br />							<p>$ourServiceName()$
  was founded by Lukas Duczko and Gracjan Polak who got to know
- eachother at the Swedish credit company Klarna.</p>"
+ each other at the Swedish credit company Klarna.</p>"
 "_accountFromSignFooterNoThx","Nej tack",,"No thanks"
 "_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes please, store"
 "_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
@@ -481,14 +479,14 @@
 "_clientsPageCusomer3About","Din partner för konferens, kick-off och företagsresor.",,"Your partner in conferences, kick-offs and company travels."
 "_clientsPageCusomer3Web","www.eventbook.se",,"www.eventbook.se"
 "_clientsPageCusomer4","Accenture Management Consulting",,"Accenture Management Consulting"
-"_clientsPageCusomer4About","                                                            ",,"                                                           "
+"_clientsPageCusomer4About",,,
 "_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
 "_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About","                   ",,"                   "
+"_clientsPageCusomer5About",,,
 "_clientsPageCusomer5Web","www.coop.se/konsumnord",,"www.coop.se/konsumnord"
 "_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About","                                                            ",,"                                                            "
-"_clientsPageCusomer6Web","                                        ",,"                                                           "
+"_clientsPageCusomer6About",,,
+"_clientsPageCusomer6Web",,,
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
@@ -533,7 +531,7 @@
 "_contractcancelbyauthormodaltitleHead","Återkalla inbjudan",,"Withdraw invitation"
 "_contractcancelledinfoheader","Dokument återkallat",,"Document withdrawn"
 "_contractcancelledinfotext","har återkallat sin inbjudan att underteckna dokumentet.",,"has withdrawn the invitation to sign the document."
-"_contractconfirmsendtext"," ",," "
+"_contractconfirmsendtext",,,
 "_contractconfirmsendtitle","Skicka inbjudan",,"Send invitation"
 "_contractexpirytext","Undertecknas inom",,"Expiration in"
 "_contractexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
@@ -1805,7 +1803,7 @@
  för accepten.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
  and $ourServiceName()$ has verified the confirmation."
 "_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
- $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$."
+ $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
@@ -1814,7 +1812,7 @@
  accepted by $partylist:noescape()$  and $ourServiceName()$ has verified the confirmation."
 "_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
- accepted by $partylist:noescape()$."
+ accepted by $partylist:noescape()$.",
 "_mailRejectContractMailContentContractRejected","<strong>$rejectorName$</strong> har avvisat att underteckna
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
  är därmed avbruten.",,"<strong>$rejectorName$</strong> has  rejected
@@ -2252,10 +2250,10 @@ for creating an account with us. When you have activated your account you will b
  e-fakturor och andra företagskritiska elektroniska dokument
  godkänns av kontrollinstitut och domstolar som fullständiga
  och oändrade över väldigt långa tidsperioder.",,"TrustWeaver is a specialist IT-security company providing e-signature,
- time stamping, archiving and invoice solutions. TrustWaever
- makes it possible for companies to be 100 % confident that e-invoices
+ time stamping, archiving and invoice solutions. TrustWeaver
+ makes it possible for companies to be 100% confident that e-invoices
  and other critical documents will be approved by control institutes
- and courts as complete, and unchanged over very long periods
+ and courts as complete and unchanged over very long periods
  of time."
 "_partnersPagePartner2Area","Dokumentsäkerhet och signering",,"Document security and signing"
 "_partnersPagePartner2Web","www.trustweaver.com",,"www.trustweaver.com"
@@ -2265,7 +2263,7 @@ for creating an account with us. When you have activated your account you will b
  och samverkar i framtagningen av morgondagens säkerhetslösningar
  för så kallade cloud tjänster. ",,"Chalmers Technical University is one of the most prestigious
  technical universities in the world. $ourServiceName()$ cooperates closely
- with the data security group at Chalmers and participate in
+ with the data security group at Chalmers and participates in
  the development of the cloud sourced security solutions of the
  future."
 "_partnersPagePartner3Area","Datasäkerhet",,"Data security"
@@ -2273,7 +2271,7 @@ for creating an account with us. When you have activated your account you will b
 "_partnersPageTitle","| Partners",,"| Partners"
 "_password","Lösenord",,"Password"
 "_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på $ourServiceName()$. Vänligen klicka
- på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your $ourServiceName()$ account. Please click to proceed, the link is valid for 12 hours:<br/>"
+ på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your $ourServiceName()$ account. Please click to proceed. The link is valid for 12 hours:<br/>"
 "_passwordChangeLinkMailTitle","Nytt lösenord",,"New password"
 "_passwordFieldName","lösenord",,"password"
 "_paymentsadminpageAccount","For account: ",,"For account: "
@@ -2319,10 +2317,7 @@ for creating an account with us. When you have activated your account you will b
  räknar vi bara signaturer i färdigställda dokument där vi utfärdat
  vårt verifikat. Med andra ord, vi tar bara betalt när du gör
  affär.</p>",,"                    <h2>We only charge you when you make money</h2>
-                    <p>We charge you per signature. Though we
- Believe in only charging when we add value. Therefore, we only
- count and charge signatures in completed documents. In other
- words, we charge only when you deal.</p>"
+                    <p>We charge you per signature, but we believe in charging only when we add value. Therefore we count solely the signatures in completed documents. In other words, we charge if and when you make a deal.</p>"
 "_priceplanPageBelowTable2","                    <h2>Gratis för privatpersoner och enmansföretagare</h2>
                     <p>Det finns tusen skäl varför alla bör signera
  sina dokument elektroniskt. Vår ambition är att alltid jobba
@@ -2386,7 +2381,7 @@ for creating an account with us. When you have activated your account you will b
      <p>3.00 £/signature</p>                                </th>
                                 <th>                        
             <h3>Enterprise</h3>                             
-       <p>Offer</p></th>                                "
+       <p>Negotiable</p></th>                                "
 "_priceplanPageTableHighlightedColumn","                            <li class=""top"">                
                 <h3>Business</h3>                           
      <p>30 kr/signatur</p>                            </li> 
@@ -2441,7 +2436,7 @@ for creating an account with us. When you have activated your account you will b
                                 <td>Offert</td>",,"                                <td>Number of users</td>    
                             <td>5</td>                      
           <td>15</td>                                <td>50</td>
-                                <td>Offer</td>"
+                                <td>Negotiable</td>"
 "_priceplanPageTableRow10","                                <td>E-signering</td>        
                         <td>✓</td>                          
       <td>✓</td>                                <td>✓</td>  
@@ -2648,7 +2643,7 @@ for creating an account with us. When you have activated your account you will b
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
-"_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices excludes VAT"
+"_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
 "_privacyPolicyPageH1","SEKRETESSPOLICY (2011:02)",,"PRIVACY POLICY (2011:02)"
 "_privacyPolicyPageH1Body","<p>All information Ni delger $ourServiceName()$ eller dess Tjänster hanteras
  med största möjliga försiktighet och innehållets säkerhet har
@@ -2865,8 +2860,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  a high security standard to meet the expectations of our customers.</li>	<li>Our
  customer use our service for storage of their most sensitive
  company data. When protecting this kind of data, sufficiently
- good is not good enough. Materials and documents has to be 100
- % protected and secured.</li>"
+ good is not good enough. Materials and documents has to be 100% protected and secured.</li>"
 "_securityPageH2IntroBody3","Vi strävar efter att alltid tillämpa den senaste tekniken i vår
  tjänst för att på så sätt kunna ligga i framkant och vara marknadsledande
  på säkerhet. Följande är några av våra viktigaste säkerhetsåtgärder
