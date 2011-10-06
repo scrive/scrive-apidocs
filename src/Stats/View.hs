@@ -20,28 +20,30 @@ import Data.List
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 
-statisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, Int, Int, Int)] -> [Fields m]
+statisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
 statisticsFieldsByDay stats = 
-  for stats (\(ct, c, s, i) -> do
+  for stats (\(ct, c:s:i:u:_) -> do
                 field "date" $ showAsDate ct
                 field "closed" c
                 field "signatures" s
                 field "sent" i
+                field "users" u
                 field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
 
-statisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, Int, Int, Int)] -> [Fields m]
+statisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
 statisticsFieldsByMonth stats = 
-  for stats (\(ct, c, s, i) -> do
+  for stats (\(ct, c:s:i:u:_) -> do
                 field "date" $ showAsMonth ct
                 field "closed" c
                 field "signatures" s
                 field "sent" i
+                field "users" u
                 field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
 
 
-statisticsCompanyFieldsByDay :: (Functor m, MonadIO m) => [(Int, String, Int, Int, Int)] -> [Fields m]
+statisticsCompanyFieldsByDay :: (Functor m, MonadIO m) => [(Int, String, [Int])] -> [Fields m]
 statisticsCompanyFieldsByDay stats = 
-  for stats (\(ct, u, c, s, i) -> do
+  for stats (\(ct, u, c:s:i:_) -> do
                 field "date" $ showAsDate ct
                 field "user" u
                 field "istotal" (u == "Total")

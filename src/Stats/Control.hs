@@ -55,7 +55,8 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   statEvents <- runDBQuery $ GetDocStatEventsByUserID userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
-  let stats = calculateDocStatsFromEventsByDay statEvents
+  let rawevents = catMaybes $ map statEventToDocStatTuple statEvents
+  let stats = calculateStatsByDay rawevents
   content <- adminUserUsageStatsPage user mcompany $ do
     fieldFL "statistics" $ statisticsFieldsByDay stats
   renderFromBody TopEmpty kontrakcja content
@@ -63,7 +64,8 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySuperUser $ do
   statCompanyEvents <- runDBQuery $ GetDocStatEventsByCompanyID companyid
-  let stats = calculateDocStatsFromCompanyEvents statCompanyEvents
+  let rawevents = catMaybes $ map statCompanyEventToDocStatTuple statCompanyEvents
+  let stats = calculateCompanyDocStats rawevents
   fullnames <- convertUserIDToFullName [] stats
   content <- adminCompanyUsageStatsPage companyid $ do
     fieldFL "statistics" $ statisticsCompanyFieldsByDay fullnames
@@ -73,10 +75,13 @@ showAdminSystemUsageStats :: Kontrakcja m => m Response
 showAdminSystemUsageStats = onlySuperUser $ do
   Context{ctxtime} <- getContext
   let today = asInt ctxtime
-      som = 100 * (today `div` 100)
+      som = 100 * (today `div` 100) -- start of month
   statEvents <- runDBQuery $ GetDocStatEvents
-  let statsByDay = calculateDocStatsFromEventsByDay $ filter (\s -> asInt (seTime s) >= som) statEvents
-      statsByMonth = calculateDocStatsFromEventsByMonth statEvents
+  userEvents <- runDBQuery $ GetUserStatEvents
+  let rawstats = (catMaybes $ map statEventToDocStatTuple statEvents)
+                 ++ (catMaybes $ map userEventToDocStatTuple userEvents)
+  let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) rawstats
+      statsByMonth = calculateStatsByMonth rawstats
   content <- adminUserStatisticsPage $ do
     fieldFL "statisticsbyday" $ statisticsFieldsByDay statsByDay
     fieldFL "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
@@ -139,64 +144,73 @@ toCSV header ls =
 {- |
    What a beast! This must be stopped! Oh, the humanity!
  -}
-convertUserIDToFullName :: Kontrakcja m => [User] -> [(Int, UserID, Int, Int, Int)] -> m [(Int, String, Int, Int, Int)]
+convertUserIDToFullName :: Kontrakcja m => [User] -> [(Int, UserID, [Int])] -> m [(Int, String, [Int])]
 convertUserIDToFullName _ [] = return []
-convertUserIDToFullName acc ((a,UserID 0,b,c,d):ss) = do
+convertUserIDToFullName acc ((a,UserID 0,s):ss) = do
   rst <- convertUserIDToFullName acc ss
-  return $ (a, "Total", b, c, d) : rst
-convertUserIDToFullName acc ((a,uid,b,c,d):ss) =  
+  return $ (a, "Total", s) : rst
+convertUserIDToFullName acc ((a,uid,s):ss) =  
   case find (\u->userid u == uid) acc of
     Just u -> do
       rst <- convertUserIDToFullName acc ss
-      return $ (a, BS.toString $ getSmartName u, b, c, d) : rst
+      return $ (a, BS.toString $ getSmartName u, s) : rst
     Nothing -> do
       mu <- runDBQuery $ GetUserByID uid
       case mu of
         Nothing -> do
           rst <- convertUserIDToFullName acc ss
-          return $ (a, "Unknown user", b, c, d) : rst
+          return $ (a, "Unknown user", s) : rst
         Just u -> do
           rst <- convertUserIDToFullName (u:acc) ss
-          return $ (a, BS.toString $ getSmartName u, b, c, d) : rst
+          return $ (a, BS.toString $ getSmartName u, s) : rst
 
-addStats :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
-addStats (_, t1, s1, i1) (t, t2, s2, i2) = (t, t1+t2, s1+s2, i1+i2)
+addStats :: (Int, [Int]) -> (Int, [Int]) -> (Int, [Int])
+addStats (_, t1s) (t, t2s) = (t, zipWithPadZeroes (+) t1s t2s)
 
-sumStats :: [(Int, Int, Int, Int)] -> (Int, Int, Int, Int)
+sumStats :: [(Int, [Int])] -> (Int, [Int])
 sumStats = foldl1 addStats
 
-addCStats :: (Int, UserID, Int, Int, Int) -> (Int, UserID, Int, Int, Int) -> (Int, UserID, Int, Int, Int)
-addCStats (_, _, t1, s1, i1) (t, uid, t2, s2, i2) = (t, uid, t1+t2, s1+s2, i1+i2)
+addCStats :: (Int, UserID, [Int]) -> (Int, UserID, [Int]) -> (Int, UserID, [Int])
+addCStats (_, _, t1s) (t, uid, t2s) = (t, uid, zipWithPadZeroes (+) t1s t2s)
 
-sumCStats :: [(Int, UserID, Int, Int, Int)] -> (Int, UserID, Int, Int, Int)
+-- this creates an infinite list, so be careful!
+zipWithPadZeroes :: (Int -> Int -> Int) -> [Int] -> [Int] -> [Int]
+zipWithPadZeroes f a b = zipWith f (a ++ repeat 0) (b ++ repeat 0)
+
+sumCStats :: [(Int, UserID, [Int])] -> (Int, UserID, [Int])
 sumCStats = foldl1 addCStats
 
-
-statEventToDocStatTuple :: DocStatEvent -> Maybe (Int, Int, Int, Int)
+statEventToDocStatTuple :: DocStatEvent -> Maybe (Int, [Int])
 statEventToDocStatTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
-  DocStatClose       -> Just (asInt seTime, seAmount, 0, 0)
-  DocStatEmailSignatures  -> Just (asInt seTime, 0, seAmount, 0)
-  DocStatElegSignatures   -> Just (asInt seTime, 0, seAmount, 0)
-  DocStatSend        -> Just (asInt seTime, 0, 0, seAmount)
-  _                       -> Nothing
+  DocStatClose           -> Just (asInt seTime, [seAmount, 0, 0, 0])
+  DocStatEmailSignatures -> Just (asInt seTime, [0, seAmount, 0, 0])
+  DocStatElegSignatures  -> Just (asInt seTime, [0, seAmount, 0, 0])
+  DocStatSend            -> Just (asInt seTime, [0, 0, seAmount, 0])
+  _                      -> Nothing
 
-statCompanyEventToDocStatTuple :: DocStatEvent -> Maybe (Int, UserID, Int, Int, Int)
+statCompanyEventToDocStatTuple :: DocStatEvent -> Maybe (Int, UserID, [Int])
 statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAmount}) = case seQuantity of
-  DocStatClose       -> Just (asInt seTime, seUserID, seAmount, 0, 0)
-  DocStatEmailSignatures  -> Just (asInt seTime, seUserID, 0, seAmount, 0)
-  DocStatElegSignatures   -> Just (asInt seTime, seUserID, 0, seAmount, 0)
-  DocStatSend        -> Just (asInt seTime, seUserID, 0, 0, seAmount)
-  _                       -> Nothing
+  DocStatClose           -> Just (asInt seTime, seUserID, [seAmount, 0, 0, 0])
+  DocStatEmailSignatures -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
+  DocStatElegSignatures  -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
+  DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount, 0])
+  _                      -> Nothing
 
+userEventToDocStatTuple :: UserStatEvent -> Maybe (Int, [Int])
+userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case usQuantity of
+  UserSignTOS -> Just (asInt usTime, [0, 0, 0, usAmount])
+  -- we'll need this eventually, when there are more constructors
+  --  _           -> Nothing
 
--- | User Stats are very simple:
+-- | Stats are very simple:
 -- Date
 -- # of documents Closed that date
 -- # of signatures on documents closed that date
 -- # of documents sent that date
-calculateDocStatsFromEventsByDay :: [DocStatEvent] -> [(Int, Int, Int, Int)]
-calculateDocStatsFromEventsByDay events =
-  let byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (catMaybes $ map statEventToDocStatTuple events)
+-- # of users signing tos that day
+calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
+calculateStatsByDay events =
+  let byDay = groupWith fst $ reverse $ sortWith fst events
   in map sumStats byDay
 
 -- | User Stats are very simple:
@@ -204,11 +218,10 @@ calculateDocStatsFromEventsByDay events =
 -- # of documents Closed that date
 -- # of signatures on documents closed that date
 -- # of documents sent that date
-calculateDocStatsFromEventsByMonth :: [DocStatEvent] -> [(Int, Int, Int, Int)]
-calculateDocStatsFromEventsByMonth events =
-  let stats  = catMaybes $ map statEventToDocStatTuple events
-      monthOnly = [(100 * (a `div` 100), b, c, d) | (a, b, c, d) <- stats]
-      byMonth = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) monthOnly
+calculateStatsByMonth :: [(Int, [Int])] -> [(Int, [Int])]
+calculateStatsByMonth events =
+  let monthOnly = [(100 * (a `div` 100), b) | (a, b) <- events]
+      byMonth = groupWith fst $ reverse $ sortWith fst monthOnly
   in map sumStats byMonth
 
 
@@ -218,12 +231,12 @@ calculateDocStatsFromEventsByMonth events =
 -- # of documents Closed that date
 -- # of signatures on documents closed that date
 -- # of documents sent that date
-calculateDocStatsFromCompanyEvents :: [DocStatEvent] -> [(Int, UserID, Int, Int, Int)]
-calculateDocStatsFromCompanyEvents events =
-  let byDay = groupWith (\(a,_,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_,_)->a) (catMaybes $ map statCompanyEventToDocStatTuple events)
-      byUser = map (groupWith (\(_,a,_,_,_)->a) . sortWith (\(_,a,_,_,_)->a)) byDay
+calculateCompanyDocStats :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
+calculateCompanyDocStats events =
+  let byDay = groupWith (\(a,_,_)->a) $ reverse $ sortWith (\(a,_,_)->a) events
+      byUser = map (groupWith (\(_,a,_)->a) . sortWith (\(_,a,_)->a)) byDay
       userTotalsByDay = map (map sumCStats) byUser
-      setUID0 (a,_,c,d,e) = (a,UserID 0,c,d,e)
+      setUID0 (a,_,s) = (a,UserID 0,s)
       totalByDay = map (setUID0 . sumCStats) byDay
   in concat $ zipWith (\a b->a++[b]) userTotalsByDay totalByDay
 

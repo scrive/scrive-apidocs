@@ -571,6 +571,7 @@ statisticsPage=
               <td style="width:200px">Total Closed Signatures</td>
               <td style="width:200px">Average Signatures / Doc</td>
               <td style="width:200px">Documents Sent</td>
+              <td style="width:200px">New Users (TOS)</td>
 	    </thead>
             $statisticsbyday:{stat|<tr>
               <td>$stat.date$</td>
@@ -578,6 +579,7 @@ statisticsPage=
               <td>$stat.signatures$ </td>
               <td>$stat.avg$ </td>
               <td>$stat.sent$ </td>
+              <td>$stat.users$ </td>
 	    </tr>}$
 	  </table>
       <h1>Stats by month</h1>
@@ -588,6 +590,7 @@ statisticsPage=
               <td style="width:200px">Total Closed Signatures</td>
               <td style="width:200px">Average Signatures / Doc</td>
               <td style="width:200px">Documents Sent</td>
+              <td style="width:200px">New Users (TOS)</td>
 	    </thead>
             $statisticsbymonth:{stat|<tr>
               <td>$stat.date$</td>
@@ -595,6 +598,7 @@ statisticsPage=
               <td>$stat.signatures$ </td>
               <td>$stat.avg$ </td>
               <td>$stat.sent$ </td>
+              <td>$stat.users$ </td>
 	    </tr>}$
 	  </table>
     </div>
