@@ -42,11 +42,12 @@ import HtmlTest
 import User.UserView
 import Kontra
 import Util.HasSomeUserInfo
+import Text.XML.HaXml.Parse (xmlParse')
 
 mailsTests :: Connection -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
-    testCase "All document connected emails" $ testDocumentMails conn (toMailAddress params),
-    testCase "All user creation emails" $ testUserMails conn (toMailAddress params)
+    testCase "Document emails" $ testDocumentMails conn (toMailAddress params),
+    testCase "User emails" $ testUserMails conn (toMailAddress params)
     ]
 
 testDocumentMails  :: Connection -> Maybe String -> Assertion
@@ -56,7 +57,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   forM_ allValues $ \l ->   
     forM_ [Contract,Offer,Order] $ \doctype -> do
         let tstr s = s ++ " " ++ show doctype 
-        (Right d) <- randomUpdate $ \t -> NewDocument author mcompany t (Signable doctype)
+        (Right d) <- randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
         let docid = documentid d 
         let authordetails = signatorydetails $ head $ documentsignatorylinks d
         isl <- rand 10 arbitrary
@@ -79,8 +80,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email 
-        when (doctype == Contract) $ do
-          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
+        --when (doctype == Contract) $ do
+        --  checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
         -- Virtual signing 
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl)  (10 `minutesAfter` now) ip Nothing []
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
@@ -106,12 +107,24 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
     checkMail "New account by admin" $ do 
           al <- newAccountCreatedLink user
           mailNewAccountCreatedByAdmin ctx (getSmartName user) (getEmail user) al Nothing
-    
+    checkMail "New account after signing contract" $ do 
+          al <- newAccountCreatedLink user
+          mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al 
+    checkMail "Reset password mail" $ do 
+          al <- newAccountCreatedLink user
+          resetPasswordMail (ctxhostpart ctx) user al 
     
     
 -- MAIL TESTING UTILS
 validMail :: String -> Mail -> DB ()
-validMail name m = assertSuccess
+validMail name m = do
+    let c = BS.toString $ content m
+    let exml = xmlParse' name c
+    liftIO $ putStrLn $  name
+    liftIO $ putStrLn $  c
+    case exml of 
+         Right _ -> assertSuccess
+         Left err -> assertFailure ("Valid HTML mail " ++ name ++ " : " ++ c) 
 
 
 mailingContext :: Region -> Connection -> DB Context
