@@ -492,10 +492,14 @@ updateDocumentSimple did (authordetails,author) signatories = do
                               }
              signatorylinks <- sequence $ map (flip signLinkFromDetails [SignatoryPartner]) signatories
              let alllinks = authorlink : signatorylinks
+                 docfunctionality = if length alllinks > 2 
+                                    then AdvancedFunctionality
+                                    else documentfunctionality document
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
                     , documentmtime                  = now
                     , documentallowedidtypes         = [EmailIdentification]
+                    , documentfunctionality          = docfunctionality
                     }
          else return $ Left "Document not in preparation"
 
