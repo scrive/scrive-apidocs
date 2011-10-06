@@ -351,7 +351,7 @@ sendClosedEmails ctx document = do
 sendAwaitingEmail :: TemplatesMonad m => Context -> Document -> m ()
 sendAwaitingEmail ctx document = do
   let Just authorsiglink = getAuthorSigLink document
-  mail <- mailDocumentAwaitingForAuthor ctx (getFullName authorsiglink) document
+  mail <- mailDocumentAwaitingForAuthor ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsiglink]
                                                   , from = documentservice document  }
 
@@ -375,7 +375,7 @@ sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
-    mail <- mailDocumentRejected customMessage ctx (getFullName sl) document signalink
+    mail <- mailDocumentRejected customMessage ctx document signalink
     scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
 
@@ -2102,7 +2102,7 @@ prepareEmailPreview docid slid = do
          "reject" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
-               Just sl -> mailRejectMailContent Nothing ctx  BS.empty doc sl
+               Just sl -> mailRejectMailContent Nothing ctx  doc sl
                Nothing -> return ""
          _ -> return ""
     return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]

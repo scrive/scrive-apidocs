@@ -171,13 +171,11 @@ remindMailNotSignedStandardHeader document signlink =
 mailDocumentRejected :: TemplatesMonad m
                      => Maybe String
                      -> Context
-                     -> BS.ByteString
                      -> Document
                      -> SignatoryLink
                      -> m Mail
-mailDocumentRejected customMessage ctx username document rejector = do
+mailDocumentRejected customMessage ctx document rejector = do
     kontramail (fromMaybe "" $ getValueForProcess document processmailreject) $ do
-        field "username" username
         field "rejectorName" $ getSmartName rejector
         fieldM "footer" $ mailFooter ctx document
         field "customMessage" $ customMessage
@@ -186,12 +184,11 @@ mailDocumentRejected customMessage ctx username document rejector = do
 mailRejectMailContent :: TemplatesMonad m
                       => Maybe String
                       -> Context
-                      -> BS.ByteString
                       -> Document
                       -> SignatoryLink
                       -> m String
-mailRejectMailContent customMessage ctx  username  document  rejector =
-     (BS.toString . content) <$> mailDocumentRejected customMessage ctx username document rejector
+mailRejectMailContent customMessage ctx  document  rejector =
+     (BS.toString . content) <$> mailDocumentRejected customMessage ctx document rejector
      
 mailDocumentError :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentError ctx document = do
@@ -305,11 +302,11 @@ mailDocumentClosed ctx document@Document{documenttitle} = do
         field "service" $ isJust $ documentservice document
         contextFields ctx
 
-mailDocumentAwaitingForAuthor :: TemplatesMonad m => Context -> BS.ByteString -> Document  -> m Mail
-mailDocumentAwaitingForAuthor ctx authorname  document@Document{documenttitle,documentid} = do
+mailDocumentAwaitingForAuthor :: TemplatesMonad m => Context -> Document  -> m Mail
+mailDocumentAwaitingForAuthor ctx document@Document{documenttitle,documentid} = do
     signatories <- renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
     kontramail "mailDocumentAwaitingForAuthor" $ do
-        field "authorname" $ BS.toString authorname
+        field "authorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
         field "documenttitle" $ BS.toString  documenttitle
         field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc documentid)
         field "partylist" signatories

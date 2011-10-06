@@ -37,58 +37,102 @@ import Test.QuickCheck
 import Control.Monad
 import MinutesTime
 import Util.SignatoryLinkUtils
+import Data.Maybe
+import HtmlTest
+import User.UserView
+import Kontra
+import Util.HasSomeUserInfo
 
 mailsTests :: Connection -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
-    testCase "All invitation mails" $ testDocumentInvitationMail conn (toMailAddress params)
+    testCase "All document connected emails" $ testDocumentMails conn (toMailAddress params),
+    testCase "All user creation emails" $ testUserMails conn (toMailAddress params)
     ]
 
-testDocumentInvitationMail :: Connection -> Maybe String -> Assertion
-testDocumentInvitationMail conn mailTo = withTestEnvironment conn $ do
-    author <- addNewRandomAdvancedUser
-    mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-    (Right d) <- randomUpdate $ \t -> NewDocument author mcompany t (Signable Contract)
-    let docid = documentid d 
-    let authordetails = signatorydetails $ head $ documentsignatorylinks d
-    (sl1,sl2) <- rand 10 arbitrary
-    time <- getMinutesTime
-    _ <- randomUpdate $ UpdateDocumentSimple docid (authordetails,author) [sl1,sl2]
-    (Right doc) <- randomUpdate $ \ip -> AuthorSignDocument docid time ip Nothing         
-    ctx <- mailingContext conn
+testDocumentMails  :: Connection -> Maybe String -> Assertion
+testDocumentMails  conn mailTo = withTestEnvironment conn $ do
+  author <- addNewRandomAdvancedUser
+  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
+  forM_ allValues $ \l ->   
+    forM_ [Contract,Offer,Order] $ \doctype -> do
+        let tstr s = s ++ " " ++ show doctype 
+        (Right d) <- randomUpdate $ \t -> NewDocument author mcompany t (Signable doctype)
+        let docid = documentid d 
+        let authordetails = signatorydetails $ head $ documentsignatorylinks d
+        isl <- rand 10 arbitrary
+        now <- getMinutesTime
+        _ <- randomUpdate $ UpdateDocumentSimple docid (authordetails,author) [isl]
+        (Right doc) <- randomUpdate $ \ip -> AuthorSignDocument docid now ip Nothing         
+        let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
+        ctx <- mailingContext l conn
+        req <- mkRequest POST []
+        --Invitation Mails
+        let checkMail s mg = do
+                              m <- fst <$> (runTestKontra req ctx $ mg) 
+                              validMail (s ++ " "++ show doctype) m
+                              sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
+        checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
+        --remind mails
+        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
+        --cancel by author mail
+        checkMail "Cancel" $ mailCancelDocumentByAuthor True Nothing  ctx doc
+        --reject mail
+        checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
+        -- awaiting author email 
+        when (doctype == Contract) $ do
+          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
+        -- Virtual signing 
+        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl)  (10 `minutesAfter` now) ip Nothing []
+        (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
+        -- Sending closed email
+        checkMail "Closed" $ mailDocumentClosed ctx sdoc
+        -- Reminder after send
+        checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
+
+
+testUserMails :: Connection -> Maybe String -> Assertion
+testUserMails conn mailTo = withTestEnvironment conn $ do
+  forM_ allValues $ \l ->  do  
+    user <- addNewRandomAdvancedUser
+    ctx <- mailingContext l conn
     req <- mkRequest POST []
-    --Generating all invitation mails
-    let jsignatories = Just <$> filter (not . isAuthor) (documentsignatorylinks doc)
-    mailInvitations <- (map fst) <$> mapM (runTestKontra req ctx) ((mailInvitation True ctx Sign doc) <$> jsignatories)
-    --Sending for manual checking
-    mapM_ (sendoutForManualChecking req ctx mailTo) mailInvitations 
-    return ()
-
+    let checkMail s mg = do
+                           m <- fst <$> (runTestKontra req ctx $ mg) 
+                           validMail s m
+                           sendoutForManualChecking s req ctx mailTo m
+    checkMail "New account" $ do 
+          al <- newAccountCreatedLink user
+          newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al False
+    checkMail "New account by admin" $ do 
+          al <- newAccountCreatedLink user
+          mailNewAccountCreatedByAdmin ctx (getSmartName user) (getEmail user) al Nothing
+    
+    
+    
 -- MAIL TESTING UTILS
-validMail :: Mail -> Bool
-validMail _m = True
+validMail :: String -> Mail -> DB ()
+validMail name m = assertSuccess
 
 
-mailingContext :: Connection -> DB Context
-mailingContext conn = do
-    ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+mailingContext :: Region -> Connection -> DB Context
+mailingContext r conn = do
+    ctx <- mkContext =<< localizedVersion (Scrive,r,defaultRegionLang r)  <$> readGlobalTemplates
     return $ ctx {
                 ctxdbconn = conn,
                 ctxhostpart = "http://dev.skrivapa.se"
               }
 
 
-sendoutForManualChecking ::  Request -> Context ->  Maybe String -> Mail -> DB ()
-sendoutForManualChecking req ctx Nothing _ = assertSuccess
-sendoutForManualChecking req ctx (Just email) m = do
+sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
+sendoutForManualChecking titleprefix req ctx (Just email) m = do
     runTestKontra req ctx $ do
         let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
                                                 email=BS.fromString email}],
-                             title = BS.fromString $ "(Testing) " ++ (BS.toString $ title m)}
+                             title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
         a <- rand 10 arbitrary 
-        liftIO $ putStrLn $ show "Really sending"
         success <- sendMail testMailer a mailToSend
-        liftIO $ putStrLn $ show "Done"
-        assertBool "Mail has been relly send" success
+        assertBool "Mail could not be send" success
     assertSuccess 
 
 testMailer:: Mailer
