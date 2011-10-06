@@ -45,12 +45,12 @@ mailCancelOrderByAuthor=
 ##### MAIL AWAITING AUTHOR
 #####
 #####
-mailDocumentAwaitingForAuthorContent=
+mailDocumentAwaitingForAuthor=
     $_mailDocumentAwaitingForAuthorTitle()$
     $nicemail(
         mailheader= _mailDocumentAwaitingForAuthorTitle();
         mailp1 = mailDocumentAwaitingForAuthorContentMainP();
-        mailp3 = footer
+        mailp2 = footer
     )$
 #####
 mailDocumentAwaitingForAuthorContentMainP = 

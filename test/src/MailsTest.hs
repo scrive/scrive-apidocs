@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wwarn #-}
-
 module MailsTest (mailsTests) where
 
 import Control.Applicative
@@ -8,37 +6,25 @@ import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import qualified Data.ByteString.Char8 as BS
 
-import AppControl
 import DB.Classes
 import Context
-import Redirect
 import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
-import User.UserControl
 import Misc
 import Doc.DocState
 import Doc.DocViewMail
 import Mails.SendMail
-import User.Model
 import Company.Model
-import Control.Monad.Trans
 import Mails.MailsConfig
-import Mails.SendMail
-import TestKontra
-import TestingUtil
 import qualified Data.ByteString.UTF8 as BS
-import System.Random
 import Test.QuickCheck
 import Control.Monad
 import MinutesTime
 import Util.SignatoryLinkUtils
-import Data.Maybe
-import HtmlTest
 import User.UserView
 import Kontra
 import Util.HasSomeUserInfo
@@ -56,7 +42,6 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   forM_ allValues $ \l ->   
     forM_ [Contract,Offer,Order] $ \doctype -> do
-        let tstr s = s ++ " " ++ show doctype 
         (Right d) <- randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
         let docid = documentid d 
         let authordetails = signatorydetails $ head $ documentsignatorylinks d
@@ -80,8 +65,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email 
-        --when (doctype == Contract) $ do
-        --  checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
+        when (doctype == Contract) $ do
+          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
         -- Virtual signing 
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl)  (10 `minutesAfter` now) ip Nothing []
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
@@ -120,11 +105,9 @@ validMail :: String -> Mail -> DB ()
 validMail name m = do
     let c = BS.toString $ content m
     let exml = xmlParse' name c
-    liftIO $ putStrLn $  name
-    liftIO $ putStrLn $  c
     case exml of 
          Right _ -> assertSuccess
-         Left err -> assertFailure ("Valid HTML mail " ++ name ++ " : " ++ c) 
+         Left err -> assertFailure ("Valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err) 
 
 
 mailingContext :: Region -> Connection -> DB Context
@@ -139,13 +122,13 @@ mailingContext r conn = do
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
 sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
 sendoutForManualChecking titleprefix req ctx (Just email) m = do
-    runTestKontra req ctx $ do
-        let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
+    _ <- runTestKontra req ctx $ do
+            let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
                                                 email=BS.fromString email}],
-                             title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
-        a <- rand 10 arbitrary 
-        success <- sendMail testMailer a mailToSend
-        assertBool "Mail could not be send" success
+                                 title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
+            a <- rand 10 arbitrary 
+            success <- sendMail testMailer a mailToSend
+            assertBool "Mail could not be send" success
     assertSuccess 
 
 testMailer:: Mailer
