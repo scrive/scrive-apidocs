@@ -97,7 +97,7 @@ integrationService = do
 
 integrationAPI :: Kontra Response
 integrationAPI = dir "integration" $ msum [
-      dir "api" $  apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
+      dir "api" $ apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
     , dir "api" $ apiCall "new_document" createDocument              :: Kontrakcja m => m Response
     , dir "api" $ apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
     , dir "api" $ apiCall "document" getDocument                     :: Kontrakcja m => m Response
@@ -298,7 +298,8 @@ setDocumentTag =  do
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
     doc <- documentFromParam
-    res <- update $ ArchiveDocumentForAll $ documentid doc
+    -- we only control the author through the integration api
+    res <- update $ ArchiveDocumentForAuthor $ documentid doc
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
 
