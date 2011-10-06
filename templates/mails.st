@@ -25,7 +25,7 @@ mailCancelOrderByAuthor=
     <p>$_mailCancelOrderByAuthorContentBody()$</p>
     $footer:noescape()$
 #####
-mailDocumentAwaitingForAuthorContent=
+mailDocumentAwaitingForAuthor=
     $_mailDocumentAwaitingForAuthorTitle()$
     <p>$_hi()$,</p>
     <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
@@ -532,9 +532,8 @@ $messages:noescape()$
 <p>$_mailMismatchAuthorContentBestRegards()$</p>
 <p>$_skrivapa()$</p>
 ####
-mailInviteUserAsCompanyAccountTitle=$_mailInviteUserAsCompanyAccountTitle()$
-###
-mailInviteUserAsCompanyAccountContent=
+mailInviteUserAsCompanyAccount=
+  $_mailInviteUserAsCompanyAccountTitle()$
   <p>$_hi()$ $invited.fullnameOrEmail$,</p>
   <p>$_mailInviteUserAsCompanyAccountContentBodyFirst()$</p>
 
@@ -547,10 +546,9 @@ mailInviteUserAsCompanyAccountContent=
  <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsCompanyAccountContentLink()$</a></p>
   $poweredBySkrivaPaPara()$
 ####
-####
-mailCompanyAccountAcceptedTitle=$_mailCompanyAccountAcceptedTitle()$
 ###
-mailCompanyAccountAcceptedContent=
+mailCompanyAccountAccepted=
+  $_mailCompanyAccountAcceptedTitle()$
   <p>$_hi()$ $user.fullnameOrEmail$,</p>
   <p>$_mailCompanyAccountAcceptedContentBody()$</p>
   $poweredBySkrivaPaPara()$
