@@ -358,13 +358,15 @@ sendAwaitingEmail ctx document = do
 
 makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
 makeMailAttachments ctx document = do
-  mainfile <- liftM head $ case documentsealedfiles document of
-        [] -> documentfilesM document
-        _ -> documentsealedfilesM document
+  let mainfile = head $ case documentsealedfiles document of
+        [] -> documentfiles document
+        _ -> documentsealedfiles document
   let
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
-      allfiles = [mainfile] ++ aattachments ++ sattachments
+      allfiles' = [mainfile] ++ aattachments ++ sattachments
+  allfiles <- liftM catMaybes $ mapM (query . GetFileByFileID) allfiles'
+  let
       filenames = map filename allfiles
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
@@ -878,7 +880,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
     signlast <- isFieldSet "signlast"
 
-    let existingattachments = map (fileid . authorattachmentfile) (documentauthorattachments udoc)
+    let existingattachments = map (authorattachmentfile) (documentauthorattachments udoc)
         idsforremoval = [read $ BS.toString f | (f, r) <- zip attidsnums removeatt
                                               , r] :: [FileID]
     fileinputs <- getDataFnM $ lookInputs "attachment"
@@ -887,11 +889,11 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     -- if the FileID exists in the existing author attachments
     -- it's not a DocumentID
     -- otherwise, consider it a DocumentID to add
-    let idsforadd = [did | (did, fid) <- [( read $ BS.toString sid
+    let idsforadd = [fid | (_did :: DocumentID, fid) <- [( read $ BS.toString sid
                                           , read $ BS.toString sid) | (sid, r) <- zip attidsnums removeatt
                                                                     , not r]
                          , not $ fid `elem` existingattachments]
-                    ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
+                    ++ (map (head . documentfiles) $ catMaybes mattachments) :: [FileID]
     ndoc <- guardRightM $ updateDocAuthorAttachments (documentid udoc) idsforadd idsforremoval
     return $ LinkDesignDoc $ DesignStep3 (documentid ndoc) signlast
 
@@ -1885,14 +1887,14 @@ handleCreateFromTemplate = withUserPost $ do
  -}
 authorAttachmentHasFileID :: FileID -> AuthorAttachment -> Bool
 authorAttachmentHasFileID fid attachment =
-  fid == fileid (authorattachmentfile attachment)
+  fid == authorattachmentfile attachment
 
 {- |
    The FileID matches the SignatoryAttachment.
 -}
 sigAttachmentHasFileID :: FileID -> SignatoryAttachment -> Bool
 sigAttachmentHasFileID fid attachment =
-  maybe False ((fid ==) . fileid) (signatoryattachmentfile attachment)
+  maybe False (fid ==) (signatoryattachmentfile attachment)
 
 {- |
    Download the attachment with the given fileid
@@ -1903,14 +1905,14 @@ handleAttachmentDownloadForAuthor did fid = do
   case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
     Just AuthorAttachment{ authorattachmentfile } -> do
       ctx <- getContext
-      contents <- liftIO $ getFileContents ctx authorattachmentfile
+      contents <- liftIO $ getFileIDContents ctx authorattachmentfile
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
           res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
       return res2
     Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
       Just SignatoryAttachment{ signatoryattachmentfile = Just file } -> do
         ctx <- getContext
-        contents <- liftIO $ getFileContents ctx file
+        contents <- liftIO $ getFileIDContents ctx file
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
         return res2
@@ -1925,10 +1927,10 @@ handleAttachmentDownloadForViewer did sid mh fid = do
   ctx <- getContext
   case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
       Just AuthorAttachment{ authorattachmentfile } ->
-        respondWithPDF =<< liftIO (getFileContents ctx authorattachmentfile)
+        respondWithPDF =<< liftIO (getFileIDContents ctx authorattachmentfile)
       Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
         Just SignatoryAttachment{ signatoryattachmentfile = Just file } ->
-          respondWithPDF =<< liftIO (getFileContents ctx file)
+          respondWithPDF =<< liftIO (getFileIDContents ctx file)
         _ -> mzero -- attachment with this file ID does not exist
         
         
@@ -2012,7 +2014,8 @@ handleSigAttach docid siglinkid mh = do
   -- we use gs to do that of course
   ctx <- getContext
   content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
-  _ <- update $ SaveSigAttachment docid attachname email content
+  file <- update $ NewFile attachname content
+  _ <- update $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc doc siglink
 
 

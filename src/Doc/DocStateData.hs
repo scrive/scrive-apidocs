@@ -924,17 +924,63 @@ data CSVUpload = CSVUpload
 
 
 -- for Author Attachment and Signatory Attachments, obviously -EN
-data AuthorAttachment = AuthorAttachment { authorattachmentfile :: File }
+data AuthorAttachment0 = AuthorAttachment0 { authorattachmentfile0 :: File }
                       deriving (Eq, Ord, Typeable)
 
-data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: Maybe File
+instance Version AuthorAttachment0
+
+data AuthorAttachment = AuthorAttachment { authorattachmentfile :: FileID }
+                      deriving (Eq, Ord, Typeable)
+
+instance Version AuthorAttachment where
+    mode = extension 1 (Proxy :: Proxy AuthorAttachment0)
+
+instance Migrate AuthorAttachment0 AuthorAttachment where
+    migrate (AuthorAttachment0 
+             { authorattachmentfile0 
+             }) = AuthorAttachment 
+                { authorattachmentfile = unsafePerformIO $ update $ PutFileUnchecked authorattachmentfile0
+                }
+
+
+
+data SignatoryAttachment0 = SignatoryAttachment0 { signatoryattachmentfile0            :: Maybe File
+                                                 , signatoryattachmentemail0           :: BS.ByteString
+                                                 , signatoryattachmentname0            :: BS.ByteString
+                                                 , signatoryattachmentdescription0     :: BS.ByteString
+                                                 }
+                         deriving (Eq, Ord, Typeable)
+
+
+instance Version SignatoryAttachment0
+
+data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: Maybe FileID
                                                , signatoryattachmentemail           :: BS.ByteString
                                                , signatoryattachmentname            :: BS.ByteString
                                                , signatoryattachmentdescription     :: BS.ByteString
                                                }
                          deriving (Eq, Ord, Typeable)
 
+instance Version SignatoryAttachment where
+    mode = extension 1 (Proxy :: Proxy SignatoryAttachment0)
 
+instance Migrate SignatoryAttachment0 SignatoryAttachment where
+    migrate (SignatoryAttachment0 
+             { signatoryattachmentfile0
+             , signatoryattachmentemail0
+             , signatoryattachmentname0
+             , signatoryattachmentdescription0
+             }) = SignatoryAttachment 
+                { signatoryattachmentfile         = maybe Nothing (Just . unsafePerformIO . update . PutFileUnchecked) signatoryattachmentfile0
+                , signatoryattachmentemail        = signatoryattachmentemail0
+                , signatoryattachmentname         = signatoryattachmentname0
+                , signatoryattachmentdescription  = signatoryattachmentdescription0
+                }
+
+$(deriveSerialize ''AuthorAttachment0)
+$(deriveSerialize ''SignatoryAttachment)
+$(deriveSerialize ''SignatoryAttachment0)
+$(deriveSerialize ''AuthorAttachment)
 
 
 instance Eq Document where
@@ -1012,13 +1058,6 @@ instance FromReqURI DocumentID where
 
 instance FromReqURI SignatoryLinkID where
     fromReqURI = readM
-
-
-$(deriveSerialize ''AuthorAttachment)
-instance Version AuthorAttachment
-
-$(deriveSerialize ''SignatoryAttachment)
-instance Version SignatoryAttachment
 
 $(deriveSerialize ''FieldDefinition0)
 instance Version FieldDefinition0

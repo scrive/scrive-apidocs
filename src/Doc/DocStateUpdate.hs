@@ -150,7 +150,7 @@ signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
   mcompany <- getCompanyForUser user
   transActionNotAvailable <$> update (SignableFromDocumentIDWithUpdatedAuthor user mcompany did)
 
-updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [DocumentID] -> [FileID] -> m (Either DBError Document)
+updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [FileID] -> [FileID] -> m (Either DBError Document)
 updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
   transActionNotAvailable <$> update (UpdateDocumentAttachments did adds removes)
 

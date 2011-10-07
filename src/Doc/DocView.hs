@@ -299,7 +299,8 @@ documentJSON msl _crttime doc = do
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
        ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
-       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
+       -- FIXME
+       -- ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
@@ -349,9 +350,8 @@ signatoryAttachmentJSON :: SignatoryAttachment -> JSValue
 signatoryAttachmentJSON sa = JSObject $ toJSObject $
     [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
       , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
-      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
+      -- , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
     ]
-
 
 signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = JSArray $
@@ -833,9 +833,10 @@ documentAttachmentDesignFields docid atts = do
   field "attachmentcount" $ length atts
   fieldFL "attachments" $ map attachmentFields atts
   where
-    attachmentFields AuthorAttachment{authorattachmentfile = File {fileid, filename}} = do
+    attachmentFields AuthorAttachment{authorattachmentfile = fileid} = do
       field "attachmentid" $ show fileid
-      field "attachmentname" $ filename
+      -- FiXME
+      -- field "attachmentname" $ filename
       field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
 
 documentFunctionalityFields :: MonadIO m => Document -> Fields m

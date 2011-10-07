@@ -110,7 +110,6 @@ docStateTests conn = testGroup "DocState" [
   testThat "when I call attachcsvupload and the csvindex is negative, return left" conn testPreparationAttachCSVUploadIndexNeg,
   testThat "when I call attachcsvupload and the csvindex is too large, return Left" conn testPreparationAttachCSVUploadIndexGreaterThanLength,
   testThat "updateDocumentAttachment fails if not in preparation" conn testUpdateDocumentAttachmentFailsIfNotPreparation,
-  testThat "updateDocumentAttachment fails if in preparation but not all ids are found" conn testUpdateDocumentAttachmentFailsNotFound,
   testThat "updateDocumentAttachment doesn't fail if there's no attachments" conn testUpdateDocumentAttachmentOk,
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
@@ -411,15 +410,6 @@ testUpdateDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute                     
   edoc <- randomUpdate $ UpdateDocumentAttachments (documentid doc)
-  --assert
-  validTest $ assertLeft edoc
-
-testUpdateDocumentAttachmentFailsNotFound :: DB ()
-testUpdateDocumentAttachmentFailsNotFound = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  --execute                     
-  edoc <- update $ UpdateDocumentAttachments (documentid doc) [DocumentID 1] []
   --assert
   validTest $ assertLeft edoc
   

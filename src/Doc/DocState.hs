@@ -557,11 +557,19 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
    the document not being in preparation mode then a Left is returned.
 -}
 updateDocumentAttachments :: DocumentID
-                          -> [DocumentID]
+                          -> [FileID]
                           -> [FileID]
                           -> Update Documents (Either String Document)
-updateDocumentAttachments _docid _idstoadd _idstoremove = do
-  error "updateDocumentAttachments not implemented"
+updateDocumentAttachments docid idstoadd idstoremove = do
+  modifySignableOrTemplate docid $ \doc ->
+      case documentstatus doc of
+        Preparation -> Right doc { documentauthorattachments =
+                                      [da | da <- documentauthorattachments doc,
+                                       authorattachmentfile da `notElem` idstoremove]
+                                      ++
+                                      map AuthorAttachment idstoadd
+                                 }
+        _ -> Left "Can only attach to document in Preparation"
 #if 0
   documents <- ask
   let addattachments   = toList $ documents @+ idstoadd
@@ -1614,22 +1622,16 @@ updateSigAttachments docid sigatts =
     If there's a problem such as the document isn't in a pending or awaiting author state,
     or the document does not exist a Left is returned.
 -}
-saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Update Documents (Either String Document)
-saveSigAttachment docid name email content = do
-  documents <- ask
-  fileid <- getUnique64 documents FileID
+saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> FileID -> Update Documents (Either String Document)
+saveSigAttachment docid name email fid = do
   modifySignable docid $ \doc ->
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-      False -> Left "Only attach when the document is signable."
+      False -> Left $ "saveSigAttachment can be used only in Pending or AwaitingAuthor status, document is in " ++ show (documentstatus doc) ++ " docid #" ++ show docid
       True -> Right doc { documentsignatoryattachments = newsigatts }
         where
           newsigatts = map addfile $ documentsignatoryattachments doc
           addfile a | email == signatoryattachmentemail a && name == signatoryattachmentname a =
-            a { signatoryattachmentfile =
-                   Just $ File { fileid = fileid
-                               , filename = name
-                               , filestorage = FileStorageMemory content
-                               }
+            a { signatoryattachmentfile = Just $ fid
               }
           addfile a = a
 
@@ -1643,13 +1645,12 @@ deleteSigAttachment docid email fid =
   modifySignable docid $ \doc -> do
     let newsigatts = map removefile $ documentsignatoryattachments doc
         removefile a | email == signatoryattachmentemail a && 
-                       isJust (signatoryattachmentfile a) &&
-                       (fileid $ fromJust $ signatoryattachmentfile a) == fid = a { signatoryattachmentfile = Nothing }
+                       signatoryattachmentfile a == Just fid = a { signatoryattachmentfile = Nothing }
         removefile a = a
 
 
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-      False -> Left "Only attach when the document is signable."
+      False -> Left $ "deleteSigAttachment can be used only in Pending or AwaitingAuthor status, document is in " ++ show (documentstatus doc) ++ " docid #" ++ show docid
       True -> Right doc { documentsignatoryattachments = newsigatts }
 
 storeDocumentForTesting :: Document -> Update Documents DocumentID

@@ -105,7 +105,8 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                then makeFullLink ctx document $ show $ LinkSignDoc document signlink
                else makeFullLink ctx document $ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         field "isattachments" $ length (documentauthorattachments document) > 0
-        field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
+        -- FIXME: get the attachments      
+        -- field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
 
 remindMailSigned :: TemplatesMonad m
                  => Bool
@@ -278,7 +279,8 @@ mailInvitation forMail
         field "issignatory" $ issignatory || not forMail
         field "creatorname" creatorname
         field "isattachments" $ length (documentauthorattachments document) > 0
-        field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
+        -- FIXME: get attachments
+        -- field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
         field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
         fieldFL "sigattachments" $ do
             for (buildattach csvstring document (documentsignatoryattachments document) [])
