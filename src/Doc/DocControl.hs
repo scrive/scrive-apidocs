@@ -1809,9 +1809,8 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
   guard $ signatorymagichash siglink == magichash1
   return ()
 
-mainPage :: Kontrakcja m => m String
-mainPage =  do
-    guardLoggedIn
+handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
+handleShowUploadPage = checkUserTOSGet $ do
     showTemplates <- isFieldSet "showTemplates"
     tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess
