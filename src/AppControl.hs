@@ -43,7 +43,7 @@ import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
-import qualified ELegitimation.BankID as BankID
+import qualified ELegitimation.Routes as Elegitimation
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
@@ -108,8 +108,8 @@ data AppGlobals
    the function for any given path and method.
 -}
 handleRoutes :: Locale -> Kontra Response
-handleRoutes locale = msum [
-       regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
+handleRoutes locale = msum $ 
+     [ regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
      , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome locale
      
      , publicDir locale "priser" "pricing" LinkPriceplan handlePriceplanPage
@@ -127,16 +127,9 @@ handleRoutes locale = msum [
 
      -- this is SMTP to HTTP gateway
      , mailAPI
-
-     -- e-legitimation stuff
-     -- I put this stuff up here because someone changed things out from under me
-     -- I will rearrange this later
-     , dir "s" $ hGet4                        $ toK4 $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken3 $ toK3 $ BankID.handleSignPostBankID
-     , dir "d" $ hGet2                        $ toK2 $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost1        $ toK1 $ BankID.handleIssuePostBankID
-
-     , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
+     ] 
+  ++ Elegitimation.handleRoutes
+  ++ [ dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
      , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  This will be droped 
      
@@ -335,11 +328,6 @@ handleRoutes locale = msum [
      -- viral invite
      , dir "invite"      $ hPostNoXToken0 $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp0 $ toK0 $ UserControl.handleQuestion
-     -- e-legitimation stuff
-     , dir "s" $ hGet4  $ toK4 $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPost3 $ toK3 $ BankID.handleSignPostBankID
-     , dir "d" $ hGet2  $ toK2 $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost1 $ toK1 $ BankID.handleIssuePostBankID
        
      -- a general purpose blank page
      --, dir "/blank" $ hGet0 $ toK0 $ simpleResponse ""
