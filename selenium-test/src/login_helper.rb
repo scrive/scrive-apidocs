@@ -22,7 +22,7 @@ class LoginHelper
     (@wait.until { @driver.find_element :name => "email" }).send_keys email
     (@wait.until { @driver.find_element :name => "password" }).send_keys password
     (@wait.until { @driver.find_element :css => "#loginForm a.submit" }).click
-    @wait.until { @driver.find_element :xpath => "//a[@href='/logout']" }
+    (@wait.until { @driver.find_element :css => "a.logout" })
     
     if (@driver.find_elements :id => "toscontainer").length>0 then
       (@wait.until { @driver.find_element :css => "input#tos" }).click
@@ -33,7 +33,7 @@ class LoginHelper
   end
   
   def logout
-    (@wait.until { @driver.find_element :xpath => "//a[@href='/logout']" }).click
+    (@wait.until { @driver.find_element :css => "a.logout" }).click
     @wait.until { @driver.find_element :css => "a.login-button" }
   end
 end
