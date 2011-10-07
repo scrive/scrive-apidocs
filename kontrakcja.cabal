@@ -86,6 +86,10 @@ Flag allow-warnings
   Description: Disable -Werror flag
   Default: False
 
+Flag test-coverage
+  Description: Collects tests coverage status
+  Default: False
+
 Executable kontrakcja-server
   if flag(server)
     Buildable: True
@@ -211,7 +215,9 @@ Executable kontrakcja-test
 
   Hs-source-dirs: test/src src pdfseal/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fhpc
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if flag(test-coverage)
+    GHC-Options: -fhpc
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if !os(windows)
