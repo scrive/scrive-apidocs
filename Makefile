@@ -6,7 +6,7 @@ TESTS=all
 
 .PHONY : all
 all:
-	cabal install
+	cabal install -f-test
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
 dist/dbmodel/$(DBNAME).png:
@@ -17,7 +17,7 @@ dist/dbmodel/$(DBNAME).png:
 # Build and run all tests
 .PHONY : test
 test:
-	cabal install -f-server
+	cabal install -f-server -ftest-coverage
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
@@ -25,7 +25,7 @@ test:
 .PHONY : hpc
 hpc:
 	build-scripts/createCoverageReports.sh
-	echo "Now open coverage-reports/hpc_index.html"
+	@echo "Now open coverage-reports/hpc_index.html"
 
 # Restore the test database to its original condition
 .PHONY : reset-test-db
