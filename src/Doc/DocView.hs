@@ -469,9 +469,10 @@ docForListJSON tl crtime user doc =
   let link = case getSigLinkFor doc user of 
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc 
+      sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   in fmap toJSObject $ propagateMonad  $
     [ ("fields" , jsonPack <$> docFieldsListForJSON tl crtime doc),
-      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON tl crtime doc) (documentsignatorylinks doc)),
+      ("subfields" , JSArray <$>  fmap jsonPack <$> (mapM (signatoryFieldsListForJSON tl crtime doc) (filter sigFilter (documentsignatorylinks doc)))),
       ("link", return $ JSString $ toJSString $  show link)
     ]
 
