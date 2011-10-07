@@ -21,36 +21,39 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 
 statisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
-statisticsFieldsByDay stats = 
-  for stats (\(ct, c:s:i:u:_) -> do
+statisticsFieldsByDay stats = for stats f
+  where f (ct, c:s:i:u:_) = do
                 field "date" $ showAsDate ct
                 field "closed" c
                 field "signatures" s
                 field "sent" i
                 field "users" u
-                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
+                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
+        f _ = error $ "statisticsFieldsByDay: bad stats: "++show stats
 
 statisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
-statisticsFieldsByMonth stats = 
-  for stats (\(ct, c:s:i:u:_) -> do
+statisticsFieldsByMonth stats = for stats f
+  where f (ct, c:s:i:u:_) = do
                 field "date" $ showAsMonth ct
                 field "closed" c
                 field "signatures" s
                 field "sent" i
                 field "users" u
-                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
+                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
+        f _ = error $ "statisticsFieldsByMonth: bad stats: "++show stats
 
 
 statisticsCompanyFieldsByDay :: (Functor m, MonadIO m) => [(Int, String, [Int])] -> [Fields m]
-statisticsCompanyFieldsByDay stats = 
-  for stats (\(ct, u, c:s:i:_) -> do
+statisticsCompanyFieldsByDay stats = for stats f
+  where f (ct, u, c:s:i:_) = do
                 field "date" $ showAsDate ct
                 field "user" u
                 field "istotal" (u == "Total")
                 field "closed" c
                 field "signatures" s
                 field "sent" i
-                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
+                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
+        f _ = error $ "statisticsCompanyFieldsByDay: bad stats: "++show stats
 
 statisticsCSV :: [DocStatEvent] -> String
 statisticsCSV events = 

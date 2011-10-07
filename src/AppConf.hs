@@ -32,6 +32,7 @@ data AppConf
               , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
               , aesConfig          :: AESConf                      -- ^ aes key/iv for encryption
               , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
+              , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
               }
       deriving (Show,Read,Eq,Ord)
 

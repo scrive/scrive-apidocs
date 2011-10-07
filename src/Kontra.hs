@@ -4,7 +4,6 @@ module Kontra
     , KontraMonad(..)
     , isSuperUser
     , Kontra(runKontra)
-    , initialUsers
     , clearFlashMsgs
     , addELegTransaction
     , logUserToContext
@@ -64,23 +63,6 @@ instance KontraMonad Kontra where
 
 instance TemplatesMonad Kontra where
     getTemplates = ctxtemplates <$> getContext
-
-{- |
-   A list of default user emails.  These should start out as the users
-   in a brand new system.
--}
-initialUsers :: [Email]
-initialUsers = map (Email . BS.fromString)
-         [ "gracjanpolak@gmail.com"
-         , "lukas@skrivapa.se"
-         , "ericwnormand@gmail.com"
-         , "oskar@skrivapa.se"
-         , "kbaldyga@gmail.com"
-         , "viktor@skrivapa.se"
-         , "andrzej@skrivapa.se"
-         , "mariusz@skrivapa.se"
-         , "heidi@skrivapa.se"
-         ]
 
 {- |
    Whether the user is an administrator.
