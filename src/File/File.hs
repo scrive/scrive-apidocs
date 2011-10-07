@@ -32,7 +32,14 @@ data File = File {
     fileid      :: FileID
   , filename    :: BS.ByteString
   , filestorage :: FileStorage
-  } deriving (Typeable)
+  } 
+
+{- | Watch out. This instance is a bit special. It has to be
+   "File" - as this is what database uses as table name.  Simple
+   deriving clause will create a "MyApp.MyModule.File"!  -}
+
+instance Typeable File where typeOf _ = mkTypeOf "File"
+
 
 instance Eq File where
     a == b = fileid a == fileid b

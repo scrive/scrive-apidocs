@@ -36,6 +36,8 @@ import Data.Functor
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import Happstack.State (query)
+import File.File
 
 mailDocumentRemind :: TemplatesMonad m
                    => Maybe BS.ByteString
@@ -68,6 +70,7 @@ remindMailNotSigned :: TemplatesMonad m
                     -> m Mail
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
+    authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     kontramail (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         field "documenttitle" $ documenttitle document
         fieldM "header" $ do
@@ -105,8 +108,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                then makeFullLink ctx document $ show $ LinkSignDoc document signlink
                else makeFullLink ctx document $ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         field "isattachments" $ length (documentauthorattachments document) > 0
-        -- FIXME: get the attachments      
-        -- field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
+        field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
 
 remindMailSigned :: TemplatesMonad m
                  => Bool
@@ -221,6 +223,7 @@ mailInvitation forMail
                invitationto
                document@Document{ documenttimeouttime, documentinvitetext, documenttitle }
                msiglink = do
+    authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
     let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
     let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
@@ -279,8 +282,7 @@ mailInvitation forMail
         field "issignatory" $ issignatory || not forMail
         field "creatorname" creatorname
         field "isattachments" $ length (documentauthorattachments document) > 0
-        -- FIXME: get attachments
-        -- field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
+        field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
         field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
         fieldFL "sigattachments" $ do
             for (buildattach csvstring document (documentsignatoryattachments document) [])

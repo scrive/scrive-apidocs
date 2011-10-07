@@ -906,8 +906,9 @@ getDocumentStats = queryDocs $ \documents ->
     Maybe we should have some sort of error case instead of returning 0.
 -}
 fileModTime :: FileID -> Query Documents MinutesTime
-fileModTime fileid = queryDocs $ \documents ->
-  maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
+fileModTime _fileid = -- queryDocs $ \documents ->
+  return $ fromSeconds 0
+  -- maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
 {- |
     Links up a signatory link to a user account.  This should happen when 

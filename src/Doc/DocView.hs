@@ -102,6 +102,8 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
+import Happstack.State (query)
+import File.File
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -295,12 +297,12 @@ documentJSON msl _crttime doc = do
     ctx <- getContext
     files <- documentfilesM doc
     sealedfiles <- documentsealedfilesM doc
+    authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
        ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
-       -- FIXME
-       -- ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
+       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
