@@ -5,3 +5,7 @@ kontrakcja.conf
 kontrakcja_test.conf
 kontrakcja-server
 *.cookies
+selenium-test/selenium-test.properties
+kontrakcja-test.tix
+jslint.txt
+.hpc/
