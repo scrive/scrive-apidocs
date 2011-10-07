@@ -686,9 +686,8 @@ $messages:noescape()$
 <p>$_mailMismatchAuthorContentBestRegards()$</p>
 #### 
 ####
-mailInviteUserAsCompanyAccountTitle=$_mailInviteUserAsCompanyAccountTitle()$
-###
-mailInviteUserAsCompanyAccountContent=
+mailInviteUserAsCompanyAccount=
+  $_mailInviteUserAsCompanyAccountTitle()$
   <p>$_hi()$ $invited.fullnameOrEmail$,</p>
   <p>$_mailInviteUserAsCompanyAccountContentBodyFirst()$</p>
 

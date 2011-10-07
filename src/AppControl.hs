@@ -155,7 +155,7 @@ handleRoutes locale = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "upload" $ hGet0 $ toK0 $ DocControl.mainPage
+     , dir "upload" $ hGet0 $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost0 $ toK0 $ UserControl.handlePostUserLocale
      , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive

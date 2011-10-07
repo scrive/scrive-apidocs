@@ -47,8 +47,8 @@ checkPasswordsMatch p1 p2 =
        else Left flashMessagePasswordsDontMatch
 
 
-handleUserGet :: Kontrakcja m => m Response
-handleUserGet = do
+handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
+handleUserGet = checkUserTOSGet $ do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
