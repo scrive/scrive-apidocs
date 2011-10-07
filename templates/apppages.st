@@ -332,7 +332,7 @@ header=
                                  </form>
                                 </span>
                                  
-     <a href="$linklogout$" class="document-button">$_headerLogOut()$</a>
+     <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
      <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
      <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
      <a href="$linkupload$" class="document-button">$_headerSend()$</a>

@@ -801,7 +801,7 @@ accountFromSignInputs=
 accountFromSignFooter=
     <div class="accountFromSignFooter">
       <div class="float-left">
-        <a class="declineAccountFromSign cancel" style="width:60px;">$_accountFromSignFooterNoThx()$</a>
+        <a class="declineAccountFromSign cancel" style="width:70px;">$_accountFromSignFooterNoThx()$</a>
       </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>

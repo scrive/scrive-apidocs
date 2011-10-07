@@ -10,6 +10,7 @@ module Doc.DocState
     , undeliveredSignatoryLinks
     , ArchiveDocuments(..)
     , ArchiveDocumentForAll(..)
+    , ArchiveDocumentForAuthor(..)
     , RestoreArchivedDocuments(..)
     , ReallyDeleteDocuments(..)
     , DeleteDocumentRecordIfRequired(..)
@@ -513,10 +514,14 @@ updateDocumentSimple did (authordetails,author) signatories = do
                               }
              signatorylinks <- sequence $ map (flip signLinkFromDetails [SignatoryPartner]) signatories
              let alllinks = authorlink : signatorylinks
+                 docfunctionality = if length alllinks > 2 
+                                    then AdvancedFunctionality
+                                    else documentfunctionality document
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
                     , documentmtime                  = now
                     , documentallowedidtypes         = [EmailIdentification]
+                    , documentfunctionality          = docfunctionality
                     }
          else return $ Left "Document not in preparation"
 
@@ -1029,6 +1034,15 @@ archiveDocuments user docids =
 -}
 archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
 archiveDocumentForAll docid = archiveDocumentFor (const True) docid
+
+{- |
+   Archives a document for the author. This is just a soft delete,
+    the document will appear in their recycle bin//trash cans.
+    A Left is returned when there are problems, such as the document not existing or a document
+    being in pending mode.
+-}
+archiveDocumentForAuthor :: DocumentID -> Update Documents (Either String Document)
+archiveDocumentForAuthor docid = archiveDocumentFor isAuthor docid
 
 {- |
     Helper function that makes it easier to run update functions that return Either over
@@ -1706,6 +1720,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'archiveDocumentForAll
+                        , 'archiveDocumentForAuthor
                         , 'restoreArchivedDocuments
                         , 'reallyDeleteDocuments
                         , 'deleteDocumentRecordIfRequired

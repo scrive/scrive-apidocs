@@ -36,6 +36,7 @@ import Data.Typeable
 import Doc.Invariants
 import Doc.DocInfo
 import Doc.DocProcess
+import ActionSchedulerState
 
 instance Arbitrary UserID where
   arbitrary = do
@@ -117,7 +118,9 @@ instance Arbitrary DocumentUI where
     a <- arbitrary
     return $ DocumentUI a
 
-
+instance Arbitrary ActionID where
+  arbitrary = ActionID <$> arbitrary
+  
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
      This is a class to make it more random - so to attach this fields for example.
@@ -581,7 +584,7 @@ class RandomCallable a b where
   randomCall :: MonadIO m => a -> m b
 
 instance RandomCallable (IO res) res where
-  randomCall = liftIO
+  randomCall = liftIO  
 
 instance (Typeable res) => RandomCallable res res where
   randomCall = return 

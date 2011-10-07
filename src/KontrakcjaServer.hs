@@ -49,7 +49,6 @@ import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
-import Kontra
 import Misc
 import qualified MemCache
 import File.File
@@ -117,11 +116,11 @@ listenOn iface port = do
             return sock
         )
 
-initDatabaseEntries :: Connection -> IO ()
-initDatabaseEntries conn = do
+initDatabaseEntries :: Connection -> [(Email,String)] -> IO ()
+initDatabaseEntries conn iusers = do
   -- create initial database entries
-  passwd <- createPassword (BS.pack "admin")
-  flip mapM_ Kontra.initialUsers $ \email -> do
+  flip mapM_ iusers $ \(email,passwordstring) -> do
+      passwd <- createPassword (BS.pack passwordstring)
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
@@ -220,7 +219,7 @@ runKontrakcjaServer = Log.withLogger $ do
                                         -- FIXME: make it checkpoint always at the same time
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
-                                          initDatabaseEntries conn
+                                          initDatabaseEntries conn (initialUsers appConf)
                                           _ <- forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination
@@ -254,6 +253,7 @@ defaultConf progName
                   , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
                   }
               , admins             = map (Email . BSU.fromString) ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+              , initialUsers       = []
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]

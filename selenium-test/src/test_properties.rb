@@ -48,6 +48,21 @@ class TestProperties
     is_missing_second_counterpart = @second_counterpart_email.nil? || @second_counterpart_password.nil? || @second_counterpart_fstname.nil? || @second_counterpart_sndname.nil?
     is_missing_third_counterpart = @third_counterpart_email.nil? || @third_counterpart_password.nil? || @third_counterpart_fstname.nil? || @third_counterpart_sndname.nil?
     is_missing_a_counterpart = @is_missing_first_counterpart || @is_missing_second_counterpart || @is_missing_third_counterpart
+    if @contract_pdf_path.nil? then
+      @contract_pdf_path = Dir.pwd + "/selenium-test/samples/contract.pdf"
+    end
+    if @first_author_attachment_pdf_path.nil? then
+      @first_author_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/author-att-1.pdf"
+    end
+    if @second_author_attachment_pdf_path.nil? then
+      @second_author_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/author-att-2.pdf"
+    end
+    if @first_sig_attachment_pdf_path.nil? then
+      @first_sig_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/sig-att-1.pdf"
+    end
+    if @second_sig_attachment_pdf_path.nil? then
+      @second_sig_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/sig-att-1.pdf"
+    end
     is_missing_pdf = @contract_pdf_path.nil? || @first_author_attachment_pdf_path.nil? || @second_author_attachment_pdf_path.nil? || @first_sig_attachment_pdf_path.nil? || @second_sig_attachment_pdf_path.nil?
     
     if is_missing_url || is_missing_tester || is_missing_a_counterpart || is_missing_pdf then
@@ -68,11 +83,6 @@ class TestProperties
       msg += "third-counterpart-password password12\n"
       msg += "third-counterpart-fstname Emily May\n"
       msg += "third-counterpart-sndname Green\n"
-      msg += "contract-pdf-path ~/samples/contract.pdf"
-      msg += "first-author-attachment-pdf-path ~/samples/firstauthorattachment.pdf"
-      msg += "second-author-attachment-pdf-path ~/samples/secondauthorattachment.pdf"
-      msg += "first-sig-attachment-pdf-path ~/samples/firstsigattachment.pdf"
-      msg += "second-sig-attachment-pdf-path ~/samples/secondsigattachment.pdf"
       raise msg
     end
   end

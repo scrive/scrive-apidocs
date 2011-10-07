@@ -10,7 +10,7 @@
 -- standard data wrappers.
 -----------------------------------------------------------------------------
 module Templates.TemplatesUtils
-    (wrapHTML,wrapHTML',option,soption,Option(..),markParity,kontramail) where
+(option,soption,Option(..),markParity,kontramail,contextFields) where
 
 import Control.Monad.IO.Class
 import Data.Data
@@ -20,17 +20,13 @@ import Misc
 import Data.Char
 import qualified AppLogger as Log
 import qualified Data.ByteString.UTF8 as BS
+import Kontra
 
 {- Common templates - should be shared and it seams like a good place for them -}
 
 {- |
    Wrap an HTML string so that it becomes the body of an HTML document
  -}
-wrapHTML :: KontrakcjaTemplates -> String -> IO String
-wrapHTML templates body =  renderTemplate templates "wrapHTML" [("body",body)]
-
-wrapHTML' :: TemplatesMonad m => String -> m String
-wrapHTML' body = renderTemplateFM "wrapHTML" $ field "body" body
 
 {- |
    Option one of standard wrappers. It holds two strings and bool.
@@ -73,13 +69,15 @@ markOdd f = do
     field "even" False
     field "odd"  True
 
-kontramail :: TemplatesMonad m => String -> Fields m -> m Mail
+kontramail :: TemplatesMonad m  => String -> Fields m -> m Mail
 kontramail tname fields = do
     Log.debug "Mail rendering by kontramail"
     wholemail <- renderTemplateFM tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
     Log.debug $ "kontramail->Title:" ++ title
-    content' <- wrapHTML' content
     return $ emptyMail  {   title   = BS.fromString title
-                          , content = BS.fromString content'
+                          , content = BS.fromString content
                         }
+                        
+contextFields ::(MonadIO m) => Context -> Fields m                       
+contextFields ctx = field "ctxhostpart" (ctxhostpart ctx)

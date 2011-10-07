@@ -227,6 +227,7 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
       Nothing -> error "No author in Document"
       Just authorsl -> do
         mail <- mailMismatchSignatory
+                ctx
                 document
                 (BS.toString $ getEmail authorsl)
                 (BS.toString $ getFullName authorsl)
@@ -352,7 +353,7 @@ sendClosedEmails ctx document = do
 sendAwaitingEmail :: TemplatesMonad m => Context -> Document -> m ()
 sendAwaitingEmail ctx document = do
   let Just authorsiglink = getAuthorSigLink document
-  mail <- mailDocumentAwaitingForAuthor ctx (getFullName authorsiglink) document
+  mail <- mailDocumentAwaitingForAuthor ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsiglink]
                                                   , from = documentservice document  }
 
@@ -379,7 +380,7 @@ sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
-    mail <- mailDocumentRejected customMessage ctx (getFullName sl) document signalink
+    mail <- mailDocumentRejected customMessage ctx document signalink
     scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
 
@@ -1164,6 +1165,9 @@ makeSignatories placements fielddefs
             = z a b c d e f g h : zipWith8 z as bs cs ds es fs gs hs
         zipWith8 _ _ _ _ _ _ _ _ _ = []
 
+
+-- NEED FIX !!!!  Reverse engineering is not a good design pattern | MR
+-- I will fix this when doing backbone anyway.
 makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
                      -> [(BS.ByteString, SignatoryField)]
                      -> SignatoryDetails
@@ -1171,17 +1175,17 @@ makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
 makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = sigfields} =
   sigdetails {
     signatoryfields =
-      map f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
+      concatMap f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
   }
   where
     f sf = case sfType sf of
-      EmailFT -> g "email"
-      FirstNameFT -> g "fstname"
-      LastNameFT -> g "sndname"
-      CompanyFT -> g "company"
-      PersonalNumberFT -> g "personalnumber"
-      CompanyNumberFT -> g "companynumber"
-      CustomFT _ _ -> sf
+      EmailFT -> [g "email"]
+      FirstNameFT -> [g "fstname"]
+      LastNameFT -> [g "sndname"]
+      CompanyFT -> [g "company"]
+      PersonalNumberFT -> [g "personalnumber"]
+      CompanyNumberFT -> [g "companynumber"]
+      CustomFT _ _ -> []
       where
         g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }
 
@@ -1828,9 +1832,8 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
   guard $ signatorymagichash siglink == magichash1
   return ()
 
-mainPage :: Kontrakcja m => m String
-mainPage =  do
-    guardLoggedIn
+handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
+handleShowUploadPage = checkUserTOSGet $ do
     showTemplates <- isFieldSet "showTemplates"
     tooLarge <- isFieldSet "tooLarge"
     mdocprocess <- getDocProcess
@@ -2123,7 +2126,7 @@ prepareEmailPreview docid slid = do
          "reject" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
-               Just sl -> mailRejectMailContent Nothing ctx  BS.empty doc sl
+               Just sl -> mailRejectMailContent Nothing ctx  doc sl
                Nothing -> return ""
          _ -> return ""
     return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]

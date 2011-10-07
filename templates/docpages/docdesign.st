@@ -1101,7 +1101,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 </form>
 
 <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
-  <div class="modal-container">
+  <div class="modal-container email-preview">
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
