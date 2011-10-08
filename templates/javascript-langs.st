@@ -124,10 +124,12 @@ javascriptLocalisation =
              , signatoryMessage : {
                          datamismatch :"$_signatoryMessageIfSignatoryDatamismatch()$"
                        , timedout : "$_signatoryMessageIfTimedout()$"
-                       , rejected : "$_signatoryMessageIfSignatoryRejecteddate()$"
+                       , rejected : "$_signatoryMessageIfSignatoryRejected()$"
                        , seen : "$_signatoryMessageIfSignatorySeendate()$"
                        , read : "$_signatoryMessageIfSignatoryReaddate()$"
                        , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
+                       , signed : "$_signatoryMessageIfSigned()$"
+                       , cancelled : "$_signatoryMessageIfCancelled()$"
                        , other : "$_signatoryMessageIfElse()$"   
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"

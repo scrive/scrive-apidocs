@@ -57,12 +57,6 @@ window.Process = Backbone.Model.extend({
     cancelbyauthormodaltitle : function(){
         return this.get("cancelbyauthormodaltitle");
     },
-    signatorysignedtext : function(){
-        return this.get("signatorysignedtext");
-    },
-    signatorycanceledtext : function(){
-        return this.get("signatorycanceledtext");
-    },
     authorissecretarytext : function(){
         return this.get("authorissecretarytext");
     },

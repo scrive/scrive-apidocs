@@ -384,7 +384,7 @@ placementJSON doc placement = JSObject $ toJSObject $
 
 
 jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateDMY <$> mdate
+jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
 
 {- 
 , signatorysndnameplacements        = []
@@ -440,8 +440,6 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
       , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
-      , ("signatorysignedtext", text processsignatorysignedtext)
-      , ("signatorycanceledtext", text processsignatorycanceledtext)
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more
