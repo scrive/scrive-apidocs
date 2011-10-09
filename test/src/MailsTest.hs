@@ -28,6 +28,8 @@ import Util.SignatoryLinkUtils
 import User.UserView
 import Kontra
 import Util.HasSomeUserInfo
+import Mails.SendGridEvents
+import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 
 mailsTests :: Connection -> [String] -> Test
@@ -58,6 +60,10 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
                               validMail (s ++ " "++ show doctype) m
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
+        -- DELIVERY MAILS
+        checkMail "Deferred invitation"    $  mailDeferredInvitation ctx doc
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation ctx doc sl
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
         --cancel by author mail
@@ -105,9 +111,12 @@ validMail :: String -> Mail -> DB ()
 validMail name m = do
     let c = BS.toString $ content m
     let exml = xmlParse' name c
+    case (any isAlphaNum $ BS.toString $ title m) of 
+         True -> assertSuccess
+         False -> assertFailure ("Empty title of mail " ++ name) 
     case exml of 
          Right _ -> assertSuccess
-         Left err -> assertFailure ("Valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err) 
+         Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err) 
 
 
 mailingContext :: Region -> Connection -> DB Context
