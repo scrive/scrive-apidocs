@@ -149,16 +149,12 @@ handleDeliveredInvitation docid signlinkid = do
              -- send it only if email was reported deferred earlier
              when (invitationdeliverystatus signlink == Mail.Deferred) $ do
                  ctx <- getContext
-                 title <- renderTemplateM "invitationMailDeliveredAfterDeferredTitle" ()
                  let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-                 content <- wrapHTML' =<< (renderTemplateFM "invitationMailDeliveredAfterDeferredContent" $ do
+                 mail <- kontramail  "invitationMailDeliveredAfterDeferred" $ do
                      field "authorname" $ getFullName documentauthordetails
                      field "email" $ getEmail signlink
-                     field "documenttitle" $ BS.toString $ documenttitle doc)
-                 scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
-                                                                      , content = BS.fromString content
-                                                                      , to = [getMailAddress documentauthordetails]
-                                                                      }
+                     field "documenttitle" $ BS.toString $ documenttitle doc
+                 scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress documentauthordetails] }
          Nothing -> return ()
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
@@ -175,37 +171,29 @@ handleDeferredInvitation docid signlinkid = do
     case mdoc of
          Right doc -> do
              ctx <- getContext
-             title <- renderTemplateM "invitationMailDeferredTitle" ()
              let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-             content <- wrapHTML' =<< (renderTemplateFM "invitationMailDeferredContent" $ do
+             mail <- kontramail "invitationMailDeferred" $ do
                 field "authorname" $ getFullName documentauthordetails
                 field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-                field "ctxhostpart" $ ctxhostpart ctx)
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
-                                                                  , content = BS.fromString content
-                                                                  , to = [getMailAddress documentauthordetails]
-                                                                  }
+                field "ctxhostpart" $ ctxhostpart ctx
+             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress documentauthordetails]  }
          Left _ -> return ()
 
 handleUndeliveredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation docid signlinkid = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     ctx <- getContext
-    title <- renderTemplateM "invitationMailUndeliveredTitle" ()
     let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
     case getSignatoryLinkFromDocumentByID doc signlinkid of
          Just signlink -> do
              _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
-             content <- wrapHTML' =<< (renderTemplateFM "invitationMailUndeliveredContent" $ do
+             mail <- kontramail "invitationMailUndelivered" $ do
                  field "authorname" $ getFullName documentauthordetails
                  field "documenttitle" $ documenttitle doc
                  field "email" $ getEmail signlink
                  field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-                 field "ctxhostpart" $ ctxhostpart ctx)
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title
-                                                                  , content = BS.fromString content
-                                                                  , to = [getMailAddress documentauthordetails]
-                                                                  }
+                 field "ctxhostpart" $ ctxhostpart ctx
+             scheduleEmailSendout (ctxesenforcer ctx) $ mail {  to = [getMailAddress documentauthordetails]  }
          Nothing -> return ()
 
 getSignatoryLinkFromDocumentByID :: Document -> SignatoryLinkID -> Maybe SignatoryLink
