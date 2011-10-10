@@ -91,6 +91,6 @@ getLastSignedTime doc =
 {- |
   Get the Time the document was sent as Int.
  -}
-getInviteTime :: Document -> MinutesTime
-getInviteTime = signtime . fromJust . documentinvitetime
+getInviteTime :: Document -> Maybe MinutesTime
+getInviteTime doc = signtime <$> (documentinvitetime doc)
 

@@ -586,7 +586,7 @@ sumStats = foldl1 addStats1
 newCalculateStatsFromDocuments :: [Document] -> [(Int, Int, Int, Int)]
 newCalculateStatsFromDocuments docs =
   let cls = [(asInt $ getLastSignedTime d, 1, countSignatures d, 0) | d <- docs, isClosed d]
-      pds = [(asInt $ getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d]
+      pds = [(asInt $ fromJust $ getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d, isJust $ getInviteTime d]
       byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (cls ++ pds)
   in map sumStats byDay
 
