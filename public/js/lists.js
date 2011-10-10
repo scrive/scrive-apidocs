@@ -426,7 +426,7 @@
                     if (cell.isSelect())
                         td.append(this.checkbox = $("<input type='checkbox' class='selectme check'/>"));
                     else if (cell.isRendered() && value != undefined)
-                        td.append(cell.rendering(value,true,this.model));
+                        td.append(cell.rendering(value,undefined,this.model));
                     else if (cell.isExpandable() &&  value != undefined)
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     else if(cell.isLink() && this.model.hasLink() && value != undefined)
@@ -448,7 +448,7 @@
                     var value = this.model.subfield(j,(this.schema.cell(i).subfield()));
                     if (value != undefined) {
                         if (this.schema.cell(i).isRendered())
-                            div.append(this.schema.cell(i).rendering(value,false,this.model));
+                            div.append(this.schema.cell(i).rendering(value,j,this.model));
                         else
                             div.text(value);
                     }

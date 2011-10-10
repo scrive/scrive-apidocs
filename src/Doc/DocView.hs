@@ -489,6 +489,7 @@ docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("time", return $ showDateAbbrev tl crtime (documentmtime doc)),
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
+    ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),  
     ("shared", return $ show $ (documentsharing doc)==Shared)
     ]
   where
@@ -505,7 +506,8 @@ signatoryFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesT
 signatoryFieldsListForJSON tl crtime doc sl = propagateMonad [
     ("status", return $ show $ signatoryStatusClass doc sl ),
     ("name", return $ BS.toString $ getSmartName sl ),
-    ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
+    ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)),
+    ("invitationundelivered", return $ show $ isUndelivered sl && Pending == documentstatus doc)
     ]
     where
         sign = signtime <$> maybesigninfo sl
