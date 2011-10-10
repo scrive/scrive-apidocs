@@ -269,7 +269,7 @@ window.SignatoryStandarView = Backbone.View.extend({
                return localization.signatoryMessage.seen + " " + signatory.seendate()
           else if (signatory.readdate()!= undefined)
                return localization.signatoryMessage.read + " " + signatory.readdate()
-          else if (signatory.deliveredEmail)
+          else if (signatory.deliveredEmail())
                return localization.signatoryMessage.delivered
           else
               return localization.signatoryMessage.other       
