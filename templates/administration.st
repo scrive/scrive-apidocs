@@ -618,7 +618,7 @@ adminFunctionalityStatsPage=
     <div>
       <h1>Functionality Statistics</h1><br/><br/>
       <p>The purpose of these stats is to indicate how much functionality is being used.  Deleted documents or users are not counted here.</p><br/><br/>
-      <p>A recent user is one that accepted the TOS within the last 90 days.  A recent document is one created within the last 90 days.  A recent document part is a part on a recent document.</p><br/></br>
+      <p>A recent user is one that accepted the TOS within the last 90 days.  A recent document is one created within the last 90 days.  A recent document part is a part on a recent document.</p><br/><br/>
 	    <table>
         <thead>
           <th style="width:400px;text-align:right;padding-right:20px;"></th>
