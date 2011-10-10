@@ -417,22 +417,40 @@ addDocumentCreateStatEvents doc = msum [
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate          
+      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate          
       return a
   , return False]
+
+allDocStats :: Kontrakcja m => Document -> m ()
+allDocStats doc = do
+    _ <- addDocumentSendStatEvents doc
+    _ <- addDocumentCloseStatEvents doc
+    _ <- addDocumentCreateStatEvents doc
+    _ <- addDocumentRejectStatEvents doc
+    _ <- addDocumentCancelStatEvents doc
+    return ()
+  
+-- | Must be sorted (both!)
+filterMissing :: [DocumentID] -> [Document] -> [Document]
+filterMissing _ [] = []
+filterMissing [] docs = docs
+filterMissing (did:dids) (doc:docs) | did <  documentid doc = filterMissing dids (doc:docs)
+filterMissing (did:dids) (doc:docs) | did == documentid doc = filterMissing (did:dids) docs
+filterMissing dids (doc:docs) = doc : filterMissing dids docs
+  
+
 
 addAllDocsToStats :: Kontrakcja m => m KontraLink
 addAllDocsToStats = onlySuperUser $ do
   services <- runDBQuery GetServices
   let allservices = Nothing : map (Just . serviceid) services
+  stats <- runDBQuery GetDocStatEvents  
+  let stats' = sort $ map seDocumentID stats
   _ <- forM allservices $ \s -> do
     docs <- query $ GetDocuments s
-    _ <- mapM addDocumentSendStatEvents docs
-    _ <- mapM addDocumentCloseStatEvents docs
-    _ <- mapM addDocumentCreateStatEvents docs
-    _ <- mapM addDocumentRejectStatEvents docs
-    _ <- mapM addDocumentCancelStatEvents docs
-    return ()
+    let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
+        docs'' = filterMissing stats' docs'
+    mapM allDocStats docs''
   addFlash (OperationDone, "Added all docs to stats")
   return LinkUpload
 
