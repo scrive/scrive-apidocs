@@ -22,17 +22,18 @@ $loadingdialog()$
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",
-                 rendering: function(status,mainrow,listobject) {
+                rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
-                    if (listobject.field("anyinvitationundelivered") == "true" && mainrow == true)
-                       icon.add("<span style='color:#000000;'>!</span>");
-
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
                                       localization.statusToolTip[status]+"</p></div>");
                     ToolTip.set({
                         on: icon,
                         tip: tip
                     })
+                    if ((listobject.field("anyinvitationundelivered") == "True" &&  idx == undefined)
+                       || (idx != undefined && listobject.subfield(idx,"invitationundelivered") == "True"))
+                       icon = jQuery.merge( icon, jQuery("<span style='color:#000000;position:relative;top:-2px'>!</span>"));
+                        
                     return icon;
                  }
         }),
@@ -81,7 +82,8 @@ $loadingdialog()$
                                                 return doc.field("status") == "sent"      ||
                                                        doc.field("status") == "delivered" ||
                                                        doc.field("status") == "read"      ||
-                                                       doc.field("status") == "opened"
+                                                       doc.field("status") == "opened"    ||
+                                                       doc.field("anyinvitationundelivered") == "True"
                                             })
                              if (anySendOrOpenSelected) {
                                 FlashMessages.add({content: "$_CantRemoveActiveOffers()$", color: "red"});
