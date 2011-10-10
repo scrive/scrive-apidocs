@@ -332,11 +332,11 @@ addDocumentCancelStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
-      sendtime <- guardJust $ getInviteTime doc      
+      let canceltime = documentmtime doc
       let did = documentid doc
           sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
+                                                        , seTime       = canceltime
                                                         , seQuantity   = DocStatCancel
                                                         , seAmount     = 1
                                                         , seDocumentID = did
@@ -350,7 +350,7 @@ addDocumentCancelStatEvents doc = msum [
             [ELegitimationIdentification] -> DocStatElegSignatureCancel
             _ -> DocStatEmailSignatures
       b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
+                                                        , seTime       = canceltime
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
@@ -369,11 +369,11 @@ addDocumentRejectStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
-      sendtime <- guardJust $ getInviteTime doc      
+      (rejecttime,_,_) <- guardJust $ documentrejectioninfo doc      
       let did = documentid doc
           sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
+                                                        , seTime       = rejecttime
                                                         , seQuantity   = DocStatCancel
                                                         , seAmount     = 1
                                                         , seDocumentID = did
@@ -387,7 +387,7 @@ addDocumentRejectStatEvents doc = msum [
             [ELegitimationIdentification] -> DocStatElegSignatureCancel
             _ -> DocStatEmailSignatures
       b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
+                                                        , seTime       = rejecttime
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
@@ -406,10 +406,10 @@ addDocumentCreateStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
-      sendtime <- guardJust $ getInviteTime doc            
+      let createtime = documentctime doc
       let did = documentid doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
+                                                        , seTime       = createtime
                                                         , seQuantity   = DocStatCreate
                                                         , seAmount     = 1
                                                         , seDocumentID = did
