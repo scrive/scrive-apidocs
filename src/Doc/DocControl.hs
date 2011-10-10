@@ -1365,9 +1365,7 @@ someArchivePage page = checkUserTOSGet $ do
     page user 
     
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
-handleAttachmentViewForViewer _docid _siglinkid _mh = do
-  error "handleAttachmentViewForViewer not implemented"
-#if 0
+handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   let pending JpegPagesPending = True
       pending _                = False
@@ -1381,12 +1379,9 @@ handleAttachmentViewForViewer _docid _siglinkid _mh = do
         else do
         pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
         simpleResponse pages
-#endif
 
 handleAttachmentViewForAuthor :: Kontrakcja m => DocumentID -> m Response
-handleAttachmentViewForAuthor _docid = do
-  error "handleAttachmentViewForAuthor not implemented"
-#if 0
+handleAttachmentViewForAuthor docid = do
   doc <- guardRightM $ getDocByDocID docid
   let pending JpegPagesPending = True
       pending _                = False
@@ -1400,7 +1395,6 @@ handleAttachmentViewForAuthor _docid = do
         else do
         pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
         simpleResponse pages
-#endif
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
@@ -1408,7 +1402,7 @@ handleFilePages did fid = do
   (mdoc,_) <- jsonDocumentGetterWithPermissionCheck did
   when (isNothing mdoc ) mzero
   let doc = fromJust mdoc
-  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  -- ++ (authorattachmentfile <$> documentauthorattachments doc)
+  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  ++ (authorattachmentfile <$> documentauthorattachments doc)
   case find (== fid) allfiles of
     Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "File #" ++ show fid ++ " not found in document #" ++ show did)]
     Just _  -> do
