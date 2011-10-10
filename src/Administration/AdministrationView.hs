@@ -131,7 +131,9 @@ adminCompanyPage company =
     
 adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
 adminUserStatisticsPage morefields =
-  renderTemplateFM "statisticsPage" morefields
+  renderTemplateFM "statisticsPage" $ do
+    morefields
+    field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
