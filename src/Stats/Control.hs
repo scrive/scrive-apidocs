@@ -295,8 +295,8 @@ addDocumentSendStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
+      sendtime <- guardJust $ getInviteTime doc
       let did = documentid doc
-          sendtime = getInviteTime doc
           sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
@@ -332,8 +332,8 @@ addDocumentCancelStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
+      sendtime <- guardJust $ getInviteTime doc      
       let did = documentid doc
-          sendtime = getInviteTime doc
           sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
@@ -369,8 +369,8 @@ addDocumentRejectStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
+      sendtime <- guardJust $ getInviteTime doc      
       let did = documentid doc
-          sendtime = getInviteTime doc
           sigs = countSignatories doc          
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
@@ -406,8 +406,8 @@ addDocumentCreateStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
+      sendtime <- guardJust $ getInviteTime doc            
       let did = documentid doc
-          sendtime = getInviteTime doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = DocStatCreate
