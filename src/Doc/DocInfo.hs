@@ -92,5 +92,7 @@ getLastSignedTime doc =
   Get the Time the document was sent as Int.
  -}
 getInviteTime :: Document -> Maybe MinutesTime
-getInviteTime doc = signtime <$> (documentinvitetime doc)
+getInviteTime doc = case documentinvitetime doc of
+  Nothing -> Nothing
+  Just i -> Just $ signtime i
 
