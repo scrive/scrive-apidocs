@@ -26,6 +26,7 @@ module Administration.AdministrationView(
           , adminUserUsageStatsPage
           , adminCompanyUsageStatsPage
           , adminUserStatisticsPage
+          , adminFunctionalityStatsPage
           , AdminListPageParams(..)
           , StatsView(..)) where
 
@@ -134,6 +135,21 @@ adminUserStatisticsPage morefields =
   renderTemplateFM "statisticsPage" $ do
     morefields
     field "adminlink" $ show $ LinkAdminOnly
+
+adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)] 
+                                              -> [(String, Int)] 
+                                              -> [(String,Int)] 
+                                              -> m String
+adminFunctionalityStatsPage userstats docstats siglinkstats =
+  renderTemplateFM "adminFunctionalityStatsPage" $ do
+    fieldFL "userfunctionalitystats" $ map functionalityStatFields userstats
+    fieldFL "docfunctionalitystats" $ map functionalityStatFields docstats
+    fieldFL "siglinkfunctionalitystats" $ map functionalityStatFields siglinkstats
+    field "adminlink" $ show $ LinkAdminOnly
+  where
+    functionalityStatFields (label, count) = do
+      field "label" label
+      field "count" count
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
