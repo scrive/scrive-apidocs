@@ -48,6 +48,15 @@ adminsmain=
           <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> </td>
           <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
         </tr>
+        <tr>
+          <td style="height:50px;">
+            <a href="/adminonly/functionalitystats">
+              <button style="width:150px">Functionality Stats</button>
+            </a>
+          </td>
+          <td style="height:50px">
+          </td>
+        </tr>
     </tbody></table>
     <br/>
     <br/>
@@ -601,6 +610,51 @@ statisticsPage=
               <td>$stat.users$ </td>
 	    </tr>}$
 	  </table>
+    </div>
+###
+###
+adminFunctionalityStatsPage=
+    $backtoadminmainlink()$
+    <div>
+      <h1>Functionality Statistics</h1><br/><br/>
+      <p>The purpose of these stats is to indicate how much functionality is being used.  Deleted documents or users are not counted here.</p><br/><br/>
+      <p>A recent user is one that accepted the TOS within the last 90 days.  A recent document is one created within the last 90 days.  A recent document part is a part on a recent document.</p><br/><br/>
+	    <table>
+        <thead>
+          <th style="width:400px;text-align:right;padding-right:20px;"></th>
+          <th style="width:200px;text-align:left;">Recent User Count</th>
+	      </thead>
+        $userfunctionalitystats:{stat|
+        <tr>
+          <th style="text-align:right;padding-right:20px;">$stat.label$</th>
+          <td>$stat.count$ </td>
+	      </tr>
+	      }$
+	    </table><br/><br/>
+	    <table>
+        <thead>
+          <th style="width:400px;text-align:right;padding-right:20px;"></th>
+          <th style="width:200px;text-align:left;">Recent Document Count</th>
+	      </thead>
+        $docfunctionalitystats:{stat|
+        <tr>
+          <th style="text-align:right;padding-right:20px;">$stat.label$</th>
+          <td>$stat.count$ </td>
+	      </tr>
+	      }$
+	    </table><br/><br/>
+	    <table>
+        <thead>
+          <th style="width:400px;text-align:right;padding-right:20px;"></th>
+          <th style="width:200px;text-align:left;">Recent Document Part Count</th>
+	      </thead>
+        $siglinkfunctionalitystats:{stat|
+        <tr>
+          <th style="text-align:right;padding-right:20px;">$stat.label$</th>
+          <td>$stat.count$ </td>
+	      </tr>
+	      }$
+	    </table>
     </div>
 ###
 ###

@@ -32,6 +32,7 @@ module Administration.AdministrationControl(
           , handleCreateCompanyUser
           , handleCreateService
           , handleStatistics
+          , showFunctionalityStats
           , handleBackdoorQuery
           , handleFixForBug510
           , handleFixForAdminOnlyBug
@@ -670,6 +671,79 @@ handleStatistics =
     content <- renderTemplateFM "statisticsPage" $ do
       fieldsFromStats users documents
     renderFromBody TopEmpty kontrakcja content
+
+{- |
+    Shows statistics about functionality use.
+    
+    If you would like to add some stats then please add the definitions to
+    the getStatDefinitions function of whatever HasFunctionalityStats instance
+    is relevant.
+    The getStatDefinitions defines each statistic as a label and definition function
+    pair.  The label will describe it in the table.  And the definition function
+    takes in the doc, user or siglink, and has to return a bool to indicate whether
+    that object uses the particular functionality.
+    So you should add a pair to the list to add a statistic.
+-}
+showFunctionalityStats :: Kontrakcja m => m Response
+showFunctionalityStats = onlySuperUser $ do
+  ctx@Context{ ctxtime } <- getContext
+  users <- runDBQuery GetUsers
+  documents <- query $ GetDocuments $ currentServiceID ctx
+  let docsAndSigLinks = concat $ map (\d -> zip (repeat d) (documentsignatorylinks d)) documents
+  parts <- mapM (\(doc, siglink) -> case maybesignatory siglink of
+                             Just signerid -> do
+                               msigner <- runDBQuery $ GetUserByID signerid
+                               return (doc, siglink, msigner)
+                             Nothing -> return (doc, siglink, Nothing)) docsAndSigLinks
+  content <- adminFunctionalityStatsPage (mkStats ctxtime users)
+                                         (mkStats ctxtime documents)
+                                         (mkStats ctxtime parts)
+  renderFromBody TopEmpty kontrakcja content
+  where
+    mkStats time xs =
+      map (\(label, deffunc) -> (label, length $ filter (\x -> isRecent time x && deffunc x) xs)) getStatDefinitions
+
+class HasFunctionalityStats a where
+  isRecent :: MinutesTime -> a -> Bool
+  getStatDefinitions :: [(String, a -> Bool)]
+
+aRecentDate :: MinutesTime -> MinutesTime
+aRecentDate = minutesBefore (60 * 24 * 30 * 3)
+
+instance HasFunctionalityStats Document where
+  isRecent time doc = aRecentDate time < documentctime doc
+  getStatDefinitions = 
+    [ ("drag n drop", anyField hasPlacement)
+    , ("custom fields", anyField isCustom)
+    , ("custom sign order", any ((/=) (SignOrder 1) . signatorysignorder . signatorydetails) . documentsignatorylinks)
+    , ("csv", isJust . documentcsvupload)
+    ]
+    where
+      anyField p doc =
+        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc 
+      hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
+      isCustom SignatoryField{sfType} =
+        case sfType of
+          (CustomFT _ _) -> True
+          _ -> False
+
+instance HasFunctionalityStats User where
+  isRecent time user =
+    case userhasacceptedtermsofservice user of
+      Just tostime -> aRecentDate time < tostime
+      Nothing -> False
+  getStatDefinitions = 
+    [ ("accepted TOS after signing", (== BySigning) . usersignupmethod)
+    ]
+
+instance HasFunctionalityStats (Document, SignatoryLink, Maybe User) where
+  isRecent time (doc, _siglink, _msignuser) = isRecent time doc
+  getStatDefinitions = 
+    [ ("rejected TOS after signing", rejectedTOS)
+    ]
+    where
+      rejectedTOS (_doc, siglink, msignuser) =
+        (isJust $ maybesigninfo siglink) && (isNothing $ msignuser >>= userhasacceptedtermsofservice)
 
 showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do

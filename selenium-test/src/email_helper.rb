@@ -23,11 +23,9 @@ class EmailHelper
       @driver.get(@ctx.createKontrakcjaURL("/adminonly/backdoor/" + email))
       @wait.until { @driver.find_element :css => "a" }
       link = (@driver.find_elements :css => ".mainContainer a").first.attribute("href")
-      puts("the link is '" + link + "'")
     ensure
       @loginhelper.logout
     end
-    puts("getting link '" + link + "'")
     @driver.get(link)
   end
 end

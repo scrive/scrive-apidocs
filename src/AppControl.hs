@@ -250,6 +250,7 @@ handleRoutes locale = msum $
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost1 $ toK1 $ Administration.handleCreateCompanyUser
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost1 $ toK1 $ Administration.handleCompanyChange
+     , dir "adminonly" $ dir "functionalitystats" $ hGet0 $ toK0 $ Administration.showFunctionalityStats
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
      
