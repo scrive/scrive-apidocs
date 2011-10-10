@@ -436,14 +436,6 @@ instance DBQuery GetDocumentsSharedInCompany [Document] where
   dbQuery (GetDocumentsSharedInCompany user) = wrapDB $ \conn -> do
     unimplemented "GetDocumentsSharedInCompany"
 
-#if 0
-data GetFilesThatShouldBeMovedToAmazon = GetFilesThatShouldBeMovedToAmazon
-                                         deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetFilesThatShouldBeMovedToAmazon [File] where
-  dbQuery (GetFilesThatShouldBeMovedToAmazon) = wrapDB $ \conn -> do
-    unimplemented "GetFilesThatShouldBeMovedToAmazon"
-#endif
-
 data GetMagicHash = GetMagicHash
                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetMagicHash MagicHash where

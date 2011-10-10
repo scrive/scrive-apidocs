@@ -2268,12 +2268,6 @@ instance Indexable Document where
             -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
             -- the scope of a single document! FIXME
           , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])           
-#if 0
-          , ixFun (\x -> map fileid (documentfiles x
-                                       ++ documentsealedfiles x
-                                       ++ map authorattachmentfile (documentauthorattachments x)
-                                       ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments x)]) :: [FileID])
-#endif          
           , ixFun $ ifDocumentNotDeleted (maybeToList . documenttimeouttime)
           , ixFun $ ifDocumentNotDeleted (\x -> [documenttype x] :: [DocumentType])
           , ixFun $ ifDocumentNotDeleted (\x -> documenttags x :: [DocumentTag])

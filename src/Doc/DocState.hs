@@ -19,9 +19,6 @@ module Doc.DocState
     , AuthorSignDocument(..)
     , AuthorSendDocument(..)
     , RejectDocument(..)
-    , FileModTime(..)
-    -- , FileMovedToAWS(..)
-    -- , FileMovedToDisk(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
@@ -33,7 +30,6 @@ module Doc.DocState
     , GetDocumentsByUser(..)
     , GetDeletedDocumentsByCompany(..)
     , GetDeletedDocumentsByUser(..)
-    -- , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
     , MarkDocumentSeen(..)
@@ -45,7 +41,6 @@ module Doc.DocState
     , SetDocumentTags(..)
     , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
-    , SetDocumentTrustWeaverReference(..)
     , ShareDocument(..)
     , SetDocumentTitle(..)
     , SignDocument(..)
@@ -339,40 +334,6 @@ blankDocument =
           , documentregion               = defaultValue
           }
 
-#if 0
-fileMovedToAWS :: FileID
-               -> BS.ByteString
-               -> BS.ByteString
-               -> Update Documents ()
-fileMovedToAWS fileid bucket url = fileMovedTo fileid $ FileStorageAWS bucket url
-
-fileMovedToDisk :: FileID -> FilePath -> Update Documents ()
-fileMovedToDisk fileid filepath = fileMovedTo fileid $ FileStorageDisk filepath
-
-fileMovedTo :: FileID -> FileStorage -> Update Documents ()
-fileMovedTo fid fstorage = do
-    documents <- ask
-    let docs = toList (documents @= fid)
-    mapM_ (\doc -> modifySignableOrTemplate (documentid doc) moved) docs
-    where
-    moved doc@Document{documentfiles, documentsealedfiles, documentsignatoryattachments, documentauthorattachments} =
-        Right $ doc { documentfiles = map moved1 documentfiles
-                    , documentsealedfiles = map moved1 documentsealedfiles
-                    , documentsignatoryattachments = map movedsig documentsignatoryattachments
-                    , documentauthorattachments = map movedaut documentauthorattachments
-                    }
-    moved1 file@File{ fileid
-                    , filestorage = FileStorageMemory _
-                    } | fileid == fid =
-                                 file { filestorage = fstorage }
-                      | otherwise = file
-    moved1 file = file
-    movedsig sa@SignatoryAttachment{signatoryattachmentfile=Just file} = sa {signatoryattachmentfile = Just (moved1 file)}
-    movedsig sa = sa
-    movedaut aa@AuthorAttachment{authorattachmentfile = file} = aa {authorattachmentfile = moved1 file}
-
-#endif
-
 {- |
     Gets the document for the given FileID.  This includes documents where
     documentdeleted = True.  If a document cannot be found then this is counted
@@ -389,21 +350,6 @@ getDocumentByFileID fileid' = queryDocs $ \documents ->
     If there is a problem, such as the document not existing,
     then a Left is returned.
 -}
-#if 0
-attachFile :: DocumentID
-           -> BS.ByteString
-           -> BS.ByteString
-           -> Update Documents (Either String Document)
-attachFile documentid filename1 content = do
-  documents <- ask
-  fileid2 <- getUnique64 documents FileID
-  modifySignableOrTemplate documentid $ \document ->
-      let nfile = File { fileid = fileid2
-                       , filename = filename1
-                       , filestorage = FileStorageMemory content
-                       }
-      in Right $ document { documentfiles = documentfiles document ++ [nfile] }
-#endif
 attachFile :: DocumentID
            -> FileID
            -> Update Documents (Either String Document)
@@ -416,21 +362,6 @@ attachFile documentid fid = do
     If there is a problem, such as the document not existing,
     or the document not being a signable then a Left is returned.
 -}
-#if 0
-attachSealedFile :: DocumentID
-                 -> BS.ByteString
-                 -> BS.ByteString
-                 -> Update Documents (Either String Document)
-attachSealedFile documentid filename1 content = do
-  documents <- ask
-  fileid2 <- getUnique64 documents FileID
-  modifySignable documentid $ \document ->
-      let nfile = File { fileid = fileid2
-                       , filename = filename1
-                       , filestorage = FileStorageMemory content
-                       }
-      in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
-#endif
 attachSealedFile :: DocumentID
                  -> FileID
                  -> Update Documents (Either String Document)
@@ -574,27 +505,7 @@ updateDocumentAttachments docid idstoadd idstoremove = do
                                       ++
                                       map AuthorAttachment idstoadd
                                  }
-        _ -> Left "Can only attach to document in Preparation"
-#if 0
-  documents <- ask
-  let addattachments   = toList $ documents @+ idstoadd
-      foundattachments = length idstoadd == length addattachments
-      newattachment Document{ documenttitle, documentfiles = (file:_) }
-        = Just AuthorAttachment{ authorattachmentfile = file { filename = documenttitle } }
-      newattachment _ = Nothing
-      addfiles = catMaybes $ map newattachment addattachments
-  case foundattachments of
-    False -> return $ Left "documents don't exist for all the given ids"
-    True -> modifySignableOrTemplate docid $ \doc ->
-      case documentstatus doc of
-        Preparation -> Right doc { documentauthorattachments =
-                                      [da | da <- documentauthorattachments doc,
-                                       not ((fileid $ authorattachmentfile da) `elem` idstoremove)]
-                                      ++
-                                      addfiles
-                                 }
-        _ -> Left "Can only attach to document in Preparation"
-#endif
+        _ -> Left $ "Can only attach to document in Preparation, #" ++ show docid ++ " is in " ++ show (documentstatus doc)
 
 {- |
     Creates a new document by copying an existing document pumping some values into a particular signatory.
@@ -903,17 +814,6 @@ getDocumentStats = queryDocs $ \documents ->
       , signaturecount6m = 0
       , signaturecount12m = 0
       }
-
-{- |
-    Queries for the last modified time of the document for the indicated file.
-    If there isn't a document for the file this will return the 0 time.
-    
-    Maybe we should have some sort of error case instead of returning 0.
--}
-fileModTime :: FileID -> Query Documents MinutesTime
-fileModTime _fileid = -- queryDocs $ \documents ->
-  return $ fromSeconds 0
-  -- maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
 
 {- |
     Links up a signatory link to a user account.  This should happen when 
@@ -1255,26 +1155,6 @@ cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
         AwaitingAuthor -> Right canceledDocument
         _ -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
-#if 0
-{- |
-    Gathers together all the files in the system attached to documents.
-    This excludes all documents where documentdeleted is True.
--}
-getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
-getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
-  let doclist = filter (not . documentdeleted) $ IxSet.toList documents
-      getFiles d@Document{documentfiles,documentsealedfiles} =
-        documentfiles
-        ++ documentsealedfiles
-        ++ map authorattachmentfile (documentauthorattachments d)
-        ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments d)]
-      allFiles = concatMap getFiles doclist
-      getID file@File{ filestorage = FileStorageMemory _ } = [file]
-      getID _ = [] in
-  concatMap getID allFiles
-#endif
-
-
 {- |
     This restarts a document.
     It will check that the document is in the correct state, as it can't be Canceled, Timedout, or Rejected,
@@ -1382,20 +1262,6 @@ getUniqueSignatoryLinkID = do
   sg <- ask
   linkid <- getUnique sg SignatoryLinkID
   return linkid
-
-{- |
-    Sets the reference used for the document within TrustWeaver.
-    If the document doesn't exist, or isn't a signable, then this will return a Left.
--}
-setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
-setDocumentTrustWeaverReference _documentid _reference = do
-  error "kill it"  
-#if 0
-  modifySignable documentid $ \document ->
-      let
-          newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
-      in Right newdocument
-#endif
 
 {- |
     Turns the document status into DocumentError with the error given.
@@ -1708,7 +1574,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setInvitationDeliveryStatus
                         , 'getDocumentStats
                         , 'getDocumentStatsByUser
-                        , 'fileModTime
                         , 'saveDocumentForUser
                         , 'adminOnlySaveForUser
                         , 'getDocumentsByUser
@@ -1717,7 +1582,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTags
                         , 'setDocumentUI
                         , 'getDocumentsByCompanyAndTags
-                        , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'archiveDocumentForAll
                         , 'archiveDocumentForAuthor
@@ -1729,11 +1593,8 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
-                        -- , 'fileMovedToAWS
-                        -- , 'fileMovedToDisk
                         , 'deleteSigAttachment
                           -- admin only area follows
-                        -- , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
                         , 'getUniqueSignatoryLinkID

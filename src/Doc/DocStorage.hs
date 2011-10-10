@@ -75,16 +75,6 @@ uploadDocumentFileToAmazon docstore ctxs3action _docid fileid1 = do
       return ()
     _ -> return ()
   return ()
-#if 0
-  Just doc <- query $ GetDocumentByDocumentID docid
-  let files = documentfiles doc ++ documentsealedfiles doc
-  case filter (\x -> fileid x == fileid1) files  of
-    [file] -> do
-      AWS.uploadFile docstore ctxs3action file
-      return ()
-    _ -> return ()
-  return ()
-#endif
 
 {- Upload document to TW-}
 uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf

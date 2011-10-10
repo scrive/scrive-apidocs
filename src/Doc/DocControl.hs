@@ -1019,22 +1019,6 @@ handleFileGet fileid' _title = do
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
 
-#if 0
-   document <- guardRightM $ query $ GetDocumentByFileID $ fileid'
-
-   let allfiles = documentsealedfiles document ++ documentfiles document
-   case filter (\file -> fileid file == fileid') allfiles of
-     [file] -> do
-       contents <- liftIO $ getFileContents ctx file
-       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-       return res2
-     _ -> do
-       Log.debug $ "We found a document for file id but then there was no such file in there. docid "++
-         show (documentid document) ++ ", fileid " ++ show fileid'
-       mzero
-#endif
-
 {- |
    Get multiple post/get params and return them in an array
  -}
@@ -1723,16 +1707,12 @@ showPageForSignatory docid siglinkid sigmagichash fileid pageno = do
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
-  modminutes <- query $ FileModTime fileid
   docmap <- liftIO $ readMVar ctxnormalizeddocuments
   case Map.lookup fileid docmap of
     Just (JpegPages pages) -> do
       let (contents,_,_) =  pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-      let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
-      let modtime = toUTCTime modminutes
-      rq <- askRq                 -- FIXME: what?
-      return $ ifModifiedSince modtime rq res2
+      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
     _ -> mzero
 
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
@@ -1952,17 +1932,6 @@ respondWithFile :: Kontrakcja m =>  Document -> FileID -> m Response
 respondWithFile _doc fid =  do
     ctx <- getContext
     respondWithPDF =<< liftIO (getFileIDContents ctx fid)
-#if 0
-    case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
-      Just AuthorAttachment{ authorattachmentfile } ->
-        respondWithPDF =<< liftIO (getFileContents ctx authorattachmentfile)
-      Nothing -> case find (sigAttachmentHasFileID fid) (documentsignatoryattachments doc) of
-        Just SignatoryAttachment{ signatoryattachmentfile = Just file } ->
-          respondWithPDF =<< liftIO (getFileContents ctx file)
-        _ -> case find (((==) fid) . fileid) (documentfiles doc ++ documentsealedfiles doc) of
-           Just file ->   respondWithPDF =<< liftIO (getFileContents ctx file)
-           Nothing   -> mzero
-#endif
         
 respondWithPDF :: Kontrakcja m => BS.ByteString -> m Response
 respondWithPDF contents = do
