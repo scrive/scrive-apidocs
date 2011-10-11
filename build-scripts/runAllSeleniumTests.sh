@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$1" == "" ]; then
-  echo "usage: ./build-scripts/runAllSeleniumTests.sh [existing-selenium|<path/selenium-server-standalone-2.*.jar>] [existing-kontrakcja|local-kontakcja]"
+  echo "usage: ./build-scripts/runAllSeleniumTests.sh [existing-selenium|<path/selenium-server-standalone-2.*.jar>] [existing-kontrakcja|local-kontrakcja]"
 elif [ "$2" == ""]; then
   echo "usage: ./build-scripts/runAllSeleniumTests.sh [existing-selenium|<path/selenium-server-standalone-2.*.jar>] [existing-kontrakcja|local-kontrakcja]"
 else
