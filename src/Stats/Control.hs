@@ -131,7 +131,14 @@ dbCompanyIDLookup :: (Kontrakcja m) => CompanyID -> [(CompanyID, String)] -> m (
 dbCompanyIDLookup cid tbl =
   case lookup cid tbl of
     Nothing -> do
-      name <- maybe "unknown company" (BS.toString . companyname . companyinfo) <$> (runDBQuery $ GetCompany cid)
+      mcompany <- runDBQuery $ GetCompany cid
+      let name = case mcompany of 
+            Nothing -> "Unknown Company"
+            Just company -> case companyexternalid company of
+              Just eid -> BS.toString $ unexternalid eid
+              Nothing -> case BS.toString $ companyname $ companyinfo company of
+                "" -> "no company name"
+                a -> a
       return (name, (cid, name):tbl)
     Just name -> return (name, tbl)
 
