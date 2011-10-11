@@ -7,6 +7,7 @@ require "selenium-test/src/test_properties.rb"
 require "selenium-test/src/test_context.rb"
 require "selenium-test/src/email_helper.rb"
 require "selenium-test/src/login_helper.rb"
+require "selenium-test/src/doc_helper.rb"
 
 describe "sign up" do
 
@@ -18,6 +19,7 @@ describe "sign up" do
 
     @emailhelper = EmailHelper.new(@ctx, @driver, @wait)    
     @loginhelper = LoginHelper.new(@ctx, @driver, @wait)
+    @dochelper = DocHelper.new(@ctx, @driver, @wait)
   end
   
   append_after(:all) do
@@ -76,6 +78,78 @@ describe "sign up" do
     #should be logged in and able to upload a document
     @wait.until { @driver.find_element :css => "a.logout" }
     @wait.until { @driver.find_element :css => "a.documenticon" }
+    
+    @loginhelper.logout
+    
+    #make sure we can login and out as our new user
+    @loginhelper.login_as(random_email, "password-12")
+    @loginhelper.logout
+  end
+
+  it "can be done after signing if they click the tos and enter their password" do
+  
+    random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
+    puts "using random email : " + random_email
+  
+    @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    begin
+      @dochelper.uploadContract      
+      @dochelper.useBasicMode
+      @dochelper.enterCounterpart("Random", "Person", random_email)
+      @dochelper.signAndSend
+    ensure
+      @loginhelper.logout
+    end
+    
+    @emailhelper.follow_link_in_latest_mail_for random_email
+    
+    #sign the doc
+    (@wait.until { @driver.find_element :id => "signGuardCBox" }).click
+    (@wait.until { @driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
+    (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
+    
+    #we should be given the option to accept the tos
+    @wait.until { @driver.find_element :id => "tos" }
+    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    
+    #make sure we get a red flash if we try to activate without signing the tos
+    (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
+    @wait.until { @driver.find_element :css => ".flash-container.red" }
+    @wait.until { @driver.find_element :id => "tos" }
+    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    
+    #accept the tos
+    (@wait.until { @driver.find_element :id => "tos" }).click
+    
+    #make sure we get a red flash if we try to activate without filling in the password details
+    (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
+    @wait.until { @driver.find_element :css => ".flash-container.red" }
+    @wait.until { @driver.find_element :id => "tos" }
+    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    
+    #accept the tos again
+    (@wait.until { @driver.find_element :id => "tos" }).click
+    
+    #fill in the password details incorrectly and make sure we get red flash message
+    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password\"]" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password2\"]" }).send_keys "password-123"
+    (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
+    @wait.until { @driver.find_element :css => ".flash-container.red" }
+    @wait.until { @driver.find_element :id => "tos" }
+    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    
+    #accept the tos yet again
+    (@wait.until { @driver.find_element :id => "tos" }).click
+    
+    #fill in the password details correctly
+    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password\"]" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password2\"]" }).send_keys "password-12"
+
+    #submit the signup form
+    (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
+    
+    #should be logged in
+    @wait.until { @driver.find_element :css => "a.logout" }
     
     @loginhelper.logout
     
