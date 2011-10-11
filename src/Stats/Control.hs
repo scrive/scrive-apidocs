@@ -135,7 +135,7 @@ dbCompanyIDLookup cid tbl =
       let name = case mcompany of 
             Nothing -> "Unknown Company"
             Just company -> case companyexternalid company of
-              Just eid -> BS.toString $ unexternalid eid
+              Just eid -> BS.toString $ unExternalCompanyID eid
               Nothing -> case BS.toString $ companyname $ companyinfo company of
                 "" -> "no company name"
                 a -> a
