@@ -7,6 +7,7 @@ require "selenium-test/src/test_properties.rb"
 require "selenium-test/src/test_context.rb"
 require "selenium-test/src/email_helper.rb"
 require "selenium-test/src/login_helper.rb"
+require "selenium-test/src/doc_helper.rb"
 
 describe "sign view" do
 
