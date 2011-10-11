@@ -31,6 +31,8 @@ integrationAPITests conn = testGroup "Integration API" [
     , testCase "new_document example" $ testNewDocumentWithSpecificExample conn
     , testCase "new_document other example" $ testNewDocumentWithOtherSpecificExample conn
     , testCase "embed_document_frame exampel" $ testEmbedDocumentFrameFromExamples conn
+    , testCase "remove_document example" $ testRemoveDocumentFromExamples conn
+    , testCase "set_document_tag example" $ testSetDocumentTagFromExamples conn
     ]
 
 -- Main tests
@@ -102,6 +104,23 @@ testEmbedDocumentFrameFromExamples conn = withTestEnvironment conn $ do
   let Ok rq = decode $ "{\"email\":\"mariusz@skrivapa.se\",\"company_id\":\"test_company1\",\"document_id\":" ++ show docid1 ++ ",\"location\":\"http://192.168.0.16:8080/Demo/index.jsp\"}"
   rsp <- makeAPIRequest embeddDocumentFrame rq
   assertBool ("response json does not have link field: " ++ show rsp) $ isJust $ getJSONField "link" rsp
+
+testRemoveDocumentFromExamples :: Connection -> Assertion
+testRemoveDocumentFromExamples conn = withTestEnvironment conn $ do
+  createTestService
+  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
+  let Ok rq = decode $ "{\"document_id\":" ++ show docid1 ++ "}"
+  _rsp <- makeAPIRequest removeDocument rq -- the response is empty
+  assertBool "Done" True
+
+testSetDocumentTagFromExamples :: Connection -> Assertion
+testSetDocumentTagFromExamples conn = withTestEnvironment conn $ do
+  createTestService
+  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
+  let Ok rq = decode $ "{\"document_id\":" ++ show docid1 ++ ",\"tag\"    : { \"name\": \"client\", \"value\": \"3213123\" }}"
+  _rsp <- makeAPIRequest setDocumentTag rq -- response empty
+  assertBool "Done" True
+
 
 -- Requests body 
 createDocumentJSON :: String -> String -> DB JSValue
