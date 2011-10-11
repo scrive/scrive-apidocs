@@ -43,6 +43,7 @@ import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
+import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.Routes as Elegitimation
 import qualified FlashMessage as F
 import qualified MemCache
@@ -150,27 +151,27 @@ handleRoutes locale = msum $
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGet0 $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost0 $ toK0 $ UserControl.handlePostUserLocale
-     , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
+     , dir "a"                     $ hGet0  $ toK0 $ ArchiveControl.showAttachmentList
+     , dir "a" $ param "archive"   $ hPost0 $ toK0 $ ArchiveControl.handleAttachmentArchive
      , dir "a" $ param "share"     $ hPost0 $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost1 $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost0 $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet0  $ toK0 $ DocControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleTemplateArchive
+     , dir "t" $ hGet0  $ toK0 $ ArchiveControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleTemplateArchive
      , dir "t" $ param "share" $ hPost0 $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost0 $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "o" $ hGet0 $ toK0 $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOffersArchive
+     , dir "o" $ hGet0 $ toK0 $ ArchiveControl.showOfferList
+     , dir "o" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleOffersArchive
      , dir "o" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOfferRemind
 
-     , dir "or" $ hGet0  $ toK0 $ DocControl.showOrdersList
-     , dir "or" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOrdersArchive
+     , dir "or" $ hGet0  $ toK0 $ ArchiveControl.showOrdersList
+     , dir "or" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
      
-     , dir "r" $ hGet0 $ toK0 $ DocControl.showRubbishBinList
+     , dir "r" $ hGet0 $ toK0 $ ArchiveControl.showRubbishBinList
      , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
 
@@ -179,12 +180,12 @@ handleRoutes locale = msum $
      , dir "d"                     $ hGet3  $ toK3 $ DocControl.handleDownloadFileLogged -- This + magic hash version will be the only file download possible
      , dir "d"                     $ hGet5 $ toK5 $ DocControl.handleDownloadFileNotLogged 
      
-     , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
+     , dir "d"                     $ hGet0  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet1  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleIssueShowTitleGet
      , dir "d"                     $ hGet4  $ toK4 $ DocControl.handleIssueShowTitleGetForSignatory
      , dir "d" $ {- param "doc" $ -} hPost0 $ toK0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleContractArchive
+     , dir "d" $ param "archive"   $ hPost0 $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList

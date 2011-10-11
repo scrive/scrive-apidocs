@@ -10,7 +10,6 @@ module Doc.DocView (
   , flashDocumentTemplateSaved
   , flashMessageAccountActivatedFromSign
   , flashMessageAccountRemovedFromSign
-  , flashMessageAttachmentArchiveDone
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
@@ -18,7 +17,6 @@ module Doc.DocView (
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
-  , flashMessageSignableArchiveDone
   , flashMessageFailedToParseCSV
   , flashMessageInvalidCSV
   , flashMessageMultipleAttachmentShareDone
@@ -29,7 +27,6 @@ module Doc.DocView (
   , flashMessagePleaseSignWithEleg
   , flashMessageSingleAttachmentShareDone
   , flashMessageSingleTemplateShareDone
-  , flashMessageTemplateArchiveDone
   , flashRemindMailSent
   , getDataMismatchMessage
   , isNotLinkForUserID
@@ -52,17 +49,11 @@ module Doc.DocView (
   , modalSendConfirmationView
   , pageAttachmentDesign
   , pageAttachmentForSignatory
-  , pageAttachmentList
   , pageAttachmentView
-  , pageContractsList
   , pageDocumentDesign
   , pageDocumentForAuthor
   , pageDocumentForSignatory
   , pageDocumentForViewer
-  , pageOffersList
-  , pageOrdersList
-  , pageTemplatesList
-  , pageRubbishBinList
   , showFilesImages2
   , signatoryDetailsFromUser
   , documentsToFixView
@@ -228,18 +219,6 @@ flashMessageNoBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMess
 flashMessageNoBulkRemindsSent doctype = do
   toFlashMsg OperationFailed <$> renderTextForProcess doctype processflashmessagenobulkremindssent
 
-flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
-flashMessageSignableArchiveDone doctype = do
-  toFlashMsg OperationDone <$> renderTextForProcess doctype processflashmessagearchivedone
-
-flashMessageTemplateArchiveDone :: TemplatesMonad m => m FlashMessage
-flashMessageTemplateArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageTemplateArchiveDone" ()
-
-flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
-flashMessageAttachmentArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
-  
 flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishRestoreDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishRestoreDone" ()
@@ -625,50 +604,6 @@ docsPageSize = 100
 
 
 --
-
-pageContractsList :: TemplatesMonad m => User -> m String
-pageContractsList = pageList' "pageContractsList" LinkContracts
-
-pageTemplatesList :: TemplatesMonad m => User -> m String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates
-
-pageAttachmentList :: TemplatesMonad m =>  User -> m String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
-
-pageOffersList :: TemplatesMonad m => User -> m String
-pageOffersList = pageList' "pageOffersList" LinkOffers
-
-pageOrdersList :: TemplatesMonad m => User -> m String
-pageOrdersList = pageList' "pageOrdersList" LinkOrders
-
-pageRubbishBinList :: TemplatesMonad m => User ->  m String
-pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
-
-{- |
-    Helper function for list pages
--}
-pageList' :: TemplatesMonad m
-          => String
-          -> KontraLink
-          -> User
-          -> m String
-pageList' templatename currentlink user  =
-  renderTemplateFM templatename $ do
-    field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
-    field "currentlink" $ show $ currentlink
-    field "linkdoclist" $ show $ LinkContracts 
-    field "documentactive" $ (LinkContracts == currentlink)
-    field "linkofferlist" $ show $ LinkOffers 
-    field "offeractive" $ (LinkOffers == currentlink)
-    field "linkorderlist" $ show $ LinkOrders
-    field "orderactive" $ (LinkOrders == currentlink)
-    field "linktemplatelist" $ show $ LinkTemplates
-    field "templateactive" $ (LinkTemplates == currentlink)
-    field "linkattachmentlist" $ show $ LinkAttachments 
-    field "attachmentactive" $ (LinkAttachments == currentlink)
-    field "linkrubbishbinlist" $ show $ LinkRubbishBin
-    field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
-
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
   renderTemplateM "showFileImagesPending" ()
