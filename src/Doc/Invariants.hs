@@ -298,7 +298,7 @@ basicDocsDontUseSignOrder _ Document{documentfunctionality,documentsignatorylink
   where
     hasOrdinarySignOrder :: SignatoryLink -> Bool
     hasOrdinarySignOrder sl@SignatoryLink{signatorydetails}
-      | isAuthor sl = hasSignOrder 0
+      | isAuthor sl = hasSignOrder 0 || hasSignOrder 1
       | otherwise = hasSignOrder 1
       where hasSignOrder n = SignOrder n == signatorysignorder signatorydetails
 
