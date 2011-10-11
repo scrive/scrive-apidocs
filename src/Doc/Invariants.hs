@@ -58,8 +58,8 @@ documentInvariants = [ documentHasOneAuthor
                      , basicDocsDontHavePlacements
                      , basicDocsDontUseSignOrder
                      , basicDocsDontHaveAttachments
-                     , hasFirstName
-                     , hasLastName
+--                   , hasFirstName
+--                   , hasLastName
                      , hasValidEmail
                      , hasAtMostOneOfEachTypeOfField
                      ]
@@ -314,16 +314,16 @@ basicDocsDontHaveAttachments _ Document{documentfunctionality,documentauthoratta
 -- the following should work in Pending, Closed, AwaitingAuthor
 
 -- | First Name not null
-hasFirstName :: MinutesTime -> Document -> Maybe String
-hasFirstName _ document =
+--hasFirstName :: MinutesTime -> Document -> Maybe String
+--hasFirstName _ document =
   assertInvariant "has a signatory with no first name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
                 (not $ null $ BS.toString$ getFirstName sl))
         (documentsignatorylinks document)
 
 -- | Last Name not null
-hasLastName :: MinutesTime -> Document -> Maybe String
-hasLastName _ document =
+--hasLastName :: MinutesTime -> Document -> Maybe String
+--hasLastName _ document =
   assertInvariant "has a signatory with no last name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
                 (not $ null $ BS.toString $ getLastName sl))
