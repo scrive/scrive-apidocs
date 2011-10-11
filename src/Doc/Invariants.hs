@@ -263,7 +263,7 @@ basicDocsDontHaveViewingCounterparts :: MinutesTime -> Document -> Maybe String
 basicDocsDontHaveViewingCounterparts _ Document{documentfunctionality, documentsignatorylinks, documenttype} =
   assertInvariant ("basic doc has viewing counterparts")
                   ((documenttype == Signable Contract && documentfunctionality == BasicFunctionality) =>> 
-                    (not . any isViewer $ filter (not . isAuthor) documentsignatorylinks))
+                    (all isSignatory $ filter (not . isAuthor) documentsignatorylinks))
                     
 {- |
     Documents in basic mode don't have any custom fields
