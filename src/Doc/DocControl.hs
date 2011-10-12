@@ -890,11 +890,15 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     -- if the FileID exists in the existing author attachments
     -- it's not a DocumentID
     -- otherwise, consider it a DocumentID to add
-    let idsforadd = [fid | (_did :: DocumentID, fid) <- [( read $ BS.toString sid
-                                          , read $ BS.toString sid) | (sid, r) <- zip attidsnums removeatt
-                                                                    , not r]
-                         , not $ fid `elem` existingattachments]
-                    ++ (map (head . documentfiles) $ catMaybes mattachments) :: [FileID]
+    Log.debug $ show mattachments
+    let didsforadd = [ did | (did :: DocumentID, fid) <- [ ( read $ BS.toString sid, read $ BS.toString sid)
+                                                               | (sid, r) <- zip attidsnums removeatt
+                                                         , not r]
+                     , not $ fid `elem` existingattachments]
+                     ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
+    docsforadd <- liftM catMaybes $ mapM (query . GetDocumentByDocumentID) didsforadd
+    let idsforadd = concat $ map documentfiles docsforadd
+
     ndoc <- guardRightM $ updateDocAuthorAttachments (documentid udoc) idsforadd idsforremoval
     return $ LinkDesignDoc $ DesignStep3 (documentid ndoc) signlast
 
@@ -1434,7 +1438,7 @@ handlePageOfDocument' documentid mtokens = do
 
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
-  Log.debug $ "Uploading file for doc " ++ show docid
+  Log.debug $ "Uploading file for doc #" ++ show docid
   Context{ctxdocstore, ctxs3action} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
@@ -1442,6 +1446,7 @@ handleDocumentUpload docid content1 filename = do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
+        Log.debug $ "Uploaded file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
         files <- documentfilesM document
         _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
         return ()
