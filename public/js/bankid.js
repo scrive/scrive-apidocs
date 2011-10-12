@@ -496,7 +496,7 @@ window.Eleg = {
             LoadingDialog.close();
             },
             error: repeatForeverWithDelay(250)
-      })  
+      });  
     },
     nordeaSign : function(document, signatory, submit) {
        if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
@@ -553,7 +553,7 @@ window.Eleg = {
             LoadingDialog.close();
             },
             error: repeatForeverWithDelay(250)
-      })
+      });
     
     
     
