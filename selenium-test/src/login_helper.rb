@@ -18,8 +18,16 @@ class LoginHelper
     (@wait.until { @driver.find_element :css => "a.login-button" }).click
     @wait.until { @driver.find_element :id => "loginForm" }
     
-    (@wait.until { @driver.find_element :name => "email" }).send_keys email
-    (@wait.until { @driver.find_element :name => "password" }).send_keys password
+    email_elem = @wait.until { @driver.find_element :name => "email" }
+    email_elem.click
+    @wait.until { email_elem[:value] == "" }
+    email_elem.send_keys email
+
+    password_elem = @wait.until { @driver.find_element :name => "password" }
+    password_elem.click
+    @wait.until { password_elem[:value] == "" }
+    password_elem.send_keys password
+
     (@wait.until { @driver.find_element :css => "#loginForm a.submit" }).click
     (@wait.until { @driver.find_element :css => "a.logout" })
     

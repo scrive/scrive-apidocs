@@ -34,7 +34,10 @@ describe "sign up" do
     @driver.get(@ctx.createKontrakcjaURL "/")
     
     #request an account and make sure you get a green flash back
-    (@wait.until { @driver.find_element :css => ".requestAccount input" }).send_keys random_email
+    email = @wait.until { @driver.find_element :css => ".requestAccount input" }
+    email.click
+    @wait.until { email[:value] == "" }
+    email.send_keys random_email
     (@wait.until { @driver.find_element :css => ".requestAccount .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.green" }
       
