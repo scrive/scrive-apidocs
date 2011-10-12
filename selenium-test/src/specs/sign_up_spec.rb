@@ -11,7 +11,7 @@ require "selenium-test/src/doc_helper.rb"
 
 describe "sign up" do
 
-  before(:all) do
+  before(:each) do
     @wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 
     @ctx = TestContext.new
@@ -22,7 +22,7 @@ describe "sign up" do
     @dochelper = DocHelper.new(@ctx, @driver, @wait)
   end
   
-  append_after(:all) do
+  append_after(:each) do
     @driver.quit
   end
   
@@ -34,10 +34,7 @@ describe "sign up" do
     @driver.get(@ctx.createKontrakcjaURL "/")
     
     #request an account and make sure you get a green flash back
-    email = @wait.until { @driver.find_element :css => ".requestAccount input" }
-    email.click
-    @wait.until { email[:value] == "" }
-    email.send_keys random_email
+    (@wait.until { @driver.find_element :css => ".requestAccount input" }).send_keys random_email
     (@wait.until { @driver.find_element :css => ".requestAccount .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.green" }
       
@@ -62,8 +59,8 @@ describe "sign up" do
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
     
     #fill in the password details incorrectly and make sure we get red flash message
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password\"]" }).send_keys "password-12"
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password2\"]" }).send_keys "password-123"
+    (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-123"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     @wait.until { @driver.find_element :id => "tosCBox" }
@@ -72,8 +69,8 @@ describe "sign up" do
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
     
     #fill in the password details correctly
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password\"]" }).send_keys "password-12"
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password2\"]" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-12"
 
     #submit the signup form
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
@@ -134,8 +131,8 @@ describe "sign up" do
     (@wait.until { @driver.find_element :id => "tos" }).click
     
     #fill in the password details incorrectly and make sure we get red flash message
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password\"]" }).send_keys "password-12"
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password2\"]" }).send_keys "password-123"
+    (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-123"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     @wait.until { @driver.find_element :id => "tos" }
@@ -145,8 +142,8 @@ describe "sign up" do
     (@wait.until { @driver.find_element :id => "tos" }).click
     
     #fill in the password details correctly
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password\"]" }).send_keys "password-12"
-    (@wait.until { @driver.find_element :xpath => "//input[@name=\"password2\"]" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
+    (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-12"
 
     #submit the signup form
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click

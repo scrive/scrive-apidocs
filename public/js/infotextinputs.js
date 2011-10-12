@@ -57,6 +57,7 @@ var InfoTextInputView = Backbone.View.extend({
         "focus"  :  "addFocus",
         "blur"   :  "looseFocus",
         "change" :  "updateValue",
+        "keydown" : "addFocus"
         "keyup" : "updateValue"
     },
     initialize: function (args) {
@@ -83,13 +84,17 @@ var InfoTextInputView = Backbone.View.extend({
         return this;
     },
     addFocus: function(){
-        this.model.setFocus();
-        this.render();
+        if (!this.model.hasFocus()) {
+          this.model.setFocus();
+          this.render();
+        }
     },
     looseFocus: function(){
-        this.updateValue();
-        this.model.looseFocus();
-        this.render();
+        if (this.model.hasFocus()) {
+          this.updateValue();
+          this.model.looseFocus();
+          this.render();
+        }
     },
     updateValue: function(){
         this.model.setValue(this.el.val());

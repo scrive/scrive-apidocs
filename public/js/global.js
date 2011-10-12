@@ -60,7 +60,7 @@ function enableInfoTextOnce(where) {
         }
     }
 
-    inputs.live("focus", function() {
+    inputs.live("keydown","focus", function() {
         var input = $(this);
         if (input.hasClass("grayed")) {
             input.val("");
