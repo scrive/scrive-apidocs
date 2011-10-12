@@ -33,7 +33,9 @@ class LoginHelper
   end
   
   def logout
-    (@wait.until { @driver.find_element :css => "a.logout" }).click
+    @wait.until { (@driver.find_element :css => "a.logout") }
+    @wait.until { (@driver.find_elements :css => ".flash-content").length == 0 }
+    (@wait.until { (@driver.find_element :css => "a.logout") }).click
     @wait.until { @driver.find_element :css => "a.login-button" }
   end
 end

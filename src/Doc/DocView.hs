@@ -94,7 +94,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
 import Happstack.State (query)
-import File.File
+import File.State
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()

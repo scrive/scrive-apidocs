@@ -55,7 +55,7 @@ import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
-import File.File
+import File.State
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (debug)

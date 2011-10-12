@@ -57,7 +57,7 @@ var InfoTextInputView = Backbone.View.extend({
         "focus"  :  "addFocus",
         "blur"   :  "looseFocus",
         "change" :  "updateValue",
-        "keydown" : "addFocus"
+        "keydown" : "addFocus",
         "keyup" : "updateValue"
     },
     initialize: function (args) {

@@ -59,13 +59,22 @@ function enableInfoTextOnce(where) {
             input.val(input.attr("infotext"));
         }
     }
-
-    inputs.live("keydown","focus", function() {
-        var input = $(this);
+    
+    var removeInfoText = function(input) {
         if (input.hasClass("grayed")) {
             input.val("");
             input.removeClass("grayed");
         }
+    };
+
+    inputs.live("focus", function() {
+        var input = $(this);
+        removeInfoText(input);
+    });
+    
+    inputs.live("keydown", function() {
+        var input = $(this);
+        removeInfoText(input);
     });
 
     inputs.live("blur", function() {
@@ -1002,8 +1011,6 @@ function checkSignPossibility() {
         // sign is possible
         return true;
     }
-
-    return true;
 }
 
 function checkAllCustomFieldsAreNamed() {
