@@ -1709,8 +1709,11 @@ showPage' fileid pageno = do
       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
       let modtime = toUTCTime modminutes
       rq <- askRq                 -- FIXME: what?
+      Log.debug $ "JPEG page found and returned for file " ++ show fileid ++ " and page " ++ show pageno
       return $ ifModifiedSince modtime rq res2
-    _ -> notFound (toResponse "temporarily unavailable (document has files pending for process)")
+    _ -> do
+      Log.debug $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
+      notFound (toResponse "temporarily unavailable (document has files pending for process)")
 
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
