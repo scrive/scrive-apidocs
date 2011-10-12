@@ -3,6 +3,7 @@ require "rubygems"
 class TestProperties
 
   attr_accessor :selenium_url, :kontrakcja_url
+  attr_accessor :browser
   attr_accessor :tester_email, :tester_password
   attr_accessor :first_counterpart_email, :first_counterpart_password, :first_counterpart_fstname, :first_counterpart_sndname
   attr_accessor :second_counterpart_email, :second_counterpart_password, :second_counterpart_fstname, :second_counterpart_sndname
@@ -21,6 +22,7 @@ class TestProperties
     
     @selenium_url = props["selenium-url"]
     @kontrakcja_url = props["kontrakcja-url"]
+    @browser = props["browser"].downcase
     @tester_email = props["tester-email"]
     @tester_password = props["tester-password"]
     @first_counterpart_email = props["first-counterpart-email"]
