@@ -1019,6 +1019,9 @@ function emailFieldsValidation(fields) {
     fields = fields.filter(function() {
         return ! isExceptionalField($(this));
     });
+    $(fields).each(function(i, el) {
+        el.value = el.value.trim();
+    });
     if (fields.length > 0) {
         var inputs = fields.validator({
             effect: 'failWithFlashOnEmail',
