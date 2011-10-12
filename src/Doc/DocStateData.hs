@@ -68,6 +68,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
+import File.State
 import Doc.JpegPages
 
 import System.IO.Unsafe

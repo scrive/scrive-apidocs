@@ -20,7 +20,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocProcess
 import InputValidation
-import File.File
+import File.State
 import Kontra
 import KontraLink
 import ListUtil

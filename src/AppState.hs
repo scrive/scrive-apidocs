@@ -16,7 +16,7 @@ import Misc
 import API.Service.ServiceState
 import Company.CompanyState
 import User.UserState
-import File.File
+import File.State
 
 -- |top-level application state
 data AppState = AppState

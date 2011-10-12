@@ -51,7 +51,7 @@ import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
-import File.File
+import File.State
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)

@@ -22,6 +22,8 @@ import User.Migrations
 import User.Tables
 import Stats.Tables
 import Stats.Migrations
+import File.Tables
+import File.Model ()
 
 migrationsList :: [Migration]
 migrationsList = [addRegionToUserSettings
@@ -38,6 +40,7 @@ tablesList = [
   , tableCompanies
   , tableDocStatEvents
   , tableUserStatEvents
+  , tableFiles
   -- this is not ready yet
   {-, tableDocuments
   , tableFiles

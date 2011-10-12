@@ -30,7 +30,7 @@ import User.Model
 import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
-import File.File
+import File.State
 
 {- |
    Mark document seen securely.
