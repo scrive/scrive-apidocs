@@ -1435,13 +1435,13 @@ handlePageOfDocumentForSignatory docid siglinkid sigmagichash = do
 
 handlePageOfDocument' :: Kontrakcja m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> m Response
 handlePageOfDocument' documentid mtokens = do
-  liftIO $ print "Request for docs"
+  Log.debug $ "Request for doc " ++ show documentid
   edoc <- case mtokens of
     Nothing         -> getDocByDocID documentid
     Just (slid, mh) -> getDocByDocIDSigLinkIDAndMagicHash documentid slid mh
   case edoc of
     Left l -> do
-      liftIO $ print ("Could not get Document" ++ show l)
+      Log.debug ("Could not get Document " ++ show l)
       mzero
     Right Document { documentfiles
                    , documentsealedfiles
@@ -1453,11 +1453,11 @@ handlePageOfDocument' documentid mtokens = do
                                       then documentsealedfiles
                                       else documentfiles
       case files of
-         [] -> notFound $ toResponse "temporary unavailable (document has no files)"
+         [] -> notFound $ toResponse "temporarily unavailable (document has no files)"
          f  -> do
              b <- mapM (\file -> maybeScheduleRendering file documentid) f
              if any pending b
-                then notFound (toResponse "temporary unavailable (document has files pending for process)")
+                then notFound (toResponse "temporarily unavailable (document has files pending for process)")
                 else do
                     pages <- Doc.DocView.showFilesImages2 documentid mtokens $ zip f b
                     simpleResponse pages
@@ -1710,7 +1710,7 @@ showPage' fileid pageno = do
       let modtime = toUTCTime modminutes
       rq <- askRq                 -- FIXME: what?
       return $ ifModifiedSince modtime rq res2
-    _ -> mzero
+    _ -> notFound (toResponse "temporarily unavailable (document has files pending for process)")
 
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
