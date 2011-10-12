@@ -390,7 +390,7 @@ var bgok = true;
 
 function checkbgimageok(i, el) {
     console.log("checking bg image");
-    var url = $(el).css('background-image').replace('url(', '').replace(')', '').replace("'", '').replace('"', '');
+    var url = $(el).css('background-image').replace('url(', '').replace(')', '').replace(/'/g, '').replace(/"/g, '');
     console.log(url);
     var bgImg = $('<img />');
     bgImg.hide();
