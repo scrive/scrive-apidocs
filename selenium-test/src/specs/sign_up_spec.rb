@@ -11,7 +11,7 @@ require "selenium-test/src/doc_helper.rb"
 
 describe "sign up" do
 
-  before(:all) do
+  before(:each) do
     @wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 
     @ctx = TestContext.new
@@ -22,7 +22,7 @@ describe "sign up" do
     @dochelper = DocHelper.new(@ctx, @driver, @wait)
   end
   
-  append_after(:all) do
+  append_after(:each) do
     @driver.quit
   end
   
