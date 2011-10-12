@@ -120,7 +120,7 @@ $(document).ready(function() {
     if (tweetelems.length > 0) {
         setTimeout(function() {
             tweetelems.tweet({
-                username: 'skrivapa',
+                username: localization.tweetAccount,
                 count: 3,
                 loading_text: localization.loadingTweets
             });
