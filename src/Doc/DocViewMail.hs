@@ -295,18 +295,18 @@ mailInvitationContent  forMail ctx invitationto document msiglink = do
      (BS.toString . content) <$> mailInvitation forMail ctx invitationto document msiglink
 
 mailDocumentClosed :: TemplatesMonad m => Context -> Document -> m Mail
-mailDocumentClosed ctx document@Document{documenttitle} = do
+mailDocumentClosed ctx document= do
    partylist <- renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
    documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         field "partylist" $ partylist
         fieldM "footer" $ mailFooter ctx document
 
 mailDocumentAwaitingForAuthor :: TemplatesMonad m => Context -> Document  -> m Mail
-mailDocumentAwaitingForAuthor ctx document@Document{documenttitle,documentid} = do
+mailDocumentAwaitingForAuthor ctx document = do
     signatories <- renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
     documentMail ctx document "mailDocumentAwaitingForAuthor" $ do
         field "authorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
-        field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc documentid)
+        field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc $ documentid document)
         field "partylist" signatories
 
 mailCancelDocumentByAuthorContent :: TemplatesMonad m
