@@ -71,7 +71,7 @@ clientsPageContents=
 							</li>
                                                         <li>
 								<div class="partner-image">
-									<img src="" />
+									<!--<img src="" /> -->
 								</div>
 								<h2>$_clientsPageCusomer5()$</h2>
 								<blockquote>$_Quote5()$</blockquote>
@@ -80,7 +80,7 @@ clientsPageContents=
 								<a href="http://www.coop.se/konsumnord">$_clientsPageCusomer5Web()$</a>
 							</li>                                                        <li>
 								<div class="partner-image">
-									<img src="" />
+									<!--<img src="" /> -->
 								</div>
 								<h2>$_clientsPageCusomer6()$</h2>
 								<blockquote>$_Quote6()$</blockquote>

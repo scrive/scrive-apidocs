@@ -358,6 +358,11 @@ safeReady(function() {
 });
 
 safeReady(function() {
+    loadpages();
+});
+
+function loadpages() {
+    console.log("loading pages . . .");
     if (typeof(window.documentid) != "undefined") {
         var myurl;
         if (typeof(window.siglinkid) != "undefined" && typeof(window.sigmagichash) != "undefined")
@@ -380,12 +385,49 @@ safeReady(function() {
                     });
                 } else {
                     $('#documentBox').html(content);
+                    bgok = true;
+                    console.log("bgok: " + bgok);
+                    $('.pagejpg').each(checkbgimageok);
                 }
             },
             error: repeatForeverWithDelay(1000)
         });
     }
-});
+}
+
+var bgok = true;
+
+function checkbgimageok(i, el) {
+    console.log("checking bg image");
+    var url = $(el).css('background-image').replace('url(', '').replace(')', '').replace(/'/g, '').replace(/"/g, '');
+    console.log(url);
+    var bgImg = $('<img />');
+    bgImg.hide();
+    bgImg.load(function() {
+        console.log("finished loading bg for check");
+        var complete = $(this)[0].complete;
+        var width = $(this).width();
+        console.log("width of bg image: " + width);
+        
+        if(bgok && (!complete || !width)) {
+            bgok = false;
+//            loadpages();
+        }
+        bgImg.remove();
+    }).error(function() { 
+        console.log("here"); 
+        bgImg.remove();
+        if(bgok) {
+            bgok = false;
+            loadpages();
+        }
+
+    });
+    console.log("appending");
+    $('body').append(bgImg);
+    bgImg.attr('src', url);
+    console.log("finished");
+}
 
 function escapeHTML(s) {
     var result = '';
@@ -985,6 +1027,9 @@ function emailFieldsValidation(fields) {
     fields.removeClass("noflash");
     fields = fields.filter(function() {
         return ! isExceptionalField($(this));
+    });
+    $(fields).each(function(i, el) {
+        el.value = el.value.trim();
     });
     if (fields.length > 0) {
         var inputs = fields.validator({
