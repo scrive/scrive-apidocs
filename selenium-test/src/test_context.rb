@@ -13,11 +13,11 @@ class TestContext
   def createWebDriver
     if @props.browser.nil? then
       @driver = Selenium::WebDriver.for(:remote, :url => @props.selenium_url)
-    elsif @props.browser == "firefox" then
+    elsif @props.browser.downcase == "firefox" then
       @driver = Selenium::WebDriver.for(:remote, :desired_capabilities => :firefox, :url => @props.selenium_url)
-    elsif @props.browser == "chrome" then
+    elsif @props.browser.downcase == "chrome" then
       @driver = Selenium::WebDriver.for(:remote, :desired_capabilities => :chrome, :url => @props.selenium_url)
-    elsif @props.browser == "ie" then
+    elsif @props.browser.downcase == "ie" then
       @driver = Selenium::WebDriver.for(:remote, :desired_capabilities => :ie, :url => @props.selenium_url)
     else
       raise "browser can be left unspecified or one of firefox, chrome, & ie"
