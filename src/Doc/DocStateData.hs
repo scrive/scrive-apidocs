@@ -2154,6 +2154,23 @@ instance Migrate Document29 Document30 where
                 , documentregion30                 = REGION_SE
                 }
 
+-- | This is like rwhnf but just in points that we need now. Basically
+-- I've used some unsafePerformIO in a couple of places. True reason
+-- is that Migrate class should really have an IO based migration
+-- method. So we need to cheat and that is bad. Sorry.
+ensureDocumentHasNoUnsafePerformIO :: Document -> Document
+ensureDocumentHasNoUnsafePerformIO document =
+    seqList (documentfiles document) `seq`
+    seqList (documentsealedfiles document) `seq`
+    seqList (map authorattachmentfile (documentauthorattachments document)) `seq`
+    seqList (map (maybe (FileID 0) id . signatoryattachmentfile) (documentsignatoryattachments document)) `seq`
+    document
+    where
+        {- | Forces the evaluation of the entire list. -}
+        seqList :: [a] -> [a]
+        seqList [] = []
+        seqList (x:xs) = x `seq` seqList xs
+
 instance Migrate Document30 Document where
     migrate ( Document30
         { documentid30                     
@@ -2185,7 +2202,7 @@ instance Migrate Document30 Document where
         , documentsignatoryattachments30   
         , documentui30                     
         , documentregion30                 
-        }) = Document
+        }) = ensureDocumentHasNoUnsafePerformIO $ Document
         { documentid                     = documentid30
         , documenttitle                  = documenttitle30
         , documentsignatorylinks         = documentsignatorylinks30
