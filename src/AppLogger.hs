@@ -8,6 +8,7 @@ module AppLogger ( amazon
                  , mailContent
                  , security
                  , server
+                 , integration
                  , teardownLogger
                  , trustWeaver
                  , withLogger
@@ -56,6 +57,7 @@ setupLogger = do
     elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
 
     stdoutLog <- streamHandler stdout NOTICE
 
@@ -71,6 +73,7 @@ setupLogger = do
                      , elegLog
                      , statsLog
                      , mailContentLog
+                     , integrationLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -134,6 +137,11 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.Stats"
         (setLevel NOTICE . setHandlers [statsLog])
+        
+    -- Integration API Log
+    updateGlobalLogger
+        "Kontrakcja.Integration"
+        (setLevel NOTICE . setHandlers [integrationLog])
 
     return $ LoggerHandle allLoggers
 
@@ -177,6 +185,9 @@ eleg msg = liftIO $ noticeM "Kontrakcja.Eleg" msg
 
 stats :: (MonadIO m) => String -> m ()
 stats msg = liftIO $ noticeM "Kontrakcja.Stats" msg
+
+integration :: (MonadIO m) => String -> m ()
+integration msg = liftIO $ noticeM "Kontrakcja.Integration" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
