@@ -1056,8 +1056,6 @@ function checkSignPossibility() {
         // sign is possible
         return true;
     }
-
-    return true;
 }
 
 function checkAllCustomFieldsAreNamed() {

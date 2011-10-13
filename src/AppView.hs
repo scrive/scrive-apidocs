@@ -22,6 +22,7 @@ module AppView( TopMenu(..)
               , clientsPage
               , modalError
               , embeddedErrorPage
+              , serviceFields
               ) where
 
 import API.Service.Model
@@ -105,7 +106,7 @@ embeddedPage pb = do
     ctx <- getContext
     bdy <- renderTemplateFM "embeddedPage" $ do
         field "content" pb
-        serviceFields (ctxservice ctx) (ctxlocation ctx)
+        serviceFields (ctxlocation ctx) (ctxservice ctx) 
         standardPageFields ctx "" Nothing False False Nothing Nothing
     res <- simpleResponse bdy
     clearFlashMsgs
@@ -115,11 +116,11 @@ embeddedErrorPage :: Kontra Response
 embeddedErrorPage = do
     ctx <- getContext
     content <- renderTemplateFM "embeddedErrorPage" $ do
-        serviceFields (ctxservice ctx) (ctxlocation ctx)
+        serviceFields (ctxlocation ctx) (ctxservice ctx)
     simpleResponse content
 
-serviceFields :: MonadIO m => Maybe Service -> String -> Fields m
-serviceFields (Just service) location = do
+serviceFields :: MonadIO m => String -> Maybe Service -> Fields m
+serviceFields location (Just service)  = do
     field "location" location
     field "buttons" $ isJust $ servicebuttons $ serviceui service
     field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
@@ -130,7 +131,7 @@ serviceFields (Just service) location = do
     field "barsbackground"  $ servicebarsbackground $ serviceui service
     field "logo" $ isJust $ servicelogo $ serviceui service
     field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-serviceFields Nothing location =
+serviceFields location Nothing =
     field "location" location
 
 sitemapPage :: Kontrakcja m => m String

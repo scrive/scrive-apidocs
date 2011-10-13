@@ -28,7 +28,6 @@ data File = File {
 
 instance Typeable File where typeOf _ = mkTypeOf "File"
 
-
 instance Eq File where
     a == b = fileid a == fileid b
 

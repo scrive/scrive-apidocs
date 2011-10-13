@@ -214,7 +214,7 @@ window.ConfirmationWithEmail = {
                            speed : 0,
                            mask: standardDialogMask,
                            top: standardDialogTop,
-                           fixed: false,
+                           fixed: false
                           });
           });
    }
