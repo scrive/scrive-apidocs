@@ -17,10 +17,6 @@ class LoginHelper
     
     (@wait.until { @driver.find_element :css => "a.login-button" }).click
     
-    if (@driver.find_elements :id => "overridelink").length>0 then
-      (@driver.find_element :id => "overridelink").click
-    end
-    
     @wait.until { @driver.find_element :id => "loginForm" }
     
     (@wait.until { @driver.find_element :name => "email" }).send_keys email
