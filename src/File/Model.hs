@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE CPP #-}
 module File.Model
     ( FileMovedToAWS(..)
     , FileMovedToDisk(..)
