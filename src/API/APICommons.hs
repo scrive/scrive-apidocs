@@ -238,8 +238,8 @@ getSignatoryTMP = do
     fstname        <- apiAskBS "fstname"
     sndname        <- apiAskBS "sndname"
     company        <- apiAskBS "company"
-    personalnumber <- apiAskBS "personalnumber"
-    companynumber  <- apiAskBS "companynumber"
+    personalnumber <- apiAskBS "personalnr"
+    companynumber  <- apiAskBS "companynr"
     email          <- apiAskBS "email"
     fields <- apiLocal "fields" $ apiMapLocal $ do
                                         name <- apiAskBS "name"
