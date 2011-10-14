@@ -28,6 +28,7 @@ module API.APICommons (
           , getFiles
           , api_document_tag
           , api_signatory
+          , api_file
         ) where
 
 
@@ -191,22 +192,25 @@ api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [
       ("name", showJSON $ BS.toString $ tagname tag)
     , ("value", showJSON $ BS.toString $ tagvalue tag)]
+                       
+api_file :: BS.ByteString -> BS.ByteString -> JSValue
+api_file name content = 
+  let base64data = BASE64.encode (BS.unpack content) in
+  JSObject $ toJSObject [ ("name", showJSON $ BS.toString name)
+                        , ("content", showJSON base64data)]
 
-api_document_file :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
-api_document_file file = do
+api_document_file_read :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
+api_document_file_read file = do
     ctx <- getContext
     content <- liftIO $ getFileContents ctx file
-    let base64data = BASE64.encode (BS.unpack content)
-    return $ JSObject $ toJSObject [
-          ("name", showJSON $ BS.toString $ filename file)
-        , ("content", showJSON base64data)]
+    return $ api_file (filename file) content
 
 
 api_document :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
 api_document addFiles doc = do
     files <- if addFiles
               then do
-               files <- mapM api_document_file =<< liftIO (getFilesByStatus doc)
+               files <- mapM api_document_file_read =<< liftIO (getFilesByStatus doc)
                return [("files", JSArray files)]
               else return []
     return $ JSObject $ toJSObject $ [
