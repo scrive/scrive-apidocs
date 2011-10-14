@@ -22,7 +22,7 @@ class TestProperties
     
     @selenium_url = props["selenium-url"]
     @kontrakcja_url = props["kontrakcja-url"]
-    @browser = props["browser"].downcase
+    @browser = props["browser"]
     @tester_email = props["tester-email"]
     @tester_password = props["tester-password"]
     @first_counterpart_email = props["first-counterpart-email"]

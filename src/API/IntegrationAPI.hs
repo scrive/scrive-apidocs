@@ -58,7 +58,7 @@ import Stats.Control
 import File.State
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
-import qualified AppLogger as Log (debug)
+import qualified AppLogger as Log (integration)
 
 
 {- |
@@ -76,8 +76,8 @@ instance APIContext IntegrationAPIContext where
         mbody <- apiBody
         case (mservice, mbody)  of
              (Just service, Right body2) -> do
-                Log.debug $ "API call from service:" ++ show (serviceid service)
-                Log.debug $ "API call body is:" ++ (take 300 $ encode body2)
+                Log.integration $ "API call from service:" ++ show (serviceid service)
+                Log.integration $ "API call body is:" ++ (take 300 $ encode body2)
                 return $ Right $ IntegrationAPIContext {ibody=body2,service=service}
              (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
              (_,Left s) -> return $ Left $ (API_ERROR_PARSING,"Parsing error: " ++ s)
@@ -323,9 +323,9 @@ connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m
 connectUserToSessionGet _sid _uid _ssid = do
   rq <- askRq
   let uri = rqUri rq
-  Log.debug $ "uri: " ++ uri
+  Log.integration $ "uri: " ++ uri
   referer <- look "referer"
-  Log.debug $ "referer: " ++ referer
+  Log.integration $ "referer: " ++ referer
   bdy <- renderTemplateFM "connectredirect" $ do
     field "url" uri
     field "referer" referer

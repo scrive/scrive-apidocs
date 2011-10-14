@@ -1361,6 +1361,10 @@ function initializeTemplates() {
 }
 
 safeReady(function() {
+    // check to see that jquery-ui was loaded properly
+    if(!$(document).droppable){
+        location.reload();
+    }
     docstateToHTML();
     initializeTemplates();
 });
