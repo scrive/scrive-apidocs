@@ -218,7 +218,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   , ("mdate", api_date $ documentmtime doc)
   ] ++ case mfiles of
   Nothing -> []
-  Just files -> [("file", JSArray files)]
+  Just files -> [("files", JSArray files)]
   
 
 api_document_read :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue

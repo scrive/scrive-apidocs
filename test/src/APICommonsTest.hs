@@ -70,7 +70,7 @@ testFileJSON = do
 testDocumentJSON :: Assertion
 testDocumentJSON = do
   let doc = blankDocument { documenttitle = BS.fromString "Cool Contract" }
-      jsv = api_document Nothing doc
+      jsv = api_document (Just []) doc
   testJSONStringLookup "title" jsv "Cool Contract"
   testJSONStringLookup "document_id" jsv "0"
   testJSONStringLookup "mdate" jsv $ showMinutesTimeForAPI $ fromSeconds 0
@@ -84,7 +84,16 @@ testDocumentJSON = do
         Just (JSRational _ s) -> assertBool ("Document allowed id type was not 1: " ++ show s ++ " in " ++ show js) $ s == 1
         Just _ -> assertFailure ("Expected a number in authorization, got: " ++ show js)
         Nothing -> assertFailure $ "authorization not found in " ++ show js
+      testFieldExists "files" js
+      testFieldExists "involved" js
+      testFieldExists "tags" js
     _ -> assertFailure $ "Expected JSObject but got " ++ show jsv
+    
+    
+testFieldExists :: String -> JSObject JSValue -> Assertion
+testFieldExists k js = case getJSONField k js of
+  Nothing -> assertFailure $ "Could not find field " ++ show k ++ " in " ++ show js
+  _ -> assertSuccess
   
 testJSONStringLookup :: String -> JSValue -> String -> Assertion
 testJSONStringLookup k js e =
