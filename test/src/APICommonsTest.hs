@@ -14,13 +14,15 @@ import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo 
 import qualified Data.ByteString as BS
 import qualified  Codec.Binary.Base64 as BASE64
+import MinutesTime
 
 apiCommonsTest :: Test
 apiCommonsTest = testGroup "API Commons Test" [
   testCase "Tag JSON 1" testTagJSON,
   testCase "Tag JSON Random" testTagJSONRandom,
   testCase "Involved JSON 1" testInvolvedJSON,
-  testCase "File JSON" testFileJSON
+  testCase "File JSON" testFileJSON,
+  testCase "Document JSON" testDocumentJSON
   ]
 
 testTagJSON :: Assertion
@@ -47,8 +49,8 @@ testInvolvedJSON = do
   testJSONStringLookup "company"    js $ BS.toString $ getCompanyName    sl
   testJSONStringLookup "companynr"  js $ BS.toString $ getCompanyNumber  sl
   testJSONStringLookup "personalnr" js $ BS.toString $ getPersonalNumber sl
-  testJSONStringLookup "seen" js "1969-12-31 21:00"
-  testJSONStringLookup "sign" js "1969-12-31 21:00"
+  testJSONStringLookup "seen" js $ showMinutesTimeForAPI $ fromSeconds 0
+  testJSONStringLookup "sign" js $ showMinutesTimeForAPI $ fromSeconds 0
   case js of
     JSObject obj -> case getJSONField "fields" obj of
       Nothing -> assertFailure ("fields is missing, should be in: " ++ show js)
@@ -64,6 +66,25 @@ testFileJSON = do
   let js = api_file (BS.fromString "file1") (BS.fromString "abc")
   testJSONStringLookup "name" js "file1"
   testJSONStringLookup "content" js  base64data
+  
+testDocumentJSON :: Assertion
+testDocumentJSON = do
+  let doc = blankDocument { documenttitle = BS.fromString "Cool Contract" }
+      jsv = api_document Nothing doc
+  testJSONStringLookup "title" jsv "Cool Contract"
+  testJSONStringLookup "document_id" jsv "0"
+  testJSONStringLookup "mdate" jsv $ showMinutesTimeForAPI $ fromSeconds 0
+  case jsv of
+    JSObject js -> do
+      case getJSONField "state" js of
+        Just (JSRational _ s) -> assertBool ("Document status was not between 0 and 10: " ++ show s ++ " in " ++ show js) $ 0 <= s && s < 10
+        Just _ -> assertFailure ("Expected a number in state, got: " ++ show js)
+        Nothing -> assertFailure $ "state not found in " ++ show js
+      case getJSONField "authorization" js of
+        Just (JSRational _ s) -> assertBool ("Document allowed id type was not 1: " ++ show s ++ " in " ++ show js) $ s == 1
+        Just _ -> assertFailure ("Expected a number in authorization, got: " ++ show js)
+        Nothing -> assertFailure $ "authorization not found in " ++ show js
+    _ -> assertFailure $ "Expected JSObject but got " ++ show jsv
   
 testJSONStringLookup :: String -> JSValue -> String -> Assertion
 testJSONStringLookup k js e =

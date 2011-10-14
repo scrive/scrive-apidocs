@@ -20,6 +20,7 @@
 -----------------------------------------------------------------------------
 module API.APICommons (
             api_document_read
+          , api_document
           , SignatoryTMP(..)
           , getSignatoryTMP
           , mergeSignatoryWithTMP
@@ -205,25 +206,26 @@ api_document_file_read file = do
     content <- liftIO $ getFileContents ctx file
     return $ api_file (filename file) content
 
+api_document :: Maybe [JSValue] -> Document -> JSValue
+api_document mfiles doc = JSObject $ toJSObject $ [
+  ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
+  , ("title", showJSON  $ BS.toString $ documenttitle doc)
+  , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
+  , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
+  , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
+  , ("tags", JSArray $ map api_document_tag $ documenttags doc)
+  , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
+  , ("mdate", api_date $ documentmtime doc)
+  ] ++ case mfiles of
+  Nothing -> []
+  Just files -> [("file", JSArray files)]
+  
 
 api_document_read :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
-api_document_read addFiles doc = do
-    files <- if addFiles
-              then do
-               files <- mapM api_document_file_read =<< liftIO (getFilesByStatus doc)
-               return [("files", JSArray files)]
-              else return []
-    return $ JSObject $ toJSObject $ [
-       ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
-     , ("title", showJSON  $ BS.toString $ documenttitle doc)
-     , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
-     , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
-     , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
-     , ("tags", JSArray $ map api_document_tag $ documenttags doc)
-     , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
-     , ("mdate", api_date $ documentmtime doc)
-     ]
-     ++ files
+api_document_read False doc = return $ api_document Nothing doc
+api_document_read True doc = do
+  files <- mapM api_document_file_read =<< liftIO (getFilesByStatus doc)
+  return $ api_document (Just files) doc
 
 
 api_date :: MinutesTime -> JSValue
