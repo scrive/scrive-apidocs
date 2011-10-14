@@ -26,6 +26,8 @@ module API.APICommons (
           , toSignatoryDetails
           , toDocumentType
           , getFiles
+          , api_document_tag
+          , api_signatory
         ) where
 
 
@@ -102,10 +104,10 @@ data DOCUMENT_TYPE =
     deriving (Bounded,Ord,Eq)
 
 instance SafeEnum DOCUMENT_TYPE where
-    fromSafeEnum DOCUMENT_TYPE_CONTRACT = 1
+    fromSafeEnum DOCUMENT_TYPE_CONTRACT          = 1
     fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 2
-    fromSafeEnum DOCUMENT_TYPE_OFFER = 3
-    fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE = 4
+    fromSafeEnum DOCUMENT_TYPE_OFFER             = 3
+    fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE    = 4
     toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
     toSafeEnum 2 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
     toSafeEnum 3 = Just DOCUMENT_TYPE_OFFER
@@ -113,21 +115,21 @@ instance SafeEnum DOCUMENT_TYPE where
     toSafeEnum _ = Nothing
 
 toDocumentType :: DOCUMENT_TYPE -> DocumentType
-toDocumentType DOCUMENT_TYPE_CONTRACT = Signable Contract
-toDocumentType DOCUMENT_TYPE_OFFER = Signable Offer
+toDocumentType DOCUMENT_TYPE_CONTRACT          = Signable Contract
+toDocumentType DOCUMENT_TYPE_OFFER             = Signable Offer
 toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
-toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = Template Offer
+toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE    = Template Offer
 
 {- Building JSON structure representing object in any API response
    TODO: Something is WRONG FOR ATTACHMENTS HERE
 -}
 api_document_type :: Document ->  DOCUMENT_TYPE
 api_document_type doc
-    | Template Contract == documenttype doc  = DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    | Template Offer == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
+    | Template Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    | Template Offer    == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
     | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
-    | Signable Offer == documenttype doc = DOCUMENT_TYPE_OFFER
-    | otherwise = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
+    | Signable Offer    == documenttype doc = DOCUMENT_TYPE_OFFER
+    | otherwise                             = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
 
 
 api_document_status :: Document -> DOCUMENT_STATUS
@@ -155,7 +157,8 @@ api_document_relation sl
     | otherwise                     = DOCUMENT_RELATION_VIEWER
 
 api_signatory :: SignatoryLink -> JSValue
-api_signatory sl = JSObject $ toJSObject $ fields
+api_signatory sl = JSObject $ toJSObject $ 
+    fields
     ++
     case maybeseeninfo sl of
      Just seeninfo ->  [("seen", api_date $ signtime seeninfo)]
