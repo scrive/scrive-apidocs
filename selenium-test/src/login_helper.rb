@@ -16,6 +16,7 @@ class LoginHelper
     @driver.get(@ctx.createKontrakcjaURL "/")
     
     (@wait.until { @driver.find_element :css => "a.login-button" }).click
+    
     @wait.until { @driver.find_element :id => "loginForm" }
     
     (@wait.until { @driver.find_element :name => "email" }).send_keys email
