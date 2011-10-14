@@ -19,7 +19,7 @@
 -- , like for files or signatories it should be put here
 -----------------------------------------------------------------------------
 module API.APICommons (
-            api_document
+            api_document_read
           , SignatoryTMP(..)
           , getSignatoryTMP
           , mergeSignatoryWithTMP
@@ -206,8 +206,8 @@ api_document_file_read file = do
     return $ api_file (filename file) content
 
 
-api_document :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
-api_document addFiles doc = do
+api_document_read :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
+api_document_read addFiles doc = do
     files <- if addFiles
               then do
                files <- mapM api_document_file_read =<< liftIO (getFilesByStatus doc)
