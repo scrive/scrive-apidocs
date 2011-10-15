@@ -58,7 +58,7 @@ import Stats.Control
 import File.State
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
-import qualified AppLogger as Log (debug)
+import qualified AppLogger as Log (integration)
 
 
 {- |
@@ -76,8 +76,8 @@ instance APIContext IntegrationAPIContext where
         mbody <- apiBody
         case (mservice, mbody)  of
              (Just service, Right body2) -> do
-                Log.debug $ "API call from service:" ++ show (serviceid service)
-                Log.debug $ "API call body is:" ++ (take 300 $ encode body2)
+                Log.integration $ "API call from service:" ++ show (serviceid service)
+                Log.integration $ "API call body is:" ++ (take 300 $ encode body2)
                 return $ Right $ IntegrationAPIContext {ibody=body2,service=service}
              (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
              (_,Left s) -> return $ Left $ (API_ERROR_PARSING,"Parsing error: " ++ s)
@@ -275,7 +275,7 @@ getDocuments = do
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
     -- We support only offers and contracts by API calls    
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
-    api_docs <- sequence $  map (api_document False) $ filter (\d -> notDeleted d && supportedType d) documents
+    api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
     
 
@@ -283,7 +283,7 @@ getDocuments = do
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
     doc <- documentFromParam
-    api_doc <- api_document True doc
+    api_doc <- api_document_read True doc
     return $ toJSObject [("document",api_doc)]
 
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -323,9 +323,9 @@ connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m
 connectUserToSessionGet _sid _uid _ssid = do
   rq <- askRq
   let uri = rqUri rq
-  Log.debug $ "uri: " ++ uri
+  Log.integration $ "uri: " ++ uri
   referer <- look "referer"
-  Log.debug $ "referer: " ++ referer
+  Log.integration $ "referer: " ++ referer
   bdy <- renderTemplateFM "connectredirect" $ do
     field "url" uri
     field "referer" referer
