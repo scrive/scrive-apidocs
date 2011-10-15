@@ -72,6 +72,7 @@ remindMailNotSigned :: TemplatesMonad m
                     -> m Mail
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
+    let mainfile =  head $ documentfiles document
     authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         fieldM "header" $ do
@@ -90,25 +91,21 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                         with <- renderTemplateFM "customFooter" $
                             field "creatorname" creatorname
                         replaceOnEdit this with
-        fieldM "timetosigninfo" $ do
-            case documenttimeouttime document of
-                 Just time -> renderTemplateFM "timetosigninfo" $ do
-                                  field "time" $ show time
-                 Nothing   -> return ""
-        fieldM "partnersinfo" $ do
-            renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
-        fieldM "whohadsignedinfo" $ do
-            renderTemplateForProcess document processwhohadsignedinfoformail $ do
-                fieldM "signedlist" $
-                    if not $ null $ partySignedList document
-                       then fmap Just $ renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
-                       else return Nothing
+        field "partners" $ map (BS.toString . getSmartName) $ partyList document
+        field "partnerswhosigned" $ map (BS.toString . getSmartName) $ partySignedList document
+        field "someonesigned" $ not $ null $ partySignedList document
+        field "timetosign" $ show <$> documenttimeouttime document
         fieldM "link" $ do
             if forMail
                then makeFullLink ctx document $ show $ LinkSignDoc document signlink
                else makeFullLink ctx document $ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
+        field "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
+        field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
+        -- We try to use generic templates and this is why we return a tuple
+        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa -> 
+                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
 
 remindMailSigned :: TemplatesMonad m
                  => Bool
