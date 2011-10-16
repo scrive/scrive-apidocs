@@ -91,7 +91,7 @@ sendReminder = do
 getDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 getDocument = do
   doc <- getUserDoc
-  api_doc <- api_document True (doc)
+  api_doc <- api_document_read True (doc)
   return $ toJSObject [("document",api_doc)]
 
 

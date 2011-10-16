@@ -700,6 +700,7 @@ showFunctionalityStats = onlySuperUser $ do
                                          (mkStats ctxtime parts)
   renderFromBody TopEmpty kontrakcja content
   where
+    mkStats :: HasFunctionalityStats a => MinutesTime -> [a] -> [(String, Int)]
     mkStats time xs =
       map (\(label, deffunc) -> (label, length $ filter (\x -> isRecent time x && deffunc x) xs)) getStatDefinitions
 

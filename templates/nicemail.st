@@ -13,12 +13,12 @@ nicemail=
         </tr>
     </table>
     -->
-    <table id="main" cellpadding="0" cellspacing="15" width="600" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
+    <table id="main" cellpadding="0" cellspacing="15" width="630" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
         <tr>
             <td style="padding:10px; margin: auto;">
                 <table id="header" width="580" cellpadding="9" 
                         bgcolor="$if(!service.barsbackground)$212121$else$$service.barsbackground$$endif$" 
-                    cellspacing="0" align="center" style="color:#ffffff;text-align:center;margin:auto;">
+                    cellspacing="0" align="center" style="color:#ffffff;text-align:center;margin:auto">
                     <tr>
                         <td style="text-align:left; margin: auto;padding:10px;">
                            $if(!service.logo)$
@@ -30,9 +30,9 @@ nicemail=
                     </tr>
                     <tr>
                     <td>
-                        <table id="banner" width="560" cellpadding="0" bgcolor="$if(!service.barsbackground)$212121$else$$service.barsbackground$$endif$" cellspacing="0" align="center" style="color:#fff;text-align:center;">
+                        <table id="banner" width="590" cellpadding="0" bgcolor="$if(!service.barsbackground)$212121$else$$service.barsbackground$$endif$" cellspacing="0" align="center" style="color:#fff;text-align:center;">
                             <tr>
-                                <td width="580" cellpadding="0"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse', serif;">
+                                <td width="580" cellpadding="0"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse', serif;padding:10px">
                                     $if(mailheader)$ $mailheader$ $endif$
                                     </span>
                                 </td>
@@ -43,7 +43,7 @@ nicemail=
                             <tr>
                                 
                                 <td width="580"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:#fff;">
-                                       $if(!service)$ $if(mailsubheader)$ $mailsubheader$ $endif$ $endif$
+                                       $if(!service)$ $_mailsubheader()$ $endif$ 
                                     </span>
                                 </td>
                             </tr>
@@ -55,7 +55,7 @@ nicemail=
         </tr><!-- header -->
         <tr>
             <td>
-                <table id="content" width="560" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
+                <table id="content" width="590" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
                     <tr>
                         <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
                     </tr>

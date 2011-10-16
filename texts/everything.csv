@@ -2658,30 +2658,30 @@ for creating an account with us. When you have activated your account you will b
 "_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på
- länken<br/>        <a href=""$link$"">$link$</a><br/>        2.
+ Länken    <a href=""$link$"">$link$</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
-         4. Färdig",,"<i>To continue</i><br/>        1. Click the link<br/>         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done"
+         4. Färdig <BR/> $footer:noescape()$",,"<i>To continue</i><br/>        1. Click the link         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
 Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedOfferContentInstruction","1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
+"_remindMailNotSignedOfferContentInstruction","1. Klicka på länken        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
- avvisa)<br/>        4. Färdig",,"1. Click the link<br/>        <a href=""$link$"">$link$</a><br/>
+ avvisa)<br/>        4. Färdig <BR/> $footer:noescape()$",,"1. Click the link        <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
- reject)<br/>        4. Done"
+ reject)<br/>        4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedOfferContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
  offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or rejected the order  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedOrderContentInstruction","1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
+"_remindMailNotSignedOrderContentInstruction","1. Klicka på länken      <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
- avvisa)<br/>         4. Färdig",,"1. Click the link<br/>        <a href=""$link$"">$link$</a><br/>
+ avvisa)<br/>         4. Färdig <BR/> $footer:noescape()$",,"1. Click the link       <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3. Confirm the order (or
- reject)<br/>         4. Done"
+ reject)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedOrderContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
@@ -3331,3 +3331,4 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
 "_tweetAccount","skrivapa",,"scriveuk"
+"_mailsubheader"," Signera Dokument Online med Scrive",," Sign Documents Online with Scrive"

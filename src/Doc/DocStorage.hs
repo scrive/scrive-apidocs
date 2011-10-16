@@ -16,6 +16,7 @@ module Doc.DocStorage
     , uploadDocumentFilesToTrustWeaver
     , maybeScheduleRendering
     , preprocessPDF
+    , scaleForPreview
     ) where
 
 import Control.Concurrent
@@ -113,6 +114,19 @@ resizeImageAndReturnOriginalSize filepath = do
     fcontent <- BS.readFile filepath
     return (fcontent,943,1335)
 
+
+scaleForPreview :: DocumentID -> BS.ByteString -> IO BS.ByteString
+scaleForPreview did image = withSystemTempDirectory "preview" $ \tmppath -> do
+    let fpath = tmppath ++ "/" ++ show did ++ ".jpg"
+    BS.writeFile fpath image
+    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","190x270!", fpath, fpath]
+    resizerexitcode <- waitForProcess resizer
+    case resizerexitcode of
+        ExitFailure _ -> return ()
+        ExitSuccess -> return ()
+    fcontent <- BS.readFile fpath
+    return fcontent
+    
 {- |
    Convert PDF to jpeg images of pages
  -}

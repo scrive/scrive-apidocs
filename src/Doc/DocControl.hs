@@ -1632,6 +1632,40 @@ showPageForSignatory docid siglinkid sigmagichash fileid pageno = do
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
     showPage' fileid pageno
 
+showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
+showPreview docid fileid = withAuthorOrFriend docid $ do
+    iprev <- preview docid fileid 0 
+    case iprev of
+         Just res -> return $ Right res
+         Nothing ->   return $ Left $ LinkDocumentPreview docid Nothing fileid
+
+showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)
+showPreviewForSignatory docid siglinkid sigmagichash fileid = do
+    doc <- queryOrFail $ GetDocumentByDocumentID docid
+    checkLinkIDAndMagicHash doc siglinkid sigmagichash
+    iprev <- preview docid fileid 0 
+    case iprev of
+         Just res -> return $ Right res
+         Nothing ->   return $ Left $ LinkDocumentPreview docid (getMaybeSignatoryLink (doc,siglinkid)) fileid
+     
+preview :: Kontrakcja m =>  DocumentID -> FileID -> Int -> m (Maybe Response)       
+preview did fid value 
+  | value > 10 = return Nothing 
+  | otherwise  =   do
+        Context{ctxnormalizeddocuments} <- getContext
+        docmap <- liftIO $ readMVar ctxnormalizeddocuments
+        case Map.lookup fid docmap of
+            Just (JpegPages pages) -> do
+                let (contents,_,_) =  pages !! 0
+                scaledContent <- liftIO $ scaleForPreview did contents
+                let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [scaledContent]) Nothing
+                return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
+            other -> do
+                when_ (other == Nothing) $ maybeScheduleRendering fid did
+                liftIO $ threadDelay 500000 
+                preview did fid (value+1)     
+    
+
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
