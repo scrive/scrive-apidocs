@@ -3331,3 +3331,4 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
 "_tweetAccount","skrivapa",,"scriveuk"
+"_mailsubheader"," Signera Dokument Online med Scrive",," Sign Documents Online with Scrive"

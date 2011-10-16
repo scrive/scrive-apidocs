@@ -17,7 +17,7 @@ mailCancelOrderByAuthorStandardHeader=
 mailCancelContractByAuthor=
     $_mailCancelDocumentByAuthorTitle()$
     $nicemail(
-        mailheader= mailInvitationTitle();
+        mailheader= _mailCancelDocumentByAuthorTitle();
         mailp1 = header;
         mailp2 = _mailCancelContractByAuthorContentBody();
         mailp3 = footer
@@ -26,7 +26,7 @@ mailCancelContractByAuthor=
 mailCancelOfferByAuthor=
     $_mailCancelDocumentByAuthorTitle()$
     $nicemail(
-        mailheader= mailInvitationTitle();
+        mailheader= _mailCancelDocumentByAuthorTitle();
         mailp1 = header;
         mailp2 = _mailCancelOfferByAuthorContentBody();
         mailp3 = footer
@@ -35,7 +35,7 @@ mailCancelOfferByAuthor=
 mailCancelOrderByAuthor=
     $_mailCancelDocumentByAuthorTitle()$
     $nicemail(
-        mailheader= mailInvitationTitle();
+        mailheader= _mailCancelDocumentByAuthorTitle();
         mailp1 = header;
         mailp2 = _mailCancelOrderByAuthorContentBody();
         mailp3 = footer
@@ -119,7 +119,7 @@ mailOrderClosedMainP=
 mailRejectContractMail=
       $_mailRejectMailTitle()$
       $nicemail(
-        mailheader = _mailDocumentClosedTitle();
+        mailheader = _mailRejectMailTitle();
         mailp1 = mailRejectMailContentHeader();
         mailp2 = _mailRejectContractMailContentContractRejected();
         mailp3 = footer
@@ -128,7 +128,7 @@ mailRejectContractMail=
 mailRejectOfferMail=
       $_mailRejectMailTitle()$
       $nicemail(
-        mailheader = _mailDocumentClosedTitle();
+        mailheader = _mailRejectMailTitle();
         mailp1 = mailRejectMailContentHeader();
         mailp2 = _mailRejectOfferMailContentOfferRejected();
         mailp3 = footer
@@ -137,7 +137,7 @@ mailRejectOfferMail=
 mailRejectOrderMail=
       $_mailRejectMailTitle()$
     $nicemail(
-        mailheader = _mailDocumentClosedTitle();
+        mailheader = _mailRejectMailTitle();
         mailp1 = mailRejectMailContentHeader();
         mailp2 = _mailRejectOrderMailContentHasRejected();
         mailp3 = footer
@@ -168,24 +168,13 @@ mailInvitationToSignContract=
      $nicemail(
         mailheader= mailInvitationTitle();
         mailp1 = header;
-        mailp2 = mailInvitationToSignContractMainP();
+        mailp2 = contractInfo();
         mailp3 = mailInvitationToSignContractIntructions();
         mailp4 = legalparagraph()
     )$
 ###
-mailInvitationToSignContractMainP=
-<p>
-     <i>$_mailInvitationToSignContractContentInfo()$</i><br/>
-     $_mailInvitationToSignContractContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedinfo:noescape()$<br/>
-     $_mailInvitationToSignContractContentSender()$ <strong>$creatorname$</strong><br/>
-     $timetosigninfo:noescape()$
-     $appendixList()$
-     $sigattachlist()$
-</p>
-###
 mailInvitationToSignContractIntructions=
-    $if(issignatory)$
+    $if(sign)$
     <p>$_mailInvitationToSignContractContentIfSignatoryInstruction()$</p>
     $else$
     $_mailInvitationToSignContractContentIfNotSignatoryInstruction()$
@@ -202,24 +191,13 @@ mailInvitationToSignOffer=
      $nicemail(
         mailheader= mailInvitationTitle();
         mailp1 = header;
-        mailp2 = mailInvitationToSignOfferMainP();
+        mailp2 = offerInfo();
         mailp3 = mailInvitationToSignOfferIntructions();
         mailp4 = legalparagraph()
     )$
 ###
-mailInvitationToSignOfferMainP=
-    <p>
-     <i>$_mailInvitationToSignOfferContentInfo()$</i><br/>
-     $_mailInvitationToSignOfferContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedinfo:noescape()$<br/>
-     $_mailInvitationToSignOfferContentSender()$ <strong>$creatorname$</strong><br/>
-     $timetosigninfo:noescape()$
-     $appendixList()$
-     $sigattachlist()$
-    </p>
-###
 mailInvitationToSignOfferIntructions=
-    $if(issignatory)$
+    $if(sign)$
     <p>$_mailInvitationToSignOfferContentIfSignatoryInstruction()$</p>
     $else$
     $_mailInvitationToSignOfferContentIfNotSignatoryInstruction()$
@@ -234,24 +212,13 @@ mailInvitationToSignOrder=
     $nicemail(
         mailheader= mailInvitationTitle();
         mailp1 = header;
-        mailp2 = mailInvitationToSignOrderMainP();
+        mailp2 = orderInfo();
         mailp3 = mailInvitationToSignOrderIntructions();
         mailp4 = legalparagraph()
     )$
 ####
-mailInvitationToSignOrderMainP=
-    <p>
-     <i>$_mailInvitationToSignOrderContentInfo()$</i><br/>
-     $_mailInvitationToSignOrderContentPartys()$ $partnersinfo:noescape()$<br/>
-     $whohadsignedinfo:noescape()$<br/>
-     $_mailInvitationToSignOrderContentSender()$ <strong>$creatorname$</strong><br/>
-     $timetosigninfo:noescape()$
-     $appendixList()$
-     $sigattachlist()$
-    </p>
-####
 mailInvitationToSignOrderIntructions=
-    $if(issignatory)$
+    $if(sign)$
     <p>$_mailInvitationToSignOrderContentIfSignatoryInstruction()$</p>
     $else$
     $_mailInvitationToSignOrderContentIfNotSignatoryInstruction()$
@@ -369,88 +336,20 @@ remindMailNotSignedContract=
     $nicemail(
         mailheader=_remindMailNotSignedTitle();
         mailp1=header;
-        mailp2=remindMailNotSignedContractMainP();
+        mailp2=contractInfo();
         mailp3=_remindMailNotSignedContractContentInstruction();
         mailp4= legalparagraph()
     )$
 #####
-remindMailNotSignedContractMainP= 
-    $nicemailbodywithpreview(
-        r1='true';
-        r1cond='true';
-        r1text= _remindMailNotSignedContractContentPartys();
-        r1elems=partners; 
-
-        r2='true';
-        r2cond=someonesigned;
-        r2text= _whohadsignedcontractinfoformailIfSigned();
-        r2elems=partnerswhosigned;
-        r2alter='true';
-        r2alttext = _whohadsignedcontractinfoformailIfNotSigned();
-        r2altelems = noonehadsignedtext();
-          
-        r3='true';      
-        r3cond=timetosign;
-        r3text= _timetosigninfo();
-        r3elems=timetosign;
-          
-        r4='true';      
-        r4cond=isattachments;
-        r4text= _appendixListAttachment();
-        r4elems=attachments;
-
-        r5='true';
-        r5cond=hassigattachments;
-        r5text=_sigattachlistRequestedAttachment();
-        r5elems= sigattachments;
-        r5separator= _from()
-    )$
 #####
 remindMailNotSignedOffer=
     $_remindMailNotSignedTitle()$
     $nicemail(
         mailheader=_remindMailNotSignedTitle();
         mailp1=header;
-        mailp2=remindMailNotSignedOfferMainP();
+        mailp2=offerInfo();
         mailp3=_remindMailNotSignedOfferContentInstruction();
         mailp4= legalparagraph()
-    )$
-#####
-remindMailNotSignedOfferMainP=
-    $nicemailbodywithpreview(
-        r1='true';
-        r1cond='true';
-        r1text= _remindMailNotSignedOfferContentPartys();
-        r1elems=partners; 
-
-        r2='true';
-        r2cond=someonesigned;
-        r2text= _whohadsignedofferinfoformailIfConfirmed();
-        r2elems=partnerswhosigned;
-        r2alter='true';
-        r2alttext = _whohadsignedofferinfoformailIfNotConfirmed();
-        r2altelems = noonehadsignedtext();
-          
-        r3='true';      
-        r3cond='true';
-        r3text= _remindMailNotSignedOfferContentSender();
-        r3elems=creatorname;
-
-        r4='true';      
-        r4cond=timetosign;
-        r4text= _timetosigninfo();
-        r4elems=timetosign;
-          
-        r5='true';      
-        r5cond=isattachments;
-        r5text= _appendixListAttachment();
-        r5elems=attachments;
-
-        r6='true';
-        r6cond=hassigattachments;
-        r6text=_sigattachlistRequestedAttachment();
-        r6elems= sigattachments;
-        r6separator= _from()
     )$
 ###
 remindMailNotSignedOrder=
@@ -458,43 +357,10 @@ remindMailNotSignedOrder=
     $nicemail(
         mailheader=_remindMailNotSignedTitle();
         mailp1=header;
-        mailp2=remindMailNotSignedOrderMainP();
+        mailp2=orderInfo();
         mailp3=_remindMailNotSignedOrderContentInstruction();
         mailp4= legalparagraph()
     )$
-###
-remindMailNotSignedOrderMainP=
-    $nicemailbodywithpreview(
-        r1='true';
-        r1cond='true';
-        r1text= _remindMailNotSignedOrderContentPartys();
-        r1elems=partners; 
-
-        r2='true';
-        r2cond=someonesigned;
-        r2text= _whohadsignedorderinfoformailIfAccepted();
-        r2elems=partnerswhosigned;
-        r2alter='true';
-        r2alttext = _whohadsignedorderinfoformailIfNotAccepted();
-        r2altelems = noonehadsignedtext();
-          
-        r3='true';      
-        r3cond=timetosign;
-        r3text= _timetosigninfo();
-        r3elems=timetosign;
-          
-        r4='true';      
-        r4cond=isattachments;
-        r4text= _appendixListAttachment();
-        r4elems=attachments;
-
-        r5='true';
-        r5cond=hassigattachments;
-        r5text=_sigattachlistRequestedAttachment();
-        r5elems= sigattachments;
-        r5separator= _from()
-    )$
-
 ###
 ###
 ###  NEW USER MAIN
@@ -853,32 +719,154 @@ offerhassignedformailtext=$_offerhassignedformailtext()$
 ####
 orderhassignedformailtext=$_orderhassignedformailtext()$
 ####
-whohadsignedcontractinfoformail=
-    $if(signedlist)$    $_whohadsignedcontractinfoformailIfSigned()$ $signedlist:noescape()$
-    $else$  $_whohadsignedcontractinfoformailIfNotSigned()$ $noonehadsignedtext()$
-    $endif$
-####
-whohadsignedorderinfoformail=
-    $if(signedlist)$    $_whohadsignedorderinfoformailIfAccepted()$ $signedlist:noescape()$
-    $else$  $_whohadsignedorderinfoformailIfNotAccepted()$ $noonehadsignedtext()$
-    $endif$
-####
-whohadsignedofferinfoformail=
-    $if(signedlist)$    $_whohadsignedofferinfoformailIfConfirmed()$$signedlist:noescape()$
-    $else$  $_whohadsignedofferinfoformailIfNotConfirmed()$ $noonehadsignedtext()$
-    $endif$
 ####
 whohadsignedinfoforpreview=
-    <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="$_whohadsignedinfoforpreview()$"></span>
+    <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$"></span>
 ####
 ####
 legalparagraph=
 <p style="width:90%;font-size:8pt;font-style:italic;">$_legalparagraphBody()$ </p>
 <BR/>
 ####
-appendixList=$if(isattachments)$ $_appendixListAttachment()$ $attachments:{a | $a$ };separator=", "$ <br />$endif$
-###
-sigattachlist=$if(hassigattachments)$ $_sigattachlistRequestedAttachment()$ $sigattachments:{sa|$sa.name:strong()$ $_from()$ $sa.sigs:noescape()$};separator="; "$ <br />$endif$
+####
+####
+#### DOCUMENT INFORMATION PREVIEW FOR MAIL
+####
+contractInfo=
+    $nicemailbodywithpreview(
+        r1='true';
+        r1cond='true';
+        r1text= _remindMailNotSignedContractContentPartys();
+        r1elems=partners; 
+        r1elemsclass = 'partnersmailpreview';
+
+
+        r2='true';
+        r2cond='true';
+        r2text= _mailInvitationToSignContractContentSender();
+        r2elems=creatorname;
+
+
+        r3=nojavascriptmagic;
+        r3cond=someonesigned;
+        r3text= _whohadsignedcontractinfoformailIfSigned();
+        r3elems=partnerswhosigned;
+        r3alter='true';
+        r3alttext = _whohadsignedcontractinfoformailIfNotSigned();
+        r3altelems = noonehadsignedtext();
+          
+
+        r4=javascriptmagic;
+        r4cond='true';
+        r4text= _whohadsignedcontractinfoformailIfNotSigned();
+        r4elems= whohadsignedinfoforpreview();
+        
+        r5='true';      
+        r5cond=timetosign;
+        r5text= _timetosigninfo();
+        r5elems=timetosign;
+          
+        r6='true';      
+        r6cond=isattachments;
+        r6text= _appendixListAttachment();
+        r6elems=attachments;
+
+        r7='true';
+        r7cond=hassigattachments;
+        r7text=_sigattachlistRequestedAttachment();
+        r7elems= sigattachments;
+        r7separator= _from()
+    )$
+
+####
+offerInfo=
+    $nicemailbodywithpreview(
+        r1='true';
+        r1cond='true';
+        r1text= _remindMailNotSignedOfferContentPartys();
+        r1elems=partners; 
+
+          
+        r2='true';      
+        r2cond='true';
+        r2text= _remindMailNotSignedOfferContentSender();
+        r2elems=creatorname;
+
+        r3=nojavascriptmagic;
+        r3cond=someonesigned;
+        r3text= _whohadsignedofferinfoformailIfConfirmed();
+        r3elems=partnerswhosigned;
+        r3alter='true';
+        r3alttext = _whohadsignedofferinfoformailIfNotConfirmed();
+        r3altelems = noonehadsignedtext();
+          
+
+        r4=javascriptmagic;
+        r4cond='true';
+        r4text= _whohadsignedofferinfoformailIfNotConfirmed();
+        r4elems= whohadsignedinfoforpreview();
+
+        r5='true';      
+        r5cond=timetosign;
+        r5text= _timetosigninfo();
+        r5elems=timetosign;
+          
+        r6='true';      
+        r6cond=isattachments;
+        r6text= _appendixListAttachment();
+        r6elems=attachments;
+
+        r7='true';
+        r7cond=hassigattachments;
+        r7text=_sigattachlistRequestedAttachment();
+        r7elems= sigattachments;
+        r7separator= _from()
+    )$
+####
+orderInfo=
+    $nicemailbodywithpreview(
+        r1='true';
+        r1cond='true';
+        r1text= _remindMailNotSignedOrderContentPartys();
+        r1elems=partners; 
+          
+        r2='true';      
+        r2cond='true';
+        r2text= _mailInvitationToSignOrderContentSender();
+        r2elems=creatorname;
+
+        r3=nojavascriptmagic;
+        r3cond=someonesigned;
+        r3text= _whohadsignedorderinfoformailIfAccepted();
+        r3elems=partnerswhosigned;
+        r3alter='true';
+        r3alttext = _whohadsignedorderinfoformailIfNotAccepted();
+        r3altelems = noonehadsignedtext(); 
+
+        r4=javascriptmagic;
+        r4cond='true';
+        r4text= _whohadsignedorderinfoformailIfNotAccepted();
+        r4elems= whohadsignedinfoforpreview();
+
+  
+        r5='true';      
+        r5cond=timetosign;
+        r5text= _timetosigninfo();
+        r5elems=timetosign;
+          
+        r6='true';      
+        r6cond=isattachments;
+        r6text= _appendixListAttachment();
+        r6elems=attachments;
+
+        r7='true';
+        r7cond=hassigattachments;
+        r7text=_sigattachlistRequestedAttachment();
+        r7elems= sigattachments;
+        r7separator= _from()
+    )$
+
+####
 ####
 nicemailbodywithpreview= 
 <table align="center" style="margin: auto; border-collapse: separate;  border-spacing: 30px;">     
@@ -886,7 +874,7 @@ nicemailbodywithpreview=
        <td>
          <table cellspacing="0" cellpadding="0" style="margin: auto;">
            <tr>
-               <td> <div style="width:190px;height:270px;border:1px solid #CCCCCC"><img src="$ctxhostpart$$previewLink$" height="270" width="190" alt=""/></td>
+               <td> <div style="width:190px;height:270px;border:1px solid #CCCCCC"><img src="$ctxhostpart$$previewLink$" height="270" width="190" alt=""/></div></td>
            </tr>
          </table>
        </td>
@@ -894,7 +882,7 @@ nicemailbodywithpreview=
 
         <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;">
             <tr>
-                <td><span style="color:#212121;font-size:1.5em;">$documenttitle$</h2></td>
+                <td><span style="color:#212121;font-size:1.5em;">$documenttitle$</span></td>
             </tr>
                $if(r1)$
                 $nicemailpreviewrow(
@@ -904,6 +892,7 @@ nicemailbodywithpreview=
                     alter=r1alter;
                     alttext = r1alttext;
                     altelems = r1altelems;
+                    elemsclass = r1elemsclass;
                     separator = r1separator
                 )$
               $endif$
@@ -917,6 +906,7 @@ nicemailbodywithpreview=
                     alter=r2alter;
                     alttext = r2alttext;
                     altelems = r2altelems;
+                    elemsclass = r2elemsclass;
                     separator = r2separator
                 )$
             $endif$
@@ -929,6 +919,7 @@ nicemailbodywithpreview=
                     alter=r3alter;
                     alttext = r3alttext;
                     altelems = r3altelems;
+                    elemsclass = r3elemsclass;
                     separator = r3separator
                 )$
             $endif$
@@ -941,6 +932,7 @@ nicemailbodywithpreview=
                     alter=r4alter;
                     alttext = r4alttext;
                     altelems = r4altelems;
+                    elemsclass = r4elemsclass;
                     separator = r4separator
                 )$
             $endif$
@@ -953,6 +945,7 @@ nicemailbodywithpreview=
                     alter=r5alter;
                     alttext = r5alttext;
                     altelems = r5altelems;
+                    elemsclass = r5elemsclass;
                     separator = r5separator
                 )$
             $endif$
@@ -965,10 +958,23 @@ nicemailbodywithpreview=
                     alter=r6alter;
                     alttext = r6alttext;
                     altelems = r6altelems;
+                    elemsclass = r6elemsclass;
                     separator = r6separator
                 )$
             $endif$
-
+         
+            $if(r7)$
+                $nicemailpreviewrow(
+                    cond=r7cond;
+                    text= r7text;
+                    elems=r7elems;
+                    alter=r7alter;
+                    alttext = r7alttext;
+                    altelems = r7altelems;
+                    elemsclass = r7elemsclass;
+                    separator = r7separator
+                )$
+            $endif$
         </table>
        </td>
    </tr>
@@ -982,7 +988,7 @@ $if(cond)$
               $if(elem.0)$
                 <p style="font-weight:bold;"> $elem.0$ $separator$ $elem.1$<br/></p>
               $else$
-                <p style="font-weight:bold;"> $elem$ <br/></p>
+                <p style="font-weight:bold;" $if(elemsclass)$class="$elemsclass$"$endif$> $elem$ <br/></p>
               $endif$
           }$
 </td></tr>
@@ -994,4 +1000,3 @@ $nicemailpreviewrow(
     )$
 $endif$
 ####
-

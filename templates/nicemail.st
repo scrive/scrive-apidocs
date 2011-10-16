@@ -43,7 +43,7 @@ nicemail=
                             <tr>
                                 
                                 <td width="580"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:#fff;">
-                                       $if(!service)$ $if(mailsubheader)$ $mailsubheader$ $endif$ $endif$
+                                       $if(!service)$ $_mailsubheader()$ $endif$ 
                                     </span>
                                 </td>
                             </tr>

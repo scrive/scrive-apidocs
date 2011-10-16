@@ -658,7 +658,6 @@ safeReady(function() {
             //var author = $(".authorname .fieldvalue").text();
             var sigs = $("#personpane .persondetails");
             var partners = new Array();
-
             if (authorSignes) {
                 var fstnamefield = $(".authorfstname .fieldvalue");
                 var sndnamefield = $(".authorsndname .fieldvalue");
@@ -668,7 +667,7 @@ safeReady(function() {
                     res = mailfield.text();
                 }
                 partners.push(res);
-                signedList.html(signedList.attr("okprefix") + " <strong>" + res + "</strong>");
+                signedList.html(res);
             } else {
                 signedList.html(signedList.attr("alt"));
             }
@@ -687,7 +686,15 @@ safeReady(function() {
                     }
                 }
             });
-            $(".partylistupdate").html(swedishList(partners));
+            var plist = $(".partnersmailpreview").parent();
+            $(".partnersmailpreview").remove();
+            for(var i=0;i<partners.length;i++)
+            {
+                var p = $("<p class='partnersmailpreview' style='font-weight:bold;'></p>");
+                p.text(partners[i])
+                p.append("<BR/>")
+                plist.append(p);
+            }    
         },
         fixed:false
     });
