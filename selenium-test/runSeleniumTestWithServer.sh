@@ -9,8 +9,8 @@ else
   SSPID=$!
   echo $SSPID > selenium-server.pid
   sleep 10
-  
-  ./selenium-test/runSeleniumTest.sh all
+
+  ./selenium-test/runSeleniumTest.sh $1
 
   echo "stopping selenium server"
   kill `more selenium-server.pid`
