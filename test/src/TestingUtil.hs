@@ -38,6 +38,11 @@ import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 
+instance Arbitrary DocumentTag where
+  arbitrary = do
+    (k, v) <- arbitrary
+    return $ DocumentTag k v
+
 instance Arbitrary UserID where
   arbitrary = do
     a <- arbitrary
@@ -106,12 +111,6 @@ instance Arbitrary MinutesTime where
   arbitrary = do
     a <- arbitrary
     return $ fromSeconds a
-
-instance Arbitrary DocumentTag where
-  arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    return $ DocumentTag a b
 
 instance Arbitrary DocumentUI where
   arbitrary = do
@@ -337,8 +336,34 @@ arbEmail = do
   d <- arbString 3 7
   return $ BS.fromString (n ++ "@" ++ d ++ ".com")
 
-
-
+signatoryLinkExample1 :: SignatoryLink
+signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
+                                      , signatorymagichash = MagicHash 0
+                                      , maybesignatory = Nothing
+                                      , maybesupervisor = Nothing
+                                      , maybecompany = Nothing
+                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybereadinvite = Nothing
+                                      , invitationdeliverystatus = Delivered
+                                      , signatorysignatureinfo = Nothing
+                                      , signatoryroles = [SignatoryPartner]
+                                      , signatorylinkdeleted = False
+                                      , signatorylinkreallydeleted = False
+                                      , signatorydetails = SignatoryDetails { signatorysignorder = SignOrder 1,
+                                                                              signatoryfields = [SignatoryField FirstNameFT (BS.fromString "Eric") [],
+                                                                                                 SignatoryField LastNameFT (BS.fromString "Normand") [],
+                                                                                                 SignatoryField EmailFT (BS.fromString "eric@scrive.com") [],
+                                                                                                 SignatoryField CompanyFT (BS.fromString "Scrive") [],
+                                                                                                 SignatoryField CompanyNumberFT (BS.fromString "1234") [],
+                                                                                                 SignatoryField PersonalNumberFT (BS.fromString "9101112") [],
+                                                                                                 SignatoryField (CustomFT (BS.fromString "phone") True) (BS.fromString "504-302-3742") []
+                                                                                
+                                                                                                ]
+                                        
+                                                                            }
+                                      }
+                        
 blankUser :: User
 blankUser = User {  
                    userid                  =  UserID 0
@@ -383,7 +408,7 @@ blankDocument =
           , documentinvitetext           = BS.empty
           , documentsealedfiles          = []
           -- , documenttrustweaverreference = Nothing
-          , documentallowedidtypes       = []
+          , documentallowedidtypes       = [EmailIdentification]
           , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing
@@ -535,6 +560,12 @@ untilCondition cond gen = do
 
 addRandomDocumentWithAuthor' :: User -> DB Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
+
+doNTimes :: Int -> IO () -> IO ()
+doNTimes 0 _ = return ()
+doNTimes n a = do
+  _ <- a
+  doNTimes (n - 1) a
 
 doTimes :: Int -> DB (Maybe (DB ())) -> DB ()
 doTimes i action

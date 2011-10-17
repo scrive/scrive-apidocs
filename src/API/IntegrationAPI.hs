@@ -275,7 +275,7 @@ getDocuments = do
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
     -- We support only offers and contracts by API calls    
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
-    api_docs <- sequence $  map (api_document False) $ filter (\d -> notDeleted d && supportedType d) documents
+    api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
     
 
@@ -283,7 +283,7 @@ getDocuments = do
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
     doc <- documentFromParam
-    api_doc <- api_document True doc
+    api_doc <- api_document_read True doc
     return $ toJSObject [("document",api_doc)]
 
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse

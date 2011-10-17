@@ -207,6 +207,10 @@ handleRoutes locale = msum $
 
      , dir "pages"  $ hGetAjax3 $ toK3 $ DocControl.showPage
      , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
+     -- HTMP emails can have embedded preview image
+     , dir "preview" $ hGet2 $ toK2 $ DocControl.showPreview
+     , dir "preview" $ hGet4 $ toK4 $ DocControl.showPreviewForSignatory
+
      , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
      , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages

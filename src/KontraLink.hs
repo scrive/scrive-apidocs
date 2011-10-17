@@ -112,6 +112,7 @@ data KontraLink
     | LinkServiceButtonsBody ServiceID
     | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
+    | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID 
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -226,3 +227,9 @@ instance Show KontraLink where
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
     showsPrec _ (LinkCSVLandPage c) = (++) ("/csvlandpage/" ++ show c)
+    showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++ 
+                 "/" ++ show (signatorylinkid sl) ++
+                 "/" ++ show (signatorymagichash sl) ++
+                 "/" ++ show fid)
+    showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++ 
+                 "/" ++ show fid)

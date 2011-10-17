@@ -22,6 +22,7 @@ import Data.Ratio
 import Data.List
 import Data.Maybe
 import Database.HDBC.PostgreSQL
+import Util.JSON
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
@@ -207,9 +208,6 @@ createTestService = do
 isError :: JSObject JSValue -> Bool
 isError = isJust . lookup "error" . fromJSObject
 
-getJSONField :: String -> JSObject JSValue -> Maybe JSValue
-getJSONField s = lookup s .fromJSObject
-
 docsCount :: JSObject JSValue -> Int
 docsCount obj = case getJSONField "documents" obj of
                    Just (JSArray docs) -> length docs
@@ -221,8 +219,3 @@ containsUserEmbedLink obj =    "connectuser" `isInfixOf` (getJSONStringField "li
 containsCompanyEmbedLink :: JSObject JSValue -> Bool
 containsCompanyEmbedLink obj = "connectcompany" `isInfixOf` (getJSONStringField "link" obj)
 
-getJSONStringField :: String -> JSObject JSValue ->  String
-getJSONStringField name obj =
-    case (getJSONField name obj) of
-        Just (JSString s) -> fromJSString s
-        _ -> ""

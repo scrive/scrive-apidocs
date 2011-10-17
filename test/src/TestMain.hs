@@ -69,6 +69,9 @@ import LocaleTest
 #ifndef NO_MAILS
 import MailsTest
 #endif
+#ifndef NO_MAILS
+import APICommonsTest
+#endif
 
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
@@ -126,6 +129,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_MAILS
       , ("mails", mailsTests conn )
+#endif
+#ifndef NO_MAILS
+      , ("apicommons", const $ apiCommonsTest )
 #endif
       ]
 
