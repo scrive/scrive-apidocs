@@ -2,7 +2,7 @@
 "_AddCompanyAccount","Lägg till",,"Add"
 "_Attachment","Bilaga:",,"Attachment:"
 "_Attachments","Bilagor",,"Attachments"
-"_BelowPriceTable1","<h3>Gratis för privatpersoner och enmansföretagare</h3>     
+"_BelowPriceTable1","<h3>Gratis för privatpersoner och enmansföretagare</h3>
                              <p>Det finns tusen skäl varför alla
  bör signera sina dokument elektroniskt. Vår ambition är att
  alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
@@ -70,165 +70,165 @@
 "_PleaseAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
 "_PresentPassword","Nuvarande lösenord:",,"Present password:"
 "_PriceTableHead","                                                        <th>
-                                                            
-    <h3>Small</h3>                                          
+
+    <h3>Small</h3>
                       <p>Förbättra processerna i den mindre organisationen</p>
                                                         </th>
                                                         <th>
-                                                            
-    <h3>Team</h3>                                           
+
+    <h3>Team</h3>
                      <p>Effektivisera teamet med enkla medel</p>
                                                         </th>
                                                         <th>
-                                                            
-    <h3>Business</h3>                                       
+
+    <h3>Business</h3>
                          <p>En helhetslösning för många användningsområden</p>
                                                         </th>
                                                         <th>
-                                                            
-    <h3>Enterprise</h3>                                     
+
+    <h3>Enterprise</h3>
                            <p>Större volymer, integrationer och
- anpassning</p>                                             
+ anpassning</p>
            </th>",,"                                                        <th>
-                                                            
-    <h3>Small</h3>                                          
-                      <p>Improve small organisations</p>    
-                                                    </th>   
-                                                     <th>   
-                                                            
- <h3>Team</h3>                                              
-                  <p>Make your team more efficient</p>       
-                                                 </th>      
-                                                  <th>      
+
+    <h3>Small</h3>
+                      <p>Improve small organisations</p>
+                                                    </th>
+                                                     <th>
+
+ <h3>Team</h3>
+                  <p>Make your team more efficient</p>
+                                                 </th>
+                                                  <th>
                                                           <h3>Business</h3>
-                                                            
-    <p>One solution with many uses</p>                     
-                                   </th>                    
-                                    <th>                    
+
+    <p>One solution with many uses</p>
+                                   </th>
+                                    <th>
                                             <h3>Enterprise</h3>
-                                                            
-    <p>Larger volume, integrations and customisation</p>    
+
+    <p>Larger volume, integrations and customisation</p>
                                                     </th>"
-"_PriceTableHighlightedColumn","<ul class=""highlight-rows"">                                 
-                       <li class=""top"">                     
+"_PriceTableHighlightedColumn","<ul class=""highlight-rows"">
+                       <li class=""top"">
                                            <h3>Business</h3>
-                                                            
-    <p>En helhetslösning för många användningsområden </p>  
-                                                      </li> 
+
+    <p>En helhetslösning för många användningsområden </p>
+                                                      </li>
                                                        <li class=""odd"">50
- användare</li>                                             
-           <li>                                             
-                   <p>2000 signaturer/år</p>                
-                                        </li>               
+ användare</li>
+           <li>
+                   <p>2000 signaturer/år</p>
+                                        </li>
                                          <li class=""odd"">Obegränsad
- lagring</li>                                               
-         <li>Avancerade funktioner</li>                     
-                                   <li class=""bottom"">      
+ lagring</li>
+         <li>Avancerade funktioner</li>
+                                   <li class=""bottom"">
                                                           <h4>30
- kr/signatur</h4>                                           
+ kr/signatur</h4>
                      <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
-                                                           </li></ul>","<ul class=""highlight-rows"">                                 
-                       <li class=""top"">                     
+                                                           </li></ul>","<ul class=""highlight-rows"">
+                       <li class=""top"">
                                            <h3>Business</h3>
-                                                            
-    <p>One solution with many uses</p>                     
-                                   </li>                    
+
+    <p>One solution with many uses</p>
+                                   </li>
                                     <li class=""odd"">50 users</li>
                                                         <li>
-                                                            
-    <p>2000 signatures/year</p>                             
-                           </li>                            
+
+    <p>2000 signatures/year</p>
+                           </li>
                             <li class=""odd"">Unlimited storage</li>
                                                         <li>Advanced
- features</li>                                              
-          <li class=""bottom"">                               
+ features</li>
+          <li class=""bottom"">
                                  <h4>30 kr/signature</h4>
-                                                            
- <a href=""$linkpriceplan$"">Detailed price plan</a>                   
-                                        </li></ul>","<ul class=""highlight-rows"">                                 
-                       <li class=""top"">                     
+
+ <a href=""$linkpriceplan$"">Detailed price plan</a>
+                                        </li></ul>","<ul class=""highlight-rows"">
+                       <li class=""top"">
                                            <h3>Business</h3>
-                                                            
-    <p>One solution with many uses</p>                     
-                                   </li>                    
+
+    <p>One solution with many uses</p>
+                                   </li>
                                     <li class=""odd"">50 users</li>
                                                         <li>
-                                                            
-    <p>2000 signatures/year</p>                             
-                           </li>                            
+
+    <p>2000 signatures/year</p>
+                           </li>
                             <li class=""odd"">Unlimited storage</li>
                                                         <li>Advanced
- features</li>                                              
-          <li class=""bottom"">                               
+ features</li>
+          <li class=""bottom"">
                                  <h4>£3/signature</h4>
-                                                            
- <a href=""$linkpriceplan$"">Detailed price plan</a>                   
+
+ <a href=""$linkpriceplan$"">Detailed price plan</a>
                                         </li></ul>"
-"_PriceTablePriceRow","<td>                                                        
-        <h4>35 kr/signatur</h4>                             
+"_PriceTablePriceRow","<td>
+        <h4>35 kr/signatur</h4>
                                    <a href=""$linkpriceplan$"">Detaljerad
- prisplan</a>                                               
-         </td>                                              
-          <td>                                              
-                  <h4>32.50 kr/signatur</h4>                
+ prisplan</a>
+         </td>
+          <td>
+                  <h4>32.50 kr/signatur</h4>
                                                 <a href=""$linkpriceplan$"">Detaljerad
- prisplan</a>                                               
-         </td>                                              
-          <td>                                              
-                  <h4>30 kr/signatur</h4>                   
+ prisplan</a>
+         </td>
+          <td>
+                  <h4>30 kr/signatur</h4>
                                              <a href=""$linkpriceplan$"">Detaljerad
- prisplan</a>                                               
+ prisplan</a>
                                                             </td>
                                                         <td>
-                                                            
-    <h4>Offert</h4>                                         
+
+    <h4>Offert</h4>
                        <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
-                                                        </td>","<td>                                                                 <h4>35 kr/signature</h4>                                     <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>32.50 kr/signature</h4>                                                   <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>30 kr/signature</h4>                                                <a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>                                                                 <h4>Negotiable</h4>                                                                 <a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>                                                        
+                                                        </td>","<td>                                                                 <h4>35 kr/signature</h4>                                     <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>32.50 kr/signature</h4>                                                   <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>30 kr/signature</h4>                                                <a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>                                                                 <h4>Negotiable</h4>                                                                 <a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>
         <h4>£3.50/signature</h4>
                                     <a href=""$linkpriceplan$"">Detailed
  price plan</a>
-          </td>                                             
-           <td>                                             
+          </td>
+           <td>
                    <h4>£3.25/signature</h4>
                                                   <a href=""$linkpriceplan$"">Detailed
  price plan</a>
-          </td>                                             
-           <td>                                             
+          </td>
+           <td>
                    <h4>£3/signature</h4>
                                                <a href=""$linkpriceplan$"">Detailed
  price plan</a>
-                                                            
- </td>                                                      
-  <td>                                                      
-          <h4>Negotiable</h4>                                    
+
+ </td>
+  <td>
+          <h4>Negotiable</h4>
                             <a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>"
-"_PriceTableRow1","<td>5 användare</td>                                        
-                <td>15 användare</td>                       
-                                 <td>50 användare</td>      
+"_PriceTableRow1","<td>5 användare</td>
+                <td>15 användare</td>
+                                 <td>50 användare</td>
                                                   <td>Offert</td>",,"<td>5 users</td>
                 <td>15 users</td>
                                  <td>50 users</td>
                                                   <td>Negotiable</td>"
-"_PriceTableRow2","<td>500 signaturer/år</td>                                  
-                      <td>1000 signaturer/år</td>           
+"_PriceTableRow2","<td>500 signaturer/år</td>
+                      <td>1000 signaturer/år</td>
                                              <td>2000 signaturer/år</td>
                                                         <td>Från
- 4000 signaturer/år</td>",,"<td>500 signatures/year</td>                                
-                        <td>1000 signatures/year</td>       
+ 4000 signaturer/år</td>",,"<td>500 signatures/year</td>
+                        <td>1000 signatures/year</td>
                                                  <td>2000 signatures/year</td>
                                                         <td>From
  4000 signatures/year</td>"
-"_PriceTableRow3","<td>500 dok laging</td>                                     
-                   <td>Obegränsad lagring</td>              
+"_PriceTableRow3","<td>500 dok laging</td>
+                   <td>Obegränsad lagring</td>
                                           <td>Obegränsad lagring</td>
                                                         <td>Offert</td>",,"<td>Storage for 500 documents</td>                                                         <td>Unlimited storage</td>                                                         <td>Unlimited storage</td>                                                         <td>Negotiable</td>"
-"_PriceTableRow4","<td>Basfunktioner</td>                                      
-                  <td>Basfunktioner</td>                    
+"_PriceTableRow4","<td>Basfunktioner</td>
+                  <td>Basfunktioner</td>
                                     <td>Advancerade funktioner</td>
                                                         <td>Anpassad
- lösning</td>",,"<td>Basic features</td>                                     
-                   <td>Basic features</td>                  
+ lösning</td>",,"<td>Basic features</td>
+                   <td>Basic features</td>
                                       <td>Advanced features</td>
                                                         <td>Custom
  solution</td>"
@@ -242,7 +242,7 @@
 "_Quote3","”Smart lösning.”",,"”A smart solution.”"
 "_Quote3By","Christoffer Lindquist, VD, Eventbook, Eventpartner",,"Christoffer Lindquist, CEO, Eventbook, Eventpartner"
 "_Quote4","”Tjänsten är väldigt smidig och det visar verkligen hur mycket
- man kan effektivisera avtalsprocessen.”",,"""The service is very smooth. It really shows how 
+ man kan effektivisera avtalsprocessen.”",,"""The service is very smooth. It really shows how
  efficient the signing process can become."""
 "_Quote4By","Ola Brundin, Accenture Management Consulting",,"Ola Brundin, Accenture Management Consulting"
 "_Quote5","”Snabbt och överskådligt.”",,"”Fast and efficient.”"
@@ -404,7 +404,7 @@
  Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
  Terms of Service</a>"
 "_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? $ourServiceName()$ kan även arkivera
- ett original för din säkerhet. Det kostar ingenting.       
+ ett original för din säkerhet. Det kostar ingenting.
  ",,"          Do you want to secure your original? $ourServiceName()$ can store
  it for your safety, free of charge.        "
 "_accountFromSignInputsConfirmPassword","Bekräfta lösenord",,"Confirm password"
@@ -511,15 +511,15 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_contracthassignedformailtext","Har undertecknat",,"Has signed"
 "_contractname","Avtal",,"Contract"
 "_contractpendingauthorinfoheader","Väntar",,"Waiting"
-"_contractpendingauthorinfotextIfElse","Du har endast behörighet att se detta                       
-    dokumentet. Dokumentet har ännu inte                    
-       undertecknats av samtliga parter.",,"You only have permission to see this                        
-   document. The document has not yet                       
+"_contractpendingauthorinfotextIfElse","Du har endast behörighet att se detta
+    dokumentet. Dokumentet har ännu inte
+       undertecknats av samtliga parter.",,"You only have permission to see this
+   document. The document has not yet
     been signed by all signatories."
 "_contractpendingauthorinfotextIfiamauthor","Du har skickat inbjudan att                           underteckna.
  Dokumentet har ännu inte                           undertecknats
  av samtliga parter.",,"You have sent an invitation to sign.
- The document has not yet been signed                       
+ The document has not yet been signed
     by all signatories."
 "_contractpendingauthornotsignedinfoheader","Granska",,"Please review"
 "_contractpendingauthornotsignedinfotext","Vänligen var noga med att granska dokumentet och kontrollera
@@ -597,7 +597,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  sure you want to sent an invitation to sign the document"
 "_dialogConfirmSendinviteBody2To"," till ",," to "
 "_dialogConfirmSendinviteBody3","Du har skapat fält för parterna att fylla i innan de undertecknar.
- Efter att alla har undertecknat kommer du att              
+ Efter att alla har undertecknat kommer du att
  få ett mail med en länk till en sida på $ourServiceName()$ där du kan
  granska parternas uppgifter och underteckna dokumentet. ",,"You have created fields for the parties to fill in before they
  sign. When all counterparts have signed,               you
@@ -620,9 +620,9 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_dialogConfirmSigninviteBody2OnlyAuthor","När du undertecknat kommer det färdigställda dokumentet att skickas till samtliga parter med e-post.",,
 "_dialogConfirmSigninviteBody3"," med e-post.",," by e-mail."
 "_dialogConfirmSigninviteHead","Underteckna",,"Sign"
-"_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en            
-  e-legitimation från din internetbank eller från           
-   Telia. ",,"No e-ID? You can download an e-ID from you online           
+"_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en
+  e-legitimation från din internetbank eller från
+   Telia. ",,"No e-ID? You can download an e-ID from you online
    bank or from Telia."
 "_dialogConfirmSigninviteSubBody2ClickHere","Klicka här",,"Click here"
 "_dialogConfirmSigninviteSubBody3"," för att läsa mer.",," to read more."
@@ -636,7 +636,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_dialogCsvupload1Body","            Du har valt att göra ett massutskick, för att genomföra
  detta krävs att du laddar upp ett dokument med formatet .csv
           ",,"            You have chosen to multi send. To complete this you
- are required to upload a document with format .csv         
+ are required to upload a document with format .csv
  "
 "_dialogCsvupload1CSVOnly","OBS! Endast .CSV",,".CSV only!"
 "_dialogCsvupload1ChooseFile","Välj fil ",,"Select file"
@@ -658,21 +658,21 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_docListTabsRubbishBin","Papperskorgen",,"Rubbish Bin"
 "_docListTabsTemplates","Mallar",,"Templates"
 "_document","dokument",,"document"
-"_documentInfoTextDatamismatchElseImauthorBody","Avtalsprocessen är avbruten på grund av                     
-         felaktig matchning mellan en                       
-       undertecknande part och dennes                       
+"_documentInfoTextDatamismatchElseImauthorBody","Avtalsprocessen är avbruten på grund av
+         felaktig matchning mellan en
+       undertecknande part och dennes
        e-legitimation.",,"The signing process was canceled because the personal data of
  a signatory did not match the data in his or her e-ID."
 "_documentInfoTextDatamismatchElseImauthorHead","Avtalsprocessen avbruten",,"Signing process canceled"
-"_documentInfoTextDatamismatchNotsignedbymeImauthorBody","Avtalsprocessen är avbruten på grund                        
-        av felaktig matchning mellan en                     
-           undertecknande part och dennes                   
+"_documentInfoTextDatamismatchNotsignedbymeImauthorBody","Avtalsprocessen är avbruten på grund
+        av felaktig matchning mellan en
+           undertecknande part och dennes
              e-legitimation.",,"The signing process was canceled because the personal data of
  a signatory did not match the data in his or her e-ID."
 "_documentInfoTextDatamismatchNotsignedbymeImauthorHead","Avtalsprocessen avbruten",,"Signing process canceled"
-"_documentInfoTextDatamismatchSignedbymeImauthorBody","Avtalsprocessen är avbruten på grund av                     
-         felaktig matchning mellan en                       
-       undertecknande part och dennes                       
+"_documentInfoTextDatamismatchSignedbymeImauthorBody","Avtalsprocessen är avbruten på grund av
+         felaktig matchning mellan en
+       undertecknande part och dennes
        e-legitimation.",,"The signing process was canceled because the personal data of
  a signatory did not match the data in his or her e-ID."
 "_documentInfoTextDatamismatchSignedbymeImauthorHead","Avtalsprocessen avbruten",,"Signing process canceled"
@@ -822,6 +822,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageUserActivated","Välkommen till $ourServiceName()$!",,"Welcome to $ourServiceName()$!"
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
+"_flashMessageCompanyCreated","A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
 "_flashMessageUserHasBecomeSubaccount","Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
  och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$
  and the rights to your documents have been transferred."
@@ -843,7 +844,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_from","från",,"from"
 "_h1","Varför krångla? - Signera med $ourServiceName()$!",,"Why struggle? Sign with $ourServiceName()$!"
 "_h1Body","Signera avtal och andra dokument elektroniskt med $ourServiceName()$.<br/>Våra kunder
- och våra kunders kunder älskar enkelheten.           
+ och våra kunders kunder älskar enkelheten.
                                ",,"Sign contracts and other documents online with $ourServiceName()$.<br/>Our customers just love the simplicity.                                     "
 "_h3CreateAccount","Skapa konto nu!",,"Create your account now."
 "_h3CreateAccountBody","1 månad full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial.  Easy signup."
@@ -876,14 +877,14 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  med mottagarens e-post server eller mer troligt på att adressen
  $email$ inte existerar.       Processen har därmed avbrutits.
  Gör så här om du vill börja om:",,"We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been canceled. To restart it:"
-"_invitationMailUndeliveredContentInstruction","Kontrollera vilken som är mottagarens korrekta adress<br/>  
+"_invitationMailUndeliveredContentInstruction","Kontrollera vilken som är mottagarens korrekta adress<br/>
      2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
 "_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
-    underkonto på $ourServiceName()$ genom vilket du kan skriva avtal 
+    underkonto på $ourServiceName()$ genom vilket du kan skriva avtal
    för organisationen <strong>$companyname$</strong>. Observera
  att detta konto inte    är avsett för privat bruk då samtliga
  dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a subaccount on $ourServiceName()$.  Using $ourServiceName()$ you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
@@ -1828,8 +1829,8 @@ Would appreciate it too."
 "_modalAccountSetupIfPrivateAccount","Privatperson",,"Private person"
 "_modalAccountSetupPosition","Position:",,"Position:"
 "_modalAccountSetupRepeatPassword","Upprepa lösenord:",,"Repeat password:"
-"_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du underkonto till huvudkontot	       
-   $supervisor.fullnamePlusEmail$ och huvudkontot tar över	 
+"_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du underkonto till huvudkontot
+   $supervisor.fullnamePlusEmail$ och huvudkontot tar över
          ägarskapet över samtliga dokument i ditt konto.  Är
  du	          säker att du vill acceptera?	        ",,"If you accept to become subaccoount to the main account
         $supervisor.fullnamePlusEmail$, the ownership of all
@@ -1839,15 +1840,15 @@ Would appreciate it too."
 "_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli underkonto?",,"Do you want to accept to become subaccount?"
 "_modalErrorBody","Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
 "_modalErrorHeader","Oops, ett fel har uppstått",,"Oops, an error has occurred"
-"_modalInviteUserAsSubaccountBodySendRequest","Skicka en förfrågan till användaren att bli ett underkonto	 
-         under ditt konto. Det betyder att du blir	         
+"_modalInviteUserAsSubaccountBodySendRequest","Skicka en förfrågan till användaren att bli ett underkonto
+         under ditt konto. Det betyder att du blir
  huvudkonto och kommer att ta över ägarskapet över samtliga underkontots
- dokument. 	        ",,"Send a request to the user to become subaccount to your	    
+ dokument. 	        ",,"Send a request to the user to become subaccount to your
       account. This means that you will become	           main
  account, and the ownership of all the documents in the subaccount
  will be transferred to you.	          "
 "_modalInviteUserAsSubaccountBodySendSure","	          Är du säker att du vill skicka förfrågan till användaren
- att bli	          underkonto?	        ",,"	          Are you sure you want to send a request to become	
+ att bli	          underkonto?	        ",,"	          Are you sure you want to send a request to become
           subaccount?	        "
 "_modalInviteUserAsSubaccountFooterSendRequest","Skicka förfrågan",,"Send request"
 "_modalInviteUserAsSubaccountHeaderSendRequest","Skicka förfrågan?",,"Send request?"
@@ -1889,13 +1890,13 @@ Would appreciate it too."
  has been completed."
 "_modalSignInviteViewHeaderIfElse","Du har undertecknat!",,"You have signed!"
 "_modalSignInviteViewHeaderIfSigned","Du har undertecknat dokumentet <strong>$documenttitle$</strong>!",,"You have signed the document <strong>$documenttitle$</strong>!"
-"_modalSignedViewClosedHasAccountLoggedInBodySaved","        Dokumentet har sparats till ditt konto.      ",,"          The document has been saved to your account.      
+"_modalSignedViewClosedHasAccountLoggedInBodySaved","        Dokumentet har sparats till ditt konto.      ",,"          The document has been saved to your account.
   "
 "_modalSignedViewClosedHasAccountLoggedInBodySigned","        $partyListString:noescape()$ har nu undertecknat och
         dokumentet är bindande.     ",,"        $partyListString:noescape()$ has signed, and the document
          is now legally binding.        "
 "_modalSignedViewClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
-"_modalSignedViewClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ",,"          The document has been saved to your account.      
+"_modalSignedViewClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ",,"          The document has been saved to your account.
   "
 "_modalSignedViewClosedHasAccountNotLoggedInBodySigned","          $partyListString:noescape()$ har nu undertecknat och
           dokumentet är bindande.        ",,"          $partyListString:noescape()$ has signed, and the document
@@ -1908,9 +1909,9 @@ Would appreciate it too."
  transaction and generated a verification. An original document
  has been sent to your e-mail address.     "
 "_modalSignedViewClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
-"_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte  
+"_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte
       undertecknat. När alla undertecknat blir dokumentet bindande
-        och en kopia skickas till din e-post.      ",,"        $partyUnsignedListString:noescape()$ has not yet    
+        och en kopia skickas till din e-post.      ",,"        $partyUnsignedListString:noescape()$ has not yet
       signed. When everyone involved has signed, the document
           becomes legally binding and a duplicate is sent to
  your e-mail address.      "
@@ -1918,12 +1919,12 @@ Would appreciate it too."
 "_modalSignedViewNotClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
 "_modalSignedViewNotClosedHasAccountNotLoggedInBodyNotSigned","          $partyUnsignedListString:noescape()$ har ännu inte
           undertecknat. När alla undertecknat blir dokumentet
- bindande          och en kopia skickas till din e-post.    
-    ",,"          $partyUnsignedListString:noescape()$ has not yet  
+ bindande          och en kopia skickas till din e-post.
+    ",,"          $partyUnsignedListString:noescape()$ has not yet
         signed. When everyone involved has signed, the document
           becomes legally binding and a duplicate is sent to
  your e-mail address."
-"_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ",,"          The document has been saved to your account.      
+"_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ",,"          The document has been saved to your account.
   "
 "_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
 "_modalSignedViewNotClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
@@ -1936,7 +1937,7 @@ Would appreciate it too."
 "_modalSignedViewOrderClosedHasAccountNotLoggedInBodyConfirmed","          $partyListString:noescape()$ har nu bekräftat ordern.
         ",,"          $partyListString:noescape()$ has now confirmed the
  order.    "
-"_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.    
+"_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.
     ",,"          The order confirmation has been saved to your account.
    "
 "_modalSignedViewOrderClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
@@ -1944,7 +1945,7 @@ Would appreciate it too."
  inkorg.      ",,"        We have sent an original order confirmation to your e-mail
  address.   "
 "_modalSignedViewOrderClosedNoAccountHeader","	Du har bekräftat ordern!",,"	You have confirmed the order!"
-"_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte  
+"_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte
       bekräftat.      ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed.
    "
 "_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ",,"        The order confirmation has been saved to your account.
@@ -1953,7 +1954,7 @@ Would appreciate it too."
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed","          $partyUnsignedListString:noescape()$ har ännu inte
           bekräftat.        ",,"          $partyUnsignedListString:noescape()$ has not yet confirmed.
    "
-"_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.    
+"_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.
     ",,"          The order confirmation has been saved to your account."
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
@@ -2306,286 +2307,286 @@ for creating an account with us. When you have activated your account you will b
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
-"_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>  
-                              <th>                          
+"_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>
+                              <th>
           <h3>Small</h3>                                    <p>35
- kr/signatur</p>                                </th>       
-                         <th>                               
+ kr/signatur</p>                                </th>
+                         <th>
      <h3>Team</h3>                                    <p>32.50
- kr/signatur</p>                                </th>       
-                         <th>                               
+ kr/signatur</p>                                </th>
+                         <th>
      <h3>Business</h3>                                    <p>30
- kr/signatur</p>                                </th>       
-                         <th>                               
+ kr/signatur</p>                                </th>
+                         <th>
      <h3>Enterprise</h3>                                    <p>Offert</p></th>
                                 ","<th><h2>Price plan</h2>                                </th>                                <th>                                     <h3>Small</h3>                                     <p>35kr/signature</p>                                </th>                                 <th>                                     <h3>Team</h3>                                     <p>32.5kr/signature</p>                                </th>                                 <th>                                     <h3>Business</h3>                                     <p>30 kr/signature</p>                                </th>                                 <th>                                     <h3>Enterprise</h3>                                     <p>Negotiable</p></th>                                ","<th><h2>Price plan</h2>                                </th>
-                               <th>                         
-           <h3>Small</h3>                                   
+                               <th>
+           <h3>Small</h3>
  <p>£3.50/signature</p>                                </th>
-                                <th>                        
-            <h3>Team</h3>                                   
+                                <th>
+            <h3>Team</h3>
  <p>£3.25/signature</p>                                </th>
-                                <th>                        
-            <h3>Business</h3>                               
+                                <th>
+            <h3>Business</h3>
      <p>£3.00/signature</p>                                </th>
-                                <th>                        
-            <h3>Enterprise</h3>                             
+                                <th>
+            <h3>Enterprise</h3>
        <p>Negotiable</p></th>                                "
-"_priceplanPageTableHighlightedColumn","                            <li class=""top"">                
-                <h3>Business</h3>                           
-     <p>30 kr/signatur</p>                            </li> 
-                           <li>50</li>                      
+"_priceplanPageTableHighlightedColumn","                            <li class=""top"">
+                <h3>Business</h3>
+     <p>30 kr/signatur</p>                            </li>
+                           <li>50</li>
       <li class=""odd"">2 000</li>                            <li>Obegränsad</li>
-                            <li class=""odd"">Offert</li>     
-                       <li>2 x 1h</li>                      
+                            <li class=""odd"">Offert</li>
+                       <li>2 x 1h</li>
       <li class=""odd"">4h</li>                            <li>Telefon</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>                      
+                            <li>✓</li>
       <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>                      
+                            <li>✓</li>
       <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>                      
+                            <li>✓</li>
       <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li></li>                            <li class=""odd""></li>
-                            <li></li>                       
-     <li class=""odd""></li>                            <li class=""bottom""></li>",,"                            <li class=""top"">                
-                <h3>Business</h3>                           
+                            <li></li>
+     <li class=""odd""></li>                            <li class=""bottom""></li>",,"                            <li class=""top"">
+                <h3>Business</h3>
      <p>£3.00/signature</p>                            </li>
-                            <li>50</li>                     
-       <li class=""odd"">2 000</li>                           
+                            <li>50</li>
+       <li class=""odd"">2 000</li>
  <li>Unlimited</li>                            <li class=""odd"">Negotiable</li>
-                            <li>2 x 1h</li>                 
-           <li class=""odd"">4h</li>                          
+                            <li>2 x 1h</li>
+           <li class=""odd"">4h</li>
   <li>Phone</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>                      
+                            <li>✓</li>
       <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>                      
+                            <li>✓</li>
       <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>                      
+                            <li>✓</li>
       <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>          
+                            <li class=""odd"">✓</li>
                   <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li></li>                       
+                            <li></li>
      <li class=""odd""></li>                            <li></li>
-                            <li class=""odd""></li>           
+                            <li class=""odd""></li>
                  <li class=""bottom""></li>"
-"_priceplanPageTableRow1","                                <td>Antal användare</td>    
-                            <td>5</td>                      
+"_priceplanPageTableRow1","                                <td>Antal användare</td>
+                            <td>5</td>
           <td>15</td>                                <td>50</td>
-                                <td>Offert</td>",,"                                <td>Number of users</td>    
-                            <td>5</td>                      
+                                <td>Offert</td>",,"                                <td>Number of users</td>
+                            <td>5</td>
           <td>15</td>                                <td>50</td>
                                 <td>Negotiable</td>"
-"_priceplanPageTableRow10","                                <td>E-signering</td>        
-                        <td>✓</td>                          
-      <td>✓</td>                                <td>✓</td>  
-                              <td>✓</td>",,"                                <td>E-signing</td>          
-                      <td>✓</td>                            
-    <td>✓</td>                                <td>✓</td>    
+"_priceplanPageTableRow10","                                <td>E-signering</td>
+                        <td>✓</td>
+      <td>✓</td>                                <td>✓</td>
+                              <td>✓</td>",,"                                <td>E-signing</td>
+                      <td>✓</td>
+    <td>✓</td>                                <td>✓</td>
                             <td>✓</td>"
 "_priceplanPageTableRow11","                                <td>E-legitimationssignering</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>E-ID signing</td>       
-                         <td>✓</td>                         
-       <td>✓</td>                                <td>✓</td> 
+                                <td>✓</td>",,"                                <td>E-ID signing</td>
+                         <td>✓</td>
+       <td>✓</td>                                <td>✓</td>
                                <td>✓</td>"
-"_priceplanPageTableRow12","                                <td>E-arkiv</td>            
-                    <td>✓</td>                              
-  <td>✓</td>                                <td>✓</td>      
-                          <td>✓</td>",,"                                <td>E-archive</td>          
-                      <td>✓</td>                            
-    <td>✓</td>                                <td>✓</td>    
+"_priceplanPageTableRow12","                                <td>E-arkiv</td>
+                    <td>✓</td>
+  <td>✓</td>                                <td>✓</td>
+                          <td>✓</td>",,"                                <td>E-archive</td>
+                      <td>✓</td>
+    <td>✓</td>                                <td>✓</td>
                             <td>✓</td>"
-"_priceplanPageTableRow13","                                <td>Processbevakning</td>   
-                             <td>✓</td>                     
+"_priceplanPageTableRow13","                                <td>Processbevakning</td>
+                             <td>✓</td>
            <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Process monitoring</td> 
-                               <td>✓</td>                   
+                                <td>✓</td>",,"                                <td>Process monitoring</td>
+                               <td>✓</td>
              <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow14","                                <td>Påminnelser</td>        
-                        <td>✓</td>                          
-      <td>✓</td>                                <td>✓</td>  
-                              <td>✓</td>",,"                                <td>Reminders</td>          
-                      <td>✓</td>                            
-    <td>✓</td>                                <td>✓</td>    
+"_priceplanPageTableRow14","                                <td>Påminnelser</td>
+                        <td>✓</td>
+      <td>✓</td>                                <td>✓</td>
+                              <td>✓</td>",,"                                <td>Reminders</td>
+                      <td>✓</td>
+    <td>✓</td>                                <td>✓</td>
                             <td>✓</td>"
 "_priceplanPageTableRow15","                                <td>Justera hälsningsmeddelande</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>",,"                                <td>Edit invitation message</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow16","                                <td>Välj förfallodatum</td> 
-                               <td>✓</td>                   
+"_priceplanPageTableRow16","                                <td>Välj förfallodatum</td>
+                               <td>✓</td>
              <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>",,"                                <td>Select expiry date</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow17","                                <td>Spara egna mallar</td>  
-                              <td>✓</td>                    
+"_priceplanPageTableRow17","                                <td>Spara egna mallar</td>
+                              <td>✓</td>
             <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Save templates</td>     
-                           <td>✓</td>                       
+                                <td>✓</td>",,"                                <td>Save templates</td>
+                           <td>✓</td>
          <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow18","                                <td>Bifoga bilaga</td>      
-                          <td>✓</td>                        
+"_priceplanPageTableRow18","                                <td>Bifoga bilaga</td>
+                          <td>✓</td>
         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Add attachment</td>     
-                           <td>✓</td>                       
+                                <td>✓</td>",,"                                <td>Add attachment</td>
+                           <td>✓</td>
          <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow19","                                <td>Begär Bilagor</td>      
-                          <td>✓</td>                        
+"_priceplanPageTableRow19","                                <td>Begär Bilagor</td>
+                          <td>✓</td>
         <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>",,"                                <td>Request attachments</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
 "_priceplanPageTableRow2","                                <td>Minimum antal signaturer
- per år</td>                                <td>500</td>    
-                            <td>1 000</td>                  
+ per år</td>                                <td>500</td>
+                            <td>1 000</td>
               <td>2 000</td>                                <td>4
  000</td>",,"                                <td>Minimum yearly signatures</td>
-                                <td>500</td>                
-                <td>1 000</td>                              
+                                <td>500</td>
+                <td>1 000</td>
   <td>2 000</td>                                <td>4 000</td>"
-"_priceplanPageTableRow20","                                <td>Flerpartsavtal</td>     
-                           <td>✓</td>                       
+"_priceplanPageTableRow20","                                <td>Flerpartsavtal</td>
+                           <td>✓</td>
          <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>",,"                                <td>Multi party contract</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow21","                                <td>Användarroller</td>     
-                           <td>✓</td>                       
+"_priceplanPageTableRow21","                                <td>Användarroller</td>
+                           <td>✓</td>
          <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>User roles</td>         
-                       <td>✓</td>                           
-     <td>✓</td>                                <td>✓</td>   
+                                <td>✓</td>",,"                                <td>User roles</td>
+                       <td>✓</td>
+     <td>✓</td>                                <td>✓</td>
                              <td>✓</td>"
-"_priceplanPageTableRow22","                                <td>Drag and drop</td>      
-                          <td>✓</td>                        
+"_priceplanPageTableRow22","                                <td>Drag and drop</td>
+                          <td>✓</td>
         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Drag and drop</td>      
-                          <td>✓</td>                        
+                                <td>✓</td>",,"                                <td>Drag and drop</td>
+                          <td>✓</td>
         <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow23","                                <td>Signeringsordning</td>  
-                              <td>✓</td>                    
+"_priceplanPageTableRow23","                                <td>Signeringsordning</td>
+                              <td>✓</td>
             <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Sign order</td>         
-                       <td>✓</td>                           
-     <td>✓</td>                                <td>✓</td>   
+                                <td>✓</td>",,"                                <td>Sign order</td>
+                       <td>✓</td>
+     <td>✓</td>                                <td>✓</td>
                              <td>✓</td>"
-"_priceplanPageTableRow24","                                <td>Delat arkiv</td>        
-                        <td>✓</td>                          
-      <td>✓</td>                                <td>✓</td>  
-                              <td>✓</td>",,"                                <td>Shared archive</td>     
-                           <td>✓</td>                       
+"_priceplanPageTableRow24","                                <td>Delat arkiv</td>
+                        <td>✓</td>
+      <td>✓</td>                                <td>✓</td>
+                              <td>✓</td>",,"                                <td>Shared archive</td>
+                           <td>✓</td>
          <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow25","                                <td>Enkel Integration</td>  
-                              <td></td>                     
+"_priceplanPageTableRow25","                                <td>Enkel Integration</td>
+                              <td></td>
            <td></td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Simple integration</td> 
-                               <td></td>                    
+                                <td>✓</td>",,"                                <td>Simple integration</td>
+                               <td></td>
             <td></td>                                <td>✓</td>
                                 <td>✓</td>"
-"_priceplanPageTableRow26","                                <td>Massutskick</td>        
-                        <td></td>                           
-     <td></td>                                <td>✓</td>    
-                            <td>✓</td>",,"                                <td>Mass sendout</td>          
-                      <td></td>                             
-   <td></td>                                <td>✓</td>      
+"_priceplanPageTableRow26","                                <td>Massutskick</td>
+                        <td></td>
+     <td></td>                                <td>✓</td>
+                            <td>✓</td>",,"                                <td>Mass sendout</td>
+                      <td></td>
+   <td></td>                                <td>✓</td>
                           <td>✓</td>"
 "_priceplanPageTableRow27","                                <td>Brandad signeringssida</td>
-                                <td></td>                   
+                                <td></td>
              <td></td>                                <td></td>
                                 <td>✓</td>",,"                                <td>Branded signing page</td>
-                                <td></td>                   
+                                <td></td>
              <td></td>                                <td></td>
                                 <td>✓</td>"
-"_priceplanPageTableRow28","                                <td>Brandat mail</td>       
-                         <td></td>                          
-      <td></td>                                <td></td>    
-                            <td>✓</td>",,"                                <td>Branded e-mail</td>     
-                           <td></td>                        
-        <td></td>                                <td></td>  
+"_priceplanPageTableRow28","                                <td>Brandat mail</td>
+                         <td></td>
+      <td></td>                                <td></td>
+                            <td>✓</td>",,"                                <td>Branded e-mail</td>
+                           <td></td>
+        <td></td>                                <td></td>
                               <td>✓</td>"
-"_priceplanPageTableRow29","                                <td>Fullt API</td>          
-                      <td></td>                             
-   <td></td>                                <td></td>       
-                         <td>✓</td>",,"                                <td>Full API</td>           
-                     <td></td>                              
-  <td></td>                                <td></td>        
+"_priceplanPageTableRow29","                                <td>Fullt API</td>
+                      <td></td>
+   <td></td>                                <td></td>
+                         <td>✓</td>",,"                                <td>Full API</td>
+                     <td></td>
+  <td></td>                                <td></td>
                         <td>✓</td>"
-"_priceplanPageTableRow3","                                <td>Standardlagring</td>    
-                            <td>500 dok</td>                
-                <td>Obegränsad</td>                         
-       <td>Obegränsad</td>                                <td>Obegränsad</td>",,"                                <td>Standard storage</td>   
-                             <td>500 docs</td>              
-                  <td>Unlimited</td>                        
+"_priceplanPageTableRow3","                                <td>Standardlagring</td>
+                            <td>500 dok</td>
+                <td>Obegränsad</td>
+       <td>Obegränsad</td>                                <td>Obegränsad</td>",,"                                <td>Standard storage</td>
+                             <td>500 docs</td>
+                  <td>Unlimited</td>
         <td>Unlimited</td>                                <td>Unlimited</td>"
-"_priceplanPageTableRow30","                                <td>Skapa egen process</td> 
-                               <td></td>                    
+"_priceplanPageTableRow30","                                <td>Skapa egen process</td>
+                               <td></td>
             <td></td>                                <td></td>
-                                <td>✓</td>",,"                                <td>Custom workflow</td> 
-                               <td></td>                    
+                                <td>✓</td>",,"                                <td>Custom workflow</td>
+                               <td></td>
             <td></td>                                <td></td>
                                 <td>✓</td>"
 "_priceplanPageTableRow4","                                <td>Trustweaver premiumlagring</td>
-                                <td>Uppgradera</td>         
-                       <td>Uppgradera</td>                  
-              <td>Offert</td>                               
+                                <td>Uppgradera</td>
+                       <td>Uppgradera</td>
+              <td>Offert</td>
  <td>Offert</td>",,"                                <td>Trustweaver premium storage</td>                                 <td>Upgrade</td>                                 <td>Upgrade</td>                                 <td>Negotiable</td>                                <td>Negotiable</td>"
 "_priceplanPageTableRow5","                                <td>Uppstartsutbildning</td>
-                                <td>0.5 h</td>              
-                  <td>1 h</td>                              
-  <td>2 x 1 h</td>                                <td>Offert</td>",,"                                <td>Startup training</td>   
-                             <td>0.5 h</td>                 
+                                <td>0.5 h</td>
+                  <td>1 h</td>
+  <td>2 x 1 h</td>                                <td>Offert</td>",,"                                <td>Startup training</td>
+                             <td>0.5 h</td>
                <td>1 h</td>                                <td>2
  x 1 h</td>                                <td>Negotiable</td>"
 "_priceplanPageTableRow6","                                <td>Hjälp med konfiguration</td>
-                                <td>1 h</td>                
+                                <td>1 h</td>
                 <td>2 h</td>                                <td>4
- h</td>                                <td>Offert</td>",,"                                <td>Configuration help</td> 
-                               <td>1 h</td>                 
+ h</td>                                <td>Offert</td>",,"                                <td>Configuration help</td>
+                               <td>1 h</td>
                <td>2 h</td>                                <td>4
  h</td>                                <td>Negotiable</td>"
-"_priceplanPageTableRow7","                                <td>Support</td>            
-                    <td>E-post</td>                         
+"_priceplanPageTableRow7","                                <td>Support</td>
+                    <td>E-post</td>
        <td>Telefon</td>                                <td>Telefon</td>
-                                <td>Personlig kontakt</td>",,"                                <td>Support</td>            
-                    <td>E-mail</td>                         
+                                <td>Personlig kontakt</td>",,"                                <td>Support</td>
+                    <td>E-mail</td>
        <td>Phone</td>                                <td>Phone</td>
                                 <td>Personal</td>"
 "_priceplanPageTableRow8","                                <td>Avtals-, offert- eller orderprocess</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>",,"                                <td>Contract, offer or order
- processes</td>                                <td>✓</td>   
-                             <td>✓</td>                     
+ processes</td>                                <td>✓</td>
+                             <td>✓</td>
            <td>✓</td>                                <td>✓</td>"
 "_priceplanPageTableRow9","                                <td>Tredjepartsverifiering</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>",,"                                <td>Third-party verification</td>
-                                <td>✓</td>                  
+                                <td>✓</td>
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
@@ -2907,7 +2908,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signCanceledDataMismatchBody","Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina
  personuppgifter.",,"We are sorry. The information in your e-ID does not match your personal information."
 "_signCanceledDataMismatchIncorrectPersonalInfo","Felaktiga personuppgifter",,"Incorrect personal information"
-"_signCanceledDataMismatchModalBodyAborted","Avtalsprocessen är därför bruten, var vänliga invänta <br/> 
+"_signCanceledDataMismatchModalBodyAborted","Avtalsprocessen är därför bruten, var vänliga invänta <br/>
         en ny inbjudan eller kontakta <a href=""mailto:$authoremail$"">$authorname$</a>.",,"The signing process was therefore canceled, please <br/>
       wait for a new invitation or contact <a href=""mailto:$authoremail$"">$authorname$</a>."
 "_signCanceledDataMismatchModalBodySorry","Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina
@@ -3332,3 +3333,6 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_zip","Postnummer",,"Zip"
 "_tweetAccount","skrivapa",,"scriveuk"
 "_mailsubheader"," Signera Dokument Online med Scrive",," Sign Documents Online with Scrive"
+"_createCompany","Create Company",,"Create Company"
+"_createCompanyExplanation","When a company is created you will be made an admin user and will be able to invite your colleagues to join you.",,"When a company is created you will be made an admin user and will be able to invite your colleagues to join you."
+"_createCompanyFormPreamble","To create a company please complete the following information:",,"To create a company please complete the following information:"

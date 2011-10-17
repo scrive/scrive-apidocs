@@ -58,21 +58,40 @@ handleUserGet = checkUserTOSGet $ do
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
-    ctx <- getContext
-    case (ctxmaybeuser ctx) of
-         Just user -> do
-             infoUpdate <- getUserInfoUpdate
-             _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             mcompany <- getCompanyForUser user
-             case (useriscompanyadmin user, mcompany) of
-               (True, Just company) -> do
-                 companyinfoupdate <- getCompanyInfoUpdate
-                 _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
-                 return ()
-               _ -> return ()
-             addFlashM flashMessageUserDetailsSaved
-             return LinkAccount
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+  guardLoggedIn
+  (upgraded, user) <- maybeUpgradeToCompanyAdmin
+  infoUpdate <- getUserInfoUpdate
+  _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  mcompany <- getCompanyForUser user
+  case (useriscompanyadmin user, mcompany) of
+    (True, Just company) -> do
+      companyinfoupdate <- getCompanyInfoUpdate
+      _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+      return ()
+    _ -> return ()
+  if upgraded
+    then addFlashM flashMessageCompanyCreated
+    else addFlashM flashMessageUserDetailsSaved
+  return LinkAccount
+  where
+    maybeUpgradeToCompanyAdmin = do
+      user <- guardJustM $ ctxmaybeuser <$> getContext
+      mcompany <- getCompanyForUser user
+      createcompany <- isFieldSet "createcompany"
+      if isNothing mcompany && createcompany
+        then do
+          -- check all the required fields have been filled in okay
+          _ <- guardJustM $ getRequiredField asValidCompanyName "companyname"
+          _ <- guardJustM $ getRequiredField asValidName "fstname"
+          _ <- guardJustM $ getRequiredField asValidName "sndname"
+          _ <- guardJustM $ getRequiredField asValidPosition "companyposition"
+          _ <- guardJustM $ getRequiredField (Good . BS.fromString) "phone"
+          company <- runDBUpdate $ CreateCompany Nothing Nothing
+          _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+          _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
+          upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+          return (True, upgradeduser)
+        else return (False, user)
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -503,7 +522,7 @@ createNewUserByAdmin ctx names email _freetill custommessage ss l = do
              mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
-         Nothing -> return muser 
+         Nothing -> return muser
 
 createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Locale) -> m (Maybe User)
 createInvitedUser names email mlocale = do
@@ -694,13 +713,13 @@ handleAccountSetupGet aid hash = do
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
-  Log.debug "Account setup after signing document"  
+  Log.debug "Account setup after signing document"
   muserid <- getUserIDFromAction
   Log.debug $ "Account setup after signing document: UserID->"  ++ (show muserid)
   case muserid of
     Just userid -> do
       user <- runDBOrFail $ dbQuery $ GetUserByID userid
-      Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)    
+      Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
       handleActivate aid hash BySigning user
     Nothing -> return Nothing
   where
@@ -818,7 +837,7 @@ handleActivate aid hash signupmethod actvuser = do
     finalizePrivateActivation :: Kontrakcja n => User -> n (Maybe User)
     finalizePrivateActivation user =
       finalizeActivation user Nothing id id
-          
+
     finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
     finalizeCompanyActivation user company = do
       -- is this from the acceptaccount after signup modal? if it is then they just type in their
@@ -859,24 +878,24 @@ handleActivate aid hash signupmethod actvuser = do
       mlname <- getRequiredField asValidName "lname"
       mcompanyposition <- getRequiredField asValidPosition "companyposition"
       mphone <- getRequiredField (Good . BS.fromString) "phone"
-      return $ 
+      return $
         case (mfname, mlname, mcompanyposition, mphone) of
-          (Just fname, Just lname, Just companytitle, Just phone) -> Just $ 
+          (Just fname, Just lname, Just companytitle, Just phone) -> Just $
             \info -> info { userfstname = fname
                           , usersndname = lname
                           , usercompanyposition = companytitle
                           , userphone = phone
                           }
           _ -> Nothing
- 
+
     getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
     getCompanyInfoUpdateFunc _company = do
       mcompanyname <- getRequiredField asValidCompanyName "companyname"
-      return $ 
+      return $
         case mcompanyname of
           (Just companyname') -> Just $ \info -> info { companyname = companyname' }
           _ -> Nothing
-    
+
     performActivation :: Kontrakcja n => User
                                          -> Maybe Company
                                          -> ActionID
@@ -1000,7 +1019,7 @@ handleAccountRemovalPost aid hash = do
 -}
 handleAccountRemoval' :: Kontrakcja m => ActionID -> MagicHash -> m Document
 handleAccountRemoval' aid hash = do
-  action <- guardJustM $ getAccountCreatedBySigningIDAction aid        
+  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
   let AccountCreatedBySigning _ _ (docid, _) token = actionType action
   guard $ hash == token
   doc <- queryOrFail $ GetDocumentByDocumentID docid
@@ -1016,7 +1035,7 @@ getAccountCreatedBySigningIDAction aid = do
   maction <- query $ GetAction aid
   case maction of
     Nothing -> return Nothing
-    Just action -> 
+    Just action ->
       -- allow for account created by signing links only
       if actionTypeID (actionType action) /= AccountCreatedBySigningID
       then return Nothing
@@ -1062,7 +1081,7 @@ dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
-  
+
 handleFriends :: Kontrakcja m => m JSValue
 handleFriends = do
   Context{ctxmaybeuser} <- getContext
@@ -1070,11 +1089,11 @@ handleFriends = do
   friends <- runDBQuery $ GetUserFriends $ userid user
   params <- getListParamsNew
   let friendsPage = friendSortSearchPage params friends
-  return $ JSObject $ toJSObject [("list", 
-                                   JSArray $ 
-                                   map (\f -> JSObject $ 
+  return $ JSObject $ toJSObject [("list",
+                                   JSArray $
+                                   map (\f -> JSObject $
                                               toJSObject [("fields",
-                                                           JSObject $ toJSObject [("email", 
+                                                           JSObject $ toJSObject [("email",
                                                                                    JSString $ toJSString $ BS.toString $ getEmail f)
                                                                                  ,("id", JSString $ toJSString (show (userid f)))])])
                                            (list friendsPage)),
@@ -1092,7 +1111,7 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
                                    JSArray $
                                    map (\f -> JSObject $
                                               toJSObject [("fields",
-                                                           JSObject $ toJSObject [("id", 
+                                                           JSObject $ toJSObject [("id",
                                                                                    JSString $ toJSString $ show $ userid f)
                                                                                  ,("firstname",
                                                                                    JSString $ toJSString $ BS.toString $ getFirstName f)
@@ -1101,14 +1120,14 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
                                                                                  ,("position",
                                                                                    JSString $ toJSString $ BS.toString $ usercompanyposition $ userinfo f)
                                                                                  ,("phone",
-                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f) 
+                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f)
                                                                                  ,("email",
                                                                                    JSString $ toJSString $ BS.toString $ getEmail f)])])
                                    (list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
-  
 
-{- | 
+
+{- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
  -}
 readXToken :: Kontrakcja m => m (Either String MagicHash)

@@ -1,111 +1,183 @@
 ####
 showUser =
-<form action="$linkaccount$" method="post">
 <div id="tab-viewer">
-   <div class="tab-header">
-   </div>
-   <ul class="tabs">
-       <li class="active"><a href="/account">$_HeadUserInfo()$</a></li>
-       <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
-       $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
-       <li><a href="/account/sharing">$_sharing()$</a></li>
-       <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-   </ul>
-   <div class="tab-container">
-       <div class="tab-content account">
-           <div $if(iscompanyaccount)$class="col"$endif$>
-               <div class="account-header">
-                   <h2>$fstname$ $sndname$</h2>
-                   <!-- <a href="javascript:;">Ladda upp ny bild...</a> -->
-                   <div class="image">
-                      $if(userimagelink)$
-                       <img src="$userimagelink$" height="68" width="58" />
-                      $endif$
-                   </div>
-               </div>
-               <div class="account-body">
-                   <table>
-                       <tr>
-                           <td>$_firstname()$:</td>
-                           <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
-                       </tr>
-                       <tr>
-                           <td>$_lastname()$:</td>
-                           <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
-                       </tr>
-                       <tr>
-                           <td>$_personnumber()$:</td>
-                           <td><input type="text" name="personalnumber" value="$personalnumber$" autocomplete="off" /></td>
-                       </tr>
-                       <tr>
-                           <td>$_email()$:</td>
-                           <td><input type="email" name="email" value="$email$" autocomplete="off" disabled=""/></td>
-                       </tr>
-                       <tr>
-                           <td>$_phone()$:</td>
-                           <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
-                       </tr>
-                       <tr>
-                           <td>$_companyposition()$:</td>
-                           <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
-                       </tr>
-                   </table>
-               </div>
-           </div>
-           $if(iscompanyaccount)$    
-           <div class="col">
-               <div class="account-header">
-                   <h2>$companyname$</h2>
-                   <!--<a href="javascript:;">Ladda upp ny logotyp...</a> -->
-                   <div class="image">
-                      $if(companyimagelink)$
-                       <img src="$companyimagelink$" height="68" width="58" />
-                      $endif$
-                   </div>
-               </div>
-               <div class="account-body">
-                   <table>
-                       <tr>
-                           <td>$_company()$:</td>
-                           <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
-                       </tr>
-                       <tr>
-                           <td>$_orgnumber()$:</td>
-                           <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(!iscompanyadmin)$disabled="disabled"$endif$ /></td>
-                       </tr>
-                       <tr>
-                           <td>$_address()$:</td>
-                           <td><input type="text" name="companyaddress" value="$address$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
-                       </tr>
-                       <tr>
-                           <td>$_zip()$:</td>
-                           <td><input type="email" name="companyzip" value="$zip$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
-                       </tr>
-                       <tr>
-                           <td>$_city()$:</td>
-                           <td><input type="text" name="companycity" value="$city$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
-                       </tr>
-                       <tr>
-                           <td>$_country()$:</td>
-                           <td><input type="text" name="companycountry" value="$country$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
-                       </tr>
-                   </table>
-               </div>
-           </div>
-           $endif$
-           <div class="account-footer">
-                <a href="#" class="btn-small green submit">
-                   <div class="left"></div>
-                   <div class="label">
-                       <p>$_SaveChanges()$</p>
-                   </div>
-                   <div class="right"></div>
-                </a>
-           </div>
-           <div class="clearfix"></div>
-           
-       </div>
-   </div>
+  <form action="$linkaccount$" method="post" class="accountForm">
+    <div class="tab-header">
+    </div>
+    <ul class="tabs">
+        <li class="active"><a href="/account">$_HeadUserInfo()$</a></li>
+        <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+        $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
+        <li><a href="/account/sharing">$_sharing()$</a></li>
+        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
+    </ul>
+    <div class="tab-container">
+        <div class="tab-content account">
+            <div $if(iscompanyaccount)$class="col"$endif$>
+                <div class="account-header">
+                    <h2>$fstname$ $sndname$</h2>
+                    <!-- <a href="javascript:;">Ladda upp ny bild...</a> -->
+                    <div class="image">
+                        $if(userimagelink)$
+                        <img src="$userimagelink$" height="68" width="58" />
+                        $endif$
+                    </div>
+                </div>
+                <div class="account-body">
+                    <table>
+                        <tr>
+                            <td>$_firstname()$:</td>
+                            <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+                        </tr>
+                        <tr>
+                            <td>$_lastname()$:</td>
+                            <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+                        </tr>
+                        <tr>
+                            <td>$_personnumber()$:</td>
+                            <td><input type="text" name="personalnumber" value="$personalnumber$" autocomplete="off" /></td>
+                        </tr>
+                        <tr>
+                            <td>$_email()$:</td>
+                            <td><input type="email" name="email" value="$email$" autocomplete="off" disabled=""/></td>
+                        </tr>
+                        <tr>
+                            <td>$_phone()$:</td>
+                            <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
+                        </tr>
+                        <tr>
+                            <td>$_companyposition()$:</td>
+                            <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            $if(iscompanyaccount)$
+            <div class="col">
+                <div class="account-header">
+                    <h2>$companyname$</h2>
+                    <!--<a href="javascript:;">Ladda upp ny logotyp...</a> -->
+                    <div class="image">
+                        $if(companyimagelink)$
+                        <img src="$companyimagelink$" height="68" width="58" />
+                        $endif$
+                    </div>
+                </div>
+                <div class="account-body">
+                    <table>
+                        <tr>
+                            <td>$_company()$:</td>
+                            <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
+                        </tr>
+                        <tr>
+                            <td>$_orgnumber()$:</td>
+                            <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" $if(!iscompanyadmin)$disabled="disabled"$endif$ /></td>
+                        </tr>
+                        <tr>
+                            <td>$_address()$:</td>
+                            <td><input type="text" name="companyaddress" value="$address$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
+                        </tr>
+                        <tr>
+                            <td>$_zip()$:</td>
+                            <td><input type="email" name="companyzip" value="$zip$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
+                        </tr>
+                        <tr>
+                            <td>$_city()$:</td>
+                            <td><input type="text" name="companycity" value="$city$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
+                        </tr>
+                        <tr>
+                            <td>$_country()$:</td>
+                            <td><input type="text" name="companycountry" value="$country$" autocomplete="off"  $if(!iscompanyadmin)$disabled="disabled"$endif$/></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            $endif$
+            <div class="account-footer">
+                  $if(!iscompanyaccount)$
+                  <a href="#" rel="#dialog-create-company" id="createcompany" class="btn-small green">
+                    <div class="left"></div>
+                    <div class="label">
+                        <p>$_createCompany()$</p>
+                    </div>
+                    <div class="right"></div>
+                  </a>
+                  $endif$
+                  <a href="#" class="btn-small green submit">
+                    <div class="left"></div>
+                    <div class="label">
+                        <p>$_SaveChanges()$</p>
+                    </div>
+                    <div class="right"></div>
+                  </a>
+            </div>
+            <div class="clearfix"></div>
+
+        </div>
+    </div>
+  </form>
+  $if(!iscompanyaccount)$
+  $createCompanyDialog()$
+  $endif$
 </div>
-</form>
 ####
+$createCompanyDialog=
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-create-company" rel=".accountForm">
+    <input type="hidden" name="createcompany" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>$_createCompany()$</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div>
+            <p>
+            $_createCompanyExplanation()$
+            </p>
+            <p>
+            $_createCompanyFormPreamble()$
+            </p>
+            <div class="account-body">
+              <table>
+                <tr>
+                    <td>$_company()$:</td>
+                    <td><input type="text" name="companyname" value="$companyname$" autocomplete="off"/></td>
+                </tr>
+                <tr>
+                    <td>$_firstname()$:</td>
+                    <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+                </tr>
+                <tr>
+                    <td>$_lastname()$:</td>
+                    <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+                </tr>
+                <tr>
+                    <td>$_phone()$:</td>
+                    <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
+                </tr>
+                <tr>
+                    <td>$_companyposition()$:</td>
+                    <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="cancel close float-left" style="height:40px;">
+          <div class="label">$_cancel()$</div>
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>$_createCompany()$</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+#####

@@ -7,7 +7,7 @@ if (!window.console) {
 //ie doesn't support trim naturally!
 if(typeof String.prototype.trim !== 'function') {
   String.prototype.trim = function() {
-    return this.replace(/^\s+|\s+$/g, ''); 
+    return this.replace(/^\s+|\s+$/g, '');
   };
 }
 
@@ -59,7 +59,7 @@ function enableInfoTextOnce(where) {
             input.val(input.attr("infotext"));
         }
     }
-    
+
     var removeInfoText = function(input) {
         if (input.hasClass("grayed")) {
             input.val("");
@@ -71,7 +71,7 @@ function enableInfoTextOnce(where) {
         var input = $(this);
         removeInfoText(input);
     });
-    
+
     inputs.live("keydown", function() {
         var input = $(this);
         removeInfoText(input);
@@ -408,14 +408,14 @@ function checkbgimageok(i, el) {
         var complete = $(this)[0].complete;
         var width = $(this).width();
         console.log("width of bg image: " + width);
-        
+
         if(bgok && (!complete || !width)) {
             bgok = false;
 //            loadpages();
         }
         bgImg.remove();
-    }).error(function() { 
-        console.log("here"); 
+    }).error(function() {
+        console.log("here");
         bgImg.remove();
         if(bgok) {
             bgok = false;
@@ -694,7 +694,7 @@ safeReady(function() {
                 p.text(partners[i])
                 p.append("<BR/>")
                 plist.append(p);
-            }    
+            }
         },
         fixed:false
     });
@@ -804,6 +804,14 @@ safeReady(function() {
     $("#toscontainer").overlay({
         mask: standardDialogMask,
         load: true,
+        fixed:false
+    });
+});
+
+safeReady(function() {
+    $("#createcompany").overlay({
+        mask: standardDialogMask,
+        top: standardDialogTop,
         fixed:false
     });
 });
@@ -977,7 +985,7 @@ function isAuthorSignatory() {
 
          2. If numsigs > 0:
                 show multiple signatory confirmation text
-                1. if sign order is enabled: 
+                1. if sign order is enabled:
                     deactivate checkbox
 
                 2. if sign order is not enabled:
@@ -1001,7 +1009,7 @@ function showProperSignButtons() {
 
         deactivateSignInvite();
         checkBox.parent().find(".usual").hide();
-        checkBox.parent().find(".secretary").show();        
+        checkBox.parent().find(".secretary").show();
         $("#dialog-confirm-text-send").show();
         $("#dialog-confirm-text-send-fields").hide();
         $("#dialog-confirm-text-send-normal").hide();
@@ -1609,7 +1617,7 @@ safeReady(function() {
                 var content = $(data);
                 var errormsg = content.find(".errormsg");
                 if (errormsg.length > 0) {
-                    
+
                       Confirmation.popup({
                         submit : new Submit({url: '/d' }) ,
                         title : localization.problemWithPDF,
@@ -1618,7 +1626,7 @@ safeReady(function() {
                         acceptColor: "red",
                         acceptText : "Back to Archive"
                     });
-                    
+
                 } else {
                     $('#attachmentbox').html(content);
                 }
@@ -1694,9 +1702,9 @@ function saveOverlay(d, o) {
                 o.top = standardDialogTop;
             }
             else
-            {    
+            {
                 o.top = $(this).offset().top - $(document).scrollTop() - 400;
-            }   
+            }
             o.load = true;
             o.fixed = false;
             $(this).overlay(o);
