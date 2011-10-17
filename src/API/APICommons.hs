@@ -51,6 +51,7 @@ import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
+import DB.Classes
 
 {- -}
 
@@ -221,10 +222,10 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   Just files -> [("files", JSArray files)]
   
 
-api_document_read :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
+api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
 api_document_read False doc = return $ api_document Nothing doc
 api_document_read True doc = do
-  files <- mapM api_document_file_read =<< liftIO (getFilesByStatus doc)
+  files <- mapM api_document_file_read =<< getFilesByStatus doc
   return $ api_document (Just files) doc
 
 

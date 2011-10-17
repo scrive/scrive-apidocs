@@ -36,8 +36,8 @@ import Data.Functor
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Happstack.State (query)
-import File.State
+-- import Happstack.State (query)
+import File.TransState
 import Control.Monad.Trans
 import AppView
 
@@ -73,7 +73,7 @@ remindMailNotSigned :: TemplatesMonad m
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
     let mainfile =  head $ (documentfiles document) ++ [FileID 0]
-    authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
+    authorattachmentfiles <- mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         fieldM "header" $ do
             header <- if isNothing customMessage
@@ -217,7 +217,7 @@ mailInvitation forMail
                invitationto
                document@Document{documentinvitetext, documenttitle }
                msiglink = do
-    authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
+    authorattachmentfiles <- mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
     let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
     let personname = maybe "" (BS.toString . getSmartName) msiglink

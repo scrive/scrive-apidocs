@@ -93,8 +93,9 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
-import Happstack.State (query)
-import File.State
+--import Happstack.State (query)
+import File.TransState
+import DB.Classes
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -271,12 +272,12 @@ flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
  
-documentJSON :: (TemplatesMonad m, KontraMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
+documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do
     ctx <- getContext
     files <- documentfilesM doc
     sealedfiles <- documentsealedfilesM doc
-    authorattachmentfiles <- mapM (query . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    authorattachmentfiles <- mapM (runDB . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),

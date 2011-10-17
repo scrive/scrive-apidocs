@@ -23,7 +23,7 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Doc.DocState
-import Happstack.State (update,query)
+import Happstack.State (update)
 --import MinutesTime
 --import Misc
 import System.Directory
@@ -41,7 +41,8 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import qualified MemCache
 import ForkAction
-import File.State
+import File.TransState
+import DB.Classes
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)
@@ -56,20 +57,20 @@ getFileContents ctx file = do
 
 getFileIDContents :: Context -> FileID -> IO BS.ByteString
 getFileIDContents ctx fid = do
-  mfile <- query $ GetFileByFileID fid
+  mfile <- ioRunDB (ctxdbconn ctx) . dbQuery $ GetFileByFileID fid
   case mfile of
     Just file -> getFileContents ctx file
     Nothing -> return BS.empty
 
 
 {- Upload document to Amazon -}
-uploadDocumentFileToAmazon :: FilePath
+uploadDocumentFileToAmazon :: (MonadIO m, DBMonad m) => FilePath
                                  -> AWS.S3Action
                                  -> DocumentID
                                  -> FileID
-                                 -> IO ()
+                                 -> m ()
 uploadDocumentFileToAmazon docstore ctxs3action _docid fileid1 = do
-  mfile <- query $ GetFileByFileID fileid1
+  mfile <- runDB $ dbQuery $ GetFileByFileID fileid1
   case mfile of
     Just file -> do
       AWS.uploadFile docstore ctxs3action file
