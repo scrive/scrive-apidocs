@@ -16,8 +16,6 @@ module Doc.DocState
     , DeleteDocumentRecordIfRequired(..)
     , AttachFile(..)
     , AttachSealedFile(..)
-    , AuthorSignDocument(..)
-    , AuthorSendDocument(..)
     , RejectDocument(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
@@ -65,6 +63,10 @@ module Doc.DocState
     , DocumentFromSignatoryData(..)
     , UpdateSigAttachments(..)
     , SaveSigAttachment(..)
+    , PreparationToPending(..)
+    , AddInvitationEvidence(..)
+    , UpdateFields(..)
+    , PendingToAwaitingAuthor(..)
     --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
@@ -103,6 +105,9 @@ import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import InputValidation
+import Control.Applicative
+import Doc.DocInfo
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
@@ -556,11 +561,18 @@ timeoutDocument :: DocumentID
                 -> Update Documents (Either String Document)
 timeoutDocument documentid time = do
   modifySignable documentid $ \document ->
-      let
-          newdocument = document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
-      in case documentstatus document of
-           Pending -> Right newdocument
-           _ -> Left "Illegal document status change"
+    let newdocument = document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
+    in case documentstatus document of
+      Pending -> Right newdocument
+      _ -> Left "Illegal document status change"
+
+checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
+checkSignDocument doc slid mh = catMaybes $
+  [trueOrMessage (isPending doc) "Document is not in pending",
+   trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed",
+   trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen",
+   trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist",
+   trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"]
 
 {- |
     Signs a particular signatory link.  If there is a problem, such as the document not existing,
@@ -568,61 +580,60 @@ timeoutDocument documentid time = do
 -}
 signDocument :: DocumentID
              -> SignatoryLinkID
+             -> MagicHash
              -> MinutesTime
              -> Word32
              -> Maybe SignatureInfo
-             -> [(BS.ByteString, BS.ByteString)]
              -> Update Documents (Either String Document)
-signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
+signDocument documentid slid mh time ipnumber msiginfo = do
   modifySignable documentid $ \document ->
-    let signeddocument = document { documentsignatorylinks = newsignatorylinks
-                                  } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
-        Just signatoryLink = getSigLinkFor document signatorylinkid1
-        newsignatorylinks = map maybesign (documentsignatorylinks document)
-        maybesign link@SignatoryLink{signatorylinkid, signatorydetails = details@SignatoryDetails{signatoryfields}}
-          | signatorylinkid == signatorylinkid1 =
-            link { maybesigninfo = Just (SignInfo time ipnumber)
-                 , signatorydetails = details {
-                     signatoryfields = map (updateSigField fields) signatoryfields
-                   }
-                 , signatorysignatureinfo = msiginfo
-                 }
-        maybesign link = link
-        allbutauthor = [sl | sl <- newsignatorylinks
-                           , not $ isAuthor sl]
-        signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
-        allsignedbutauthor = all signatoryHasSigned allbutauthor
-        isallsigned = all signatoryHasSigned newsignatorylinks
+    case checkSignDocument document slid mh of
+      [] -> let signeddocument = document { documentsignatorylinks = newsignatorylinks
+                                          } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
+                -- this is a mess and could be cleaned up by good use of SQL (PLEASE!)
+                Just signatoryLink = getSigLinkFor document slid
+                newsignatorylinks = mapIf (\sl -> signatorylinkid sl == slid)  sign (documentsignatorylinks document)
+                sign link = link { maybesigninfo = Just (SignInfo time ipnumber)
+                                 , signatorysignatureinfo = msiginfo
+                                 }
+                
+            in Right signeddocument
+      s -> Left $ "Cannot sign for signatory " ++ show slid ++ " because " ++ concat s
 
-        -- Check if there are custom fields in any signatory (that is, not author)
-        -- ??: We don't use this anymore? -EN
-        -- hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
+checkUpdateFields :: Document -> SignatoryLinkID -> [String]
+checkUpdateFields doc slid = catMaybes $ 
+  [trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")",
+   trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"]
 
-        updateSigField sfields sf =
-          case sfType sf of
-            CompanyFT -> updateF $ BS.pack "sigco"
-            PersonalNumberFT -> updateF $ BS.pack "sigpersnr"
-            CompanyNumberFT -> updateF $ BS.pack "sigcompnr"
-            CustomFT label _ -> updateF label
-            _ -> sf
-          where
-            updateF = maybe sf (\v -> sf { sfValue = v }) . flip lookup sfields
-
-        signeddocument2 =
-              if isallsigned
-              then signeddocument { documentstatus = Closed } `appendHistory` [DocumentHistoryClosed time ipnumber]
-              else if allsignedbutauthor
-                   then signeddocument { documentstatus = AwaitingAuthor }
-                   else signeddocument
-
-    in case documentstatus document of
-      Pending ->  Right signeddocument2
-      Timedout -> Left "FÃ¶rfallodatum har passerat"
-      _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+updateFields :: DocumentID -> 
+                SignatoryLinkID -> 
+                [(BS.ByteString, BS.ByteString)] -> 
+                Update Documents (Either String Document)
+updateFields docid slid fields =
+  modifySignable docid $ \document ->
+  case checkUpdateFields document slid of
+    [] -> let updateSigFields sl@SignatoryLink{signatorydetails = sd@SignatoryDetails{signatoryfields}} =
+                sl { signatorydetails = sd { signatoryfields = map updateSigField signatoryfields } }
+              updateSigField sf =
+                let updateF n = case lookup n fields of
+                      Just v  -> sf { sfValue = v }
+                      Nothing -> sf
+                in case sfType sf of
+                  CompanyFT        -> updateF $ BS.pack "sigco"
+                  PersonalNumberFT -> updateF $ BS.pack "sigpersnr"
+                  CompanyNumberFT  -> updateF $ BS.pack "sigcompnr"
+                  CustomFT label _ -> updateF label
+                  _                -> sf
+              
+          in Right $ document { documentsignatorylinks = 
+                                   mapIf (\sl -> signatorylinkid sl == slid) 
+                                   updateSigFields $ documentsignatorylinks document
+                              }
+    s -> Left $ "Cannot updateFields on document " ++ show docid ++ " because " ++ concat s
 
 {- |
     A helper function that signs the given signatory link.
--}
+
 signWithUserID :: [SignatoryLink]
                   -> UserID
                   -> Maybe SignInfo
@@ -632,74 +643,97 @@ signWithUserID [] _ _ _ = []
 signWithUserID (s:ss) uid sinfo msiginfo
     | maybe False (((==) uid)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
     | otherwise = s : signWithUserID ss uid sinfo msiginfo
-
-{- |
-    Called when an author sends a document.  This will return Left when there are problems
-    such as the document not existing, or it not being in Preparation mode, or it being timedout.
 -}
-authorSendDocument :: DocumentID
-                   -> MinutesTime
-                   -> Word32
-                   -> Maybe SignatureInfo
-                   -> Update Documents (Either String Document)
-authorSendDocument documentid time ipnumber _msiginfo =
-    modifySignable documentid $ \document ->
-        case documentstatus document of
-          Preparation ->
-              let timeout = do
-                             days <- documentdaystosign document
-                             return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                  sinfo = Just (SignInfo time ipnumber)
-                  siglinks = documentsignatorylinks document
-                  sigdetails = map signatorydetails siglinks
-              in Right $ document { documenttimeouttime = timeout
-                                  , documentmtime = time
-                                  , documentstatus = Pending
-                                  , documentinvitetime = sinfo
-                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
+                  
+{- |
 
-          Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
-          _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+ -}
+trueOrMessage :: Bool -> String -> Maybe String
+trueOrMessage False s = Just s
+trueOrMessage True  _ = Nothing
+                  
+{- | Preconditions for moving a document from Preparation to Pending.
+ -}
+checkPreparationToPending :: Document -> [String]
+checkPreparationToPending document = catMaybes $
+  [trueOrMessage (documentstatus document == Preparation) ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")"),
+  trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1) ("Number of authors was not 1"),
+  trueOrMessage (length (filter isSignatory $ documentsignatorylinks document) >= 1) ("There are no signatories"),
+  trueOrMessage (all (isSignatory =>>^ (isGood . asValidEmail . BS.toString . getEmail)) (documentsignatorylinks document)) ("Not all signatories have valid email"),
+  trueOrMessage (length (documentfiles document) == 1) "Did not have exactly one file"]
+  -- NOTE: Should add stuff about first/last name, though currently the author may have his full name
+  -- stored in the first name field. OOPS!
+
+{- | Move a document from Preparation to Pending
+     Modifieds the documentstatus, documenttimeouttime, and the documentmtime
+ -}
+preparationToPending :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+preparationToPending documentid time =
+  modifySignable documentid $ \document -> 
+  case checkPreparationToPending document of
+    [] -> let timeout = do
+                days <- documentdaystosign document
+                return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
+          in Right $ document { documentstatus = Pending
+                              , documenttimeouttime = timeout
+                              , documentmtime = time
+                              }
+    s -> Left $ "Document " ++ show documentid ++ " cannot go from Preparation to Pending. " ++ concat s
+
+checkAddEvidence :: Document -> SignatoryLinkID -> [String]
+checkAddEvidence doc slid = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending) "Document is not in pending",
+  trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"]
+
+{- | Add a bit of evidence about when a signatory was invited.
+     Store the invite time + a history log message;
+     NOTE: This currently does not store a very good evidence message.
+ -}
+addInvitationEvidence :: DocumentID -> SignatoryLinkID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+addInvitationEvidence docid slid time ipnumber =
+  modifySignable docid $ \document ->
+  case checkAddEvidence document slid of
+    [] -> let Just sds = signatorydetails <$> getSigLinkFor document slid
+          in Right $ document { documentinvitetime = Just (SignInfo time ipnumber) } 
+             `appendHistory` [DocumentHistoryInvitationSent time ipnumber [sds]]
+    s -> Left $ "Document " ++ show documentid ++ " cannot have evidence attached for signatory " ++ show slid ++ " because " ++ concat s
+
 
 {- |
-    Signs the document as an author.  This expects the document to be in preparation mode,
-    so is the signing that happens just before sending the doc to be signed by others.
-    This returns Left if there is a problem such as the document
-    not existing, or the document not being in preparation mode.
+
+-}
+checkCloseDocument :: Document -> [String]
+checkCloseDocument doc = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc)),
+   trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all signatories have signed")]
+
+{- | Close a document
+ -} 
+closeDocument :: DocumentID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+closeDocument docid time ipnumber =
+  modifySignable docid $ \document ->
+  case checkCloseDocument document of
+    [] -> Right $ document { documentstatus = Closed 
+                           , documentmtime  = time
+                           } `appendHistory` [DocumentHistoryClosed time ipnumber]
+    s -> Left $ "Cannot Close document " ++ show docid ++ " because " ++ concat s
     
-    As author is no longer special we should consider refactoring to delete this function.
--}
-authorSignDocument :: DocumentID
-                   -> MinutesTime
-                   -> Word32
-                   -> Maybe SignatureInfo
-                   -> Update Documents (Either String Document)
-authorSignDocument documentid time ipnumber msiginfo =
-    modifySignable documentid $ \document ->
-        case documentstatus document of
-          Preparation ->
-              let timeout = do
-                             days <- documentdaystosign document
-                             return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                  Just authorsiglink = getAuthorSigLink document
-                  Just authorid = maybesignatory authorsiglink
-                  sinfo = Just (SignInfo time ipnumber)
-                  sigdetails = map signatorydetails (documentsignatorylinks document)
-                  -- are there no signatories besides the author
-                  authorOnly = Prelude.null [sl | sl <- documentsignatorylinks document
-                                                , not $ isAuthor sl
-                                                , isSignatory sl]
-                  newsiglinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
-                  signeddocument = document { documenttimeouttime = timeout
-                                  , documentmtime = time
-                                  , documentsignatorylinks = newsiglinks
-                                  , documentstatus = if authorOnly then Closed else Pending
-                                  , documentinvitetime = sinfo
-                                  } `appendHistory` ([DocumentHistoryInvitationSent time ipnumber sigdetails] ++ if authorOnly then [DocumentHistoryClosed time ipnumber] else [])
-              in Right $ signeddocument
+checkPendingToAwaitingAuthor :: Document -> [String]
+checkPendingToAwaitingAuthor doc = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending) ("document should be pending but it is " ++ (show $ documentstatus doc)),
+   trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all non-author signatories have signed"),
+   trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"]
 
-          Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
-          _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+{- | Pending to AwaitingAuthor
+-}
+pendingToAwaitingAuthor :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+pendingToAwaitingAuthor docid time =
+  modifySignable docid $ \document ->
+  case checkPendingToAwaitingAuthor document of
+    [] -> Right $ document { documentstatus = AwaitingAuthor
+                           , documentmtime  = time
+                           }
+    s -> Left $ "Cannot move document to awaiting author" ++ show docid ++ " because " ++ concat s
 
 getMagicHash :: Update Documents MagicHash
 getMagicHash = getRandom
@@ -749,7 +783,7 @@ markInvitationRead documentid linkid time = do
             else Left ""
     return ()
        where
-        shouldMark l = (signatorylinkid l) == linkid && (isNothing $ maybeseeninfo l)
+        shouldMark l = (signatorylinkid l) == linkid && (isNothing $ maybereadinvite l)
         mark l =  l { maybereadinvite = Just time }
 
 {- |
@@ -1113,47 +1147,19 @@ setDocumentTitle docid doctitle =
     then Right $ doc { documenttitle = doctitle }
     else Left $ "Can't update title unless the status is in preparation"
 
---This is only for awaiting author
---We should add current state checkers here (not co cancel closed documents etc.)
-closeDocument :: DocumentID
-              -> MinutesTime
-              -> Word32
-              -> Maybe SignatureInfo
-              -> Update Documents (Maybe Document)
-closeDocument docid time ipnumber msiginfo = do
-  doc <- modifySignable docid $ \document -> 
-    case documentstatus document of
-      AwaitingAuthor -> let timeout = do
-                              days <- documentdaystosign document
-                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                            Just authorsiglink = getAuthorSigLink document
-                            Just authorid = maybesignatory authorsiglink
-                            sinfo = Just (SignInfo time ipnumber)
-                            newdocument = document { documenttimeouttime = timeout
-                                                   , documentmtime = time
-                                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
-                                                   , documentstatus = Closed
-                                                   } `appendHistory` [DocumentHistoryClosed time ipnumber]
-                        in Right $ newdocument
-      _ -> Left "Only documents in AwaitingAuthor can be closed like this"
-  case doc of
-    Left _ -> return Nothing
-    Right d -> return $ Just d
-
 {- |
     Cancels a document that is either in pending or awaiting autor state.
     If it's in the wrong state, doesn't exist, or isn't a signable then a Left will be returned.
 -}
 cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> Word32 -> Update Documents (Either String Document)
 cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
-    let canceledDocument =  document {
-                              documentstatus = Canceled
-                            , documentcancelationreason = Just cr}
+    let canceledDocument =  document { documentstatus = Canceled
+                                     , documentcancelationreason = Just cr}
                             `appendHistory` [DocumentHistoryCanceled time ipnumber]
     case documentstatus document of
-        Pending -> Right canceledDocument
+        Pending        -> Right canceledDocument
         AwaitingAuthor -> Right canceledDocument
-        _ -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
+        _              -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
 {- |
     This restarts a document.
@@ -1564,8 +1570,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'updateDocumentAttachments
                         , 'updateSigAttachments
                         , 'signDocument
-                        , 'authorSignDocument
-                        , 'authorSendDocument
+--                        , 'authorSendDocument
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
@@ -1594,6 +1599,10 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'closeDocument
                         , 'cancelDocument
                         , 'deleteSigAttachment
+                        , 'preparationToPending
+                        , 'addInvitationEvidence
+                        , 'updateFields
+                        , 'pendingToAwaitingAuthor
                           -- admin only area follows
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
@@ -1602,7 +1611,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'saveSigAttachment
                         , 'storeDocumentForTesting
                         , 'signLinkFromDetailsForTest
-
                         , 'getDocumentByFileID
                         , 'errorDocument
                         , 'signableFromDocument

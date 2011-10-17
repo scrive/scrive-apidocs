@@ -13,7 +13,7 @@
 -- There are constants for stuff like document type, document state, to say thet a signatory is viewer etc.
 -- Don't invent them yourself. Don't return a 'human readable' string. Use stuff from here.
 --
--- !! JSON priners (like the one api_documents) should be shared as much as posible
+-- !! JSON priners (like the one api_document) should be shared as much as posible
 --
 -- Also if there is a common reader for more then one api
 -- , like for files or signatories it should be put here

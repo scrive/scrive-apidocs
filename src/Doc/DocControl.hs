@@ -86,12 +86,16 @@ postDocumentChangeAction document@Document  { documentstatus
                       olddocument@Document  { documentstatus = oldstatus }
                             msignalinkid
     -- No status change ;
-    | documentstatus == oldstatus =
+    | documentstatus == oldstatus = do
         -- if sign order has changed, we need to send another invitations
         when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
             ctx <- getContext
             Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
             sendInvitationEmails ctx document
+        when (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) $ do
+          ctx <- getContext
+          d <- guardRightM $ update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
+          postDocumentChangeAction d olddocument msignalinkid
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do 
@@ -314,6 +318,8 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
+  _ <- update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
+  return ()
 
 {- |
     Send a reminder email
@@ -451,9 +457,8 @@ signDocument documentid
   fieldnames <- getAndConcat "fieldname"
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zip fieldnames fieldvalues
-      
-  edoc <- signDocumentWithEmail documentid signatorylinkid1 magichash1 fields
   
+  edoc <- signDocumentWithEmail documentid signatorylinkid1 magichash1 fields
   case edoc of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
@@ -751,7 +756,7 @@ handleIssueSend document = do
         Left _ -> mzero
     where
       forIndividual ctxtime ctxipnumber udoc doc = do
-        mndoc <- authorSendDocument (documentid doc) Nothing
+        mndoc <- update $ PreparationToPending (documentid doc) ctxtime
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber

@@ -213,8 +213,7 @@ handleMailCommand = do
                                     (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)
                                     [EmailIdentification] Nothing AdvancedFunctionality
 
-    (eithernewdocument :: Either String Document) <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
-
+    (eithernewdocument :: Either String Document) <- update $ PreparationToPending (documentid doc) ctxtime
     (newdocument :: Document) <- case eithernewdocument of
                                      Left errmsg -> return (error errmsg)
                                      Right document -> return document

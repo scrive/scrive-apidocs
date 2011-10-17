@@ -31,6 +31,7 @@ import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
 import File.State
+import Control.Monad
 
 {- |
    Mark document seen securely.
@@ -72,7 +73,8 @@ signDocumentWithEmail did slid mh fields = do
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
-        newdocument <- update $ SignDocument did slid ctxtime ctxipnumber Nothing fields
+        newdocument <- msum [update $ UpdateFields did slid fields,
+                             update $ SignDocument did slid mh ctxtime ctxipnumber Nothing]
         case newdocument of
           Left message -> return $ Left (DBActionNotAvailable message)
           Right doc -> return $ Right (doc, olddoc)
@@ -98,15 +100,23 @@ rejectDocumentWithChecks did slid mh customtext = do
 authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
 authorSignDocument did msigninfo = onlyAuthor did $ do
   ctx <- getContext
-  transActionNotAvailable <$> update (AuthorSignDocument did (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+  edoc <- getDocByDocID did
+  case edoc of 
+    Left m -> return $ Left m
+    Right doc -> do
+      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
+      msum [
+        transActionNotAvailable <$> update (PreparationToPending did (ctxtime ctx)),
+        transActionNotAvailable <$> update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+        ]
 
 {- |
   The Author sends a document with security checks.
  -}
-authorSendDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
-authorSendDocument did msigninfo = onlyAuthor did $ do
+authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
+authorSendDocument did = onlyAuthor did $ do
   ctx <- getContext
-  transActionNotAvailable <$> update (AuthorSendDocument did (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+  transActionNotAvailable <$> update (PreparationToPending did (ctxtime ctx))
 
 {- |
   The Author can add new SigAttachments.
@@ -116,9 +126,9 @@ updateSigAttachments did sigatts = onlyAuthor did $ do
   transActionNotAvailable <$> update (UpdateSigAttachments did sigatts)
     
     
-eitherFromMaybe :: a -> Maybe b -> Either a b
-eitherFromMaybe _ (Just b) = Right b
-eitherFromMaybe a Nothing  = Left a
+_eitherFromMaybe :: a -> Maybe b -> Either a b
+_eitherFromMaybe _ (Just b) = Right b
+_eitherFromMaybe a Nothing  = Left a
     
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
@@ -126,7 +136,14 @@ eitherFromMaybe a Nothing  = Left a
 closeDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
 closeDocument did msigninfo = onlyAuthor did $ do
   ctx <- getContext
-  eitherFromMaybe DBResourceNotAvailable <$> update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+  edoc <- getDocByDocID did
+  case edoc of
+    Left m -> return $ Left m
+    Right doc -> do
+      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
+      msum $ [transActionNotAvailable <$> update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo),
+              transActionNotAvailable <$> update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))]
+          
 
 -- | Make sure we're logged in as the author before taking action.
 onlyAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError a) -> m (Either DBError a)
