@@ -277,22 +277,10 @@ modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => Maybe User -> Maybe Company -> KontraLink -> m FlashMessage
-modalAccountSetup muser mcompany signuplink = do
+modalAccountSetup :: MonadIO m => KontraLink -> m FlashMessage
+modalAccountSetup signuplink = do
   return $ toFlashTemplate Modal "modalAccountSetup" $
-    [ ("fstname", showUserField userfstname)
-    , ("sndname", showUserField usersndname)
-    , ("companyposition", showUserField usercompanyposition)
-    , ("phone", showUserField userphone)
-    , ("companyname", showCompanyField companyname)
-    , ("signuplink", show signuplink)
-    ] ++ boolFieldList "iscompanyadmin" (maybe False useriscompanyadmin muser)
-      ++ boolFieldList "iscompanyaccount" (maybe False (isJust . usercompany) muser)
-  where
-    showUserField f = maybe "" (BS.toString . f . userinfo) muser
-    showCompanyField f = maybe "" (BS.toString . f . companyinfo) mcompany
-    boolFieldList _ False = []
-    boolFieldList name True = [(name, "true")]
+    [("signuplink", show signuplink)]
 
 modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
 modalAccountRemoval doctitle activationlink removallink = do

@@ -675,19 +675,18 @@ handleAccountSetupGet aid hash = do
              case actionType action of
                   ViralInvitationSent _ _ _ _ token ->
                       if token == hash
-                         then activationPage Nothing Nothing
+                         then activationPage Nothing
                          else mzero
                   AccountCreatedBySigning _ uid _ token -> do
                       if token == hash
-                         then (runDBQuery $ GetUserByID uid) >>= (\mu -> activationPage mu Nothing)
+                         then (runDBQuery $ GetUserByID uid) >>= (\mu -> activationPage mu)
                          else mzero
                   AccountCreated uid token -> do
                       if token == hash
                          then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user -> do
                              if isNothing $ userhasacceptedtermsofservice user
                                 then do
-                                  mcompany <- getCompanyForUser user
-                                  activationPage (Just user) mcompany
+                                  activationPage (Just user)
                                 else do
                                   addFlashM flashMessageUserAlreadyActivated
                                   sendRedirect LinkUpload)
@@ -705,9 +704,9 @@ handleAccountSetupGet aid hash = do
                     else mzero
                   Nothing -> mzero
     where
-      activationPage muser mcompany = do
+      activationPage (muser :: Maybe User) = do
         extendActionEvalTimeToOneDayMinimum aid
-        addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+        addFlashM $ modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
         ctx <- getContext
         sendRedirect $ LinkHome (getLocale ctx)
 
@@ -797,151 +796,40 @@ handleAccountSetupPost aid hash = do
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
   Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
-  iscompanyaccount <- getOptionalField asValidAccountType "accounttype"
-  mcompany <- getCompanyForUser actvuser
-  case (iscompanyaccount, mcompany) of
-    (Nothing, _) -> do
-      Log.debug "Activating user account: No account type set"
-      addFlashM flashMessageNoAccountType
-      return Nothing
-    (Just False, Just _company) -> do
-      -- accounts setup as part of a company can't just switch to being private
-      -- we have protected against this on the client, but this should provide an extra server check
-      addFlashM flashMessageNoAccountType
-      returnToAccountSetup actvuser Nothing
-    (Just False, Nothing) ->
-      -- this is just a simple private account activation
-      finalizePrivateActivation actvuser
-    (Just True, Just company) -> do
-      -- this is an account for an existing company
-      finalizeCompanyActivation actvuser company
-    (Just True, Nothing) -> do
-      -- we need to make a new company, because one doesn't already exist - this user should be the admin too
-      (user, company) <- runDB $ do
-        company <- dbUpdate $ CreateCompany Nothing Nothing
-        _ <- dbUpdate $ SetUserCompany (userid actvuser) (Just $ companyid company)
-        _ <- dbUpdate $ SetUserCompanyAdmin (userid actvuser) True
-        Just user <- dbQuery $ GetUserByID $ userid actvuser
-        return (user, company)
-      finalizeCompanyActivation user company
+  ctx <- getContext
+  mtos <- getDefaultedField False asValidCheckBox "tos"
+  mpassword <- getRequiredField asValidPassword "password"
+  mpassword2 <- getRequiredField asValidPassword "password2"
+  case (mtos, mpassword, mpassword2) of
+    (Just tos, Just password, Just password2) -> do
+      case checkPasswordsMatch password password2 of
+        Right () ->
+          if tos
+            then do
+              passwordhash <- liftIO $ createPassword password
+              runDB $ do
+                _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+                _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+                _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+                return ()
+              tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
+              _ <- addUserSignTOSStatEvent tosuser
+              dropExistingAction aid
+              logUserToContext $ Just tosuser
+              addFlashM flashMessageUserActivated
+              return $ Just tosuser
+            else do
+              addFlashM flashMessageMustAcceptTOS
+              returnToAccountSetup
+        Left flash -> do
+          addFlashM flash
+          returnToAccountSetup
+    _ -> returnToAccountSetup
   where
-    returnToAccountSetup :: Kontrakcja n => User -> Maybe Company -> n (Maybe User)
-    returnToAccountSetup user mcompany = do
-      addFlashM $ modalAccountSetup (Just user) mcompany $ LinkAccountCreated aid hash $ BS.toString $ getEmail user
+    returnToAccountSetup :: Kontrakcja n => n (Maybe User)
+    returnToAccountSetup = do
+      addFlashM $ modalAccountSetup $ LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser
       return Nothing
-
-    asValidAccountType :: String -> Result Bool
-    asValidAccountType "CompanyAccount" = return True
-    asValidAccountType _ = return False
-
-    finalizePrivateActivation :: Kontrakcja n => User -> n (Maybe User)
-    finalizePrivateActivation user =
-      finalizeActivation user Nothing id id
-
-    finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
-    finalizeCompanyActivation user company = do
-      -- is this from the acceptaccount after signup modal? if it is then they just type in their
-      -- password, so we don't want to check for the user and company info stuff
-      acceptaccount <- isFieldSet "acceptaccount"
-      muserf <- if not acceptaccount
-                  then getUserInfoUpdateFunc user
-                  else return $ Just id
-      mcompanyf <- if not acceptaccount && useriscompanyadmin user
-                     then getCompanyInfoUpdateFunc company
-                     else return $ Just id
-      case (muserf, mcompanyf) of
-        (Just userf, Just companyf) ->
-          finalizeActivation user (Just company) userf companyf
-        _ -> returnToAccountSetup user (Just company)
-
-    finalizeActivation :: Kontrakcja n => User
-                                          -> Maybe Company
-                                          -> (UserInfo -> UserInfo)
-                                          -> (CompanyInfo -> CompanyInfo)
-                                          -> n (Maybe User)
-    finalizeActivation user mcompany userinfoupdatefunc companyinfoupdatefunc = do
-      mnewuser <- performActivation user mcompany aid userinfoupdatefunc companyinfoupdatefunc
-      case mnewuser of
-        Just newuser -> do
-          addFlashM flashMessageUserActivated
-          return $ Just newuser
-        Nothing -> do
-          -- performActivation might have updated user or company info, so we
-          -- need to query database for the newest user & company version
-          newuser <- fromMaybe user <$> (runDBQuery $ GetUserByID $ userid user)
-          mnewcompany <- getCompanyForUser newuser
-          returnToAccountSetup newuser mnewcompany
-
-    getUserInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (UserInfo -> UserInfo))
-    getUserInfoUpdateFunc _user = do
-      mfname <- getRequiredField asValidName "fname"
-      mlname <- getRequiredField asValidName "lname"
-      mcompanyposition <- getRequiredField asValidPosition "companyposition"
-      mphone <- getRequiredField (Good . BS.fromString) "phone"
-      return $
-        case (mfname, mlname, mcompanyposition, mphone) of
-          (Just fname, Just lname, Just companytitle, Just phone) -> Just $
-            \info -> info { userfstname = fname
-                          , usersndname = lname
-                          , usercompanyposition = companytitle
-                          , userphone = phone
-                          }
-          _ -> Nothing
-
-    getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
-    getCompanyInfoUpdateFunc _company = do
-      mcompanyname <- getRequiredField asValidCompanyName "companyname"
-      return $
-        case mcompanyname of
-          (Just companyname') -> Just $ \info -> info { companyname = companyname' }
-          _ -> Nothing
-
-    performActivation :: Kontrakcja n => User
-                                         -> Maybe Company
-                                         -> ActionID
-                                         -> (UserInfo -> UserInfo)
-                                         -> (CompanyInfo -> CompanyInfo)
-                                         -> n (Maybe User)
-    performActivation user mcompany actionid userinfoupdatefunc companyinfoupdatefunc = do
-      ctx <- getContext
-      mtos <- getDefaultedField False asValidCheckBox "tos"
-      mpassword <- getRequiredField asValidPassword "password"
-      mpassword2 <- getRequiredField asValidPassword "password2"
-      -- update user info he typed on signup page, so he won't
-      -- have to type in again if password validation fails.
-      _ <- runDBUpdate $ SetUserInfo (userid user) $ userinfoupdatefunc (userinfo user)
-      -- if appropriate update the company info too
-      if (isJust mcompany && useriscompanyadmin user && usercompany user == fmap companyid mcompany)
-        then do
-          let Just company = mcompany
-          _ <- runDBUpdate $ SetCompanyInfo (companyid company) $ companyinfoupdatefunc (companyinfo company)
-          return ()
-        else return ()
-      case (mtos, mpassword, mpassword2) of
-        (Just tos, Just password, Just password2) -> do
-          case checkPasswordsMatch password password2 of
-            Right () ->
-              if tos
-                then do
-                  passwordhash <- liftIO $ createPassword password
-                  runDB $ do
-                    _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-                    _ <- dbUpdate $ AcceptTermsOfService (userid user) (ctxtime ctx)
-                    _ <- dbUpdate $ SetSignupMethod (userid user) signupmethod
-                    return ()
-                  tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
-                  _ <- addUserSignTOSStatEvent tosuser
-                  dropExistingAction actionid
-                  logUserToContext $ Just user
-                  return $ Just user
-                else do
-                  addFlashM flashMessageMustAcceptTOS
-                  return Nothing
-            Left flash -> do
-              addFlashM flash
-              return Nothing
-        _ -> return Nothing
-
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
