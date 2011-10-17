@@ -1,4 +1,3 @@
 #!/bin/bash
 
-./selenium-test/runSeleniumTestWithServer.sh all
-
+./selenium-test/runSeleniumTest.sh all
