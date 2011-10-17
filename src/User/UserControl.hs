@@ -453,7 +453,7 @@ handleViralInvite = withUserPost $ do
                                                                                     , visInviterID = visInviterID
                                                                                     , visRemainedEmails = n -1
                                                                                     , visToken = visToken }
-                      sendInvitation ctx (LinkViralInvitationSent actionID $ visToken) invitedemail
+                      sendInvitation ctx (LinkViralInvitationSent actionID visToken (BS.toString invitedemail)) invitedemail
                   else addFlashM flashMessageOtherUserSentInvitation
               _ -> do
                 link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
@@ -662,26 +662,104 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
-    maction <- getActionByActionID aid
-    muser <-
-      case maction of
-        Just action -> do
-          guardMagicTokenMatch hash action
-          getUserFromAction action
-        Nothing -> getUserByEmail
-    case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
-      (True, _) -> do
-        addFlashM flashMessageUserAlreadyActivated
-        sendRedirect LinkUpload
-      (False, Just _action) -> do
-        extendActionEvalTimeToOneDayMinimum aid
-        addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        ctx <- getContext
-        sendRedirect $ LinkHome (getLocale ctx)
-      (False, Nothing) -> do
-        content <- activatePageViewNotValidLink "" --TODO EM - really should make this nicer
-        renderFromBody TopNone kontrakcja content
+  maction <- getActionByActionID aid
+  muser <-
+    case maction of
+      Just action -> do
+        guardMagicTokenMatch hash action
+        getUserFromAction action
+      Nothing -> getUserByEmail
+  case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
+    (True, _) -> do
+      addFlashM flashMessageUserAlreadyActivated
+      sendRedirect LinkUpload
+    (False, Just _action) -> do
+      extendActionEvalTimeToOneDayMinimum aid
+      addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+      ctx <- getContext
+      sendRedirect $ LinkHome (getLocale ctx)
+    (False, Nothing) -> do
+      content <- activatePageViewNotValidLink "" --TODO EM - really should make this nicer
+      renderFromBody TopNone kontrakcja content
+  where
+    -- looks up the user using the value in the optional email param
+    getUserByEmail = do
+      memail <- getOptionalField asValidEmail "email"
+      case memail of
+        Nothing -> return Nothing
+        Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
 
+handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
+handleAccountSetupFromSign aid hash = do
+  Log.debug "Account setup after signing document"
+  maction <- getActionByActionID aid
+  case maction of
+    Just action -> do
+      guardMagicTokenMatch hash action
+      muser <- getUserFromAction action
+      case muser of
+        Just user -> do
+          Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
+          handleActivate aid hash BySigning user
+        Nothing -> return Nothing
+    Nothing -> return Nothing
+
+handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
+handleAccountSetupPost aid hash = do
+  maction <- getActionByActionID aid
+  case maction of
+    Just action -> do
+      guardMagicTokenMatch hash action
+      user <- guardJustM $ getOrCreateActionUser action
+      if isJust $ userhasacceptedtermsofservice user
+        then addFlashM flashMessageUserAlreadyActivated
+        else do
+          signupmethod <- guardJust $ getSignupMethod action
+          mactivateduser <- handleActivate aid hash signupmethod user
+          when (isJust mactivateduser) $ do
+              addFlashM flashMessageUserActivated
+              -- addFlashM modalWelcomeToSkrivaPa --TODO do we want this instead, if not we should delete
+              return ()
+          return ()
+      getHomeOrUploadLink
+    Nothing ->
+      getOptionalField asValidEmail "email" >>= maybe mzero generateActivationLink
+  where
+    -- If this is a user activating a viral invitation then we create their user
+    -- if needed, otherwise we fetch the user indicated inside the action details.
+    getOrCreateActionUser action = do
+      mactionuser <- getUserFromAction action
+      case (mactionuser, actionType action) of
+        (Nothing, ViralInvitationSent email invtime inviterid _ _) -> do
+          muser <- createInvitedUser (BS.empty, BS.empty) (unEmail email) Nothing
+          case muser of
+            Just user -> do -- user created, we need to fill in some info
+              minviter <- runDBQuery $ GetUserByID inviterid
+              _ <- runDBUpdate $ SetInviteInfo (userid <$> minviter) invtime Viral (userid user)
+              return $ Just user
+            Nothing -> return Nothing
+        _ -> return mactionuser
+    -- Gets the signup method for the action's type.
+    getSignupMethod action =
+      case actionType action of
+        ViralInvitationSent _ _ _ _ _ -> Just ViralInvitation
+        AccountCreatedBySigning _ _ _ _ -> Just BySigning
+        AccountCreated _ _ -> Just AccountRequest
+        _ -> Nothing
+    -- Generates another activation link
+    generateActivationLink email = do
+      user <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email email)
+      if isNothing $ userhasacceptedtermsofservice user
+        then do
+          ctx <- getContext
+          al <- newAccountCreatedLink user
+          mail <- newUserMail (ctxhostpart ctx) email email al False
+          scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
+          addFlashM flashMessageNewActivationLinkSend
+          getHomeOrUploadLink
+        else mzero
+
+ -- Retrieves the action for the given id
 getActionByActionID :: Kontrakcja m => ActionID -> m (Maybe Action)
 getActionByActionID actionid = do
   now <- liftIO $ getMinutesTime
@@ -692,116 +770,28 @@ getActionByActionID actionid = do
     then return $ Just action
     else return $ checkValidity now $ Just action)
 
-guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
-guardMagicTokenMatch token action =
-  if getMagicTokenFromAction action == Just token
-    then return ()
-    else mzero
-
-getMagicTokenFromAction :: Action -> Maybe MagicHash
-getMagicTokenFromAction action =
-  case actionType action of
-    ViralInvitationSent _ _ _ _ token -> Just token
-    AccountCreatedBySigning _ _ _ token -> Just token
-    AccountCreated _ token -> Just token
-    _ -> Nothing
-
+-- Looks up any user id on the action, and then returns the relevant user
 getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
 getUserFromAction action =
   case actionType action of
-    AccountCreatedBySigning _ uid _ _ -> runDBQuery $ GetUserByID uid
-    AccountCreated uid _ ->  runDBQuery $ GetUserByID uid
+    (ViralInvitationSent email _ _ _ _) -> runDBQuery $ GetUserByEmail Nothing email
+    (AccountCreatedBySigning _ uid _ _) -> runDBQuery $ GetUserByID uid
+    (AccountCreated uid _) ->  runDBQuery $ GetUserByID uid
     _ -> return Nothing
 
-getUserByEmail :: Kontrakcja m => m (Maybe User)
-getUserByEmail = do
-  memail <- getOptionalField asValidEmail "email"
-  case memail of
-    Nothing -> return Nothing
-    Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
-
-handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
-handleAccountSetupFromSign aid hash = do
-  Log.debug "Account setup after signing document"
-  muserid <- getUserIDFromAction
-  Log.debug $ "Account setup after signing document: UserID->"  ++ (show muserid)
-  case muserid of
-    Just userid -> do
-      user <- runDBOrFail $ dbQuery $ GetUserByID userid
-      Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
-      handleActivate aid hash BySigning user
-    Nothing -> return Nothing
+-- Guards so that the token in the given action matches the given magic hash.
+guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
+guardMagicTokenMatch expectedtoken action =
+  if getMagicTokenFromAction == Just expectedtoken
+    then return ()
+    else mzero
   where
-    getUserIDFromAction :: Kontrakcja m => m (Maybe UserID)
-    getUserIDFromAction = do
-      now <- liftIO $ getMinutesTime
-      maction <- checkValidity now <$> (query $ GetAction aid)
-      case maction of
-        Just action ->
-          case actionType action of
-            AccountCreatedBySigning _ uid _ token ->
-              if token == hash
-                then do
-                  return $ Just uid
-                else return Nothing
-            _ -> return Nothing
-        _-> return Nothing
-
-handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handleAccountSetupPost aid hash = do
-  now <- liftIO $ getMinutesTime
-  maction <- checkValidity now <$> (query $ GetAction aid)
-  case fmap actionType maction of
-    Just (ViralInvitationSent email invtime inviterid _ token) ->
-      if token == hash
-         then do
-           _ <- (getUserForViralInvite email invtime inviterid)
-                 >>= maybe mzero (handleActivate aid hash ViralInvitation)
-           getHomeOrUploadLink
-         else mzero
-    Just (AccountCreatedBySigning _ uid _ token) ->
-      if token == hash
-        then do
-          _ <- (runDBQuery $ GetUserByID uid)
-                  >>= maybe mzero (handleActivate aid hash BySigning)
-          addFlashM modalWelcomeToSkrivaPa
-          getHomeOrUploadLink
-        else mzero
-    Just (AccountCreated uid token) ->
-      if token == hash
-        then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user ->
-          if isNothing $ userhasacceptedtermsofservice user
-            then do
-              _ <- handleActivate aid hash AccountRequest user
-              getHomeOrUploadLink
-            else do
-              addFlashM flashMessageUserAlreadyActivated
-              getHomeOrUploadLink)
-        else mzero
-    Just _ -> mzero
-    Nothing -> do -- try to generate another activation link
-      getOptionalField asValidEmail "email" >>= maybe mzero (\email ->
-        (runDBQuery $ GetUserByEmail Nothing $ Email email) >>= maybe mzero (\user ->
-          if isNothing $ userhasacceptedtermsofservice user
-            then do
-              ctx <- getContext
-              al <- newAccountCreatedLink user
-              mail <- newUserMail (ctxhostpart ctx) email email al False
-              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
-              addFlashM flashMessageNewActivationLinkSend
-              getHomeOrUploadLink
-            else mzero))
-  where
-    getUserForViralInvite :: Kontrakcja m => Email -> MinutesTime -> UserID -> m (Maybe User)
-    getUserForViralInvite invitedemail invitationtime inviterid = do
-      muser <- createInvitedUser (BS.empty, BS.empty) (unEmail invitedemail) Nothing
-      case muser of
-        Just user -> do -- user created, we need to fill in some info
-          minviter <- runDBQuery $ GetUserByID inviterid
-          _ <- runDBUpdate $ SetInviteInfo (userid <$> minviter) invitationtime Viral (userid user)
-          return muser
-        Nothing -> do -- user already exists, get her
-          runDBQuery $ GetUserByEmail Nothing invitedemail
+    getMagicTokenFromAction =
+      case actionType action of
+        ViralInvitationSent _ _ _ _ token -> Just token
+        AccountCreatedBySigning _ _ _ token -> Just token
+        AccountCreated _ token -> Just token
+        _ -> Nothing
 
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
@@ -826,7 +816,6 @@ handleActivate aid hash signupmethod actvuser = do
               _ <- addUserSignTOSStatEvent tosuser
               dropExistingAction aid
               logUserToContext $ Just tosuser
-              addFlashM flashMessageUserActivated
               return $ Just tosuser
             else do
               addFlashM flashMessageMustAcceptTOS

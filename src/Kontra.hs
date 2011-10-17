@@ -122,6 +122,7 @@ newViralInvitationSentLink email inviterid = do
     action <- liftIO $ newViralInvitationSent email inviterid
     return $ LinkViralInvitationSent (actionID action)
                                      (visToken $ actionType action)
+                                     (BS.toString $ unEmail email)
 
 newAccountCreatedLink :: MonadIO m => User -> m KontraLink
 newAccountCreatedLink user = do

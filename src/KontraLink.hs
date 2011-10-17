@@ -61,7 +61,7 @@ data KontraLink
     | LinkTemplates
     | LinkOffers
     | LinkOrders
-    | LinkAttachments 
+    | LinkAttachments
     | LinkRubbishBin
     | LinkNew (Maybe DocumentProcess) Bool
     | LinkAccount
@@ -90,7 +90,7 @@ data KontraLink
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
-    | LinkViralInvitationSent ActionID MagicHash
+    | LinkViralInvitationSent ActionID MagicHash String --email
     | LinkAccountCreated ActionID MagicHash String -- email
     | LinkAccountCreatedBySigning ActionID MagicHash
     | LinkAccountRemoval ActionID MagicHash
@@ -112,7 +112,7 @@ data KontraLink
     | LinkServiceButtonsBody ServiceID
     | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
-    | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID 
+    | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -156,10 +156,10 @@ instance Show KontraLink where
     showsPrec _ LinkUpload = (++) "/upload"
     showsPrec _ LinkLocaleSwitch = (++) "/locale"
     showsPrec _ (LinkContracts) = (++) $ "/d"
-    showsPrec _ (LinkTemplates) = (++) $ "/t" 
-    showsPrec _ (LinkOffers) = (++) $ "/o" 
-    showsPrec _ (LinkOrders) = (++) $ "/or" 
-    showsPrec _ (LinkAttachments) = (++) $ "/a" 
+    showsPrec _ (LinkTemplates) = (++) $ "/t"
+    showsPrec _ (LinkOffers) = (++) $ "/o"
+    showsPrec _ (LinkOrders) = (++) $ "/or"
+    showsPrec _ (LinkAttachments) = (++) $ "/a"
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
     showsPrec _ (LinkNew mdocprocess templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess)
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
@@ -203,7 +203,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkViralInvitationSent aid hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
+    showsPrec _ (LinkViralInvitationSent aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
     showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
     showsPrec _ (LinkAccountCreatedBySigning aid hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountRemoval aid hash) = (++) $ "/accountremoval/" ++ show aid ++ "/" ++ show hash
@@ -227,9 +227,9 @@ instance Show KontraLink where
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
     showsPrec _ (LinkCSVLandPage c) = (++) ("/csvlandpage/" ++ show c)
-    showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++ 
+    showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show (signatorylinkid sl) ++
                  "/" ++ show (signatorymagichash sl) ++
                  "/" ++ show fid)
-    showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++ 
+    showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)

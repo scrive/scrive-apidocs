@@ -803,7 +803,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessagePasswordChangeLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>     Vänligen
  använd ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry, this link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
-"_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>",,"<strong>New password</strong> does not match <strong>Repeat password</strong>"
+"_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>",,"The two passwords do not match."
 "_flashMessagePleaseSignContract","Underteckna dokumentet längst ned på sidan.",,"Sign the document at the bottom of the page."
 "_flashMessagePleaseSignOffer","Du kan acceptera offerten längst ned på sidan.",,"Accept the offer at the bottom of the page."
 "_flashMessagePleaseSignWithEleg","Du undertecknar dokumentet längst ned. Det krävs e-legitimation
@@ -832,8 +832,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageUserInvitedAsSubaccount","Din förfrågan har skickats!",,"Your request has been sent!"
 "_flashMessageUserPasswordChanged","Ditt lösenord har ändrats.",,"Your password has been changed."
 "_flashMessageUserSignupDone","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
- till din inkorg.",,"Your account has been created! An email containing your account
- details has been sent to your inbox."
+ till din inkorg.",,"Your account has been created. An email containing your account details has been sent to your inbox."
 "_flashMessageUserWithSameEmailExists","En användare med samma e-post existerar redan.",,"A user with this email already exists."
 "_flashMessageViralInviteSent","Inbjudan har skickats!",,"The invitation has been sent!"
 "_flashRemindMailSentNotSigned","En påminnelse har skickats till",,"A reminder has been sent to"
