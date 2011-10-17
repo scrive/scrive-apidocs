@@ -662,53 +662,63 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
-    now <- liftIO $ getMinutesTime
-    maction <- do
-        (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
-            -- action may be in state when it has expired, but hasn't yet been
-            -- transformed into next form. below code checks for that.
-            if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
-               then return $ Just action
-               else return $ checkValidity now $ Just action)
-    case maction of
-         Just action ->
-             case actionType action of
-                  ViralInvitationSent _ _ _ _ token ->
-                      if token == hash
-                         then activationPage Nothing
-                         else mzero
-                  AccountCreatedBySigning _ uid _ token -> do
-                      if token == hash
-                         then (runDBQuery $ GetUserByID uid) >>= (\mu -> activationPage mu)
-                         else mzero
-                  AccountCreated uid token -> do
-                      if token == hash
-                         then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user -> do
-                             if isNothing $ userhasacceptedtermsofservice user
-                                then do
-                                  activationPage (Just user)
-                                else do
-                                  addFlashM flashMessageUserAlreadyActivated
-                                  sendRedirect LinkUpload)
-                         else mzero
-                  _  -> mzero
-         Nothing -> do
-             muser <- liftMM (runDBQuery . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
-             case muser of
-                  Just user ->
-                    if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
-                     then do
-                        let email = getEmail user
-                        content <- activatePageViewNotValidLink $ BS.toString email
-                        renderFromBody TopNone kontrakcja content
-                    else mzero
-                  Nothing -> mzero
-    where
-      activationPage (muser :: Maybe User) = do
+    maction <- getActionByActionID aid
+    muser <-
+      case maction of
+        Just action -> do
+          guardMagicTokenMatch hash action
+          getUserFromAction action
+        Nothing -> getUserByEmail
+    case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
+      (True, _) -> do
+        addFlashM flashMessageUserAlreadyActivated
+        sendRedirect LinkUpload
+      (False, Just _action) -> do
         extendActionEvalTimeToOneDayMinimum aid
-        addFlashM $ modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+        addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
         ctx <- getContext
         sendRedirect $ LinkHome (getLocale ctx)
+      (False, Nothing) -> do
+        content <- activatePageViewNotValidLink "" --TODO EM - really should make this nicer
+        renderFromBody TopNone kontrakcja content
+
+getActionByActionID :: Kontrakcja m => ActionID -> m (Maybe Action)
+getActionByActionID actionid = do
+  now <- liftIO $ getMinutesTime
+  (query $ GetAction actionid) >>= maybe (return Nothing) (\action -> do
+  -- action may be in state when it has expired, but hasn't yet been
+  -- transformed into next form. below code checks for that.
+  if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
+    then return $ Just action
+    else return $ checkValidity now $ Just action)
+
+guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
+guardMagicTokenMatch token action =
+  if getMagicTokenFromAction action == Just token
+    then return ()
+    else mzero
+
+getMagicTokenFromAction :: Action -> Maybe MagicHash
+getMagicTokenFromAction action =
+  case actionType action of
+    ViralInvitationSent _ _ _ _ token -> Just token
+    AccountCreatedBySigning _ _ _ token -> Just token
+    AccountCreated _ token -> Just token
+    _ -> Nothing
+
+getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
+getUserFromAction action =
+  case actionType action of
+    AccountCreatedBySigning _ uid _ _ -> runDBQuery $ GetUserByID uid
+    AccountCreated uid _ ->  runDBQuery $ GetUserByID uid
+    _ -> return Nothing
+
+getUserByEmail :: Kontrakcja m => m (Maybe User)
+getUserByEmail = do
+  memail <- getOptionalField asValidEmail "email"
+  case memail of
+    Nothing -> return Nothing
+    Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
