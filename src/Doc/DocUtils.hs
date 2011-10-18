@@ -20,6 +20,7 @@ import User.Model
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
+import DB.Classes
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -27,8 +28,8 @@ import Data.List hiding (insert)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import File.State
-import Happstack.State
+import File.TransState
+--import Happstack.State
 
 
 {- |
@@ -362,17 +363,17 @@ sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
 isAuthoredByCompany :: CompanyID -> Document -> Bool
 isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
 
-getFilesByStatus :: Document -> IO [File]
+getFilesByStatus :: (MonadIO m, DBMonad m) => Document -> m [File]
 getFilesByStatus doc 
   | isClosed doc = liftM catMaybes $ mapM doGet $ documentsealedfiles doc
   | otherwise    = liftM catMaybes $ mapM doGet $ documentfiles doc
   where
-      doGet fid = query $ GetFileByFileID fid
+      doGet fid = runDBQuery $ GetFileByFileID fid
 
-documentfilesM :: (MonadIO m) => Document -> m [File]
+documentfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
 documentfilesM Document{documentfiles} = do
-    liftM catMaybes $ mapM (query . GetFileByFileID) documentfiles
+    liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentfiles
 
-documentsealedfilesM :: (MonadIO m) => Document -> m [File]
+documentsealedfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
 documentsealedfilesM Document{documentsealedfiles} = do
-    liftM catMaybes $ mapM (query . GetFileByFileID) documentsealedfiles
+    liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentsealedfiles

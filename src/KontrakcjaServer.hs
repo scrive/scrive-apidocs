@@ -18,7 +18,6 @@ import Happstack.State
   , shutdownSystem
   , createCheckpoint
   , waitForTermination
-  , query
   )
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
@@ -32,6 +31,7 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
 import System.IO
 import Control.Concurrent.MVar
+import Control.Monad.Reader
 
 import Crypto
 import DB.Classes
@@ -44,14 +44,17 @@ import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import User.Model
-import qualified User.UserState as U
+-- import qualified User.UserState as U
+import qualified File.State as F
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
-import File.State
+import File.TransState
+import Doc.DocState
+import Happstack.State (query)
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -128,11 +131,12 @@ initDatabaseEntries conn iusers = do
               return ()
           Just _ -> return () -- user exist, do not add it
 
-
 uploadOldFilesToAmazon :: AppConf -> IO ()
 uploadOldFilesToAmazon appConf = do
-  files <- query $ GetFilesThatShouldBeMovedToAmazon
-  mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files
+  withPostgreSQL (dbConfig appConf) $ \conn -> do
+    files <- ioRunDB conn $ dbQuery $ GetFilesThatShouldBeMovedToAmazon
+    runReaderT (mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files) conn
+    return ()
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do
@@ -198,9 +202,17 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
+                              -- need to evaluate documents upgraded because there is plenty of unsafePerformIO used
+                              x <- query $ GetDocumentByDocumentID (DocumentID 0)
+                              case x of
+                                  Just _ -> return ()
+                                  Nothing -> return ()
+
                               -- populate db with entries from happstack-state
                               ioRunDB conn $ do
-                                U.populateDBWithUsersIfEmpty
+                                -- U.populateDBWithUsersIfEmpty
+                                F.populateDBWithFilesIfEmpty
+  
                                 -- this is not ready yet
                                 --populateDBWithDocumentsIfEmpty
                               let (iface,port) = httpBindAddress appConf

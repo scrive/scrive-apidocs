@@ -158,7 +158,6 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
           _ -> error $ "No involved in document: " ++ show d
         _ -> error $ "No document returned: " ++ show doc
 
-
 -- Requests body 
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $

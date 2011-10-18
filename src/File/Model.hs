@@ -43,7 +43,7 @@ instance DBQuery GetFileByFileID (Maybe File) where
     oneObjectReturnedGuard files
 
 data NewFile = NewFile BS.ByteString BS.ByteString
-instance DBUpdate NewFile (Maybe File) where
+instance DBUpdate NewFile (File) where
   dbUpdate (NewFile filename content) = do
     wrapDB $ \conn -> runRaw conn "LOCK TABLE files IN ACCESS EXCLUSIVE MODE"
     fid <- FileID <$> getUniqueID tableFiles
@@ -58,7 +58,10 @@ instance DBUpdate NewFile (Maybe File) where
               , toSql $ Binary content
               ]
           return ()
-    dbQuery $ GetFileByFileID fid
+    x <- dbQuery $ GetFileByFileID fid
+    case x of
+        Nothing -> error "impossible"
+        Just file -> return file
 
 data PutFileUnchecked = PutFileUnchecked File
 instance DBUpdate PutFileUnchecked () where

@@ -20,7 +20,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocProcess
 import InputValidation
-import File.State
+import File.TransState
 import Kontra
 import KontraLink
 import ListUtil
@@ -117,9 +117,9 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
         _ <- addDocumentCloseStatEvents document
-        ctx@Context{ctxtemplates} <- getContext
+        ctx@Context{ctxtemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
-          enewdoc <- sealDocument ctx document
+          enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates ctxtemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
@@ -136,9 +136,9 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         _ <- addDocumentCloseStatEvents document          
-        ctx@Context{ctxtemplates} <- getContext
+        ctx@Context{ctxtemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
-          enewdoc <- sealDocument ctx document
+          enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates ctxtemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> do
@@ -374,7 +374,7 @@ makeMailAttachments ctx document = do
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
-  allfiles <- liftM catMaybes $ mapM (query . GetFileByFileID) allfiles'
+  allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
   let
       filenames = map filename allfiles
   filecontents <- sequence $ map (getFileContents ctx) allfiles
@@ -1446,34 +1446,37 @@ handlePageOfDocument' documentid mtokens = do
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug $ "Uploading file for doc #" ++ show docid
-  Context{ctxdocstore, ctxs3action} <- getContext
+  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
-        Log.debug $ "Uploaded file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
+        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
+        Log.debug $ title
         files <- documentfilesM document
-        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
+        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
         return ()
   return ()
 
 handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
-  Context{ctxdocstore, ctxs3action} <- getContext
+  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content1 docid
-  file <- update $ NewFile filename content14
+  file <- runDB $ dbUpdate $ NewFile filename content14
   fileresult <- update (AttachFile docid (fileid file))
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
+        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
+        Log.debug $ title
         files <- documentfilesM document
-        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
+        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
         return ()
   return ()
 
@@ -1923,7 +1926,7 @@ handleFixDocument docid = onlySuperUser $ do
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
                     then do
-                        _ <- liftIO $ sealDocument ctx doc
+                        _ <- liftIO $ runReaderT (sealDocument ctx doc) (ctxdbconn ctx)
                         return LoopBack
                     else return LoopBack
 
@@ -1958,7 +1961,7 @@ handleSigAttach docid siglinkid mh = do
   -- we use gs to do that of course
   ctx <- getContext
   content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
-  file <- update $ NewFile attachname content
+  file <- runDB $ dbUpdate $ NewFile attachname content
   _ <- update $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc doc siglink
 
