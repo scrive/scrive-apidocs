@@ -1,6 +1,7 @@
 module KontrakcjaServer (defaultConf, 
                          runKontrakcjaServer, 
-                         runTest) where
+                         runTest,
+                         readAppConfig ) where
 
 import Control.Concurrent (forkIO, killThread)
 import Happstack.Util.Cron (cron)
