@@ -32,7 +32,6 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 import Util.StringUtil
-import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
 import Templates.LocalTemplates
@@ -113,6 +112,7 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxtemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+          threadDelay 5000
           enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates ctxtemplates $ sendClosedEmails ctx newdoc
@@ -1439,24 +1439,18 @@ handlePageOfDocument' documentid mtokens = do
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug $ "Uploading file for doc #" ++ show docid
-  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
-    Right document -> do
-        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
-        Log.debug $ title
-        files <- documentfilesM document
-        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
+    Right _document ->
         return ()
   return ()
 
 handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
-  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content1 docid
   file <- runDB $ dbUpdate $ NewFile filename content14
@@ -1465,11 +1459,7 @@ handleDocumentUploadNoLogin docid content1 filename = do
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
-    Right document -> do
-        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
-        Log.debug $ title
-        files <- documentfilesM document
-        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
+    Right _document -> do
         return ()
   return ()
 

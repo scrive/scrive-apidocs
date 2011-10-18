@@ -12,8 +12,6 @@
 module Doc.DocStorage
     ( getFileContents
     , getFileIDContents
-    , uploadDocumentFileToAmazon
-    , uploadDocumentFilesToTrustWeaver
     , maybeScheduleRendering
     , preprocessPDF
     , scaleForPreview
@@ -63,27 +61,12 @@ getFileIDContents ctx fid = do
     Nothing -> return BS.empty
 
 
-{- Upload document to Amazon -}
-uploadDocumentFileToAmazon :: (MonadIO m, DBMonad m) => FilePath
-                                 -> AWS.S3Action
-                                 -> DocumentID
-                                 -> FileID
-                                 -> m ()
-uploadDocumentFileToAmazon docstore ctxs3action _docid fileid1 = do
-  mfile <- runDB $ dbQuery $ GetFileByFileID fileid1
-  case mfile of
-    Just file -> do
-      AWS.uploadFile docstore ctxs3action file
-      return ()
-    _ -> return ()
-  return ()
-
 {- Upload document to TW-}
-uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf
+_uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf
                                  -> String
                                  -> DocumentID
                                  -> IO ()
-uploadDocumentFilesToTrustWeaver _ctxtwconf _twownername _documentid = do
+_uploadDocumentFilesToTrustWeaver _ctxtwconf _twownername _documentid = do
   error "uploadDocumentFilesToTrustWeaver is unimplemented"
 #if 0
   Just document <- query $ GetDocumentByDocumentID documentid
