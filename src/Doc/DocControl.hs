@@ -85,6 +85,13 @@ postDocumentChangeAction document@Document  { documentstatus
                                             }
                       olddocument@Document  { documentstatus = oldstatus }
                             msignalinkid
+    | documentstatus == Pending &&
+      (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) $ documentsignatorylinks document) &&
+      (not $ hasSigned $ getAuthorSigLink document) &&
+      (isSignatory $ getAuthorSigLink document) = do
+          ctx <- getContext
+          d <- guardRightM $ update $ PendingToAwaitingAuthor documentid (ctxtime ctx)
+          postDocumentChangeAction d olddocument msignalinkid
     | (documentstatus == Pending || 
        documentstatus == AwaitingAuthor) &&
       (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
@@ -683,97 +690,85 @@ handleIssueShowPost docid = withUserPost $ do
 handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
     Log.debug "handleIssueSign"
-    ctx@Context { ctxtime, ctxipnumber} <- getContext
+    ctx <- getContext
     -- unless (document `allowsIdentification` EmailIdentification) mzero | This need to be refactored | Breaks templates
-    mudoc <- updateDocument ctx document
-    case mudoc of
-        Right udoc-> do
-          mdocs <- splitUpDocument udoc
-          case mdocs of
-            Right docs -> do
-              mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
-              case (lefts mndocs, rights mndocs) of
-                ([], [d]) -> do
-                    addFlashM $ modalSendConfirmationView d
-                    return $ LinkIssueDoc (documentid d)
-                ([], ds) -> do
-                    if isJust $ ctxservice ctx
-                      then do
-                        --sessionid <- readCookieValue "sessionId"
-                        --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
-                        return $ LinkCSVLandPage (length ds)
-                      else do
-                      addFlashM $ flashMessageCSVSent $ length ds
-                      Log.debug (show $ map documenttype ds)
-                      case documenttype (head ds) of
-                        Signable Contract -> return $ LinkContracts
-                        Signable Offer    -> return $ LinkOffers                    
-                        Signable Order    -> return $ LinkOrders
-                        _                 -> return $ LinkUpload
-                _ -> mzero
-            Left link -> return link
-        Left _ -> mzero
+    udoc <- guardRightM $ updateDocument ctx document
+    mdocs <- splitUpDocument udoc
+    case mdocs of
+      Right docs -> do
+        mndocs <- mapM (forIndividual udoc) docs
+        case (lefts mndocs, rights mndocs) of
+          ([], [d]) -> do
+            addFlashM $ modalSendConfirmationView d
+            return $ LinkIssueDoc (documentid d)
+          ([], ds) -> do
+            if isJust $ ctxservice ctx
+              then do
+              --sessionid <- readCookieValue "sessionId"
+              --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+              return $ LinkCSVLandPage (length ds)
+              else do
+              addFlashM $ flashMessageCSVSent $ length ds
+              Log.debug (show $ map documenttype ds)
+              case documenttype (head ds) of
+                Signable Contract -> return $ LinkContracts
+                Signable Offer    -> return $ LinkOffers                    
+                Signable Order    -> return $ LinkOrders
+                _                 -> return $ LinkUpload
+          (ls, _) -> do
+            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" (map show ls)
+            mzero
+      Left link -> return link
     where
-      forIndividual ctxtime ctxipnumber udoc doc = do
+      forIndividual udoc doc = do
         mndoc <- authorSignDocument (documentid doc) Nothing
         case mndoc of
           Right newdocument -> do
-            markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
             postDocumentChangeAction newdocument udoc Nothing
             return ()
-          Left _ -> return ()
+          _ -> return ()
         return mndoc
 
 handleIssueSend :: Kontrakcja m => Document -> m KontraLink
 handleIssueSend document = do
     Log.debug "handleIssueSend"
-    ctx@Context { ctxtime, ctxipnumber} <- getContext
-    mudoc <- updateDocument ctx document
-    case mudoc of
-        Right udoc-> do
-          mdocs <- splitUpDocument udoc
-          case mdocs of
-            Right docs -> do
-              mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
-              case (lefts mndocs, rights mndocs) of
-                ([], [d]) -> do
-                    addFlashM $ modalSendConfirmationView d
-                    return $ LinkIssueDoc (documentid d)
-                ([], ds) -> do
-                    if isJust $ ctxservice ctx
-                      then do
-                      --sessionid <- readCookieValue "sessionId"
-                      --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
-                      return $ LinkCSVLandPage (length ds)
-                      else do
-                      addFlashM $ flashMessageCSVSent $ length ds
-                      Log.debug (show $ map documenttype ds)
-                      case documenttype (head ds) of
-                        Signable Contract -> return $ LinkContracts
-                        Signable Offer    -> return $ LinkOffers                  
-                        Signable Order    -> return $ LinkOrders 
-                        _ -> return $ LinkUpload
-                _ -> mzero
-            Left link -> return link
-        Left _ -> mzero
+    ctx <- getContext
+    udoc <- guardRightM $ updateDocument ctx document
+    mdocs <- splitUpDocument udoc
+    case mdocs of
+      Right docs -> do
+        mndocs <- mapM (forIndividual udoc) docs
+        case (lefts mndocs, rights mndocs) of
+          ([], [d]) -> do
+            addFlashM $ modalSendConfirmationView d
+            return $ LinkIssueDoc (documentid d)
+          ([], ds) -> do
+            if isJust $ ctxservice ctx
+              then do
+              --sessionid <- readCookieValue "sessionId"
+              --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+              return $ LinkCSVLandPage (length ds)
+              else do
+              addFlashM $ flashMessageCSVSent $ length ds
+              Log.debug (show $ map documenttype ds)
+              case documenttype (head ds) of
+                Signable Contract -> return $ LinkContracts
+                Signable Offer    -> return $ LinkOffers                  
+                Signable Order    -> return $ LinkOrders 
+                _ -> return $ LinkUpload
+          (ls, _) -> do
+            Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
+            mzero
+      Left link -> return link
     where
-      forIndividual ctxtime ctxipnumber udoc doc = do
-        mndoc <- update $ PreparationToPending (documentid doc) ctxtime
+      forIndividual udoc doc = do
+        mndoc <- authorSendDocument (documentid doc)
         case mndoc of
           Right newdocument -> do
-            markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
         return mndoc
-
-markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
-markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
-  mapM_ mark $ filter isAuthor documentsignatorylinks
-  where
-    mark SignatoryLink{signatorylinkid, signatorymagichash} = do
-      update $ MarkInvitationRead documentid signatorylinkid time
-      update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
 
 handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
@@ -782,6 +777,14 @@ handleIssueSaveAsTemplate document = do
   _ndoc <- guardRightM $ update $ TemplateFromDocument $ documentid udoc
   addFlashM flashDocumentTemplateSaved
   return $ LinkTemplates
+
+markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
+markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
+  mapM_ mark $ filter isAuthor documentsignatorylinks
+  where
+    mark SignatoryLink{signatorylinkid, signatorymagichash} = do
+      update $ MarkInvitationRead documentid signatorylinkid time
+      update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
