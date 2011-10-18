@@ -752,10 +752,12 @@ pageDocumentDesign ctx
        fieldM "step1text" $ getProcessText processstep1text
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "sendbuttontext" $ getProcessText processsendbuttontext
+       fieldM "signbuttontext" $ getProcessText processsignbuttontext
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
        fieldM "expirytext" $ getProcessText processexpirytext
+       
 
 documentRegionFields :: (Functor m, MonadIO m) => Document -> Fields m
 documentRegionFields document = do
