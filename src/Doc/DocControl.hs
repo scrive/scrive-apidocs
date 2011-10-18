@@ -20,7 +20,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocProcess
 import InputValidation
-import File.State
+import File.TransState
 import Kontra
 import KontraLink
 import ListUtil
@@ -85,8 +85,21 @@ postDocumentChangeAction document@Document  { documentstatus
                                             }
                       olddocument@Document  { documentstatus = oldstatus }
                             msignalinkid
+    | documentstatus == Pending &&
+      (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) $ documentsignatorylinks document) &&
+      (not $ hasSigned $ getAuthorSigLink document) &&
+      (isSignatory $ getAuthorSigLink document) = do
+          ctx <- getContext
+          d <- guardRightM $ update $ PendingToAwaitingAuthor documentid (ctxtime ctx)
+          postDocumentChangeAction d olddocument msignalinkid
+    | (documentstatus == Pending || 
+       documentstatus == AwaitingAuthor) &&
+      (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
+          ctx <- getContext
+          d <- guardRightM $ update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
+          postDocumentChangeAction d olddocument msignalinkid
     -- No status change ;
-    | documentstatus == oldstatus =
+    | documentstatus == oldstatus = do
         -- if sign order has changed, we need to send another invitations
         when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
             ctx <- getContext
@@ -111,9 +124,9 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
         _ <- addDocumentCloseStatEvents document
-        ctx@Context{ctxtemplates} <- getContext
+        ctx@Context{ctxtemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
-          enewdoc <- sealDocument ctx document
+          enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates ctxtemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
@@ -130,9 +143,9 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         _ <- addDocumentCloseStatEvents document          
-        ctx@Context{ctxtemplates} <- getContext
+        ctx@Context{ctxtemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
-          enewdoc <- sealDocument ctx document
+          enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates ctxtemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> do
@@ -314,6 +327,8 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
+  _ <- update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
+  return ()
 
 {- |
     Send a reminder email
@@ -366,7 +381,7 @@ makeMailAttachments ctx document = do
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
-  allfiles <- liftM catMaybes $ mapM (query . GetFileByFileID) allfiles'
+  allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
   let
       filenames = map filename allfiles
   filecontents <- sequence $ map (getFileContents ctx) allfiles
@@ -451,9 +466,8 @@ signDocument documentid
   fieldnames <- getAndConcat "fieldname"
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zip fieldnames fieldvalues
-      
-  edoc <- signDocumentWithEmail documentid signatorylinkid1 magichash1 fields
   
+  edoc <- signDocumentWithEmail documentid signatorylinkid1 magichash1 fields
   case edoc of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
@@ -676,97 +690,85 @@ handleIssueShowPost docid = withUserPost $ do
 handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
     Log.debug "handleIssueSign"
-    ctx@Context { ctxtime, ctxipnumber} <- getContext
+    ctx <- getContext
     -- unless (document `allowsIdentification` EmailIdentification) mzero | This need to be refactored | Breaks templates
-    mudoc <- updateDocument ctx document
-    case mudoc of
-        Right udoc-> do
-          mdocs <- splitUpDocument udoc
-          case mdocs of
-            Right docs -> do
-              mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
-              case (lefts mndocs, rights mndocs) of
-                ([], [d]) -> do
-                    addFlashM $ modalSendConfirmationView d
-                    return $ LinkIssueDoc (documentid d)
-                ([], ds) -> do
-                    if isJust $ ctxservice ctx
-                      then do
-                        --sessionid <- readCookieValue "sessionId"
-                        --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
-                        return $ LinkCSVLandPage (length ds)
-                      else do
-                      addFlashM $ flashMessageCSVSent $ length ds
-                      Log.debug (show $ map documenttype ds)
-                      case documenttype (head ds) of
-                        Signable Contract -> return $ LinkContracts
-                        Signable Offer    -> return $ LinkOffers                    
-                        Signable Order    -> return $ LinkOrders
-                        _                 -> return $ LinkUpload
-                _ -> mzero
-            Left link -> return link
-        Left _ -> mzero
+    udoc <- guardRightM $ updateDocument ctx document
+    mdocs <- splitUpDocument udoc
+    case mdocs of
+      Right docs -> do
+        mndocs <- mapM (forIndividual udoc) docs
+        case (lefts mndocs, rights mndocs) of
+          ([], [d]) -> do
+            addFlashM $ modalSendConfirmationView d
+            return $ LinkIssueDoc (documentid d)
+          ([], ds) -> do
+            if isJust $ ctxservice ctx
+              then do
+              --sessionid <- readCookieValue "sessionId"
+              --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+              return $ LinkCSVLandPage (length ds)
+              else do
+              addFlashM $ flashMessageCSVSent $ length ds
+              Log.debug (show $ map documenttype ds)
+              case documenttype (head ds) of
+                Signable Contract -> return $ LinkContracts
+                Signable Offer    -> return $ LinkOffers                    
+                Signable Order    -> return $ LinkOrders
+                _                 -> return $ LinkUpload
+          (ls, _) -> do
+            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" (map show ls)
+            mzero
+      Left link -> return link
     where
-      forIndividual ctxtime ctxipnumber udoc doc = do
+      forIndividual udoc doc = do
         mndoc <- authorSignDocument (documentid doc) Nothing
         case mndoc of
           Right newdocument -> do
-            markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
             postDocumentChangeAction newdocument udoc Nothing
             return ()
-          Left _ -> return ()
+          _ -> return ()
         return mndoc
 
 handleIssueSend :: Kontrakcja m => Document -> m KontraLink
 handleIssueSend document = do
     Log.debug "handleIssueSend"
-    ctx@Context { ctxtime, ctxipnumber} <- getContext
-    mudoc <- updateDocument ctx document
-    case mudoc of
-        Right udoc-> do
-          mdocs <- splitUpDocument udoc
-          case mdocs of
-            Right docs -> do
-              mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
-              case (lefts mndocs, rights mndocs) of
-                ([], [d]) -> do
-                    addFlashM $ modalSendConfirmationView d
-                    return $ LinkIssueDoc (documentid d)
-                ([], ds) -> do
-                    if isJust $ ctxservice ctx
-                      then do
-                      --sessionid <- readCookieValue "sessionId"
-                      --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
-                      return $ LinkCSVLandPage (length ds)
-                      else do
-                      addFlashM $ flashMessageCSVSent $ length ds
-                      Log.debug (show $ map documenttype ds)
-                      case documenttype (head ds) of
-                        Signable Contract -> return $ LinkContracts
-                        Signable Offer    -> return $ LinkOffers                  
-                        Signable Order    -> return $ LinkOrders 
-                        _ -> return $ LinkUpload
-                _ -> mzero
-            Left link -> return link
-        Left _ -> mzero
+    ctx <- getContext
+    udoc <- guardRightM $ updateDocument ctx document
+    mdocs <- splitUpDocument udoc
+    case mdocs of
+      Right docs -> do
+        mndocs <- mapM (forIndividual udoc) docs
+        case (lefts mndocs, rights mndocs) of
+          ([], [d]) -> do
+            addFlashM $ modalSendConfirmationView d
+            return $ LinkIssueDoc (documentid d)
+          ([], ds) -> do
+            if isJust $ ctxservice ctx
+              then do
+              --sessionid <- readCookieValue "sessionId"
+              --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
+              return $ LinkCSVLandPage (length ds)
+              else do
+              addFlashM $ flashMessageCSVSent $ length ds
+              Log.debug (show $ map documenttype ds)
+              case documenttype (head ds) of
+                Signable Contract -> return $ LinkContracts
+                Signable Offer    -> return $ LinkOffers                  
+                Signable Order    -> return $ LinkOrders 
+                _ -> return $ LinkUpload
+          (ls, _) -> do
+            Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
+            mzero
+      Left link -> return link
     where
-      forIndividual ctxtime ctxipnumber udoc doc = do
-        mndoc <- authorSendDocument (documentid doc) Nothing
+      forIndividual udoc doc = do
+        mndoc <- authorSendDocument (documentid doc)
         case mndoc of
           Right newdocument -> do
-            markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
         return mndoc
-
-markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
-markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
-  mapM_ mark $ filter isAuthor documentsignatorylinks
-  where
-    mark SignatoryLink{signatorylinkid, signatorymagichash} = do
-      update $ MarkInvitationRead documentid signatorylinkid time
-      update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
 
 handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
@@ -775,6 +777,14 @@ handleIssueSaveAsTemplate document = do
   _ndoc <- guardRightM $ update $ TemplateFromDocument $ documentid udoc
   addFlashM flashDocumentTemplateSaved
   return $ LinkTemplates
+
+markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
+markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
+  mapM_ mark $ filter isAuthor documentsignatorylinks
+  where
+    mark SignatoryLink{signatorylinkid, signatorymagichash} = do
+      update $ MarkInvitationRead documentid signatorylinkid time
+      update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
 
 -- TODO | I belive this is dead. Some time ago if you were editing template you could create contract from it.
 --        But this probably is gone now.
@@ -1439,34 +1449,37 @@ handlePageOfDocument' documentid mtokens = do
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug $ "Uploading file for doc #" ++ show docid
-  Context{ctxdocstore, ctxs3action} <- getContext
+  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
-        Log.debug $ "Uploaded file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
+        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
+        Log.debug $ title
         files <- documentfilesM document
-        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
+        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
         return ()
   return ()
 
 handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
-  Context{ctxdocstore, ctxs3action} <- getContext
+  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content1 docid
-  file <- update $ NewFile filename content14
+  file <- runDB $ dbUpdate $ NewFile filename content14
   fileresult <- update (AttachFile docid (fileid file))
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
     Right document -> do
+        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
+        Log.debug $ title
         files <- documentfilesM document
-        _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files
+        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
         return ()
   return ()
 
@@ -1916,7 +1929,7 @@ handleFixDocument docid = onlySuperUser $ do
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
                     then do
-                        _ <- liftIO $ sealDocument ctx doc
+                        _ <- liftIO $ runReaderT (sealDocument ctx doc) (ctxdbconn ctx)
                         return LoopBack
                     else return LoopBack
 
@@ -1951,7 +1964,7 @@ handleSigAttach docid siglinkid mh = do
   -- we use gs to do that of course
   ctx <- getContext
   content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
-  file <- update $ NewFile attachname content
+  file <- runDB $ dbUpdate $ NewFile attachname content
   _ <- update $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc doc siglink
 

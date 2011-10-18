@@ -47,11 +47,15 @@ class (Functor m, MonadIO m) => DBMonad m where
   -- 'fail'.
   handleDBError :: DBException -> m a
 
+instance (Monad m, Functor m, MonadIO m) => DBMonad (ReaderT Connection m) where
+  getConnection = ask
+  handleDBError e = error $ "instance (Monad m) => DBMonad (ReaderT Connection m) lacks handleDBError " ++ show e
+
 -- | Wrapper for calling db related functions in controlled environment
 -- (DB/unDB is not exposed so functions may enter DB wrapper, but they
 -- can't escape it in any other way than by runDB function).
 newtype DB a = DB { unDB :: ReaderT Connection IO a }
-  deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
+  deriving (Applicative, Functor, Monad, MonadPlus, MonadIO, DBMonad)
 
 -- | Wraps IO action in DB
 wrapDB :: (Connection -> IO a) -> DB a

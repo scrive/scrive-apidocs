@@ -813,10 +813,14 @@ handleLoginPost = do
             -- check the user things here
             maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
-                Just User{userpassword}
+                Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
-                        logUserToContext maybeuser
+                        _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+                          locale = ctxuserlocale ctx
+                        }
+                        muuser <- runDBQuery $ GetUserByID (userid user)
+                        logUserToContext muuser
                         return BackToReferer
                 Just _ -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"

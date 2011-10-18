@@ -55,7 +55,7 @@ import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
-import File.State
+import File.TransState
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (integration)
@@ -205,7 +205,7 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
     when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match"
     let doc = fromRight mdoc
     let addAndAttachFile name content = do
-            file <- update $ NewFile name content
+            file <- runDB $ dbUpdate $ NewFile name content
             update $ AttachFile (documentid doc) (fileid file)
     mapM_ (uncurry addAndAttachFile) files
     _ <- update $ SetDocumentTags (documentid doc) tags
