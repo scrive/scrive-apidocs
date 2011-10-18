@@ -31,6 +31,7 @@ import Util.HasSomeUserInfo
 import Mails.SendGridEvents
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
+import Control.Monad.Trans
 
 mailsTests :: Connection -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
@@ -38,19 +39,35 @@ mailsTests conn params  = testGroup "Mails" [
     testCase "User emails" $ testUserMails conn (toMailAddress params)
     ]
 
+gRight :: (Show a, MonadIO m) => m (Either a b) -> m b
+gRight ac = do
+  r <- ac
+  case r of
+    Left m -> do
+      assertFailure (show m)
+      return undefined
+    Right d -> return d
+      
+
 testDocumentMails  :: Connection -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   forM_ allValues $ \l ->   
     forM_ [Contract,Offer,Order] $ \doctype -> do
-        (Right d) <- randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
+        d <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
         let docid = documentid d 
-        let authordetails = signatorydetails $ head $ documentsignatorylinks d
+        let asl = head $ documentsignatorylinks d
+        let authordetails = signatorydetails asl
+        _ <- gRight $ randomUpdate $ AttachFile docid
+
         isl <- rand 10 arbitrary
         now <- getMinutesTime
-        _ <- randomUpdate $ UpdateDocumentSimple docid (authordetails,author) [isl]
-        (Right doc) <- randomUpdate $ \ip -> AuthorSignDocument docid now ip Nothing         
+        _ <- gRight $ randomUpdate $ UpdateDocumentSimple docid (authordetails,author) [isl]
+        d2 <- gRight $ randomUpdate $ PreparationToPending docid now
+        let asl2 = head $ documentsignatorylinks d2
+        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
+        doc <- gRight $ randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) now
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         ctx <- mailingContext l conn
         req <- mkRequest POST []
@@ -74,7 +91,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         when (doctype == Contract) $ do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
         -- Virtual signing 
-        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl)  (10 `minutesAfter` now) ip Nothing []
+        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) (10 `minutesAfter` now) ip Nothing
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc

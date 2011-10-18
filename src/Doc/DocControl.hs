@@ -85,6 +85,12 @@ postDocumentChangeAction document@Document  { documentstatus
                                             }
                       olddocument@Document  { documentstatus = oldstatus }
                             msignalinkid
+    | (documentstatus == Pending || 
+       documentstatus == AwaitingAuthor) &&
+      (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
+          ctx <- getContext
+          d <- guardRightM $ update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
+          postDocumentChangeAction d olddocument msignalinkid
     -- No status change ;
     | documentstatus == oldstatus = do
         -- if sign order has changed, we need to send another invitations
@@ -92,10 +98,6 @@ postDocumentChangeAction document@Document  { documentstatus
             ctx <- getContext
             Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
             sendInvitationEmails ctx document
-        when (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) $ do
-          ctx <- getContext
-          d <- guardRightM $ update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
-          postDocumentChangeAction d olddocument msignalinkid
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do 

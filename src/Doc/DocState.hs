@@ -568,7 +568,7 @@ timeoutDocument documentid time = do
 
 checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
 checkSignDocument doc slid mh = catMaybes $
-  [trueOrMessage (isPending doc) "Document is not in pending",
+  [trueOrMessage (isPending doc || isAwaitingAuthor doc) "Document is not in pending",
    trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed",
    trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen",
    trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist",
@@ -603,7 +603,8 @@ signDocument documentid slid mh time ipnumber msiginfo = do
 checkUpdateFields :: Document -> SignatoryLinkID -> [String]
 checkUpdateFields doc slid = catMaybes $ 
   [trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")",
-   trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"]
+   trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist",
+   trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."] 
 
 updateFields :: DocumentID -> 
                 SignatoryLinkID -> 
