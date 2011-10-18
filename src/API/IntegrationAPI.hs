@@ -280,7 +280,7 @@ getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
     doc <- documentFromParam
     api_doc <- api_document True doc
-    return $ toJSObject [("document",api_doc)]
+    return $ toJSObject [("document", api_doc)]
 
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
