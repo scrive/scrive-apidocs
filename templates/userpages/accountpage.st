@@ -139,30 +139,30 @@ modalCreateCompany=
             <p>
             $_createCompanyFormPreamble()$
             </p>
-            <div class="account-body">
-              <table>
-                <tr>
-                    <td>$_company()$:</td>
-                    <td><input type="text" name="companyname" value="$companyname$" autocomplete="off"/></td>
-                </tr>
-                <tr>
-                    <td>$_firstname()$:</td>
-                    <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
-                </tr>
-                <tr>
-                    <td>$_lastname()$:</td>
-                    <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
-                </tr>
-                <tr>
-                    <td>$_phone()$:</td>
-                    <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
-                </tr>
-                <tr>
-                    <td>$_companyposition()$:</td>
-                    <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
-                </tr>
-              </table>
-            </div>
+          </div>
+          <div class="account-body">
+            <table>
+              <tr>
+                  <td>$_company()$:</td>
+                  <td><input type="text" name="companyname" value="$companyname$" autocomplete="off"/></td>
+              </tr>
+              <tr>
+                  <td>$_firstname()$:</td>
+                  <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+              </tr>
+              <tr>
+                  <td>$_lastname()$:</td>
+                  <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+              </tr>
+              <tr>
+                  <td>$_phone()$:</td>
+                  <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
+              </tr>
+              <tr>
+                  <td>$_companyposition()$:</td>
+                  <td style="height:30px;width:210px;"><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>
@@ -170,7 +170,7 @@ modalCreateCompany=
         <a class="cancel close float-left" style="height:40px;">
           <div class="label">$_cancel()$</div>
         </a>
-        <a class="btn-small green float-right submiter" href="#">
+        <a class="btn-small green float-right submit" href="#">
           <div class="left"></div>
           <div class="label"><p>$_createCompany()$</p></div>
           <div class="right"></div>
