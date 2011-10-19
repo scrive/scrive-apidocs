@@ -672,6 +672,7 @@ appHandler appConf appGlobals = do
                 , ctxadminaccounts = admins appConf
                 , ctxdoclocale = doclocale
                 , ctxuserlocale = userlocale
+                , ctxdbconnstring = dbConfig appConf
                 }
       return ctx
 

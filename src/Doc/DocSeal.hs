@@ -39,6 +39,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.TransState
 import DB.Classes
+import Database.HDBC.PostgreSQL
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -232,7 +233,7 @@ sealDocumentFile :: (MonadIO m, DBMonad m)
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -268,7 +269,10 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn}
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              File{fileid = sealedfileid} <- ioRunDB ctxdbconn $ dbUpdate $ NewFile filename newfilepdf
+     
+              File{fileid = sealedfileid} <- 
+                  withPostgreSQL (ctxdbconnstring ctx) $ \conn -> 
+                      ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
               res <- update $ AttachSealedFile documentid sealedfileid
               return res
       ExitFailure _ ->
