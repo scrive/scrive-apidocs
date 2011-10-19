@@ -6,9 +6,12 @@ module AppControl
     , appHandler
     , AppGlobals(..)
     , defaultAWSAction
+
+    -- exported for the sake of unit tests
     , handleLoginPost
     , getDocumentLocale
     , getUserLocale
+    , signupPagePost
     ) where
 
 import AppConf
@@ -109,10 +112,10 @@ data AppGlobals
    the function for any given path and method.
 -}
 handleRoutes :: Locale -> Kontra Response
-handleRoutes locale = msum $ 
+handleRoutes locale = msum $
      [ regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
      , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome locale
-     
+
      , publicDir locale "priser" "pricing" LinkPriceplan handlePriceplanPage
      , publicDir locale "sakerhet" "security" LinkSecurity handleSecurityPage
      , publicDir locale "juridik" "legal" LinkLegal handleLegalPage
@@ -128,13 +131,13 @@ handleRoutes locale = msum $
 
      -- this is SMTP to HTTP gateway
      , mailAPI
-     ] 
+     ]
   ++ Elegitimation.handleRoutes
   ++ [ dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
-     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  This will be droped 
-     
-     
+     , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  This will be droped
+
+
      , dir "s" $ param "sign"           $ hPostNoXToken3 $ toK3 $ DocControl.signDocument
      , dir "s" $ param "cancel"         $ hPostNoXToken3 $ toK3 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken5 $ toK5 $ DocControl.handleAcceptAccountFromSign
@@ -170,16 +173,16 @@ handleRoutes locale = msum $
      , dir "or" $ hGet0  $ toK0 $ ArchiveControl.showOrdersList
      , dir "or" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
-     
+
      , dir "r" $ hGet0 $ toK0 $ ArchiveControl.showRubbishBinList
      , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
 
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor -- This will be droped and unified to one below
-     
+
      , dir "d"                     $ hGet3  $ toK3 $ DocControl.handleDownloadFileLogged -- This + magic hash version will be the only file download possible
-     , dir "d"                     $ hGet5 $ toK5 $ DocControl.handleDownloadFileNotLogged 
-     
+     , dir "d"                     $ hGet5 $ toK5 $ DocControl.handleDownloadFileNotLogged
+
      , dir "d"                     $ hGet0  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet1  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleIssueShowTitleGet
@@ -190,7 +193,7 @@ handleRoutes locale = msum $
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
      , dir "doc"                   $ hGet1  $ toK1 $ DocControl.jsonDocument
-     , dir "mailpreview"           $ hGet2  $ toK2 $ DocControl.prepareEmailPreview 
+     , dir "mailpreview"           $ hGet2  $ toK2 $ DocControl.prepareEmailPreview
 
      , dir "friends"               $ hGet0  $ toK0 $ UserControl.handleFriends
      , dir "companyaccounts"       $ hGet0  $ toK0 $ UserControl.handleCompanyAccounts
@@ -216,7 +219,7 @@ handleRoutes locale = msum $
      , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages
      , dir "pagesofdoc" $ hGetAjax1 $ toK1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax3 $ toK3 $ DocControl.handlePageOfDocumentForSignatory
-       
+
      , dir "csvlandpage" $ hGet1 $ toK1 $ DocControl.handleCSVLandpage
 
      -- UserControl
@@ -258,10 +261,10 @@ handleRoutes locale = msum $
      , dir "adminonly" $ dir "functionalitystats" $ hGet0 $ toK0 $ Administration.showFunctionalityStats
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-     
+
      , dir "adminonly" $ dir "allstatscsv" $ Stats.handleDocStatsCSV
      , dir "adminonly" $ dir "userstatscsv" $ Stats.handleUserStatsCSV
-       
+
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet0 $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet0 $ toK0 $ Stats.handleMigrate1To2
 
@@ -285,7 +288,7 @@ handleRoutes locale = msum $
      , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
 
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
-       
+
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "adminonly" $ dir "backdoor" $ hGet1 $ toK1 $ Administration.handleBackdoorQuery
@@ -304,13 +307,13 @@ handleRoutes locale = msum $
      , dir "services" $ dir "logo" $ hGet1 $ toK1 $ handleServiceLogo
      , dir "services" $ dir "buttons_body" $ hGet1 $ toK1 $ handleServiceButtonsBody
      , dir "services" $ dir "buttons_rest" $ hGet1 $ toK1 $ handleServiceButtonsRest
-       
+
      -- never ever use this
-     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
-       
+     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly
+
      , dir "adminonly" $ dir "log" $ onlySuperUser $ hGet1 $ toK1 $ serveLogDirectory
 
-  
+
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
      , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
      , dir "dave" $ dir "company"  $ hGet1 $ toK1 $ daveCompany
@@ -334,10 +337,10 @@ handleRoutes locale = msum $
      -- viral invite
      , dir "invite"      $ hPostNoXToken0 $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp0 $ toK0 $ UserControl.handleQuestion
-       
+
      -- a general purpose blank page
      --, dir "/blank" $ hGet0 $ toK0 $ simpleResponse ""
-       
+
      , userAPI
      , integrationAPI
      -- static files
@@ -352,10 +355,10 @@ publicDir :: Locale -> String -> String -> (Locale -> KontraLink) -> Kontra Resp
 publicDir locale swedish english link handler = msum [
     -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
     regionDir locale $ langDir locale $ dirByLang locale swedish english $ hGetAllowHttp0 $ handler
-    
+
     -- if they use the swedish name without region/lang we should redirect to the correct swedish locale
   , dir swedish $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_SE)
-  
+
     -- if they use the english name without region/lang we should redirect to the correct british locale
   , dir english $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
   ]
@@ -872,7 +875,7 @@ daveUser :: Kontrakcja m => UserID -> m Response
 daveUser userid = onlySuperUserGet $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
-    
+
 {- |
     Used by super users to inspect a company in xml.
 -}

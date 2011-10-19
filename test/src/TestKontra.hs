@@ -97,14 +97,16 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
     runTestKontra rq ctx tk = do
-        (mres, (ctx', _)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
+        let noflashctx = ctx{ctxflashmessages=[]}
+        (mres, (ctx', _)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (noflashctx, id)
         case mres of
              Right res -> return (res, ctx')
              Left  _   -> error "finishWith called in function that doesn't return Response"
 
 instance RunnableTestKontra Response where
     runTestKontra rq ctx tk = do
-        (mres, (ctx', f)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (ctx, id)
+        let noflashctx = ctx{ctxflashmessages=[]}
+        (mres, (ctx', f)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (noflashctx, id)
         case mres of
              Right res -> return (f res, ctx')
              Left  res -> return (f res, ctx')

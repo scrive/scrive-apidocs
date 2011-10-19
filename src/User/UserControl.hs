@@ -671,7 +671,8 @@ handleAccountSetupGet aid hash = do
       Nothing -> getUserByEmail
   case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
     (True, _) -> do
-      addFlashM flashMessageUserAlreadyActivated
+      -- seems like a security risk.  you can just feed random numbers with emails in the get param
+      -- and work out who has an account or not
       sendRedirect LinkUpload
     (False, Just _action) -> do
       extendActionEvalTimeToOneDayMinimum aid
@@ -679,7 +680,8 @@ handleAccountSetupGet aid hash = do
       ctx <- getContext
       sendRedirect $ LinkHome (getLocale ctx)
     (False, Nothing) -> do
-      content <- activatePageViewNotValidLink "" --TODO EM - really should make this nicer
+      -- this is a very disgusting page.  i didn't even know it existed
+      content <- activatePageViewNotValidLink ""
       renderFromBody TopNone kontrakcja content
   where
     -- looks up the user using the value in the optional email param
@@ -718,7 +720,10 @@ handleAccountSetupPost aid hash = do
           mactivateduser <- handleActivate aid hash signupmethod user
           when (isJust mactivateduser) $ do
               addFlashM flashMessageUserActivated
-              -- addFlashM modalWelcomeToSkrivaPa --TODO do we want this instead, if not we should delete
+              --do we want this instead? it was in the code, but never called
+              -- before i refactored this a bit.  if not we should delete the function
+              -- properly.
+              -- addFlashM modalWelcomeToSkrivaPa
               return ()
           return ()
       getHomeOrUploadLink
