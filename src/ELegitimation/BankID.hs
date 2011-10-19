@@ -192,19 +192,26 @@ handleSignPostBankID docid signid magic = do
                                                     , signaturepersnumverified = bpn
                                                     }
                         fields = zip fieldnames fieldvalues
-                    newdocument <- update $ SignDocument docid
-                                                signid
-                                                ctxtime
-                                                ctxipnumber
-                                                (Just signinfo)
-                                                fields
-                    case newdocument of
-                        -- signature failed
-                        Left message -> do
+                    ed1 <- update $ UpdateFields docid signid fields
+                    case ed1 of 
+                      Left m -> do
+                        Log.eleg $ "SignDocument failed: " ++ m
+                        addFlash (OperationFailed, m)
+                        getHomeOrUploadLink -- where should we go?
+                      Right _ -> do
+                        newdocument <- update $ SignDocument docid signid
+                                         magic
+                                         ctxtime
+                                         ctxipnumber
+                                         (Just signinfo)
+
+                        case newdocument of
+                          -- signature failed
+                          Left message -> do
                             Log.eleg $ "SignDocument failed: " ++ message
                             addFlash (OperationFailed, message)
                             getHomeOrUploadLink -- where should we go?
-                        Right document2 -> do
+                          Right document2 -> do
                             postDocumentChangeAction document2 document (Just signid)
                             handleAfterSigning document2 signid
 
@@ -343,6 +350,7 @@ handleIssuePostBankID docid = withUserPost $ do
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
                             Log.eleg "author merge succeeded. (details omitted)"
+                            let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink document
                             let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                             , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
@@ -353,13 +361,14 @@ handleIssuePostBankID docid = withUserPost $ do
                                                             }
                                 signInd d = do
                                     mndoc <- case documentstatus document of
-                                                Preparation -> update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber $ Just signinfo
-                                                AwaitingAuthor -> do
-                                                    ed <- update $ CloseDocument (documentid d) ctxtime ctxipnumber $ Just signinfo
-                                                    case ed of
-                                                        Nothing -> return $ Left "could not close document"
-                                                        Just d2 -> return $ Right d2
-                                                _ -> do {Log.debug "should not have other status" ; mzero}
+                                      Preparation -> do 
+                                        r1 <- update $ PreparationToPending (documentid d) ctxtime
+                                        case r1 of
+                                          Left m -> return $ Left m
+                                          Right _ -> update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
+                                      AwaitingAuthor -> do
+                                        update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
+                                      _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
                                         Left msg -> do
                                             Log.eleg $ "AuthorSignDocument failed: " ++ msg

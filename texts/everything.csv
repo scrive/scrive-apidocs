@@ -552,7 +552,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_contractsignatorysignmodalcontentlast","När du undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodalcontentnotlast","När du och <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you and  <span class='unsignedpartynotcurrent'/> signed the contract will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodaltitle","Är du säker att du vill underteckna?",,"Are you sure you want to sign?"
-"_contractsignbuttontext","$ourServiceName()$",,"$ourServiceName()$"
+"_contractsignbuttontext","Signera",,"Sign"
 "_contractsignedinfoheader","Färdigställt",,"Finished"
 "_contractsignedinfotext","Samtliga parter har undertecknat dokumentet.",,"All parties have signed the document."
 "_contractsignguardwarntext","För att underteckna måste du först klicka i kryssrutan",,"You must fill in the check box to be able to sign."

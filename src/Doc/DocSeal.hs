@@ -9,7 +9,6 @@
 -----------------------------------------------------------------------------
 module Doc.DocSeal(sealDocument) where
 
-import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
 import Data.List
@@ -39,7 +38,9 @@ import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import File.State
+import File.TransState
+import DB.Classes
+import ForkAction
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -200,11 +201,11 @@ sealSpecFromDocument hostpart document inputpath outputpath =
             , Seal.staticTexts    = readtexts
             }
 
-sealDocument :: MonadIO m
+sealDocument :: (MonadIO m, DBMonad m)
              => Context
              -> Document
              -> m (Either String Document)
-sealDocument ctx@Context{ctxdocstore, ctxs3action}
+sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxdbconn}
              document = do
   files <- documentfilesM document
   Log.debug $ "Sealing document"
@@ -213,9 +214,8 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action}
   Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
   Log.debug $ "Reselecting document after update - time for upload to amazon"
   sealedfiles <- documentsealedfilesM newdocument 
-  _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) sealedfiles
+  _ <- liftIO $ forkActionIO "sealing document" $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) sealedfiles) ctxdbconn
   Log.debug $ "Upload to amazon is done"
-  Log.debug $ show newdocument
   return $ Right newdocument
 
 
@@ -234,12 +234,12 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action}
  -}
 
 
-sealDocumentFile :: MonadIO m
+sealDocumentFile :: (MonadIO m, DBMonad m)
                  => Context
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -279,7 +279,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              File{fileid = sealedfileid} <- update $ NewFile filename newfilepdf
+              File{fileid = sealedfileid} <- ioRunDB ctxdbconn $ dbUpdate $ NewFile filename newfilepdf
               res <- update $ AttachSealedFile documentid sealedfileid
               return res
       ExitFailure _ ->
