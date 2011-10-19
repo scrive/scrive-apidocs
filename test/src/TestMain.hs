@@ -45,6 +45,9 @@ import LoginTest
 #ifndef NO_SIGNUP
 import SignupTest
 #endif
+#ifndef NO_ACCOUNTINFO
+import AccountInfoTest
+#endif
 #ifndef NO_MAILAPI
 import MailAPITest
 #endif
@@ -107,6 +110,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_SIGNUP
       , ("signup", const $ signupTests conn)
+#endif
+#ifndef NO_ACCOUNTINFO
+     , ("accountinfo", const $ accountInfoTests conn)
 #endif
 #ifndef NO_MAILAPI
       , ("mailapi", const $ mailApiTests conn)

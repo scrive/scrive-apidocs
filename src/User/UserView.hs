@@ -89,11 +89,12 @@ import Util.HasSomeUserInfo
 import User.Model
 import Data.List
 
-showUser :: TemplatesMonad m => User -> Maybe Company -> m String
-showUser user mcompany = renderTemplateFM "showUser" $ do
+showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
+showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
     userFields user
     companyFields mcompany
-    field "linkaccount" $ show LinkAccount
+    field "createcompany" $ createcompany
+    field "linkaccount" $ show (LinkAccount False)
 
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mcompany = do

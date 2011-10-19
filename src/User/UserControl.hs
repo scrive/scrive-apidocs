@@ -50,16 +50,17 @@ checkPasswordsMatch p1 p2 =
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
     ctx <- getContext
+    createcompany <- isFieldSet "createcompany"  --we could dump this stupid flag if we improved javascript validation
     case (ctxmaybeuser ctx) of
          Just user -> do
            mcompany <- getCompanyForUser user
-           showUser user mcompany >>= renderFromBody TopAccount kontrakcja
+           showUser user mcompany createcompany >>= renderFromBody TopAccount kontrakcja
          Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
   guardLoggedIn
-  (upgraded, user) <- maybeUpgradeToCompanyAdmin
+  (user, mendflash, link) <- maybeUpgradeToCompanyAdmin
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
   mcompany <- getCompanyForUser user
@@ -69,29 +70,36 @@ handleUserPost = do
       _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
       return ()
     _ -> return ()
-  if upgraded
-    then addFlashM flashMessageCompanyCreated
-    else addFlashM flashMessageUserDetailsSaved
-  return LinkAccount
+  case mendflash of
+    Just endflash -> addFlashM endflash
+    _ -> return ()
+  return link
   where
+    -- this stuff would be far cleaner if we did all the validation on the client
+    -- and just failed if there were a problem with it on the server, rather
+    -- than make an effort to handle it elegantly
     maybeUpgradeToCompanyAdmin = do
       user <- guardJustM $ ctxmaybeuser <$> getContext
       mcompany <- getCompanyForUser user
       createcompany <- isFieldSet "createcompany"
       if isNothing mcompany && createcompany
         then do
+          -- they've submitted the modal so
           -- check all the required fields have been filled in okay
-          _ <- guardJustM $ getRequiredField asValidCompanyName "companyname"
-          _ <- guardJustM $ getRequiredField asValidName "fstname"
-          _ <- guardJustM $ getRequiredField asValidName "sndname"
-          _ <- guardJustM $ getRequiredField asValidPosition "companyposition"
-          _ <- guardJustM $ getRequiredField (Good . BS.fromString) "phone"
-          company <- runDBUpdate $ CreateCompany Nothing Nothing
-          _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-          _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
-          upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
-          return (True, upgradeduser)
-        else return (False, user)
+          mcname <- getRequiredField asValidCompanyName "companyname"
+          mfstname <- getRequiredField asValidName "fstname"
+          msndname <- getRequiredField asValidName "sndname"
+          mposition <- getRequiredField asValidPosition "companyposition"
+          mphone <- getRequiredField asValidPhone "phone"
+          case (mcname, mfstname, msndname, mposition, mphone) of
+            (Just _, Just _, Just _, Just _, Just _) -> do
+              company <- runDBUpdate $ CreateCompany Nothing Nothing
+              _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+              _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
+              upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+              return (upgradeduser, Just flashMessageCompanyCreated, LinkAccount False)
+            _ -> return (user, Nothing, LinkAccount True)
+        else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -637,7 +645,7 @@ handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
   addFlashM modalDoYouWantToBeCompanyAccount
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
-  content <- showUser user mcompany
+  content <- showUser user mcompany False
   renderFromBody TopAccount kontrakcja content
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => UserID -> m KontraLink
@@ -657,8 +665,8 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
               let msg = "Cannot become company account"
               Log.debug msg
               addFlash (OperationFailed, msg)
-          return LinkAccount
-     _ -> return LinkAccount
+          return $ LinkAccount False
+     _ -> return $ LinkAccount False
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do

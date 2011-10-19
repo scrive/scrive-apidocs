@@ -64,7 +64,7 @@ data KontraLink
     | LinkAttachments
     | LinkRubbishBin
     | LinkNew (Maybe DocumentProcess) Bool
-    | LinkAccount
+    | LinkAccount Bool -- show create company modal?
     | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkLandpageSaved Document SignatoryLink
@@ -163,7 +163,8 @@ instance Show KontraLink where
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
     showsPrec _ (LinkNew mdocprocess templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess)
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
-    showsPrec _ LinkAccount = (++) "/account"
+    showsPrec _ (LinkAccount False) = (++) "/account"
+    showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkAccountSecurity = (++) "/account/security"

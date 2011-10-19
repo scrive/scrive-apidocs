@@ -95,7 +95,7 @@ showUser =
             $endif$
             <div class="account-footer">
                   $if(!iscompanyaccount)$
-                  <a href="#" rel="#dialog-create-company" id="createcompany" class="btn-small green">
+                  <a href="#" rel="#dialog-create-company" id="createcompany" class="btn-small green $if(createcompany)$loadbydefault$endif$">
                     <div class="left"></div>
                     <div class="label">
                         <p>$_createCompany()$</p>
@@ -116,12 +116,10 @@ showUser =
         </div>
     </div>
   </form>
-  $if(!iscompanyaccount)$
-  $createCompanyDialog()$
-  $endif$
+  $modalCreateCompany()$
 </div>
 ####
-$createCompanyDialog=
+modalCreateCompany=
   <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-create-company" rel=".accountForm">
     <input type="hidden" name="createcompany" value="true" />
     <div class="modal-container">

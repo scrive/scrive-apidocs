@@ -809,10 +809,13 @@ safeReady(function() {
 });
 
 safeReady(function() {
+    var loadByDefault = $("#createcompany").hasClass("loadbydefault");
+
     $("#createcompany").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,
-        fixed:false
+        fixed:false,
+        load: loadByDefault
     });
 });
 
