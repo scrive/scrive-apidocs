@@ -9,7 +9,7 @@ module Amazon (
     , getFileContents
     ) where
 
-import Happstack.State (update)
+--import Happstack.State (update)
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import qualified Data.ByteString as BS
@@ -19,9 +19,12 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import Doc.DocState
+import File.File
+import File.TransState
 import Misc (concatChunks)
 import qualified AppLogger as Log
+import DB.Classes
+import Control.Monad.IO.Class
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
@@ -39,12 +42,12 @@ urlFromFile File{filename, fileid} =
 -- - upload a file to Amazon storage
 -- - save a file in a local directory
 -- - do nothing and keep it in memory database
-uploadFile :: FilePath -> S3Action -> File -> IO ()
+uploadFile :: (MonadIO m, DBMonad m) => FilePath -> S3Action -> File ->  m ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
-    BS.writeFile filepath content
+    liftIO $ BS.writeFile filepath content
     Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
-    update $ FileMovedToDisk fileid filepath
+    runDBUpdate $ FileMovedToDisk fileid filepath
     return ()
 
 uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
@@ -55,11 +58,11 @@ uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
                              }
         url = urlFromFile file
         bucket = AWS.s3bucket ctxs3action
-    result <- AWS.runAction action
+    result <- liftIO $ AWS.runAction action
     case result of
          Right _ -> do
              Log.debug $ "AWS uploaded " ++ bucket </> url
-             _ <- update $ FileMovedToAWS fileid (BS.fromString bucket) (BS.fromString url)
+             _ <- runDBUpdate $ FileMovedToAWS fileid (BS.fromString bucket) (BS.fromString url)
              return ()
          Left err -> do -- FIXME: do much better error handling
              Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err

@@ -52,106 +52,101 @@ import RedirectTest
 import ServiceStateTest
 #endif
 #ifndef NO_TRUSTWEAVER
-import TrustWeaverTest
+--import TrustWeaverTest
 #endif
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
+#ifndef NO_CSVUTIL
+import CSVUtilTest
+#endif
+#ifndef NO_SIMPLEEMAIL
+import SimpleMailTest
+#endif
+#ifndef NO_LOCALE
+import LocaleTest
+#endif
+#ifndef NO_MAILS
+import MailsTest
+#endif
+#ifndef NO_MAILS
+import APICommonsTest
+#endif
 
-allTests :: Connection -> [Test]
+allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
     tests = [
         undefined
 #ifndef NO_COMPANYSTATE
-      , companyStateTests conn
+      , ("companystate", const $ companyStateTests conn)
 #endif
 #ifndef NO_DOCSTATE
-      , docStateTests conn
+      , ("docstate", const $ docStateTests conn)
 #endif
 #ifndef NO_DOCCONTROL
-      , docControlTests conn
+      , ("doccontrol", const $ docControlTests conn)
 #endif
 #ifndef NO_DOCSTATEQUERY
-      , docStateQueryTests
+      , ("docstatequery", const $ docStateQueryTests)
 #endif
 #ifndef NO_HTML
-      , htmlTests
+      , ("html", const $ htmlTests)
 #endif
 #ifndef NO_INPUTVALIDATION
-      , inputValidationTests
+      , ("inputvalidation", const $ inputValidationTests)
 #endif
 #ifndef NO_INTEGRATIONAPI
-      , integrationAPITests conn
+      , ("integrationapi", const $ integrationAPITests conn)
 #endif
 #ifndef NO_LOGIN
-      , loginTests conn
+      , ("login", const $ loginTests conn)
 #endif
 #ifndef NO_MAILAPI
-      , mailApiTests conn
+      , ("mailapi", const $ mailApiTests conn)
 #endif
 #ifndef NO_REDIRECT
-      , redirectTests
+      , ("redirect", const $ redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
-      , serviceStateTests conn
+      , ("servicestate", const $ serviceStateTests conn)
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
-      --, trustWeaverTest
+      --("trustweaver", trustWeaverTest)
 #endif
 #ifndef NO_USERSTATE
-      , userStateTests conn
+      , ("userstate", const $ userStateTests conn)
+#endif
+#ifndef NO_CSVUTIL
+      , ("csvutil", const $ csvUtilTests)
+#endif
+#ifndef NO_SIMPLEEMAIL
+      , ("simplemail", const $ simpleMailTests)
+#endif
+#ifndef NO_LOCALE
+      , ("locale", const $ localeTests conn)
+#endif
+#ifndef NO_MAILS
+      , ("mails", mailsTests conn )
+#endif
+#ifndef NO_MAILS
+      , ("apicommons", const $ apiCommonsTest )
 #endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
-testsToRun conn (t:ts) =
-  case map toLower t of
-    "all"             -> map Right (allTests conn) ++ rest
-#ifndef NO_COMPANYSTATE
-    "companystate"    -> Right (companyStateTests conn) : rest
-#endif
-#ifndef NO_DOCSTATE
-    "docstate"        -> Right (docStateTests conn) : rest
-#endif
-#ifndef NO_DOCCONTROL
-    "doccontrol"        -> Right (docControlTests conn) : rest
-#endif
-#ifndef NO_DOCSTATEQUERY
-    "docstatequery"   -> Right docStateQueryTests : rest
-#endif
-#ifndef NO_HTML
-    "html"            -> Right htmlTests : rest
-#endif
-#ifndef NO_INPUTVALIDATION
-    "inputvalidation" -> Right inputValidationTests : rest
-#endif
-#ifndef NO_INTEGRATIONAPI
-    "integrationapi"  -> Right (integrationAPITests conn) : rest
-#endif
-#ifndef NO_LOGIN
-    "login"           -> Right (loginTests conn) : rest
-#endif
-#ifndef NO_MAILAPI
-    "mailapi"         -> Right (mailApiTests conn) : rest
-#endif
-#ifndef NO_REDIRECT
-    "redirect"        -> Right redirectTests : rest
-#endif
-#ifndef NO_SERVICESTATE
-    "servicestate"    -> Right (serviceStateTests conn) : rest
-#endif
-#ifndef NO_TRUSTWEAVER
-    "trustweaver"     -> Right trustWeaverTests : rest
-#endif
-#ifndef NO_USERSTATE
-    "userstate"       -> Right (userStateTests conn) : rest
-#endif
-    _                 -> Left t : rest
+testsToRun conn (t:ts) 
+  | lt == "$" = []
+  | lt == "all" = map (\(_,f) -> Right $ f params) (allTests conn) ++ rest
+  | otherwise = case lookup lt (allTests conn) of
+                  Just testcase -> Right (testcase params) : rest
+                  Nothing       -> Left t : rest
   where
+    lt = map toLower t
     rest = testsToRun conn ts
+    params = drop 1 $ dropWhile (/= ("$")) ts
 
 main :: IO ()
 main = do

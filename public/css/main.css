@@ -350,6 +350,23 @@ a.new-btn-small.black p {
 	color: #fff;
 }
 
+.localeSwitcher {
+  float: left;
+  display: inline-block;
+  width: 76px;
+  position: relative;
+  top: 20px;
+}
+
+#top-container .localeSwitcher {
+  top: 35px;
+  left: 200px;
+}
+
+.localeSwitcher div {
+  display: inline-block;
+}
+
 .login-container .body, .recovery-container .body {
     margin:auto;
     min-height: 122px;
@@ -588,6 +605,10 @@ a.new-btn-small.black p {
 
 #footer-container .col strong {
 	font: 14px/22px "Copse";
+}
+
+#footer-container .centre strong {
+	text-transform: uppercase;
 }
 
 #footer-container .left {
@@ -1088,7 +1109,6 @@ div.price-plan-details {
 /* Highlight Ribbon */
 
 #body-container .highlight-container .ribbon {
-	background: url(../img/highlight-ribbon.png) no-repeat transparent;
 	height: 107px;
 	left: -6px;
 	position: absolute;
@@ -1097,13 +1117,32 @@ div.price-plan-details {
 }
 
 #body-container .big-pp-container .highlight-container .ribbon {
-	background: url(../img/highlight-ribbon-small.png) no-repeat transparent;
 	height: 74px;
 	left: -4px;
 	position: absolute;
 	top: -4px;
 	width: 74px;
 }
+
+.ribbon.swedish {
+	background: url(../img/highlight-ribbon-swedish.png) no-repeat transparent;
+}
+
+.ribbon.english {
+	background: url(../img/highlight-ribbon-english.png) no-repeat transparent;
+}
+
+.big-pp-container .ribbon.swedish {
+	background: url(../img/highlight-ribbon-small-swedish.png) no-repeat transparent;
+}
+
+.big-pp-container .ribbon.english {
+	background: url(../img/highlight-ribbon-small-english.png) no-repeat transparent;
+}
+
+
+
+
 
 /* Try SkrivaPå Splash */
 

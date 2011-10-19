@@ -8,13 +8,8 @@
  alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
  möjlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
  vi ett supportfritt konto för alla mindre användare. 1 användare,
- 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"                    <h3>Free for private persons and proprietors</h3>
-                    <p>There are a thousand reasons for everyone
- to start signing their documents electronically. Our ambition
- is to work closely and cooperate with our customers. Unfortunately,
- we are not able to help all our target groups actively. Therefore,
- we offer a support-free account for small users. 1 user, 5 free
- signatures per month and storage of 50 documents.</p>"
+ 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"                    <h3>Free for personal use</h3>
+                    <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
 "_Bemefit1","Minska kostnaderna",,"Reduced costs"
 "_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. $ourServiceName()$ är
  ett skräddarsytt redskap som optimerar dina processer. Spara
@@ -57,7 +52,7 @@
 "_HeadUserInfo","Användaruppgifter",,"User info"
 "_InfoSelectTemplate"," Klicka på den mall du vill använda för att starta processen",,"  Click a template you want to use to start the process"
 "_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
-"_LanguageSettings","Språkinställningar",,"Language settings"
+"_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
 "_MailAPIEnable","Aktivera Mail API",,"Enable Mail API"
 "_MailAPILimitHead","Begränsningar",,"Limits"
@@ -131,7 +126,7 @@
                                    <li class=""bottom"">      
                                                           <h4>30
  kr/signatur</h4>                                           
-                     <a href=""/priser"">Detaljerad prisplan</a>
+                     <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
                                                            </li></ul>","<ul class=""highlight-rows"">                                 
                        <li class=""top"">                     
                                            <h3>Business</h3>
@@ -149,7 +144,7 @@
           <li class=""bottom"">                               
                                  <h4>30 kr/signature</h4>
                                                             
- <a href=""/priser"">Detailed priceplan</a>                   
+ <a href=""$linkpriceplan$"">Detailed price plan</a>                   
                                         </li></ul>","<ul class=""highlight-rows"">                                 
                        <li class=""top"">                     
                                            <h3>Business</h3>
@@ -167,65 +162,46 @@
           <li class=""bottom"">                               
                                  <h4>£3/signature</h4>
                                                             
- <a href=""/priser"">Detailed priceplan</a>                   
+ <a href=""$linkpriceplan$"">Detailed price plan</a>                   
                                         </li></ul>"
 "_PriceTablePriceRow","<td>                                                        
         <h4>35 kr/signatur</h4>                             
-                                   <a href=""/priser"">Detaljerad
+                                   <a href=""$linkpriceplan$"">Detaljerad
  prisplan</a>                                               
          </td>                                              
           <td>                                              
                   <h4>32.50 kr/signatur</h4>                
-                                                <a href=""/priser"">Detaljerad
+                                                <a href=""$linkpriceplan$"">Detaljerad
  prisplan</a>                                               
          </td>                                              
           <td>                                              
                   <h4>30 kr/signatur</h4>                   
-                                             <a href=""/priser"">Detaljerad
+                                             <a href=""$linkpriceplan$"">Detaljerad
  prisplan</a>                                               
                                                             </td>
                                                         <td>
                                                             
     <h4>Offert</h4>                                         
-                       <a href=""/priser"">Detaljerad prisplan</a>
-                                                        </td>","<td>                                                        
-        <h4>35 kr/signature</h4>
-                                    <a href=""/priser"">Detailed
- price plan</a>
-          </td>                                             
-           <td>                                             
-                   <h4>32.50 kr/signature</h4>
-                                                  <a href=""/priser"">Detailed
- price plan</a>
-          </td>                                             
-           <td>                                             
-                   <h4>30 kr/signature</h4>
-                                               <a href=""/priser"">Detailed
- price plan</a>
-                                                            
- </td>                                                      
-  <td>                                                      
-          <h4>Offer</h4>                                    
-                            <a href=""/priser"">Detailed price plan</a>
-                                                        </td>","<td>                                                        
+                       <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
+                                                        </td>","<td>                                                                 <h4>35 kr/signature</h4>                                     <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>32.50 kr/signature</h4>                                                   <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>30 kr/signature</h4>                                                <a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>                                                                 <h4>Negotiable</h4>                                                                 <a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>                                                        
         <h4>£3.50/signature</h4>
-                                    <a href=""/priser"">Detailed
+                                    <a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>                                             
            <td>                                             
                    <h4>£3.25/signature</h4>
-                                                  <a href=""/priser"">Detailed
+                                                  <a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>                                             
            <td>                                             
                    <h4>£3/signature</h4>
-                                               <a href=""/priser"">Detailed
+                                               <a href=""$linkpriceplan$"">Detailed
  price plan</a>
                                                             
  </td>                                                      
   <td>                                                      
-          <h4>Offer</h4>                                    
-                            <a href=""/priser"">Detailed price plan</a>
+          <h4>Negotiable</h4>                                    
+                            <a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>"
 "_PriceTableRow1","<td>5 användare</td>                                        
                 <td>15 användare</td>                       
@@ -233,7 +209,7 @@
                                                   <td>Offert</td>",,"<td>5 users</td>
                 <td>15 users</td>
                                  <td>50 users</td>
-                                                  <td>Offer</td>"
+                                                  <td>Negotiable</td>"
 "_PriceTableRow2","<td>500 signaturer/år</td>                                  
                       <td>1000 signaturer/år</td>           
                                              <td>2000 signaturer/år</td>
@@ -246,10 +222,7 @@
 "_PriceTableRow3","<td>500 dok laging</td>                                     
                    <td>Obegränsad lagring</td>              
                                           <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>",,"<td>500 doc storage</td>                                    
-                    <td>Unlimited storage</td>              
-                                          <td>Unlimited storage</td>
-                                                        <td>Offer</td>"
+                                                        <td>Offert</td>",,"<td>Storage for 500 documents</td>                                                         <td>Unlimited storage</td>                                                         <td>Unlimited storage</td>                                                         <td>Negotiable</td>"
 "_PriceTableRow4","<td>Basfunktioner</td>                                      
                   <td>Basfunktioner</td>                    
                                     <td>Advancerade funktioner</td>
@@ -316,21 +289,23 @@
 "_StepsH3StoreBody","Vi sparar dina dokument<br />tryggt och säkert.",,"We keep your documents<br />safe and secure."
 "_Swedish"," Svenska ",,"Swedish"
 "_UserLanguage","Användarspråk:",,"User language:"
+"_Sweden","Sverige",,"Sweden"
+"_Britain","Storbritanien",,"Britain"
+"_UserRegion","User Region:",,"User Region:"
 "_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. $ourServiceName()$ är skapat
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. $ourServiceName()$ is made
  by an ambitious, international team based in Stockholm."
-"_aboutPageH1","Om $ourServiceName()$ och gänget bakom",,"About $ourServiceName()$ and the team behind"
+"_aboutPageH1","Om $ourServiceName()$ och gänget bakom",,"About $ourServiceName()$ and the team behind it"
 "_aboutPagePerson1","Lukas Duczko",,"Lukas Duczko"
 "_aboutPagePerson1Body","Lukas har en bakgrund från Handelshögskolan i Stockholm och från
  finanssektorn från sin tid som affärsutvecklare på Klarna. Han
  lämnade Klarna för att satsa uteslutande på $ourServiceName()$. $ourServiceName()$
  är hans andra företagsengagemang efter bokningsbolaget SpokenWord
- AB.",,"Lukas has his background at Stockholm School of Economics and
- from the finance sector from his time working as a business
+ AB.",,"Lukas studied at the Stockholm School of Economics. He has a finance background including working as a business
  developer at Klarna. He left Klarna to focus at his work at
  $ourServiceName()$. $ourServiceName()$ is his second start-up after the event company
  SpokenWord AB."
-"_aboutPagePerson1Contact","lukas@skrivapa.se<br />									+46 704 56 04 04",,"lukas@skrivapa.se<br />									+46 704 56 04 04"
+"_aboutPagePerson1Contact","lukas@scrive.com<br />									+46 704 56 04 04",,"lukas@scrive.com<br />									+46 704 56 04 04"
 "_aboutPagePerson1Position","CEO",,"CEO"
 "_aboutPagePerson2","Gracjan Polak",,"Gracjan Polak"
 "_aboutPagePerson2Body","Gracjan har en bakgrund från Klarna som programmerare och från
@@ -341,8 +316,8 @@
  as a programmer, and Krakow Technical University where he studied
  as a PhD student and taught programming languages. He left Klarna
  to focus on $ourServiceName()$. $ourServiceName()$ is his second start-up involvement
- after PDF-optimising company ACCHSH. "
-"_aboutPagePerson2Contact","gracjan@skrivapa.se",,"gracjan@skrivapa.se"
+ after PDF-optimisation company ACCHSH. "
+"_aboutPagePerson2Contact","gracjan@scrive.com",,"gracjan@scrive.com"
 "_aboutPagePerson2Position","CTO",,"CTO"
 "_aboutPagePerson3","Viktor Wrede",,"Viktor Wrede"
 "_aboutPagePerson3Body","Viktor har en bakgrund från Handelshögskolan i Stockholm där
@@ -350,57 +325,56 @@
  arbetat som affärsutvecklare åt familjeföretaget Kundia AB där
  han bland annat hjälpte till att utveckla kontrollsystem och
  affärsprocesser. $ourServiceName()$ är Viktors andra företagsengagemang
- efter Mobile Mall.",,"Viktor has his background at Stockholm School of Economics where
- he studied Accounting and Financial Management. He has previously
- been working as a business developer at the family company Kundia
+ efter Mobile Mall.",,"Viktor has his background at the Stockholm School of Economics where
+ he studied Accounting and Financial Management. He has previously worked as a business developer at the family company Kundia
  AB where he, among other things, helped develop control systems
  and business processes. $ourServiceName()$ is Viktor's second start-up involvement
  after Mobile Mall."
-"_aboutPagePerson3Contact","viktor@skrivapa.se<br />									+46 708 88 47 49",,"viktor@skrivapa.se<br />									+46 708 88 47 49"
+"_aboutPagePerson3Contact","viktor@scrive.com<br />									+46 708 88 47 49",,"viktor@scrive.com<br />									+46 708 88 47 49"
 "_aboutPagePerson3Position","Business Development",,"Business Development"
 "_aboutPagePerson4","Mariusz Rak",,"Mariusz Rak"
 "_aboutPagePerson4Body","Mariusz har en bakgrund från Warszaw Technical University där
  han tagit examen i funktionella programmeringsspråk. Han har
  tidigare arbetat åt ett av Polens största IT-konsultföretag.
  Fritiden spenderar Mariusz helst med att fördjupa sig inom avancerad
- logik och nya teorier inom funktionell programmering. ",,"Mariusz has his background at Warszaw Technical University where
- he has graduated in functional programming languages. He has
- previously been working at one of Poland's largest IT consultant
- firms. Mariusz prefers spending his free time immersing in advanced
+ logik och nya teorier inom funktionell programmering. ",,"Mariusz graduated from Warsaw Technical University where
+ he specialised in functional programming languages. He has
+ previously worked at a major Polish IT consultancy
+ Firm. Mariusz spends his free time immersed in advanced
  logic and new theories about functional programming."
-"_aboutPagePerson4Contact","mariusz@skrivapa.se",,"mariusz@skrivapa.se"
+"_aboutPagePerson4Contact","mariusz@scrive.com",,"mariusz@scrive.com"
 "_aboutPagePerson4Position","Development",,"Development"
 "_aboutPagePerson5","Eric Normand",,"Eric Normand"
 "_aboutPagePerson5Body","Eric har en bakgrund från University of New Orleans och har tidigare
  arbetat som team leader för säkerhetsprojekt inom amerikanska
  militären. Han har även på egen hand utvecklat ett flertal applikationer
  för iPhone och Android. Idag backpackar Eric jorden runt och
- arbetar 100% med $ourServiceName()$ på distans.",,"Eric has his background at University of New Orleans and has
- previously been working as a team leader for security projects
+ arbetar 100% med $ourServiceName()$ på distans.",,"Eric studied at the University of New Orleans and has
+ previously worked as a team leader for security projects
  in the US military. He has also single-handedly developed several
  applications for iPhone and Android. Eric is at the moment back-packing
- around the world and working full time at $ourServiceName()$ at distance."
-"_aboutPagePerson5Contact","eric@skrivapa.se",,"eric@skrivapa.se"
+ around the world and remote-working full time at $ourServiceName()$."
+"_aboutPagePerson5Contact","eric@scrive.com",,"eric@scrive.com"
 "_aboutPagePerson5Position","Development",,"Development"
 "_aboutPagePerson6","Emily May Green",,"Emily May Green"
 "_aboutPagePerson6Body","Emily har en bakgrund från University of Bristol och har tidigare
  arbetat som utvecklare på ett flertal finansbanker i London.
  Hon lämnade sin post som systemutvecklare på HSBC för att arbeta
- heltid med $ourServiceName()$ på distans.",,"Emily has her background at University of Bristol and has previously
- been working as a devloper at several different finance banks
- in London. Se left her position as system developer at HSBC
- to work full time at $ourServiceName()$ at distance."
-"_aboutPagePerson6Contact","emily@skrivapa.se",,"emily@skrivapa.se"
+ heltid med $ourServiceName()$ på distans.",,"Emily attended the University of Bristol and has
+ worked as a developer at several different financial institutions
+ in London. She left her position as systems developer at HSBC
+ to work full time at $ourServiceName()$."
+"_aboutPagePerson6Contact","emily@scrive.com",,"emily@scrive.com"
 "_aboutPagePerson6Position","Development and Testing",,"Development and Testing"
 "_aboutPagePerson7","Oskar Wallin Berglin",,"Oskar Wallin Berglin"
 "_aboutPagePerson7Body","Oskar är student på Handelshögskolan i Stockholm och arbetar
  100 % med $ourServiceName()$ parallellt med sina studier. Entreprenörskap
  är ett stort intresse och han har tidigare bland annat drivit
  entreprenörsprojektet Snäll Skuldhjälp.",,"Oskar is a student at Stocholm School of Economics, and works
- 50 % at $ourServiceName()$ parallel to his studies. Entrepreneurship is a
- major interest if his, and he has  previously run an entrepreneurship
+ 50% at $ourServiceName()$ in parallel to his studies. Entrepreneurship is a
+ major interest of his and he has previously run an entrepreneurship
  project called Snäll Skuldhjälp."
-"_aboutPagePerson7Contact","oskar@skrivapa.se<br />									+46 709 85 08 67",,"oskar@skrivapa.se<br />									+46 709 85 08 67"
+"_aboutPagePerson7Contact","oskar@scrive.com<br />									+46 709 85 08 67",,"oskar@scrive.com<br />									+46 709 85 08 67"
 "_aboutPagePerson7Position","Business Development",,"Business Development"
 "_aboutPageTitle","| Om $ourServiceName()$",,"| About $ourServiceName()$"
 "_aboutPageTopBody","<p>$ourServiceName()$ är en tjänst för att underteckna och arkivera avtal
@@ -415,21 +389,19 @@
  problem på sätt som verkar enkla och tilltalande för slutkund.</p><br
  /><p>$ourServiceName()$ grundades av Lukas Duczko och Gracjan Polak som
  lärde känna varandra under sin tid på kreditbolaget Klarna.</p>",,"<p>$ourServiceName()$ is a service for signing and storing contracts electronically.
- We help our customers to reduce their costs, increase their
- turnover and save frustration.</p>							<br />							<p>Electronic
- document signing is a relatively young industry that grows fast
+ We help our customers to lower their costs, increase their profits and reduce frustration.</p>							<br />							<p>Electronic
+ document signing is a relatively young industry that is growing fast
  both in Sweden and internationally. We are a young company in
- rapid growth with about 10 eployees today. We are confident
- that our greatest strengths are our ability to detect customer
- needs, our customer-oriented approach, and our ability to solve
- complex legal and securityrelated issues in a way that seems
- simple and appealing to the end customer.</p> 							<br />							<p>$ourServiceName()$
+ rapid growth with about 10 employees today. We are confident
+ that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve
+ complex legal and security-related issues in a way that seems
+ simple and appealing to the end user.</p> 							<br />							<p>$ourServiceName()$
  was founded by Lukas Duczko and Gracjan Polak who got to know
- eachother at the Swedish credit company Klarna.</p>"
+ each other at the Swedish credit company Klarna.</p>"
 "_accountFromSignFooterNoThx","Nej tack",,"No thanks"
 "_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes please, store"
-"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""/allmana-villkor"">$ourServiceName()$
- Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""/allmana-villkor"">$ourServiceName()$
+"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
+ Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
  Terms of Service</a>"
 "_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? $ourServiceName()$ kan även arkivera
  ett original för din säkerhet. Det kostar ingenting.       
@@ -469,29 +441,29 @@
 "_clientsPageCusomer2About","Green hat People genomför oslagbara teambuildingaktiviteter i
  form av mobilstyrda spel där omgivningen utgör spelplanen. De
  finns representerade i hela Sverige och genomför teambuilding
- över hela Europa.",,"Green hat People does unbeatable team building activities through
+ över hela Europa.",,"Green Hat People does unbeatable team building activities through
  mobile phone controlled games where the game board consists
- of the surroundings. Green Hat People are represented all over
+ of the surroundings. Green Hat People is represented all over
  Sweden and preforms team building activities all over Europe."
 "_clientsPageCusomer2Web","www.greenhatpeople.se",,"www.greenhatpeople.se"
 "_clientsPageCusomer3","EventBook",,"EventBook"
 "_clientsPageCusomer3About","Din partner för konferens, kick-off och företagsresor.",,"Your partner in conferences, kick-offs and company travels."
 "_clientsPageCusomer3Web","www.eventbook.se",,"www.eventbook.se"
 "_clientsPageCusomer4","Accenture Management Consulting",,"Accenture Management Consulting"
-"_clientsPageCusomer4About","                                                            ",,"                                                           "
+"_clientsPageCusomer4About","         ",,"          "
 "_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
 "_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About","                   ",,"                   "
+"_clientsPageCusomer5About","         ",,"         "
 "_clientsPageCusomer5Web","www.coop.se/konsumnord",,"www.coop.se/konsumnord"
 "_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About","                                                            ",,"                                                            "
-"_clientsPageCusomer6Web","                                        ",,"                                                           "
+"_clientsPageCusomer6About","         ",,"         "
+"_clientsPageCusomer6Web","         ",,"         "
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
  RIKA-koncept inspirerar vi till handlingskraft och problemlösning.RIKA
  står för research, idé, koncept och action – de fyra stegen
- i en problemlösningsprocess.",,"Go Enterprise is a young management consultant company that
+ i en problemlösningsprocess.",,"Go Enterprise is a young management consultancy company that
  is passionate about growth, entrepreneurship and social development.
  Through our RIKA concept, we inspire to take action and solve
  problems. RIKA stands for research, idea, concept and action
@@ -506,12 +478,11 @@
  se kundens behov, vår kundnära personliga approach och vår förmåga
  att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade
  problem på sätt som verkar enkla och tilltalande för slutkund.</p>",,"<p>$ourServiceName()$ is a service for signing and storing contracts electronically.
- We help our customers to reduce their costs, increase their
- turnover and save frustration.</p>						<br />						<p>We are
- confident that our greatest strengths are our ability to detect
- customer needs, our customer-oriented approach, and our ability
- to solve complex legal and security related issues in a way that
- seems simple and appealing to the end customer.</p>"
+ We help our customers to lower their costs, increase their
+profits and reduce frustration.</p>						<br />						<p>We are confident
+ that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve
+ complex legal and security-related issues in a way that seems
+ simple and appealing to the end user.</p>"
 "_close","Stäng",,"Close"
 "_company","Företag",,"Company"
 "_companyposition","Befattning",,"Position"
@@ -530,7 +501,7 @@
 "_contractcancelbyauthormodaltitleHead","Återkalla inbjudan",,"Withdraw invitation"
 "_contractcancelledinfoheader","Dokument återkallat",,"Document withdrawn"
 "_contractcancelledinfotext","har återkallat sin inbjudan att underteckna dokumentet.",,"has withdrawn the invitation to sign the document."
-"_contractconfirmsendtext"," ",," "
+"_contractconfirmsendtext",,,
 "_contractconfirmsendtitle","Skicka inbjudan",,"Send invitation"
 "_contractexpirytext","Undertecknas inom",,"Expiration in"
 "_contractexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
@@ -581,7 +552,7 @@
 "_contractsignatorysignmodalcontentlast","När du undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodalcontentnotlast","När du och <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you and  <span class='unsignedpartynotcurrent'/> signed the contract will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodaltitle","Är du säker att du vill underteckna?",,"Are you sure you want to sign?"
-"_contractsignbuttontext","$ourServiceName()$",,"$ourServiceName()$"
+"_contractsignbuttontext","Signera",,"Sign"
 "_contractsignedinfoheader","Färdigställt",,"Finished"
 "_contractsignedinfotext","Samtliga parter har undertecknat dokumentet.",,"All parties have signed the document."
 "_contractsignguardwarntext","För att underteckna måste du först klicka i kryssrutan",,"You must fill in the check box to be able to sign."
@@ -712,7 +683,7 @@
  sig var vänlig kontakta ",,"We are sorry, a problem occurred when rendering the seal on the
  PDF. Please upload the document again. If the problem reoccurs,
  please contact"
-"_documentInfoTextElseBodyMailSupport","support@skrivapa.se",,"support@$ourServiceName()$.com"
+"_documentInfoTextElseBodyMailSupport","support@scrive.com",,"support@scrive.com"
 "_documentInfoTextElseHead","Problem",,"Problem"
 "_documentInfoTextNotsignedbymeAwaitingauthorBody","Vänligen kontrollera dokumentet och parternas uppgifter och underteckna
  längst ned.",,"Please control the document and the party data, and sign at the
@@ -975,8 +946,8 @@
  controls to prevent users from endangering other user's data
  security.</li>			<li>The service was created in a way that makes
  it impossible to remove a document and then put it back in.
- Thereby, the integrity of the document is further secured in
- another layer on top of the stamping with the qualified signature.</li>"
+ Therefore, the integrity of the document is further secured in
+ addition to the stamping with the qualified signature.</li>"
 "_legalPageH2DocHandelingH32Body3","<h4>Amazon:</h4> Denna typ av lagring sker hos den världsledande
  molnbaserade lagringslösningen Amazon S3. Precis som TrustWeaver
  är Amazon S3 säkerhetscertifierad enligt SAS 70 II och följer
@@ -994,9 +965,9 @@
  ska endast ses som en beskrivning av $ourServiceName()$ som företag och
  som tjänst. Materialet är under inga omständigheter avsett som
  juridisk rådgivning.",,"$ourServiceName()$ is a service for signing and storing contracts electronically.
- We help our customers to reduce their costs, increase their
- turnover and save frustration. The following mateial shall only
- be seen as a description of $ourServiceName()$ as a company and as a service.
+ We help our customers lower their costs, increase their
+profits and reduce frustration. The following mateials shall only
+ be seen as a description of $ourServiceName()$ as a company and service.
  The material is under no circumstances intended as legal advice."
 "_legalPageH2IntroH31","Juridiskt syfte",,"Legal objective"
 "_legalPageH2IntroH31Body1","$ourServiceName()$´s juridiska syfte är att tillhandahålla bästa möjliga
@@ -1023,23 +994,22 @@
  parter. När denna part uppfyllt sin bevisbörda åligger det bestridande
  part att bevisa motsatsen och så vidare fram och tillbaks tills
  domstolen baserat på framlagt bevismaterial slutligen fäller
- ett avgörande huruvida dokumentet är giltigt eller inte.",,"When a conflict occurs about whether a document has been signed
- os not, it is important to be able to show independent proof
- material that strengthens that the document has been signed
+ ett avgörande huruvida dokumentet är giltigt eller inte.",,"When a conflict occurs as to whether a document has been signed
+ or not, it is important to show independent proof
+ that the document has been signed
  by the involved parties. This is often tricky, since a  proof
- vacuum often is created when a contract is signed, and the only
- proof is the signed document itself. In worst case, the only
- proof is only a e-mail or SMS conversation to work from. If
- one party claims that it does not have access to any proof material,
- problems will occur for the other party to show that the proof
+ vacuum is created when a contract is signed, and the only
+ proof is the signed document itself. In the worst case, the only
+ proof is an e-mail or SMS conversation to work from. If
+ one party claims that it does not have access to any proof material(s),
+ problems will occur for the other party when showing that the proof
  material put forward is genuine, and has not been created retrospectively.
  This situation could easily lead to a broken business relationship,
- and in worst case to a trial in court. When such a conflict
+ and in worst cases to a trial in court. When such a conflict
  is brought to court, the burden of proof usually falls on the
  party claiming that the contract has been signed by other parties.
  When that party fulfills its burden of proof, it is the other
- party's burden to prove the opposite, and so the trial goes
- on until the court finally judge upon the presented evidence
+ party's burden to prove the opposite, and so the trial will continue until the court finally judge upon the presented evidence
  Whether the document is valid or not."
 "_legalPageH2IntroH31Body3","$ourServiceName()$´s syfte är att vara ett användbart redskap för båda
  parter i alla steg av processen. Genom att $ourServiceName()$ som oberoende
@@ -1057,9 +1027,9 @@
  material and storing it, $ourServiceName()$ serves as an independent third
  party that easily shows all important actions commited by the
  involved parties, and thereby functions as a tool for preventing
- conflicts from evolving further than necessary. In this way,
- $ourServiceName()$ helps minimizing the friction between parties at an early
- stage of a conflict. In the rare cases where conflicts are tried
+ conflicts from evolving. In this way,
+ $ourServiceName()$ helps to minimise the friction between parties at an early
+ stage of the conflict. In rare cases where conflicts are tried
  in court, $ourServiceName()$ aims to provide the party claiming that a document
  was signed the best proof material possible to strenghten the
  party's position in court."
@@ -1072,14 +1042,14 @@
  att ett dokument undertecknats av parterna. Vi gör allt för
  att skydda integriteten och kvaliteten i det bevismaterial som
  genereras genom $ourServiceName()$ och för att göra det så användbart
- som möjligt för våra slutanvändare.",,"To maintain the credibility of the service, $ourServiceName()$ is always
- Independent. $ourServiceName()$ never takes, and will never take the position
- of one side of signing parties regardless of who is a paying
- customer of $ourServiceName()$'s. Our purpose is exclusively to generate
- the best proof material possible to strengthen that a document
+ som möjligt för våra slutanvändare.",,"To maintain the credibility of its service, $ourServiceName()$ is always
+ Independent. $ourServiceName()$ never takes, and will not take the position
+ of one side signing the contract regardless of who is the paying
+ customer. Our purpose is to generate
+ the best proof material possible to strengthen the fact that a document
  has been signed by the parties. We do everything we can to protect
  the integrity and quality of the proof material generated by
- $ourServiceName()$, and making it as useful as possible for the end customers."
+ $ourServiceName()$, and making it as useful as possible for the customers."
 "_legalPageH2IntroH33","Användarfilosofi",,"User philosophy"
 "_legalPageH2IntroH33Body1","Dokument undertecknas i många olika former i många olika situationer.
  Därför kan våra användares behov se väldigt olika ut, framförallt
@@ -1103,11 +1073,11 @@
  att välja ett signeringsverktyg som ur ett riskperspektiv möjligen
  inte är optimalt för situationen. Vi tror dock att vi genom
  tjänstens enkelhet över lag sänker den individuella risken då
- vi:",,"We admit that this flexibility of choice to some extension may
+ vi:",,"We admit that this flexibility of choice may
  increase the risk for the user as the user is able to select
  a signing tool that for the situation is not optimal from a
- risk point of view. We believe, though, that the simplicity of
- the service generally reduces the individual risk as we:"
+ risk point of view. We believe, however, that the simplicity of
+ the service generally reduces the individual risk for the following reasons:"
 "_legalPageH2IntroH33Body3","<li>Gör det enklare över lag att skriva på dokument vilket gör
  att andelen osäkra överenskommelser minskar (som till exempel
  rent muntliga överenskommelser).</li><li>Genererar och säkrar
@@ -1116,13 +1086,13 @@
  		    redan är ett faktum och mycket material kan ha försvunnit
  eller blivit oanvändbart.</li><li>Försöker göra vårt bästa för
  att informera användaren om vad som gäller och därmed främja
- välinformerat beslutsfattande.</li>",,"<li>Generally make it easier to sign documents and thus reduce
- the number of insecure agreements (e.g verbal agreements).</li><li>Generate
+ välinformerat beslutsfattande.</li>",,"<li>As we generally make it easier to sign documents and thus reduce
+ the number of insecure agreements (e.g verbal agreements).</li><li>As we generate
  and secure high-quality proof material in advance, instead of
  the most common case today: That historical evidence is found
  retrospectively, when the conflict already has emerged and large
  parts of the evidence material may have been destroyed or become
- useless.</li><li>Do our best to inform the user in every step
+ useless.</li><li>As we do our best to inform the user in every step
  of the process to promote well-informed decision-making.</li>"
 "_legalPageH2KeyLegal","Centrala Juridiska överväganden",,"Key legal considerations"
 "_legalPageH2KeyLegalBody1","I svensk rätt råder fri bevisprövning. Det betyder att tvistande
@@ -1139,9 +1109,9 @@
  något ansvar för vad användarna gör utanför ramarna för tjänsten.
  Följande är de viktigaste faktorerna inom $ourServiceName()$´s kontrollområde
  som påverkar styrkan hos bevismaterial genererade vid användning
- av tjänsten $ourServiceName()$:",,"Swedish law prevails free assessment of evidence. This means
+ av tjänsten $ourServiceName()$:",,"Swedish law prevails in free assessment of evidence. This means
  that litigants may present any evidence to support his claim,
- and that the presented evidence that supports the different
+ and that the presented evidence that supports different
  positions are considered  against each other This applies in
  trials concerning signed documents. In cases where $ourServiceName()$ is
  used, this means that not only evidence generated through $ourServiceName()$
@@ -1178,7 +1148,7 @@
  a written signature, or an e-mail). The big difference between
  different kinds of agreements is not in the legal part, but
  rather the possibility to prove if an agreement exists at all,
- the content of it and who is involved in it. The reason to this
+ the content of it and who is involved in it. The reason for this
  is that different kinds of agreements generates different quality
  and quantity of evidence. Today, $ourServiceName()$ only offers e-mail and
  e-ID as methods of identifying parties when signing. $ourServiceName()$
@@ -1192,12 +1162,11 @@
  kan det passa väl att använda vår e-signering på grund av e-postens
  smidighet, dess starka inarbetning i andra företagsprocesser
  och eftersom e-post är en teknik som nästan alla har tillgång
- till och använder dagligen.",,"<h4>Application area:</h4> In transactions with low risk and
- low stake, where companies have their own registered domains
+ till och använder dagligen.",,"<h4>Application area:</h4> In transactions with low risk, where companies have their own registered domains
  and domain-specific e-mail addresses (e.g. PersonName@CompanyDomain.com),
  e-mail is a suitable solution for signing, considering the simplicity
  of e-mails and its strong incorporation with other business
- processes, and because just about everyone uses e-mail on a
+ processes, and because everyone uses e-mail on a
  daily bases."
 "_legalPageH2KeyLegalH32Body2","<h4>Verifieringsmetod:</h4> Det finns tre delar av verifieringen.
  En aktiv del, en passiv del och IP-adressen. I ett första steg
@@ -1263,7 +1232,7 @@
  domäner, därför avråder vi företag och privatpersoner att använda
  tjänstens e-postverifiering om inte båda parter har tillgång
  till domänspecifika e-postadresser som jobbmail, skolmail eller
- annat.",,"Thereby, the connection between identity and domain specific
+ annat.",,"Therefore, the connection between identity and domain specific
  e-mail address is relatively strong. The strength in domain specific
  e-mail addresses are not to be confused with e-mail addresses
  hosted by open e-mail providers, such as Gmail or Hotmail, where
@@ -1292,8 +1261,8 @@
  sker som en extra verifiering utöver epostverifiering. E-legitimationsverifieringen
  sker i tre steg.</p>",,"<h4>Application area:</h4> <p>This method is suitable for all
  kinds of documents that require extra high security, and for
- signing between parties who does not have domain specific e-mail
- addresses (e.g. private persons). An example of usage is for
+ signing between parties who do not have domain specific e-mail
+ addresses (e.g. private persons). An example may be
  comapnies who sign documents with private persons, companies
  who sign extra important documents, or documents with specific
  requirements on formalities.</p><br /><p>Verification by e-ID
@@ -1319,8 +1288,7 @@
  godkänns underskriften av $ourServiceName()$.</li>",,"<li>The first step of identification is when the user obtains
  his e-ID by logging in at his online bank. To be able to log
  in at the bank, you first have to get an account in the bank
- by identify yourself using your ID or legal guardian.</li>	<li>In
- the process when the person installs his e-ID on the computer,
+ and identify yourself using your ID or legal guardian.</li>	<li>Where the person installs his e-ID on the computer,
  he is asked to select a strong password for identification when
  using the e-ID. When a party are about to sign a document with
  the e-ID, the e-ID client is opened on the computer, and the
@@ -1349,12 +1317,12 @@
  few exceptions, e.g. testament, property purchase and marriage).
  E-ID is based on PKI technology, and therefore belongs to the
  category qualified signatures. E-ID is thereby, by law, equivalent
- to hand-written signatures. Truth is, though, that an e-ID signature
- is way more complex and way harder to forge than a hand-written
+ to hand-written signatures. However an e-ID signature
+ is more complex and harder to forge than a hand-written
  signature, and should therefore provide an even stronger evidence
  of agreement than a hand-written one. Only to add even further
  to the strength of the evidence, the document is also signed
- by e-mail verification. Thereby, we draw the conclusion the
+ by e-mail verification. Therefore, we can draw the conclusion that
  this method of verification is exceptionally strong."
 "_legalPageH2KeyLegalH34","Identifiering av bedrägeri",,"Identification of fraud"
 "_legalPageH2KeyLegalH34Body","En omstridd del i diskussionen kring elektroniska identifikationsmetoder
@@ -1382,8 +1350,7 @@
  for identification deals with whether the integrity of the verification
  tool can be guaranteed: how to prevent contracts to be signed
  by an intruder if an e-mail account has been hijacked or the
- verification code for an e-ID has been stolen? The answer is
- unfortunately that this cannot be prevented by $ourServiceName()$, since
+ verification code for an e-ID has been stolen? Unfortunately the answer cannot be resolved by $ourServiceName()$, since
  this is outside of $ourServiceName()$'s domain of control. Before drawing
  any conclusions from this one should as oneself: what is really
  the difference between today's hand-written signatures  and
@@ -1395,7 +1362,7 @@
  is that electronic signatures by default is one step more
  secure than  hand-written ones, since the technology itself
  forms a barrier to intruders and allows $ourServiceName()$ to witness the
- transaction by storing e.g. IP-adresses and implement advanced
+ transaction by storing proof e.g. IP-adresses and advanced
  surveillance systems for preventing frauds. $ourServiceName()$ uses IP-registration
  and is considering implementing the advanced surveillance systems
  mentioned above."
@@ -1409,7 +1376,7 @@
  that the system does not generate incorrect information, and
  that it does not have gaps in the system that allows it to be
  Manipulated in undesired ways. By thorough routines and stable
- technology, we secure that the service $ourServiceName()$ is powered by
+ technology, we ensure that the service $ourServiceName()$ is powered by
  stable and secure software."
 "_legalPageH2ProofH31Body2","<h4>Haskell:</h4> Tjänsten $ourServiceName()$ är byggd på teknologin Haskell,
  som räknas som en av de mest stabila och pålitliga mjukvaruteknologier
@@ -1423,14 +1390,14 @@
  omöjligen uppstå vid mjukvaruutveckling med Haskell och sannolikheten
  att vissa andra typer av problem uppstår blir betydligt mindre
  än vid användning av andra teknologier.",,"<h4>Haskell:</h4> The service $ourServiceName()$ is built upon the technology
- Hasell, which is counted as one of the most stable and reliable
+ is Haskell, which is counted as one of the most stable and reliable
  software technologies ever developed. One of the reasons for
  this is that Haskell is developed to minimize human error in
  the software development by using something called ""strong type
  checking"". Strong type checking means that no code may be implemented
  into the system without first being accepted as logically compatible with
  the rest of the system through strict automatic tests. Because
- of this, some problems just can not occur when programming in
+ of this, some problems just cannot occur when programming in
  Haskell, and the probability of some other types of problems
  arising are much smaller than when using other technologies."
 "_legalPageH2ProofH31Body3","<h4>Rigorösa tester:</h4> För att ytterligare säkra kvalitén
@@ -1440,7 +1407,7 @@
  i minst 10 steg utifrån ett grundligt protokoll som garanterar
  att samtliga delar av tjänsten sluttestats minst 3 gånger.",,"<h4>Rigorous tests:</h4> To further secure the quality of the
  software, we follow a strict software update routine in several
- steps that secure that the software is tested thoroughly before
+ steps to ensure that secure that the software is tested thoroughly before
  being launched publicly Before being finally accepted, the
  software is end-tested through at least 10 steps following a
  protocol that guarantees that every part of the service is end-tested
@@ -1449,9 +1416,9 @@
  och med våra samarbetspartners krypteras enligt högsta säkerhetsstandarder
  för att skydda data från förvanskning. För mer information läs
  under rubriken Säkerhet.",,"<h4>Encrypted communication:</h4> All communication with our
- users and our partners are encrypted pursuant the highest security
+ users and our partners are encrypted pursuant to the highest security
  standards to protect all data from distortion. For more information,
- please read the part ""Security""."
+ please read the part entitled ""Security""."
 "_legalPageH2ProofH31Body5","<h4>Personal och säkerhet:</h4> För att kunna garantera högsta
  möjliga kvalitet på bevismaterialet är det även viktigt att
  systemet är säkrat mot interna attacker.",,"<h4>Staff and security:</h4> To protect the highest quality of
@@ -1469,12 +1436,12 @@
  när de utförts och av vem. Därmed finns alltid full spårbarhet
  av ändringar genomförda i systemet.</li>",,"<li>We limit the number of individuals with access to the core
  of the system. Only our CTO and another two carefully selected
- technicians has access to make changes in our servers. Thereby,
+ technicians have access to make changes in our servers. Therefore,
  changes can only be made by a small, and carefully selected
- group of individuals.</li>	<li>All employees has to sign strict
+ group of individuals.</li>	<li>All employees have to sign strict
  contracts regulating what is allowed within the context of the
  work, and all employees are examined thoroughly before being
- employed at $ourServiceName()$.</li>	<li>The system logs all activity on
+ employed at $ourServiceName()$.</li>	<li>The system logs all activities of our
  our servers. We register all changes, when they occur, and
  who preforms them. Thereby, all changes in the system are traceable.</li>"
 "_legalPageH2ProofH32","Bevissäkring",,"Securing evidence"
@@ -1490,16 +1457,16 @@
  vi det i säkerhetsklassade datahallar som inte tillåter att
  material tas ut, förvanskas och stoppas in igen. Följande material
  lagras på detta sätt:",,"Evidence does not only have to be generated in the right way,
- but also be stored in a good way to prevent distortion and to
+ but also has to be stored in a good way to prevent distortion and to
  maintain the credibility of the evidence in a possible court
- trial. To secure our evidence, we create a so-called ""hasch""
+ trial. To secure our evidence, we create a so-called ""hash""
  from it, and stamp the hasch with a qualified signature. This
  guarantees that the evidence is qualitatively secured, and cannot
  be changed. Moreover, we take the security of evidence storage
  even one step further. After being stamped, the material is
  stored in high-security classed computer centers that does not
  allow material to be extracted, distorted and put back in again.
- The following types of material is stored in the way described
+ The following types of material are stored in the way described
  above:"
 "_legalPageH2ProofH32Body2","<li>Valda delar av våra loggar (dagligen)</li>	<li>Vår tjänst,
  själva mjukvarumaskinen som genererar de undertecknade dokumenten
@@ -1509,7 +1476,7 @@
  varje systemuppdatering)</li>",,"<li>Selected parts of our logs (daily)</li>	<li>Our service,
  the software itself that generates the signed documents (after
  each system update)</li>	<li>Our service, how it looks from
- the user's point of view when he signs a document (after each
+ the user's point of view when he/she signs a document (after each
  system update)</li>	<li>All of our test documents (after each
  system update)</li>"
 "_legalPageH2SignProcess","Dokumentsigneringsprocess",,"Document signing process"
@@ -1522,8 +1489,7 @@
  att samtliga parter ska vara införstådda med att de signerar
  och vad de signerar:",,"A condition, according to Swedish law, for a signature to be
  valid is that the signing party understands what is signed.
- If this is not the case, the contract should be considered invalid
- in a court trial. We have developed our process in the following
+ If this is not the case, the contract should be considered invalid. We have developed the following
  steps to ensure that all parties involved understand that they
  are signing, and what they are signing:"
 "_legalPageH2SignProcessH31Body2Table1","		<td>1</td>		<td>Avsändare</td>		<td>Avsändaren skapar ett konto
@@ -1531,7 +1497,7 @@
  bjuder in till ett konto eller skapar ett konto i slutsteget
  då den har varit mottagande part i ett dokument skickat genom
  $ourServiceName()$. Avsändaren antas här ha blivit införstådd i tjänsten.</td>	",,"		<td>1</td>		<td>Sender</td>		<td>The sender creates an account
- online in $ourServiceName()$, communicates with another user who invites
+ online in $ourServiceName()$, communicates with another user who is invited
  to an account, or creates an account in the last step of a signing
  process through $ourServiceName()$ in which it was a signatory. The sender
  is assumed to understand the service.</td>	"
@@ -1544,7 +1510,7 @@
 "_legalPageH2SignProcessH31Body2Table11","		<td>11</td>		<td>Mottagare</td>		<td>Slutligen, då dokumentet
  är undertecknat visas en informationstext som konstaterar att
  mottagaren har undertecknat dokumentet.</td>	",,"		<td>11</td>		<td>Recipient</td>		<td>Finally, when the document
- has been signed, an informative text shows, telling the recipient
+ has been signed, an informative text appears, telling the recipient
  that the document has been signed.</td>	"
 "_legalPageH2SignProcessH31Body2Table12","		<td>12</td>		<td>Mottagare &amp; Avsändare</td>		<td>När samtliga
  parter undertecknat dokumentet stämplar $ourServiceName()$ det med dokumentuppgifter
@@ -1573,7 +1539,7 @@
  och definierar fält i dokumentet som eventuellt ska fyllas i
  av mottagaren. I sista steget kan avsändaren underteckna dokumentet
  genom att klicka på knappen ”Underteckna”.</td>	",,"		<td>4</td>		<td>Sener</td>		<td>When the sender is inviting
- a counterpart, it follows a three step process. First, a document
+ the other party, it follows a three step process. First, a document
  is uploaded. Second, information about the counterpart is
  filled in and fields are that the counterpart is supposed to
  fill in are defined. In the last step, the sender signs the
@@ -1586,7 +1552,7 @@
  att det undertecknade dokumentet nu undertecknats och skickats.
  </td>	",,"		<td>5</td>		<td>Sender</td>		<td>When the sender clicks the
  button ""Sign"", a pop-up shows where the sender is asked if it
- s really sure that it wants to sign the document. When ""Sign""
+ s really sure about signing the document. When ""Sign""
  is clicked, an invitation is sent by e-mail to the involved
  Counterparts, and the sender is informed that the document
  has been signed and sent.</td>	"
@@ -1615,8 +1581,7 @@
  ned genom hela dokumentet till slutet och med största sannolikt
  noterat att den bläddrar genom ett dokument kan mottagaren slutligen
  klicka i en knapp med texten ”Underteckna”.</td>	",,"		<td>9</td>		<td>Recipient</td>		<td>When the recipient has
- scrolled through the whole document, and most likely noted that
- he is scrolling through a document, he clicks a button with
+ scrolled through the whole document, he clicks a button with
  the text ""Sign"" if he wants to sign.</td>	"
 "_legalPageH2SignProcessH31Body2TableHead","		<th>Steg</th>		<th>Användare</th>		<th>Juridisk orsak</th>	",,"		<th>Step</th>		<th>User</th>		<th>Legal reason</th>	"
 "_legalPageH2SignProcessH31Body3","Efter de sex steg med vilka avsändaren (steg 1-5 och 12) och
@@ -1720,8 +1685,8 @@
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignContractContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignContractDefaultHeaderBody1","har bjudit in dig att underteckna dokumentet",,"has invited you to sign the document"
-"_mailInvitationToSignContractDefaultHeaderBody2","online via tjänsten $ourServiceName()$.",,"online via $ourServiceName()$."
+"_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten $ourServiceName()$.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online via $ourServiceName()$."
+"_mailInvitationToSignContractDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online."
 "_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOfferContentIfSignatoryInstruction","1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
@@ -1732,9 +1697,8 @@
 "_mailInvitationToSignOfferContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOfferContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOfferContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignOfferDefaultHeaderBody1","har skickat offerten",,"has sent the offer"
-"_mailInvitationToSignOfferDefaultHeaderBody2","till dig och önskar din accept.      Acceptera eller avvisa offerten genom
- att följa instruktionerna nedan.",,"to you and wants you to accept it.     To accept or reject the offer:"
+"_mailInvitationToSignOfferDefaultHeader","<strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong> till dig och önskar din accept.      Acceptera eller avvisa offerten genom
+ att följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the offer <strong>$documenttitle$</strong> to you and wants you to accept it.     To accept or reject the offer:"
 "_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  Nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOrderContentIfSignatoryInstruction","1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
@@ -1745,12 +1709,11 @@
 "_mailInvitationToSignOrderContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOrderContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOrderContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignOrderDefaultHeaderBody1","har skickat orderbekräftelsen",,"has sent the order confirmation"
-"_mailInvitationToSignOrderDefaultHeaderBody2","till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
- följa instruktionerna nedan.",,"to you and wants your confirmation. To confirm or reject the order:"
+"_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
+ följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or reject the order:"
 "_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-"_mailInvitationToViewDefaultHeaderBody1","har bjudit in dig att se dokumentet",,"has invited you to view the document"
-"_mailInvitationToViewDefaultHeaderBody2","online via tjänsten $ourServiceName()$.",,"online via $ourServiceName()$."
+"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten $ourServiceName()$.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong> online via $ourServiceName()$."
+"_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong> online."
 "_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
 "_mailInviteUserAsCompanyAccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
  huvudkonto till ditt konto. Om du accepterar blir ditt konto
@@ -1809,12 +1772,17 @@
  $partylist:noescape()$ och $ourServiceName()$ har utfärdat ett verifikat
  för accepten.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
  and $ourServiceName()$ has verified the confirmation."
+"_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
+ $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$  och $ourServiceName()$ har utfärdat ett verifikat
  för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$  and $ourServiceName()$ has verified the confirmation."
+"_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
+ av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$.",
 "_mailRejectContractMailContentContractRejected","<strong>$rejectorName$</strong> har avvisat att underteckna
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
  är därmed avbruten.",,"<strong>$rejectorName$</strong> has  rejected
@@ -2201,7 +2169,7 @@ for creating an account with us. When you have activated your account you will b
 "_pageDocumentForSignContentRejectFooterReject","Avvisa",,"Reject"
 "_pageDocumentForViewerHelpersPartyName","Namn på avtalspart",,"Name of party"
 "_pageFooterAbout","Om $ourServiceName()$",,"About $ourServiceName()$"
-"_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact us for feedback, questions &amp; requests </strong>"
+"_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact us with feedback, queries &amp; requests </strong>"
 "_pageFooterContact2","<strong>Telefon</strong>      $ourServicePhone()$",,"<strong>Phone</strong>         $ourServicePhone()$"
 "_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17",,"<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
 "_pageFooterContact4","<strong>Maila $ourServiceName()$</strong>          <a href=""mailto:$ourServiceMail()$"">$ourServiceMail()$</a>",,"<strong>Send email to $ourServiceName()$</strong>          <a href=""mailto:$ourServiceMail()$"">$ourServiceMail()$</a>"
@@ -2240,8 +2208,8 @@ for creating an account with us. When you have activated your account you will b
  och outsourcing till kunder runt om i världen som inkluderar
  många av Europas största företag och organisationer.",,"Logica is a leading international IT-service company creating
  value by integrating people, business and IT. Logica provides
- business oriented consultant services, system integrations and
- outsourcing to customers around the world, including many of
+ business oriented consultancy services, system integrations and
+ outsourcing services to customers around the world, including many of
  the largest companies and organisations in Europe."
 "_partnersPagePartner1Area","Identifieringsteknik",,"Identification technology"
 "_partnersPagePartner1Web","www.logica.se",,"www.logica.se"
@@ -2252,10 +2220,10 @@ for creating an account with us. When you have activated your account you will b
  e-fakturor och andra företagskritiska elektroniska dokument
  godkänns av kontrollinstitut och domstolar som fullständiga
  och oändrade över väldigt långa tidsperioder.",,"TrustWeaver is a specialist IT-security company providing e-signature,
- time stamping, archiving and invoice solutions. TrustWaever
- makes it possible for companies to be 100 % confident that e-invoices
- and other critical documents will be approved by control institutes
- and courts as complete, and unchanged over very long periods
+ time stamping, archiving and invoice solutions. TrustWeaver
+ makes it possible for companies to be 100% confident that e-invoices
+ and other critical documents will be approved by regulatory authorities
+ and courts as complete and unchanged over very long periods
  of time."
 "_partnersPagePartner2Area","Dokumentsäkerhet och signering",,"Document security and signing"
 "_partnersPagePartner2Web","www.trustweaver.com",,"www.trustweaver.com"
@@ -2265,7 +2233,7 @@ for creating an account with us. When you have activated your account you will b
  och samverkar i framtagningen av morgondagens säkerhetslösningar
  för så kallade cloud tjänster. ",,"Chalmers Technical University is one of the most prestigious
  technical universities in the world. $ourServiceName()$ cooperates closely
- with the data security group at Chalmers and participate in
+ with the data security group at Chalmers and participates in
  the development of the cloud sourced security solutions of the
  future."
 "_partnersPagePartner3Area","Datasäkerhet",,"Data security"
@@ -2273,7 +2241,7 @@ for creating an account with us. When you have activated your account you will b
 "_partnersPageTitle","| Partners",,"| Partners"
 "_password","Lösenord",,"Password"
 "_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på $ourServiceName()$. Vänligen klicka
- på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your $ourServiceName()$ account. Please click to proceed, the link is valid for 12 hours:<br/>"
+ på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your $ourServiceName()$ account. Please click to proceed. The link is valid for 12 hours:<br/>"
 "_passwordChangeLinkMailTitle","Nytt lösenord",,"New password"
 "_passwordFieldName","lösenord",,"password"
 "_paymentsadminpageAccount","For account: ",,"For account: "
@@ -2319,33 +2287,21 @@ for creating an account with us. When you have activated your account you will b
  räknar vi bara signaturer i färdigställda dokument där vi utfärdat
  vårt verifikat. Med andra ord, vi tar bara betalt när du gör
  affär.</p>",,"                    <h2>We only charge you when you make money</h2>
-                    <p>We charge you per signature. Though we
- Believe in only charging when we add value. Therefore, we only
- count and charge signatures in completed documents. In other
- words, we charge only when you deal.</p>"
+                    <p>We charge you per signature, but we believe in charging only when we add value. Therefore we count just the signatures in completed documents. In other words, we charge if and when you make a deal.</p>"
 "_priceplanPageBelowTable2","                    <h2>Gratis för privatpersoner och enmansföretagare</h2>
                     <p>Det finns tusen skäl varför alla bör signera
  sina dokument elektroniskt. Vår ambition är att alltid jobba
  nära kunden i tätt samarbete. Tyvärr har vi inte möjlighet att
  hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt
  konto för alla mindre användare. 1 användare, 5 fria signaturer
- per månad och 50 dokument i lagring.</p>",,"                    <h2>Free for private persons and proprietors</h2>
-                    <p>There are a thousand reasons for everyone
- to start signing their documents electronically. Our ambition
- is to work closely and cooperate with our customers. Unfortunately,
- we are not able to help all our target groups actively Therefore,
- we offer a support-free account for small users. 1 user, 5 free
- signatures per month and storage of 50 documents.</p>"
+ per månad och 50 dokument i lagring.</p>",,"                    <h2>Free for personal use</h2>                     <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
 "_priceplanPageBelowTable3","                    <h2>Rabatter till ej vinstdrivande organisationer</h2>
                     <p>Vi gillar engagemang och eldsjälar som
  vill förändra. Därför stödjer vi ej vinstdrivande organisationer
- genom att erbjuda bra rabatter på våra listpriser.</p>",,"                    <h2>Discount for non-profit organisations</h2>
-                    <p>We enjoy dedication and enthusiasts who
- wants to make a change. We therefore support non-profit organisations
- by offering them large discounts on our list prices.</p>"
+ genom att erbjuda bra rabatter på våra listpriser.</p>",,"                    <h2>Discounts for non-profit organisations</h2>                     <p>We appreciate dedicated enthusiasts who  want to make a change. Therefore we support non-profit organisations  by offering them discounts on our list prices.</p>"
 "_priceplanPageH1","Priser",,"Prices"
-"_priceplanPageH1Body1","Skriva på dokument snabbt, smidigt och säkert!",,"Sign documents, fast, simple and secure!"
-"_priceplanPageH1Body2","Registrera dig på under minuten och testa 14 dagar redan idag.",,"Register takes less than a minute, try it out for 14 days starting
+"_priceplanPageH1Body1","Skriva på dokument snabbt, smidigt och säkert!",,"Sign documents quickly, simply and securely."
+"_priceplanPageH1Body2","Registrera dig på under minuten och testa 14 dagar redan idag.",,"Registration takes less than a minute. Try it out for free
  today!"
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
@@ -2362,31 +2318,19 @@ for creating an account with us. When you have activated your account you will b
  kr/signatur</p>                                </th>       
                          <th>                               
      <h3>Enterprise</h3>                                    <p>Offert</p></th>
-                                ","<th><h2>Price plan</h2>                                </th>
+                                ","<th><h2>Price plan</h2>                                </th>                                <th>                                     <h3>Small</h3>                                     <p>35kr/signature</p>                                </th>                                 <th>                                     <h3>Team</h3>                                     <p>32.5kr/signature</p>                                </th>                                 <th>                                     <h3>Business</h3>                                     <p>30 kr/signature</p>                                </th>                                 <th>                                     <h3>Enterprise</h3>                                     <p>Negotiable</p></th>                                ","<th><h2>Price plan</h2>                                </th>
                                <th>                         
            <h3>Small</h3>                                   
- <p>35kr/signature</p>                                </th>
+ <p>£3.50/signature</p>                                </th>
                                 <th>                        
             <h3>Team</h3>                                   
- <p>32.5kr/signature</p>                                </th>
+ <p>£3.25/signature</p>                                </th>
                                 <th>                        
             <h3>Business</h3>                               
-     <p>30 kr/signature</p>                                </th>
+     <p>£3.00/signature</p>                                </th>
                                 <th>                        
             <h3>Enterprise</h3>                             
-       <p>Offer</p></th>                                ","<th><h2>Price plan</h2>                                </th>
-                               <th>                         
-           <h3>Small</h3>                                   
- <p>3.50 £/signature</p>                                </th>
-                                <th>                        
-            <h3>Team</h3>                                   
- <p>3.25 £/signature</p>                                </th>
-                                <th>                        
-            <h3>Business</h3>                               
-     <p>3.00 £/signature</p>                                </th>
-                                <th>                        
-            <h3>Enterprise</h3>                             
-       <p>Offer</p></th>                                "
+       <p>Negotiable</p></th>                                "
 "_priceplanPageTableHighlightedColumn","                            <li class=""top"">                
                 <h3>Business</h3>                           
      <p>30 kr/signatur</p>                            </li> 
@@ -2412,10 +2356,10 @@ for creating an account with us. When you have activated your account you will b
                             <li></li>                       
      <li class=""odd""></li>                            <li class=""bottom""></li>",,"                            <li class=""top"">                
                 <h3>Business</h3>                           
-     <p>3.00 £/signature</p>                            </li>
+     <p>£3.00/signature</p>                            </li>
                             <li>50</li>                     
        <li class=""odd"">2 000</li>                           
- <li>Unlimited</li>                            <li class=""odd"">Offer</li>
+ <li>Unlimited</li>                            <li class=""odd"">Negotiable</li>
                             <li>2 x 1h</li>                 
            <li class=""odd"">4h</li>                          
   <li>Phone</li>                            <li class=""odd"">✓</li>
@@ -2441,7 +2385,7 @@ for creating an account with us. When you have activated your account you will b
                                 <td>Offert</td>",,"                                <td>Number of users</td>    
                             <td>5</td>                      
           <td>15</td>                                <td>50</td>
-                                <td>Offer</td>"
+                                <td>Negotiable</td>"
 "_priceplanPageTableRow10","                                <td>E-signering</td>        
                         <td>✓</td>                          
       <td>✓</td>                                <td>✓</td>  
@@ -2565,7 +2509,7 @@ for creating an account with us. When you have activated your account you will b
 "_priceplanPageTableRow26","                                <td>Massutskick</td>        
                         <td></td>                           
      <td></td>                                <td>✓</td>    
-                            <td>✓</td>",,"                                <td>Mass send</td>          
+                            <td>✓</td>",,"                                <td>Mass sendout</td>          
                       <td></td>                             
    <td></td>                                <td>✓</td>      
                           <td>✓</td>"
@@ -2600,7 +2544,7 @@ for creating an account with us. When you have activated your account you will b
 "_priceplanPageTableRow30","                                <td>Skapa egen process</td> 
                                <td></td>                    
             <td></td>                                <td></td>
-                                <td>✓</td>",,"                                <td>Create own process</td> 
+                                <td>✓</td>",,"                                <td>Custom workflow</td> 
                                <td></td>                    
             <td></td>                                <td></td>
                                 <td>✓</td>"
@@ -2608,31 +2552,28 @@ for creating an account with us. When you have activated your account you will b
                                 <td>Uppgradera</td>         
                        <td>Uppgradera</td>                  
               <td>Offert</td>                               
- <td>Offert</td>",,"                                <td>Trustweaver premium storage</td>
-                                <td>Upgrade</td>            
-                    <td>Upgrade</td>                        
-        <td>Offer</td>                                <td>Offer</td>"
+ <td>Offert</td>",,"                                <td>Trustweaver premium storage</td>                                 <td>Upgrade</td>                                 <td>Upgrade</td>                                 <td>Negotiable</td>                                <td>Negotiable</td>"
 "_priceplanPageTableRow5","                                <td>Uppstartsutbildning</td>
                                 <td>0.5 h</td>              
                   <td>1 h</td>                              
   <td>2 x 1 h</td>                                <td>Offert</td>",,"                                <td>Startup training</td>   
                              <td>0.5 h</td>                 
                <td>1 h</td>                                <td>2
- x 1 h</td>                                <td>Offer</td>"
+ x 1 h</td>                                <td>Negotiable</td>"
 "_priceplanPageTableRow6","                                <td>Hjälp med konfiguration</td>
                                 <td>1 h</td>                
                 <td>2 h</td>                                <td>4
  h</td>                                <td>Offert</td>",,"                                <td>Configuration help</td> 
                                <td>1 h</td>                 
                <td>2 h</td>                                <td>4
- h</td>                                <td>Offer</td>"
+ h</td>                                <td>Negotiable</td>"
 "_priceplanPageTableRow7","                                <td>Support</td>            
                     <td>E-post</td>                         
        <td>Telefon</td>                                <td>Telefon</td>
                                 <td>Personlig kontakt</td>",,"                                <td>Support</td>            
                     <td>E-mail</td>                         
        <td>Phone</td>                                <td>Phone</td>
-                                <td>Peronal contact</td>"
+                                <td>Personal</td>"
 "_priceplanPageTableRow8","                                <td>Avtals-, offert- eller orderprocess</td>
                                 <td>✓</td>                  
               <td>✓</td>                                <td>✓</td>
@@ -2643,24 +2584,24 @@ for creating an account with us. When you have activated your account you will b
 "_priceplanPageTableRow9","                                <td>Tredjepartsverifiering</td>
                                 <td>✓</td>                  
               <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"                                <td>Third party verification</td>
+                                <td>✓</td>",,"                                <td>Third-party verification</td>
                                 <td>✓</td>                  
               <td>✓</td>                                <td>✓</td>
                                 <td>✓</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
-"_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices excludes VAT"
+"_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
 "_privacyPolicyPageH1","SEKRETESSPOLICY (2011:02)",,"PRIVACY POLICY (2011:02)"
 "_privacyPolicyPageH1Body","<p>All information Ni delger $ourServiceName()$ eller dess Tjänster hanteras
  med största möjliga försiktighet och innehållets säkerhet har
  högsta prioritet för $ourServiceName()$. Er integritet är viktig för oss.</p><br
  /><p>Nedan följer en mer detaljerad beskrivning av hur $ourServiceName()$
  hanterar Er information. Vid vidare frågor, vänligen kontakta
- oss på info@skrivapa.se.</p>",,"<p>All the data You provide to $ourServiceName()$ or its Services is handled
+ oss på info@scrive.com.</p>",,"<p>All the data You provide to $ourServiceName()$ or its Services is handled
  with the highest caution possible and the security of the contents
  is of the highest priority to $ourServiceName()$. Your integrity is important
  to us.</p><br /><p>A more detailed description of how your data
  is handled by $ourServiceName()$ follows below. If you have further questions,
- please contact us at info@skrivapa.se.</p>"
+ please contact us at info@scrive.com.</p>"
 "_privacyPolicyPageH21","Återförsäljning eller delgivning av information",,"Retailing or sharing of data"
 "_privacyPolicyPageH21Body","$ourServiceName()$ kommer inte att sälja, hyra eller låna ut eller på annat
  sätt till tredje part delge Er information insamlad genom Tjänsten
@@ -2670,7 +2611,7 @@ for creating an account with us. When you have activated your account you will b
  i anonymiserad form för att göra statistiska analyser som vi
  kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.",,"$ourServiceName()$ will not sell, rent out or lend, or in any other way share
  data that you have provided us through the service or in any
- other way to a to a third party except for in those cases regulated
+ other way to a to a Third-party except for in those cases regulated
  by the Terms Of Service or your written approval. Though, we
  sometimes use anonymous user data for statistical analyses
  that are available to third parties or our partners."
@@ -2699,7 +2640,7 @@ for creating an account with us. When you have activated your account you will b
  och kontohantering. Dessa cookies kommer inte att säljas, hyras
  eller lånas ut eller på annat sätt visas till tredje part.",,"$ourServiceName()$ uses cookies to simplify user log in and account management.
  These cookies will not be sold, rented out or lent, or in
- any other way shared with a third party."
+ any other way shared with a Third-party."
 "_privacyPolicyPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
  ni delger $ourServiceName()$ eller dess tjänster hanteras med största
  möjliga försiktighet.",,"Sign and store contracts online. All data you provide to $ourServiceName()$
@@ -2710,37 +2651,37 @@ for creating an account with us. When you have activated your account you will b
  Våra kunder och våra kunders kunder älskar enkelheten.",,"$ourServiceName()$ is a service for signing and storing contracts online.
  Our customers and their customers just love the simplicity."
 "_queryColumnBody2","Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga
- förpliktelser.",,"We give you 14 days full functionality free of charge. No obligations."
-"_queryColumnEmail","E-post: info@skrivapa.se",,"Email: info@skrivapa.se"
+ förpliktelser.",,"We give you a month of full functionality free of charge. No obligations."
+"_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
 "_queryColumnHead","Avtala redan idag!",,"Sign documents today!"
 "_queryColumnPhone","Telefon: 010-195 99 15",,"Phone: +46 (0)10-195 99 15"
-"_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us!"
+"_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på
- länken<br/>        <a href=""$link$"">$link$</a><br/>        2.
+ Länken    <a href=""$link$"">$link$</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
-         4. Färdig",,"<i>To continue</i><br/>        1. Click the link<br/>         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done"
+         4. Färdig <BR/> $footer:noescape()$",,"<i>To continue</i><br/>        1. Click the link         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
 Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedOfferContentInstruction","1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
+"_remindMailNotSignedOfferContentInstruction","1. Klicka på länken        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
- avvisa)<br/>        4. Färdig",,"1. Click the link<br/>        <a href=""$link$"">$link$</a><br/>
+ avvisa)<br/>        4. Färdig <BR/> $footer:noescape()$",,"1. Click the link        <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
- reject)<br/>        4. Done"
+ reject)<br/>        4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedOfferContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
  offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or rejected the order  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedOrderContentInstruction","1. Klicka på länken<br/>        <a href=""$link$"">$link$</a><br/>
+"_remindMailNotSignedOrderContentInstruction","1. Klicka på länken      <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
- avvisa)<br/>         4. Färdig",,"1. Click the link<br/>        <a href=""$link$"">$link$</a><br/>
+ avvisa)<br/>         4. Färdig <BR/> $footer:noescape()$",,"1. Click the link       <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3. Confirm the order (or
- reject)<br/>         4. Done"
+ reject)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedOrderContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
@@ -2750,14 +2691,26 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten $ourServiceName()$. Dokumentet bifogas
  med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using $ourServiceName()$. Please find it attached."
+"_remindMailSignedContractStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
+ <strong>$documenttitle$</strong>  till dig. Dokumentet
+ har undertecknats av dig. Dokumentet bifogas
+ med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document. Please find it attached."
 "_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig via tjänsten $ourServiceName()$. Den accepterade
  offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using $ourServiceName()$. Please find it attached."
+"_remindMailSignedOfferStandardHeaderSendRequestWithService","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
+  <strong>$documenttitle$</strong>        till dig. Offerten
+ har accepterats av dig. Den accepterade
+ offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer.. Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  bekräftat via tjänsten $ourServiceName()$. Orderbekräftelsen bifogas med
  detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using $ourServiceName()$.  Please find it attached."
+"_remindMailSignedOrderStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
+ <strong>$documenttitle$</strong>        till dig som du har
+ Bekräftat. Orderbekräftelsen bifogas med
+ detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>. Please find it attached."
 "_reminderFormFooterOwnMessage"," Skriv eget meddelande ",,"Write own message"
 "_reminderFormHead","Skicka påminnelse ",,"Send reminder"
 "_reminderFormSendReminder","Skicka påminnelse ",,"Send reminder"
@@ -2853,8 +2806,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  a high security standard to meet the expectations of our customers.</li>	<li>Our
  customer use our service for storage of their most sensitive
  company data. When protecting this kind of data, sufficiently
- good is not good enough. Materials and documents has to be 100
- % protected and secured.</li>"
+ good is not good enough. Materials and documents has to be 100% protected and secured.</li>"
 "_securityPageH2IntroBody3","Vi strävar efter att alltid tillämpa den senaste tekniken i vår
  tjänst för att på så sätt kunna ligga i framkant och vara marknadsledande
  på säkerhet. Följande är några av våra viktigaste säkerhetsåtgärder
@@ -2995,14 +2947,16 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signViewNotsignedbymeAttachmentBoxHead","Bilaga",,"Attachment"
 "_signViewSigAttachmentBoxChooseFile","Välj fil",,"Select file"
 "_signViewSigAttachmentBoxHead","Begärda bilagor",,"Requested attachments"
-"_signatoryMessageIfElse","Har ej levererats",,"Has not been delivered"
+"_signatoryMessageIfElse","Skickat ",,"Sent"
 "_signatoryMessageIfSignatoryDatamismatch","Felaktig e-legitmation",,"Incorrect e-ID"
-"_signatoryMessageIfSignatoryDeliveredEmail","Har ej granskat online",,"Has not reviewed online"
-"_signatoryMessageIfSignatoryReaddate","Läst e-post",,"E-mail read"
-"_signatoryMessageIfSignatoryRejecteddate","Avvisat",,"Rejected"
+"_signatoryMessageIfSignatoryDeliveredEmail","Levererat ",,"Delivered"
+"_signatoryMessageIfSignatoryReaddate","Läst e-post ",,"Email read"
+"_signatoryMessageIfSignatoryRejected","Avvisat",,"Rejected"
 "_signatoryMessageIfSignatorySeendate","Granskat online",,"Reviewed online"
 "_signatoryMessageIfTimedout","Förfallodatum har passerat",,"Expired"
-"_signatorycanceledcontracttext","Dokumentet återkallad",,"Document withdrawn"
+"_signatoryMessageIfSigned","Signerat ",,"Signed"
+"_signatoryMessageIfCancelled","Avbrutet ",,"Cancelled"
+"_signatorycanceledcontracttext","Dokumentet återkallat",,"Document withdrawn"
 "_signatorycanceledoffertext","Offert återkallad",,"Offer withdrawn"
 "_signatorycanceledordertext","Order återkallad",,"Order withdrawn"
 "_signatoryname","Fullständigt namn",,"Full name"
@@ -3021,8 +2975,8 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signupVipPageViewEmail","Fyll i din e-postadress",,"Enter your e-mail address"
 "_signupVipPageViewHead","Gratis $ourServiceName()$ till och med 31 december!",,"Free $ourServiceName()$ through December 31!"
 "_skrivapa","$ourServiceName()$",,"$ourServiceName()$"
-"_standardBodyWrapperBody","14 dagar full funktionalitet utan kostnad. Inga förpliktelser.",,"14 days full functionality free of charge. No obligations."
-"_standardBodyWrapperHead","Skapa konto nu!",,"Create account now!"
+"_standardBodyWrapperBody","14 dagar full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial. Easy signup."
+"_standardBodyWrapperHead","Skapa konto nu!",,"Create your account now."
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
 "_step1select","Välj dokument",,"Select document"
 "_step1selectIfTemplate","Välj mall",,"Select template"
@@ -3055,7 +3009,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  e-post – inte kunnat lösa, samtidigt som vi bibehåller en hög
  säkerhetsstandard. Vår absolut främsta prioritet är att skydda
  Er integritet och säkerhet i vår tjänst. $ourServiceName()$ Allmänna Villkor
- (”Villkoren”) gäller för användning av hemsidan skrivapa.se
+ (”Villkoren”) gäller för användning av hemsidan scrive.com
  (Tjänsten) och den elektroniska tjänsten för att administrera
  och som deltagande part underteckna dokument (""Part"" eller ""Avtalspart"") (också
  Tjänsten) och är ett avtal mellan Er som använder Tjänsten (”Användaren”
@@ -3076,11 +3030,11 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_termsPageH2CommunicationBody","Genom att öppna ett konto på Tjänsten ger Ni $ourServiceName()$ tillstånd
  att genom Tjänsten eller genom en representant kontakta Er via
  Er telefon eller e-postadress. Om Ni vill sluta få våra utskick
- via e-post ska Ni skicka ett e-postmeddelande till oss på support@skrivapa.se.
+ via e-post ska Ni skicka ett e-postmeddelande till oss på support@scrive.com.
  Observera att $ourServiceName()$ fortfarande kommer att behöva kommunicera
  med Er via e-post om Era transaktioner och andra kontorelaterade
  frågor, och att dessa e-postmeddelanden inte är e-postreklam
- och inte elimineras genom ovanstående förfarande. ",,"By opening an account on the Service, You give permission to $ourServiceName()$ to, through the Service or through a representative, contact You via your telephone or e-mail address. If You do not wish to receive our mailings via email, please send an email to support@skrivapa.se. Please note that $ourServiceName()$ will still need to communicate with You via email about your transactions and other account-related issues, and that these emails are not commercial emails and will not be eliminated by the above procedure."
+ och inte elimineras genom ovanstående förfarande. ",,"By opening an account on the Service, You give permission to $ourServiceName()$ to, through the Service or through a representative, contact You via your telephone or e-mail address. If You do not wish to receive our mailings via email, please send an email to support@scrive.com. Please note that $ourServiceName()$ will still need to communicate with You via email about your transactions and other account-related issues, and that these emails are not commercial emails and will not be eliminated by the above procedure."
 "_termsPageH2Datahandeling","3. Datahanteringspolicy",,"3. Data Management Policy"
 "_termsPageH2DatahandelingBody1","$ourServiceName()$ Arkiv är ett säkert och smidigt dokumenthanterings-
  och arkiveringssystem som är en del av Tjänsten. $ourServiceName()$ lagrar
@@ -3187,7 +3141,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  övergå, totalt, summan av det minsta beloppet av antingen (A)
  Era totala betalningar för användandet av Hemsidan och Tjänsten
  under detta avtal inom senaste 12-månadersperioden eller, (B)
- max femtusen kronor.",,"You agree to hold $ourServiceName()$ and its parent companies, sister companies, subsidiaries, affiliates, service providers, other Users, distributors, licensors, officers, directors and employees free from any claim or demand, including all attorneys' fees, from You or any third party for any direct, indirect, random, special, following or specific injury, including but not limited to, damages for loss of profits, goodwill, use, data or other intangible losses (even if $ourServiceName()$ has been notified of this option), and including injuries resulting from: (i) documents or transactions submitted by the Service where $ourServiceName()$ not been a direct party to the agreement, (ii) the use or inability to use, including errors/mistakes, interruptions or delays; unauthorized access to or alteration of your documents or transactions or (iii) any other issue relating to the Service. $ourServiceName()$'s responsibility shall not exceed, in total, the sum of the minimum amount of either (A) Your total payments for the use of the Website and the Service under these Terms within the past 12 months or, (B) maximum five thousand kronor."
+ max femtusen kronor.",,"You agree to hold $ourServiceName()$ and its parent companies, sister companies, subsidiaries, affiliates, service providers, other Users, distributors, licensors, officers, directors and employees free from any claim or demand, including all attorneys' fees, from You or any Third-party for any direct, indirect, random, special, following or specific injury, including but not limited to, damages for loss of profits, goodwill, use, data or other intangible losses (even if $ourServiceName()$ has been notified of this option), and including injuries resulting from: (i) documents or transactions submitted by the Service where $ourServiceName()$ not been a direct party to the agreement, (ii) the use or inability to use, including errors/mistakes, interruptions or delays; unauthorized access to or alteration of your documents or transactions or (iii) any other issue relating to the Service. $ourServiceName()$'s responsibility shall not exceed, in total, the sum of the minimum amount of either (A) Your total payments for the use of the Website and the Service under these Terms within the past 12 months or, (B) maximum five thousand kronor."
 "_termsPageH2Signprocess","4. Signerade dokument och signeringsprocess",,"4. Signed documents and the signing process"
 "_termsPageH2SignprocessBody1","$ourServiceName()$ tillhandahåller Tjänsten som ett verktyg för Användaren
  att kunna underteckna dokument med tredje part. Följande bestämmelser
@@ -3310,7 +3264,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  som, enligt $ourServiceName()$ anses bryta mot Villkoren eller på annat
  sätt bryter mot gällande lagar och regler. Ni är själv fullt
  ansvarig för innehållet i Ert konto och de transaktioner som
- görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes, to disrupt the Service or to disseminate content that violates privacy, copyright or proprietary right of any third party, or for purposes of $ourServiceName()$ that are or may be perceived as illegal, obscene, abusive, libelous, threatening, vulgar or otherwise reprehensible. $ourServiceName()$ is not responsible for any failure or delay in removing such content. $ourServiceName()$ has the right, but not the obligation, to monitor all user-generated content, including comments and communications, in order to determine whether conditions are complied with by the user, to ascertain that the laws and rules are abided by or to satisfy requests from a government agency. $ourServiceName()$ and its partners have the right to, at any time, delete, reject and litigate against users and user content, if $ourServiceName()$ deems it to violate the Terms or otherwise violate any applicable laws and regulations. You yourself are fully responsible for the contents of your account and transactions made with your account through the Service."
+ görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes, to disrupt the Service or to disseminate content that violates privacy, copyright or proprietary right of any Third-party, or for purposes of $ourServiceName()$ that are or may be perceived as illegal, obscene, abusive, libelous, threatening, vulgar or otherwise reprehensible. $ourServiceName()$ is not responsible for any failure or delay in removing such content. $ourServiceName()$ has the right, but not the obligation, to monitor all user-generated content, including comments and communications, in order to determine whether conditions are complied with by the user, to ascertain that the laws and rules are abided by or to satisfy requests from a government agency. $ourServiceName()$ and its partners have the right to, at any time, delete, reject and litigate against users and user content, if $ourServiceName()$ deems it to violate the Terms or otherwise violate any applicable laws and regulations. You yourself are fully responsible for the contents of your account and transactions made with your account through the Service."
 "_termsPageH2UseraccountsBody4","<h4>c. Kostnader och betalning:</h4> $ourServiceName()$ tar betalt månadsvis
  för Era upplupna kostnader enligt gällande prisplan genom fakturering
  eller genom att dra pengarna från Ert registrerade kreditkort.
@@ -3334,10 +3288,10 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  (3) betalning förfallen till kronofogden eller (4) uttrycklig
  åtgärdsförfrågan från lagorgan eller andra statliga myndigheter.
  $ourServiceName()$ kommer inte att vara skyldig Er eller någon tredje
- part för att Ert konto på Tjänsten frysts eller avslutats. ",,"<h4>d. Suspension of Service or termination:</h4> You agree to that $ourServiceName()$ at any time, without notice, may freeze your account or otherwise stop your access to the Service at (a) alleged breaches of the conditions, (2) our attempt to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action request from any legal authority or other government authorities. You agree to that $ourServiceName()$ also is entitled to, with a week's notice, terminate your account at (1) clear violations of the conditions, (2) User inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. $ourServiceName()$ will not be liable to You or any third party to your account based on the Service being frozen or terminated."
+ part för att Ert konto på Tjänsten frysts eller avslutats. ",,"<h4>d. Suspension of Service or termination:</h4> You agree to that $ourServiceName()$ at any time, without notice, may freeze your account or otherwise stop your access to the Service at (a) alleged breaches of the conditions, (2) our attempt to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action request from any legal authority or other government authorities. You agree to that $ourServiceName()$ also is entitled to, with a week's notice, terminate your account at (1) clear violations of the conditions, (2) User inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. $ourServiceName()$ will not be liable to You or any Third-party to your account based on the Service being frozen or terminated."
 "_termsPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
  ni delger $ourServiceName()$ eller dess tjänster hanteras med största
- möjliga försiktighet.",,"Sign and store your contracts online. All information you share with $ourServiceName()$ and its services are hanled with great carefulness."
+Möjliga försiktighet.",,"Sign and store your contracts online. All information you share with $ourServiceName()$ and its services are handled with great care."
 "_termsPageTitle","| Allmänna villkor",,"| Terms Of Service"
 "_timetosigninfo","Undertecknas senast:",,"Sign before:"
 "_title","$ourServiceName()$ | Signera och arkivera avtal elektroniskt",,"$ourServiceName()$ | Sign and store contracts online"
@@ -3371,4 +3325,10 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_youCanNotInviteSameEmail","Du kan endast bjuda in e-post adresser med samma domännamn som din egen.",,"You can only invite e-mail addresses with the same domain alias as your own."
 "_youMustSetParnerEmail","Du måste ange e-post till motpart.",,"You must enter an email address to your counterpart."
 "_yourSigningPluginFailed","Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. ",,"You sign plug-in failed to sign the document. Please contact your e-ID provider."
+"_mailMailAPIConfirmTitle","$documenttitle$ skickat",,"$documenttitle$ sent"
+"_mailMailAPIConfirmContractHeader","Kontraktet <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
+"_mailMailAPIConfirmOrderHeader","Order <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The order <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
+"_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
+"_tweetAccount","skrivapa",,"scriveuk"
+"_mailsubheader"," Signera Dokument Online med Scrive",," Sign Documents Online with Scrive"

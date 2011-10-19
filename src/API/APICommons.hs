@@ -13,19 +13,23 @@
 -- There are constants for stuff like document type, document state, to say thet a signatory is viewer etc.
 -- Don't invent them yourself. Don't return a 'human readable' string. Use stuff from here.
 --
--- !! JSON priners (like the one api_documents) should be shared as much as posible
+-- !! JSON priners (like the one api_document) should be shared as much as posible
 --
 -- Also if there is a common reader for more then one api
 -- , like for files or signatories it should be put here
 -----------------------------------------------------------------------------
 module API.APICommons (
-            api_document
+            api_document_read
+          , api_document
           , SignatoryTMP(..)
           , getSignatoryTMP
           , mergeSignatoryWithTMP
           , toSignatoryDetails
           , toDocumentType
           , getFiles
+          , api_document_tag
+          , api_signatory
+          , api_file
         ) where
 
 
@@ -47,6 +51,7 @@ import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
+import DB.Classes
 
 {- -}
 
@@ -102,10 +107,10 @@ data DOCUMENT_TYPE =
     deriving (Bounded,Ord,Eq)
 
 instance SafeEnum DOCUMENT_TYPE where
-    fromSafeEnum DOCUMENT_TYPE_CONTRACT = 1
+    fromSafeEnum DOCUMENT_TYPE_CONTRACT          = 1
     fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 2
-    fromSafeEnum DOCUMENT_TYPE_OFFER = 3
-    fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE = 4
+    fromSafeEnum DOCUMENT_TYPE_OFFER             = 3
+    fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE    = 4
     toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
     toSafeEnum 2 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
     toSafeEnum 3 = Just DOCUMENT_TYPE_OFFER
@@ -113,21 +118,21 @@ instance SafeEnum DOCUMENT_TYPE where
     toSafeEnum _ = Nothing
 
 toDocumentType :: DOCUMENT_TYPE -> DocumentType
-toDocumentType DOCUMENT_TYPE_CONTRACT = Signable Contract
-toDocumentType DOCUMENT_TYPE_OFFER = Signable Offer
+toDocumentType DOCUMENT_TYPE_CONTRACT          = Signable Contract
+toDocumentType DOCUMENT_TYPE_OFFER             = Signable Offer
 toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
-toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = Template Offer
+toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE    = Template Offer
 
 {- Building JSON structure representing object in any API response
    TODO: Something is WRONG FOR ATTACHMENTS HERE
 -}
 api_document_type :: Document ->  DOCUMENT_TYPE
 api_document_type doc
-    | Template Contract == documenttype doc  = DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    | Template Offer == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
+    | Template Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    | Template Offer    == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
     | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
-    | Signable Offer == documenttype doc = DOCUMENT_TYPE_OFFER
-    | otherwise = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
+    | Signable Offer    == documenttype doc = DOCUMENT_TYPE_OFFER
+    | otherwise                             = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
 
 
 api_document_status :: Document -> DOCUMENT_STATUS
@@ -155,7 +160,8 @@ api_document_relation sl
     | otherwise                     = DOCUMENT_RELATION_VIEWER
 
 api_signatory :: SignatoryLink -> JSValue
-api_signatory sl = JSObject $ toJSObject $ fields
+api_signatory sl = JSObject $ toJSObject $ 
+    fields
     ++
     case maybeseeninfo sl of
      Just seeninfo ->  [("seen", api_date $ signtime seeninfo)]
@@ -167,9 +173,9 @@ api_signatory sl = JSObject $ toJSObject $ fields
     ++
     [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]
     ++
-    [("fields", JSArray $ for (filter isFieldCustom $ signatoryfields $ signatorydetails sl) $ \SignatoryField{sfType = CustomFT label _, sfValue} -> JSObject $ toJSObject [
+    [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
         ("name",  JSString $ toJSString $ BS.toString label)
-      , ("value", JSString $ toJSString $ BS.toString sfValue)
+      , ("value", JSString $ toJSString $ BS.toString (sfValue s))
       ]
     )]
     where
@@ -188,35 +194,39 @@ api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [
       ("name", showJSON $ BS.toString $ tagname tag)
     , ("value", showJSON $ BS.toString $ tagvalue tag)]
+                       
+api_file :: BS.ByteString -> BS.ByteString -> JSValue
+api_file name content = 
+  let base64data = BASE64.encode (BS.unpack content) in
+  JSObject $ toJSObject [ ("name", showJSON $ BS.toString name)
+                        , ("content", showJSON base64data)]
 
-api_document_file :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
-api_document_file file = do
+api_document_file_read :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
+api_document_file_read file = do
     ctx <- getContext
     content <- liftIO $ getFileContents ctx file
-    let base64data = BASE64.encode (BS.unpack content)
-    return $ JSObject $ toJSObject [
-          ("name", showJSON $ BS.toString $ filename file)
-        , ("content", showJSON base64data)]
+    return $ api_file (filename file) content
 
+api_document :: Maybe [JSValue] -> Document -> JSValue
+api_document mfiles doc = JSObject $ toJSObject $ [
+  ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
+  , ("title", showJSON  $ BS.toString $ documenttitle doc)
+  , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
+  , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
+  , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
+  , ("tags", JSArray $ map api_document_tag $ documenttags doc)
+  , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
+  , ("mdate", api_date $ documentmtime doc)
+  ] ++ case mfiles of
+  Nothing -> []
+  Just files -> [("files", JSArray files)]
+  
 
-api_document :: (APIContext c, Kontrakcja m) => Bool -> Document -> APIFunction m c JSValue
-api_document addFiles doc = do
-    files <- if addFiles
-              then do
-               files <- mapM api_document_file $ getFilesByStatus doc
-               return [("files", JSArray files)]
-              else return []
-    return $ JSObject $ toJSObject $ [
-       ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
-     , ("title", showJSON  $ BS.toString $ documenttitle doc)
-     , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
-     , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
-     , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
-     , ("tags", JSArray $ map api_document_tag $ documenttags doc)
-     , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
-     , ("mdate", api_date $ documentmtime doc)
-     ]
-     ++ files
+api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
+api_document_read False doc = return $ api_document Nothing doc
+api_document_read True doc = do
+  files <- mapM api_document_file_read =<< getFilesByStatus doc
+  return $ api_document (Just files) doc
 
 
 api_date :: MinutesTime -> JSValue
@@ -238,8 +248,8 @@ getSignatoryTMP = do
     fstname        <- apiAskBS "fstname"
     sndname        <- apiAskBS "sndname"
     company        <- apiAskBS "company"
-    personalnumber <- apiAskBS "personalnumber"
-    companynumber  <- apiAskBS "companynumber"
+    personalnumber <- apiAskBS "personalnr"
+    companynumber  <- apiAskBS "companynr"
     email          <- apiAskBS "email"
     fields <- apiLocal "fields" $ apiMapLocal $ do
                                         name <- apiAskBS "name"

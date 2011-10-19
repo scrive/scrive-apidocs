@@ -44,6 +44,15 @@ showUserSecurity =
                <div class="account-body">
                    <table>
                        <tr>
+                           <td>$_UserRegion()$</td>
+                           <td><select name="region">
+                                     <option $if(region.se)$ selected="" $endif$ value="REGION_SE">$_Sweden()$</option>
+                                     <option $if(region.gb)$ selected="" $endif$ value="REGION_GB">$_Britain()$</option>
+                               </select>
+                            </td>
+                       </tr>
+                       <!--
+                       <tr>
                            <td>$_UserLanguage()$</td>
                            <td><select name="lang">
                                      <option $if(lang.se)$ selected="" $endif$ value="LANG_SE">$_Swedish()$</option>
@@ -51,6 +60,7 @@ showUserSecurity =
                                </select>
                             </td>
                        </tr>
+                       -->
                    </table>
                </div> 
 

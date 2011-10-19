@@ -7,6 +7,8 @@ module AppControl
     , AppGlobals(..)
     , defaultAWSAction
     , handleLoginPost
+    , getDocumentLocale
+    , getUserLocale
     ) where
 
 import AppConf
@@ -41,7 +43,8 @@ import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
-import qualified ELegitimation.BankID as BankID
+import qualified Archive.Control as ArchiveControl
+import qualified ELegitimation.Routes as Elegitimation
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
@@ -78,7 +81,6 @@ import InspectXMLInstances ()
 import InspectXML
 import Util.MonadUtils
 import ForkAction
-import Happstack.Server.FileServe.BuildingBlocks
 
 {- |
   Global application data
@@ -106,28 +108,19 @@ data AppGlobals
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
-handleRoutes :: Region -> Lang -> Kontra Response
-handleRoutes ctxregion ctxlang = msum [
-     -- static pages  --TODO EM make this nice!
-       regionDir ctxregion $ langDir ctxlang $ hGetAllowHttp0 $ handleHomepage
-     , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome ctxregion ctxlang
-
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ handlePriceplanPage
-     , dirByLang ctxlang "priser" "pricing" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPriceplan ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ handleSecurityPage
-     , dirByLang ctxlang "sakerhet" "security" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkSecurity ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ handleLegalPage
-     , dirByLang ctxlang "juridik" "legal" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkLegal ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ handlePrivacyPolicyPage
-     , dirByLang ctxlang "sekretesspolicy" "privacy-policy" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPrivacyPolicy ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ handleTermsPage
-     , dirByLang ctxlang "allmana-villkor" "terms" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkTerms ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ handleAboutPage
-     , dirByLang ctxlang "om-skrivapa" "about" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkAbout ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ handlePartnersPage
-     , dirByLang ctxlang "partners" "partners" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkPartners ctxregion ctxlang
-     , regionDir ctxregion $ langDir ctxlang $ dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ handleClientsPage
-     , dirByLang ctxlang "kunder" "clients" $ hGetAllowHttp0 $ redirectKontraResponse $ LinkClients ctxregion ctxlang
+handleRoutes :: Locale -> Kontra Response
+handleRoutes locale = msum $ 
+     [ regionDir locale $ langDir locale $ hGetAllowHttp0 $ handleHomepage
+     , hGetAllowHttp0 $ redirectKontraResponse $ LinkHome locale
+     
+     , publicDir locale "priser" "pricing" LinkPriceplan handlePriceplanPage
+     , publicDir locale "sakerhet" "security" LinkSecurity handleSecurityPage
+     , publicDir locale "juridik" "legal" LinkLegal handleLegalPage
+     , publicDir locale "sekretesspolicy" "privacy-policy" LinkPrivacyPolicy handlePrivacyPolicyPage
+     , publicDir locale "allmana-villkor" "terms" LinkTerms handleTermsPage
+     , publicDir locale "om-scrive" "about" LinkAbout handleAboutPage
+     , publicDir locale "partners" "partners" LinkPartners handlePartnersPage
+     , publicDir locale "kunder" "clients" LinkClients handleClientsPage
 
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp0 $ handleSitemapPage
@@ -135,16 +128,9 @@ handleRoutes ctxregion ctxlang = msum [
 
      -- this is SMTP to HTTP gateway
      , mailAPI
-
-     -- e-legitimation stuff
-     -- I put this stuff up here because someone changed things out from under me
-     -- I will rearrange this later
-     , dir "s" $ hGet4                        $ toK4 $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken3 $ toK3 $ BankID.handleSignPostBankID
-     , dir "d" $ hGet2                        $ toK2 $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost1        $ toK1 $ BankID.handleIssuePostBankID
-
-     , dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
+     ] 
+  ++ Elegitimation.handleRoutes
+  ++ [ dir "s" $ hGet0 $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet3 $ toK3 $ DocControl.handleSignShow
      , dir "s" $ hGet4 $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  This will be droped 
      
@@ -163,28 +149,29 @@ handleRoutes ctxregion ctxlang = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "upload" $ hGetAllowHttp0 $ handleUploadPage
-     , dir "a"                     $ hGet0  $ toK0 $ DocControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleAttachmentArchive
+     , dir "upload" $ hGet0 $ toK0 $ DocControl.handleShowUploadPage
+     , dir "locale" $ hPost0 $ toK0 $ UserControl.handlePostUserLocale
+     , dir "a"                     $ hGet0  $ toK0 $ ArchiveControl.showAttachmentList
+     , dir "a" $ param "archive"   $ hPost0 $ toK0 $ ArchiveControl.handleAttachmentArchive
      , dir "a" $ param "share"     $ hPost0 $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost1 $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost0 $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet0  $ toK0 $ DocControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleTemplateArchive
+     , dir "t" $ hGet0  $ toK0 $ ArchiveControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleTemplateArchive
      , dir "t" $ param "share" $ hPost0 $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost0 $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "o" $ hGet0 $ toK0 $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOffersArchive
+     , dir "o" $ hGet0 $ toK0 $ ArchiveControl.showOfferList
+     , dir "o" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleOffersArchive
      , dir "o" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOfferRemind
 
-     , dir "or" $ hGet0  $ toK0 $ DocControl.showOrdersList
-     , dir "or" $ param "archive" $ hPost0 $ toK0 $ DocControl.handleOrdersArchive
+     , dir "or" $ hGet0  $ toK0 $ ArchiveControl.showOrdersList
+     , dir "or" $ param "archive" $ hPost0 $ toK0 $ ArchiveControl.handleOrdersArchive
      , dir "or" $ param "remind" $ hPost0 $ toK0 $ DocControl.handleBulkOrderRemind
      
-     , dir "r" $ hGet0 $ toK0 $ DocControl.showRubbishBinList
+     , dir "r" $ hGet0 $ toK0 $ ArchiveControl.showRubbishBinList
      , dir "r" $ param "restore" $ hPost0 $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost0 $ toK0 $ DocControl.handleRubbishReallyDelete
 
@@ -193,12 +180,12 @@ handleRoutes ctxregion ctxlang = msum [
      , dir "d"                     $ hGet3  $ toK3 $ DocControl.handleDownloadFileLogged -- This + magic hash version will be the only file download possible
      , dir "d"                     $ hGet5 $ toK5 $ DocControl.handleDownloadFileNotLogged 
      
-     , dir "d"                     $ hGet0  $ toK0 $ DocControl.showContractsList
+     , dir "d"                     $ hGet0  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet1  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d"                     $ hGet2  $ toK2 $ DocControl.handleIssueShowTitleGet
      , dir "d"                     $ hGet4  $ toK4 $ DocControl.handleIssueShowTitleGetForSignatory
      , dir "d" $ {- param "doc" $ -} hPost0 $ toK0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost0 $ toK0 $ DocControl.handleContractArchive
+     , dir "d" $ param "archive"   $ hPost0 $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
@@ -220,6 +207,10 @@ handleRoutes ctxregion ctxlang = msum [
 
      , dir "pages"  $ hGetAjax3 $ toK3 $ DocControl.showPage
      , dir "pages"  $ hGetAjax5 $ toK5 $ DocControl.showPageForSignatory
+     -- HTMP emails can have embedded preview image
+     , dir "preview" $ hGet2 $ toK2 $ DocControl.showPreview
+     , dir "preview" $ hGet4 $ toK4 $ DocControl.showPreviewForSignatory
+
      , dir "template"  $ hPost0 $ toK0 $ DocControl.handleCreateFromTemplate
 
      , dir "filepages" $ hGetAjax2 $  toK2 $ DocControl.handleFilePages
@@ -264,15 +255,20 @@ handleRoutes ctxregion ctxlang = msum [
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost1 $ toK1 $ Administration.handleCreateCompanyUser
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet1 $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost1 $ toK1 $ Administration.handleCompanyChange
+     , dir "adminonly" $ dir "functionalitystats" $ hGet0 $ toK0 $ Administration.showFunctionalityStats
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
+     
+     , dir "adminonly" $ dir "allstatscsv" $ Stats.handleDocStatsCSV
+     , dir "adminonly" $ dir "userstatscsv" $ Stats.handleUserStatsCSV
        
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet0 $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet0 $ toK0 $ Stats.handleMigrate1To2
 
+     , dir "adminonly" $ dir "runstatsonallusers" $ hGet0 $ toK0 $ Stats.addAllUsersToStats
 
      , dir "adminonly" $ dir "cleanup"           $ hPost0 $ toK0 $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Administration.handleStatistics
+     , dir "adminonly" $ dir "statistics"        $ hGet0  $ toK0 $ Stats.showAdminSystemUsageStats
      , dir "adminonly" $ dir "skrivapausers.csv" $ hGet0  $ toK0 $ Administration.getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hGet0  $ toK0 $ Payments.handlePaymentsModelForViewView
      , dir "adminonly" $ dir "advpayments"       $ hGet0  $ toK0 $ Payments.handlePaymentsModelForEditView
@@ -296,6 +292,7 @@ handleRoutes ctxregion ctxlang = msum [
 
      -- this stuff is for a fix
      , dir "adminonly" $ dir "510bugfix" $ hGet0 $ toK0 $ Administration.handleFixForBug510
+     , dir "adminonly" $ dir "adminonlybugfix" $ hGet0 $ toK0 $ Administration.handleFixForAdminOnlyBug
 
      , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet0 $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
 
@@ -311,7 +308,7 @@ handleRoutes ctxregion ctxlang = msum [
      -- never ever use this
      , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
        
-     , dir "adminonly" $ dir "log" $ onlySuperUser $ serveLogDirectory "log"
+     , dir "adminonly" $ dir "log" $ onlySuperUser $ hGet1 $ toK1 $ serveLogDirectory
 
   
      , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
@@ -320,8 +317,8 @@ handleRoutes ctxregion ctxlang = msum [
 
      -- account stuff
      , dir "logout"      $ hGet0  $ toK0 $ handleLogout
-     , regionDir ctxregion $ langDir ctxlang $ dir "login" $ hGet0  $ toK0 $ handleLoginGet
-     , regionDir ctxregion $ langDir ctxlang $ dir "login" $ hPostNoXToken0 $ toK0 $ handleLoginPost
+     , regionDir locale $ langDir locale $ dir "login" $ hGet0  $ toK0 $ handleLoginGet
+     , regionDir locale $ langDir locale $ dir "login" $ hPostNoXToken0 $ toK0 $ handleLoginPost
      --, dir "signup"      $ hGet0  $ signupPageGet
      , dir "signup"      $ hPostAllowHttp0 $ toK0 $ signupPagePost
      --, dir "vip"         $ hGet0  $ signupVipPageGet
@@ -337,11 +334,6 @@ handleRoutes ctxregion ctxlang = msum [
      -- viral invite
      , dir "invite"      $ hPostNoXToken0 $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp0 $ toK0 $ UserControl.handleQuestion
-     -- e-legitimation stuff
-     , dir "s" $ hGet4  $ toK4 $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPost3 $ toK3 $ BankID.handleSignPostBankID
-     , dir "d" $ hGet2  $ toK2 $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost1 $ toK1 $ BankID.handleIssuePostBankID
        
      -- a general purpose blank page
      --, dir "/blank" $ hGet0 $ toK0 $ simpleResponse ""
@@ -354,29 +346,74 @@ handleRoutes ctxregion ctxlang = msum [
      ]
 
 {- |
-    Determines the localisation details by checking the user settings,
-    the request, and cookies.
+    This is a helper function for routing a public dir.
 -}
-getLocalization :: (ServerMonad m, MonadIO m, FilterMonad Response m, Functor m, HasRqData m, MonadPlus m) => Maybe User -> m (SystemServer, Region, Lang)
-getLocalization muser = do
+publicDir :: Locale -> String -> String -> (Locale -> KontraLink) -> Kontra Response -> Kontra Response
+publicDir locale swedish english link handler = msum [
+    -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
+    regionDir locale $ langDir locale $ dirByLang locale swedish english $ hGetAllowHttp0 $ handler
+    
+    -- if they use the swedish name without region/lang we should redirect to the correct swedish locale
+  , dir swedish $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_SE)
+  
+    -- if they use the english name without region/lang we should redirect to the correct british locale
+  , dir english $ hGetAllowHttp0 $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
+  ]
+
+{- |
+    If the current request is referring to a document then this will
+    return the locale of that document.
+-}
+getDocumentLocale :: (ServerMonad m, MonadIO m) => m (Maybe Locale)
+getDocumentLocale = do
   rq <- askRq
-  hostpart <- getHostpart
-  mcurrentlocalecookie <- optional (readCookieValue "locale")
-  let systemServer = systemServerFromURL hostpart
-      newregion = firstOf [ region <$> usersettings <$> muser
-                          , (listToMaybe $ rqPaths rq) >>= regionFromCode
-                          , fmap fst mcurrentlocalecookie
-                          , Just $ defaultRegion systemServer
+  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+  mdoclocales <- mapM (DocControl.getDocumentLocale . DocumentID) docids
+  return . listToMaybe $ catMaybes mdoclocales
+
+{- |
+    Determines the locale of the current user (whether they are logged in or not), by checking
+    their settings, the request, and cookies.
+-}
+getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
+                   Connection -> Maybe User -> m Locale
+getUserLocale conn muser = do
+  rq <- askRq
+  currentcookielocale <- optional (readCookieValue "locale")
+  activationlocale <- getActivationLocale rq
+  let userlocale = locale <$> usersettings <$> muser
+      urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
+      urllang = (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
+      urllocale = case (urlregion, urllang) of
+                    (Just region, Just lang) -> Just $ mkLocale region lang
+                    _ -> Nothing
+  doclocale <- getDocumentLocale
+  let browserlocale = getBrowserLocale rq
+  let newlocale = firstOf [ activationlocale
+                          , userlocale
+                          , urllocale
+                          , currentcookielocale
+                          , doclocale
+                          , Just browserlocale
                           ]
-      newlang = firstOf [ lang <$> usersettings <$> muser
-                        , (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
-                        , fmap snd mcurrentlocalecookie
-                        , Just $ defaultLang systemServer
-                        ]
-  let newlocalecookie = mkCookie "locale" (show $ (newregion, newlang))
+  let newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
-  return (systemServer, newregion, newlang)
+  return newlocale
   where
+    getBrowserLocale rq =
+      mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+    -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
+    getActivationLocale rq = do
+      let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
+      return . listToMaybe $ catMaybes mactionlocales
+    getActivationLocaleFromAction aid = do
+      maction <- query $ GetAction aid
+      mactionuser <- case fmap actionType maction of
+                       Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB conn . dbQuery $ GetUserByID uid
+                       Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
+                       _ -> return Nothing
+      return $ fmap (locale . usersettings) mactionuser
     optional c = (liftM Just c) `mplus` (return Nothing)
     firstOf :: Bounded a => [Maybe a] -> a
     firstOf opts =
@@ -384,33 +421,32 @@ getLocalization muser = do
         Just val -> fromJust val
         Nothing -> defaultValue
 
-regionDir :: (ServerMonad m, MonadPlus m) => Region -> m a -> m a
-regionDir = dir . codeFromRegion
+regionDir :: (ServerMonad m, MonadPlus m) => Locale -> m a -> m a
+regionDir = dir . codeFromRegion . getRegion
 
-langDir :: (ServerMonad m, MonadPlus m) => Lang -> m a -> m a
-langDir = dir . codeFromLang
+langDir :: (ServerMonad m, MonadPlus m) => Locale -> m a -> m a
+langDir = dir . codeFromLang . getLang
 
-dirByLang :: (ServerMonad m, MonadPlus m) => Lang -> String -> String -> m a -> m a
-dirByLang LANG_SE swedishdir _englishdir = dir swedishdir
-dirByLang LANG_EN _swedishdir englishdir = dir englishdir
+dirByLang :: (ServerMonad m, MonadPlus m) => Locale -> String -> String -> m a -> m a
+dirByLang locale swedishdir englishdir
+  | getLang locale == LANG_SE = dir swedishdir
+  | otherwise = dir englishdir
 
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser } <- getContext
+  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
-  response <- case ctxmaybeuser of
-                Just _ -> V.simpleResponse =<< firstPage ctx False Nothing Nothing
-                Nothing -> V.simpleResponse =<< firstPage ctx loginOn referer email
-  clearFlashMsgs
-  return $ Left response
-
-handleUploadPage :: Kontra (Either Response (Either KontraLink String))
-handleUploadPage = do
-  Context{ ctxmaybeuser,ctxservice } <- getContext
   case (ctxmaybeuser, ctxservice) of
-    (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
+    (Just _user, _) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
+    (Nothing, Nothing) -> do
+      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      clearFlashMsgs
+      return $ Left response
     _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
@@ -542,7 +578,7 @@ appHandler appConf appGlobals = do
     handle rq session ctx = do
       (res,ctx') <- toIO ctx . runKontra $
          do
-          res <- handleRoutes (ctxregion ctx) (ctxlang ctx) `mplus` do
+          res <- handleRoutes (getLocale ctx) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
@@ -561,7 +597,6 @@ appHandler appConf appGlobals = do
         liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
-    createContext :: Request -> Session -> ServerPartT IO Context
     createContext rq session = do
       hostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
@@ -599,7 +634,10 @@ appHandler appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the system, region and language
-      (systemServer, region, language) <- getLocalization muser
+      let systemServer = systemServerFromURL hostpart
+      doclocale <- getDocumentLocale
+      userlocale <- getUserLocale conn muser
+      let ctxlocale = fromMaybe userlocale doclocale
 
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -616,7 +654,7 @@ appHandler appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,region,language) templates2
+                , ctxtemplates = localizedVersion (systemServer,getRegion ctxlocale, getLang ctxlocale) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -632,8 +670,8 @@ appHandler appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
-                , ctxregion = region
-                , ctxlang = language
+                , ctxdoclocale = doclocale
+                , ctxuserlocale = userlocale
                 }
       return ctx
 
@@ -766,7 +804,7 @@ handleLoginGet = do
 -}
 handleLoginPost :: Kontrakcja m => m KontraLink
 handleLoginPost = do
-    Context{ctxregion, ctxlang} <- getContext
+    ctx <- getContext
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
     let linkemail = maybe "" BS.toString memail
@@ -775,27 +813,31 @@ handleLoginPost = do
             -- check the user things here
             maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
-                Just User{userpassword}
+                Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
-                        logUserToContext maybeuser
+                        _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+                          locale = ctxuserlocale ctx
+                        }
+                        muuser <- runDBQuery $ GetUserByID (userid user)
+                        logUserToContext muuser
                         return BackToReferer
                 Just _ -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
+                        return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin ctxregion ctxlang $ InvalidLoginInfo linkemail
+                    return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
+        _ -> return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
 
 {- |
    Handles the logout, and sends user back to main page.
 -}
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
-    Context{ctxregion, ctxlang} <- getContext
+    ctx <- getContext
     logUserToContext Nothing
-    sendRedirect $ LinkHome ctxregion ctxlang
+    sendRedirect $ LinkHome (getLocale ctx)
 
 {- |
    Serves out the static html files.
@@ -814,10 +856,10 @@ serveHTMLFiles =  do
 -}
 onlySuperUserGet :: Kontrakcja m => m Response -> m Response
 onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser, ctxregion, ctxlang } <- getContext
+    ctx@Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
-        else sendRedirect $ LinkLogin ctxregion ctxlang NotLoggedAsSuperUser
+        else sendRedirect $ LinkLogin (getLocale ctx) NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.
@@ -850,14 +892,12 @@ sysdump = onlySuperUserGet $ do
 
 
 serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
-                   FilePath    -- ^ file/directory to serve
+                   String
                   -> m Response
-serveLogDirectory localPath = 
-    fileServe' serveFn mimeFn indexFn localPath
-        where
-          serveFn = filePathSendFile
-          mimeFn  = guessContentTypeM $ Map.fromList [("log","text/plain")]
-          indexFn fp =
-              msum [ tryIndex filePathSendFile mimeFn [] fp
-                   , browseIndex renderDirectoryContents filePathSendFile mimeFn [] fp
-                   ]
+serveLogDirectory filename = do
+    contents <- liftIO $ getDirectoryContents "log"
+    when (filename `notElem` contents) $ do
+        Log.debug $ "Log '" ++ filename ++ "' not found"
+        mzero
+    (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
+    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout

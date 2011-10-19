@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStorage
@@ -8,20 +9,23 @@
 -- Most of what is connected to storage of documents - getting files from TW and Amazon
 -- Also stuff for generating JPEGS from PDF's
 -----------------------------------------------------------------------------
-module Doc.DocStorage(
-      getFileContents
+module Doc.DocStorage
+    ( getFileContents
+    , getFileIDContents
     , uploadDocumentFileToAmazon
     , uploadDocumentFilesToTrustWeaver
     , maybeScheduleRendering
-    , preprocessPDF) where
+    , preprocessPDF
+    , scaleForPreview
+    ) where
 
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Doc.DocState
-import Happstack.State (update,query)
-import MinutesTime
-import Misc
+import Happstack.State (update)
+--import MinutesTime
+--import Misc
 import System.Directory
 import System.Exit
 import System.IO
@@ -37,6 +41,8 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import qualified MemCache
 import ForkAction
+import File.TransState
+import DB.Classes
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)
@@ -49,17 +55,24 @@ getFileContents ctx file = do
                 MemCache.put (fileid file) mcontentAWS (ctxfilecache ctx)
                 return mcontentAWS
 
+getFileIDContents :: Context -> FileID -> IO BS.ByteString
+getFileIDContents ctx fid = do
+  mfile <- ioRunDB (ctxdbconn ctx) . dbQuery $ GetFileByFileID fid
+  case mfile of
+    Just file -> getFileContents ctx file
+    Nothing -> return BS.empty
+
+
 {- Upload document to Amazon -}
-uploadDocumentFileToAmazon :: FilePath
+uploadDocumentFileToAmazon :: (MonadIO m, DBMonad m) => FilePath
                                  -> AWS.S3Action
                                  -> DocumentID
                                  -> FileID
-                                 -> IO ()
-uploadDocumentFileToAmazon docstore ctxs3action docid fileid1 = do
-  Just doc <- query $ GetDocumentByDocumentID docid
-  let files = documentfiles doc ++ documentsealedfiles doc
-  case filter (\x -> fileid x == fileid1) files  of
-    [file] -> do
+                                 -> m ()
+uploadDocumentFileToAmazon docstore ctxs3action _docid fileid1 = do
+  mfile <- runDB $ dbQuery $ GetFileByFileID fileid1
+  case mfile of
+    Just file -> do
       AWS.uploadFile docstore ctxs3action file
       return ()
     _ -> return ()
@@ -70,7 +83,9 @@ uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf
                                  -> String
                                  -> DocumentID
                                  -> IO ()
-uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
+uploadDocumentFilesToTrustWeaver _ctxtwconf _twownername _documentid = do
+  error "uploadDocumentFilesToTrustWeaver is unimplemented"
+#if 0
   Just document <- query $ GetDocumentByDocumentID documentid
   let twdocumentid = show documentid
   let twdocumentdate = showDateOnly (documentmtime document)
@@ -81,6 +96,7 @@ uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
   reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
   _ <- update $ SetDocumentTrustWeaverReference documentid reference
   return ()
+#endif
 
 resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
 resizeImageAndReturnOriginalSize filepath = do
@@ -99,17 +115,30 @@ resizeImageAndReturnOriginalSize filepath = do
     fcontent <- BS.readFile filepath
     return (fcontent,943,1335)
 
+
+scaleForPreview :: DocumentID -> BS.ByteString -> IO BS.ByteString
+scaleForPreview did image = withSystemTempDirectory "preview" $ \tmppath -> do
+    let fpath = tmppath ++ "/" ++ show did ++ ".jpg"
+    BS.writeFile fpath image
+    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","190x270!", fpath, fpath]
+    resizerexitcode <- waitForProcess resizer
+    case resizerexitcode of
+        ExitFailure _ -> return ()
+        ExitSuccess -> return ()
+    fcontent <- BS.readFile fpath
+    return fcontent
+    
 {- |
    Convert PDF to jpeg images of pages
  -}
 convertPdfToJpgPages :: Context
-                     -> File
+                     -> FileID
                      -> DocumentID
                      -> IO JpegPages
-convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
+convertPdfToJpgPages ctx fid docid = withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
   let sourcepath = tmppath ++ "/source.pdf"
 
-  content <- getFileContents ctx file
+  content <- getFileIDContents ctx fid
 
   BS.writeFile sourcepath content
 
@@ -136,8 +165,8 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
   result <- case exitcode of
     ExitFailure _ -> do
         systmp <- getTemporaryDirectory
-        (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show (fileid file) ++ "-.pdf")
-        Log.error $ "Cannot pdf2jpg (doc #" ++ show docid ++ ", file #" ++ show (fileid file) ++ "): " ++ path
+        (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
+        Log.error $ "Cannot pdf2jpg (doc #" ++ show docid ++ ", file #" ++ show fid ++ "): " ++ path
         BS.hPutStr handle content
         hClose handle
 
@@ -160,10 +189,10 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
 
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory. -}
 maybeScheduleRendering :: Kontrakcja m
-                       => File
+                       => FileID
                        -> DocumentID
                        -> m JpegPages
-maybeScheduleRendering (file@File { fileid }) docid = do
+maybeScheduleRendering fileid docid = do
   doNotCloseDBConnectionExplicitly
   ctx@Context{ ctxnormalizeddocuments = mvar } <- getContext
   liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
@@ -171,7 +200,7 @@ maybeScheduleRendering (file@File { fileid }) docid = do
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
            forkActionIO ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
-                jpegpages <- convertPdfToJpgPages ctx file docid
+                jpegpages <- convertPdfToJpgPages ctx fileid docid
                 case jpegpages of
                      JpegPagesError errmsg -> do
                          _ <- update $ ErrorDocument docid $ BS.toString errmsg

@@ -10,7 +10,6 @@ module Doc.DocView (
   , flashDocumentTemplateSaved
   , flashMessageAccountActivatedFromSign
   , flashMessageAccountRemovedFromSign
-  , flashMessageAttachmentArchiveDone
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
@@ -18,7 +17,6 @@ module Doc.DocView (
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
-  , flashMessageSignableArchiveDone
   , flashMessageFailedToParseCSV
   , flashMessageInvalidCSV
   , flashMessageMultipleAttachmentShareDone
@@ -29,7 +27,6 @@ module Doc.DocView (
   , flashMessagePleaseSignWithEleg
   , flashMessageSingleAttachmentShareDone
   , flashMessageSingleTemplateShareDone
-  , flashMessageTemplateArchiveDone
   , flashRemindMailSent
   , getDataMismatchMessage
   , isNotLinkForUserID
@@ -40,8 +37,7 @@ module Doc.DocView (
   , mailDocumentClosed
   , mailDocumentRejected
   , mailDocumentRemind
-  , mailInvitationToSend
-  , mailInvitationToSign
+  , mailInvitation
   , modalSignedClosedHasAccount
   , modalSignedNotClosedHasAccount
   , modalSignedClosedNoAccount
@@ -53,17 +49,11 @@ module Doc.DocView (
   , modalSendConfirmationView
   , pageAttachmentDesign
   , pageAttachmentForSignatory
-  , pageAttachmentList
   , pageAttachmentView
-  , pageContractsList
   , pageDocumentDesign
   , pageDocumentForAuthor
   , pageDocumentForSignatory
   , pageDocumentForViewer
-  , pageOffersList
-  , pageOrdersList
-  , pageTemplatesList
-  , pageRubbishBinList
   , showFilesImages2
   , signatoryDetailsFromUser
   , documentsToFixView
@@ -103,6 +93,9 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
+--import Happstack.State (query)
+import File.TransState
+import DB.Classes
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -135,17 +128,17 @@ modalRejectedView document = do
 modalLoginForSaveView :: TemplatesMonad m => m FlashMessage
 modalLoginForSaveView = toModal <$> renderTemplateM "modalLoginForSaveView" ()
 
-modalSignedClosedHasAccount :: TemplatesMonad m => Region -> Lang -> Document -> SignatoryLink -> Bool -> m FlashMessage
-modalSignedClosedHasAccount region lang document signatorylink isloggedin = do
+modalSignedClosedHasAccount :: TemplatesMonad m => Locale -> Document -> SignatoryLink -> Bool -> m FlashMessage
+modalSignedClosedHasAccount locale document signatorylink isloggedin = do
   toModal <$> (renderTemplateForProcess document processmodalsignedviewclosedhasaccount $ do
     modalSignedFields document
-    loginFields region lang document signatorylink isloggedin)
+    loginFields locale document signatorylink isloggedin)
 
-modalSignedNotClosedHasAccount :: TemplatesMonad m => Region -> Lang -> Document -> SignatoryLink -> Bool -> m FlashMessage
-modalSignedNotClosedHasAccount region lang document signatorylink isloggedin = do
+modalSignedNotClosedHasAccount :: TemplatesMonad m => Locale -> Document -> SignatoryLink -> Bool -> m FlashMessage
+modalSignedNotClosedHasAccount locale document signatorylink isloggedin = do
   toModal <$> (renderTemplateForProcess document processmodalsignedviewnotclosedhasaccount $ do
     modalSignedFields document
-    loginFields region lang document signatorylink isloggedin)
+    loginFields locale document signatorylink isloggedin)
 
 modalSignedClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> ActionID -> MagicHash -> m FlashMessage
 modalSignedClosedNoAccount document signatorylink actionid magichash = do
@@ -166,12 +159,12 @@ modalSignedFields document@Document{ documenttitle } = do
   field "signatory" . listToMaybe $ map (BS.toString . getEmail ) $ partyList document
   field "documenttitle" $ BS.toString documenttitle
 
-loginFields :: MonadIO m => Region -> Lang -> Document -> SignatoryLink -> Bool -> Fields m
-loginFields region lang document signatorylink isloggedin = do
+loginFields :: MonadIO m => Locale -> Document -> SignatoryLink -> Bool -> Fields m
+loginFields locale document signatorylink isloggedin = do
     field "isloggedin" isloggedin
     field "referer" $ show (LinkSignDoc document signatorylink)
     field "email" $ getEmail signatorylink
-    field "linklogin" $ show (LinkLogin region lang LoginTry)
+    field "linklogin" $ show (LinkLogin locale LoginTry)
 
 accountFromSignFields :: MonadIO m => Document -> SignatoryLink -> ActionID -> MagicHash -> Fields m
 accountFromSignFields document signatorylink actionid magichash = do
@@ -227,18 +220,6 @@ flashMessageNoBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMess
 flashMessageNoBulkRemindsSent doctype = do
   toFlashMsg OperationFailed <$> renderTextForProcess doctype processflashmessagenobulkremindssent
 
-flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
-flashMessageSignableArchiveDone doctype = do
-  toFlashMsg OperationDone <$> renderTextForProcess doctype processflashmessagearchivedone
-
-flashMessageTemplateArchiveDone :: TemplatesMonad m => m FlashMessage
-flashMessageTemplateArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageTemplateArchiveDone" ()
-
-flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
-flashMessageAttachmentArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
-  
 flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishRestoreDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishRestoreDone" ()
@@ -290,16 +271,18 @@ flashMessagePleaseSignWithEleg =
 flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
-
-
-documentJSON :: (TemplatesMonad m,KontraMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
+ 
+documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do
     ctx <- getContext
+    files <- documentfilesM doc
+    sealedfiles <- documentsealedfilesM doc
+    authorattachmentfiles <- mapM (runDB . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
-       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> documentfiles doc ),
-       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> documentsealedfiles doc ),
-       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> authorattachmentfile <$> documentauthorattachments doc),
+       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
+       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
+       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
@@ -350,9 +333,8 @@ signatoryAttachmentJSON :: SignatoryAttachment -> JSValue
 signatoryAttachmentJSON sa = JSObject $ toJSObject $
     [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
       , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
-      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
+      -- , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
     ]
-
 
 signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = JSArray $
@@ -381,12 +363,12 @@ placementJSON doc placement = JSObject $ toJSObject $
     [   ("x", JSRational True (toRational $ placementx  placement))
       , ("y", JSRational True (toRational $ placementy  placement))
       , ("page", JSRational True (toRational $ placementpage  placement))
-      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> fileid <$> (listToMaybe $ documentfiles doc))
+      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc))
     ]
 
 
 jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateDMY <$> mdate
+jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
 
 {- 
 , signatorysndnameplacements        = []
@@ -442,8 +424,6 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
       , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
-      , ("signatorysignedtext", text processsignatorysignedtext)
-      , ("signatorycanceledtext", text processsignatorycanceledtext)
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more
@@ -466,22 +446,23 @@ fileJSON file =
        ("name", BS.toString $ filename file)
     ] 
  
-docForListJSON :: (TemplatesMonad m) => MinutesTime -> User -> Document -> m (JSObject JSValue)
-docForListJSON crtime user doc =
+docForListJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> User -> Document -> m (JSObject JSValue)
+docForListJSON tl crtime user doc =
   let link = case getSigLinkFor doc user of 
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc 
+      sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   in fmap toJSObject $ propagateMonad  $
-    [ ("fields" , jsonPack <$> docFieldsListForJSON crtime doc),
-      ("subfields" , JSArray <$>  fmap jsonPack <$> mapM (signatoryFieldsListForJSON crtime doc) (documentsignatorylinks doc)),
+    [ ("fields" , jsonPack <$> docFieldsListForJSON tl crtime doc),
+      ("subfields" , JSArray <$>  fmap jsonPack <$> (mapM (signatoryFieldsListForJSON tl crtime doc) (filter sigFilter (documentsignatorylinks doc)))),
       ("link", return $ JSString $ toJSString $  show link)
     ]
 
 jsonPack :: [(String,String)] -> JSValue
 jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
 
-docFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document -> m [(String,String)]
-docFieldsListForJSON crtime doc =  propagateMonad [
+docFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document -> m [(String,String)]
+docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $  BS.toString $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
@@ -489,9 +470,10 @@ docFieldsListForJSON crtime doc =  propagateMonad [
     ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
-    ("time", return $ showDateAbbrev crtime (documentmtime doc)),
+    ("time", return $ showDateAbbrev tl crtime (documentmtime doc)),
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
+    ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),  
     ("shared", return $ show $ (documentsharing doc)==Shared)
     ]
   where
@@ -504,11 +486,12 @@ docFieldsListForJSON crtime doc =  propagateMonad [
         Template _ -> renderTemplateFM "docListTemplateLabel" $ do field "processname" pn
         Signable _ -> return pn
 
-signatoryFieldsListForJSON :: (TemplatesMonad m) => MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
-signatoryFieldsListForJSON crtime doc sl = propagateMonad [
+signatoryFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
+signatoryFieldsListForJSON tl crtime doc sl = propagateMonad [
     ("status", return $ show $ signatoryStatusClass doc sl ),
     ("name", return $ BS.toString $ getSmartName sl ),
-    ("time", return $ fromMaybe "" $ (showDateAbbrev crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open))
+    ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)),
+    ("invitationundelivered", return $ show $ isUndelivered sl && Pending == documentstatus doc)
     ]
     where
         sign = signtime <$> maybesigninfo sl
@@ -623,51 +606,7 @@ docsPageSize = 100
 
 
 --
-
-pageContractsList :: TemplatesMonad m => User -> m String
-pageContractsList = pageList' "pageContractsList" LinkContracts
-
-pageTemplatesList :: TemplatesMonad m => User -> m String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates
-
-pageAttachmentList :: TemplatesMonad m =>  User -> m String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
-
-pageOffersList :: TemplatesMonad m => User -> m String
-pageOffersList = pageList' "pageOffersList" LinkOffers
-
-pageOrdersList :: TemplatesMonad m => User -> m String
-pageOrdersList = pageList' "pageOrdersList" LinkOrders
-
-pageRubbishBinList :: TemplatesMonad m => User ->  m String
-pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
-
-{- |
-    Helper function for list pages
--}
-pageList' :: TemplatesMonad m
-          => String
-          -> KontraLink
-          -> User
-          -> m String
-pageList' templatename currentlink user  =
-  renderTemplateFM templatename $ do
-    field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
-    field "currentlink" $ show $ currentlink
-    field "linkdoclist" $ show $ LinkContracts 
-    field "documentactive" $ (LinkContracts == currentlink)
-    field "linkofferlist" $ show $ LinkOffers 
-    field "offeractive" $ (LinkOffers == currentlink)
-    field "linkorderlist" $ show $ LinkOrders
-    field "orderactive" $ (LinkOrders == currentlink)
-    field "linktemplatelist" $ show $ LinkTemplates
-    field "templateactive" $ (LinkTemplates == currentlink)
-    field "linkattachmentlist" $ show $ LinkAttachments 
-    field "attachmentactive" $ (LinkAttachments == currentlink)
-    field "linkrubbishbinlist" $ show $ LinkRubbishBin
-    field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
-
-showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> m String
+showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
   renderTemplateM "showFileImagesPending" ()
 
@@ -675,7 +614,7 @@ showFileImages _ _ _ (JpegPagesError normalizelog) =
   renderTemplateFM "showFileImagesError" $ do
     field "normalizelog" $ BS.toString normalizelog
 
-showFileImages docid mtokens File{fileid} (JpegPages jpgpages) =
+showFileImages docid mtokens fileid (JpegPages jpgpages) =
   renderTemplateFM "showFileImagesReady" $ do
     field "pageurl" $ "/pages/" ++ pageurl mtokens
     fieldFL "images" . map page $ zip ([1..]::[Int]) jpgpages
@@ -689,7 +628,7 @@ showFileImages docid mtokens File{fileid} (JpegPages jpgpages) =
       field "width" w
       field "height" h
 
-showFilesImages2 :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(File, JpegPages)] -> m String
+showFilesImages2 :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(FileID, JpegPages)] -> m String
 showFilesImages2 docid mtokens files = do
   filesPages <- sequence $ map (uncurry (showFileImages docid mtokens)) files
   renderTemplateFM "spanNoEscape" $ field "it" (concat filesPages)
@@ -772,9 +711,9 @@ pageDocumentDesign ctx
    let
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        authorotherfields fields = sequence .
-         map (\(SignatoryField{sfType = CustomFT label _, sfValue}, i) ->
+         map (\((s, label, _), i) -> 
            renderTemplateFM "customfield" $ do
-             field "otherFieldValue" $ sfValue
+             field "otherFieldValue" $ sfValue s
              field "otherFieldName"  $ label
              field "otherFieldID"    $ "field" ++ show i
              field "otherFieldOwner" "author")
@@ -784,10 +723,10 @@ pageDocumentDesign ctx
      csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
      csvfields <- documentCsvFields document
      renderTemplateFM "pageDocumentDesign" $ do
-       fieldM "authorOtherFields" $ authorotherfields $ filter isFieldCustom $ signatoryfields $ signatorydetails authorsiglink
+       fieldM "authorOtherFields" $ authorotherfields $ filterCustomField $ signatoryfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
-       fieldM "invitationMailContent" $ mailInvitationToSignOrViewContent False ctx document Nothing
+       fieldM "invitationMailContent" $ mailInvitationContent False ctx Sign document Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildDocState (signatorydetails authorsiglink) documentsignatorylinks)
        field "fromservice" (isJust $ ctxservice ctx)
@@ -814,10 +753,12 @@ pageDocumentDesign ctx
        fieldM "step1text" $ getProcessText processstep1text
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "sendbuttontext" $ getProcessText processsendbuttontext
+       fieldM "signbuttontext" $ getProcessText processsignbuttontext
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
        fieldM "expirytext" $ getProcessText processexpirytext
+       
 
 documentRegionFields :: (Functor m, MonadIO m) => Document -> Fields m
 documentRegionFields document = do
@@ -834,9 +775,10 @@ documentAttachmentDesignFields docid atts = do
   field "attachmentcount" $ length atts
   fieldFL "attachments" $ map attachmentFields atts
   where
-    attachmentFields AuthorAttachment{authorattachmentfile = File {fileid, filename}} = do
+    attachmentFields AuthorAttachment{authorattachmentfile = fileid} = do
       field "attachmentid" $ show fileid
-      field "attachmentname" $ filename
+      -- FiXME
+      -- field "attachmentname" $ filename
       field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
 
 documentFunctionalityFields :: MonadIO m => Document -> Fields m
@@ -974,10 +916,10 @@ signatoryLinkFields
         CompanyNumberFT -> field "companynumber" $ packToMString sfValue
         EmailFT -> field "email" $ packToMString sfValue
         CustomFT _ _ -> return ()
-      fieldFL "fields" $ for (filter isFieldCustom signatoryfields) $
-        \SignatoryField{sfType = CustomFT label _, sfValue} -> do
+      fieldFL "fields" $ for (filterCustomField signatoryfields) $
+        \(s, label, _) -> do
           field "fieldlabel" label
-          field "fieldvalue" sfValue
+          field "fieldvalue" (sfValue s)
       field "signorder" $ unSignOrder $ signatorysignorder sigdetails
       field "allowRemindForm" $ isEligibleForReminder muser document siglnk
       field "linkremind" $ show (LinkRemind document siglnk)
@@ -1163,6 +1105,7 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
     field "showTemplates" showTemplates
     fieldFL "processes" $ map processFields [Contract,Offer,Order]
     field "processid" $ show <$> mdocprocess
+    field "linkupload" $ show LinkUpload
     case mdocprocess of
       Just selecteprocess -> do
         fieldF "selectedprocess" $ processFields selecteprocess

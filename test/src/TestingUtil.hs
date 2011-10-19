@@ -36,6 +36,12 @@ import Data.Typeable
 import Doc.Invariants
 import Doc.DocInfo
 import Doc.DocProcess
+import ActionSchedulerState
+
+instance Arbitrary DocumentTag where
+  arbitrary = do
+    (k, v) <- arbitrary
+    return $ DocumentTag k v
 
 instance Arbitrary UserID where
   arbitrary = do
@@ -106,18 +112,14 @@ instance Arbitrary MinutesTime where
     a <- arbitrary
     return $ fromSeconds a
 
-instance Arbitrary DocumentTag where
-  arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    return $ DocumentTag a b
-
 instance Arbitrary DocumentUI where
   arbitrary = do
     a <- arbitrary
     return $ DocumentUI a
 
-
+instance Arbitrary ActionID where
+  arbitrary = ActionID <$> arbitrary
+  
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
      This is a class to make it more random - so to attach this fields for example.
@@ -334,8 +336,34 @@ arbEmail = do
   d <- arbString 3 7
   return $ BS.fromString (n ++ "@" ++ d ++ ".com")
 
-
-
+signatoryLinkExample1 :: SignatoryLink
+signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
+                                      , signatorymagichash = MagicHash 0
+                                      , maybesignatory = Nothing
+                                      , maybesupervisor = Nothing
+                                      , maybecompany = Nothing
+                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybereadinvite = Nothing
+                                      , invitationdeliverystatus = Delivered
+                                      , signatorysignatureinfo = Nothing
+                                      , signatoryroles = [SignatoryPartner]
+                                      , signatorylinkdeleted = False
+                                      , signatorylinkreallydeleted = False
+                                      , signatorydetails = SignatoryDetails { signatorysignorder = SignOrder 1,
+                                                                              signatoryfields = [SignatoryField FirstNameFT (BS.fromString "Eric") [],
+                                                                                                 SignatoryField LastNameFT (BS.fromString "Normand") [],
+                                                                                                 SignatoryField EmailFT (BS.fromString "eric@scrive.com") [],
+                                                                                                 SignatoryField CompanyFT (BS.fromString "Scrive") [],
+                                                                                                 SignatoryField CompanyNumberFT (BS.fromString "1234") [],
+                                                                                                 SignatoryField PersonalNumberFT (BS.fromString "9101112") [],
+                                                                                                 SignatoryField (CustomFT (BS.fromString "phone") True) (BS.fromString "504-302-3742") []
+                                                                                
+                                                                                                ]
+                                        
+                                                                            }
+                                      }
+                        
 blankUser :: User
 blankUser = User {  
                    userid                  =  UserID 0
@@ -355,8 +383,7 @@ blankUser = User {
                                    }
                 , usersettings  = UserSettings {
                                     preferreddesignmode = Nothing
-                                  , lang = Misc.defaultValue
-                                  , region = Misc.defaultValue
+                                  , locale = mkLocaleFromRegion Misc.defaultValue
                                   , systemserver = Misc.defaultValue
                                   }
               , userservice = Nothing
@@ -380,8 +407,8 @@ blankDocument =
           , documentlog                  = []
           , documentinvitetext           = BS.empty
           , documentsealedfiles          = []
-          , documenttrustweaverreference = Nothing
-          , documentallowedidtypes       = []
+          -- , documenttrustweaverreference = Nothing
+          , documentallowedidtypes       = [EmailIdentification]
           , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing
@@ -393,7 +420,7 @@ blankDocument =
           , documentauthorattachments    = []
           , documentdeleted              = False
           , documentsignatoryattachments = []
-          , documentattachments          = []
+          -- , documentattachments          = []
           , documentregion               = REGION_SE
           }
 
@@ -408,11 +435,11 @@ addNewCompany = do
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue defaultValue defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue defaultValue defaultValue
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue (mkLocaleFromRegion defaultValue)
 
 addNewRandomUser :: DB User
 addNewRandomUser = do
@@ -534,6 +561,12 @@ untilCondition cond gen = do
 addRandomDocumentWithAuthor' :: User -> DB Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
+doNTimes :: Int -> IO () -> IO ()
+doNTimes 0 _ = return ()
+doNTimes n a = do
+  _ <- a
+  doNTimes (n - 1) a
+
 doTimes :: Int -> DB (Maybe (DB ())) -> DB ()
 doTimes i action
   | i == 0 = return ()
@@ -582,7 +615,7 @@ class RandomCallable a b where
   randomCall :: MonadIO m => a -> m b
 
 instance RandomCallable (IO res) res where
-  randomCall = liftIO
+  randomCall = liftIO  
 
 instance (Typeable res) => RandomCallable res res where
   randomCall = return 

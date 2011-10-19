@@ -308,7 +308,7 @@ jQuery("#body-container").replaceWith(docview.view.el)
                   <a type="button" id="signinvite" rel="#dialog-confirm-signinvite"  style="display:inline-block" class="btn-small blue center">
                     <div class="left"></div>
                     <div class="label" style="width:134px;">
-                       <span style="padding-left:9px;padding-right:9px">$_skrivapa()$</span>
+                       <span style="padding-left:9px;padding-right:9px">$process.signbuttontext$</span>
                       <span class="btn-symbol cross"></span>
                     </div> 
                     <div class="right"></div>
@@ -428,7 +428,7 @@ jQuery("#body-container").replaceWith(docview.view.el)
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
                     <div class="label" style="width: 120px;">
-                    <span>$_skrivapa()$</span>
+                    <span>$process.signbuttontext$</span>
                       <span class="icon cross"></span>
                     </div> 
                     <div class="right"></div>
@@ -1024,7 +1024,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <a href="#" class="btn-small blue float-right submiter signhidden">
         <div class="left"></div>
         <div class="label">
-            <p>$_skrivapa()$</p>
+            <p>$process.signbuttontext$</p>
           <span class="btn-symbol cross"></span>
         </div>
         <div class="right"></div>
@@ -1095,7 +1095,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 </form>
 
 <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
-  <div class="modal-container">
+  <div class="modal-container email-preview">
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">

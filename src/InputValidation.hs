@@ -61,7 +61,8 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
-import Kontra
+import KontraMonad
+import Context
 import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
@@ -247,7 +248,7 @@ logIfBad x@(input, Bad flashmsg) = do
   flash <- flashmsg
   let username :: String
       username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser
-      logtext = "ip " ++ (show ctxipnumber) ++
+      logtext = "ip " ++ (formatIP ctxipnumber) ++
                " user " ++ username ++
                " invalid input: " ++
                " flash [" ++ show (snd <$> unFlashMessage flash) ++ "]" ++

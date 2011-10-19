@@ -1,5 +1,11 @@
 ###
 adminsmain=
+<strong>Stats CSVs</strong>
+<p><a href="/adminonly/allstatscsv">Download the CSV containing
+    all signature stats</a></p>
+<p><a href="/adminonly/userstatscsv">Download the CSV containing
+    all user stats</a></p>
+
     <strong>Sales Tools</strong>
     <table><tbody>
         <tr>
@@ -42,6 +48,15 @@ adminsmain=
           <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> </td>
           <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
         </tr>
+        <tr>
+          <td style="height:50px;">
+            <a href="/adminonly/functionalitystats">
+              <button style="width:150px">Functionality Stats</button>
+            </a>
+          </td>
+          <td style="height:50px">
+          </td>
+        </tr>
     </tbody></table>
     <br/>
     <br/>
@@ -56,6 +71,14 @@ adminsmain=
           <td style="height:50px;width:200px"><!--<a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> --> </td>
         </tr>
     </tbody></table>
+    <br/>
+    <br/>
+    <strong> Log Files </strong>
+    <ul>
+      <li><a href="/adminonly/log/debug.log">debug.log</a></li>
+      <li><a href="/adminonly/log/mail.log">mail.log</a></li>
+      <li><a href="/adminonly/log/error.log">error.log</a></li>
+    </ul>
 ###
 adminsmanageall =
     $backtoadminmainlink()$
@@ -306,6 +329,12 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
+    <tr> <td>Region:</td>
+      <td><select name="userregion">
+        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
+      </select></td>
+    </tr>
 		<tr>
 		  <td style="padding-top:10px" ><strong>Account</strong></td>
 		  <td> </td>
@@ -313,13 +342,16 @@ adminuser=
 		<tr> <td>Account type:</td>
 		  <td>
 		    $if(user.iscompanyaccount)$
-		    <a href="/adminonly/companyadmin/$company.companyid$">
-		      $company.companyname$ $if(user.iscompanyadmin)$Company Account (Admin)$else$Company Account (Standard)$endif$
-		    </a>
-		    $else$
-		    Private Account<br/>
-		    <input type="checkbox" name="upgradetocompany"/> Upgrade to Company
-		    $endif$
+        <p><a href="/adminonly/companyadmin/$company.companyid$">
+         view company $company.companyname$
+        </a></p>
+        $endif$
+
+		    <select name="useraccounttype">
+		      <option $if(user.iscompanyaccount)$$if(user.iscompanyadmin)$selected=""$endif$$endif$ value="companyadminaccount">$company.companyname$ Admin Company Account $if(!user.iscompanyaccount)$(Creates a new company)$endif$</option>
+		      <option $if(user.iscompanyaccount)$$if(!user.iscompanyadmin)$selected=""$endif$$endif$ value="companystandardaccount">$company.companyname$ Standard Company Account $if(!user.iscompanyaccount)$(Creates a new company)$endif$</option>
+		      <option $if(!user.iscompanyaccount)$selected=""$endif$value="privateaccount">Private Account $if(user.iscompanyaccount)$(May leave an empty company)$endif$</option>
+		    </select>
 		  </td>
 		</tr>
 	    </tbody></table>
@@ -428,16 +460,17 @@ admincompanyusers=
             </td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
+              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
          <tr>
             <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
+            <td> <input type="button" class="editer " value="Default"/>
                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
            </td>
           </tr>
@@ -479,18 +512,6 @@ userusagestats=
       </ul>
       <div class="tab-container">
 	<div class="tab-content account">
-      <p>Current date range: Always</p>
-      <p>NOTE: The date boxes do not work yet!!</p>
-      <form method="GET">
-        <label for="startdate">Start date</label>
-        <input id="startdate" name="startdate" class="dateinput"
-               type="text"></input>
-        -
-        <label for="enddate">End date</label>
-        <input id="enddate" name="enddate" type="text"
-               class="dateinput"></input>
-        <input type="submit" value="Filter date range"></input>
-      </form>
 	  <table>
             <thead>
               <td style="width:200px">Date</td>
@@ -530,10 +551,10 @@ companyusagestats=
             <thead>
               <td style="width:200px">Date</td>
               <td style="width:200px">User</td>
-              <td style="width:200px">Documents Closed That Day</td>
-              <td style="width:200px">Total Closed Signatures That Day</td>
+              <td style="width:200px">Documents Closed</td>
+              <td style="width:200px">Total Closed Signatures</td>
               <td style="width:200px">Average Signatures / Doc</td>
-              <td style="width:200px">Documents Sent That Day</td>
+              <td style="width:200px">Documents Sent</td>
 	    </thead>
             $statistics:{stat|<tr class="$if(stat.istotal)$totalline$endif$">
               <td>$stat.date$</td>
@@ -551,80 +572,89 @@ companyusagestats=
 statisticsPage=
     $backtoadminmainlink()$
     <div>
-      <h1>Stats last month by date</h1>
-      <table>
-        <thead>
-          <td style="width:200px">Date</td>
-          <td style="width:200px">All signatures</td>
-          <td style="width:200px">Signs in closed</td>
-          <td style="width:200px">All users</td>
-          <td style="width:200px">All documents</td>
-          <td style="width:200px">Preparation</td>
-          <td style="width:200px">Pending</td>
-          <td style="width:200px">Closed</td>
-          <td style="width:200px">AwaitingAuthor</td>
-          <td style="width:200px">Rejected</td>
-          <td style="width:200px">Canceled</td>
-          <td style="width:200px">Timeout</td>
-          <td style="width:200px">Error</td>
-          <td style="width:200px">Viral invites</td>
-          <td style="width:200px">Admin invites</td>
-       </thead>
-        $lastMonthStats:{stat|<tr>
-          <td>$stat.date$</td>
-          <td>$stat.documents.signatures$ </td>
-          <td>$stat.documents.signaturesInClosed$ </td>
-          <td>$stat.users.all$ </td>
-          <td>$stat.documents.all$ </td>
-          <td>$stat.documents.preparation$</td>
-          <td>$stat.documents.pending$ </td>
-          <td>$stat.documents.closed$ </td>
-          <td>$stat.documents.awaitingauthor$ </td>
-          <td>$stat.documents.rejected$ </td>
-          <td>$stat.documents.canceled$ </td>
-          <td>$stat.documents.timeout$ </td>
-          <td>$stat.documents.error$ </td>
-          <td>$stat.users.viralInvites$ </td>
-          <td>$stat.users.adminInvites$ </td>
-       </tr>}$
-      </table>
+      <h1>Stats this month by date</h1>
+	  <table>
+            <thead>
+              <td style="width:200px">Date</td>
+              <td style="width:200px">Documents Closed</td>
+              <td style="width:200px">Total Closed Signatures</td>
+              <td style="width:200px">Average Signatures / Doc</td>
+              <td style="width:200px">Documents Sent</td>
+              <td style="width:200px">New Users (TOS)</td>
+	    </thead>
+            $statisticsbyday:{stat|<tr>
+              <td>$stat.date$</td>
+              <td>$stat.closed$ </td>
+              <td>$stat.signatures$ </td>
+              <td>$stat.avg$ </td>
+              <td>$stat.sent$ </td>
+              <td>$stat.users$ </td>
+	    </tr>}$
+	  </table>
       <h1>Stats by month</h1>
-      <table>
+	  <table>
+            <thead>
+              <td style="width:200px">Month</td>
+              <td style="width:200px">Documents Closed</td>
+              <td style="width:200px">Total Closed Signatures</td>
+              <td style="width:200px">Average Signatures / Doc</td>
+              <td style="width:200px">Documents Sent</td>
+              <td style="width:200px">New Users (TOS)</td>
+	    </thead>
+            $statisticsbymonth:{stat|<tr>
+              <td>$stat.date$</td>
+              <td>$stat.closed$ </td>
+              <td>$stat.signatures$ </td>
+              <td>$stat.avg$ </td>
+              <td>$stat.sent$ </td>
+              <td>$stat.users$ </td>
+	    </tr>}$
+	  </table>
+    </div>
+###
+###
+adminFunctionalityStatsPage=
+    $backtoadminmainlink()$
+    <div>
+      <h1>Functionality Statistics</h1><br/><br/>
+      <p>The purpose of these stats is to indicate how much functionality is being used.  Deleted documents or users are not counted here.</p><br/><br/>
+      <p>A recent user is one that accepted the TOS within the last 90 days.  A recent document is one created within the last 90 days.  A recent document part is a part on a recent document.</p><br/><br/>
+	    <table>
         <thead>
-          <td style="width:200px">Date</td>
-          <td style="width:200px">All signatures</td>
-          <td style="width:200px">Signs in closed</td>
-          <td style="width:200px">All users</td>
-          <td style="width:200px">All documents</td>
-          <td style="width:200px">Preparation</td>
-          <td style="width:200px">Pending</td>
-          <td style="width:200px">Closed</td>
-          <td style="width:200px">AwaitingAuthor</td>
-          <td style="width:200px">Rejected</td>
-          <td style="width:200px">Canceled</td>
-          <td style="width:200px">Timeout</td>
-          <td style="width:200px">Error</td>
-          <td style="width:200px">Viral invites</td>
-          <td style="width:200px">Admin invites</td>
-       </thead>
-        $allMonthsStats:{stat|<tr>
-          <td>$stat.date$</td>
-          <td>$stat.documents.signatures$ </td>
-          <td>$stat.documents.signaturesInClosed$ </td>
-          <td>$stat.users.all$ </td>
-          <td>$stat.documents.all$ </td>
-          <td>$stat.documents.preparation$</td>
-          <td>$stat.documents.pending$ </td>
-          <td>$stat.documents.closed$ </td>
-          <td>$stat.documents.awaitingauthor$ </td>
-          <td>$stat.documents.rejected$ </td>
-          <td>$stat.documents.canceled$ </td>
-          <td>$stat.documents.timeout$ </td>
-          <td>$stat.documents.error$ </td>
-          <td>$stat.users.viralInvites$ </td>
-          <td>$stat.users.adminInvites$ </td>
-       </tr>}$
-      </table>
+          <th style="width:400px;text-align:right;padding-right:20px;"></th>
+          <th style="width:200px;text-align:left;">Recent User Count</th>
+	      </thead>
+        $userfunctionalitystats:{stat|
+        <tr>
+          <th style="text-align:right;padding-right:20px;">$stat.label$</th>
+          <td>$stat.count$ </td>
+	      </tr>
+	      }$
+	    </table><br/><br/>
+	    <table>
+        <thead>
+          <th style="width:400px;text-align:right;padding-right:20px;"></th>
+          <th style="width:200px;text-align:left;">Recent Document Count</th>
+	      </thead>
+        $docfunctionalitystats:{stat|
+        <tr>
+          <th style="text-align:right;padding-right:20px;">$stat.label$</th>
+          <td>$stat.count$ </td>
+	      </tr>
+	      }$
+	    </table><br/><br/>
+	    <table>
+        <thead>
+          <th style="width:400px;text-align:right;padding-right:20px;"></th>
+          <th style="width:200px;text-align:left;">Recent Document Part Count</th>
+	      </thead>
+        $siglinkfunctionalitystats:{stat|
+        <tr>
+          <th style="text-align:right;padding-right:20px;">$stat.label$</th>
+          <td>$stat.count$ </td>
+	      </tr>
+	      }$
+	    </table>
     </div>
 ###
 ###
@@ -679,11 +709,12 @@ pageStats=
             <td><input type="email" name="email"/></td>
           </tr>
           <tr>
-            <td>Service:</td>
-            <td><select name="systemserver">
-                  <option selected="" value="SkrivaPa">SkrivaPå</option>
-                  <option value="Scrive">Scrive</option>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
+              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
           <tr>
@@ -717,7 +748,7 @@ pageStats=
     </div>
 ####
 backtoadminmainlink=
-    <a href="$adminlink$">Go back to main admin page</a>
+   <a href="$adminlink$">Go back to main admin page</a>
     <br/><br/>
 ####
 servicesAdmin=

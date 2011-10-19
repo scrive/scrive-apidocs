@@ -37,7 +37,8 @@ import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Util.KontraLinkUtils
 import Util.MonadUtils
-
+import Stats.Control
+import User.Utils
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -45,27 +46,15 @@ checkPasswordsMatch p1 p2 =
        then Right ()
        else Left flashMessagePasswordsDontMatch
 
-{- |
-    This is really a util function that I couldn't figure out a better
-    place for.  TODO put in better place!
-    
-    This looks up the company for the given user, if the user doesn't
-    have a company then it returns Nothing.
--}
-getCompanyForUser :: Kontrakcja m => User -> m (Maybe Company)
-getCompanyForUser user =
-  case usercompany user of
-    Just companyid -> runDBQuery $ GetCompany companyid
-    _ -> return Nothing
 
-handleUserGet :: Kontrakcja m => m Response
-handleUserGet = do
+handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
+handleUserGet = checkUserTOSGet $ do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> do
            mcompany <- getCompanyForUser user
            showUser user mcompany >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
@@ -83,7 +72,7 @@ handleUserPost = do
                _ -> return ()
              addFlashM flashMessageUserDetailsSaved
              return LinkAccount
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -177,7 +166,20 @@ handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+
+handlePostUserLocale :: Kontrakcja m => m KontraLink
+handlePostUserLocale = do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  mregion <- readField "region"
+  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+           locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
+         }
+  referer <- getField "referer"
+  case referer of
+    Just _ -> return BackToReferer
+    Nothing -> return LoopBack
 
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
@@ -202,14 +204,12 @@ handlePostUserSecurity = do
         _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
-      mlang <- readField "lang"
-      case (mlang) of
-          Just lang -> do
-              _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {lang=lang}
-              return ()
-          Nothing -> return ()
+      mregion <- readField "region"
+      _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
+           }
       return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+    Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
@@ -227,7 +227,8 @@ friendsSortSearchPage  =
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
 handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
     Context{ctxmaybeuser = Just user} <- getContext
-    companyaccounts <- runDBQuery $ GetCompanyAccounts companyid
+    companyaccounts' <- runDBQuery $ GetCompanyAccounts companyid
+    let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
     params <- getListParams
     content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
@@ -278,7 +279,7 @@ handlePostSharing = do
                       return $ LinkSharing emptyListParams
                   (_,True) -> return $ LinkSharing emptyListParams
                   _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
@@ -305,7 +306,7 @@ handlePostCompanyAccounts = do
                       handleTakeOverUserForCompany (fromJust memail)
                       return $ LinkCompanyAccounts emptyListParams
                   _ -> LinkCompanyAccounts <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
 handleDeleteCompanyUser user = do
@@ -467,8 +468,8 @@ createUser ctx names email madminuser mcompany' vip = do
                    (Just True, Just adminusercompanyid, Just company)
                      | adminusercompanyid == companyid company -> mcompany'
                    _ -> Nothing
-  let Context{ctxhostpart, ctxregion, ctxlang} = ctx
-  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) ctxregion ctxlang
+  let Context{ctxhostpart} = ctx
+  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) (getLocale ctx)
   case muser of
     Just user -> do
       let fullname = composeFullName names
@@ -490,9 +491,9 @@ createUserBySigning names email doclinkdata =
         return $ Just (user, actionid, magichash)
     )
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Region -> Lang -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage ss r l = do
-    muser <- createInvitedUser names email (Just (ss, r, l))
+createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Locale -> m (Maybe User)
+createNewUserByAdmin ctx names email _freetill custommessage ss l = do
+    muser <- createInvitedUser names email (Just (ss, l))
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -504,12 +505,12 @@ createNewUserByAdmin ctx names email _freetill custommessage ss r l = do
              return muser
          Nothing -> return muser 
 
-createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Region, Lang) -> m (Maybe User)
+createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Locale) -> m (Maybe User)
 createInvitedUser names email mlocale = do
-    Context{ctxhostpart, ctxregion, ctxlang} <- getContext
-    let (ss, r, l) = fromMaybe (systemServerFromURL ctxhostpart, ctxregion, ctxlang) mlocale
+    ctx <- getContext
+    let (ss, l) = fromMaybe (systemServerFromURL $ ctxhostpart ctx, getLocale ctx) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss r l
+    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss l
 
 {- |
    Guard against a POST with no logged in user.
@@ -520,7 +521,7 @@ withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
-         Nothing -> return $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -531,7 +532,7 @@ withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+    Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
 
 {- |
    Runs an action only if currently logged in user is a company admin
@@ -566,7 +567,7 @@ checkUserTOSGet action = do
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> case (ctxcompany ctx) of
              Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin (ctxregion ctx) (ctxlang ctx) NotLogged
+             Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
 
 
 
@@ -581,6 +582,8 @@ handleAcceptTOSPost = withUserPost $ do
   case tos of
     Just True -> do
       _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
+      user <- guardJustM $ runDBQuery $ GetUserByID userid
+      _ <- addUserSignTOSStatEvent user
       addFlashM flashMessageUserDetailsSaved
       return LinkUpload
     Just False -> do
@@ -624,7 +627,7 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
   supervisor <- fromMaybe user <$> (runDBQuery $ GetUserByID supervisorid)
   case (userid user /= supervisorid, usercompany supervisor) of
      (True, Just companyid) -> do
-          setcompanyresult <- runDBUpdate $ SetUserCompany (userid user) companyid
+          setcompanyresult <- runDBUpdate $ SetUserCompany (userid user) (Just companyid)
           if setcompanyresult
             then do
               addFlashM $ flashMessageUserHasBecomeCompanyAccount supervisor
@@ -686,15 +689,18 @@ handleAccountSetupGet aid hash = do
       activationPage muser mcompany = do
         extendActionEvalTimeToOneDayMinimum aid
         addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        linkmain <- getHomeOrUploadLink
-        sendRedirect linkmain
+        ctx <- getContext
+        sendRedirect $ LinkHome (getLocale ctx)
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
+  Log.debug "Account setup after signing document"  
   muserid <- getUserIDFromAction
+  Log.debug $ "Account setup after signing document: UserID->"  ++ (show muserid)
   case muserid of
     Just userid -> do
       user <- runDBOrFail $ dbQuery $ GetUserByID userid
+      Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)    
       handleActivate aid hash BySigning user
     Nothing -> return Nothing
   where
@@ -771,26 +777,31 @@ handleAccountSetupPost aid hash = do
 
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
-  iscompanyaccount <- getCriticalField asValidAccountType "accounttype"
+  Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
+  iscompanyaccount <- getOptionalField asValidAccountType "accounttype"
   mcompany <- getCompanyForUser actvuser
   case (iscompanyaccount, mcompany) of
-    (False, Just _company) -> do
+    (Nothing, _) -> do
+      Log.debug "Activating user account: No account type set"
+      addFlashM flashMessageNoAccountType
+      return Nothing
+    (Just False, Just _company) -> do
       -- accounts setup as part of a company can't just switch to being private
       -- we have protected against this on the client, but this should provide an extra server check
       addFlashM flashMessageNoAccountType
       returnToAccountSetup actvuser Nothing
-    (False, Nothing) ->
+    (Just False, Nothing) ->
       -- this is just a simple private account activation
       finalizePrivateActivation actvuser
-    (True, Just company) -> do
+    (Just True, Just company) -> do
       -- this is an account for an existing company
       finalizeCompanyActivation actvuser company
-    (True, Nothing) -> do
+    (Just True, Nothing) -> do
       -- we need to make a new company, because one doesn't already exist - this user should be the admin too
       (user, company) <- runDB $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
-        _ <- dbUpdate $ SetUserCompany (userid actvuser) (companyid company)
-        _ <- dbUpdate $ MakeUserCompanyAdmin (userid actvuser)
+        _ <- dbUpdate $ SetUserCompany (userid actvuser) (Just $ companyid company)
+        _ <- dbUpdate $ SetUserCompanyAdmin (userid actvuser) True
         Just user <- dbQuery $ GetUserByID $ userid actvuser
         return (user, company)
       finalizeCompanyActivation user company
@@ -899,6 +910,8 @@ handleActivate aid hash signupmethod actvuser = do
                     _ <- dbUpdate $ AcceptTermsOfService (userid user) (ctxtime ctx)
                     _ <- dbUpdate $ SetSignupMethod (userid user) signupmethod
                     return ()
+                  tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
+                  _ <- addUserSignTOSStatEvent tosuser
                   dropExistingAction actionid
                   logUserToContext $ Just user
                   return $ Just user
@@ -1072,7 +1085,7 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
   Context{ctxmaybeuser = Just user} <- getContext
   companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
   -- filter out the current user, they don't want to see themselves in the list
-  let companyaccounts = filter (not . (== userid user) . userid) companyaccounts'
+  let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",

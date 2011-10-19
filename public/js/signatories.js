@@ -254,13 +254,13 @@ window.SignatoryStandarView = Backbone.View.extend({
           var signatory = this.model;
           var document = signatory.document();
           if (signatory.signdate() != undefined)
-               return document.process().signatorysignedtext() + " "+  signatory.signdate();
+               return localization.signatoryMessage.signed + " "+  signatory.signdate();
           else if (signatory.datamismatch() == true)
                return localization.signatoryMessage.datamismatch
           else if (document.timedout())
                return localization.signatoryMessage.timedout
           else if(document.canceled())
-               return document.process().signatorycanceledtext()
+               return localization.signatoryMessage.cancelled
           else if (document.datamismatch())
                return " "
           else if (signatory.rejecteddate()!= undefined)
@@ -269,7 +269,7 @@ window.SignatoryStandarView = Backbone.View.extend({
                return localization.signatoryMessage.seen + " " + signatory.seendate()
           else if (signatory.readdate()!= undefined)
                return localization.signatoryMessage.read + " " + signatory.readdate()
-          else if (signatory.deliveredEmail)
+          else if (signatory.deliveredEmail())
                return localization.signatoryMessage.delivered
           else
               return localization.signatoryMessage.other       

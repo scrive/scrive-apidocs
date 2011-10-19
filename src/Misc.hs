@@ -41,6 +41,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
+import Data.Bits
 
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
@@ -643,3 +644,11 @@ sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
 groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
 
+-- oh boy, this is really network byte order!
+formatIP :: Word32 -> String
+formatIP 0 = ""
+-- formatIP 0x7f000001 = ""
+formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
+                   "." ++ show ((x `shiftR` 8) .&. 255) ++
+                   "." ++ show ((x `shiftR` 16) .&. 255) ++
+                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"

@@ -91,7 +91,7 @@ sendReminder = do
 getDocument :: Kontrakcja m => UserAPIFunction m APIResponse
 getDocument = do
   doc <- getUserDoc
-  api_doc <- api_document True (doc)
+  api_doc <- api_document_read True (doc)
   return $ toJSObject [("document",api_doc)]
 
 
@@ -129,11 +129,7 @@ sendFromTemplate = do
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
       liftIO $ print edoc
-      esdoc <- update $ AuthorSendDocument
-               (documentid edoc)
-               (ctxtime ctx)
-               (ctxipnumber ctx)
-               Nothing
+      esdoc <- update $ PreparationToPending (documentid edoc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
@@ -193,11 +189,7 @@ sendNewDocument = do
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
       liftIO $ print doc
-      esdoc <- update $ AuthorSendDocument
-               (documentid doc)
-               (ctxtime ctx)
-               (ctxipnumber ctx)
-               Nothing
+      esdoc <- update $ PreparationToPending (documentid doc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do

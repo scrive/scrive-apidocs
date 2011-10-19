@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE CPP #-}
 
 module Doc.DocState
     ( module Doc.DocStateData
@@ -9,17 +10,13 @@ module Doc.DocState
     , undeliveredSignatoryLinks
     , ArchiveDocuments(..)
     , ArchiveDocumentForAll(..)
+    , ArchiveDocumentForAuthor(..)
     , RestoreArchivedDocuments(..)
     , ReallyDeleteDocuments(..)
     , DeleteDocumentRecordIfRequired(..)
     , AttachFile(..)
     , AttachSealedFile(..)
-    , AuthorSignDocument(..)
-    , AuthorSendDocument(..)
     , RejectDocument(..)
-    , FileModTime(..)
-    , FileMovedToAWS(..)
-    , FileMovedToDisk(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
@@ -31,7 +28,6 @@ module Doc.DocState
     , GetDocumentsByUser(..)
     , GetDeletedDocumentsByCompany(..)
     , GetDeletedDocumentsByUser(..)
-    , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
     , MarkDocumentSeen(..)
@@ -43,7 +39,6 @@ module Doc.DocState
     , SetDocumentTags(..)
     , SetDocumentUI(..)
     , GetDocumentsByCompanyAndTags(..)
-    , SetDocumentTrustWeaverReference(..)
     , ShareDocument(..)
     , SetDocumentTitle(..)
     , SignDocument(..)
@@ -68,6 +63,10 @@ module Doc.DocState
     , DocumentFromSignatoryData(..)
     , UpdateSigAttachments(..)
     , SaveSigAttachment(..)
+    , PreparationToPending(..)
+    , AddInvitationEvidence(..)
+    , UpdateFields(..)
+    , PendingToAwaitingAuthor(..)
     --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
@@ -75,6 +74,8 @@ module Doc.DocState
     , SignLinkFromDetailsForTest(..)
     , DeleteSigAttachment(..)
     , GetSignatoryLinkIDs(..)
+    , AdminOnlySaveForUser(..)
+    -- , populateDBWithDocumentsIfEmpty
     )
 where
 
@@ -82,10 +83,13 @@ import API.Service.Model
 import Company.Model
 import Control.Monad
 import Control.Monad.Reader (ask)
+--import Database.HDBC
 import Data.List (find)
 import Data.Maybe
 import Data.Word
+--import DB.Classes
 import DB.Types
+--import DB.Utils
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocStateUtils
@@ -101,6 +105,12 @@ import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import InputValidation
+import Control.Applicative
+import Doc.DocInfo
+--import qualified AppLogger as Log
+--import qualified Doc.Model as D
+--import qualified Doc.Tables as D
 
 {- |
     All documents for the given service.  This does not include
@@ -279,7 +289,7 @@ newDocument user mcompany title documenttype ctime =
                   documenttitle                = title
                 , documentsignatorylinks       = [authorlink]
                 , documenttype                 = documenttype
-                , documentregion               = region $ usersettings user
+                , documentregion               = getRegion user
                 , documentfunctionality        = newDocumentFunctionality documenttype user
                 , documentctime                = ctime
                 , documentmtime                = ctime
@@ -312,7 +322,7 @@ blankDocument =
           , documentlog                  = []
           , documentinvitetext           = BS.empty
           , documentsealedfiles          = []
-          , documenttrustweaverreference = Nothing
+          -- , documenttrustweaverreference = Nothing
           , documentallowedidtypes       = []
           , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
@@ -325,40 +335,9 @@ blankDocument =
           , documentauthorattachments    = []
           , documentdeleted              = False
           , documentsignatoryattachments = []
-          , documentattachments          = []
+          -- , documentattachments          = []
           , documentregion               = defaultValue
           }
-
-fileMovedToAWS :: FileID
-               -> BS.ByteString
-               -> BS.ByteString
-               -> Update Documents ()
-fileMovedToAWS fileid bucket url = fileMovedTo fileid $ FileStorageAWS bucket url
-
-fileMovedToDisk :: FileID -> FilePath -> Update Documents ()
-fileMovedToDisk fileid filepath = fileMovedTo fileid $ FileStorageDisk filepath
-
-fileMovedTo :: FileID -> FileStorage -> Update Documents ()
-fileMovedTo fid fstorage = do
-    documents <- ask
-    let docs = toList (documents @= fid)
-    mapM_ (\doc -> modifySignableOrTemplate (documentid doc) moved) docs
-    where
-    moved doc@Document{documentfiles, documentsealedfiles, documentsignatoryattachments, documentauthorattachments} =
-        Right $ doc { documentfiles = map moved1 documentfiles
-                    , documentsealedfiles = map moved1 documentsealedfiles
-                    , documentsignatoryattachments = map movedsig documentsignatoryattachments
-                    , documentauthorattachments = map movedaut documentauthorattachments
-                    }
-    moved1 file@File{ fileid
-                    , filestorage = FileStorageMemory _
-                    } | fileid == fid =
-                                 file { filestorage = fstorage }
-                      | otherwise = file
-    moved1 file = file
-    movedsig sa@SignatoryAttachment{signatoryattachmentfile=Just file} = sa {signatoryattachmentfile = Just (moved1 file)}
-    movedsig sa = sa
-    movedaut aa@AuthorAttachment{authorattachmentfile = file} = aa {authorattachmentfile = moved1 file}
 
 {- |
     Gets the document for the given FileID.  This includes documents where
@@ -377,38 +356,23 @@ getDocumentByFileID fileid' = queryDocs $ \documents ->
     then a Left is returned.
 -}
 attachFile :: DocumentID
-           -> BS.ByteString
-           -> BS.ByteString
+           -> FileID
            -> Update Documents (Either String Document)
-attachFile documentid filename1 content = do
-  documents <- ask
-  fileid2 <- getUnique documents FileID
+attachFile documentid fid = do
   modifySignableOrTemplate documentid $ \document ->
-      let nfile = File { fileid = fileid2
-                       , filename = filename1
-                       , filestorage = FileStorageMemory content
-                       }
-      in Right $ document { documentfiles = documentfiles document ++ [nfile] }
+    Right $ document { documentfiles = documentfiles document ++ [fid] }
 
 {- |
     Attaches a sealed file to the indicated document.
     If there is a problem, such as the document not existing,
     or the document not being a signable then a Left is returned.
 -}
-
 attachSealedFile :: DocumentID
-                 -> BS.ByteString
-                 -> BS.ByteString
+                 -> FileID
                  -> Update Documents (Either String Document)
-attachSealedFile documentid filename1 content = do
-  documents <- ask
-  fileid2 <- getUnique documents FileID
+attachSealedFile documentid fid = do
   modifySignable documentid $ \document ->
-      let nfile = File { fileid = fileid2
-                       , filename = filename1
-                       , filestorage = FileStorageMemory content
-                       }
-      in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
+    Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] }
 
 {- |
     Updates an existing document, typically this stores information collected
@@ -442,9 +406,12 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                                (Just cu, Just (Right newsigindex))
                                  -> Just cu{csvsignatoryindex=newsigindex}
                                _ -> Nothing
+                 updatedFstFileName  = documentfiles document
+#if 0
                  updatedFstFileName  = case (documentfiles document) of
-                                         (f:fs) -> (f {filename= docname} :fs)
+                                         (f:fs) -> (f {filename = docname} :fs)
                                          fs -> fs
+#endif
                  isbasic = BasicFunctionality == docfunctionality
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
@@ -483,10 +450,14 @@ updateDocumentSimple did (authordetails,author) signatories = do
                               }
              signatorylinks <- sequence $ map (flip signLinkFromDetails [SignatoryPartner]) signatories
              let alllinks = authorlink : signatorylinks
+                 docfunctionality = if length alllinks > 2 
+                                    then AdvancedFunctionality
+                                    else documentfunctionality document
              return $ Right $ document
                     { documentsignatorylinks         = alllinks
                     , documentmtime                  = now
                     , documentallowedidtypes         = [EmailIdentification]
+                    , documentfunctionality          = docfunctionality
                     }
          else return $ Left "Document not in preparation"
 
@@ -527,28 +498,19 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
    the document not being in preparation mode then a Left is returned.
 -}
 updateDocumentAttachments :: DocumentID
-                          -> [DocumentID]
+                          -> [FileID]
                           -> [FileID]
                           -> Update Documents (Either String Document)
 updateDocumentAttachments docid idstoadd idstoremove = do
-  documents <- ask
-  let addattachments   = toList $ documents @+ idstoadd
-      foundattachments = length idstoadd == length addattachments
-      newattachment Document{ documenttitle, documentfiles = (file:_) }
-        = Just AuthorAttachment{ authorattachmentfile = file { filename = documenttitle } }
-      newattachment _ = Nothing
-      addfiles = catMaybes $ map newattachment addattachments
-  case foundattachments of
-    False -> return $ Left "documents don't exist for all the given ids"
-    True -> modifySignableOrTemplate docid $ \doc ->
+  modifySignableOrTemplate docid $ \doc ->
       case documentstatus doc of
         Preparation -> Right doc { documentauthorattachments =
                                       [da | da <- documentauthorattachments doc,
-                                       not ((fileid $ authorattachmentfile da) `elem` idstoremove)]
+                                       authorattachmentfile da `notElem` idstoremove]
                                       ++
-                                      addfiles
+                                      map AuthorAttachment idstoadd
                                  }
-        _ -> Left "Can only attach to document in Preparation"
+        _ -> Left $ "Can only attach to document in Preparation, #" ++ show docid ++ " is in " ++ show (documentstatus doc)
 
 {- |
     Creates a new document by copying an existing document pumping some values into a particular signatory.
@@ -599,11 +561,18 @@ timeoutDocument :: DocumentID
                 -> Update Documents (Either String Document)
 timeoutDocument documentid time = do
   modifySignable documentid $ \document ->
-      let
-          newdocument = document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
-      in case documentstatus document of
-           Pending -> Right newdocument
-           _ -> Left "Illegal document status change"
+    let newdocument = document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
+    in case documentstatus document of
+      Pending -> Right newdocument
+      _ -> Left "Illegal document status change"
+
+checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
+checkSignDocument doc slid mh = catMaybes $
+  [trueOrMessage (isPending doc || isAwaitingAuthor doc) "Document is not in pending",
+   trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed",
+   trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen",
+   trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist",
+   trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"]
 
 {- |
     Signs a particular signatory link.  If there is a problem, such as the document not existing,
@@ -611,61 +580,61 @@ timeoutDocument documentid time = do
 -}
 signDocument :: DocumentID
              -> SignatoryLinkID
+             -> MagicHash
              -> MinutesTime
              -> Word32
              -> Maybe SignatureInfo
-             -> [(BS.ByteString, BS.ByteString)]
              -> Update Documents (Either String Document)
-signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
+signDocument documentid slid mh time ipnumber msiginfo = do
   modifySignable documentid $ \document ->
-    let signeddocument = document { documentsignatorylinks = newsignatorylinks
-                                  } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
-        Just signatoryLink = getSigLinkFor document signatorylinkid1
-        newsignatorylinks = map maybesign (documentsignatorylinks document)
-        maybesign link@SignatoryLink{signatorylinkid, signatorydetails = details@SignatoryDetails{signatoryfields}}
-          | signatorylinkid == signatorylinkid1 =
-            link { maybesigninfo = Just (SignInfo time ipnumber)
-                 , signatorydetails = details {
-                     signatoryfields = map (updateSigField fields) signatoryfields
-                   }
-                 , signatorysignatureinfo = msiginfo
-                 }
-        maybesign link = link
-        allbutauthor = [sl | sl <- newsignatorylinks
-                           , not $ isAuthor sl]
-        signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
-        allsignedbutauthor = all signatoryHasSigned allbutauthor
-        isallsigned = all signatoryHasSigned newsignatorylinks
+    case checkSignDocument document slid mh of
+      [] -> let signeddocument = document { documentsignatorylinks = newsignatorylinks
+                                          } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
+                -- this is a mess and could be cleaned up by good use of SQL (PLEASE!)
+                Just signatoryLink = getSigLinkFor document slid
+                newsignatorylinks = mapIf (\sl -> signatorylinkid sl == slid)  sign (documentsignatorylinks document)
+                sign link = link { maybesigninfo = Just (SignInfo time ipnumber)
+                                 , signatorysignatureinfo = msiginfo
+                                 }
+                
+            in Right signeddocument
+      s -> Left $ "Cannot sign for signatory " ++ show slid ++ " because " ++ concat s
 
-        -- Check if there are custom fields in any signatory (that is, not author)
-        -- ??: We don't use this anymore? -EN
-        -- hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
+checkUpdateFields :: Document -> SignatoryLinkID -> [String]
+checkUpdateFields doc slid = catMaybes $ 
+  [trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")",
+   trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist",
+   trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."] 
 
-        updateSigField sfields sf =
-          case sfType sf of
-            CompanyFT -> updateF $ BS.pack "sigco"
-            PersonalNumberFT -> updateF $ BS.pack "sigpersnr"
-            CompanyNumberFT -> updateF $ BS.pack "sigcompnr"
-            CustomFT label _ -> updateF label
-            _ -> sf
-          where
-            updateF = maybe sf (\v -> sf { sfValue = v }) . flip lookup sfields
-
-        signeddocument2 =
-              if isallsigned
-              then signeddocument { documentstatus = Closed } `appendHistory` [DocumentHistoryClosed time ipnumber]
-              else if allsignedbutauthor
-                   then signeddocument { documentstatus = AwaitingAuthor }
-                   else signeddocument
-
-    in case documentstatus document of
-      Pending ->  Right signeddocument2
-      Timedout -> Left "FÃ¶rfallodatum har passerat"
-      _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+updateFields :: DocumentID -> 
+                SignatoryLinkID -> 
+                [(BS.ByteString, BS.ByteString)] -> 
+                Update Documents (Either String Document)
+updateFields docid slid fields =
+  modifySignable docid $ \document ->
+  case checkUpdateFields document slid of
+    [] -> let updateSigFields sl@SignatoryLink{signatorydetails = sd@SignatoryDetails{signatoryfields}} =
+                sl { signatorydetails = sd { signatoryfields = map updateSigField signatoryfields } }
+              updateSigField sf =
+                let updateF n = case lookup n fields of
+                      Just v  -> sf { sfValue = v }
+                      Nothing -> sf
+                in case sfType sf of
+                  CompanyFT        -> updateF $ BS.pack "sigco"
+                  PersonalNumberFT -> updateF $ BS.pack "sigpersnr"
+                  CompanyNumberFT  -> updateF $ BS.pack "sigcompnr"
+                  CustomFT label _ -> updateF label
+                  _                -> sf
+              
+          in Right $ document { documentsignatorylinks = 
+                                   mapIf (\sl -> signatorylinkid sl == slid) 
+                                   updateSigFields $ documentsignatorylinks document
+                              }
+    s -> Left $ "Cannot updateFields on document " ++ show docid ++ " because " ++ concat s
 
 {- |
     A helper function that signs the given signatory link.
--}
+
 signWithUserID :: [SignatoryLink]
                   -> UserID
                   -> Maybe SignInfo
@@ -675,74 +644,97 @@ signWithUserID [] _ _ _ = []
 signWithUserID (s:ss) uid sinfo msiginfo
     | maybe False (((==) uid)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
     | otherwise = s : signWithUserID ss uid sinfo msiginfo
-
-{- |
-    Called when an author sends a document.  This will return Left when there are problems
-    such as the document not existing, or it not being in Preparation mode, or it being timedout.
 -}
-authorSendDocument :: DocumentID
-                   -> MinutesTime
-                   -> Word32
-                   -> Maybe SignatureInfo
-                   -> Update Documents (Either String Document)
-authorSendDocument documentid time ipnumber _msiginfo =
-    modifySignable documentid $ \document ->
-        case documentstatus document of
-          Preparation ->
-              let timeout = do
-                             days <- documentdaystosign document
-                             return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                  sinfo = Just (SignInfo time ipnumber)
-                  siglinks = documentsignatorylinks document
-                  sigdetails = map signatorydetails siglinks
-              in Right $ document { documenttimeouttime = timeout
-                                  , documentmtime = time
-                                  , documentstatus = Pending
-                                  , documentinvitetime = sinfo
-                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
+                  
+{- |
 
-          Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
-          _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+ -}
+trueOrMessage :: Bool -> String -> Maybe String
+trueOrMessage False s = Just s
+trueOrMessage True  _ = Nothing
+                  
+{- | Preconditions for moving a document from Preparation to Pending.
+ -}
+checkPreparationToPending :: Document -> [String]
+checkPreparationToPending document = catMaybes $
+  [trueOrMessage (documentstatus document == Preparation) ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")"),
+  trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1) ("Number of authors was not 1"),
+  trueOrMessage (length (filter isSignatory $ documentsignatorylinks document) >= 1) ("There are no signatories"),
+  trueOrMessage (all (isSignatory =>>^ (isGood . asValidEmail . BS.toString . getEmail)) (documentsignatorylinks document)) ("Not all signatories have valid email"),
+  trueOrMessage (length (documentfiles document) == 1) "Did not have exactly one file"]
+  -- NOTE: Should add stuff about first/last name, though currently the author may have his full name
+  -- stored in the first name field. OOPS!
+
+{- | Move a document from Preparation to Pending
+     Modifieds the documentstatus, documenttimeouttime, and the documentmtime
+ -}
+preparationToPending :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+preparationToPending documentid time =
+  modifySignable documentid $ \document -> 
+  case checkPreparationToPending document of
+    [] -> let timeout = do
+                days <- documentdaystosign document
+                return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
+          in Right $ document { documentstatus = Pending
+                              , documenttimeouttime = timeout
+                              , documentmtime = time
+                              }
+    s -> Left $ "Document " ++ show documentid ++ " cannot go from Preparation to Pending. " ++ concat s
+
+checkAddEvidence :: Document -> SignatoryLinkID -> [String]
+checkAddEvidence doc slid = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending) "Document is not in pending",
+  trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"]
+
+{- | Add a bit of evidence about when a signatory was invited.
+     Store the invite time + a history log message;
+     NOTE: This currently does not store a very good evidence message.
+ -}
+addInvitationEvidence :: DocumentID -> SignatoryLinkID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+addInvitationEvidence docid slid time ipnumber =
+  modifySignable docid $ \document ->
+  case checkAddEvidence document slid of
+    [] -> let Just sds = signatorydetails <$> getSigLinkFor document slid
+          in Right $ document { documentinvitetime = Just (SignInfo time ipnumber) } 
+             `appendHistory` [DocumentHistoryInvitationSent time ipnumber [sds]]
+    s -> Left $ "Document " ++ show documentid ++ " cannot have evidence attached for signatory " ++ show slid ++ " because " ++ concat s
+
 
 {- |
-    Signs the document as an author.  This expects the document to be in preparation mode,
-    so is the signing that happens just before sending the doc to be signed by others.
-    This returns Left if there is a problem such as the document
-    not existing, or the document not being in preparation mode.
+
+-}
+checkCloseDocument :: Document -> [String]
+checkCloseDocument doc = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc)),
+   trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all signatories have signed")]
+
+{- | Close a document
+ -} 
+closeDocument :: DocumentID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+closeDocument docid time ipnumber =
+  modifySignable docid $ \document ->
+  case checkCloseDocument document of
+    [] -> Right $ document { documentstatus = Closed 
+                           , documentmtime  = time
+                           } `appendHistory` [DocumentHistoryClosed time ipnumber]
+    s -> Left $ "Cannot Close document " ++ show docid ++ " because " ++ concat s
     
-    As author is no longer special we should consider refactoring to delete this function.
--}
-authorSignDocument :: DocumentID
-                   -> MinutesTime
-                   -> Word32
-                   -> Maybe SignatureInfo
-                   -> Update Documents (Either String Document)
-authorSignDocument documentid time ipnumber msiginfo =
-    modifySignable documentid $ \document ->
-        case documentstatus document of
-          Preparation ->
-              let timeout = do
-                             days <- documentdaystosign document
-                             return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                  Just authorsiglink = getAuthorSigLink document
-                  Just authorid = maybesignatory authorsiglink
-                  sinfo = Just (SignInfo time ipnumber)
-                  sigdetails = map signatorydetails (documentsignatorylinks document)
-                  -- are there no signatories besides the author
-                  authorOnly = Prelude.null [sl | sl <- documentsignatorylinks document
-                                                , not $ isAuthor sl
-                                                , isSignatory sl]
-                  newsiglinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
-                  signeddocument = document { documenttimeouttime = timeout
-                                  , documentmtime = time
-                                  , documentsignatorylinks = newsiglinks
-                                  , documentstatus = if authorOnly then Closed else Pending
-                                  , documentinvitetime = sinfo
-                                  } `appendHistory` ([DocumentHistoryInvitationSent time ipnumber sigdetails] ++ if authorOnly then [DocumentHistoryClosed time ipnumber] else [])
-              in Right $ signeddocument
+checkPendingToAwaitingAuthor :: Document -> [String]
+checkPendingToAwaitingAuthor doc = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending) ("document should be pending but it is " ++ (show $ documentstatus doc)),
+   trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all non-author signatories have signed"),
+   trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"]
 
-          Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
-          _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+{- | Pending to AwaitingAuthor
+-}
+pendingToAwaitingAuthor :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+pendingToAwaitingAuthor docid time =
+  modifySignable docid $ \document ->
+  case checkPendingToAwaitingAuthor document of
+    [] -> Right $ document { documentstatus = AwaitingAuthor
+                           , documentmtime  = time
+                           }
+    s -> Left $ "Cannot move document to awaiting author" ++ show docid ++ " because " ++ concat s
 
 getMagicHash :: Update Documents MagicHash
 getMagicHash = getRandom
@@ -792,7 +784,7 @@ markInvitationRead documentid linkid time = do
             else Left ""
     return ()
        where
-        shouldMark l = (signatorylinkid l) == linkid && (isNothing $ maybeseeninfo l)
+        shouldMark l = (signatorylinkid l) == linkid && (isNothing $ maybereadinvite l)
         mark l =  l { maybereadinvite = Just time }
 
 {- |
@@ -859,16 +851,6 @@ getDocumentStats = queryDocs $ \documents ->
       }
 
 {- |
-    Queries for the last modified time of the document for the indicated file.
-    If there isn't a document for the file this will return the 0 time.
-    
-    Maybe we should have some sort of error case instead of returning 0.
--}
-fileModTime :: FileID -> Query Documents MinutesTime
-fileModTime fileid = queryDocs $ \documents ->
-  maximum $ (fromSeconds 0) : (map documentmtime $ toList (documents @= fileid))
-
-{- |
     Links up a signatory link to a user account.  This should happen when 
       \1. a document moves from preparation to pending more
       \2. a signer creates an account after signing to save their document
@@ -931,11 +913,11 @@ getDocumentStatsByUser user time = do
     Sets the document's timeout time.  This will return a Left if the document isn't a signable,
     or if the document doesn't exist.
 -}
-setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents (Either String Document)
+setDocumentTimeoutTime :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
 setDocumentTimeoutTime documentid timeouttime = do
   -- check if document status change is a legal transition
   modifySignable documentid $ \doc ->
-      Right $ doc{ documenttimeouttime = Just timeouttime }
+      Right $ doc{ documenttimeouttime = Just (TimeoutTime timeouttime) }
 
 {- |
     Sets tags on a document.  This will return a Left if the document doesn't exist.
@@ -987,6 +969,15 @@ archiveDocuments user docids =
 -}
 archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
 archiveDocumentForAll docid = archiveDocumentFor (const True) docid
+
+{- |
+   Archives a document for the author. This is just a soft delete,
+    the document will appear in their recycle bin//trash cans.
+    A Left is returned when there are problems, such as the document not existing or a document
+    being in pending mode.
+-}
+archiveDocumentForAuthor :: DocumentID -> Update Documents (Either String Document)
+archiveDocumentForAuthor docid = archiveDocumentFor isAuthor docid
 
 {- |
     Helper function that makes it easier to run update functions that return Either over
@@ -1104,12 +1095,12 @@ setupForDeletion :: Document -> Document
 setupForDeletion doc = blankDocument {
                          documentid = documentid doc,
                          documentdeleted = True,
-                         documentfiles = map (blankFile . fileid) (documentfiles doc),
-                         documentsealedfiles = map (blankFile . fileid) (documentsealedfiles doc),
+                         --documentfiles = map (blankFile . fileid) (documentfiles doc),
+                         --documentsealedfiles = map (blankFile . fileid) (documentsealedfiles doc),
                          documentsignatorylinks = map (blankSigLink . signatorylinkid) (documentsignatorylinks doc) }
   where
-  blankFile :: FileID -> File
-  blankFile fid = File { fileid = fid,
+  _blankFile :: FileID -> File
+  _blankFile fid = File { fileid = fid,
                          filename = BS.empty,
                          filestorage = FileStorageMemory BS.empty }
   blankSigLink :: SignatoryLinkID -> SignatoryLink
@@ -1157,65 +1148,19 @@ setDocumentTitle docid doctitle =
     then Right $ doc { documenttitle = doctitle }
     else Left $ "Can't update title unless the status is in preparation"
 
---This is only for awaiting author
---We should add current state checkers here (not co cancel closed documents etc.)
-closeDocument :: DocumentID
-              -> MinutesTime
-              -> Word32
-              -> Maybe SignatureInfo
-              -> Update Documents (Maybe Document)
-closeDocument docid time ipnumber msiginfo = do
-  doc <- modifySignable docid $ \document -> 
-    case documentstatus document of
-      AwaitingAuthor -> let timeout = do
-                              days <- documentdaystosign document
-                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
-                            Just authorsiglink = getAuthorSigLink document
-                            Just authorid = maybesignatory authorsiglink
-                            sinfo = Just (SignInfo time ipnumber)
-                            newdocument = document { documenttimeouttime = timeout
-                                                   , documentmtime = time
-                                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
-                                                   , documentstatus = Closed
-                                                   } `appendHistory` [DocumentHistoryClosed time ipnumber]
-                        in Right $ newdocument
-      _ -> Left "Only documents in AwaitingAuthor can be closed like this"
-  case doc of
-    Left _ -> return Nothing
-    Right d -> return $ Just d
-
 {- |
     Cancels a document that is either in pending or awaiting autor state.
     If it's in the wrong state, doesn't exist, or isn't a signable then a Left will be returned.
 -}
 cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> Word32 -> Update Documents (Either String Document)
 cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
-    let canceledDocument =  document {
-                              documentstatus = Canceled
-                            , documentcancelationreason = Just cr}
+    let canceledDocument =  document { documentstatus = Canceled
+                                     , documentcancelationreason = Just cr}
                             `appendHistory` [DocumentHistoryCanceled time ipnumber]
     case documentstatus document of
-        Pending -> Right canceledDocument
+        Pending        -> Right canceledDocument
         AwaitingAuthor -> Right canceledDocument
-        _ -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
-
-{- |
-    Gathers together all the files in the system attached to documents.
-    This excludes all documents where documentdeleted is True.
--}
-getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
-getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
-  let doclist = filter (not . documentdeleted) $ IxSet.toList documents
-      getFiles d@Document{documentfiles,documentsealedfiles} =
-        documentfiles
-        ++ documentsealedfiles
-        ++ map authorattachmentfile (documentauthorattachments d)
-        ++ [f | SignatoryAttachment{signatoryattachmentfile = Just f} <- (documentsignatoryattachments d)]
-      allFiles = concatMap getFiles doclist
-      getID file@File{ filestorage = FileStorageMemory _ } = [file]
-      getID _ = [] in
-  concatMap getID allFiles
-
+        _              -> Left $ "Invalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
 {- |
     This restarts a document.
@@ -1324,17 +1269,6 @@ getUniqueSignatoryLinkID = do
   sg <- ask
   linkid <- getUnique sg SignatoryLinkID
   return linkid
-
-{- |
-    Sets the reference used for the document within TrustWeaver.
-    If the document doesn't exist, or isn't a signable, then this will return a Left.
--}
-setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
-setDocumentTrustWeaverReference documentid reference = do
-  modifySignable documentid $ \document ->
-      let
-          newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
-      in Right newdocument
 
 {- |
     Turns the document status into DocumentError with the error given.
@@ -1454,6 +1388,24 @@ templateFromDocument docid = modifySignable docid $ \doc ->
           documentstatus = Preparation
         , documenttype =  Template process
         }
+
+{- |
+    The existance of this function is wrong.  What it means is that storing
+    maybesignatory and maybecompany on the signatory links is the wrong way of doing it,
+    and there should be something else for hooking accounts to sig links that doesn't
+    involve editing all the docs as a user moves between private and company accounts.
+-}
+adminOnlySaveForUser :: DocumentID -> User -> Update Documents (Either String Document)
+adminOnlySaveForUser docid user =
+  modifyDocumentWithActionTime False (const True) docid $ \doc ->
+    return . Right $ doc {
+      documentsignatorylinks = map maybeSaveSigLink $ documentsignatorylinks doc
+    }
+  where
+    maybeSaveSigLink :: SignatoryLink -> SignatoryLink
+    maybeSaveSigLink siglink@SignatoryLink{maybesignatory}
+      | maybesignatory == Just (userid user) = siglink { maybecompany = usercompany user }
+      | otherwise = siglink
         
 
 fixBug510ForDocument :: DocumentID -> Update Documents (Either String Document)
@@ -1558,22 +1510,16 @@ updateSigAttachments docid sigatts =
     If there's a problem such as the document isn't in a pending or awaiting author state,
     or the document does not exist a Left is returned.
 -}
-saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Update Documents (Either String Document)
-saveSigAttachment docid name email content = do
-  documents <- ask
-  fileid <- getUnique documents FileID
+saveSigAttachment :: DocumentID -> BS.ByteString -> BS.ByteString -> FileID -> Update Documents (Either String Document)
+saveSigAttachment docid name email fid = do
   modifySignable docid $ \doc ->
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-      False -> Left "Only attach when the document is signable."
+      False -> Left $ "saveSigAttachment can be used only in Pending or AwaitingAuthor status, document is in " ++ show (documentstatus doc) ++ " docid #" ++ show docid
       True -> Right doc { documentsignatoryattachments = newsigatts }
         where
           newsigatts = map addfile $ documentsignatoryattachments doc
           addfile a | email == signatoryattachmentemail a && name == signatoryattachmentname a =
-            a { signatoryattachmentfile =
-                   Just $ File { fileid = fileid
-                               , filename = name
-                               , filestorage = FileStorageMemory content
-                               }
+            a { signatoryattachmentfile = Just $ fid
               }
           addfile a = a
 
@@ -1587,13 +1533,12 @@ deleteSigAttachment docid email fid =
   modifySignable docid $ \doc -> do
     let newsigatts = map removefile $ documentsignatoryattachments doc
         removefile a | email == signatoryattachmentemail a && 
-                       isJust (signatoryattachmentfile a) &&
-                       (fileid $ fromJust $ signatoryattachmentfile a) == fid = a { signatoryattachmentfile = Nothing }
+                       signatoryattachmentfile a == Just fid = a { signatoryattachmentfile = Nothing }
         removefile a = a
 
 
     case documentstatus doc `elem` [Pending, AwaitingAuthor] of
-      False -> Left "Only attach when the document is signable."
+      False -> Left $ "deleteSigAttachment can be used only in Pending or AwaitingAuthor status, document is in " ++ show (documentstatus doc) ++ " docid #" ++ show docid
       True -> Right doc { documentsignatoryattachments = newsigatts }
 
 storeDocumentForTesting :: Document -> Update Documents DocumentID
@@ -1604,6 +1549,9 @@ storeDocumentForTesting doc = do
 getSignatoryLinkIDs :: Query Documents [SignatoryLinkID]
 getSignatoryLinkIDs =
   (concatMap (map signatorylinkid . documentsignatorylinks) . toList) `fmap` ask
+
+getAllDocuments :: Query Documents [Document]
+getAllDocuments = return . toList =<< ask
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1623,8 +1571,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'updateDocumentAttachments
                         , 'updateSigAttachments
                         , 'signDocument
-                        , 'authorSignDocument
-                        , 'authorSendDocument
+--                        , 'authorSendDocument
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
@@ -1633,17 +1580,17 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setInvitationDeliveryStatus
                         , 'getDocumentStats
                         , 'getDocumentStatsByUser
-                        , 'fileModTime
                         , 'saveDocumentForUser
+                        , 'adminOnlySaveForUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'setDocumentTags
                         , 'setDocumentUI
                         , 'getDocumentsByCompanyAndTags
-                        , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'archiveDocumentForAll
+                        , 'archiveDocumentForAuthor
                         , 'restoreArchivedDocuments
                         , 'reallyDeleteDocuments
                         , 'deleteDocumentRecordIfRequired
@@ -1652,11 +1599,12 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
-                        , 'fileMovedToAWS
-                        , 'fileMovedToDisk
                         , 'deleteSigAttachment
+                        , 'preparationToPending
+                        , 'addInvitationEvidence
+                        , 'updateFields
+                        , 'pendingToAwaitingAuthor
                           -- admin only area follows
-                        , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
                         , 'getUniqueSignatoryLinkID
@@ -1664,7 +1612,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'saveSigAttachment
                         , 'storeDocumentForTesting
                         , 'signLinkFromDetailsForTest
-
                         , 'getDocumentByFileID
                         , 'errorDocument
                         , 'signableFromDocument
@@ -1675,4 +1622,190 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'migrateDocumentSigLinkCompanies
                         , 'fixBug510ForDocument
                         , 'getSignatoryLinkIDs
+                        , 'getAllDocuments
                         ])
+
+-- stuff for converting to pgsql
+#if 0
+populateDBWithDocumentsIfEmpty :: DB ()
+populateDBWithDocumentsIfEmpty = do
+  [docsnumber] :: [Int] <- wrapDB $ \conn -> quickQuery' conn "SELECT COUNT(*) FROM documents" [] >>= return . map fromSql . join
+  when (docsnumber == 0) $ do
+    Log.debug "No documents in database, populating with values from happstack-state..."
+    docs <- query GetAllDocuments
+    _ <- wrapDB $ \conn -> runRaw conn "SET CONSTRAINTS ALL DEFERRED"
+    forM_ docs $ \doc -> do
+      Log.debug $ show doc
+      let (doctype, docprocess) = case documenttype doc of
+            Signable p -> (D.Signable, Just p)
+            Template p -> (D.Template, Just p)
+            Attachment -> (D.Attachment, Nothing)
+            AttachmentTemplate -> (D.AttachmentTemplate, Nothing)
+          mdocfile = listToMaybe $ documentfiles doc
+          mdocsealedfile = listToMaybe $ documentsealedfiles doc
+      insertFile mdocfile
+      insertFile mdocsealedfile
+      _ <- wrapDB $ \conn -> run conn ("INSERT INTO documents ("
+        ++ "  id"
+        ++ ", service_id"
+        ++ ", file_id"
+        ++ ", sealed_file_id"
+        ++ ", title"
+        ++ ", status"
+        ++ ", type"
+        ++ ", process"
+        ++ ", functionality"
+        ++ ", ctime"
+        ++ ", mtime"
+        ++ ", days_to_sign"
+        ++ ", timeout_time"
+        ++ ", invite_time"
+        ++ ", invite_ip"
+        ++ ", log"
+        ++ ", invite_text"
+        ++ ", trust_weaver_reference"
+        ++ ", allowed_id_types"
+        ++ ", csv_title"
+        ++ ", csv_contents"
+        ++ ", csv_signatory_index"
+        ++ ", cancelation_reason"
+        ++ ", sharing"
+        ++ ", rejection_time"
+        ++ ", rejection_signatory_link_id"
+        ++ ", rejection_reason"
+        ++ ", tags"
+        ++ ", mail_footer"
+        ++ ", region"
+        ++ ", deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), to_timestamp(?), ?, to_timestamp(?), to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?)") [
+            toSql $ documentid doc
+          , toSql $ documentservice doc
+          , toSql $ fileid `fmap` mdocfile
+          , toSql $ fileid `fmap` mdocsealedfile
+          , toSql $ documenttitle doc
+          , toSql $ documentstatus doc
+          , toSql doctype
+          , toSql docprocess
+          , toSql $ documentfunctionality doc
+          , toSql $ documentctime doc
+          , toSql $ documentmtime doc
+          , toSql $ documentdaystosign doc
+          , toSql $ unTimeoutTime `fmap` documenttimeouttime doc
+          , toSql $ signtime `fmap` documentinvitetime doc
+          , toSql $ signipnumber `fmap` documentinvitetime doc
+          , toSql $ documentlog doc
+          , toSql $ documentinvitetext doc
+          , toSql $ "" -- documenttrustweaverreference doc
+          , toSql $ documentallowedidtypes doc
+          , toSql $ csvtitle `fmap` documentcsvupload doc
+          , toSql $ csvcontents `fmap` documentcsvupload doc
+          , toSql $ csvsignatoryindex `fmap` documentcsvupload doc
+          , toSql $ documentcancelationreason doc
+          , toSql $ documentsharing doc
+          , toSql $ fst3 `fmap` documentrejectioninfo doc
+          , toSql $ snd3 `fmap` documentrejectioninfo doc
+          , toSql $ thd3 `fmap` documentrejectioninfo doc
+          , toSql $ documenttags doc
+          , toSql $ documentmailfooter $ documentui doc
+          , toSql $ documentregion doc
+          , toSql $ documentdeleted doc
+          ]
+      forM_ (documentsignatorylinks doc) $ \sl -> do
+        _ <- wrapDB $ \conn -> run conn ("INSERT INTO signatory_links ("
+          ++ "  id"
+          ++ ", document_id"
+          ++ ", user_id"
+          ++ ", company_id"
+          ++ ", fields"
+          ++ ", sign_order"
+          ++ ", token"
+          ++ ", sign_time"
+          ++ ", sign_ip"
+          ++ ", seen_time"
+          ++ ", seen_ip"
+          ++ ", read_invitation"
+          ++ ", invitation_delivery_status"
+          ++ ", signinfo_text"
+          ++ ", signinfo_signature"
+          ++ ", signinfo_certificate"
+          ++ ", signinfo_provider"
+          ++ ", signinfo_first_name_verified"
+          ++ ", signinfo_last_name_verified"
+          ++ ", signinfo_personal_number_verified"
+          ++ ", roles"
+          ++ ", deleted"
+          ++ ", really_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, to_timestamp(?), ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
+              toSql $ signatorylinkid sl
+            , toSql $ documentid doc
+            , toSql $ maybesignatory sl
+            , toSql $ maybecompany sl
+            , toSql $ signatoryfields $ signatorydetails sl
+            , toSql $ signatorysignorder $ signatorydetails sl
+            , toSql $ signatorymagichash sl
+            , toSql $ signtime `fmap` maybesigninfo sl
+            , toSql $ signipnumber `fmap` maybesigninfo sl
+            , toSql $ signtime `fmap` maybeseeninfo sl
+            , toSql $ signipnumber `fmap` maybeseeninfo sl
+            , toSql $ maybereadinvite sl
+            , toSql $ invitationdeliverystatus sl
+            , toSql $ signatureinfotext `fmap` signatorysignatureinfo sl
+            , toSql $ signatureinfosignature `fmap` signatorysignatureinfo sl
+            , toSql $ signatureinfocertificate `fmap` signatorysignatureinfo sl
+            , toSql $ signatureinfoprovider `fmap` signatorysignatureinfo sl
+            , toSql $ signaturelstnameverified `fmap` signatorysignatureinfo sl
+            , toSql $ signaturelstnameverified `fmap` signatorysignatureinfo sl
+            , toSql $ signaturepersnumverified `fmap` signatorysignatureinfo sl
+            , toSql $ signatoryroles sl
+            , toSql $ signatorylinkdeleted sl
+            , toSql $ signatorylinkreallydeleted sl
+            ]
+        return ()
+      forM_ (documentauthorattachments doc) $ \(AuthorAttachment file) -> do
+        _ <- wrapDB $ \conn -> run conn ("INSERT INTO author_attachments ("
+          ++ "  file_id"
+          ++ ", document_id) VALUES (?, ?)") [
+              toSql $ fileid file
+            , toSql $ documentid doc
+            ]
+        return ()
+      forM_ (documentsignatoryattachments doc) $ \file -> do
+        let msigfile = signatoryattachmentfile file
+        insertFile msigfile
+        fid <- FileID `fmap` getUniqueID D.tableFiles
+        when (isNothing msigfile) $ do
+          _ <- wrapDB $ \conn -> run conn ("INSERT INTO files ("
+            ++ "  id"
+            ++ ", name) VALUES (?, ?)") [
+                toSql fid
+              , toSql $ signatoryattachmentname file
+              ]
+          return ()
+        _ <- wrapDB $ \conn -> run conn ("INSERT INTO signatory_attachments ("
+          ++ "  file_id"
+          ++ ", document_id"
+          ++ ", email"
+          ++ ", description) VALUES (?, ?, ?, ?)") [
+              toSql $ maybe fid (FileID . fromIntegral . unFileID . fileid) msigfile
+            , toSql $ documentid doc
+            , toSql $ signatoryattachmentemail file
+            , toSql $ signatoryattachmentdescription file
+            ]
+        return ()
+      return ()
+  where
+    insertFile Nothing = return ()
+    insertFile (Just file) = do
+      let (storage, content) = case filestorage file of
+            FileStorageMemory s -> (Nothing, Just $ Binary s)
+            fs -> (Just fs, Nothing)
+      _ <- wrapDB $ \conn -> run conn ("INSERT INTO files ("
+        ++ "  id"
+        ++ ", name"
+        ++ ", content"
+        ++ ", storage) VALUES (?, ?, ?, ?)") [
+            toSql $ fileid file
+          , toSql $ filename file
+          , toSql content
+          , toSql storage
+          ]
+      return ()
+#endif

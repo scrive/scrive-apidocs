@@ -28,13 +28,14 @@ import TestKontra as T
 
 mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
-      testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn
+      testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_ok.eml"
     , testCase "fail if user doesn't exist" $ testFailureNoSuchUser conn
+    , testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_simple_onesig.eml"
     ]
 
-testSuccessfulDocCreation :: Connection -> Assertion
-testSuccessfulDocCreation conn = withMyTestEnvironment conn $ \tmpdir -> do
-    req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
+testSuccessfulDocCreation :: Connection -> String -> Assertion
+testSuccessfulDocCreation conn emlfile = withMyTestEnvironment conn $ \tmpdir -> do
+    req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
     ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir, ctxmaybeuser = muser })
@@ -70,6 +71,7 @@ successChecks res = do
     let doc = fromJust mdoc
     assertBool "document has two signatories" $ length (documentsignatorylinks doc) == 2
     assertBool "document status is pending" $ documentstatus doc == Pending
+    assertBool "document has file attached" $ (length $ documentfiles doc) == 1
 
 equalsKey :: (a -> Bool) -> String -> [(String, a)] -> Bool
 equalsKey f k list = (f <$> lookup k list) == Just True
@@ -86,5 +88,5 @@ withMyTestEnvironment conn f =
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue defaultValue defaultValue
+    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
     return userid

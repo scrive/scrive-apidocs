@@ -49,18 +49,32 @@ function enableInfoTextOnce(where) {
     function setInfoText(obj) {
         var input = $(obj);
         if (input.val() == "") {
-            input = input.not($(document.activeElement));
+            if ($.browser.msie && $.browser.version >= 9) {
+                input = input.not(":focus");
+            }
+            else {
+                input = input.not($(document.activeElement));
+            }
             input.addClass("grayed");
             input.val(input.attr("infotext"));
         }
     }
-
-    inputs.live("focus", function() {
-        var input = $(this);
+    
+    var removeInfoText = function(input) {
         if (input.hasClass("grayed")) {
             input.val("");
             input.removeClass("grayed");
         }
+    };
+
+    inputs.live("focus", function() {
+        var input = $(this);
+        removeInfoText(input);
+    });
+    
+    inputs.live("keydown", function() {
+        var input = $(this);
+        removeInfoText(input);
     });
 
     inputs.live("blur", function() {
@@ -344,6 +358,11 @@ safeReady(function() {
 });
 
 safeReady(function() {
+    loadpages();
+});
+
+function loadpages() {
+    console.log("loading pages . . .");
     if (typeof(window.documentid) != "undefined") {
         var myurl;
         if (typeof(window.siglinkid) != "undefined" && typeof(window.sigmagichash) != "undefined")
@@ -366,12 +385,49 @@ safeReady(function() {
                     });
                 } else {
                     $('#documentBox').html(content);
+                    bgok = true;
+                    console.log("bgok: " + bgok);
+                    $('.pagejpg').each(checkbgimageok);
                 }
             },
             error: repeatForeverWithDelay(1000)
         });
     }
-});
+}
+
+var bgok = true;
+
+function checkbgimageok(i, el) {
+    console.log("checking bg image");
+    var url = $(el).css('background-image').replace('url(', '').replace(')', '').replace(/'/g, '').replace(/"/g, '');
+    console.log(url);
+    var bgImg = $('<img />');
+    bgImg.hide();
+    bgImg.load(function() {
+        console.log("finished loading bg for check");
+        var complete = $(this)[0].complete;
+        var width = $(this).width();
+        console.log("width of bg image: " + width);
+        
+        if(bgok && (!complete || !width)) {
+            bgok = false;
+//            loadpages();
+        }
+        bgImg.remove();
+    }).error(function() { 
+        console.log("here"); 
+        bgImg.remove();
+        if(bgok) {
+            bgok = false;
+            loadpages();
+        }
+
+    });
+    console.log("appending");
+    $('body').append(bgImg);
+    bgImg.attr('src', url);
+    console.log("finished");
+}
 
 function escapeHTML(s) {
     var result = '';
@@ -602,7 +658,6 @@ safeReady(function() {
             //var author = $(".authorname .fieldvalue").text();
             var sigs = $("#personpane .persondetails");
             var partners = new Array();
-
             if (authorSignes) {
                 var fstnamefield = $(".authorfstname .fieldvalue");
                 var sndnamefield = $(".authorsndname .fieldvalue");
@@ -612,7 +667,7 @@ safeReady(function() {
                     res = mailfield.text();
                 }
                 partners.push(res);
-                signedList.html(signedList.attr("okprefix") + " <strong>" + res + "</strong>");
+                signedList.html(res);
             } else {
                 signedList.html(signedList.attr("alt"));
             }
@@ -631,7 +686,15 @@ safeReady(function() {
                     }
                 }
             });
-            $(".partylistupdate").html(swedishList(partners));
+            var plist = $(".partnersmailpreview").parent();
+            $(".partnersmailpreview").remove();
+            for(var i=0;i<partners.length;i++)
+            {
+                var p = $("<p class='partnersmailpreview' style='font-weight:bold;'></p>");
+                p.text(partners[i])
+                p.append("<BR/>")
+                plist.append(p);
+            }    
         },
         fixed:false
     });
@@ -972,6 +1035,9 @@ function emailFieldsValidation(fields) {
     fields = fields.filter(function() {
         return ! isExceptionalField($(this));
     });
+    $(fields).each(function(i, el) {
+        el.value = el.value.trim();
+    });
     if (fields.length > 0) {
         var inputs = fields.validator({
             effect: 'failWithFlashOnEmail',
@@ -997,8 +1063,6 @@ function checkSignPossibility() {
         // sign is possible
         return true;
     }
-
-    return true;
 }
 
 function checkAllCustomFieldsAreNamed() {
@@ -1101,7 +1165,7 @@ safeReady(function() {
 
 function prepareForEdit(form) {
     $(".editable", form).each(function() {
-        var textarea = $("<textarea style='width:470px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
+        var textarea = $("<textarea style='width:540px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
         var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
         wrapper.append(textarea);
         $(this).replaceWith(wrapper);

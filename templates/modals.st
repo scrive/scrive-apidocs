@@ -247,7 +247,7 @@ modalWelcomeToSkrivaPa=
       <p>$_modalWelcomeToSkrivaPaBodyHint()$</p>
 
       <p>$_modalWelcomeToSkrivaPaBodyBestRegards()$<br/>
-        Team SkrivaPå</p>
+        Team $ourServiceName()$</p>
     </div>
   </div>
   <div class="modal-footer">
@@ -657,7 +657,7 @@ modalSignedViewNotClosedNoAccount=
     <span class="modal-title">
       <h3>Du har undertecknat!</h3>
       <p>
-        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar SkrivaPå ett verifikat,
+        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar $ourServiceName()$ ett verifikat,
         dokumentet blir bindande och en kopia skickas till din e-post.
       </p>
     </span>
@@ -801,7 +801,7 @@ accountFromSignInputs=
 accountFromSignFooter=
     <div class="accountFromSignFooter">
       <div class="float-left">
-        <a class="declineAccountFromSign cancel" style="width:60px;">$_accountFromSignFooterNoThx()$</a>
+        <a class="declineAccountFromSign cancel" style="width:70px;">$_accountFromSignFooterNoThx()$</a>
       </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>

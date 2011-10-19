@@ -148,14 +148,16 @@ whitelabel = true;
 var bodyHeight = 0;
 function propagateHeight() {
 var h = jQuery("body").height();
-if (h == null) h= 400;
+if (h == undefined) h= 400;
 if (bodyHeight != h) {
-jQuery.pm({
+if (! ("$location$" == "" && jQuery.browser.msie &&  parseInt(jQuery.browser.version, 10)  < 8))
+pm({
   target: window.parent,
   url: "$location$",
   type:"height", 
   data: h
 });
+
 bodyHeight = h;
 }
 setTimeout(propagateHeight,1000);
@@ -186,6 +188,7 @@ $doctype()$
 <script type="text/javascript" src="/js/postmessage.js"></script>
 <script>
 function propagateError() {
+if (! ("$location$" == "" && jQuery.browser.msie &&  parseInt(jQuery.browser.version, 10)  < 8))
 pm({
   target: window.parent,
   url: "$location$",

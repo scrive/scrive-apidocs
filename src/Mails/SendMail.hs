@@ -47,6 +47,7 @@ import Data.List
 import API.Service.Model
 import DB.Classes
 import Util.MonadUtils
+import InputValidation
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
@@ -83,7 +84,11 @@ emptyMail = Mail
 
 -- Mail is unsendable if there is no to adress provided
 unsendable :: Mail -> Bool
-unsendable mail = all BS.null (email <$> to mail)
+unsendable mail = any (not . valid) (email <$> to mail)
+    where
+        valid x = case asValidEmail (BS.toString x) of
+                        Good _ -> True
+                        _ -> False
 
 --
 newtype Mailer = Mailer { sendMail :: DBMonad m => ActionID -> Mail -> m Bool }
@@ -212,9 +217,9 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
                      [ BSL.fromString headerEmail
                      , BSL.fromString headerContent
                      , BSL.fromString headerContentText
-                     , BSL.fromString $ htmlToTxt $ BS.toString content
+                     , BSL.fromString $ htmlToTxt $ BS.toString $ content
                      , BSL.fromString headerContentHtml
-                     , BSL.fromChunks [content]
+                     , BSL.fromChunks [BS.fromString $ wrapMail $ BS.toString content]
                      , BSL.fromString footerContent
                      ] ++ map attach attachments ++
                      [ BSL.fromString footerEmail
@@ -293,3 +298,15 @@ htmlToTxt = dropWhile isSpace . unescapeEntities . toText . removeWSAfterNL . re
                 f t = t
 
                 lowerCase = map toLower
+
+
+wrapMail :: String -> String
+wrapMail body = "<html>"++
+                    "<head>" ++
+                      "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>" ++
+                            -- "<meta http-equiv='content-language' content='$ctxlang$'/>" ++
+                    "</head>" ++
+                    "<body style='background-color: #f5f5f5;'>" ++
+                       body ++ 
+                    "</body>" ++ 
+                "</html>"          

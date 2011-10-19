@@ -16,6 +16,7 @@ import qualified AppLogger as Log
 import Misc
 import Util.FlashUtil
 import DBError
+import User.Locale
 import User.UserView
 import Util.KontraLinkUtils
 
@@ -39,7 +40,7 @@ sendRedirect BackToReferer = do
   let link  = if (null link') then (show mainlink) else link'
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
-sendRedirect link@(LinkLogin _region _lang reason) = do
+sendRedirect link@(LinkLogin _locale reason) = do
   curr <- rqUri <$> askRq
   referer <- getField "referer"
   addFlashM $ flashMessageLoginRedirectReason reason
@@ -73,8 +74,8 @@ instance GuardRight String where
 instance GuardRight DBError where
   guardRight (Right b)            = return b
   guardRight (Left DBNotLoggedIn) = do
-    Context{ctxregion, ctxlang} <- getContext
-    r <- sendRedirect $ LinkLogin ctxregion ctxlang NotLogged
+    ctx <- getContext
+    r <- sendRedirect $ LinkLogin (getLocale ctx) NotLogged
     finishWith r
   guardRight _                    = mzero
   
@@ -89,7 +90,7 @@ guardLoggedIn = do
   Context{ ctxmaybeuser } <- getContext
   case ctxmaybeuser of
     Nothing -> do
-      Context{ctxregion, ctxlang} <- getContext
-      r <- sendRedirect $ LinkLogin ctxregion ctxlang NotLogged
+      ctx <- getContext
+      r <- sendRedirect $ LinkLogin (getLocale ctx) NotLogged
       finishWith r
     Just _ -> return ()

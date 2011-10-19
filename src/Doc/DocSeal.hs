@@ -9,18 +9,16 @@
 -----------------------------------------------------------------------------
 module Doc.DocSeal(sealDocument) where
 
-import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
-import Data.Bits
 import Data.List
-import Data.Word
 import Data.Ord
 import Debug.Trace
 import Doc.DocProcess
 import Doc.DocState
 import Doc.DocStorage
 import Doc.DocView
+import Doc.DocUtils
 import Happstack.State (update, query)
 import Misc
 import System.Directory
@@ -40,6 +38,9 @@ import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import File.TransState
+import DB.Classes
+import ForkAction
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -109,15 +110,6 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
     }
-
--- oh boy, this is really network byte order!
-formatIP :: Word32 -> String
-formatIP 0 = ""
--- formatIP 0x7f000001 = ""
-formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document inputpath outputpath =
@@ -209,21 +201,21 @@ sealSpecFromDocument hostpart document inputpath outputpath =
             , Seal.staticTexts    = readtexts
             }
 
-sealDocument :: MonadIO m
+sealDocument :: (MonadIO m, DBMonad m)
              => Context
              -> Document
              -> m (Either String Document)
-sealDocument ctx@Context{ctxdocstore, ctxs3action}
+sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxdbconn}
              document = do
-  let files = documentfiles document
+  files <- documentfilesM document
   Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
   Log.debug $ "Sealing should be done now"
   Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
   Log.debug $ "Reselecting document after update - time for upload to amazon"
-  _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
+  sealedfiles <- documentsealedfilesM newdocument 
+  _ <- liftIO $ forkActionIO "sealing document" $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) sealedfiles) ctxdbconn
   Log.debug $ "Upload to amazon is done"
-  Log.debug $ show newdocument
   return $ Right newdocument
 
 
@@ -242,12 +234,12 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action}
  -}
 
 
-sealDocumentFile :: MonadIO m
+sealDocumentFile :: (MonadIO m, DBMonad m)
                  => Context
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -287,7 +279,8 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              res <- update $ AttachSealedFile documentid filename newfilepdf
+              File{fileid = sealedfileid} <- ioRunDB ctxdbconn $ dbUpdate $ NewFile filename newfilepdf
+              res <- update $ AttachSealedFile documentid sealedfileid
               return res
       ExitFailure _ ->
           do

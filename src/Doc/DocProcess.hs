@@ -73,21 +73,20 @@ data DocProcessInfo =
   , processsignatorysignmodalcontentnotlast :: String
   , processsignbuttontext :: String
   , processsignatorycancelmodaltitle :: String
-  , processsignatorysignedtext :: String
-  , processsignatorycanceledtext :: String
   , processauthorissecretarytext :: String
   , processremindagainbuttontext :: String
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader :: String
-  , processmailcancelbyauthorcontent :: String
-  , processmailclosedcontent :: String
-  , processmailrejectcontent :: String
-  , processmailinvitationtosigncontent :: String
+  , processmailcancelbyauthor :: String
+  , processmailclosed :: String
+  , processmailreject :: String
+  , processmailinvitationtosign :: String
   , processmailinvitationtosigndefaultheader :: String
   , processmailsignedstandardheader :: String
   , processmailnotsignedstandardheader :: String
-  , processmailremindnotsignedcontent :: String
+  , processmailremindnotsigned :: String
+  , processmailconfirmbymailapi :: String
   , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
@@ -161,21 +160,20 @@ contractProcess =
   , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
-  , processsignatorysignedtext = "signatorysignedcontracttext"
-  , processsignatorycanceledtext = "signatorycanceledcontracttext"
   , processauthorissecretarytext = "contractauthorissecretarytext"
   , processremindagainbuttontext = "contractremindagainbuttontext"
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelContractByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelContractByAuthorContent"
-  , processmailclosedcontent = "mailContractClosedContent"
-  , processmailrejectcontent = "mailRejectContractMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignContractContent"
+  , processmailcancelbyauthor = "mailCancelContractByAuthor"
+  , processmailclosed= "mailContractClosed"
+  , processmailreject = "mailRejectContractMail"
+  , processmailinvitationtosign = "mailInvitationToSignContract"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignContractDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedContractStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedContractStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedContractContent"
+  , processmailremindnotsigned = "remindMailNotSignedContract"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmContract"
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
@@ -249,21 +247,20 @@ offerProcess =
   , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
   , processsignbuttontext = "offersignbuttontext"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
-  , processsignatorysignedtext = "signatorysignedoffertext"
-  , processsignatorycanceledtext = "signatorycanceledoffertext"
   , processauthorissecretarytext = "offerauthorissecretarytext"
   , processremindagainbuttontext = "offerremindagainbuttontext"
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelOfferByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelOfferByAuthorContent"
-  , processmailclosedcontent = "mailOfferClosedContent"
-  , processmailrejectcontent = "mailRejectOfferMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignOfferContent"
+  , processmailcancelbyauthor = "mailCancelOfferByAuthor"
+  , processmailclosed = "mailOfferClosed"
+  , processmailreject = "mailRejectOfferMail"
+  , processmailinvitationtosign = "mailInvitationToSignOffer"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOfferDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOfferStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOfferStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedOfferContent"
+  , processmailremindnotsigned= "remindMailNotSignedOffer"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOffer"
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
@@ -337,21 +334,20 @@ orderProcess =
   , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
-  , processsignatorysignedtext = "signatorysignedordertext"
-  , processsignatorycanceledtext = "signatorycanceledordertext"
   , processauthorissecretarytext = "orderauthorissecretarytext"
   , processremindagainbuttontext = "orderremindagainbuttontext"
 
   -- process specific doc mail template names
   , processmailcancelbyauthorstandardheader = "mailCancelOrderByAuthorStandardHeader"
-  , processmailcancelbyauthorcontent = "mailCancelOrderByAuthorContent"
-  , processmailclosedcontent = "mailOrderClosedContent"
-  , processmailrejectcontent = "mailRejectOrderMailContent"
-  , processmailinvitationtosigncontent = "mailInvitationToSignOrderContent"
+  , processmailcancelbyauthor = "mailCancelOrderByAuthor"
+  , processmailclosed = "mailOrderClosed"
+  , processmailreject = "mailRejectOrderMail"
+  , processmailinvitationtosign = "mailInvitationToSignOrder"
   , processmailinvitationtosigndefaultheader = "mailInvitationToSignOrderDefaultHeader"
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
-  , processmailremindnotsignedcontent = "remindMailNotSignedOrderContent"
+  , processmailremindnotsigned = "remindMailNotSignedOrder"
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOrder" 
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages

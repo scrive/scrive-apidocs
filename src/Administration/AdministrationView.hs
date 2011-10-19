@@ -25,6 +25,8 @@ module Administration.AdministrationView(
           , adminTranslationsPage
           , adminUserUsageStatsPage
           , adminCompanyUsageStatsPage
+          , adminUserStatisticsPage
+          , adminFunctionalityStatsPage
           , AdminListPageParams(..)
           , StatsView(..)) where
 
@@ -127,6 +129,27 @@ adminCompanyPage company =
     field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
     field "adminlink" $ show $ LinkAdminOnly
+    
+adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
+adminUserStatisticsPage morefields =
+  renderTemplateFM "statisticsPage" $ do
+    morefields
+    field "adminlink" $ show $ LinkAdminOnly
+
+adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)] 
+                                              -> [(String, Int)] 
+                                              -> [(String,Int)] 
+                                              -> m String
+adminFunctionalityStatsPage userstats docstats siglinkstats =
+  renderTemplateFM "adminFunctionalityStatsPage" $ do
+    fieldFL "userfunctionalitystats" $ map functionalityStatFields userstats
+    fieldFL "docfunctionalitystats" $ map functionalityStatFields docstats
+    fieldFL "siglinkfunctionalitystats" $ map functionalityStatFields siglinkstats
+    field "adminlink" $ show $ LinkAdminOnly
+  where
+    functionalityStatFields (label, count) = do
+      field "label" label
+      field "count" count
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
@@ -268,6 +291,12 @@ userFields u =  do
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u
+        field "serviceskrivapa" $ SkrivaPa == (systemserver $ usersettings u)
+        field "servicescrive" $ Scrive == (systemserver $ usersettings u)
+        field "regionse" $ REGION_SE == getRegion u
+        field "regiongb" $ REGION_GB == getRegion u
+        field "langsv" $ LANG_SE == getLang u
+        field "langen" $ LANG_EN == getLang u
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin" $ useriscompanyadmin u
 {-

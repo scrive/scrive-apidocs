@@ -17,10 +17,13 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
+--import Doc.Tables
 import User.Migrations
 import User.Tables
 import Stats.Tables
 import Stats.Migrations
+import File.Tables
+import File.Model ()
 
 migrationsList :: [Migration]
 migrationsList = [addRegionToUserSettings
@@ -36,6 +39,14 @@ tablesList = [
   , tableServices
   , tableCompanies
   , tableDocStatEvents
+  , tableUserStatEvents
+  , tableFiles
+  -- this is not ready yet
+  {-, tableDocuments
+  , tableFiles
+  , tableAuthorAttachments
+  , tableSignatoryAttachments
+  , tableSignatoryLinks-}
   ]
 
 checkDBConsistency :: DB ()

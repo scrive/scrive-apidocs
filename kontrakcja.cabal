@@ -14,9 +14,17 @@ Flag pdfseal
   Description: Build pdfseal
   Default: True
 
+Flag dbdump
+  Description: Build dbdump
+  Default: False
+
 Flag server
   Description: Build server
   Default: True
+
+Flag server-coverage
+  Description: Build server with coverage instrumentation
+  Default: False
 
 Flag test
   Description: Build tests
@@ -70,8 +78,20 @@ Flag test-userstate
   Description: Build userstate testsuite
   Default: True
 
+Flag test-csvutil
+  Description: Build csvutil testsuite
+  Default: True
+
+Flag test-locale
+  Description: Build locale testsuite
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
+  Default: False
+
+Flag test-coverage
+  Description: Collects tests coverage status
   Default: False
 
 Executable kontrakcja-server
@@ -85,6 +105,8 @@ Executable kontrakcja-server
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
     GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
   if !os(windows)
     -- don't do threaded on Windows because it uses blocking listen and accept
     GHC-Options: -threaded
@@ -138,6 +160,8 @@ Executable kontrakcja-server
   Build-depends: text
   Build-depends: transformers
   Build-depends: unix
+  Build-depends: spreadsheet
+  Build-depends: explicit-exception
 
   Main-Is: Main.hs
 
@@ -196,6 +220,8 @@ Executable kontrakcja-test
   Hs-source-dirs: test/src src pdfseal/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if flag(test-coverage)
+    GHC-Options: -fhpc
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if !os(windows)
@@ -224,6 +250,10 @@ Executable kontrakcja-test
     cpp-options: -DNO_TRUSTWEAVER
   if !flag(test-userstate)
     cpp-options: -DNO_USERSTATE
+  if !flag(test-csvutil)
+    cpp-options: -DNO_CSVUTIL
+  if !flag(test-locale)
+    cpp-options: -DNO_LOCALE
   if !flag(test-redirect)
     cpp-options: -DNO_REDIRECT
   if !flag(test-docstatequery)
@@ -248,3 +278,35 @@ Executable kontrakcja-test
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
+
+Executable dbdump
+  if flag(dbdump)
+    Buildable: True
+  else
+    Buildable: False
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
+  Hs-source-dirs: dbdump/src src pdfseal/inc
+
+  cpp-options: -DDBDumper=Main
+  Main-is: DBDumper.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              ScopedTypeVariables,
+              StandaloneDeriving,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+

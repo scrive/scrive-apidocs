@@ -1,9 +1,8 @@
 require "rubygems"
 gem "rspec"
-gem "selenium-client"
-require "selenium/client"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
+require "selenium-webdriver"
 
 class EmailHelper
     
@@ -23,11 +22,9 @@ class EmailHelper
       @driver.get(@ctx.createKontrakcjaURL("/adminonly/backdoor/" + email))
       @wait.until { @driver.find_element :css => "a" }
       link = (@driver.find_elements :css => ".mainContainer a").first.attribute("href")
-      puts("the link is '" + link + "'")
     ensure
       @loginhelper.logout
     end
-    puts("getting link '" + link + "'")
     @driver.get(link)
   end
 end

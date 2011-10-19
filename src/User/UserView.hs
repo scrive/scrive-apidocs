@@ -75,7 +75,7 @@ import Company.Model
 import DB.Types
 import Kontra
 import KontraLink
-import Mails.SendMail(Mail, emptyMail, title, content)
+import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
@@ -135,9 +135,12 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "fstname" $ getFirstName user
     field "sndname" $ getLastName user
     field "userimagelink" False
+    fieldF "region" $ do
+        field "se" $ REGION_SE == (getRegion user)
+        field "gb" $ REGION_GB == (getRegion user)
     fieldF "lang" $ do
-        field "en" $ LANG_EN == (lang $ usersettings user)
-        field "se" $ LANG_SE == (lang $ usersettings user)
+        field "en" $ LANG_EN == (getLang user)
+        field "se" $ LANG_SE == (getLang user)
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
@@ -179,114 +182,87 @@ activatePageViewNotValidLink email =
 
 resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
 resetPasswordMail hostname user setpasslink = do
-  title   <- renderTemplateM "passwordChangeLinkMailTitle" ()
-  content <- (renderTemplateFM "passwordChangeLinkMailContent" $ do
+  kontramail "passwordChangeLinkMail" $ do
     field "personname"   $ getFullName user
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
-    ) >>= wrapHTML'
-  return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
-
-
+ 
 newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> m Mail
 newUserMail hostpart emailaddress personname activatelink vip = do
-  title   <- renderTemplateM "newUserMailTitle" ()
-  content <- (renderTemplateFM "newUserMailContent" $ do
+  kontramail "newUserMail" $ do
     field "personname"   $ BS.toString personname
     field "email"        $ BS.toString emailaddress
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
     field "vip"            vip
-    ) >>= wrapHTML'
-  return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
+  
 
 
 inviteCompanyAccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
 inviteCompanyAccountMail hostpart supervisorname companyname emailaddress personname setpasslink = do
-  title   <- renderTemplateM "inviteCompanyAccountMailTitle" ()
-  content <- (renderTemplateFM "inviteCompanyAccountMailContent" $ do
+  kontramail "inviteCompanyAccountMail" $ do
     field "personname"     $ BS.toString personname
     field "email"          $ BS.toString emailaddress
     field "passwordlink"   $ show setpasslink
     field "supervisorname" $ BS.toString supervisorname
     field "companyname"    $ BS.toString companyname
     field "ctxhostpart"    $ hostpart
-    ) >>= wrapHTML'
-  return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
-
-
+  
 viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do
   let invitername = BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
-  title   <- renderTemplateFM "mailViralInviteTitle" $ field "invitername" invitername
-  content <- (renderTemplateFM "mailViralInviteContent" $ do
+  kontramail "mailViralInvite" $ do
     field "email"        $ BS.toString invitedemail
     field "invitername"  $ invitername
     field "ctxhostpart"  $ ctxhostpart ctx
     field "passwordlink" $ show setpasslink
-    ) >>= wrapHTML'
-  return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 
 mailNewAccountCreatedByAdmin :: TemplatesMonad m => Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx personname email setpasslink custommessage = do
-  title   <- renderTemplateM "mailNewAccountCreatedByAdminTitle" ()
-  content <- (renderTemplateFM "mailNewAccountCreatedByAdminContent" $ do
+  kontramail "mailNewAccountCreatedByAdmin" $ do
     field "personname"    $ BS.toString personname
     field "email"         $ BS.toString email
     field "passwordlink"  $ show setpasslink
     field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
-    ) >>= wrapHTML'
-  return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
-
+    
 mailAccountCreatedBySigningContractReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningContractReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningContractReminderTitle"
-                                 "mailAccountBySigningContractReminderContent"
+    mailAccountCreatedBySigning' "mailAccountBySigningContractReminder"
 
 mailAccountCreatedBySigningOfferReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningOfferReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningOfferReminderTitle"
-                                 "mailAccountBySigningOfferReminderContent"
+    mailAccountCreatedBySigning' "mailAccountBySigningOfferReminder"
+                                 
 
 mailAccountCreatedBySigningOrderReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningOrderReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningOrderReminderTitle"
-                                 "mailAccountBySigningOrderReminderContent"
+    mailAccountCreatedBySigning' "mailAccountBySigningOrderReminder"
 
-mailAccountCreatedBySigning' :: TemplatesMonad m => String -> String -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-mailAccountCreatedBySigning' title_template content_template hostpart doctitle personname activationlink = do
-    title <- renderTemplateM title_template ()
-    content <- (renderTemplateFM content_template $ do
+mailAccountCreatedBySigning' :: TemplatesMonad m => String -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+mailAccountCreatedBySigning' mail_template hostpart doctitle personname activationlink = do
+   kontramail mail_template $ do
         field "personname"     $ BS.toString personname
         field "ctxhostpart"    $ hostpart
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-        ) >>= wrapHTML'
-    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
 mailInviteUserAsCompanyAccount :: TemplatesMonad m => Context -> User -> User -> m Mail
 mailInviteUserAsCompanyAccount ctx invited supervisor = do
-    title <- renderTemplateM "mailInviteUserAsCompanyAccountTitle" ()
-    content <- (renderTemplateFM "mailInviteUserAsCompanyAccountContent" $ do
+  kontramail  "mailInviteUserAsCompanyAccount" $ do
                    field "hostpart" (ctxhostpart ctx)
                    fieldF "supervisor" $ userFields supervisor
                    fieldF "invited" $ userFields invited
-        ) >>= wrapHTML'
-    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
-
+  
 mailCompanyAccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
 mailCompanyAccountAccepted ctx invited supervisor = do
-    title <- renderTemplateM "mailCompanyAccountAcceptedTitle" ()
-    content <- (renderTemplateFM "mailCompanyAccountAcceptedContent" $ do
+  kontramail "mailCompanyAccountAccepted" $ do
                    field "hostpart" $ ctxhostpart ctx
                    fieldF "user" $ userFields supervisor
                    fieldF "invited" $ userFields invited
-        ) >>= wrapHTML'
-    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
-
+    
 -------------------------------------------------------------------------------
 
 modalInviteUserAsCompanyAccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage

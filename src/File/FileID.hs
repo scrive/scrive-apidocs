@@ -1,11 +1,15 @@
-module Doc.FileID
+module File.FileID
+    ( FileID(..)
+    )
 where
 
+import DB.Derive
 import Happstack.Data
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
+import Data.Int
 
-newtype FileID = FileID { unFileID :: Int }
+newtype FileID = FileID { unFileID :: Int64 }
     deriving (Eq, Ord, Typeable)
 
 instance Show FileID where
@@ -21,3 +25,4 @@ instance FromReqURI FileID where
 $(deriveSerialize ''FileID)
 instance Version FileID where
 
+$(newtypeDeriveConvertible ''FileID)

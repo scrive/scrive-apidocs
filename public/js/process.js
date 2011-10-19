@@ -57,12 +57,6 @@ window.Process = Backbone.Model.extend({
     cancelbyauthormodaltitle : function(){
         return this.get("cancelbyauthormodaltitle");
     },
-    signatorysignedtext : function(){
-        return this.get("signatorysignedtext");
-    },
-    signatorycanceledtext : function(){
-        return this.get("signatorycanceledtext");
-    },
     authorissecretarytext : function(){
         return this.get("authorissecretarytext");
     },
@@ -86,9 +80,6 @@ window.Process = Backbone.Model.extend({
     },
     signatorysignmodalcontentlast:  function() {
         return this.get("signatorysignmodalcontentlast");
-    },
-    signbuttontext :  function() {
-        return this.get("signbuttontext");
     },
     signatorysignmodaltitle : function() {
         return this.get("signatorysignmodaltitle");

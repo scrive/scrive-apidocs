@@ -1,6 +1,7 @@
 module KontrakcjaServer (defaultConf, 
                          runKontrakcjaServer, 
-                         runTest) where
+                         runTest,
+                         readAppConfig ) where
 
 import Control.Concurrent (forkIO, killThread)
 import Happstack.Util.Cron (cron)
@@ -18,7 +19,6 @@ import Happstack.State
   , shutdownSystem
   , createCheckpoint
   , waitForTermination
-  , query
   )
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
@@ -32,6 +32,7 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
 import System.IO
 import Control.Concurrent.MVar
+import Control.Monad.Reader
 
 import Crypto
 import DB.Classes
@@ -43,16 +44,18 @@ import qualified Control.Exception as E
 import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
-import Doc.DocState
 import User.Model
-import qualified User.UserState as U
+-- import qualified User.UserState as U
+import qualified File.State as F
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
-import Kontra
 import Misc
 import qualified MemCache
+import File.TransState
+import Doc.DocState
+import Happstack.State (query)
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -117,23 +120,24 @@ listenOn iface port = do
             return sock
         )
 
-initDatabaseEntries :: Connection -> IO ()
-initDatabaseEntries conn = do
+initDatabaseEntries :: Connection -> [(Email,String)] -> IO ()
+initDatabaseEntries conn iusers = do
   -- create initial database entries
-  passwd <- createPassword (BS.pack "admin")
-  flip mapM_ Kontra.initialUsers $ \email -> do
+  flip mapM_ iusers $ \(email,passwordstring) -> do
+      passwd <- createPassword (BS.pack passwordstring)
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue defaultValue defaultValue
+              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
               return ()
           Just _ -> return () -- user exist, do not add it
 
-
 uploadOldFilesToAmazon :: AppConf -> IO ()
 uploadOldFilesToAmazon appConf = do
-  files <- query $ GetFilesThatShouldBeMovedToAmazon
-  mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files
+  withPostgreSQL (dbConfig appConf) $ \conn -> do
+    files <- ioRunDB conn $ dbQuery $ GetFilesThatShouldBeMovedToAmazon
+    runReaderT (mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files) conn
+    return ()
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do
@@ -199,8 +203,19 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
+                              -- need to evaluate documents upgraded because there is plenty of unsafePerformIO used
+                              x <- query $ GetDocumentByDocumentID (DocumentID 0)
+                              case x of
+                                  Just _ -> return ()
+                                  Nothing -> return ()
+
                               -- populate db with entries from happstack-state
-                              ioRunDB conn U.populateDBWithUsersIfEmpty
+                              ioRunDB conn $ do
+                                -- U.populateDBWithUsersIfEmpty
+                                F.populateDBWithFilesIfEmpty
+  
+                                -- this is not ready yet
+                                --populateDBWithDocumentsIfEmpty
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
@@ -217,7 +232,7 @@ runKontrakcjaServer = Log.withLogger $ do
                                         -- FIXME: make it checkpoint always at the same time
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
-                                          initDatabaseEntries conn
+                                          initDatabaseEntries conn (initialUsers appConf)
                                           _ <- forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination
@@ -251,6 +266,7 @@ defaultConf progName
                   , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
                   }
               , admins             = map (Email . BSU.fromString) ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+              , initialUsers       = []
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]

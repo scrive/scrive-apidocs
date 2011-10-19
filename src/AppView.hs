@@ -22,6 +22,7 @@ module AppView( TopMenu(..)
               , clientsPage
               , modalError
               , embeddedErrorPage
+              , serviceFields
               ) where
 
 import API.Service.Model
@@ -37,8 +38,8 @@ import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
 import User.Lang
+import User.Locale
 import User.Region
-import User.SystemServer
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
 
@@ -54,7 +55,7 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
    and this is the pretty public name)
 -}
 kontrakcja :: String
-kontrakcja = "SkrivaPå"
+kontrakcja = "Scrive"
 
 -- * Main Implementation
 
@@ -98,15 +99,15 @@ pageFromBody ctx
              bodytext = do
     renderTemplateFM "wholePage" $ do
         field "content" bodytext
-        standardPageFields ctx title False showCreateAccount loginOn referer email
+        standardPageFields ctx title Nothing showCreateAccount loginOn referer email
 
 embeddedPage :: String -> Kontra Response
 embeddedPage pb = do
     ctx <- getContext
     bdy <- renderTemplateFM "embeddedPage" $ do
         field "content" pb
-        serviceFields (ctxservice ctx) (ctxlocation ctx)
-        standardPageFields ctx "" False False False Nothing Nothing
+        serviceFields (ctxlocation ctx) (ctxservice ctx) 
+        standardPageFields ctx "" Nothing False False Nothing Nothing
     res <- simpleResponse bdy
     clearFlashMsgs
     return res
@@ -115,11 +116,11 @@ embeddedErrorPage :: Kontra Response
 embeddedErrorPage = do
     ctx <- getContext
     content <- renderTemplateFM "embeddedErrorPage" $ do
-        serviceFields (ctxservice ctx) (ctxlocation ctx)
+        serviceFields (ctxlocation ctx) (ctxservice ctx)
     simpleResponse content
 
-serviceFields :: MonadIO m => Maybe Service -> String -> Fields m
-serviceFields (Just service) location = do
+serviceFields :: MonadIO m => String -> Maybe Service -> Fields m
+serviceFields location (Just service)  = do
     field "location" location
     field "buttons" $ isJust $ servicebuttons $ serviceui service
     field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
@@ -130,7 +131,7 @@ serviceFields (Just service) location = do
     field "barsbackground"  $ servicebarsbackground $ serviceui service
     field "logo" $ isJust $ servicelogo $ serviceui service
     field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-serviceFields Nothing location =
+serviceFields location Nothing =
     field "location" location
 
 sitemapPage :: Kontrakcja m => m String
@@ -140,42 +141,42 @@ sitemapPage = do
         field "hostpart" $ case hostpart of
                                 ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                                 xs -> xs
-        fieldFL "locales" $ map (uncurry staticLinksFields) . targetedLocales $ systemServerFromURL hostpart
+        fieldFL "locales" $ map staticLinksFields targetedLocales
 
 priceplanPage :: Kontra String
-priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True True
+priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True
 
 securityPage :: Kontra String
-securityPage = getContext >>= \ctx -> renderTemplateAsPage ctx "securityPage" True True
+securityPage = getContext >>= \ctx -> renderTemplateAsPage ctx "securityPage" (Just LinkSecurity) True
 
 legalPage :: Kontra String
-legalPage = getContext >>= \ctx -> renderTemplateAsPage ctx "legalPage" True True
+legalPage = getContext >>= \ctx -> renderTemplateAsPage ctx "legalPage" (Just LinkLegal) True
 
 privacyPolicyPage :: Kontra String
-privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True True
+privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" (Just LinkPrivacyPolicy) True
 
 termsPage :: Kontra String
-termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" True True
+termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" (Just LinkTerms) True
 
 aboutPage :: Kontra String
-aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True True
+aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" (Just LinkAbout) True
 
 partnersPage :: Kontra String
-partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True True
+partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" (Just LinkPartners) True
 
 clientsPage :: Kontra String
-clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True True
+clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" (Just LinkClients) True
 
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Kontrakcja m => Context -> String -> Bool -> Bool -> m String
-renderTemplateAsPage ctx templateName publicpage showCreateAccount = do
+renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> m String
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     wholePage <- renderTemplateFM templateName $ do
-        standardPageFields ctx kontrakcja publicpage showCreateAccount2 loginOn loginreferer Nothing
+        standardPageFields ctx kontrakcja mpubliclink showCreateAccount2 loginOn loginreferer Nothing
     return wholePage
 
 getLoginOn :: Kontrakcja m => m Bool
@@ -191,14 +192,15 @@ getLoginReferer = do
     let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
     return loginreferer
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Bool -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m
-standardPageFields ctx title publicpage showCreateAccount loginOn referer email = do
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m
+standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
-    mainLinksFields (ctxregion ctx) (ctxlang ctx)
-    staticLinksFields (ctxregion ctx) (ctxlang ctx)
+    mainLinksFields $ getLocale ctx
+    staticLinksFields $ getLocale ctx
+    localeSwitcherFields ctx mpubliclink
     contextInfoFields ctx
-    publicSafeFlagField ctx loginOn publicpage
+    publicSafeFlagField ctx loginOn (isJust mpubliclink)
     loginModal loginOn referer email
 
 {- |
@@ -237,39 +239,51 @@ firstPage ctx loginOn referer email =
     renderTemplateFM "firstPage" $ do
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
-        mainLinksFields (ctxregion ctx) (ctxlang ctx)
-        staticLinksFields (ctxregion ctx) (ctxlang ctx)
+        mainLinksFields $ getLocale ctx
+        staticLinksFields $ getLocale ctx
+        localeSwitcherFields ctx (Just LinkHome)
         loginModal loginOn referer email
 
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields :: MonadIO m => Region -> Lang -> Fields m
-mainLinksFields region lang = do
+mainLinksFields :: MonadIO m => Locale -> Fields m
+mainLinksFields locale = do
     field "linkaccount"          $ show LinkAccount
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show LinkContracts
-    field "linklogin"            $ show (LinkLogin region lang LoginTry)
+    field "linklogin"            $ show (LinkLogin locale LoginTry)
     field "linklogout"           $ show LinkLogout
     field "linkupload"           $ show LinkUpload
     field "linkquestion"         $ show LinkAskQuestion
     field "linksignup"           $ show LinkSignup
 
+localeSwitcherFields :: MonadIO m => Context -> Maybe (Locale -> KontraLink) -> Fields m
+localeSwitcherFields ctx mlink = do
+  field "isdoclocale" $ isJust (ctxdoclocale ctx)
+  field "localesweden" $ getLang ctx == LANG_SE
+  field "localebritain" $ getLang ctx == LANG_EN
+  field "langsv" $ getLang ctx == LANG_SE
+  field "langen" $ getLang ctx == LANG_EN
+  field "linklocaleswitch" $ show LinkLocaleSwitch
+  field "linksesv" $ fmap (\l -> show $ l (mkLocale REGION_SE LANG_SE)) mlink
+  field "linkgben" $ fmap (\l -> show $ l (mkLocale REGION_GB LANG_EN)) mlink
+
 {- |
     Defines the static links which are region and language sensitive.
 -}
-staticLinksFields :: MonadIO m => Region -> Lang -> Fields m
-staticLinksFields ctxregion ctxlang = do
-    field "linkhome"  $ show $ LinkHome ctxregion ctxlang
-    field "linkpriceplan"  $ show $ LinkPriceplan ctxregion ctxlang
-    field "linksecurity"  $ show $ LinkSecurity ctxregion ctxlang
-    field "linklegal"  $ show $ LinkLegal ctxregion ctxlang
-    field "linkprivacypolicy"  $ show $ LinkPrivacyPolicy ctxregion ctxlang
-    field "linkterms"  $ show $ LinkTerms ctxregion ctxlang
-    field "linkabout"  $ show $ LinkAbout ctxregion ctxlang
-    field "linkpartners"  $ show $ LinkPartners ctxregion ctxlang
-    field "linkclients"  $ show $ LinkClients ctxregion ctxlang
+staticLinksFields :: MonadIO m => Locale -> Fields m
+staticLinksFields locale = do
+    field "linkhome"  $ show $ LinkHome locale
+    field "linkpriceplan"  $ show $ LinkPriceplan locale
+    field "linksecurity"  $ show $ LinkSecurity locale
+    field "linklegal"  $ show $ LinkLegal locale
+    field "linkprivacypolicy"  $ show $ LinkPrivacyPolicy locale
+    field "linkterms"  $ show $ LinkTerms locale
+    field "linkabout"  $ show $ LinkAbout locale
+    field "linkpartners"  $ show $ LinkPartners locale
+    field "linkclients"  $ show $ LinkClients locale
 
 {- |
    Defines some standard context information as fields handy for substitution
@@ -282,8 +296,8 @@ contextInfoFields ctx = do
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
-    field "ctxregion" $ codeFromRegion (ctxregion ctx)
-    field "ctxlang" $ codeFromLang (ctxlang ctx)
+    field "ctxregion" $ codeFromRegion (getRegion ctx)
+    field "ctxlang" $ codeFromLang (getLang ctx)
 
 {- |
     Only public safe is explicitely set as a public page,

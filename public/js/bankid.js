@@ -19,11 +19,12 @@ function hasNetIDPluginIE() {
     // This function always returns true. The detection does not work.
     // Eric
     return true;
+    /**
     try {
         return !!(new ActiveXObject('Nexus.AuthenticationCtl'));
     } catch(e) {
         return false;
-    }
+    }*/
 }
 
 // checks for others
@@ -126,8 +127,6 @@ function doSignNetID(tbs, nonce, servertime) {
         return signer.GetProperty('Signature');
     else
         return failEleg(localization.yourSigningPluginFailed + " error code: " + res);
-
-    return null;
 }
 
 // success fns
@@ -497,7 +496,7 @@ window.Eleg = {
             LoadingDialog.close();
             },
             error: repeatForeverWithDelay(250)
-      })  
+      });  
     },
     nordeaSign : function(document, signatory, submit) {
        if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
@@ -554,7 +553,7 @@ window.Eleg = {
             LoadingDialog.close();
             },
             error: repeatForeverWithDelay(250)
-      })
+      });
     
     
     
@@ -620,4 +619,4 @@ window.Eleg = {
 
 };
     
-})(window);     
+})(window);

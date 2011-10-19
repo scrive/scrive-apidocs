@@ -218,6 +218,7 @@ pageFooter=
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
         <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
+        <li><a href="http://api.scrive.com/index.php?title=Scrive_by_Mail">Scrive by Mail</a></li>
       </ul>
       <br />
       <strong>$_pageFooterTerms()$</strong>
@@ -314,7 +315,9 @@ header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
                                 <a href="$linkhome$" class="$ourLogoClass()$"></a>
+                                $localeSwitcher()$
                                 $if(logged)$
+                                
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
@@ -331,7 +334,7 @@ header=
                                  </form>
                                 </span>
                                  
-     <a href="$linklogout$" class="document-button">$_headerLogOut()$</a>
+     <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
      <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
      <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
      <a href="$linkupload$" class="document-button">$_headerSend()$</a>
@@ -343,4 +346,29 @@ header=
                            
             <div class="clearboth"></div>
           </div>
+####
+localeSwitcher=
+  <div class="localeSwitcher">
+    $if(!isdoclocale)$
+    $if(!logged)$
+    <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
+    <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
+    $else$
+    <div><form action="$linklocaleswitch$" method="POST">
+           <input type="hidden" name="region" value="REGION_SE"/>
+           $if(linksesv)$
+           <input type="hidden" name="referer" value="$linksesv$"/>
+           $endif$
+           <a href="" class="submit icon flag swedish $if(localesweden)$active$endif$"></a>
+         </form></div>
+    <div><form action="$linklocaleswitch$" method="POST">
+           <input type="hidden" name="region" value="REGION_GB"/>
+           $if(linkgben)$
+           <input type="hidden" name="referer" value="$linkgben$"/>
+           $endif$
+           <a href="" class="submit icon flag british $if(localebritain)$active$endif$"></a>
+         </form></div>
+    $endif$
+    $endif$
+  </div>
 ####
