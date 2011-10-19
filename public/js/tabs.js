@@ -86,6 +86,7 @@ var TabsView = Backbone.View.extend({
     model: Tabs,
     initialize: function (args) {
         _.bindAll(this, 'render');
+        this.extrasInTabsRow = args.extrasInTabsRow;
         this.model.bind('change', this.render);
         this.model.view = this;
         this.prerender();
@@ -125,6 +126,8 @@ var TabsView = Backbone.View.extend({
         this.toprow.append(titlepart);
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
+        if (this.extrasInTabsRow != undefined)
+           //DO SOMETHING extrasInTabsRow
 
         // Main part
         this.model.hideAll();
@@ -138,6 +141,7 @@ window.KontraTabs = {
     init : function(args){
         this.model = new Tabs(args)
         this.view = new TabsView({
+                        extrasInTabsRow : args.extrasInTabsRow,
                         model: this.model,
                         el : $("<div/>")
                     })

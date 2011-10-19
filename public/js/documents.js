@@ -131,10 +131,10 @@ window.Document = Backbone.Model.extend({
           });
     },
     switchToAdvanced : function() {
-          return save.add("changefunctionality","true").add("toadvanced","true");
+          return this.save.add("changefunctionality","true").add("toadvanced","true");
     },
     switchToBasic : function() {
-          return save.add("changefunctionality","true").add("tobasic","true");
+          return this.save.add("changefunctionality","true").add("tobasic","true");
     },
     saveAsTemplate : function() {
           return this.save().add("template", "YES");
@@ -211,6 +211,7 @@ window.Document = Backbone.Model.extend({
     },
     isTemplate: function() {
       return this.get("template") == true
+    },  
     recall : function() {
        this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});  
     },
