@@ -8,6 +8,7 @@ import Database.HDBC.PostgreSQL
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
+import qualified AppLogger as Log
 
 import DB.Classes
 import DB.Migrations
@@ -149,7 +150,7 @@ testsToRun conn (t:ts)
     params = drop 1 $ dropWhile (/= ("$")) ts
 
 main :: IO ()
-main = do
+main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
