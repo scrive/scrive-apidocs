@@ -52,6 +52,7 @@ import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
 import DB.Classes
+import qualified AppLogger as Log
 
 {- -}
 
@@ -245,6 +246,7 @@ data SignatoryTMP = SignatoryTMP {
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
+    Log.debug "getSigantoryTMP"
     fstname        <- apiAskBS "fstname"
     sndname        <- apiAskBS "sndname"
     company        <- apiAskBS "company"
