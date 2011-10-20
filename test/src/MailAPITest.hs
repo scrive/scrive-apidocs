@@ -61,6 +61,7 @@ testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
 
 successChecks :: [(String, String)] -> DB ()
 successChecks res = do
+  
     assertBool "status is success" $ equalsKey (== "success") "status" res
     assertBool "message matches 'Document #* created'" $
         equalsKey (=~ "^Document #[0-9]+ created$") "message" res
@@ -69,8 +70,8 @@ successChecks res = do
     mdoc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
-    assertBool "document has two signatories" $ length (documentsignatorylinks doc) == 2
-    assertBool "document status is pending" $ documentstatus doc == Pending
+    assertBool ("document should have 2 signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == 2
+    assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file attached" $ (length $ documentfiles doc) == 1
 
 equalsKey :: (a -> Bool) -> String -> [(String, a)] -> Bool

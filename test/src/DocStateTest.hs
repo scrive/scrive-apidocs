@@ -84,21 +84,23 @@ docStateTests conn = testGroup "DocState" [
   testThat "create document and check invariants" conn testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" conn testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" conn testDocumentCanBeCreatedAndFetchedByAllDocs,
-  
+{-  
   testThat "when I call update document, it doesn't change the document id" conn testDocumentUpdateDoesNotChangeID,
   testThat "when I call update document, i can change the title" conn testDocumentUpdateCanChangeTitle,
-  
-  testThat "when I attach a file to a real document, it ALWAYS returns Right" conn testDocumentAttachAlwaysRight,
+  -}
+  testThat "when I attach a file to a real document in preparation, it returns Right" conn testDocumentAttachPreparationRight,
+  testThat "when I attach a file to a real document not in preparation, it returns Right" conn testDocumentAttachNotPreparationLeft,  
   testThat "when I attach a file to a bad docid, it ALWAYS returns Left" conn testNoDocumentAttachAlwaysLeft,
   testThat "when I attach a file, the file is attached" conn testDocumentAttachHasAttachment,
   
   testThat "when I attach a sealed file to a bad docid, it always returns left" conn testNoDocumentAttachSealedAlwaysLeft,
-  testThat "when I attach a sealed file to a real doc, it always returns Right" conn testDocumentAttachSealedAlwaysRight,
-  
+  testThat "when I attach a sealed file to a real doc not in pending, it always returns left" conn testDocumentAttachSealedNotPendingLeft,
+  testThat "when I attach a sealed file to a real doc in pending, it always returns Right" conn testDocumentAttachSealedPendingRight,
+  {-
   testThat "when I call updateDocument, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentAlwaysLeft,
   testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentAlwaysLeft,
   testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" conn testPreparationUpdateDocumentAlwaysRight,
-
+-}
   testThat "when I create document from shared template author custom fields are stored" conn testCreateFromSharedTemplate,
 
   testThat "when I call updateDocumentSimple, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentSimpleAlwaysLeft,
@@ -109,8 +111,13 @@ docStateTests conn = testGroup "DocState" [
   testThat "when I call attachcsvupload and the csvindex is the author, return left" conn testPreparationAttachCSVUploadAuthorIndexLeft,
   testThat "when I call attachcsvupload and the csvindex is negative, return left" conn testPreparationAttachCSVUploadIndexNeg,
   testThat "when I call attachcsvupload and the csvindex is too large, return Left" conn testPreparationAttachCSVUploadIndexGreaterThanLength,
-  testThat "updateDocumentAttachment fails if not in preparation" conn testUpdateDocumentAttachmentFailsIfNotPreparation,
-  testThat "updateDocumentAttachment doesn't fail if there's no attachments" conn testUpdateDocumentAttachmentOk,
+  testThat "addDocumentAttachment fails if not in preparation" conn testAddDocumentAttachmentFailsIfNotPreparation,
+  testThat "addDocumentAttachment doesn't fail if there's no attachments" conn testAddDocumentAttachmentOk,
+  
+  testThat "removeDocumentAttachment fails if not in preparation" conn testRemoveDocumentAttachmentFailsIfNotPreparation,
+  testThat "removeDocumentAttachment doesn't fail if there's no attachments" conn testRemoveDocumentAttachmentOk,
+  
+  
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
   testThat "documentFromSignatoryData succeeds when document exists" conn testDocumentFromSignatoryDataSucceedsExists,
@@ -157,7 +164,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   validTest $ do
     assertJust $ find (sameDocID doc) docs
     assertInvariants $ fromJust $ find (sameDocID doc) docs
-
+{-
 testDocumentUpdateDoesNotChangeID :: DB ()
 testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
   -- setup
@@ -168,7 +175,7 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- update $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -191,18 +198,30 @@ testDocumentUpdateCanChangeTitle = doTimes 10 $ do
     assertRight enewdoc
     assert $ (documenttitle $ fromRight enewdoc) == a
     assertInvariants $ fromRight enewdoc
-    
-testDocumentAttachAlwaysRight :: DB ()
-testDocumentAttachAlwaysRight = doTimes 10 $ do
+-}    
+testDocumentAttachNotPreparationLeft :: DB ()
+testDocumentAttachNotPreparationLeft = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthor' author
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  --execute
+  edoc <- randomUpdate $ AttachFile (documentid doc)
+  --assert
+  validTest $ do
+    assertLeft edoc
+
+testDocumentAttachPreparationRight :: DB ()
+testDocumentAttachPreparationRight = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
   edoc <- randomUpdate $ AttachFile (documentid doc)
   --assert
   validTest $ do
     assertRight edoc
     assertInvariants $ fromRight edoc
+
 
 testNoDocumentAttachAlwaysLeft :: DB ()
 testNoDocumentAttachAlwaysLeft = doTimes 10 $ do
@@ -218,7 +237,7 @@ testDocumentAttachHasAttachment :: DB ()
 testDocumentAttachHasAttachment = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthor' author
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   a <- rand 10 arbitrary
   --execute
   edoc <- randomUpdate $ AttachFile (documentid doc) a
@@ -237,11 +256,11 @@ testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
   --assert
   validTest $ assertLeft edoc
   
-testDocumentAttachSealedAlwaysRight :: DB ()
-testDocumentAttachSealedAlwaysRight = doTimes 10 $ do
+testDocumentAttachSealedPendingRight :: DB ()
+testDocumentAttachSealedPendingRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isSignable
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   --execute
   edoc <- randomUpdate $ AttachSealedFile (documentid doc)
   --assert
@@ -249,6 +268,18 @@ testDocumentAttachSealedAlwaysRight = doTimes 10 $ do
     assertRight edoc
     assertInvariants $ fromRight edoc
 
+
+testDocumentAttachSealedNotPendingLeft :: DB ()
+testDocumentAttachSealedNotPendingLeft = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
+  --execute
+  edoc <- randomUpdate $ AttachSealedFile (documentid doc)
+  --assert
+  validTest $ do
+    assertLeft edoc
+{-
 testNotPreparationUpdateDocumentAlwaysLeft :: DB ()
 testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
   -- setup
@@ -289,7 +320,7 @@ testNoDocumentUpdateDocumentAlwaysLeft = doTimes 10 $ do
   edoc <- randomUpdate $ UpdateDocument
   --assert
   validTest $ assertLeft edoc
-
+-}
 testNotPreparationUpdateDocumentSimpleAlwaysLeft :: DB ()
 testNotPreparationUpdateDocumentSimpleAlwaysLeft = doTimes 10 $ do
   -- setup
@@ -404,24 +435,43 @@ testCreateFromSharedTemplate = do
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294" 
            
-testUpdateDocumentAttachmentFailsIfNotPreparation :: DB ()
-testUpdateDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
+testAddDocumentAttachmentFailsIfNotPreparation :: DB ()
+testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute                     
-  edoc <- randomUpdate $ UpdateDocumentAttachments (documentid doc)
+  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc)
   --assert
   validTest $ assertLeft edoc
   
-testUpdateDocumentAttachmentOk :: DB ()
-testUpdateDocumentAttachmentOk = doTimes 10 $ do
+testAddDocumentAttachmentOk :: DB ()
+testAddDocumentAttachmentOk = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute                     
-  edoc <- update $ UpdateDocumentAttachments (documentid doc) [] []
+  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) 
   --assert
   validTest $ assertRight edoc
           
+testRemoveDocumentAttachmentFailsIfNotPreparation :: DB ()
+testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  --execute                     
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc)
+  --assert
+  validTest $ assertLeft edoc
+  
+testRemoveDocumentAttachmentOk :: DB ()
+testRemoveDocumentAttachmentOk = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  --execute                     
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) 
+  --assert
+  validTest $ assertRight edoc
+
+
 testDocumentFromSignatoryDataFailsDoesntExist :: DB ()
 testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
   mdoc <- randomUpdate $ DocumentFromSignatoryData

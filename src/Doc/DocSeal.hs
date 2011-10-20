@@ -239,7 +239,7 @@ sealDocumentFile :: (MonadIO m, DBMonad m)
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn, ctxtime}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -280,7 +280,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn}
                                       Log.trustWeaver msg
                                       return result
               File{fileid = sealedfileid} <- ioRunDB ctxdbconn $ dbUpdate $ NewFile filename newfilepdf
-              res <- update $ AttachSealedFile documentid sealedfileid
+              res <- update $ AttachSealedFile documentid sealedfileid ctxtime
               return res
       ExitFailure _ ->
           do
