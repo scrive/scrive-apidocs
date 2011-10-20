@@ -13,6 +13,7 @@ module MinutesTime
        , showDateOnly
        , showDateYMD
        , showMinutesTimeForAPI
+       , showMinutesTimeForFileName
        , toMinutes
        , toSeconds
        , toUTCTime
@@ -70,6 +71,11 @@ instance Show MinutesTime where
 -- | Show time in %Y-%m-%d %H:%M format. Warning: system needs to run in UTC time!
 showMinutesTimeForAPI :: MinutesTime -> String
 showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M" mt
+
+-- | Show time for files creation
+showMinutesTimeForFileName :: MinutesTime -> String
+showMinutesTimeForFileName mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d-%H-%M" mt
+
 
 -- | Show time in "%Y-%m-%d" format.  Warning: system needs to run in UTC time!
 showDateOnly :: MinutesTime -> String

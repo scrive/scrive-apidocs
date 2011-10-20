@@ -32,6 +32,7 @@ import Doc.DocStorage
 import User.Utils
 import File.TransState
 import DB.Classes
+import Data.Either
 
 {- |
    Mark document seen securely.
@@ -142,7 +143,8 @@ authorSendDocument did = onlyAuthor did $ do
  -}
 updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
 updateSigAttachments did sigatts = onlyAuthor did $ do
-  transActionNotAvailable <$> update (UpdateSigAttachments did sigatts)
+  Context{ctxtime} <- getContext
+  transActionNotAvailable <$> update (UpdateSigAttachments did sigatts ctxtime)
         
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
@@ -185,7 +187,16 @@ signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
 
 updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [FileID] -> [FileID] -> m (Either DBError Document)
 updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
-  transActionNotAvailable <$> update (UpdateDocumentAttachments did adds removes)
+  case (adds ++ removes) of
+    [] -> getDocByDocID did
+    _ -> do
+      res1 <- mapM (update . AddDocumentAttachment    did) adds
+      res2 <- mapM (update . RemoveDocumentAttachment did) removes
+      let ls = lefts (res1 ++ res2)
+          rs = rights (res1 ++ res2)
+      case ls of
+        [] -> return $ Right $ last rs
+        (a:_) -> return $ Left $ DBActionNotAvailable a
 
 attachFile :: (Kontrakcja m) => DocumentID -> BS.ByteString -> BS.ByteString -> m (Either DBError Document)
 attachFile docid filename content = onlyAuthor docid $ do
@@ -194,7 +205,7 @@ attachFile docid filename content = onlyAuthor docid $ do
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content docid
   file <- runDB $ dbUpdate $ NewFile filename content14
-  transActionNotAvailable <$> update (AttachFile docid (fileid file))
+  transActionNotAvailable <$> update (AttachFile docid (fileid file) (ctxtime ctx))
 
 newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
 newDocument title doctype = withUser $ \user -> do

@@ -30,6 +30,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
+import Data.Either
 
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
@@ -197,6 +198,7 @@ handleMailCommand = do
     (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
+    Log.debug $ show involved
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
     mcompany <- case usercompany user of
                   Just companyid -> runDBQuery $ GetCompany companyid
@@ -208,10 +210,10 @@ handleMailCommand = do
                            Left errmsg -> return (error errmsg)
                            Right document -> return document
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUploadNoLogin (documentid doc) content title
-    (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
-                                     signatories Nothing BS.empty
-                                    (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)
-                                    [EmailIdentification] Nothing AdvancedFunctionality
+    _errs <- lefts <$> (liftIO $ sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
+                                            update $ SetDocumentTitle (documentid doc) title ctxtime,
+                                            update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime,
+                                            update $ ResetSignatoryDetails (documentid doc) ((userDetails, [SignatoryPartner, SignatoryAuthor]):signatories) ctxtime])
 
     (eithernewdocument :: Either String Document) <- update $ PreparationToPending (documentid doc) ctxtime
     (newdocument :: Document) <- case eithernewdocument of
