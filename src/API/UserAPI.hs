@@ -106,35 +106,27 @@ getUserDoc = do
 sendFromTemplate :: Kontrakcja m => UserAPIFunction m APIResponse
 sendFromTemplate = do
   author <- user <$> ask
+  mcompany <- case usercompany author of
+                Just companyid -> runDBQuery $ GetCompany companyid
+                Nothing -> return Nothing
   ctx <- getContext
   temp <- getTemplate
   signatories <- getSignatories
   doc <- update $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-  let Just authorsiglink = mauthorsiglink
-  medoc <- update $
-          UpdateDocument --really? This is ridiculous! Too many params
-          (ctxtime ctx)
-          (documentid doc)
-          (documenttitle doc)
-          (zip signatories (repeat [SignatoryPartner]))
-          Nothing
-          (documentinvitetext doc)
-          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, userid author, usercompany author)
-          [EmailIdentification]
-          Nothing
-          AdvancedFunctionality
+  _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetEmailIdentification (documentid doc) (ctxtime ctx)
+  medoc <- update $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
+                                                             [SignatoryPartner, SignatoryAuthor]): 
+                                                            (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case medoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
-      liftIO $ print edoc
       esdoc <- update $ PreparationToPending (documentid edoc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
-          liftIO $ print sdoc
-
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
@@ -171,30 +163,19 @@ sendNewDocument = do
   mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx)
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
-  liftIO $ print newdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  edoc <- update $
-          UpdateDocument --really? This is ridiculous! Too many params
-          (ctxtime ctx)
-          (documentid newdoc)
-          title
-          (zip signatories (repeat [SignatoryPartner]))
-          Nothing
-          (documentinvitetext newdoc)
-          ((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
-          [EmailIdentification]
-          Nothing
-          AdvancedFunctionality
+  _ <- update $ SetDocumentFunctionality (documentid newdoc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
+  edoc <- update $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
+                                                             [SignatoryPartner, SignatoryAuthor]): 
+                                                            (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case edoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
-      liftIO $ print doc
       esdoc <- update $ PreparationToPending (documentid doc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
-          liftIO $ print sdoc
-
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 

@@ -652,3 +652,8 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 8) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
+
+ignore :: Monad m => m a -> m ()
+ignore acc = do
+  _ <- acc
+  return ()

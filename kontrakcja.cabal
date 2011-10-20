@@ -58,6 +58,12 @@ Flag test-login
   Description: Build login testsuite
   Default: True
 
+Flag test-signup
+  Description: Build signup testsuite
+
+Flag test-accountinfo
+  Description: Build account info testsuite
+
 Flag test-mailapi
   Description: Build mailapi testsuite
   Default: True
@@ -242,6 +248,10 @@ Executable kontrakcja-test
     cpp-options: -DNO_INTEGRATIONAPI
   if !flag(test-login)
     cpp-options: -DNO_LOGIN
+  if !flag(test-signup)
+    cpp-options: -DNO_SIGNUP
+  if !flag(test-accountinfo)
+    cpp-options: -DNO_ACCOUNTINFO
   if !flag(test-mailapi)
     cpp-options: -DNO_MAILAPI
   if !flag(test-servicestate)

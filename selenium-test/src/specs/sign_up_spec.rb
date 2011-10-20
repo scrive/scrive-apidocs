@@ -109,37 +109,33 @@ describe "sign up" do
     (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
 
     #we should be given the option to accept the tos
-    @wait.until { @driver.find_element :id => "tos" }
-    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    @wait.until { @driver.find_element :id => "tosCBox" }
 
     #make sure we get a red flash if we try to activate without signing the tos
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
-    @wait.until { @driver.find_element :id => "tos" }
-    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    @wait.until { @driver.find_element :id => "tosCBox" }
 
     #accept the tos
-    (@wait.until { @driver.find_element :id => "tos" }).click
+    (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
     #make sure we get a red flash if we try to activate without filling in the password details
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
-    @wait.until { @driver.find_element :id => "tos" }
-    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    @wait.until { @driver.find_element :id => "tosCBox" }
 
     #accept the tos again
-    (@wait.until { @driver.find_element :id => "tos" }).click
+    (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
     #fill in the password details incorrectly and make sure we get red flash message
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-123"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
-    @wait.until { @driver.find_element :id => "tos" }
-    (@wait.until { @driver.find_element :id => "accountTypePrivate" }).click
+    @wait.until { @driver.find_element :id => "tosCBox" }
 
     #accept the tos yet again
-    (@wait.until { @driver.find_element :id => "tos" }).click
+    (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
     #fill in the password details correctly
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"

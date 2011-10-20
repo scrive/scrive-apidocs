@@ -42,6 +42,12 @@ import IntegrationAPITest
 #ifndef NO_LOGIN
 import LoginTest
 #endif
+#ifndef NO_SIGNUP
+import SignupTest
+#endif
+#ifndef NO_ACCOUNTINFO
+import AccountInfoTest
+#endif
 #ifndef NO_MAILAPI
 import MailAPITest
 #endif
@@ -102,6 +108,12 @@ allTests conn = tail tests
 #ifndef NO_LOGIN
       , ("login", const $ loginTests conn)
 #endif
+#ifndef NO_SIGNUP
+      , ("signup", const $ signupTests conn)
+#endif
+#ifndef NO_ACCOUNTINFO
+     , ("accountinfo", const $ accountInfoTests conn)
+#endif
 #ifndef NO_MAILAPI
       , ("mailapi", const $ mailApiTests conn)
 #endif
@@ -137,7 +149,7 @@ allTests conn = tail tests
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
-testsToRun conn (t:ts) 
+testsToRun conn (t:ts)
   | lt == "$" = []
   | lt == "all" = map (\(_,f) -> Right $ f params) (allTests conn) ++ rest
   | otherwise = case lookup lt (allTests conn) of

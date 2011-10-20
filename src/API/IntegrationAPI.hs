@@ -164,8 +164,6 @@ createDocument = do
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
-   -- Again, we don't check that the document is from the service
-   -- -EN
    mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
    involved  <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
    tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
@@ -206,7 +204,7 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
     let doc = fromRight mdoc
     let addAndAttachFile name content = do
             file <- runDB $ dbUpdate $ NewFile name content
-            update $ AttachFile (documentid doc) (fileid file)
+            update $ AttachFile (documentid doc) (fileid file) now
     mapM_ (uncurry addAndAttachFile) files
     _ <- update $ SetDocumentTags (documentid doc) tags
     doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
