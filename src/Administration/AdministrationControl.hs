@@ -126,7 +126,7 @@ showAdminCompanies Nothing = onlySuperUser $ do
   params <- getAdminListPageParams
   content <- adminCompaniesPage companies params
   renderFromBody TopEmpty kontrakcja content
-  
+
 showAdminCompanies (Just companyid) = onlySuperUser $ do
   company <- guardJustM . runDBQuery $ GetCompany companyid
   content <- adminCompanyPage company
@@ -339,7 +339,7 @@ handleCreateUser = onlySuperUser $ do
         addFlashM $ toFlashMsg OperationFailed <$> (const $ return "Sorry please change your region to match the new user's --em") ()
     -- FIXME: where to redirect?
     return LinkStats
-    
+
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m KontraLink
 handleCreateCompanyUser companyid = onlySuperUser $ do
   ctx <- getContext
@@ -613,12 +613,12 @@ calculateStatsFromDocuments documents =
                       --_ -> docStatsZero  -- catch all to make it run in case somebody adds new status
                       )
                 ]
-                
+
 showAsDate1 :: Int -> String
 showAsDate1 int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
 
 statisticsFieldsForASingleUser :: (Functor m, MonadIO m) => [Document] -> Fields m
-statisticsFieldsForASingleUser ds = 
+statisticsFieldsForASingleUser ds =
   let stats = newCalculateStatsFromDocuments ds in
   fieldFL "statistics" $ for stats (\(ct, c, s, i) -> do
                                        field "date" $ showAsDate1 ct
@@ -626,8 +626,8 @@ statisticsFieldsForASingleUser ds =
                                        field "signatures" s
                                        field "sent" i
                                        field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
-                                                                     
-                                    
+
+
 
 fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats _users documents = do
@@ -674,7 +674,7 @@ handleStatistics =
 
 {- |
     Shows statistics about functionality use.
-    
+
     If you would like to add some stats then please add the definitions to
     the getStatDefinitions function of whatever HasFunctionalityStats instance
     is relevant.
@@ -713,7 +713,7 @@ aRecentDate = minutesBefore (60 * 24 * 30 * 3)
 
 instance HasFunctionalityStats Document where
   isRecent time doc = aRecentDate time < documentctime doc
-  getStatDefinitions = 
+  getStatDefinitions =
     [ ("drag n drop", anyField hasPlacement)
     , ("custom fields", anyField isCustom)
     , ("custom sign order", any ((/=) (SignOrder 1) . signatorysignorder . signatorydetails) . documentsignatorylinks)
@@ -721,7 +721,7 @@ instance HasFunctionalityStats Document where
     ]
     where
       anyField p doc =
-        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc 
+        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc
       hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
       isCustom SignatoryField{sfType} =
         case sfType of
@@ -733,13 +733,11 @@ instance HasFunctionalityStats User where
     case userhasacceptedtermsofservice user of
       Just tostime -> aRecentDate time < tostime
       Nothing -> False
-  getStatDefinitions = 
-    [ ("accepted TOS after signing", (== BySigning) . usersignupmethod)
-    ]
+  getStatDefinitions = []
 
 instance HasFunctionalityStats (Document, SignatoryLink, Maybe User) where
   isRecent time (doc, _siglink, _msignuser) = isRecent time doc
-  getStatDefinitions = 
+  getStatDefinitions =
     [ ("rejected TOS after signing", rejectedTOS)
     ]
     where
@@ -830,14 +828,14 @@ handleFixForBug510 = onlySuperUser $ do
                     " with type " ++ (show $ documenttype doc) ++
                     " and author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc) ++ " : " ++ msg
 
--- This method can be used do reseal a document 
+-- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlySuperUser $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> mzero
-    Just doc -> case (documentfiles doc,documentsealedfiles doc, documentstatus doc) of  
+    Just doc -> case (documentfiles doc,documentsealedfiles doc, documentstatus doc) of
                      ((_:_),[], Closed) -> do
                          ctx <- getContext
                          Log.debug "Document is valid for resealing sealing"

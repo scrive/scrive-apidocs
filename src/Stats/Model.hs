@@ -1,4 +1,4 @@
-module Stats.Model 
+module Stats.Model
        (
          AddDocStatEvent(..),
          DocStatEvent(..),
@@ -12,7 +12,7 @@ module Stats.Model
          GetUserStatEvents(..),
          UserStatQuantity(..)
        )
-       
+
        where
 
 import Database.HDBC
@@ -32,7 +32,7 @@ data DocStatQuantity = DocStatClose       -- ^ A Close Document event
                      | DocStatEmailSignatures  -- ^ The number of email signatories in a closed document
                      | DocStatSend        -- ^ A Send Document event
                      | DocStatElegSignatures
-                     | DocStatCreate                       
+                     | DocStatCreate
                      | DocStatEmailSignaturePending
                      | DocStatElegSignaturePending
                      | DocStatCancel
@@ -56,6 +56,7 @@ data DocStatEvent = DocStatEvent { seUserID     :: UserID          -- ^ User who
                                  }
 
 data UserStatQuantity = UserSignTOS  -- When user signs TOS
+                        | UserSaveAfterSign -- when user accepts the save option after signing
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 
@@ -79,7 +80,7 @@ selectDocStatEventsSQL = "SELECT "
  ++ ", e.document_type"
  ++ "  FROM doc_stat_events e"
  ++ " " -- always end in space to avoid problems
- 
+
 selectUserStatEventsSQL :: String
 selectUserStatEventsSQL = "SELECT "
  ++ "  e.user_id"
@@ -106,7 +107,7 @@ instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
       ++ " WHERE e.user_id = ?"
     _ <- execute st [toSql userid]
     fetchDocStats st []
-    
+
 data AddDocStatEvent = AddDocStatEvent DocStatEvent
 instance DBUpdate AddDocStatEvent Bool where
   dbUpdate (AddDocStatEvent event) = wrapDB $ \conn -> do
@@ -217,4 +218,4 @@ instance DBUpdate FlushDocStats Bool where
     st <- prepare conn $ "DELETE FROM doc_stat_events"
     _ <- execute st []
     return True
-    
+
