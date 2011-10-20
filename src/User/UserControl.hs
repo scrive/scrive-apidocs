@@ -710,7 +710,13 @@ handleAccountSetupFromSign aid hash = do
       case muser of
         Just user -> do
           Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
-          handleActivate aid hash BySigning user
+          mactivateduser <- handleActivate aid hash BySigning user
+          case mactivateduser of
+            Just activateduser -> do
+              _ <- addUserSaveAfterSignStatEvent activateduser
+              return ()
+            Nothing -> return ()
+          return mactivateduser
         Nothing -> return Nothing
     Nothing -> return Nothing
 

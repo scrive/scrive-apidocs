@@ -1,4 +1,4 @@
-module Stats.Control 
+module Stats.Control
        (
          showAdminCompanyUsageStats,
          showAdminUserUsageStats,
@@ -10,13 +10,14 @@ module Stats.Control
          addDocumentRejectStatEvents,
          addUserIDSignTOSStatEvent,
          addUserSignTOSStatEvent,
+         addUserSaveAfterSignStatEvent,
          addAllDocsToStats,
          addAllUsersToStats,
          handleDocStatsCSV,
          handleMigrate1To2,
          handleUserStatsCSV
        )
-       
+
        where
 
 import API.Service.Model
@@ -97,13 +98,13 @@ handleDocStatsCSV = onlySuperUser $ do
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse csv
-     
+
 docStatsToString :: Kontrakcja m => [DocStatEvent] -> [(UserID, String)] -> [(CompanyID, String)] -> m [[String]]
 docStatsToString [] _ _ = return []
 docStatsToString (e:es) usernames companynames = do
   (username, usernames') <- dbUserIDLookup (seUserID e) usernames
-  (companyname, companynames') <- maybe (return ("none", companynames)) 
-                                  (\i -> dbCompanyIDLookup i companynames) 
+  (companyname, companynames') <- maybe (return ("none", companynames))
+                                  (\i -> dbCompanyIDLookup i companynames)
                                   (seCompanyID e)
   let servicename = maybe "scrive" (BS.toString . unServiceID) (seServiceID e)
   rest <- docStatsToString es usernames' companynames'
@@ -118,7 +119,7 @@ docStatsToString (e:es) usernames companynames = do
            , maybe "" show $ seCompanyID e
            , show $ seDocumentType e
            ] : rest
-      
+
 dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [(UserID, String)])
 dbUserIDLookup uid tbl =
   case lookup uid tbl of
@@ -132,7 +133,7 @@ dbCompanyIDLookup cid tbl =
   case lookup cid tbl of
     Nothing -> do
       mcompany <- runDBQuery $ GetCompany cid
-      let name = case mcompany of 
+      let name = case mcompany of
             Nothing -> "Unknown Company"
             Just company -> case companyexternalid company of
               Just eid -> BS.toString $ unExternalCompanyID eid
@@ -156,7 +157,7 @@ convertUserIDToFullName _ [] = return []
 convertUserIDToFullName acc ((a,UserID 0,s):ss) = do
   rst <- convertUserIDToFullName acc ss
   return $ (a, "Total", s) : rst
-convertUserIDToFullName acc ((a,uid,s):ss) =  
+convertUserIDToFullName acc ((a,uid,s):ss) =
   case find (\u->userid u == uid) acc of
     Just u -> do
       rst <- convertUserIDToFullName acc ss
@@ -206,8 +207,7 @@ statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAm
 userEventToDocStatTuple :: UserStatEvent -> Maybe (Int, [Int])
 userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case usQuantity of
   UserSignTOS -> Just (asInt usTime, [0, 0, 0, usAmount])
-  -- we'll need this eventually, when there are more constructors
-  --  _           -> Nothing
+  _           -> Nothing
 
 -- | Stats are very simple:
 -- Date
@@ -258,7 +258,7 @@ calculateCompanyDocStats events =
 addDocumentCloseStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCloseStatEvents doc = msum [
   do
-    if not (isClosed doc) || none hasSigned (documentsignatorylinks doc) 
+    if not (isClosed doc) || none hasSigned (documentsignatorylinks doc)
       then return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
@@ -266,7 +266,7 @@ addDocumentCloseStatEvents doc = msum [
       let did = documentid doc
           sigs = countSignatures doc
           signtime = getLastSignedTime doc
-          
+
       when (signtime == fromSeconds 0) $ Log.stats ("weird document: "++show (documentid doc))
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = signtime
@@ -294,7 +294,7 @@ addDocumentCloseStatEvents doc = msum [
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
   , return False]
-         
+
 addDocumentSendStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentSendStatEvents doc = msum [
   do
@@ -304,7 +304,7 @@ addDocumentSendStatEvents doc = msum [
       uid <- guardJust $ maybesignatory sl
       sendtime <- guardJust $ getInviteTime doc
       let did = documentid doc
-          sigs = countSignatories doc          
+          sigs = countSignatories doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = DocStatSend
@@ -314,7 +314,7 @@ addDocumentSendStatEvents doc = msum [
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatSend           
+      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatSend
       let q = case documentallowedidtypes doc of
             [EmailIdentification] -> DocStatEmailSignaturePending
             [ELegitimationIdentification] -> DocStatElegSignaturePending
@@ -331,7 +331,7 @@ addDocumentSendStatEvents doc = msum [
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
   , return False]
-                                
+
 addDocumentCancelStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCancelStatEvents doc = msum [
   do
@@ -341,7 +341,7 @@ addDocumentCancelStatEvents doc = msum [
       uid <- guardJust $ maybesignatory sl
       let canceltime = documentmtime doc
       let did = documentid doc
-          sigs = countSignatories doc          
+          sigs = countSignatories doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = canceltime
                                                         , seQuantity   = DocStatCancel
@@ -351,7 +351,7 @@ addDocumentCancelStatEvents doc = msum [
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel           
+      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
       let q = case documentallowedidtypes doc of
             [EmailIdentification] -> DocStatEmailSignatureCancel
             [ELegitimationIdentification] -> DocStatElegSignatureCancel
@@ -376,9 +376,9 @@ addDocumentRejectStatEvents doc = msum [
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
-      (rejecttime,_,_) <- guardJust $ documentrejectioninfo doc      
+      (rejecttime,_,_) <- guardJust $ documentrejectioninfo doc
       let did = documentid doc
-          sigs = countSignatories doc          
+          sigs = countSignatories doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = rejecttime
                                                         , seQuantity   = DocStatCancel
@@ -388,7 +388,7 @@ addDocumentRejectStatEvents doc = msum [
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel           
+      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
       let q = case documentallowedidtypes doc of
             [EmailIdentification] -> DocStatEmailSignatureCancel
             [ELegitimationIdentification] -> DocStatElegSignatureCancel
@@ -424,7 +424,7 @@ addDocumentCreateStatEvents doc = msum [
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate          
+      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
       return a
   , return False]
 
@@ -436,7 +436,7 @@ allDocStats doc = do
     _ <- addDocumentRejectStatEvents doc
     _ <- addDocumentCancelStatEvents doc
     return ()
-  
+
 -- | Must be sorted (both!)
 filterMissing :: [DocumentID] -> [Document] -> [Document]
 filterMissing _ [] = []
@@ -444,14 +444,14 @@ filterMissing [] docs = docs
 filterMissing (did:dids) (doc:docs) | did <  documentid doc = filterMissing dids (doc:docs)
 filterMissing (did:dids) (doc:docs) | did == documentid doc = filterMissing (did:dids) docs
 filterMissing dids (doc:docs) = doc : filterMissing dids docs
-  
+
 
 
 addAllDocsToStats :: Kontrakcja m => m KontraLink
 addAllDocsToStats = onlySuperUser $ do
   services <- runDBQuery GetServices
   let allservices = Nothing : map (Just . serviceid) services
-  stats <- runDBQuery GetDocStatEvents  
+  stats <- runDBQuery GetDocStatEvents
   let stats' = sort $ map seDocumentID stats
   _ <- forM allservices $ \s -> do
     docs <- query $ GetDocuments s
@@ -476,8 +476,18 @@ addAllUsersToStats = onlySuperUser $ do
   addFlash (OperationDone, "Added all users to stats")
   return LinkUpload
 
+
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool
-addUserSignTOSStatEvent user = msum [
+addUserSignTOSStatEvent = addUserStatEventWithTOSTime UserSignTOS
+
+addUserIDSignTOSStatEvent :: (DBMonad m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserIDSignTOSStatEvent = addUserIDStatEvent UserSignTOS
+
+addUserSaveAfterSignStatEvent :: Kontrakcja m => User -> m Bool
+addUserSaveAfterSignStatEvent = addUserStatEventWithTOSTime UserSaveAfterSign
+
+addUserStatEventWithTOSTime :: Kontrakcja m => UserStatQuantity -> User -> m Bool
+addUserStatEventWithTOSTime qty user = msum [
   do
     if isNothing $ userhasacceptedtermsofservice user then return False
       else do
@@ -486,19 +496,19 @@ addUserSignTOSStatEvent user = msum [
       let mt' = if mt == fromSeconds 0
                 then (60 * 24) `minutesBefore` ctxtime -- one day before running stats
                 else mt
-      addUserIDSignTOSStatEvent (userid user) mt' (usercompany user) (userservice user)
+      addUserIDStatEvent qty (userid user) mt' (usercompany user) (userservice user)
   , return False]
 
-addUserIDSignTOSStatEvent :: (DBMonad m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
-addUserIDSignTOSStatEvent uid mt mcid msid =  do
+addUserIDStatEvent :: (DBMonad m) => UserStatQuantity -> UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserIDStatEvent qty uid mt mcid msid =  do
     a <- runDBUpdate $ AddUserStatEvent $ UserStatEvent { usUserID     = uid
                                                         , usTime       = mt
-                                                        , usQuantity   = UserSignTOS
+                                                        , usQuantity   = qty
                                                         , usAmount     = 1
                                                         , usCompanyID  = mcid
                                                         , usServiceID  = msid
                                                         }
-    unless a $ Log.stats $ "Skipping existing user stat for userid: " ++ show uid ++ " and quantity: " ++ show UserSignTOS
+    unless a $ Log.stats $ "Skipping existing user stat for userid: " ++ show uid ++ " and quantity: " ++ show qty
     return a
 
 
