@@ -106,7 +106,7 @@ embeddedPage pb = do
     ctx <- getContext
     bdy <- renderTemplateFM "embeddedPage" $ do
         field "content" pb
-        serviceFields (ctxlocation ctx) (ctxservice ctx) 
+        serviceFields (ctxlocation ctx) (ctxservice ctx)
         standardPageFields ctx "" Nothing False False Nothing Nothing
     res <- simpleResponse bdy
     clearFlashMsgs
@@ -249,7 +249,7 @@ firstPage ctx loginOn referer email =
 -}
 mainLinksFields :: MonadIO m => Locale -> Fields m
 mainLinksFields locale = do
-    field "linkaccount"          $ show LinkAccount
+    field "linkaccount"          $ show (LinkAccount False)
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show LinkContracts

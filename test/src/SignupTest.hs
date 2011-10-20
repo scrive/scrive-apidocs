@@ -1,0 +1,229 @@
+module SignupTest (signupTests) where
+
+import Control.Applicative
+import Control.Monad.State
+import Database.HDBC.PostgreSQL
+import Happstack.Server
+import Happstack.State (query)
+import Test.Framework
+import Test.Framework.Providers.HUnit
+import Test.HUnit (Assertion)
+import qualified Data.ByteString.UTF8 as BS
+
+import ActionSchedulerState
+import AppControl
+import Context
+import DB.Types
+import FlashMessage
+import MinutesTime
+import Misc
+import Redirect
+import StateHelper
+import Templates.TemplatesLoader
+import TestingUtil
+import TestKontra as T
+import User.Model
+import User.UserControl
+
+signupTests :: Connection -> Test
+signupTests conn = testGroup "Signup" [
+      testCase "can self signup and activate an account" $ testSignupAndActivate conn
+    , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
+    , testCase "must accept tos to activate an account" $ testAcceptTOSToActivate conn
+    , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
+    , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
+    ]
+
+testSignupAndActivate :: Connection -> Assertion
+testSignupAndActivate conn = withTestEnvironment conn $ do
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated uid token) = actionType action
+
+  -- follow the signup link
+  (res2, ctx2) <- followActivationLink ctx1 aid token
+  assertActivationPageOK (res2, ctx2)
+
+  -- activate the account using the signup details
+  (res3, ctx3) <- activateAccount ctx1 aid token True "password12" "password12"
+  assertAccountActivatedFor uid (res3, ctx3)
+
+testViralInviteAndActivate :: Connection -> Assertion
+testViralInviteAndActivate conn = withTestEnvironment conn $ do
+  Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just inviter })
+    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+
+   -- enter the email to invite
+  (res1, ctx1) <- inviteToAccount ctx "emily@scrive.com"
+  action <- assertInviteSuccessful (userid inviter) ("emily@scrive.com") (res1, ctx1)
+  let aid = actionID action
+      (ViralInvitationSent _ _ _ _ token) = actionType action
+
+  -- follow the signup link
+  let ctx1withoutuser = ctx1{ctxmaybeuser = Nothing}
+  (res2, ctx2) <- followActivationLink ctx1withoutuser aid token
+  assertActivationPageOK (res2, ctx2)
+
+  -- activate the account using the signup details
+  (res3, ctx3) <- activateAccount ctx1 aid token True "password12" "password12"
+  assertAccountActivated (res3, ctx3)
+
+testAcceptTOSToActivate :: Connection -> Assertion
+testAcceptTOSToActivate conn = withTestEnvironment conn $ do
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated _uid token) = actionType action
+
+  -- activate the account without accepting the tos
+  (res3, ctx3) <- activateAccount ctx1 aid token False "password12" "password12"
+  assertAccountActivationFailed (res3, ctx3)
+
+testNeedPasswordToActivate :: Connection -> Assertion
+testNeedPasswordToActivate conn = withTestEnvironment conn $ do
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated _uid token) = actionType action
+
+  -- activate the account without entering passwords
+  (res3, ctx3) <- activateAccount ctx1 aid token True "" ""
+  assertAccountActivationFailed (res3, ctx3)
+
+testPasswordsMatchToActivate :: Connection -> Assertion
+testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated _uid token) = actionType action
+
+  -- activate the account using mismatched passwords
+  (res3, ctx3) <- activateAccount ctx1 aid token True "password12" "password21"
+  assertAccountActivationFailed (res3, ctx3)
+
+signupForAccount :: MonadIO m => Context -> String -> m (Response, Context)
+signupForAccount ctx email = do
+  req <- mkRequest POST [("email", inText email)]
+  runTestKontra req ctx $ signupPagePost >>= sendRedirect
+
+assertSignupSuccessful :: MonadIO m => (Response, Context) -> m Action
+assertSignupSuccessful (res, ctx) = do
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "Location is /se/sv" (Just "/se/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
+  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
+  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx) `isFlashOfType` OperationDone
+  actions <- getAccountCreatedActions
+  assertEqual "An AccountCreated action was made" 1 (length $ actions)
+  return $ head actions
+
+inviteToAccount :: MonadIO m => Context -> String -> m (Response, Context)
+inviteToAccount ctx email = do
+  req <- mkRequest POST [("invitedemail", inText email)]
+  runTestKontra req ctx $ handleViralInvite >>= sendRedirect
+
+assertInviteSuccessful :: MonadIO m => UserID -> String -> (Response, Context) -> m Action
+assertInviteSuccessful expectedid expectedemail (res, ctx) = do
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "User is logged in" (Just expectedid) (fmap userid $ ctxmaybeuser ctx)
+  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
+  -- why is this signing related?!  should be just success no?
+  assertBool "Flash message has type indicating its signing related" $ head (ctxflashmessages ctx) `isFlashOfType` SigningRelated
+  actions <- getViralInviteActions
+  assertEqual "A ViralInvite action was made" 1 (length $ actions)
+  let action = head actions
+      (ViralInvitationSent email _ inviterid _ _) = actionType action
+  assertEqual "Action email is correct" (Email $ BS.fromString expectedemail) email
+  assertEqual "Inviter id is correct" expectedid inviterid
+  return action
+
+followActivationLink :: MonadIO m => Context -> ActionID -> MagicHash -> m (Response, Context)
+followActivationLink ctx aid token = do
+  req <- mkRequest GET []
+  runTestKontra req ctx $ handleAccountSetupGet aid token
+
+assertActivationPageOK :: MonadIO m => (Response, Context) -> m ()
+assertActivationPageOK (res, ctx) = do
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "Location is /se/sv" (Just "/se/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
+  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
+  assertBool "Flash message has type indicating is modal" $ head (ctxflashmessages ctx) `isFlashOfType` Modal
+
+activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> m (Response, Context)
+activateAccount ctx aid token tos password password2 = do
+  let tosValue = if tos
+                   then "on"
+                   else "off"
+  req <- mkRequest POST [ ("tos", inText tosValue)
+                        , ("password", inText password)
+                        , ("password2", inText password2)
+                        ]
+  runTestKontra req ctx $ handleAccountSetupPost aid token >>= sendRedirect
+
+assertAccountActivatedFor :: MonadIO m => UserID -> (Response, Context) -> m ()
+assertAccountActivatedFor uid (res, ctx) = do
+  assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
+  assertAccountActivated (res, ctx)
+
+assertAccountActivated :: MonadIO m => (Response, Context) -> m ()
+assertAccountActivated (res, ctx) = do
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "Location is /upload" (Just "/upload") (T.getHeader "location" (rsHeaders res))
+  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
+  --shouldn't this flash just indicate success and not that it's signing related?!
+  assertBool "Flash message has type indicating signing related" $ head (ctxflashmessages ctx) `isFlashOfType` SigningRelated
+
+assertAccountActivationFailed :: MonadIO m => (Response, Context) -> m ()
+assertAccountActivationFailed (res, ctx) = do
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "Location is /se/sv" (Just "/se/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
+  assertEqual "There are two flash messages" 2 (length $ ctxflashmessages ctx)
+  -- if they don't accept the tos then the flash is signing related, not sure why
+  assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
+  assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
+
+getViralInviteActions :: MonadIO m => m [Action]
+getViralInviteActions = do
+  now <- getMinutesTime
+  let expirytime = (7 * 24 * 60 + 1) `minutesAfter` now
+  allactions <- query $ GetExpiredActions LeisureAction expirytime
+  return $ filter isViralInvite allactions
+
+isViralInvite :: Action -> Bool
+isViralInvite action =
+  case actionType action of
+    (ViralInvitationSent _ _ _ _ _) ->  True
+    _ -> False
+
+getAccountCreatedActions :: MonadIO m => m [Action]
+getAccountCreatedActions = do
+  now <- getMinutesTime
+  let expirytime = (24 * 60 + 1) `minutesAfter` now
+  allactions <- query $ GetExpiredActions LeisureAction expirytime
+  return $ filter isAccountCreated allactions
+
+isAccountCreated :: Action -> Bool
+isAccountCreated action =
+  case actionType action of
+    (AccountCreated _ _ ) ->  True
+    _ -> False
