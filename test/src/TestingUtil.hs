@@ -37,6 +37,7 @@ import Doc.Invariants
 import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
+import Text.JSON
 
 instance Arbitrary DocumentTag where
   arbitrary = do
@@ -681,6 +682,19 @@ instance Arbitrary SignInfo where
   arbitrary = do
     (a, b) <- arbitrary
     return $ SignInfo a b
+
+
+instance Arbitrary JSValue where
+  arbitrary = do
+    (v :: Int) <- (arbitrary :: Gen Int)
+    case (v `mod` 10) of
+         0 -> JSObject <$> toJSObject <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
+         1 -> JSArray <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
+         2 -> JSRational True <$> toRational <$> (arbitrary :: Gen Integer)
+         3 -> JSBool <$> arbitrary
+         _ -> JSString <$> toJSString <$> arbitrary
+         
+         
 
 -- our asserts
 
