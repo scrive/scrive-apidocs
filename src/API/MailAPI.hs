@@ -106,7 +106,7 @@ maybeFail msg = maybe (fail msg) return
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
   where
-    mime = MIME.parseMIMEMessage $ replace "\r\n\r\n--" "\r\n--" (BSC.unpack content)
+    mime = MIME.parseMIMEMessage (BSC.unpack content)
     parts mimevalue = case MIME.mime_val_content mimevalue of
         MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
         MIME.Multi more -> concatMap parts more
