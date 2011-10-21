@@ -73,9 +73,6 @@ import MailsTest
 #ifndef NO_MAILS
 import APICommonsTest
 #endif
-#ifndef NO_JSON
-import JSONUtilTest
-#endif
 
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
@@ -136,9 +133,6 @@ allTests conn = tail tests
 #endif
 #ifndef NO_MAILS
       , ("apicommons", const $ apiCommonsTest )
-#endif
-#ifndef NO_JSON
-      , ("jsonutil", const $ jsonUtilTests )
 #endif
       ]
 

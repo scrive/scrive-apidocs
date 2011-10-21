@@ -53,7 +53,6 @@ import Control.Monad
 import Util.SignatoryLinkUtils
 import DB.Classes
 import qualified AppLogger as Log
-import Util.JSON
 
 {- -}
 
@@ -248,15 +247,15 @@ data SignatoryTMP = SignatoryTMP {
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
     Log.debug "getSigantoryTMP"
-    fstname        <- askJSONBS "fstname"
-    sndname        <- askJSONBS "sndname"
-    company        <- askJSONBS "company"
-    personalnumber <- askJSONBS "personalnr"
-    companynumber  <- askJSONBS "companynr"
-    email          <- askJSONBS "email"
-    fields <- askJSONLocal "fields" $ askJSONLocalMap $ do
-                                        name <- askJSONBS "name"
-                                        value <- askJSONBS "value"
+    fstname        <- apiAskBS "fstname"
+    sndname        <- apiAskBS "sndname"
+    company        <- apiAskBS "company"
+    personalnumber <- apiAskBS "personalnr"
+    companynumber  <- apiAskBS "companynr"
+    email          <- apiAskBS "email"
+    fields <- apiLocal "fields" $ apiMapLocal $ do
+                                        name <- apiAskBS "name"
+                                        value <- apiAskBS "value"
                                         return $ (, value) <$> name
     return $ Just $ SignatoryTMP
                 { fstname = fstname
@@ -308,8 +307,8 @@ mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd}) = do
 
 -- High level commons. Used buy some simmilar API's, but not all of them
 getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]
-getFiles = fmap (fromMaybe []) $ askJSONLocal "files" $ askJSONLocalMap $ do
-    name    <- askJSONBS     "name"
-    content <- askJSONBase64 "content"
+getFiles = fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
+    name    <- apiAskBS     "name"
+    content <- apiAskBase64 "content"
     when (isNothing name || isNothing content) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
     return $ Just (fromJust name, fromJust content)

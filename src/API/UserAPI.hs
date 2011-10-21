@@ -36,23 +36,20 @@ import qualified Data.ByteString as BS
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
-import Util.JSON
-import Text.JSON.String
+
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a
 
 instance APIContext UserAPIContext where
+    body= wsbody
+    newBody b ctx = ctx {wsbody = b}
     apiContext  = do
         muser <- apiUser
-        mbody <- runGetJSON readJSObject <$> getFieldWithDefault "" "body"
+        mbody <- apiBody
         case (muser, mbody)  of
              (Just u, Right b) -> return $ Right $ UserAPIContext { wsbody = b, user = u}
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
              (_, Left s)             -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
-
-instance JSONContainer UserAPIContext where
-    getJSON = wsbody
-    setJSON j uapictx = uapictx {wsbody = j}
 
 apiUser :: Kontrakcja m => m (Maybe User)
 apiUser = do
@@ -101,7 +98,7 @@ getDocument = do
 getUserDoc :: Kontrakcja m => UserAPIFunction m Document
 getUserDoc = do
   author <- user <$> ask
-  mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ askJSONString "document_id"
+  mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
   when (isNothing mdocument || (not $ isAuthor ((fromJust mdocument), author))) $
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
@@ -148,7 +145,7 @@ sendFromTemplate = do
 getTemplate :: Kontrakcja m => UserAPIFunction m Document
 getTemplate = do
   author <- user <$> ask
-  mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ askJSONString "template_id"
+  mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
   when (isNothing mtemplate) $ throwApiError API_ERROR_NO_DOCUMENT "No template exists with this ID"
   let Just temp = mtemplate
   when (not $ isAuthor (temp, author)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
@@ -161,7 +158,7 @@ sendNewDocument = do
   mcompany <- case usercompany author of
                 Just companyid -> runDBQuery $ GetCompany companyid
                 Nothing -> return Nothing
-  mtitle <- askJSONBS "title"
+  mtitle <- apiAskBS "title"
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""
   let title = fromJust mtitle
   files <- getFiles
@@ -169,11 +166,11 @@ sendNewDocument = do
   let (filename, content) = head files
   signatories <- getSignatories
   when (Data.List.null signatories) $ throwApiError API_ERROR_MISSING_VALUE "There were no involved parties. At least one is needed."
-  mtype <- liftMM (return . toSafeEnum) (askJSONInteger "type")
+  mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
   when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
   let doctype = toDocumentType $ fromJust mtype
-  _msignedcallback <- askJSONBS "signed_callback"
-  _mnotsignedcallback <- askJSONBS "notsigned_callback"
+  _msignedcallback <- apiAskBS "signed_callback"
+  _mnotsignedcallback <- apiAskBS "notsigned_callback"
   ctx <- getContext
   mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx)
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
@@ -211,7 +208,7 @@ sendNewDocument = do
 
 getSignatories :: Kontrakcja m => UserAPIFunction m [SignatoryDetails]
 getSignatories = do
-    minvolved  <- askJSONLocal "involved" $ askJSONLocalMap $ fmap toSignatoryDetails <$> getSignatoryTMP
+    minvolved  <- apiLocal "involved" $ apiMapLocal $ fmap toSignatoryDetails <$> getSignatoryTMP
     case minvolved of
         Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
         Just involved -> return involved

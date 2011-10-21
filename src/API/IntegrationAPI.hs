@@ -56,8 +56,7 @@ import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
 import File.TransState
-import Util.JSON
-import Text.JSON.String
+
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (integration)
 
@@ -70,9 +69,11 @@ data IntegrationAPIContext = IntegrationAPIContext {ibody :: APIRequestBody , se
 type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
 
 instance APIContext IntegrationAPIContext where
+    body= ibody
+    newBody b ctx = ctx {ibody = b}
     apiContext  = do
         mservice <- integrationService
-        mbody <- runGetJSON readJSObject <$> getFieldWithDefault "" "body"
+        mbody <- apiBody
         case (mservice, mbody)  of
              (Just service, Right body2) -> do
                 Log.integration $ "API call from service:" ++ show (serviceid service)
@@ -81,9 +82,7 @@ instance APIContext IntegrationAPIContext where
              (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
              (_,Left s) -> return $ Left $ (API_ERROR_PARSING,"Parsing error: " ++ s)
 
-instance JSONContainer IntegrationAPIContext where
-    getJSON = ibody
-    setJSON j iapic = iapic {ibody = j}
+
 
 integrationService :: Kontrakcja m => m (Maybe Service)
 integrationService = do
@@ -115,7 +114,7 @@ integrationAPI = dir "integration" $ msum [
 documentFromParam:: Kontrakcja m => IntegrationAPIFunction m Document
 documentFromParam = do
     srvs <- service <$> ask
-    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ askJSONString "document_id"
+    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
@@ -126,13 +125,13 @@ embeddDocumentFrame = do
     let sid = serviceid srvs
     let slocation = fromMaybe (ctxhostpart ctx) $ (BS.toString . unServiceLocation) <$> (servicelocation $ servicesettings srvs)
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
-    location <- fold <$> askJSONString "location"
+    location <- fold <$> apiAskString "location"
     doc <- documentFromParam
-    mcompany <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid)) (fmap ExternalCompanyID <$> askJSONBS "company_id")
+    mcompany <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid)) (fmap ExternalCompanyID <$> apiAskBS "company_id")
     when (isNothing mcompany) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
     let company = fromJust mcompany
     when (not $ isAuthoredByCompany (companyid company) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
-    msiglink <- liftMM (return . getSigLinkFor doc) (askJSONBS "email")
+    msiglink <- liftMM (return . getSigLinkFor doc) (apiAskBS "email")
     case msiglink of
          Nothing -> do
              when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
@@ -155,23 +154,23 @@ embeddDocumentFrame = do
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
-   mcompany_id <- fmap ExternalCompanyID <$> askJSONBS "company_id"
+   mcompany_id <- fmap ExternalCompanyID <$> apiAskBS "company_id"
    when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
    company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
-   mtitle <- askJSONBS "title"
+   mtitle <- apiAskBS "title"
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
    files <- getFiles
-   mtype <- liftMM (return . toSafeEnum) (askJSONInteger "type")
+   mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
    -- Again, we don't check that the document is from the service
    -- -EN
-   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ askJSONString "template_id"
-   involved  <- fmap (fromMaybe []) $ askJSONLocal "involved" $ askJSONLocalMap $ getSignatoryTMP
-   tags <- fmap (fromMaybe []) $ askJSONLocal "tags" $ askJSONLocalMap $ do
-                    n <- askJSONBS "name"
-                    v <- askJSONBS "value"
+   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
+   involved  <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
+   tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
+                    n <- apiAskBS "name"
+                    v <- apiAskBS "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
    doc <- case mtemplate of
@@ -184,7 +183,7 @@ createDocument = do
 
 updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
-    mailfooter <- askJSONBS "mailfooter"
+    mailfooter <- apiAskBS "mailfooter"
     ndoc <- update $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
     return $ either (const doc) id ndoc
 
@@ -263,12 +262,12 @@ setCompanyInfoFromTMP uTMP company = do
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
     sid <- serviceid <$> service <$> ask
-    mcompany_id <- fmap ExternalCompanyID <$> askJSONBS "company_id"
+    mcompany_id <- fmap ExternalCompanyID <$> apiAskBS "company_id"
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
     company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
-    tags <- fmap (fromMaybe []) $ askJSONLocal "tags" $ askJSONLocalMap $ do
-                    n <- askJSONBS "name"
-                    v <- askJSONBS "value"
+    tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
+                    n <- apiAskBS "name"
+                    v <- apiAskBS "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     linkeddocuments <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
@@ -290,8 +289,8 @@ getDocument = do
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
     doc <- documentFromParam
-    mtag <- askJSONLocal "tag" $ do
-              liftM2 pairMaybe (askJSONBS "name") (askJSONBS "value")
+    mtag <- apiLocal "tag" $ do
+              liftM2 pairMaybe (apiAskBS "name") (apiAskBS "value")
     when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
     let tags = addTag (documenttags doc) (fromJust mtag)
     res <- update $ SetDocumentTags (documentid doc) tags
