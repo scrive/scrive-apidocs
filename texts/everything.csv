@@ -876,11 +876,11 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  med mottagarens e-post server eller mer troligt på att adressen
  $email$ inte existerar.       Processen har därmed avbrutits.
  Gör så här om du vill börja om:",,"We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been canceled. To restart it:"
-"_invitationMailUndeliveredContentInstruction","Kontrollera vilken som är mottagarens korrekta adress<br/>  
+"_invitationMailUndeliveredContentInstruction","1. Kontrollera vilken som är mottagarens korrekta adress<br/>  
      2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
- in rätt e-postadress och skicka igen",,"Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
+ in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
 "_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
     underkonto på $ourServiceName()$ genom vilket du kan skriva avtal 
