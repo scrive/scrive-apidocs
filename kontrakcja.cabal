@@ -302,6 +302,7 @@ Executable dbdump
 
   cpp-options: -DDBDumper=Main
   Main-is: DBDumper.hs
+
   Extensions: BangPatterns,
               DeriveDataTypeable,
               FlexibleContexts,

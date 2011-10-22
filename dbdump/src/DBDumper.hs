@@ -1,4 +1,5 @@
-module Main(main) where
+{-# LANGUAGE CPP #-}
+module DBDumper(main) where
 
 import KontrakcjaServer
 import AppConf
@@ -15,7 +16,8 @@ import MinutesTime
 
 data DBDump = DBDump {
                       pgdump :: BSL.ByteString,
-                      hsdump  ::BSL.ByteString
+                      -- Checkpoint file name , content , current content
+                      hsdump  :: ((String,BSL.ByteString),BSL.ByteString)
                      } 
                      
 instance Binary DBDump where
@@ -70,12 +72,18 @@ getDBDump = do
     putStrLn $ "Postgres:" ++ db   
     putStrLn "Postgres dumping successfull"    
     lastCheckpoint <- find ("checkpoint" `isPrefixOf`) <$> reverse <$> sort <$> getDirectoryContents happstackStoreDir
-    hsd <- case lastCheckpoint of
-                   Nothing -> do
+    lastCurrent <- find ("current" `isPrefixOf`) <$> reverse <$> sort <$> getDirectoryContents happstackStoreDir
+    hsd <- case (lastCheckpoint,lastCurrent) of
+                   (Nothing,_) -> do
                         error "No last checkpoint found"
-                   Just name -> do
-                        putStrLn $ "Checkpoint file selected: " ++ name                       
-                        BSL.readFile $ happstackStoreDir ++ "/" ++ name
+                   (_,Nothing) -> do
+                        error "No last current found"
+                   (Just chname,Just crname) -> do
+                        putStrLn $ "Checkpoint file selected: " ++ chname                       
+                        ch <- BSL.readFile $ happstackStoreDir ++ "/" ++ chname
+                        putStrLn $ "Current file selected: " ++ crname                       
+                        curr <- BSL.readFile $ happstackStoreDir ++ "/" ++ crname
+                        return ((chname,ch),curr)
     putStrLn "Happstack dumping successfull"    
     return $ DBDump {pgdump = pgd, hsdump =  hsd}
 
@@ -91,8 +99,10 @@ loadDBDump dump = do
     forM_ files $ \n -> when (not $ "." `isPrefixOf` n) $ do
         putStrLn $ "Droping old happstack state file : " ++ n
         removeFile $ happstackStoreDir ++ "/" ++n
-    BSL.writeFile  (happstackStoreDir ++ "/" ++  "checkpoint-0000000000") (hsdump dump)
+    BSL.writeFile  (happstackStoreDir ++ "/" ++  (fst $ fst $ hsdump dump)) (snd $ fst $ hsdump dump)
     putStrLn "Happstack state checkpoint recreated"
+    BSL.writeFile  (happstackStoreDir ++ "/" ++  "current-0000000000") (snd $ hsdump dump)
+    putStrLn "Happstack state current recreated"
     return ()
 
 question :: String -> IO Bool
