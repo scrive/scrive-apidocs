@@ -43,29 +43,29 @@ testBasicDiggers ::  Assertion
 testBasicDiggers= do
     let Right json = runGetJSON readJSObject "{\"a\":\"1\" , \"b\" : 1 , \"c\": [], \"d\": {} }"
     withJSON json $ do
-        a <- askJSONString "a"
-        assertBool "Test askJSONString" (a == Just "1")  
-        a' <- askJSONBS "a"
-        assertBool "Test askJSONBS" (a' == Just (BS.fromString "1"))  
-        b <-  askJSONInteger "b"
-        assertBool "Test askJSONInteger" (b == Just 1)  
-        c <-  askJSONList  "c" 
-        assertBool "Test askJSONList" (c == Just [])  
-        d <-  askJSONField "d"
-        assertBool "Test askJSONField" (d == (Just $ JSObject $ toJSObject []))  
+        a <- fromJSONField "a"
+        assertBool "Test fromJSONField String" (a == Just "1")  
+        a' <- fromJSONField "a"
+        assertBool "Test fromJSONField BS" (a' == Just (BS.fromString "1"))  
+        b <-  fromJSONField "b"
+        assertBool "Test fromJSONField Integer" (b == Just (1::Integer))  
+        c <-  fromJSONField  "c" 
+        assertBool "Test fromJSONField List" (c == Just ([]::[String]))  
+        d <-  fromJSONField "d"
+        assertBool "Test fromJSONField Object" (d == (Just $ JSObject $ toJSObject []))  
         
 testAdvancedDiggers ::  Assertion
 testAdvancedDiggers= do
     let Right json1 = runGetJSON readJSObject "{\"a\": {\"b\" : [{\"c\":1},{\"c\":2},{\"c\":3}] }}"
     withJSON json1 $ do
-        l <- askJSONLocal "a" $ do 
-                askJSONLocal "b" $
-                    askJSONLocalMap (askJSONInteger "c")
-        assertBool "Test positive digger" (l == Just [1,2,3])  
+        l <- fromJSONLocal "a" $ do 
+                fromJSONLocal "b" $ do
+                    fromJSONLocalMap (fromJSONField "c")
+        assertBool "Test positive digger" (l == Just ([1,2,3]::[Integer]))  
     let Right json2 = runGetJSON readJSArray "[{\"a\":1},{\"a\":2},{}]"
     withJSON json2 $ do
-        l <-  askJSONLocalMap (askJSONInteger "a")
-        assertBool "Test negative digger" (l == Nothing)  
+        l <-  fromJSONLocalMap (fromJSONField "a")
+        assertBool "Test negative digger" (l == (Nothing::Maybe [String]))  
         
         
                 

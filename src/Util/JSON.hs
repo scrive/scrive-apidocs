@@ -1,20 +1,18 @@
+{-# LANGUAGE OverlappingInstances, IncoherentInstances #-}
 module Util.JSON (
-    -- 
+    -- Stuff that was here before
       getJSONField
     , getJSONStringFieldSafe  
     , getJSONStringField
     -- | Class for structures that have JSON object inside
     ,  JSONContainer(..)
+    -- | Interface for structures that can bve read from JSON
+    ,  FromJSON(..) 
     -- | Diggers - Asking local envirement about JSON object
-    , askJSONBS 
-    , askJSONString       
-    , askJSONInteger 
-    , askJSONBase64
-    , askJSONList
-    , askJSONLocal
-    , askJSONLocalList
-    , askJSONLocalMap 
-    , askJSONField       
+    , fromJSONLocal
+    , fromJSONLocalMap 
+    , fromJSONField       
+    , fromJSONFieldBase64
     , askJSON 
     -- | Simple runner
     , withJSON
@@ -26,7 +24,8 @@ import Control.Monad.Reader
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as BASE64
 import Data.Ratio
-
+import Control.Monad.Identity
+import Data.Maybe
 
 getJSONField :: String -> JSObject JSValue -> Maybe JSValue
 getJSONField s = lookup s .fromJSObject
@@ -56,55 +55,66 @@ instance JSONContainer JSValue where
     getJSON = id
     setJSON = const
     
-instance (JSONContainer c) => JSONContainer (c,a) where
-    getJSON (c,_)  = getJSON c
-    setJSON j (c,a) = (setJSON j c,a)
+-- FromJSON - structures that can be parsed from JSON
+-- Instances must declare at least fromJSValue - simple parser
+-- or fromJSON - diggers based parser
+class FromJSON a where
+    fromJSValue :: JSValue -> Maybe a
+    fromJSValue j = runIdentity $ withJSON j $ liftM fromJSON askJSON
+    fromJSON :: (JSONContainer c , MonadReader c m) => m (Maybe a)
+    fromJSON = liftM fromJSValue askJSON
 
 
-askJSONBS ::(JSONContainer c , MonadReader c m) => String -> m (Maybe BS.ByteString)
-askJSONBS = liftM (liftM BS.fromString) . askJSONString
-
-askJSONString :: (JSONContainer c , MonadReader c m) =>String -> m (Maybe String)
-askJSONString s = askJSONLocal s (liftM fromString askJSON)
+fromJSONField ::  (JSONContainer c , MonadReader c m, FromJSON a) => String -> m (Maybe a)
+fromJSONField s = liftM fromObject askJSON
     where
-        fromString (JSString string) = Just $ fromJSString string
-        fromString _ = Nothing
-        
-askJSONInteger :: (JSONContainer c , MonadReader c m) =>String -> m  (Maybe Integer)
-askJSONInteger s = askJSONLocal s (liftM fromNumerator askJSON)
-    where
-        fromNumerator (JSRational _ r) = Just $ numerator r
-        fromNumerator _ = Nothing        
+      fromObject (JSObject object) = join (fmap fromJSValue (lookup s $ fromJSObject object))
+      fromObject _ = Nothing         
 
-askJSONBase64 ::(JSONContainer c , MonadReader c m) =>String -> m  (Maybe BS.ByteString)
-askJSONBase64 s =  do
-    coded <- liftM (liftM BASE64.decode) (askJSONBS s)
-    case coded of
-         Just (Right r) -> return $ Just r
-         _ -> return Nothing
+fromJSONFieldBase64 ::(JSONContainer c , MonadReader c m) =>String -> m  (Maybe BS.ByteString)
+fromJSONFieldBase64 s =  liftM dc (fromJSONField s)
+    where dc s' = case (fmap BASE64.decode s') of
+                            Just (Right r) -> Just r
+                            _ -> Nothing
+    
 
-askJSONList :: (JSONContainer c , MonadReader c m) => String -> m (Maybe [JSValue])
-askJSONList s = askJSONLocal s askJSONLocalList
+instance FromJSON JSValue where
+    fromJSValue = Just
 
-askJSONLocalList :: (JSONContainer c , MonadReader c m) => m (Maybe [JSValue])
-askJSONLocalList = liftM fromList askJSON
-    where
-        fromList (JSArray list) = Just list
-        fromList _ = Nothing
+instance FromJSON String where
+    fromJSValue (JSString string) = Just $ fromJSString string
+    fromJSValue _ = Nothing
 
+instance FromJSON BS.ByteString where
+    fromJSValue s = fmap BS.fromString (fromJSValue s)
+
+instance FromJSON Integer where
+    fromJSValue (JSRational _ r) = Just $ numerator r
+    fromJSValue _ = Nothing
+
+instance (FromJSON a) => FromJSON [a] where
+    fromJSValue (JSArray list) = let plist = map fromJSValue list 
+                                 in if (all isJust plist) 
+                                     then Just $ map fromJust plist
+                                     else Nothing
+    
+    fromJSValue _ = Nothing
+
+instance (FromJSON a) => FromJSON (Maybe a) where
+    fromJSValue = join . fromJSValue
 
 -- Locallized diggers. The diffrence is that they run themself in local context. Version for objects and lists
 
-askJSONLocal :: (JSONContainer c , MonadReader c m) =>  String -> m (Maybe a) -> m (Maybe a)
-askJSONLocal s digger = do
-    mobj <- askJSONField s
+fromJSONLocal :: (JSONContainer c , MonadReader c m) =>  String -> m (Maybe a) -> m (Maybe a)
+fromJSONLocal s digger = do
+    mobj <- fromJSONField s
     case mobj of
          Just obj -> local (setJSON obj) (digger)
          Nothing -> return Nothing
 
-askJSONLocalMap :: (JSONContainer c , MonadReader c m) => m (Maybe a) -> m (Maybe [a])
-askJSONLocalMap digger = do
-    mlist <- askJSONLocalList
+fromJSONLocalMap :: (JSONContainer c , MonadReader c m) => m (Maybe a) -> m (Maybe [a])
+fromJSONLocalMap digger = do
+    mlist <- fromJSON
     case mlist of 
          Nothing -> return Nothing
          Just list ->  runDiggers list
@@ -120,15 +130,7 @@ askJSONLocalMap digger = do
                  _ -> return Nothing
          runDiggers _ = return $ Just []
 
-
-
-
-askJSONField ::  (JSONContainer c , MonadReader c m) => String -> m (Maybe JSValue)
-askJSONField s = liftM fromObject askJSON
-    where
-      fromObject (JSObject object) = lookup s $ fromJSObject object
-      fromObject _ = Nothing         
-
+-- | Getting JSON part of envirement
 askJSON :: (JSONContainer c , MonadReader c m) => m JSValue
 askJSON = liftM getJSON ask
         

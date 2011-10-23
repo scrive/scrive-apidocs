@@ -172,9 +172,9 @@ handleMailCommand = do
         fail $ "User '" ++ username ++ "' hasn't enabled mail api"
     let Just mailapi = mmailapi
 
-    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (askJSONBS "title")
+    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (fromJSONField "title")
 
-    apikey <- fromMaybe extension <$> (askJSONString "apikey")
+    apikey <- fromMaybe extension <$> (fromJSONField "apikey")
 
     case apikey of
         "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
@@ -184,7 +184,7 @@ handleMailCommand = do
     
 
     let toStr = BS.toString to
-    mdoctype <- askJSONString "doctype"
+    mdoctype <- fromJSONField "doctype"
     doctype <- case mdoctype of
         Just "contract" -> return (Signable Contract)
         Just "offer" -> return (Signable Offer)
@@ -204,7 +204,7 @@ handleMailCommand = do
         umapiSentToday = umapiSentToday mailapi + 1
     }
     Log.debug "here"
-    (involvedTMP) <- fmap (fromMaybe []) $ (askJSONLocal "involved" $ askJSONLocalMap $ getSignatoryTMP)
+    (involvedTMP) <- fmap (fromMaybe []) $ (fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
     Log.debug $ show involved
