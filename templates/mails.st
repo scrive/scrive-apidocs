@@ -989,9 +989,9 @@ $if(cond)$
       <p style="font-style:italic;font-family:sans-serif;vertical-align:top;font-size:11px;">$text$</p>
           $elems: {elem |
               $if(elem.0)$
-                <p style="font-weight:bold;"> $elem.0$ $separator$ $elem.1$<br/></p>
+                <p style="font-weight:bold;"> $elem.0$ $separator$ $elem.1$</p>
               $else$
-                <p style="font-weight:bold;" $if(elemsclass)$class="$elemsclass$"$endif$> $elem$ <br/></p>
+                <p style="font-weight:bold;" $if(elemsclass)$class="$elemsclass$"$endif$> $elem$ </p>
               $endif$
           }$
 </td></tr>

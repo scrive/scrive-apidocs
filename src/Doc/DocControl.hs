@@ -301,8 +301,6 @@ sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
-      authorsiglink = fromJust $ getAuthorSigLink document
-      hasAuthorSigned = isJust $ maybesigninfo authorsiglink
   mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)        
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
