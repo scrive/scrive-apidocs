@@ -4,7 +4,7 @@
 ## mass sendout instead of Arkiv.
 ## I know it's ugly. Cut me a break. That's why we hired a designer.
 csvlandpage=
-<div id="tab-viewer">
+<div class="tab-viewer">
   <div id="signStepsContainer">
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">

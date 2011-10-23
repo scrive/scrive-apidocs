@@ -2,7 +2,7 @@
 pageTemplatesList=
 $loadingdialog()$
 <div> 
-    <div id="tab-viewer">
+    <div class="tab-viewer">
         <div class="tab-header">
         $docListRubbishBinLink()$
         </div>
@@ -91,7 +91,7 @@ var documentsTable = KontraList.init({
 
 
 jQuery(function(){
-    jQuery("#tab-viewer").append(documentsTable.view.el)
+    jQuery(".tab-viewer").append(documentsTable.view.el)
 });
 </script>
 ####

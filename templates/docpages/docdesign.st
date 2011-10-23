@@ -12,8 +12,8 @@ var docview = KontraDesignDocument.init({
 jQuery("#body-container").replaceWith(docview.view.el)
 })
 </script>
-
-
+###
+designoldtemplate=
 <!--
 <div style="display: none">
   <script type="text/javascript"> 

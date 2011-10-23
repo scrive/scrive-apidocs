@@ -14,14 +14,14 @@ viewFriends =
   });
     
   jQuery(function(){
-  jQuery("#tab-viewer").append(friendsTable.view.el);
+  jQuery(".tab-viewer").append(friendsTable.view.el);
   });
 </script>
 
 
 <div>
   <form method="post" action="$currentlink$" class="listForm">
-	<div id="tab-viewer">
+	<div class="tab-viewer">
 	  <div class="tab-header">
 	  </div>
 	  <ul class="tabs">

@@ -276,7 +276,7 @@ adminuser=
     <br/>
     <br/>
     <form action="" method="POST">
-      <div id="tab-viewer">
+      <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
@@ -369,7 +369,7 @@ admincompany=
     <br/>
     <br/>
     <form action="" method="POST">
-      <div id="tab-viewer">
+      <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
@@ -428,7 +428,7 @@ admincompanyusers=
 <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
 <br/>
 <br/>
-<div id="tab-viewer">
+<div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
@@ -501,7 +501,7 @@ userusagestats=
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
     <br/>
-    <div id="tab-viewer">
+    <div class="tab-viewer">
       <div class="tab-header">
       </div>
       <ul class="tabs">
@@ -537,7 +537,7 @@ companyusagestats=
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
     <br/>
-      <div id="tab-viewer">
+      <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">

@@ -358,7 +358,7 @@
 
 /* Tab Viewer */
 
-#tab-viewer {
+.tab-viewer {
 	width: 960px;
 }
 
@@ -386,7 +386,7 @@
 }
 
 
-#tab-viewer .tab-header {
+.tab-viewer .tab-header {
 	background: url(../img/bg-header.jpg);
 	border: solid #000;
 	border-width: 1px 1px 0 1px;
@@ -396,45 +396,45 @@
 	position: relative;
 }
 
-#tab-viewer .tab-header span {
+.tab-viewer .tab-header span {
 	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
 
-#tab-viewer .tab-header h3 {
+.tab-viewer .tab-header h3 {
 	display: inline;
 	font: 16px/24px "Lucida Grande";
 	text-transform: uppercase;
 }
 
-#tab-viewer .tab-header .doc-rename {
+.tab-viewer .tab-header .doc-rename {
 	color: #2e99d3;
 	font: 10px "Lucida Grande";
 	text-decoration: none;
 	text-transform: uppercase;
 }
 
-#tab-viewer .tab-header .next-step {
+.tab-viewer .tab-header .next-step {
 	right: 10px;
 	position: absolute;
 	top: 6px;
 }
 
-#tab-viewer .tabs {
+.tab-viewer .tabs {
 	background: #f4f4f4;
 	border: solid #808080;
 	border-width: 0 1px 1px 0px;
 	height: 24px;
 }
 
-#tab-viewer .tabs li:first-child {
+.tab-viewer .tabs li:first-child {
     border: solid #808080;
     border-width: 0 0px 0px 1px;
 }
-#tab-viewer .tabs li.active:first-child {
+.tab-viewer .tabs li.active:first-child {
     border-width: 0;
 }
-#tab-viewer .tabs li {
+.tab-viewer .tabs li {
 	color: #4b4b4b;
 	float: left;
 	font: 11px "Lucida Grande";
@@ -442,25 +442,25 @@
 	padding: 4px 30px;
 }
 
-#tab-viewer .tabs li a {
+.tab-viewer .tabs li a {
 	color: #000;
 	font: 11px "Helvetica Neue";
     display: inline-block;
     padding-top:2px;
 }
 
-#tab-viewer .tabs li.active a {
+.tab-viewer .tabs li.active a {
 	color: #fff;
     padding-top:0px;
     
 }
 
-#tab-viewer .tabs li.active {
+.tab-viewer .tabs li.active {
 	background: url(../img/bg-header.jpg);
 	color: #d9d9d9;
 }
 
-#tab-viewer .tab-container {
+.tab-viewer .tab-container {
 	background: #fff;
 	border: solid #808080;
 	border-width: 0 1px 1px 1px;
@@ -473,24 +473,24 @@
     cursor : pointer
 }
 
-#tab-viewer .tab-content {
+.tab-viewer .tab-content {
 
 }
 
-#tab-viewer .tab-content .col {
+.tab-viewer .tab-content .col {
 	margin: 0 20px;
 	padding: 15px 0;
     width: 300px;
 }
 
-#tab-viewer .tab-content .tab-box {
+.tab-viewer .tab-content .tab-box {
 	border: 1px solid #e6e7ef;
 	min-height: 90px;
 	padding: 10px;
 	width: 220px;
 }
 
-#tab-viewer .tab-content .tab-box a {
+.tab-viewer .tab-content .tab-box a {
 	color: #2e99d3;
 	text-decoration: none;
 }
@@ -517,14 +517,14 @@
 	-webkit-border-radius: 3px;
 }
 
-#tab-viewer .tab-dd {
+.tab-viewer .tab-dd {
     font: 12px/24px "Lucida Grande";
 	text-indent: 9px;
 	position: relative;
     margin-right: 15px;
 }
 
-#tab-viewer .tab-dd-button {
+.tab-viewer .tab-dd-button {
 	background: url(../img/dropdown.png) no-repeat;
 	height: 25px;
 	position: relative;
@@ -532,20 +532,20 @@
         z-index: 2;
 }
 
-#tab-viewer .tab-dd-exp {
+.tab-viewer .tab-dd-exp {
        height: 21px;
 }
 
-#tab-viewer .tab-dd-button > a {
+.tab-viewer .tab-dd-button > a {
 	color: #000;
 	text-decoration: none;
 }
 
-#tab-viewer .tab-dd {
+.tab-viewer .tab-dd {
     width: 110px !important;
 }
 
-#tab-viewer .tab-dd .tab-dd-opts {
+.tab-viewer .tab-dd .tab-dd-opts {
 	background: #e9e9e9;
 	display: none;
 	left: 0;
@@ -557,13 +557,13 @@
         padding-top: 5px;
 }
 
-#tab-viewer .tab-dd .tab-dd-opts a {
+.tab-viewer .tab-dd .tab-dd-opts a {
 	color: #999;
 	display: block;
 	text-decoration: none;
 }
 
-#tab-viewer .tab-dd .tab-dd-opts a:hover {
+.tab-viewer .tab-dd .tab-dd-opts a:hover {
 	color: #000;
 }
 
@@ -575,17 +575,17 @@
 	width: 1px;
 }
 
-#tab-viewer .account {
+.tab-viewer .account {
    padding: 40px 50px 20px;
 }
 
-#tab-viewer .account .col {
+.tab-viewer .account .col {
    float: left;
    margin: 0 0 0 40px;
    width: 380px;
 }
 
-#tab-viewer .account-header {
+.tab-viewer .account-header {
    background: url(../img/bg-body-dark.png);
    border-radius:  5px 5px 0px 0px;
        -moz-border-radius: 5px 5px 0px 0px;
@@ -595,19 +595,19 @@
    position: relative;
 }
 
-#tab-viewer .account-header h2 {
+.tab-viewer .account-header h2 {
    color: #fff;
    font: 14px/24px "Helvetica Neue";
 }
 
-#tab-viewer .account-header a {
+.tab-viewer .account-header a {
    color: #2777ca;
    font: 10px/24px "Lucida Grande";
    text-decoration: none;
    text-transform: uppercase;
 }
 
-#tab-viewer .account-header .image {
+.tab-viewer .account-header .image {
    background: #fff;
    border-radius: 3px;
        -moz-border-radius: 3px;
@@ -622,7 +622,7 @@
    z-index: 1;
 }
 
-#tab-viewer .account-header .image:before {
+.tab-viewer .account-header .image:before {
    bottom: 3px;
    box-shadow: inset 0 0 5px #000;
        -moz-box-shadow: inset 0 0 5px #000;
@@ -635,7 +635,7 @@
    z-index: -1;
 }
 
-#tab-viewer .account-body {
+.tab-viewer .account-body {
    background: #f7f7f7;
    border: 1px solid #dedede;
    border-radius: 0px 0px 5px 5px;
@@ -646,17 +646,17 @@
    min-height: 150px;
 }
 
-#tab-viewer .account-body h2 {
+.tab-viewer .account-body h2 {
    color: #000;
    font: 14px/24px "Helvetica Neue";
 }
 
-#tab-viewer .mailapi {
+.tab-viewer .mailapi {
    color: #666;
    font-size: 12px;
 }
 
-#tab-viewer .mailapi .mailapibox {
+.tab-viewer .mailapi .mailapibox {
     margin: 10px;
 }
 
@@ -668,30 +668,30 @@
     margin: 5px 0 0 5px;
 }
 
-#tab-viewer .mailapitable td:first-child {
+.tab-viewer .mailapitable td:first-child {
    width: 250px !important;
 }
 
-#tab-viewer .mailapitable input {
+.tab-viewer .mailapitable input {
     width: 70px !important;
 }
 
-#tab-viewer .account-body table {
+.tab-viewer .account-body table {
    color: #666;
    margin-top: 10px;
    margin-bottom: 10px;
    text-transform: uppercase;
 }
 
-#tab-viewer .account-body table td {
+.tab-viewer .account-body table td {
    padding: 4px;
 }
 
-#tab-viewer .account-body table td:first-child {
+.tab-viewer .account-body table td:first-child {
    width: 120px;
 }
 
-#tab-viewer .account-body table input {
+.tab-viewer .account-body table input {
    border: 1px solid #6f89aa;
    /* color: #666; */
    font: 12px "Lucida Grande";
@@ -700,17 +700,17 @@
    width: 200px;
 }
 
-#tab-viewer .account-footer {
+.tab-viewer .account-footer {
     float:right;
     margin-right:20px;
     margin-top:10px;
 }
 
-#tab-viewer .col .account-footer {
+.tab-viewer .col .account-footer {
     margin-right: 5px;
 }
 
-#tab-viewer .account-footer a {
+.tab-viewer .account-footer a {
    display: inline-block;
    margin: 0 auto;
 }

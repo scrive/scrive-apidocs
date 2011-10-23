@@ -33,7 +33,7 @@ viewCompanyAccounts =
 
 <div>
   <form method="post" action="$currentlink$" class="listForm">
-    <div id="tab-viewer">
+    <div class="tab-viewer">
 	  <div class="tab-header"></div>
 	  <ul class="tabs">
 	    <li><a href="/account">$_HeadUserInfo()$</a></li>

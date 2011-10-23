@@ -1,7 +1,7 @@
 ####
 showUser =
 <form action="$linkaccount$" method="post">
-<div id="tab-viewer">
+<div class="tab-viewer">
    <div class="tab-header">
    </div>
    <ul class="tabs">

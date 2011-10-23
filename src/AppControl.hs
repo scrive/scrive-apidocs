@@ -188,6 +188,9 @@ handleRoutes locale = msum $
      , dir "d" $ param "archive"   $ hPost0 $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost0 $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost1 $ toK1 $ DocControl.handleIssueShowPost
+     
+     -- Returning JSON functions - new aproach
+     , dir "save"                  $ hPost1 $ toK1 $ DocControl.handleSaveDraft 
      , dir "docs"                  $ hGet0  $ toK0 $ DocControl.jsonDocumentsList
      , dir "doc"                   $ hGet1  $ toK1 $ DocControl.jsonDocument
      , dir "mailpreview"           $ hGet2  $ toK2 $ DocControl.prepareEmailPreview 

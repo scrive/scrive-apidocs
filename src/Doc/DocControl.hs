@@ -63,7 +63,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-
+import Text.JSON.Fields
 import ForkAction
 
 {-
@@ -2083,4 +2083,33 @@ handleCSVLandpage :: Kontrakcja m => Int -> m String
 handleCSVLandpage c = do
   text <- csvLandPage c
   return text
+
+
+
+-- Function for saving document while still working in design view
+handleSaveDraft:: Kontrakcja m => DocumentID -> m JSValue
+handleSaveDraft docid = withUserPost $ do
+    
+    document <- guardRightM $ getDocByDocID docid
+    
+    liftIO $ json $ return ()
+    
+   
+data DraftData = DraftData {
+      title :: String
+    , functionality :: DocumentFunctionality
+    }
+    
+    
+    
+instance JSField DraftData where
+    field s draft = field s $ do
+        field "title" (title draft)
+        field "functionality" $ "basic" <| isBasic (functionality draft) |> "advanced"
+        
+        
+
+       
+       
+
 

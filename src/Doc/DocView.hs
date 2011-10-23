@@ -96,6 +96,8 @@ import Data.List (intercalate)
 --import Happstack.State (query)
 import File.TransState
 import DB.Classes
+import Text.JSON.Fields as JSON (json)
+import qualified Text.JSON.Fields as JSON (field)
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -291,7 +293,8 @@ documentJSON msl _crttime doc = do
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
        ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
-       ("template", return $ JSBool $ isTemplate doc)
+       ("template", return $ JSBool $ isTemplate doc),
+       ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced")
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -314,10 +317,10 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
       , ("seendate", return $ jsonDate $ signtime <$> maybeseeninfo siglink)
       , ("readdate", return $ jsonDate $ maybereadinvite siglink)
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
-      , ("fields", return $ signatoryFieldsJSON doc siglink)
+      , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map signatoryAttachmentJSON $ 
-                        filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
+      , ("attachments", liftIO $ JSArray <$> mapM signatoryAttachmentJSON 
+                        (filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc)))
    ]
     where
     datamismatch = case documentcancelationreason doc of
@@ -329,16 +332,15 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
                     _                             -> Nothing
 
 
-signatoryAttachmentJSON :: SignatoryAttachment -> JSValue
-signatoryAttachmentJSON sa = JSObject $ toJSObject $
-    [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
-      , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
-      -- , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
-    ]
+signatoryAttachmentJSON :: SignatoryAttachment -> IO JSValue
+signatoryAttachmentJSON sa = json $ do
+    JSON.field "name" $ BS.toString $ signatoryattachmentname sa
+    JSON.field "description" $ BS.toString $ signatoryattachmentdescription sa
 
-signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = JSArray $
-  for signatoryfields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
+
+signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
+signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = fmap JSArray $
+  forM signatoryfields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
       FirstNameFT -> fieldJSON doc "fstname" sfValue True sfPlacements
       LastNameFT -> fieldJSON doc "sndname" sfValue True sfPlacements
@@ -350,13 +352,12 @@ signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signat
   where
     closedF sf = (not $ BS.null $ sfValue sf) || (null $ sfPlacements sf)
 
-fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON  doc name value closed placements = JSObject $ toJSObject $
-    [   ("name", JSString $ toJSString name)
-      , ("value", jsStringFromBS value)
-      , ("closed", JSBool closed)
-      , ("placements", JSArray $ map (placementJSON doc) placements)
-    ]
+fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> IO JSValue
+fieldJSON  doc name value closed placements = json $ do
+    JSON.field "name" name
+    JSON.field "value" $ BS.toString value
+    JSON.field "closed" closed
+    JSON.field "placements"  $ map (placementJSON doc) placements
 
 placementJSON :: Document -> FieldPlacement -> JSValue
 placementJSON doc placement = JSObject $ toJSObject $

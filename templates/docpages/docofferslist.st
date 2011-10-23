@@ -2,7 +2,7 @@
 pageOffersList=
 $loadingdialog()$
 <div>
-  <div id="tab-viewer">
+  <div class="tab-viewer">
 	<div class="tab-header">
       $docListRubbishBinLink()$
 	</div>
@@ -126,7 +126,7 @@ $loadingdialog()$
 
 
 jQuery(function(){
-    jQuery("#tab-viewer").append(documentsTable.view.el)
+    jQuery(".tab-viewer").append(documentsTable.view.el)
 });
 </script>
 

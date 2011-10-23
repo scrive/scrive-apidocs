@@ -39,7 +39,6 @@ window.Document = Backbone.Model.extend({
         infotext: "",
         authorization: "email",
         template : false
-        
     },
     initialize: function (args) {
         this.url = "/doc/" + args.id;
@@ -130,11 +129,10 @@ window.Document = Backbone.Model.extend({
               method: "POST"
           });
     },
-    switchToAdvanced : function() {
-          return this.save.add("changefunctionality","true").add("toadvanced","true");
-    },
-    switchToBasic : function() {
-          return this.save.add("changefunctionality","true").add("tobasic","true");
+    switchFunctionality : function() {
+          var newfunctionality = this.isBasic() ? "advanced" : "basic";
+          this.set({functionality: newfunctionality});
+          return this.save()
     },
     saveAsTemplate : function() {
           return this.save().add("template", "YES");
@@ -210,8 +208,11 @@ window.Document = Backbone.Model.extend({
         });
     },
     isTemplate: function() {
-      return this.get("template") == true
+       return this.get("template") == true
     },  
+    isBasic: function() {
+       return this.get("functionality") == "basic";
+    },    
     recall : function() {
        this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});  
     },
@@ -254,6 +255,7 @@ window.Document = Backbone.Model.extend({
       signorder : args.signorder,
       authorization : args.authorization,
       template : args.template,
+      functionality : args.functionality,
       ready: true
       };
     }
