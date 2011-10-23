@@ -202,6 +202,7 @@ mkContext templates = liftIO $ do
         , ctxipnumber = 0
         , ctxdbconn = error "dbconn is not defined"
         , ctxdbconnclose = False
+        , ctxdbconnstring = error "dbconnstring is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""

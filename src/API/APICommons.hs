@@ -55,6 +55,7 @@ import DB.Classes
 import qualified AppLogger as Log
 import Util.JSON
 
+
 {- -}
 
 data DOCUMENT_AUTHORISATION =

@@ -79,9 +79,9 @@ renderTemplateMain ts name params f = do
     case mt of
         Just t -> do
                 let t'= f (setManyAttrib params  t)
-                let (e,p,st) = checkTemplateDeep t'
-                when (not (null e) || not (null p) || not (null st)) $
-                     Log.error $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st))
+                -- let (e,p,st) = checkTemplateDeep t'
+                -- when (not (null e) || not (null p) || not (null st)) $
+                --     Log.error $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st))
                 return $ render t'
         Nothing -> do
                 Log.error $ "No template named " ++ name
