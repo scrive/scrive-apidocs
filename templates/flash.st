@@ -8,7 +8,7 @@ flashDocumentTemplateSaved=
 
 ######
 flashRemindMailSentNotSigned=
-	$_flashRemindMailSentNotSigned()$ $personname$ 
+	$_flashRemindMailSentNotSigned()$ $personname$
 
 ######
 flashRemindMailSentSigned=
@@ -40,8 +40,10 @@ flashMessageMustAcceptTOS=
 ####
 flashMessageUserDetailsSaved=
 	<div>$_flashMessageUserDetailsSaved()$</div>
-
-####        
+####
+flashMessageCompanyCreated=
+        <div>$_flashMessageCompanyCreated()$</div>
+####
 flashMessageBadOldPassword=
 	$_flashMessageBadOldPassword()$
 

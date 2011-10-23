@@ -13,7 +13,9 @@ import Test.HUnit (Assertion)
 import Text.JSON.Generic
 import Text.Regex.TDFA ((=~))
 import System.IO.Temp
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.UTF8 as BS
+import qualified Codec.MIME.Type as MIME
 
 import API.MailAPI
 import DB.Classes
@@ -28,13 +30,31 @@ import TestKontra as T
 
 mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
-      testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_ok.eml"
+      testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_ok.eml" 2
     , testCase "fail if user doesn't exist" $ testFailureNoSuchUser conn
-    , testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_simple_onesig.eml"
+    , testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_simple_onesig.eml" 2
+    , testCase "Parse mime document email_onesig_ok.eml" $ testParseMimes "test/mailapi/email_onesig_ok.eml"
+    , testCase "Parse mime document email_simple_onesig.eml" $ testParseMimes "test/mailapi/email_simple_onesig.eml"
+    , testCase "Parse mime document email_outlook_three.eml" $ testParseMimes "test/mailapi/email_outlook_three.eml"
+    , testCase "Parse mime document email_outlook_viktor.eml" $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
+    , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"      
+    , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_three.eml" 4
     ]
+                    
+testParseMimes :: String -> Assertion
+testParseMimes mimepath = do
+  cont <- readFile mimepath
+  let (_mime, allParts) = parseEmailMessageToParts $ BS.fromString cont
+      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
+      isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
+      --typesOfParts = map fst allParts
+      pdfs = filter isPDF allParts
+      plains = filter isPlain allParts
+  assertBool ("SHould be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
+  assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
-testSuccessfulDocCreation :: Connection -> String -> Assertion
-testSuccessfulDocCreation conn emlfile = withMyTestEnvironment conn $ \tmpdir -> do
+testSuccessfulDocCreation :: Connection -> String -> Int -> Assertion
+testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
@@ -47,7 +67,7 @@ testSuccessfulDocCreation conn emlfile = withMyTestEnvironment conn $ \tmpdir ->
     }
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
     wrapDB rollback
-    successChecks $ jsonToStringList res
+    successChecks sigs $ jsonToStringList res
 
 testFailureNoSuchUser :: Connection -> Assertion
 testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
@@ -59,9 +79,9 @@ testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
     assertBool "message matches regex 'User .* not found'" $
         equalsKey (=~ "^User '.*' not found$") "error_message" res
 
-successChecks :: [(String, String)] -> DB ()
-successChecks res = do
-    assertBool "status is success" $ equalsKey (== "success") "status" res
+successChecks :: Int -> [(String, String)] -> DB ()
+successChecks sigs res = do
+    assertBool ("status is not success " ++ show res) $ equalsKey (== "success") "status" res
     assertBool "message matches 'Document #* created'" $
         equalsKey (=~ "^Document #[0-9]+ created$") "message" res
     let mdocid = lookup "documentid" res
@@ -69,8 +89,8 @@ successChecks res = do
     mdoc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
-    assertBool "document has two signatories" $ length (documentsignatorylinks doc) == 2
-    assertBool "document status is pending" $ documentstatus doc == Pending
+    assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs
+    assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file attached" $ (length $ documentfiles doc) == 1
 
 equalsKey :: (a -> Bool) -> String -> [(String, a)] -> Bool
@@ -88,5 +108,5 @@ withMyTestEnvironment conn f =
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
     return userid

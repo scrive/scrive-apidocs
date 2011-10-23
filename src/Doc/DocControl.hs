@@ -32,7 +32,6 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 import Util.StringUtil
-import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
 import Templates.LocalTemplates
@@ -65,7 +64,7 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import Text.JSON.Fields
 import ForkAction
-
+import Doc.DocDraft as Draft
 {-
   Document state transitions are described in DocState.
 
@@ -126,6 +125,7 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxtemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+          threadDelay 5000
           enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates ctxtemplates $ sendClosedEmails ctx newdoc
@@ -314,12 +314,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
-      authorsiglink = fromJust $ getAuthorSigLink document
-      hasAuthorSigned = isJust $ maybesigninfo authorsiglink
-  mail <- case (isSignatory signatorylink, hasAuthorSigned) of
-          (True, True)  -> mailInvitation True ctx Sign document (Just signatorylink)
-          (True, False) -> mailInvitation True ctx Send document (Just signatorylink)
-          (False, _)    -> mailInvitation True ctx View document (Just signatorylink)
+  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)        
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
@@ -1291,23 +1286,30 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
                         signatoriescompanynumbers
                         signatoriesfstnames
                         signatoriessndnames
-
+  Log.debug $ "signatories " ++ show signatories
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
-      Just authorid = maybesignatory authorsiglink
-      authorcompany = maybecompany authorsiglink
-  let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
+      authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
   Log.debug $ "set author sign order to " ++ (show authorsignorder)
 
   let isauthorsig = authorrole == "signatory"
       signatories2 = zip signatories roles2
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
-                                       else [SignatoryAuthor],
-                                       authorid, authorcompany)
+                                       else [SignatoryAuthor])
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
+  --if they are switching to basic we want to lose information
+  let basicauthorroles =
+        if getValueForProcess document processauthorsend == Just True
+        then [SignatoryAuthor]
+        else [SignatoryPartner, SignatoryAuthor]
+      basicauthordetails = (removeFieldsAndPlacements authordetails, basicauthorroles)
+      basicsignatories = zip (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)
+                         [[SignatoryPartner]]
+  
+  
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
@@ -1316,24 +1318,24 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
 
   -- author is gotten above, no?
   -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor documentis
-
+  _ <- update $ SetDocumentFunctionality documentid docfunctionality ctxtime
+  _ <- update $ SetDocumentTitle documentid docname ctxtime
+  _ <- update $ SetInviteText documentid invitetext ctxtime
   if docfunctionality == BasicFunctionality
     then do
-     --if they are switching to basic we want to lose information
-     let basicauthorroles =
-           if getValueForProcess document processauthorsend == Just True
-             then [SignatoryAuthor]
-             else [SignatoryPartner, SignatoryAuthor]
-         --basicauthordetails = ((removeFieldsAndPlacements authordetails), basicauthorroles, authoraccount)
-         basicauthordetails = ((removeFieldsAndPlacements authordetails), basicauthorroles, authorid, authorcompany)
-         basicsignatories = zip
-                             (take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
      Log.debug $ "basic functionality so author roles are " ++ (show basicauthorroles)
-     update $ UpdateDocument ctxtime documentid docname
-                basicsignatories Nothing invitetext basicauthordetails docallowedidtypes Nothing docfunctionality
+     _ <- update $ SetEmailIdentification documentid ctxtime
+     update $ ResetSignatoryDetails documentid (basicauthordetails : basicsignatories) ctxtime
     else do
-     update $ UpdateDocument ctxtime documentid docname
-           signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
+     when (isJust mcsvsigindex) $ ignore $ update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
+     case docallowedidtypes of
+       [ELegitimationIdentification] -> ignore $ update $ SetElegitimationIdentification documentid ctxtime
+       [EmailIdentification] -> ignore $ update $ SetEmailIdentification documentid ctxtime
+       i -> Log.debug $ "I don't know how to set this kind of identificaiton: " ++ show i
+     when (isJust daystosign) $ ignore $ update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
+     aa <- update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
+     Log.debug $ "final document returned " ++ show aa
+     return aa
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
@@ -1449,37 +1451,27 @@ handlePageOfDocument' documentid mtokens = do
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug $ "Uploading file for doc #" ++ show docid
-  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
-    Right document -> do
-        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
-        Log.debug $ title
-        files <- documentfilesM document
-        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
+    Right _document ->
         return ()
   return ()
 
 handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
-  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content1 docid
   file <- runDB $ dbUpdate $ NewFile filename content14
-  fileresult <- update (AttachFile docid (fileid file))
+  fileresult <- update (AttachFile docid (fileid file) (ctxtime ctx))
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
-    Right document -> do
-        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
-        Log.debug $ title
-        files <- documentfilesM document
-        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
+    Right _document -> do
         return ()
   return ()
 
@@ -1582,8 +1574,9 @@ handleIssueShare = do
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
+  Context {ctxtime} <- getContext
   newname <- getCriticalField (return . BS.fromString) "docname"
-  doc <- guardRightM $ update $ SetDocumentTitle docid newname
+  doc <- guardRightM $ update $ SetDocumentTitle docid newname ctxtime
   return $ LinkIssueDoc $ documentid doc
 
 handleBulkContractRemind :: Kontrakcja m => m KontraLink
@@ -2089,26 +2082,11 @@ handleCSVLandpage c = do
 -- Function for saving document while still working in design view
 handleSaveDraft:: Kontrakcja m => DocumentID -> m JSValue
 handleSaveDraft docid = withUserPost $ do
-    
-    document <- guardRightM $ getDocByDocID docid
-    
+    _document <- guardRightM $ getDocByDocID docid
     liftIO $ json $ return ()
     
    
-data DraftData = DraftData {
-      title :: String
-    , functionality :: DocumentFunctionality
-    }
-    
-    
-    
-instance JSField DraftData where
-    field s draft = field s $ do
-        field "title" (title draft)
-        field "functionality" $ "basic" <| isBasic (functionality draft) |> "advanced"
-        
-        
-
+   
        
        
 

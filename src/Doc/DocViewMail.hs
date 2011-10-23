@@ -197,12 +197,11 @@ mailDocumentError ctx document = do
 
 
 
-data InvitationTo = Sign | Send | View deriving (Eq,Show)
+data InvitationTo = Sign | View deriving (Eq,Show)
 
 fieldsInvitationTo :: (TemplatesMonad m) => InvitationTo -> Fields m
 fieldsInvitationTo a = do
     field "sign" (a == Sign)
-    field "send" (a == Send)
     field "view" (a == View)
     
 mailInvitation :: TemplatesMonad m

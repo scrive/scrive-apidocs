@@ -32,6 +32,7 @@ module User.UserView (
     -- flash messages
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
+    flashMessageCompanyCreated,
     flashMessageNoAccountType,
     flashMessageInvalidAccountType,
     flashMessageMustAcceptTOS,
@@ -62,7 +63,7 @@ module User.UserView (
 
     --utils
     userBasicFields,
-    
+
     -- friends list
     friendSortSearchPage
     ) where
@@ -88,11 +89,12 @@ import Util.HasSomeUserInfo
 import User.Model
 import Data.List
 
-showUser :: TemplatesMonad m => User -> Maybe Company -> m String
-showUser user mcompany = renderTemplateFM "showUser" $ do
+showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
+showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
     userFields user
     companyFields mcompany
-    field "linkaccount" $ show LinkAccount
+    field "createcompany" $ createcompany
+    field "linkaccount" $ show (LinkAccount False)
 
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mcompany = do
@@ -186,7 +188,7 @@ resetPasswordMail hostname user setpasslink = do
     field "personname"   $ getFullName user
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
- 
+
 newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> m Mail
 newUserMail hostpart emailaddress personname activatelink vip = do
   kontramail "newUserMail" $ do
@@ -195,7 +197,7 @@ newUserMail hostpart emailaddress personname activatelink vip = do
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
     field "vip"            vip
-  
+
 
 
 inviteCompanyAccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
@@ -207,7 +209,7 @@ inviteCompanyAccountMail hostpart supervisorname companyname emailaddress person
     field "supervisorname" $ BS.toString supervisorname
     field "companyname"    $ BS.toString companyname
     field "ctxhostpart"    $ hostpart
-  
+
 viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do
   let invitername = BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
@@ -227,7 +229,7 @@ mailNewAccountCreatedByAdmin ctx personname email setpasslink custommessage = do
     field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
-    
+
 mailAccountCreatedBySigningContractReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningContractReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningContractReminder"
@@ -235,7 +237,7 @@ mailAccountCreatedBySigningContractReminder =
 mailAccountCreatedBySigningOfferReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningOfferReminder =
     mailAccountCreatedBySigning' "mailAccountBySigningOfferReminder"
-                                 
+
 
 mailAccountCreatedBySigningOrderReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
 mailAccountCreatedBySigningOrderReminder =
@@ -255,14 +257,14 @@ mailInviteUserAsCompanyAccount ctx invited supervisor = do
                    field "hostpart" (ctxhostpart ctx)
                    fieldF "supervisor" $ userFields supervisor
                    fieldF "invited" $ userFields invited
-  
+
 mailCompanyAccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
 mailCompanyAccountAccepted ctx invited supervisor = do
   kontramail "mailCompanyAccountAccepted" $ do
                    field "hostpart" $ ctxhostpart ctx
                    fieldF "user" $ userFields supervisor
                    fieldF "invited" $ userFields invited
-    
+
 -------------------------------------------------------------------------------
 
 modalInviteUserAsCompanyAccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage
@@ -276,22 +278,10 @@ modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => Maybe User -> Maybe Company -> KontraLink -> m FlashMessage
-modalAccountSetup muser mcompany signuplink = do
+modalAccountSetup :: MonadIO m => KontraLink -> m FlashMessage
+modalAccountSetup signuplink = do
   return $ toFlashTemplate Modal "modalAccountSetup" $
-    [ ("fstname", showUserField userfstname)
-    , ("sndname", showUserField usersndname)
-    , ("companyposition", showUserField usercompanyposition)
-    , ("phone", showUserField userphone)
-    , ("companyname", showCompanyField companyname)
-    , ("signuplink", show signuplink)
-    ] ++ boolFieldList "iscompanyadmin" (maybe False useriscompanyadmin muser)
-      ++ boolFieldList "iscompanyaccount" (maybe False (isJust . usercompany) muser)
-  where
-    showUserField f = maybe "" (BS.toString . f . userinfo) muser
-    showCompanyField f = maybe "" (BS.toString . f . companyinfo) mcompany
-    boolFieldList _ False = []
-    boolFieldList name True = [(name, "true")]
+    [("signuplink", show signuplink)]
 
 modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
 modalAccountRemoval doctitle activationlink removallink = do
@@ -323,6 +313,10 @@ flashMessageLoginRedirectReason reason =
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserDetailsSaved" ()
+
+flashMessageCompanyCreated :: TemplatesMonad m => m FlashMessage
+flashMessageCompanyCreated =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageCompanyCreated" ()
 
 
 flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
@@ -463,5 +457,5 @@ friendSortFunc _ u1 u2 = compare (getEmail u1) (getEmail u2)
 
 friendSearchFunc :: SearchingFunction User
 friendSearchFunc s u = s `isInfixOf` (BS.toString $ getEmail u)
-  
-  
+
+

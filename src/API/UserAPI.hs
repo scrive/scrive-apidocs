@@ -36,20 +36,23 @@ import qualified Data.ByteString as BS
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
-
+import Util.JSON
+import Text.JSON.String
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a
 
 instance APIContext UserAPIContext where
-    body= wsbody
-    newBody b ctx = ctx {wsbody = b}
     apiContext  = do
         muser <- apiUser
-        mbody <- apiBody
+        mbody <- runGetJSON readJSObject <$> getFieldWithDefault "" "body"
         case (muser, mbody)  of
              (Just u, Right b) -> return $ Right $ UserAPIContext { wsbody = b, user = u}
              (Nothing, _)            -> return $ Left $ (API_ERROR_LOGIN, "Not logged in")
              (_, Left s)             -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
+
+instance JSONContainer UserAPIContext where
+    getJSON = wsbody
+    setJSON j uapictx = uapictx {wsbody = j}
 
 apiUser :: Kontrakcja m => m (Maybe User)
 apiUser = do
@@ -98,7 +101,7 @@ getDocument = do
 getUserDoc :: Kontrakcja m => UserAPIFunction m Document
 getUserDoc = do
   author <- user <$> ask
-  mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+  mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ askJSONString "document_id"
   when (isNothing mdocument || (not $ isAuthor ((fromJust mdocument), author))) $
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
@@ -106,42 +109,34 @@ getUserDoc = do
 sendFromTemplate :: Kontrakcja m => UserAPIFunction m APIResponse
 sendFromTemplate = do
   author <- user <$> ask
+  mcompany <- case usercompany author of
+                Just companyid -> runDBQuery $ GetCompany companyid
+                Nothing -> return Nothing
   ctx <- getContext
   temp <- getTemplate
   signatories <- getSignatories
   doc <- update $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-  let Just authorsiglink = mauthorsiglink
-  medoc <- update $
-          UpdateDocument --really? This is ridiculous! Too many params
-          (ctxtime ctx)
-          (documentid doc)
-          (documenttitle doc)
-          (zip signatories (repeat [SignatoryPartner]))
-          Nothing
-          (documentinvitetext doc)
-          ((signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 }, signatoryroles authorsiglink, userid author, usercompany author)
-          [EmailIdentification]
-          Nothing
-          AdvancedFunctionality
+  _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetEmailIdentification (documentid doc) (ctxtime ctx)
+  medoc <- update $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
+                                                             [SignatoryPartner, SignatoryAuthor]): 
+                                                            (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case medoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
-      liftIO $ print edoc
       esdoc <- update $ PreparationToPending (documentid edoc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
-          liftIO $ print sdoc
-
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
 getTemplate :: Kontrakcja m => UserAPIFunction m Document
 getTemplate = do
   author <- user <$> ask
-  mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
+  mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ askJSONString "template_id"
   when (isNothing mtemplate) $ throwApiError API_ERROR_NO_DOCUMENT "No template exists with this ID"
   let Just temp = mtemplate
   when (not $ isAuthor (temp, author)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
@@ -154,7 +149,7 @@ sendNewDocument = do
   mcompany <- case usercompany author of
                 Just companyid -> runDBQuery $ GetCompany companyid
                 Nothing -> return Nothing
-  mtitle <- apiAskBS "title"
+  mtitle <- askJSONBS "title"
   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "There was no document title. Please add the title attribute (ex: title: \"mycontract\""
   let title = fromJust mtitle
   files <- getFiles
@@ -162,45 +157,34 @@ sendNewDocument = do
   let (filename, content) = head files
   signatories <- getSignatories
   when (Data.List.null signatories) $ throwApiError API_ERROR_MISSING_VALUE "There were no involved parties. At least one is needed."
-  mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
+  mtype <- liftMM (return . toSafeEnum) (askJSONInteger "type")
   when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
   let doctype = toDocumentType $ fromJust mtype
-  _msignedcallback <- apiAskBS "signed_callback"
-  _mnotsignedcallback <- apiAskBS "notsigned_callback"
+  _msignedcallback <- askJSONBS "signed_callback"
+  _mnotsignedcallback <- askJSONBS "notsigned_callback"
   ctx <- getContext
   mnewdoc <- update $ NewDocument author mcompany title doctype (ctxtime ctx)
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
-  liftIO $ print newdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  edoc <- update $
-          UpdateDocument --really? This is ridiculous! Too many params
-          (ctxtime ctx)
-          (documentid newdoc)
-          title
-          (zip signatories (repeat [SignatoryPartner]))
-          Nothing
-          (documentinvitetext newdoc)
-          ((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, [SignatoryAuthor], userid author, usercompany author)
-          [EmailIdentification]
-          Nothing
-          AdvancedFunctionality
+  _ <- update $ SetDocumentFunctionality (documentid newdoc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
+  edoc <- update $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
+                                                             [SignatoryPartner, SignatoryAuthor]): 
+                                                            (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case edoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
-      liftIO $ print doc
       esdoc <- update $ PreparationToPending (documentid doc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
-          liftIO $ print sdoc
-
           liftKontra $ postDocumentChangeAction sdoc doc Nothing
           return $ toJSObject [("document_id", JSString $ toJSString $ show (documentid sdoc))]
 
 getSignatories :: Kontrakcja m => UserAPIFunction m [SignatoryDetails]
 getSignatories = do
-    minvolved  <- apiLocal "involved" $ apiMapLocal $ fmap toSignatoryDetails <$> getSignatoryTMP
+    minvolved  <- askJSONLocal "involved" $ askJSONLocalMap $ fmap toSignatoryDetails <$> getSignatoryTMP
     case minvolved of
         Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
         Just involved -> return involved

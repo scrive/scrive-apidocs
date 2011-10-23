@@ -50,7 +50,7 @@ modalOfferCreated=
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>$_modalOfferCreatedBody()$ 
+      <p>$_modalOfferCreatedBody()$
       </p>
     </div>
   </div>
@@ -158,50 +158,11 @@ modalAccountSetup=
       <div style="max-height: 300px; overflow: auto">
         $termsPageContents()$
       </div>
-      <div style="padding: 0 19px">
-        <input type="checkbox" id="tosCBox" name="tos" />
-        <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
-        <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
-            <td><input id="accountTypePrivate" 
-                       type="radio" 
-                       value="PrivateAccount" 
-                       name="accounttype" 
-                       $if(iscompanyaccount)$disabled="true"$endif$
-                       $if(!iscompanyaccount)$checked="true"$endif$ /> 
-                <label for="accountTypePrivate">$_modalAccountSetupIfPrivateAccount()$</label></td>
-            <td><input id="accountTypeCompany" 
-                       type="radio"
-                       value="CompanyAccount"
-                       name="accounttype"
-                       $if(iscompanyaccount)$checked="true"$endif$ />
-                <label for="accountTypeCompany">$_company()$:</label></td>
-        </tr></tbody></table>
-        <table id="companyInfo"><tbody>
-            <tr>
-                <td style="width: 120px">$_firstname()$:</td>
-                <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"/></td>
-            </tr>
-            <tr>
-                <td>$_lastname()$:</td>
-                <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"/></td>
-            </tr>
-            <tr>
-                <td>$_company()$:</td>
-                <td><input type="text" 
-                           name="companyname" 
-                           autocomplete="off"
-                           $if(iscompanyaccount)$$if(!iscompanyadmin)$disabled="true"$endif$$endif$
-                           value="$companyname$"/></td>
-            </tr>
-            <tr>
-                <td>$_modalAccountSetupPosition()$</td>
-                <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"/></td>
-            </tr>
-            <tr>
-                <td>$_phone()$:</td>
-                <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"/></td>
-            </tr>
-        </tbody></table>
+      <div style="padding: 0 19px;">
+        <div style="padding-bottom:10px;">
+          <input type="checkbox" id="tosCBox" name="tos" />
+          <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
+        </div>
         <table id="passwordInfo"><tbody>
             <tr>
                 <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
@@ -773,13 +734,9 @@ accountFromSignInputs=
         <input type="hidden" name="acceptaccount" value="true" />
         <div style="padding:10px 50px;">
          <div>
-          <input type="checkbox" name="tos" id="tos" style="width: auto"/>
+          <input type="checkbox" name="tos" id="tosCBox" style="width: auto"/>
           <label for="tos" style="padding-left:5px;">$_accountFromSignInputsBodyAcceptTOS()$</label>
          </div>
-         <table style="width: 250px; margin-top: 5px"><tbody><tr>
-           <td><input style="width: auto" id="accountTypePrivate" type="radio" name="accounttype" value="PrivateAccount" /> <label for="accountTypePrivate">$_accountFromSignInputsPrivateAccount()$</label></td>
-           <td><input style="width: auto" id="accountTypeCompany" type="radio" name="accounttype" value="CompanyAccount" /> <label for="accountTypeCompany">$_company()$</label></td>
-         </tr></tbody></table>
          <div style="padding-top:10px">
           <table>
             <tr>
@@ -829,7 +786,7 @@ $if(loginModal)$
           <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
-          <div class="modal-content"> 
+          <div class="modal-content">
             <div class="body">
               <div class="wrapper" style="text-align:right">
                 <input type="hidden" name="referer" value="$referer$" />
@@ -856,7 +813,7 @@ $if(loginModal)$
       </form>
     </div>
   </div>
-  
+
   <div class="modalbox overlay recovery-container">
     <div class="modal-container">
       <form method="post" action="$linkforgotenpassword$">
@@ -868,7 +825,7 @@ $if(loginModal)$
           <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
-          <div class="modal-content"> 
+          <div class="modal-content">
             <div class="body">
               <div class="wrapper">
                 <span class="txt">$_email()$</span><input type="email" name="email" infotext="$_email()$" autocomplete="off"/>
@@ -876,7 +833,7 @@ $if(loginModal)$
               </div>
             </div>
           </div>
-        </div>  
+        </div>
         <div class="modal-footer">
           <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
@@ -922,14 +879,14 @@ modalNewPasswordView=
       </span>
       <a class="modal-close close"> </a>
     </div>
-    <div class="modal-body">   
-      <div class="modal-content"> 
+    <div class="modal-body">
+      <div class="modal-content">
         <div class="recovery-container">
           <div class="body">
             <div class="wrapper" style="text-align: right;">
               <span class="txt">$_modalNewPasswordViewNewPassword()$</span>
               <input type="password" name="password" autocomplete="off" />
-              <BR/> 
+              <BR/>
               <span class="txt">$_modalNewPasswordViewRepeatPassword()$</span>
               <input type="password" name="password2" autocomplete="off" />
               <BR/>
@@ -968,8 +925,8 @@ modalInviteUserAsCompanyAccount=
       </span>
       <a class="modal-close close"> </a>
     </div>
-    <div class="modal-body">   
-      <div class="modal-content"> 
+    <div class="modal-body">
+      <div class="modal-content">
 	    <div class="recovery-container">
 	      <div class="body">
 	        <p>$_modalInviteUserAsSubaccountBodySendRequest()$</p>
@@ -1004,8 +961,8 @@ modalDoYouWantToBeCompanyAccount=
       </span>
       <a class="modal-close close"> </a>
     </div>
-    <div class="modal-body">   
-      <div class="modal-content"> 
+    <div class="modal-body">
+      <div class="modal-content">
 	    <div class="recovery-container">
 	      <div class="body">
 	        <p>$_modalDoYouWantToBeSubaccountBody()$</p>
@@ -1119,8 +1076,8 @@ pdfTooBigModal=
       </span>
       <a class="modal-close close"> </a>
     </div>
-    <div class="modal-body">   
-      <div class="modal-content"> 
+    <div class="modal-body">
+      <div class="modal-content">
         <div class="recovery-container">
           <div class="body">
             $_modalPdfTooBigBody()$

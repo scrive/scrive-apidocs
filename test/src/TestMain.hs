@@ -8,6 +8,7 @@ import Database.HDBC.PostgreSQL
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
+import qualified AppLogger as Log
 
 import DB.Classes
 import DB.Migrations
@@ -42,6 +43,12 @@ import IntegrationAPITest
 #ifndef NO_LOGIN
 import LoginTest
 #endif
+#ifndef NO_SIGNUP
+import SignupTest
+#endif
+#ifndef NO_ACCOUNTINFO
+import AccountInfoTest
+#endif
 #ifndef NO_MAILAPI
 import MailAPITest
 #endif
@@ -72,6 +79,9 @@ import MailsTest
 #ifndef NO_MAILS
 import APICommonsTest
 #endif
+#ifndef NO_JSON
+import JSONUtilTest
+#endif
 
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
@@ -101,6 +111,12 @@ allTests conn = tail tests
 #endif
 #ifndef NO_LOGIN
       , ("login", const $ loginTests conn)
+#endif
+#ifndef NO_SIGNUP
+      , ("signup", const $ signupTests conn)
+#endif
+#ifndef NO_ACCOUNTINFO
+     , ("accountinfo", const $ accountInfoTests conn)
 #endif
 #ifndef NO_MAILAPI
       , ("mailapi", const $ mailApiTests conn)
@@ -133,11 +149,14 @@ allTests conn = tail tests
 #ifndef NO_MAILS
       , ("apicommons", const $ apiCommonsTest )
 #endif
+#ifndef NO_JSON
+      , ("jsonutil", const $ jsonUtilTests )
+#endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
-testsToRun conn (t:ts) 
+testsToRun conn (t:ts)
   | lt == "$" = []
   | lt == "all" = map (\(_,f) -> Right $ f params) (allTests conn) ++ rest
   | otherwise = case lookup lt (allTests conn) of
@@ -149,7 +168,7 @@ testsToRun conn (t:ts)
     params = drop 1 $ dropWhile (/= ("$")) ts
 
 main :: IO ()
-main = do
+main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"

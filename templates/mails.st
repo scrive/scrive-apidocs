@@ -168,9 +168,10 @@ mailInvitationToSignContract=
      $nicemail(
         mailheader= mailInvitationTitle();
         mailp1 = header;
-        mailp2 = contractInfo();
-        mailp3 = mailInvitationToSignContractIntructions();
-        mailp4 = legalparagraph()
+        mailp2 = mailInvitationToSignContractIntructions();
+        mailp3 = contractInfo();
+        mailp4 = footer;
+        mailp5 = legalparagraph()
     )$
 ###
 mailInvitationToSignContractIntructions=
@@ -183,7 +184,6 @@ mailInvitationToSignContractIntructions=
     <br/>
     $endif$
     <BR/>
-    $footer:noescape()$ 
 
 ####
 mailInvitationToSignOffer=
@@ -191,9 +191,10 @@ mailInvitationToSignOffer=
      $nicemail(
         mailheader= mailInvitationTitle();
         mailp1 = header;
-        mailp2 = offerInfo();
-        mailp3 = mailInvitationToSignOfferIntructions();
-        mailp4 = legalparagraph()
+        mailp2 = mailInvitationToSignOfferIntructions();
+        mailp3 = offerInfo();
+        mailp4 = footer;
+        mailp5 = legalparagraph()
     )$
 ###
 mailInvitationToSignOfferIntructions=
@@ -205,16 +206,17 @@ mailInvitationToSignOfferIntructions=
     <a href="$link$">$link$</a> <br/>
     <br/>
     $endif$
-    $footer:noescape()$
+
 ###
 mailInvitationToSignOrder=
     $mailInvitationTitle()$
     $nicemail(
         mailheader= mailInvitationTitle();
         mailp1 = header;
-        mailp2 = orderInfo();
-        mailp3 = mailInvitationToSignOrderIntructions();
-        mailp4 = legalparagraph()
+        mailp2 = mailInvitationToSignOrderIntructions();
+        mailp3 = orderInfo();
+        mailp4 = footer;
+        mailp5 = legalparagraph()
     )$
 ####
 mailInvitationToSignOrderIntructions=
@@ -226,7 +228,6 @@ mailInvitationToSignOrderIntructions=
     <a href="$link$">$link$</a> <br/>
     <br/>
     $endif$
-    $footer:noescape()$
 ####
 mailInvitationToSignContractDefaultHeader=
     <p>$_hi()$ $personname$,
@@ -347,9 +348,10 @@ remindMailNotSignedOffer=
     $nicemail(
         mailheader=_remindMailNotSignedTitle();
         mailp1=header;
-        mailp2=offerInfo();
-        mailp3=_remindMailNotSignedOfferContentInstruction();
-        mailp4= legalparagraph()
+        mailp2=_remindMailNotSignedOfferContentInstruction();
+        mailp3=offerInfo();
+        mailp4=footer;
+        mailp5= legalparagraph()
     )$
 ###
 remindMailNotSignedOrder=
@@ -357,9 +359,10 @@ remindMailNotSignedOrder=
     $nicemail(
         mailheader=_remindMailNotSignedTitle();
         mailp1=header;
-        mailp2=orderInfo();
-        mailp3=_remindMailNotSignedOrderContentInstruction();
-        mailp4= legalparagraph()
+        mailp2=_remindMailNotSignedOrderContentInstruction();
+        mailp3=orderInfo();
+        mailp4=footer;
+        mailp5= legalparagraph()
     )$
 ###
 ###
@@ -986,9 +989,9 @@ $if(cond)$
       <p style="font-style:italic;font-family:sans-serif;vertical-align:top;font-size:11px;">$text$</p>
           $elems: {elem |
               $if(elem.0)$
-                <p style="font-weight:bold;"> $elem.0$ $separator$ $elem.1$<br/></p>
+                <p style="font-weight:bold;"> $elem.0$ $separator$ $elem.1$</p>
               $else$
-                <p style="font-weight:bold;" $if(elemsclass)$class="$elemsclass$"$endif$> $elem$ <br/></p>
+                <p style="font-weight:bold;" $if(elemsclass)$class="$elemsclass$"$endif$> $elem$ </p>
               $endif$
           }$
 </td></tr>

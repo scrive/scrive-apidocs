@@ -223,10 +223,10 @@ multipartTypes =
   ]
 
 untilMatch :: String -> String -> Maybe String
-untilMatch str xs = go str xs
-  where go ""     rs      = Just rs
-        go _      ""      = Nothing
-        go (a:as) (b:bs)  = if a == b then go as bs else go str bs
+untilMatch "" a  = Just a
+untilMatch _  "" = Nothing
+untilMatch a b | a `isPrefixOf` b = Just $ drop (length a) b
+untilMatch a (_:bs) = untilMatch a bs
 
 matchUntil :: String -> String -> (String, String)
 matchUntil _   "" = ("", "")

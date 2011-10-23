@@ -398,15 +398,15 @@ asValidName input =
     >>= checkOnly (isAlpha : map (==) " \'-") fieldtemplate
     >>= mkByteString
     where fieldtemplate = "nameFieldName"
-          
+
 {- |
    Sanitize characters that are not allowed but can be converted
 into something we do allow without upsetting the user.
  -}
 sanitize :: String -> Result String
-sanitize input = 
+sanitize input =
   replaceChar '\t' ' ' input
-  
+
 replaceChar :: Char -> Char -> String -> Result String
 replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 
@@ -417,7 +417,7 @@ replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 -}
 asValidCompanyName :: String -> Result BS.ByteString
 asValidCompanyName input =
-    sanitize input 
+    sanitize input
     >>= stripWhitespace
     >>= checkIfEmpty
     >>= checkLengthIsMax 100 fieldtemplate
@@ -488,7 +488,11 @@ asValidCheckBox input =
 asValidPhone :: String -> Result BS.ByteString
 asValidPhone input =
     stripWhitespace input
+    >>= checkIfEmpty
+    >>= checkLengthIsMax 100 fieldtemplate
+    >>= checkOnly (isAlphaNum : map (==) " +-()") fieldtemplate
     >>= mkByteString
+  where fieldtemplate = "_phone"
 
 {-|
     Gets the cleaned up number of days to sign.

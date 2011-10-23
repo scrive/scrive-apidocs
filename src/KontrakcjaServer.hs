@@ -132,12 +132,15 @@ initDatabaseEntries conn iusers = do
               return ()
           Just _ -> return () -- user exist, do not add it
 
-uploadOldFilesToAmazon :: AppConf -> IO ()
-uploadOldFilesToAmazon appConf = do
+uploadFileToAmazon :: AppConf -> IO Bool
+uploadFileToAmazon appConf = do
   withPostgreSQL (dbConfig appConf) $ \conn -> do
-    files <- ioRunDB conn $ dbQuery $ GetFilesThatShouldBeMovedToAmazon
-    runReaderT (mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files) conn
-    return ()
+    mfile <- ioRunDB conn $ dbQuery $ GetFileThatShouldBeMovedToAmazon
+    case mfile of
+        Just file -> do
+                   runReaderT (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file) conn
+                   return True
+        _ -> return False 
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do
@@ -225,7 +228,10 @@ runKontrakcjaServer = Log.withLogger $ do
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
                               t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
-                              return [t1, t2, t3, t4, t5]
+                              t6 <- forkIO $ cron (60) $ (let loop = (do
+                                                                        r <- uploadFileToAmazon appConf
+                                                                        if r then loop else return ()) in loop)
+                              return [t1, t2, t3, t4, t5, t6]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day
@@ -233,7 +239,6 @@ runKontrakcjaServer = Log.withLogger $ do
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
                                           initDatabaseEntries conn (initialUsers appConf)
-                                          _ <- forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination
                                           Log.server $ "Termination request received"

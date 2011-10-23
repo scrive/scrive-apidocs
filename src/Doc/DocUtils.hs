@@ -21,6 +21,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB.Classes
+import Misc
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -29,6 +30,7 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import File.TransState
+
 --import Happstack.State
 
 
@@ -148,10 +150,9 @@ instance  MaybeShared Document where
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
-  | n<0 || n>=slcount = Left $ "signatory with index " ++ show n ++ " doesn't exist."
+  | n < 0 || n >= length sls = Left $ "signatory with index " ++ show n ++ " doesn't exist."
   | isAuthor (sls !! n) = Left "author can't be set from csv"
   | otherwise = Right n
-  where slcount = length sls
 
 {- |
    Given a Document, return all of the undelivered signatorylinks.
@@ -279,6 +280,9 @@ isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, C
 removeFieldsAndPlacements :: SignatoryDetails -> SignatoryDetails
 removeFieldsAndPlacements sd = sd { signatoryfields = filter (not . isFieldCustom)
   $ map (\sf -> sf { sfPlacements = [] }) $ signatoryfields sd }
+                               
+hasFieldsAndPlacements :: SignatoryDetails -> Bool
+hasFieldsAndPlacements sd = any (isFieldCustom ||^ (not . Data.List.null . sfPlacements)) (signatoryfields sd) 
 
 {- |
     Sets the sign order on some signatory details.

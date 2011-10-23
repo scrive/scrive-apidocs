@@ -43,11 +43,11 @@ module Doc.DocState
     , SetDocumentTitle(..)
     , SignDocument(..)
     , TimeoutDocument(..)
-    , UpdateDocument(..)
     , UpdateDocumentSimple(..)
     , AttachCSVUpload(..)
     , GetDocumentsByDocumentID(..)
-    , UpdateDocumentAttachments(..)
+    , AddDocumentAttachment(..)
+    , RemoveDocumentAttachment(..)
     , CloseDocument(..)
     , CancelDocument(..)
     , RestartDocument(..)
@@ -67,6 +67,19 @@ module Doc.DocState
     , AddInvitationEvidence(..)
     , UpdateFields(..)
     , PendingToAwaitingAuthor(..)
+    , SetSignatoryCompany(..)
+    , RemoveSignatoryCompany(..)
+    , SetSignatoryUser(..)
+    , RemoveSignatoryUser(..)
+    , SetInviteText(..)
+    , SetDaysToSign(..)
+    , RemoveDaysToSign(..)
+    , SetDocumentFunctionality(..)
+    , SetCSVSigIndex(..)
+    , SetEmailIdentification(..)
+    , SetElegitimationIdentification(..)
+    , ResetSignatoryDetails(..)
+
     --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
@@ -84,7 +97,6 @@ import Company.Model
 import Control.Monad
 import Control.Monad.Reader (ask)
 --import Database.HDBC
-import Data.List (find)
 import Data.Maybe
 import Data.Word
 --import DB.Classes
@@ -108,6 +120,7 @@ import Util.HasSomeUserInfo
 import InputValidation
 import Control.Applicative
 import Doc.DocInfo
+import Data.List
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
@@ -357,10 +370,12 @@ getDocumentByFileID fileid' = queryDocs $ \documents ->
 -}
 attachFile :: DocumentID
            -> FileID
+           -> MinutesTime
            -> Update Documents (Either String Document)
-attachFile documentid fid = do
-  modifySignableOrTemplate documentid $ \document ->
-    Right $ document { documentfiles = documentfiles document ++ [fid] }
+attachFile documentid fid time = do
+  modifySignableOrTemplate documentid $ guardStatus "attach a file to" Preparation $ \document ->
+    Right $ document { documentfiles = documentfiles document ++ [fid]
+                     , documentmtime = time}
 
 {- |
     Attaches a sealed file to the indicated document.
@@ -369,64 +384,151 @@ attachFile documentid fid = do
 -}
 attachSealedFile :: DocumentID
                  -> FileID
+                 -> MinutesTime
                  -> Update Documents (Either String Document)
-attachSealedFile documentid fid = do
-  modifySignable documentid $ \document ->
-    Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] }
+attachSealedFile documentid fid time = do
+  modifySignable documentid $ guardStatus "attach a file to" Pending $ \document ->
+    Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] 
+                     , documentmtime = time }
+      
+modifysiglink :: Document -> SignatoryLinkID -> (SignatoryLink -> SignatoryLink) -> Either String Document
+modifysiglink doc slid f = case getSigLinkFor doc slid of
+    Nothing -> Left $ "No signatory for document " ++ show (documentid doc) ++ " and signatorylinkid " ++ show slid
+    Just _ -> Right $ doc { documentsignatorylinks = mapIf (isSigLinkFor slid) f $ documentsignatorylinks doc }
+      
+{- | Set the maybecompany for a signatorylink
+ -}
+setSignatoryCompany :: DocumentID -> SignatoryLinkID -> CompanyID -> Update Documents (Either String Document)
+setSignatoryCompany documentid slid cid = do
+  modifySignable documentid $ \doc -> 
+    modifysiglink doc slid (\sl -> sl { maybecompany = Just cid })    
+    
+{- | Remove the maybecompany for a signatorylink
+ -}
+removeSignatoryCompany :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
+removeSignatoryCompany documentid slid = do
+  modifySignable documentid $ \doc -> 
+    modifysiglink doc slid (\sl -> sl { maybecompany = Nothing })    
 
-{- |
-    Updates an existing document, typically this stores information collected
-    from the doc design view.  If there is a problem, such as the document not existing,
-    or the document not being in preparation mode then a Left is returned.
--}
-updateDocument :: MinutesTime
-               -> DocumentID
-               -> BS.ByteString
-               -> [(SignatoryDetails,[SignatoryRole])]
-               -> Maybe Int
-               -> BS.ByteString
-               -> (SignatoryDetails, [SignatoryRole], UserID, Maybe CompanyID)
-               -> [IdentificationType]
-               -> Maybe Int
-               -> DocumentFunctionality
-               -> Update Documents (Either String Document)
-updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authorid, mcompanyid) idtypes mcsvsigindex docfunctionality =
-    modifySignableOrTemplateWithAction documentid $ \document ->
-        if documentstatus document == Preparation
-         then do
-             authorlink0 <- signLinkFromDetails authordetails authorroles
-             let authorlink = authorlink0 { --do we need to be doing this?  surely the author id stays the same throughout
-                                maybesignatory = Just authorid,
-                                maybecompany = mcompanyid
-                              }
-             signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
-             let alllinks = authorlink : signatorylinks
-                 csvupload = case (documentcsvupload document,
-                                   fmap (checkCSVSigIndex alllinks) mcsvsigindex) of
-                               (Just cu, Just (Right newsigindex))
-                                 -> Just cu{csvsignatoryindex=newsigindex}
-                               _ -> Nothing
-                 updatedFstFileName  = documentfiles document
-#if 0
-                 updatedFstFileName  = case (documentfiles document) of
-                                         (f:fs) -> (f {filename = docname} :fs)
-                                         fs -> fs
-#endif
-                 isbasic = BasicFunctionality == docfunctionality
-             return $ Right $ document
-                    { documentsignatorylinks         = alllinks
-                    , documentdaystosign             = daystosign
-                    , documentmtime                  = time
-                    , documenttitle                  = docname
-                    , documentinvitetext             = invitetext
-                    , documentallowedidtypes         = idtypes
-                    , documentcsvupload              = if isbasic then Nothing else csvupload
-                    , documentfunctionality          = docfunctionality
-                    , documentfiles                  = updatedFstFileName
-                    , documentauthorattachments      = if isbasic then [] else documentauthorattachments document
-                    , documentsignatoryattachments   = if isbasic then [] else documentsignatoryattachments document
-                    }
-         else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
+
+{- | Set the user of a signatorylink
+ -}
+setSignatoryUser :: DocumentID -> SignatoryLinkID -> UserID -> Update Documents (Either String Document)
+setSignatoryUser documentid slid uid = do
+  modifySignable documentid $ \doc ->
+    modifysiglink doc slid (\sl -> sl { maybesignatory = Just uid })
+
+{- | Remove the user of a signatorylink
+ -}
+removeSignatoryUser :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
+removeSignatoryUser documentid slid = do
+  modifySignable documentid $ \doc ->
+    modifysiglink doc slid (\sl -> sl { maybesignatory = Nothing })
+
+setInviteText :: DocumentID -> BS.ByteString -> MinutesTime -> Update Documents (Either String Document)
+setInviteText docid text time = do
+  modifySignableOrTemplate docid $ guardStatus "set invite text" Preparation $ \doc ->
+    Right $ doc { documentinvitetext = text
+                , documentmtime      = time }
+
+guardStatus :: String -> DocumentStatus -> (Document -> Either String Document) -> (Document -> Either String Document)
+guardStatus name status f = \doc ->
+  if status == documentstatus doc 
+  then f doc
+  else Left $ "Cannot " ++ name ++ " on document " ++ show (documentid doc) ++ " because not in " ++ show status ++ "; in " ++ show (documentstatus doc)
+
+setDaysToSign :: DocumentID -> Int -> MinutesTime -> Update Documents (Either String Document)
+setDaysToSign docid daystosign time = do
+  modifySignableOrTemplate docid $ guardStatus "set days to sign" Preparation $ \doc ->
+    Right $ doc { documentdaystosign = Just daystosign
+                , documentmtime = time}
+
+removeDaysToSign :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+removeDaysToSign docid time = do
+  modifySignableOrTemplate docid $ guardStatus "remove days to sign" Preparation $ \doc ->
+    Right $ doc { documentdaystosign = Nothing
+                , documentmtime = time}
+
+setDocumentFunctionality :: DocumentID -> DocumentFunctionality -> MinutesTime -> Update Documents (Either String Document)
+setDocumentFunctionality did docfunc time =
+  modifySignableOrTemplate did $ guardStatus "set document functionality on" Preparation $ \doc ->
+  let isbasic = BasicFunctionality == docfunc
+      oldsiglinks = documentsignatorylinks doc
+      basicsiglinks = signatoriesToBasic oldsiglinks
+  in Right $ doc { documentfunctionality = docfunc
+                 , documentmtime = time
+                 , documentauthorattachments      = [] <| isbasic |> documentauthorattachments doc
+                 , documentsignatoryattachments   = [] <| isbasic |> documentsignatoryattachments doc
+                 , documentcsvupload              = Nothing <| isbasic |> documentcsvupload doc
+                 , documentsignatorylinks         = basicsiglinks <| isbasic |> oldsiglinks
+                 , documentallowedidtypes         = [EmailIdentification] <| isbasic |> documentallowedidtypes doc
+                 }
+     
+setCSVSigIndex :: DocumentID -> Int -> MinutesTime -> Update Documents (Either String Document)
+setCSVSigIndex did csvsigindex time =
+  modifySignableOrTemplate did $ guardStatus "set csv sig index on" Preparation $ \doc ->
+  case documentfunctionality doc of
+    BasicFunctionality -> Left $ "Cannot set csvindex on basic functionality document " ++ show did
+    AdvancedFunctionality -> case documentcsvupload doc of
+      Nothing -> Left $ "There is no csv upload for document " ++ show did
+      Just cu -> case checkCSVSigIndex (documentsignatorylinks doc) csvsigindex of
+        Left s -> Left s
+        Right i -> Right $ doc { documentmtime = time
+                               , documentcsvupload = Just $ cu { csvsignatoryindex = i }
+                               }                              
+                   
+setEmailIdentification :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+setEmailIdentification did time =
+  modifySignableOrTemplate did $ guardStatus "set email identification on" Preparation $ \doc ->
+  Right $ doc { documentmtime = time
+              , documentallowedidtypes = [EmailIdentification]
+              }
+  
+setElegitimationIdentification :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+setElegitimationIdentification did time =
+  modifySignableOrTemplate did $ guardStatus "set elegitimation identification on" Preparation $ \doc ->
+  Right $ doc { documentmtime = time
+              , documentallowedidtypes = [ELegitimationIdentification]
+              }
+  
+signatoriesToBasic :: [SignatoryLink] -> [SignatoryLink]
+signatoriesToBasic sls =
+  let news = [sl { signatorydetails = removeFieldsAndPlacements (signatorydetails sl)} | sl <- sls]
+      asl  = head   [ sl { signatoryroles = [SignatoryAuthor] }  | sl <- news, isAuthor sl]
+      nsls = take 1 [ sl { signatoryroles = [SignatoryPartner] } | sl <- news, not $ isAuthor sl]
+  in asl : nsls
+  
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole])] -> [String]
+checkResetSignatoryData doc sigs = 
+  let authors    = [ r | (_, r) <- sigs, SignatoryAuthor `elem` r]
+      nonauthors = [ r | (_, r) <- sigs, SignatoryAuthor `notElem` r]
+      isbasic = documentfunctionality doc == BasicFunctionality
+      allowspartner _ = getValueForProcess doc processauthorsend /= Just True
+  in catMaybes $
+      [trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc),
+       trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors),
+       trueOrMessage (isbasic =>> (length nonauthors == 1)) $ "Should have exactly one signatory since it's basic functionality",
+       trueOrMessage (isbasic =>> all (allowspartner =>>^ (SignatoryPartner `notElem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
+       trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" ]
+  
+resetSignatoryDetails :: DocumentID
+                       -> [(SignatoryDetails, [SignatoryRole])]
+                       -> MinutesTime
+                       -> Update Documents (Either String Document)
+resetSignatoryDetails documentid signatories time =
+  modifySignableOrTemplateWithAction documentid $ \document -> 
+  case checkResetSignatoryData document signatories of
+    [] -> do
+      -- this reassigns signlinkid and magic hash each time we call it
+      signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
+      let signatorylinks2 = mapIf isAuthor (\sl -> sl { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
+                                                      , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
+                                                      }) signatorylinks
+          mauthorsiglink = getAuthorSigLink document
+      return $ Right $ document { documentsignatorylinks = signatorylinks2
+                                , documentmtime = time
+                                }
+    s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
 
 {- |
     A cut down version of updateDocument that requires fewer parameters.  This is used by the integration api.
@@ -492,25 +594,19 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
     then Right . toList $ relevantdocs
     else Left "documents don't exist for all the given ids"
 
-{- |
-   Add and remove attachments to a document in Preparation.
-   If there is a problem, such as the document not existing, or
-   the document not being in preparation mode then a Left is returned.
--}
-updateDocumentAttachments :: DocumentID
-                          -> [FileID]
-                          -> [FileID]
-                          -> Update Documents (Either String Document)
-updateDocumentAttachments docid idstoadd idstoremove = do
-  modifySignableOrTemplate docid $ \doc ->
-      case documentstatus doc of
-        Preparation -> Right doc { documentauthorattachments =
-                                      [da | da <- documentauthorattachments doc,
-                                       authorattachmentfile da `notElem` idstoremove]
-                                      ++
-                                      map AuthorAttachment idstoadd
-                                 }
-        _ -> Left $ "Can only attach to document in Preparation, #" ++ show docid ++ " is in " ++ show (documentstatus doc)
+addDocumentAttachment :: DocumentID -> FileID -> Update Documents (Either String Document)
+addDocumentAttachment docid fileid = 
+  modifySignableOrTemplate docid $ guardStatus "attach to" Preparation $ \doc ->
+  let aa = AuthorAttachment fileid
+      as = documentauthorattachments doc
+  in Right doc { documentauthorattachments = as ++ ([aa] <| (aa `notElem` as) |> []) }
+
+removeDocumentAttachment :: DocumentID -> FileID -> Update Documents (Either String Document)
+removeDocumentAttachment docid fileid =
+  modifySignableOrTemplate docid $ guardStatus "remove attachment from" Preparation $ \doc ->
+  let aa = AuthorAttachment fileid
+      as = documentauthorattachments doc
+  in Right doc { documentauthorattachments = filter (/= aa) as }
 
 {- |
     Creates a new document by copying an existing document pumping some values into a particular signatory.
@@ -560,11 +656,8 @@ timeoutDocument :: DocumentID
                 -> MinutesTime
                 -> Update Documents (Either String Document)
 timeoutDocument documentid time = do
-  modifySignable documentid $ \document ->
-    let newdocument = document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
-    in case documentstatus document of
-      Pending -> Right newdocument
-      _ -> Left "Illegal document status change"
+  modifySignable documentid $ guardStatus "timeout" Pending $ \document ->
+    Right $ document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
 
 checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
 checkSignDocument doc slid mh = catMaybes $
@@ -1141,11 +1234,12 @@ shareDocument docid =
     Will return Left if there is a problem, such as the document not existing,
     or not being in preparation mode.
 -}
-setDocumentTitle :: DocumentID -> BS.ByteString -> Update Documents (Either String Document)
-setDocumentTitle docid doctitle =
+setDocumentTitle :: DocumentID -> BS.ByteString -> MinutesTime -> Update Documents (Either String Document)
+setDocumentTitle docid doctitle time =
   modifySignableOrTemplate docid $ \doc@Document{documentstatus} ->
     if documentstatus == Preparation
-    then Right $ doc { documenttitle = doctitle }
+    then Right $ doc { documenttitle = doctitle, 
+                       documentmtime = time}
     else Left $ "Can't update title unless the status is in preparation"
 
 {- |
@@ -1492,17 +1586,19 @@ migrateDocumentSigAccounts docid sigusers =
     clearSignatoryAccount :: SignatoryLink -> SignatoryLink
     clearSignatoryAccount siglink = siglink { maybesignatory = Nothing, maybecompany = Nothing }
 -}
+-- CHANGE TO ADD/REMOVE operations
 {- |
     Updates the list of required signatory attachments on the given document.
     This ensures that the document is in a preperation state.  If there's a problem,
     for example if the document doesn't exist, or the document is in the wrong state, then
     a Left is returned.
 -}
-updateSigAttachments :: DocumentID -> [SignatoryAttachment] -> Update Documents (Either String Document)
-updateSigAttachments docid sigatts =
+updateSigAttachments :: DocumentID -> [SignatoryAttachment] -> MinutesTime -> Update Documents (Either String Document)
+updateSigAttachments docid sigatts time =
   modifySignableOrTemplate docid $ \doc ->
   case documentstatus doc of
-    Preparation -> Right doc { documentsignatoryattachments = sigatts }
+    Preparation -> Right doc { documentsignatoryattachments = sigatts 
+                             , documentmtime = time}
     _ -> Left "Can only attach to document in Preparation"
 
 {- |
@@ -1564,14 +1660,26 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'newDocument
                         , 'getDocumentByDocumentID
                         , 'getTimeoutedButPendingDocuments
-                        , 'updateDocument
                         , 'updateDocumentSimple
                         , 'attachCSVUpload
                         , 'getDocumentsByDocumentID
-                        , 'updateDocumentAttachments
+                        , 'addDocumentAttachment
+                        , 'removeDocumentAttachment                          
                         , 'updateSigAttachments
                         , 'signDocument
 --                        , 'authorSendDocument
+                        , 'setSignatoryCompany
+                        , 'removeSignatoryCompany
+                        , 'setSignatoryUser
+                        , 'removeSignatoryUser
+                        , 'setInviteText  
+                        , 'setDaysToSign  
+                        , 'removeDaysToSign  
+                        , 'setDocumentFunctionality  
+                        , 'setCSVSigIndex  
+                        , 'setEmailIdentification  
+                        , 'setElegitimationIdentification  
+                        , 'resetSignatoryDetails  
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile

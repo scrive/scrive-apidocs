@@ -50,29 +50,56 @@ checkPasswordsMatch p1 p2 =
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
     ctx <- getContext
+    createcompany <- isFieldSet "createcompany"  --we could dump this stupid flag if we improved javascript validation
     case (ctxmaybeuser ctx) of
          Just user -> do
            mcompany <- getCompanyForUser user
-           showUser user mcompany >>= renderFromBody TopAccount kontrakcja
+           showUser user mcompany createcompany >>= renderFromBody TopAccount kontrakcja
          Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
-    ctx <- getContext
-    case (ctxmaybeuser ctx) of
-         Just user -> do
-             infoUpdate <- getUserInfoUpdate
-             _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             mcompany <- getCompanyForUser user
-             case (useriscompanyadmin user, mcompany) of
-               (True, Just company) -> do
-                 companyinfoupdate <- getCompanyInfoUpdate
-                 _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
-                 return ()
-               _ -> return ()
-             addFlashM flashMessageUserDetailsSaved
-             return LinkAccount
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+  guardLoggedIn
+  (user, mendflash, link) <- maybeUpgradeToCompanyAdmin
+  infoUpdate <- getUserInfoUpdate
+  _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  mcompany <- getCompanyForUser user
+  case (useriscompanyadmin user, mcompany) of
+    (True, Just company) -> do
+      companyinfoupdate <- getCompanyInfoUpdate
+      _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+      return ()
+    _ -> return ()
+  case mendflash of
+    Just endflash -> addFlashM endflash
+    _ -> return ()
+  return link
+  where
+    -- this stuff would be far cleaner if we did all the validation on the client
+    -- and just failed if there were a problem with it on the server, rather
+    -- than make an effort to handle it elegantly
+    maybeUpgradeToCompanyAdmin = do
+      user <- guardJustM $ ctxmaybeuser <$> getContext
+      mcompany <- getCompanyForUser user
+      createcompany <- isFieldSet "createcompany"
+      if isNothing mcompany && createcompany
+        then do
+          -- they've submitted the modal so
+          -- check all the required fields have been filled in okay
+          mcname <- getRequiredField asValidCompanyName "companyname"
+          mfstname <- getRequiredField asValidName "fstname"
+          msndname <- getRequiredField asValidName "sndname"
+          mposition <- getRequiredField asValidPosition "companyposition"
+          mphone <- getRequiredField asValidPhone "phone"
+          case (mcname, mfstname, msndname, mposition, mphone) of
+            (Just _, Just _, Just _, Just _, Just _) -> do
+              company <- runDBUpdate $ CreateCompany Nothing Nothing
+              _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+              _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
+              upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+              return (upgradeduser, Just flashMessageCompanyCreated, LinkAccount False)
+            _ -> return (user, Nothing, LinkAccount True)
+        else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -434,7 +461,7 @@ handleViralInvite = withUserPost $ do
                                                                                     , visInviterID = visInviterID
                                                                                     , visRemainedEmails = n -1
                                                                                     , visToken = visToken }
-                      sendInvitation ctx (LinkViralInvitationSent actionID $ visToken) invitedemail
+                      sendInvitation ctx (LinkViralInvitationSent actionID visToken (BS.toString invitedemail)) invitedemail
                   else addFlashM flashMessageOtherUserSentInvitation
               _ -> do
                 link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
@@ -503,7 +530,7 @@ createNewUserByAdmin ctx names email _freetill custommessage ss l = do
              mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
-         Nothing -> return muser 
+         Nothing -> return muser
 
 createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Locale) -> m (Maybe User)
 createInvitedUser names email mlocale = do
@@ -618,7 +645,7 @@ handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
   addFlashM modalDoYouWantToBeCompanyAccount
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
-  content <- showUser user mcompany
+  content <- showUser user mcompany False
   renderFromBody TopAccount kontrakcja content
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => UserID -> m KontraLink
@@ -638,291 +665,189 @@ handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
               let msg = "Cannot become company account"
               Log.debug msg
               addFlash (OperationFailed, msg)
-          return LinkAccount
-     _ -> return LinkAccount
+          return $ LinkAccount False
+     _ -> return $ LinkAccount False
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
-    now <- liftIO $ getMinutesTime
-    maction <- do
-        (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
-            -- action may be in state when it has expired, but hasn't yet been
-            -- transformed into next form. below code checks for that.
-            if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
-               then return $ Just action
-               else return $ checkValidity now $ Just action)
+  maction <- getActionByActionID aid
+  muser <-
     case maction of
-         Just action ->
-             case actionType action of
-                  ViralInvitationSent _ _ _ _ token ->
-                      if token == hash
-                         then activationPage Nothing Nothing
-                         else mzero
-                  AccountCreatedBySigning _ uid _ token -> do
-                      if token == hash
-                         then (runDBQuery $ GetUserByID uid) >>= (\mu -> activationPage mu Nothing)
-                         else mzero
-                  AccountCreated uid token -> do
-                      if token == hash
-                         then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user -> do
-                             if isNothing $ userhasacceptedtermsofservice user
-                                then do
-                                  mcompany <- getCompanyForUser user
-                                  activationPage (Just user) mcompany
-                                else do
-                                  addFlashM flashMessageUserAlreadyActivated
-                                  sendRedirect LinkUpload)
-                         else mzero
-                  _  -> mzero
-         Nothing -> do
-             muser <- liftMM (runDBQuery . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
-             case muser of
-                  Just user ->
-                    if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
-                     then do
-                        let email = getEmail user
-                        content <- activatePageViewNotValidLink $ BS.toString email
-                        renderFromBody TopNone kontrakcja content
-                    else mzero
-                  Nothing -> mzero
-    where
-      activationPage muser mcompany = do
-        extendActionEvalTimeToOneDayMinimum aid
-        addFlashM $ modalAccountSetup muser mcompany $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
-        ctx <- getContext
-        sendRedirect $ LinkHome (getLocale ctx)
+      Just action -> do
+        guardMagicTokenMatch hash action
+        getUserFromAction action
+      Nothing -> getUserByEmail
+  case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
+    (True, _) -> do
+      -- seems like a security risk.  you can just feed random numbers with emails in the get param
+      -- and work out who has an account or not
+      sendRedirect LinkUpload
+    (False, Just _action) -> do
+      extendActionEvalTimeToOneDayMinimum aid
+      addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+      ctx <- getContext
+      sendRedirect $ LinkHome (getLocale ctx)
+    (False, Nothing) -> do
+      -- this is a very disgusting page.  i didn't even know it existed
+      content <- activatePageViewNotValidLink ""
+      renderFromBody TopNone kontrakcja content
+  where
+    -- looks up the user using the value in the optional email param
+    getUserByEmail = do
+      memail <- getOptionalField asValidEmail "email"
+      case memail of
+        Nothing -> return Nothing
+        Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
 
 handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
 handleAccountSetupFromSign aid hash = do
-  Log.debug "Account setup after signing document"  
-  muserid <- getUserIDFromAction
-  Log.debug $ "Account setup after signing document: UserID->"  ++ (show muserid)
-  case muserid of
-    Just userid -> do
-      user <- runDBOrFail $ dbQuery $ GetUserByID userid
-      Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)    
-      handleActivate aid hash BySigning user
+  Log.debug "Account setup after signing document"
+  maction <- getActionByActionID aid
+  case maction of
+    Just action -> do
+      guardMagicTokenMatch hash action
+      muser <- getUserFromAction action
+      case muser of
+        Just user -> do
+          Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
+          mactivateduser <- handleActivate aid hash BySigning user
+          case mactivateduser of
+            Just activateduser -> do
+              _ <- addUserSaveAfterSignStatEvent activateduser
+              return ()
+            Nothing -> return ()
+          return mactivateduser
+        Nothing -> return Nothing
     Nothing -> return Nothing
-  where
-    getUserIDFromAction :: Kontrakcja m => m (Maybe UserID)
-    getUserIDFromAction = do
-      now <- liftIO $ getMinutesTime
-      maction <- checkValidity now <$> (query $ GetAction aid)
-      case maction of
-        Just action ->
-          case actionType action of
-            AccountCreatedBySigning _ uid _ token ->
-              if token == hash
-                then do
-                  return $ Just uid
-                else return Nothing
-            _ -> return Nothing
-        _-> return Nothing
 
 handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
-  now <- liftIO $ getMinutesTime
-  maction <- checkValidity now <$> (query $ GetAction aid)
-  case fmap actionType maction of
-    Just (ViralInvitationSent email invtime inviterid _ token) ->
-      if token == hash
-         then do
-           _ <- (getUserForViralInvite email invtime inviterid)
-                 >>= maybe mzero (handleActivate aid hash ViralInvitation)
-           getHomeOrUploadLink
-         else mzero
-    Just (AccountCreatedBySigning _ uid _ token) ->
-      if token == hash
+  maction <- getActionByActionID aid
+  case maction of
+    Just action -> do
+      guardMagicTokenMatch hash action
+      user <- guardJustM $ getOrCreateActionUser action
+      if isJust $ userhasacceptedtermsofservice user
+        then addFlashM flashMessageUserAlreadyActivated
+        else do
+          signupmethod <- guardJust $ getSignupMethod action
+          mactivateduser <- handleActivate aid hash signupmethod user
+          when (isJust mactivateduser) $ do
+              addFlashM flashMessageUserActivated
+              --do we want this instead? it was in the code, but never called
+              -- before i refactored this a bit.  if not we should delete the function
+              -- properly.
+              -- addFlashM modalWelcomeToSkrivaPa
+              return ()
+          return ()
+      getHomeOrUploadLink
+    Nothing ->
+      getOptionalField asValidEmail "email" >>= maybe mzero generateActivationLink
+  where
+    -- If this is a user activating a viral invitation then we create their user
+    -- if needed, otherwise we fetch the user indicated inside the action details.
+    getOrCreateActionUser action = do
+      mactionuser <- getUserFromAction action
+      case (mactionuser, actionType action) of
+        (Nothing, ViralInvitationSent email invtime inviterid _ _) -> do
+          muser <- createInvitedUser (BS.empty, BS.empty) (unEmail email) Nothing
+          case muser of
+            Just user -> do -- user created, we need to fill in some info
+              minviter <- runDBQuery $ GetUserByID inviterid
+              _ <- runDBUpdate $ SetInviteInfo (userid <$> minviter) invtime Viral (userid user)
+              return $ Just user
+            Nothing -> return Nothing
+        _ -> return mactionuser
+    -- Gets the signup method for the action's type.
+    getSignupMethod action =
+      case actionType action of
+        ViralInvitationSent _ _ _ _ _ -> Just ViralInvitation
+        AccountCreatedBySigning _ _ _ _ -> Just BySigning
+        AccountCreated _ _ -> Just AccountRequest
+        _ -> Nothing
+    -- Generates another activation link
+    generateActivationLink email = do
+      user <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email email)
+      if isNothing $ userhasacceptedtermsofservice user
         then do
-          _ <- (runDBQuery $ GetUserByID uid)
-                  >>= maybe mzero (handleActivate aid hash BySigning)
-          addFlashM modalWelcomeToSkrivaPa
+          ctx <- getContext
+          al <- newAccountCreatedLink user
+          mail <- newUserMail (ctxhostpart ctx) email email al False
+          scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
+          addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
         else mzero
-    Just (AccountCreated uid token) ->
-      if token == hash
-        then (runDBQuery $ GetUserByID uid) >>= maybe mzero (\user ->
-          if isNothing $ userhasacceptedtermsofservice user
-            then do
-              _ <- handleActivate aid hash AccountRequest user
-              getHomeOrUploadLink
-            else do
-              addFlashM flashMessageUserAlreadyActivated
-              getHomeOrUploadLink)
-        else mzero
-    Just _ -> mzero
-    Nothing -> do -- try to generate another activation link
-      getOptionalField asValidEmail "email" >>= maybe mzero (\email ->
-        (runDBQuery $ GetUserByEmail Nothing $ Email email) >>= maybe mzero (\user ->
-          if isNothing $ userhasacceptedtermsofservice user
-            then do
-              ctx <- getContext
-              al <- newAccountCreatedLink user
-              mail <- newUserMail (ctxhostpart ctx) email email al False
-              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
-              addFlashM flashMessageNewActivationLinkSend
-              getHomeOrUploadLink
-            else mzero))
+
+ -- Retrieves the action for the given id
+getActionByActionID :: Kontrakcja m => ActionID -> m (Maybe Action)
+getActionByActionID actionid = do
+  now <- liftIO $ getMinutesTime
+  (query $ GetAction actionid) >>= maybe (return Nothing) (\action -> do
+  -- action may be in state when it has expired, but hasn't yet been
+  -- transformed into next form. below code checks for that.
+  if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
+    then return $ Just action
+    else return $ checkValidity now $ Just action)
+
+-- Looks up any user id on the action, and then returns the relevant user
+getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
+getUserFromAction action =
+  case actionType action of
+    (ViralInvitationSent email _ _ _ _) -> runDBQuery $ GetUserByEmail Nothing email
+    (AccountCreatedBySigning _ uid _ _) -> runDBQuery $ GetUserByID uid
+    (AccountCreated uid _) ->  runDBQuery $ GetUserByID uid
+    _ -> return Nothing
+
+-- Guards so that the token in the given action matches the given magic hash.
+guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
+guardMagicTokenMatch expectedtoken action =
+  if getMagicTokenFromAction == Just expectedtoken
+    then return ()
+    else mzero
   where
-    getUserForViralInvite :: Kontrakcja m => Email -> MinutesTime -> UserID -> m (Maybe User)
-    getUserForViralInvite invitedemail invitationtime inviterid = do
-      muser <- createInvitedUser (BS.empty, BS.empty) (unEmail invitedemail) Nothing
-      case muser of
-        Just user -> do -- user created, we need to fill in some info
-          minviter <- runDBQuery $ GetUserByID inviterid
-          _ <- runDBUpdate $ SetInviteInfo (userid <$> minviter) invitationtime Viral (userid user)
-          return muser
-        Nothing -> do -- user already exists, get her
-          runDBQuery $ GetUserByEmail Nothing invitedemail
+    getMagicTokenFromAction =
+      case actionType action of
+        ViralInvitationSent _ _ _ _ token -> Just token
+        AccountCreatedBySigning _ _ _ token -> Just token
+        AccountCreated _ token -> Just token
+        _ -> Nothing
 
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
   Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
-  iscompanyaccount <- getOptionalField asValidAccountType "accounttype"
-  mcompany <- getCompanyForUser actvuser
-  case (iscompanyaccount, mcompany) of
-    (Nothing, _) -> do
-      Log.debug "Activating user account: No account type set"
-      addFlashM flashMessageNoAccountType
-      return Nothing
-    (Just False, Just _company) -> do
-      -- accounts setup as part of a company can't just switch to being private
-      -- we have protected against this on the client, but this should provide an extra server check
-      addFlashM flashMessageNoAccountType
-      returnToAccountSetup actvuser Nothing
-    (Just False, Nothing) ->
-      -- this is just a simple private account activation
-      finalizePrivateActivation actvuser
-    (Just True, Just company) -> do
-      -- this is an account for an existing company
-      finalizeCompanyActivation actvuser company
-    (Just True, Nothing) -> do
-      -- we need to make a new company, because one doesn't already exist - this user should be the admin too
-      (user, company) <- runDB $ do
-        company <- dbUpdate $ CreateCompany Nothing Nothing
-        _ <- dbUpdate $ SetUserCompany (userid actvuser) (Just $ companyid company)
-        _ <- dbUpdate $ SetUserCompanyAdmin (userid actvuser) True
-        Just user <- dbQuery $ GetUserByID $ userid actvuser
-        return (user, company)
-      finalizeCompanyActivation user company
+  ctx <- getContext
+  mtos <- getDefaultedField False asValidCheckBox "tos"
+  mpassword <- getRequiredField asValidPassword "password"
+  mpassword2 <- getRequiredField asValidPassword "password2"
+  case (mtos, mpassword, mpassword2) of
+    (Just tos, Just password, Just password2) -> do
+      case checkPasswordsMatch password password2 of
+        Right () ->
+          if tos
+            then do
+              passwordhash <- liftIO $ createPassword password
+              runDB $ do
+                _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+                _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+                _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+                return ()
+              tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
+              _ <- addUserSignTOSStatEvent tosuser
+              dropExistingAction aid
+              logUserToContext $ Just tosuser
+              return $ Just tosuser
+            else do
+              addFlashM flashMessageMustAcceptTOS
+              returnToAccountSetup
+        Left flash -> do
+          addFlashM flash
+          returnToAccountSetup
+    _ -> returnToAccountSetup
   where
-    returnToAccountSetup :: Kontrakcja n => User -> Maybe Company -> n (Maybe User)
-    returnToAccountSetup user mcompany = do
-      addFlashM $ modalAccountSetup (Just user) mcompany $ LinkAccountCreated aid hash $ BS.toString $ getEmail user
+    returnToAccountSetup :: Kontrakcja n => n (Maybe User)
+    returnToAccountSetup = do
+      addFlashM $ modalAccountSetup $ LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser
       return Nothing
-
-    asValidAccountType :: String -> Result Bool
-    asValidAccountType "CompanyAccount" = return True
-    asValidAccountType _ = return False
-
-    finalizePrivateActivation :: Kontrakcja n => User -> n (Maybe User)
-    finalizePrivateActivation user =
-      finalizeActivation user Nothing id id
-          
-    finalizeCompanyActivation :: Kontrakcja n => User -> Company -> n (Maybe User)
-    finalizeCompanyActivation user company = do
-      -- is this from the acceptaccount after signup modal? if it is then they just type in their
-      -- password, so we don't want to check for the user and company info stuff
-      acceptaccount <- isFieldSet "acceptaccount"
-      muserf <- if not acceptaccount
-                  then getUserInfoUpdateFunc user
-                  else return $ Just id
-      mcompanyf <- if not acceptaccount && useriscompanyadmin user
-                     then getCompanyInfoUpdateFunc company
-                     else return $ Just id
-      case (muserf, mcompanyf) of
-        (Just userf, Just companyf) ->
-          finalizeActivation user (Just company) userf companyf
-        _ -> returnToAccountSetup user (Just company)
-
-    finalizeActivation :: Kontrakcja n => User
-                                          -> Maybe Company
-                                          -> (UserInfo -> UserInfo)
-                                          -> (CompanyInfo -> CompanyInfo)
-                                          -> n (Maybe User)
-    finalizeActivation user mcompany userinfoupdatefunc companyinfoupdatefunc = do
-      mnewuser <- performActivation user mcompany aid userinfoupdatefunc companyinfoupdatefunc
-      case mnewuser of
-        Just newuser -> do
-          addFlashM flashMessageUserActivated
-          return $ Just newuser
-        Nothing -> do
-          -- performActivation might have updated user or company info, so we
-          -- need to query database for the newest user & company version
-          newuser <- fromMaybe user <$> (runDBQuery $ GetUserByID $ userid user)
-          mnewcompany <- getCompanyForUser newuser
-          returnToAccountSetup newuser mnewcompany
-
-    getUserInfoUpdateFunc :: Kontrakcja n => User -> n (Maybe (UserInfo -> UserInfo))
-    getUserInfoUpdateFunc _user = do
-      mfname <- getRequiredField asValidName "fname"
-      mlname <- getRequiredField asValidName "lname"
-      mcompanyposition <- getRequiredField asValidPosition "companyposition"
-      mphone <- getRequiredField (Good . BS.fromString) "phone"
-      return $ 
-        case (mfname, mlname, mcompanyposition, mphone) of
-          (Just fname, Just lname, Just companytitle, Just phone) -> Just $ 
-            \info -> info { userfstname = fname
-                          , usersndname = lname
-                          , usercompanyposition = companytitle
-                          , userphone = phone
-                          }
-          _ -> Nothing
- 
-    getCompanyInfoUpdateFunc :: Kontrakcja n => Company -> n (Maybe (CompanyInfo -> CompanyInfo))
-    getCompanyInfoUpdateFunc _company = do
-      mcompanyname <- getRequiredField asValidCompanyName "companyname"
-      return $ 
-        case mcompanyname of
-          (Just companyname') -> Just $ \info -> info { companyname = companyname' }
-          _ -> Nothing
-    
-    performActivation :: Kontrakcja n => User
-                                         -> Maybe Company
-                                         -> ActionID
-                                         -> (UserInfo -> UserInfo)
-                                         -> (CompanyInfo -> CompanyInfo)
-                                         -> n (Maybe User)
-    performActivation user mcompany actionid userinfoupdatefunc companyinfoupdatefunc = do
-      ctx <- getContext
-      mtos <- getDefaultedField False asValidCheckBox "tos"
-      mpassword <- getRequiredField asValidPassword "password"
-      mpassword2 <- getRequiredField asValidPassword "password2"
-      -- update user info he typed on signup page, so he won't
-      -- have to type in again if password validation fails.
-      _ <- runDBUpdate $ SetUserInfo (userid user) $ userinfoupdatefunc (userinfo user)
-      -- if appropriate update the company info too
-      if (isJust mcompany && useriscompanyadmin user && usercompany user == fmap companyid mcompany)
-        then do
-          let Just company = mcompany
-          _ <- runDBUpdate $ SetCompanyInfo (companyid company) $ companyinfoupdatefunc (companyinfo company)
-          return ()
-        else return ()
-      case (mtos, mpassword, mpassword2) of
-        (Just tos, Just password, Just password2) -> do
-          case checkPasswordsMatch password password2 of
-            Right () ->
-              if tos
-                then do
-                  passwordhash <- liftIO $ createPassword password
-                  runDB $ do
-                    _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-                    _ <- dbUpdate $ AcceptTermsOfService (userid user) (ctxtime ctx)
-                    _ <- dbUpdate $ SetSignupMethod (userid user) signupmethod
-                    return ()
-                  tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
-                  _ <- addUserSignTOSStatEvent tosuser
-                  dropExistingAction actionid
-                  logUserToContext $ Just user
-                  return $ Just user
-                else do
-                  addFlashM flashMessageMustAcceptTOS
-                  return Nothing
-            Left flash -> do
-              addFlashM flash
-              return Nothing
-        _ -> return Nothing
-
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -1000,7 +925,7 @@ handleAccountRemovalPost aid hash = do
 -}
 handleAccountRemoval' :: Kontrakcja m => ActionID -> MagicHash -> m Document
 handleAccountRemoval' aid hash = do
-  action <- guardJustM $ getAccountCreatedBySigningIDAction aid        
+  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
   let AccountCreatedBySigning _ _ (docid, _) token = actionType action
   guard $ hash == token
   doc <- queryOrFail $ GetDocumentByDocumentID docid
@@ -1016,7 +941,7 @@ getAccountCreatedBySigningIDAction aid = do
   maction <- query $ GetAction aid
   case maction of
     Nothing -> return Nothing
-    Just action -> 
+    Just action ->
       -- allow for account created by signing links only
       if actionTypeID (actionType action) /= AccountCreatedBySigningID
       then return Nothing
@@ -1062,7 +987,7 @@ dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
-  
+
 handleFriends :: Kontrakcja m => m JSValue
 handleFriends = do
   Context{ctxmaybeuser} <- getContext
@@ -1070,11 +995,11 @@ handleFriends = do
   friends <- runDBQuery $ GetUserFriends $ userid user
   params <- getListParamsNew
   let friendsPage = friendSortSearchPage params friends
-  return $ JSObject $ toJSObject [("list", 
-                                   JSArray $ 
-                                   map (\f -> JSObject $ 
+  return $ JSObject $ toJSObject [("list",
+                                   JSArray $
+                                   map (\f -> JSObject $
                                               toJSObject [("fields",
-                                                           JSObject $ toJSObject [("email", 
+                                                           JSObject $ toJSObject [("email",
                                                                                    JSString $ toJSString $ BS.toString $ getEmail f)
                                                                                  ,("id", JSString $ toJSString (show (userid f)))])])
                                            (list friendsPage)),
@@ -1092,7 +1017,7 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
                                    JSArray $
                                    map (\f -> JSObject $
                                               toJSObject [("fields",
-                                                           JSObject $ toJSObject [("id", 
+                                                           JSObject $ toJSObject [("id",
                                                                                    JSString $ toJSString $ show $ userid f)
                                                                                  ,("firstname",
                                                                                    JSString $ toJSString $ BS.toString $ getFirstName f)
@@ -1101,14 +1026,14 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
                                                                                  ,("position",
                                                                                    JSString $ toJSString $ BS.toString $ usercompanyposition $ userinfo f)
                                                                                  ,("phone",
-                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f) 
+                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f)
                                                                                  ,("email",
                                                                                    JSString $ toJSString $ BS.toString $ getEmail f)])])
                                    (list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
-  
 
-{- | 
+
+{- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
  -}
 readXToken :: Kontrakcja m => m (Either String MagicHash)

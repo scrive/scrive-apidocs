@@ -4,6 +4,7 @@ module API.MailAPI (
     , parseSimpleEmail
     , parseSignatory
     , allStrings
+    , parseEmailMessageToParts
     ) where
 
 import DB.Classes
@@ -30,6 +31,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
+import Data.Either
 
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
@@ -41,6 +43,7 @@ import Data.String.Utils
 import Util.StringUtil
 import Doc.DocViewMail
 
+import Util.JSON
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , icontent :: BS.ByteString
                                      , ifrom :: BS.ByteString
@@ -49,9 +52,11 @@ data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
 type MailAPIFunction m a = APIFunction m MailAPIContext a
 
 instance APIContext MailAPIContext where
-    body = ibody
-    newBody b ctx = ctx {ibody = b}
     apiContext = apiContextForMail
+
+instance JSONContainer MailAPIContext where
+    getJSON = ibody
+    setJSON j mapictx = mapictx {ibody = j}
 
 
 apiContextForMail :: Kontrakcja m => m (Either (API_ERROR, String) MailAPIContext)
@@ -61,7 +66,6 @@ apiContextForMail = do
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-
     -- content at this point is basically full MIME email as it was received by SMTP server
     -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
     eresult <- parseEmailMessage (concatChunks content)
@@ -74,11 +78,12 @@ apiContextForMail = do
              _ -> return ()
         return $ Left (API_ERROR_PARSING, "Cannot parse email API call: " ++ msg)
       Right (json, pdf, from, to) -> do
-                        return $ Right $ MailAPIContext { ibody = json
-                                                        , icontent = pdf
-                                                        , ifrom = from
-                                                        , ito = to
-                                                        }
+        Log.debug $ "json again: " ++ show json
+        return $ Right $ MailAPIContext { ibody    = json
+                                        , icontent = pdf
+                                        , ifrom    = from
+                                        , ito      = to
+                                        }
 
 mailAPI :: Kontrakcja m => m Response
 mailAPI = apiCall "mailapi" handleMailCommand
@@ -117,7 +122,8 @@ parseEmailMessage content =
   pdfs = filter isPDF allParts
   plains = filter isPlain allParts
   from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
-  to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
+  to   = maybe BS.empty BS.fromString $ lookup "to"   (MIME.mime_val_headers mime)
+  isOutlook = maybe False ("Outlook" `isInfixOf`) $ lookup "x-mailer" (MIME.mime_val_headers mime) 
   subject = maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
   charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
   recode mimetype content' =
@@ -128,6 +134,7 @@ parseEmailMessage content =
   extendWithFrom (Right r) = Right r
   in
  liftM extendWithFrom $ runErrorT $ do        
+  Log.debug $ "Types of mime parts: " ++ show typesOfParts 
   pdf <- case pdfs of
     [pdf] -> return pdf
     _ -> throwError $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
@@ -135,17 +142,20 @@ parseEmailMessage content =
     [plain] -> return plain
     _ -> throwError $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
   let pdfBinary = snd pdf
-  recodedPlain <- recode (fst plain) (snd plain)
-
-  json <- (ErrorT . return) $ if '{' == (head $ strip $ BS.toString recodedPlain)
-                              then runGetJSON readJSObject (BS.toString recodedPlain)
-                              else parseSimpleEmail (BS.toString subject) (BS.toString recodedPlain)
+  recodedPlain' <- recode (fst plain) (snd plain)
+  let recodedPlain = (replace "\r\n\r\n" "\r\n" $ BS.toString recodedPlain') <| isOutlook |> BS.toString recodedPlain'
+  Log.debug $ "recodedPlain body: " ++ recodedPlain
+  json <- (ErrorT . return) $ if '{' == (head $ strip recodedPlain)
+                              then runGetJSON readJSObject recodedPlain
+                              else parseSimpleEmail (BS.toString subject) recodedPlain
+  Log.debug $ "Json returned from parsing: " ++ show json
   return (json,pdfBinary,from,to)
 
 -- handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
 -- handleMailCommand (JSObject json) content from to = runErrorT $ do
 handleMailCommand :: Kontrakcja m => MailAPIFunction m (JSObject JSValue)
 handleMailCommand = do
+    Log.debug "top of handleMailCommand"
     MailAPIContext { ifrom = from, ito = to, icontent = content } <- ask
     let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
     -- 'extension' is a piece of data that is after + sign in email
@@ -162,9 +172,9 @@ handleMailCommand = do
         fail $ "User '" ++ username ++ "' hasn't enabled mail api"
     let Just mailapi = mmailapi
 
-    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
+    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (askJSONBS "title")
 
-    apikey <- fromMaybe extension <$> (apiAskString "apikey")
+    apikey <- fromMaybe extension <$> (askJSONString "apikey")
 
     case apikey of
         "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
@@ -174,7 +184,7 @@ handleMailCommand = do
     
 
     let toStr = BS.toString to
-    mdoctype <- apiAskString "doctype"
+    mdoctype <- askJSONString "doctype"
     doctype <- case mdoctype of
         Just "contract" -> return (Signable Contract)
         Just "offer" -> return (Signable Offer)
@@ -193,10 +203,11 @@ handleMailCommand = do
     _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
         umapiSentToday = umapiSentToday mailapi + 1
     }
-
-    (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
+    Log.debug "here"
+    (involvedTMP) <- fmap (fromMaybe []) $ (askJSONLocal "involved" $ askJSONLocalMap $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
+    Log.debug $ show involved
     let signatories = map (\p -> (p,[SignatoryPartner])) involved
     mcompany <- case usercompany user of
                   Just companyid -> runDBQuery $ GetCompany companyid
@@ -208,10 +219,10 @@ handleMailCommand = do
                            Left errmsg -> return (error errmsg)
                            Right document -> return document
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUploadNoLogin (documentid doc) content title
-    (_ :: Either String Document) <- liftIO $ update $ UpdateDocument ctxtime (documentid doc) title
-                                     signatories Nothing BS.empty
-                                    (userDetails, [SignatoryPartner, SignatoryAuthor], userid user, usercompany user)
-                                    [EmailIdentification] Nothing AdvancedFunctionality
+    _errs <- lefts <$> (liftIO $ sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
+                                            update $ SetDocumentTitle (documentid doc) title ctxtime,
+                                            update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime,
+                                            update $ ResetSignatoryDetails (documentid doc) ((userDetails, [SignatoryPartner, SignatoryAuthor]):signatories) ctxtime])
 
     (eithernewdocument :: Either String Document) <- update $ PreparationToPending (documentid doc) ctxtime
     (newdocument :: Document) <- case eithernewdocument of
@@ -355,7 +366,6 @@ parseSimpleEmail subject mailbody =
           then Left "The subject of the email becomes the title. The subject you sent was blank. Please add a subject."
           else let sigs = map parseSignatory $ splitSignatories mailbody
                in Right $ JSObject $ toJSObject [("title", JSString $ toJSString $ strip subject),
-                                                 ("involved", 
-                                                  JSArray (catMaybes sigs))]
+                                                 ("involved", JSArray (catMaybes sigs))]
     es -> Left $ intercalate "<br />\n" (map show es)
                            

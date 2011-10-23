@@ -7,6 +7,8 @@ import qualified Control.Exception as E
 
 import DB.Classes
 import DB.Model
+import Happstack.State()
+
 
 getUniqueID :: Table -> DB Int64
 getUniqueID table = do
