@@ -127,13 +127,13 @@ sealSpecFromDocument hostpart document inputpath outputpath =
 
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
-          seenDesc <- renderTemplateForProcess document processseenhistentry $ do
+          seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
-          signDesc <- renderTemplateForProcess document processsignhistentry $ do
+          signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
@@ -145,7 +145,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       invitationSentEntry = case documentinvitetime document of
                                 Nothing -> return []
                                 Just (SignInfo time ipnumber) -> do
-                                   desc <-  renderTemplateForProcess document processinvitationsententry $ do
+                                   desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
@@ -160,7 +160,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       concatComma = concat . intersperse ", "
 
       lastHistEntry = do
-                       desc <- renderTemplateForProcess document processlasthisentry (documentInfoFields document)
+                       desc <- renderLocalTemplateForProcess document processlasthisentry (documentInfoFields document)
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
                                 then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
@@ -181,7 +181,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
       -- Log.debug ("about to render staticTexts")
-      staticTexts <- renderTemplateForProcess document processsealingtext $ do
+      staticTexts <- renderLocalTemplateForProcess document processsealingtext $ do
                         documentInfoFields document
                         field "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
