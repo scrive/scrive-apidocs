@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.APICommons
@@ -54,7 +55,9 @@ import Util.SignatoryLinkUtils
 import DB.Classes
 import qualified AppLogger as Log
 import Util.JSON
-
+import User.Lang
+import User.Region
+import User.Locale
 
 {- -}
 
@@ -220,10 +223,11 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
   , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
   , ("mdate", api_date $ documentmtime doc)
+  , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of
   Nothing -> []
   Just files -> [("files", JSArray files)]
-  
+
 
 api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
 api_document_read False doc = return $ api_document Nothing doc
@@ -248,7 +252,7 @@ data SignatoryTMP = SignatoryTMP {
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
-    Log.debug "getSigantoryTMP"
+    Log.debug "getSignatoryTMP"
     fstname        <- fromJSONField "fstname"
     sndname        <- fromJSONField "sndname"
     company        <- fromJSONField "company"
@@ -314,3 +318,23 @@ getFiles = fmap (fromMaybe []) $ fromJSONLocal "files" $ fromJSONLocalMap $ do
     content <- fromJSONFieldBase64 "content"
     when (isNothing name || isNothing content) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
     return $ Just (fromJust name, fromJust content)
+
+{- | JSON from Locale
+ -}
+jsonFromLocale :: Locale -> JSValue
+jsonFromLocale l = JSObject $ toJSObject [("region", showJSON $ codeFromRegion $ getRegion l),
+                                          ("language", showJSON $ codeFromLang $ getLang l)]
+
+instance FromJSON Locale where
+  fromJSValue (JSObject obj) = 
+    case (fromJSValue =<< getJSONField "region" obj, fromJSValue =<< getJSONField "language" obj) of
+      (Just region, Just language) -> Just $ mkLocale region language
+      (Just region, _)             -> Just $ mkLocaleFromRegion region
+      _                            -> Nothing
+  fromJSValue _ = Nothing
+
+instance FromJSON Region where
+  fromJSValue a = regionFromCode =<< (fromJSValue a)
+  
+instance FromJSON Lang where
+  fromJSValue a = langFromCode =<< (fromJSValue a)

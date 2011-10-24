@@ -79,7 +79,7 @@ module Doc.DocState
     , SetEmailIdentification(..)
     , SetElegitimationIdentification(..)
     , ResetSignatoryDetails(..)
-
+    , SetDocumentLocale(..)
     --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
@@ -314,6 +314,12 @@ newDocument user mcompany title documenttype ctime =
       inserteddoc <- insertNewDocument doc
       return $ Right inserteddoc 
 
+setDocumentLocale :: DocumentID -> Locale -> MinutesTime -> Update Documents (Either String Document)
+setDocumentLocale did locale time = 
+  modifySignableOrTemplate did $ guardStatus "set locale for" Preparation $ \document ->
+    Right $ document { documentregion = getRegion locale
+                     , documentmtime = time}
+
 {- |
     A blank document containing default values that need to be set before
     saving.
@@ -455,13 +461,13 @@ setDocumentFunctionality did docfunc time =
   let isbasic = BasicFunctionality == docfunc
       oldsiglinks = documentsignatorylinks doc
       basicsiglinks = signatoriesToBasic oldsiglinks
-  in Right $ doc { documentfunctionality = docfunc
-                 , documentmtime = time
-                 , documentauthorattachments      = [] <| isbasic |> documentauthorattachments doc
-                 , documentsignatoryattachments   = [] <| isbasic |> documentsignatoryattachments doc
-                 , documentcsvupload              = Nothing <| isbasic |> documentcsvupload doc
-                 , documentsignatorylinks         = basicsiglinks <| isbasic |> oldsiglinks
-                 , documentallowedidtypes         = [EmailIdentification] <| isbasic |> documentallowedidtypes doc
+  in Right $ doc { documentfunctionality        = docfunc
+                 , documentmtime                = time
+                 , documentauthorattachments    = []                    <| isbasic |> documentauthorattachments doc
+                 , documentsignatoryattachments = []                    <| isbasic |> documentsignatoryattachments doc
+                 , documentcsvupload            = Nothing               <| isbasic |> documentcsvupload doc
+                 , documentsignatorylinks       = basicsiglinks         <| isbasic |> oldsiglinks
+                 , documentallowedidtypes       = [EmailIdentification] <| isbasic |> documentallowedidtypes doc
                  }
      
 setCSVSigIndex :: DocumentID -> Int -> MinutesTime -> Update Documents (Either String Document)
@@ -1667,6 +1673,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'removeDocumentAttachment                          
                         , 'updateSigAttachments
                         , 'signDocument
+                        , 'setDocumentLocale
 --                        , 'authorSendDocument
                         , 'setSignatoryCompany
                         , 'removeSignatoryCompany
