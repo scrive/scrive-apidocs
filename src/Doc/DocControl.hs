@@ -32,7 +32,6 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 import Util.StringUtil
-import qualified Amazon as AWS
 import qualified AppLogger as Log
 import Templates.Templates
 import Templates.LocalTemplates
@@ -126,6 +125,7 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxtemplatesforlocale, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+          threadDelay 5000
           enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
             Right newdoc -> runLocalTemplates (ctxtemplatesforlocale $ getLocale newdoc) $ sendClosedEmails ctx newdoc
@@ -325,12 +325,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
-      authorsiglink = fromJust $ getAuthorSigLink document
-      hasAuthorSigned = isJust $ maybesigninfo authorsiglink
-  mail <- case (isSignatory signatorylink, hasAuthorSigned) of
-          (True, True)  -> mailInvitation True ctx Sign document (Just signatorylink)
-          (True, False) -> mailInvitation True ctx Send document (Just signatorylink)
-          (False, _)    -> mailInvitation True ctx View document (Just signatorylink)
+  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)        
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
@@ -1467,37 +1462,27 @@ handlePageOfDocument' documentid mtokens = do
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug $ "Uploading file for doc #" ++ show docid
-  Context{ctxdocstore, ctxs3action, ctxdbconn} <- getContext
   fileresult <- attachFile docid filename content1
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
-    Right document -> do
-        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
-        Log.debug $ title
-        files <- documentfilesM document
-        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
+    Right _document ->
         return ()
   return ()
 
 handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
-  Context{ctxdocstore, ctxs3action, ctxdbconn, ctxtime} <- getContext
   ctx <- getContext
   content14 <- liftIO $ preprocessPDF ctx content1 docid
   file <- runDB $ dbUpdate $ NewFile filename content14
-  fileresult <- update (AttachFile docid (fileid file) ctxtime)
+  fileresult <- update (AttachFile docid (fileid file) (ctxtime ctx))
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
       return ()
-    Right document -> do
-        let title = "Uploading file #" ++ show (documentfiles document) ++ " for doc #" ++ show docid
-        Log.debug $ title
-        files <- documentfilesM document
-        _ <- forkAction title $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) files) ctxdbconn
+    Right _document -> do
         return ()
   return ()
 

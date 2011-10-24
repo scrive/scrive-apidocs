@@ -573,8 +573,8 @@ appHandler appConf appGlobals = do
   finishTime <- liftIO getClockTime
   let TOD ss sp = startTime
       TOD fs fp = finishTime
-      diff = (fs - ss) * 1000000000000 + fp - sp
-  Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
+      _diff = (fs - ss) * 1000000000000 + fp - sp
+  --Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
   return response
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
@@ -675,6 +675,7 @@ appHandler appConf appGlobals = do
                 , ctxadminaccounts = admins appConf
                 , ctxdoclocale = doclocale
                 , ctxuserlocale = userlocale
+                , ctxdbconnstring = dbConfig appConf
                 }
       return ctx
 

@@ -43,6 +43,7 @@ import Data.String.Utils
 import Util.StringUtil
 import Doc.DocViewMail
 
+import Util.JSON
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
                                      , icontent :: BS.ByteString
                                      , ifrom :: BS.ByteString
@@ -51,9 +52,11 @@ data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
 type MailAPIFunction m a = APIFunction m MailAPIContext a
 
 instance APIContext MailAPIContext where
-    body = ibody
-    newBody b ctx = ctx {ibody = b}
     apiContext = apiContextForMail
+
+instance JSONContainer MailAPIContext where
+    getJSON = ibody
+    setJSON j mapictx = mapictx {ibody = j}
 
 
 apiContextForMail :: Kontrakcja m => m (Either (API_ERROR, String) MailAPIContext)
@@ -104,7 +107,7 @@ maybeFail msg = maybe (fail msg) return
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
   where
-    mime = MIME.parseMIMEMessage $ replace "\r\n\r\n--" "\r\n--" (BSC.unpack content)
+    mime = MIME.parseMIMEMessage (BSC.unpack content)
     parts mimevalue = case MIME.mime_val_content mimevalue of
         MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
         MIME.Multi more -> concatMap parts more
@@ -169,9 +172,9 @@ handleMailCommand = do
         fail $ "User '" ++ username ++ "' hasn't enabled mail api"
     let Just mailapi = mmailapi
 
-    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (apiAskBS "title")
+    title <- fromMaybe (BS.fromString "Untitled document received by email") <$> (fromJSONField "title")
 
-    apikey <- fromMaybe extension <$> (apiAskString "apikey")
+    apikey <- fromMaybe extension <$> (fromJSONField "apikey")
 
     case apikey of
         "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
@@ -181,7 +184,7 @@ handleMailCommand = do
     
 
     let toStr = BS.toString to
-    mdoctype <- apiAskString "doctype"
+    mdoctype <- fromJSONField "doctype"
     doctype <- case mdoctype of
         Just "contract" -> return (Signable Contract)
         Just "offer" -> return (Signable Offer)
@@ -201,7 +204,7 @@ handleMailCommand = do
         umapiSentToday = umapiSentToday mailapi + 1
     }
     Log.debug "here"
-    (involvedTMP) <- fmap (fromMaybe []) $ (apiLocal "involved" $ apiMapLocal $ getSignatoryTMP)
+    (involvedTMP) <- fmap (fromMaybe []) $ (fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP)
     let (involved :: [SignatoryDetails]) = map toSignatoryDetails involvedTMP
 
     Log.debug $ show involved

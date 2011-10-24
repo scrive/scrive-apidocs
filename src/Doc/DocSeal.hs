@@ -26,7 +26,6 @@ import System.Exit
 import Kontra
 import Templates.LocalTemplates
 import Templates.Templates
-import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -40,7 +39,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.TransState
 import DB.Classes
-import ForkAction
+import Database.HDBC.PostgreSQL
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -172,22 +171,22 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       fields = concatMap (fieldsFromSignatory . signatorydetails) (documentsignatorylinks document)
 
   in do
-      Log.debug "Creating seal spec from file."
+      -- Log.debug "Creating seal spec from file."
       events <- fmap concat $ sequence $
                     (map makeHistoryEntryFromSignatory signatories) ++
                     [invitationSentEntry] ++
                     [lastHistEntry]
-      Log.debug ("events created: " ++ show events)
+      -- Log.debug ("events created: " ++ show events)
       -- here we use Data.List.sort that is *stable*, so it puts
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
-      Log.debug ("about to render staticTexts")
+      -- Log.debug ("about to render staticTexts")
       staticTexts <- renderTemplateForProcess document processsealingtext $ do
                         documentInfoFields document
                         field "hostpart" hostpart
-      Log.debug ("finished staticTexts: " ++ show staticTexts)
+      -- Log.debug ("finished staticTexts: " ++ show staticTexts)
       let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
-      Log.debug ("read texts: " ++ show readtexts)
+      -- Log.debug ("read texts: " ++ show readtexts)
       return $ Seal.SealSpec
             { Seal.input          = inputpath
             , Seal.output         = outputpath
@@ -205,17 +204,12 @@ sealDocument :: (MonadIO m, DBMonad m)
              => Context
              -> Document
              -> m (Either String Document)
-sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxdbconn}
-             document = do
+sealDocument ctx document = do
   files <- documentfilesM document
   Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
   Log.debug $ "Sealing should be done now"
   Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
-  Log.debug $ "Reselecting document after update - time for upload to amazon"
-  sealedfiles <- documentsealedfilesM newdocument 
-  _ <- liftIO $ forkActionIO "sealing document" $ runReaderT (mapM_ (AWS.uploadFile ctxdocstore ctxs3action) sealedfiles) ctxdbconn
-  Log.debug $ "Upload to amazon is done"
   return $ Right newdocument
 
 
@@ -239,7 +233,7 @@ sealDocumentFile :: (MonadIO m, DBMonad m)
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn, ctxtime}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -247,12 +241,8 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn, ct
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents ctx file
-    Log.debug ("got file contents: " ++ show (BS.length content))
     BS.writeFile tmpin content
-    Log.debug ("wrote file : " ++ tmppath)
     config <- runLocalTemplates ctxtemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
-    Log.debug (show config)
-    Log.debug $ show config
     (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
     case code of
@@ -279,8 +269,10 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates, ctxdbconn, ct
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              File{fileid = sealedfileid} <- ioRunDB ctxdbconn $ dbUpdate $ NewFile filename newfilepdf
-              res <- update $ AttachSealedFile documentid sealedfileid ctxtime
+              File{fileid = sealedfileid} <- 
+                  withPostgreSQL (ctxdbconnstring ctx) $ \conn -> 
+                      ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
+              res <- update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
               return res
       ExitFailure _ ->
           do

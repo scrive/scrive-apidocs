@@ -3,7 +3,7 @@ module File.Model
     ( FileMovedToAWS(..)
     , FileMovedToDisk(..)
     , GetFileByFileID(..)
-    , GetFilesThatShouldBeMovedToAmazon(..)
+    , GetFileThatShouldBeMovedToAmazon(..)
     , NewFile(..)
     , PutFileUnchecked(..)
     ) where
@@ -18,6 +18,7 @@ import DB.Types
 import File.File
 import File.FileID
 import File.Tables
+import Data.Maybe
 
 fetchFiles :: Statement -> [File] -> IO [File]
 fetchFiles st acc = fetchRow st >>= maybe (return acc) f
@@ -92,10 +93,13 @@ instance DBUpdate FileMovedToDisk () where
         _ <- oneRowAffectedGuard r
         return ()
 
-data GetFilesThatShouldBeMovedToAmazon = GetFilesThatShouldBeMovedToAmazon
-instance DBQuery GetFilesThatShouldBeMovedToAmazon [File] where
-  dbQuery GetFilesThatShouldBeMovedToAmazon = wrapDB $ \conn -> do
-    st <- prepare conn $ "SELECT id, name, content, amazon_bucket, amazon_url, disk_path FROM files WHERE content IS NOT NULL"
+data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
+instance DBQuery GetFileThatShouldBeMovedToAmazon (Maybe File) where
+  dbQuery GetFileThatShouldBeMovedToAmazon = wrapDB $ \conn -> do
+    st <- prepare conn $ "SELECT id, name, content, amazon_bucket, amazon_url, disk_path " ++
+                         "FROM files " ++
+                         "WHERE content IS NOT NULL " ++
+                         "LIMIT 1"
     _ <- execute st []
     files <- fetchFiles st []
-    return files
+    return $ listToMaybe files

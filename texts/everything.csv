@@ -868,7 +868,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_invitationMailDeliveredAfterDeferredContentBody","Vi meddelade dig tidigare om att vi hade problem att nå mottagarens
  server. Efter upprepade försök har vår server lyckats leverera
  inbjudan till dokumentet <strong>$documenttitle$</strong> till
- $email$.",,"We notified you earlier that we had difficulties delivering an email. After several attempts we have successfully delivered the invitation for document<strong>$documenttitle$</strong>
+ $email$.",,"We notified you earlier that we had difficulties delivering an email. After several attempts we have successfully delivered the invitation for document <strong>$documenttitle$</strong>
  to $email$."
 "_invitationMailDeliveredAfterDeferredTitle","Lyckosam leverans",,"Successfully delivered"
 "_invitationMailUndeliveredContentBody","Vi har inte kunnat leverera din inbjudan att underteckna dokumentet
@@ -876,11 +876,11 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  med mottagarens e-post server eller mer troligt på att adressen
  $email$ inte existerar.       Processen har därmed avbrutits.
  Gör så här om du vill börja om:",,"We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been canceled. To restart it:"
-"_invitationMailUndeliveredContentInstruction","Kontrollera vilken som är mottagarens korrekta adress<br/>
+"_invitationMailUndeliveredContentInstruction","1. Kontrollera vilken som är mottagarens korrekta adress<br/>  
      2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
- in rätt e-postadress och skicka igen",,"Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
+ in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
 "_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
     underkonto på $ourServiceName()$ genom vilket du kan skriva avtal
@@ -1642,10 +1642,10 @@ profits and reduce frustration. The following mateials shall only
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
 "_mailCancelContractByAuthorContentBody","<strong>$creatorname$</strong> har valt att återkalla sin
- inbjudan att underteckna dokument $documenttitle$.      Därmed
+ inbjudan att underteckna dokument <strong>$documenttitle$</strong>.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
  dokumentet.",,"<strong>$creatorname$</strong> has chosen to withdraw
- the invitation to sign $documenttitle$. Therefore the
+ the invitation to sign <strong>$documenttitle$</strong>. Therefore the
  agreement process has been cancelled."
 "_mailCancelDocumentByAuthorTitle","Återkallelsenotis: $documenttitle$",,"Cancellation notice: $documenttitle$"
 "_mailCancelOfferByAuthorContentBody","<strong>$creatorname$</strong>   har valt att återkalla
@@ -1685,7 +1685,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignContractContentSender","Avsändare:",,"Sender:"
-"_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten $ourServiceName()$.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online via $ourServiceName()$."
+"_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong>."
 "_mailInvitationToSignContractDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online."
 "_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
@@ -1712,8 +1712,8 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or reject the order:"
 "_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online via tjänsten $ourServiceName()$.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong> online via $ourServiceName()$."
-"_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong> online."
+"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
+"_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
 "_mailInviteUserAsCompanyAccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
  huvudkonto till ditt konto. Om du accepterar blir ditt konto
@@ -1769,8 +1769,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailNewAccountCreatedByAdminTitle","Nytt konto",,"New account"
 "_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.",,"The verified offer is attached."
 "_mailOfferClosedContentOfferAccepted","Offerten <strong>$documenttitle$</strong> har accepterats av
- $partylist:noescape()$ och $ourServiceName()$ har utfärdat ett verifikat
- för accepten.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
+ $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
  and $ourServiceName()$ has verified the confirmation."
 "_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
@@ -2687,7 +2686,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
  genom att följa instruktionerna nedan.",,"<strong>$author$</strong> wants to remind you that you haven't  confirmed or rejected the order <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedTitle","Påminnelse att underteckna  $documenttitle$",,"Reminder to sign  $documenttitle$"
-"_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
+"_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> vill skicka
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten $ourServiceName()$. Dokumentet bifogas
  med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using $ourServiceName()$. Please find it attached."
@@ -2695,17 +2694,15 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  <strong>$documenttitle$</strong>  till dig. Dokumentet
  har undertecknats av dig. Dokumentet bifogas
  med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document. Please find it attached."
-"_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
-  <strong>$documenttitle$</strong>        till dig. Offerten
- har accepterats av dig via tjänsten $ourServiceName()$. Den accepterade
- offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer using $ourServiceName()$. Please find it attached."
+"_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> vill skicka offerten
+  <strong>$documenttitle$</strong>        till dig. Den accepterade
+ offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. Please find it attached."
 "_remindMailSignedOfferStandardHeaderSendRequestWithService","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig. Den accepterade
  offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer.. Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
- <strong>$documenttitle$</strong>        till dig som du har
- bekräftat via tjänsten $ourServiceName()$. Orderbekräftelsen bifogas med
+ <strong>$documenttitle$</strong>        till dig. Orderbekräftelsen bifogas med
  detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using $ourServiceName()$.  Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
