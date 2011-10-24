@@ -52,8 +52,9 @@ testLoggedInLocaleSwitching :: Connection -> Assertion
 testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
     --create a new uk user and login
     uid <- createTestUser REGION_GB LANG_EN
-    ctx0 <- (\c -> c { ctxdbconn = conn, ctxuserlocale = mkLocale REGION_GB LANG_EN })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    globaltemplates <- readGlobalTemplates
+    ctx0 <- (\c -> c { ctxdbconn = conn, ctxlocale = mkLocale REGION_GB LANG_EN })
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res1, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost >>= sendRedirect
     assertLoggedInAndOnUploadPage uid res1 ctx1

@@ -123,12 +123,12 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
         _ <- addDocumentCloseStatEvents document
-        ctx@Context{ctxtemplatesforlocale, ctxdbconn} <- getContext
+        ctx@Context{ctxlocale, ctxglobaltemplates, ctxdbconn} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           threadDelay 5000
           enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
-            Right newdoc -> runLocalTemplates (ctxtemplatesforlocale $ getLocale newdoc) $ sendClosedEmails ctx newdoc
+            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
@@ -144,16 +144,16 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         _ <- addDocumentCloseStatEvents document
-        ctx@Context{ctxtemplatesforlocale, ctxdbconn} <- getContext
+        ctx@Context{ctxlocale, ctxglobaltemplates, ctxdbconn} <- getContext
         author <- getDocAuthor
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
           case enewdoc of
-            Right newdoc -> runLocalTemplates (ctxtemplatesforlocale $ getLocale newdoc) $ sendClosedEmails ctx newdoc
+            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> do
               _ <- update $ ErrorDocument documentid errmsg
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-              runLocalTemplates (ctxtemplatesforlocale $ getLocale document) $ sendDocumentErrorEmail ctx document author
+              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail ctx document author
               return ()
         return ()
     -- Pending -> Rejected
@@ -325,7 +325,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
-  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)        
+  mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {

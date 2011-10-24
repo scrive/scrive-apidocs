@@ -158,7 +158,7 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
           _ -> error $ "No involved in document: " ++ show d
         _ -> error $ "No document returned: " ++ show doc
 
--- Requests body 
+-- Requests body
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
@@ -188,7 +188,9 @@ getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSOb
 -- Making requests
 makeAPIRequest :: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> DB APIResponse
 makeAPIRequest handler req = wrapDB $ \conn -> do
-    ctx <- (\c -> c { ctxdbconn = conn }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    globaltemplates <- readGlobalTemplates
+    ctx <- (\c -> c { ctxdbconn = conn })
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
     fmap fst $ runTestKontra rq ctx $ testAPI handler
 
@@ -199,8 +201,8 @@ createTestService = do
     Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
     _ <- dbUpdate $ CreateService (ServiceID $ BS.pack "test_service") (Just pwd) userid
     return ()
-    
-    
+
+
 
 
 -- Utils

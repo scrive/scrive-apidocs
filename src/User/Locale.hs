@@ -6,6 +6,7 @@ module User.Locale (
   , getLang
   , HasLocale (..)
   , targetedLocales
+  , allLocales
   ) where
 
 import Misc
@@ -30,7 +31,7 @@ instance HasLocale Locale where
 getRegion :: HasLocale a => a -> Region
 getRegion x =
   let Locale region _lang = getLocale x in
-  region            
+  region
 
 getLang :: HasLocale a => a -> Lang
 getLang x =
@@ -39,3 +40,6 @@ getLang x =
 
 targetedLocales :: [Locale]
 targetedLocales = map mkLocaleFromRegion allValues
+
+allLocales :: [Locale]
+allLocales = targetedLocales

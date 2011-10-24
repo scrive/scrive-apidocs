@@ -36,8 +36,10 @@ data Context = Context {
     , ctxgscmd               :: String -- ^
     , ctxproduction          :: Bool -- ^ Is this server the production server?
     , ctxbackdooropen        :: Bool -- ^ Whether the testing backdoor is open?
-    , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text
-    , ctxtemplatesforlocale  :: Locale -> KontrakcjaTemplates -- ^ Templates by locale.
+    , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
+    , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
+    , ctxlocale              :: Locale
+    , ctxdoclocale           :: Maybe Locale
     , ctxesenforcer          :: MVar () -- ^
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
@@ -47,8 +49,6 @@ data Context = Context {
     , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
-    , ctxuserlocale          :: Locale
-    , ctxdoclocale           :: Maybe Locale
 }
 
 {- |
@@ -56,4 +56,4 @@ data Context = Context {
     use the user's locale
 -}
 instance HasLocale Context where
-  getLocale Context{ctxuserlocale} = ctxuserlocale
+  getLocale Context{ctxlocale} = ctxlocale

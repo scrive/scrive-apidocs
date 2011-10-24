@@ -38,7 +38,6 @@ import MinutesTime
 import Templates.Templates
 import qualified MemCache
 import User.Locale
-import User.Region
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
@@ -52,9 +51,9 @@ instance DBMonad TestKontra where
 
 instance TemplatesMonad TestKontra where
     getTemplates = ctxtemplates <$> getContext
-    getLocalTemplates haslocale = do
-      ctx <- getContext
-      return $ (ctxtemplatesforlocale ctx) (getLocale haslocale)
+    getLocalTemplates locale = do
+      Context{ctxglobaltemplates} <- getContext
+      return $ localizedVersion locale ctxglobaltemplates
 
 instance KontraMonad TestKontra where
     getContext    = TK $ fst <$> get
@@ -190,8 +189,8 @@ mkRequest method vars = liftIO $ do
         isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
-mkContext :: MonadIO m => KontrakcjaTemplates -> m Context
-mkContext templates = liftIO $ do
+mkContext :: MonadIO m => Locale -> KontrakcjaGlobalTemplates -> m Context
+mkContext locale globaltemplates = liftIO $ do
     docs <- newMVar M.empty
     enforcer <- newEmptyMVar
     memcache <- MemCache.new BS.length 52428800
@@ -219,8 +218,10 @@ mkContext templates = liftIO $ do
         , ctxgscmd = "gs"
         , ctxproduction = False
         , ctxbackdooropen = False
-        , ctxtemplates = templates
-        , ctxtemplatesforlocale = const templates
+        , ctxtemplates = localizedVersion locale globaltemplates
+        , ctxglobaltemplates = globaltemplates
+        , ctxlocale = locale
+        , ctxdoclocale = Nothing
         , ctxesenforcer = enforcer
         , ctxtwconf = error "twconf is not defined"
         , ctxelegtransactions = []
@@ -230,6 +231,4 @@ mkContext templates = liftIO $ do
         , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
-        , ctxdoclocale = Nothing
-        , ctxuserlocale = mkLocaleFromRegion REGION_SE
     }

@@ -31,8 +31,9 @@ loginTests conn = testGroup "Login" [
 testSuccessfulLogin :: Connection -> Assertion
 testSuccessfulLogin conn = withTestEnvironment conn $ do
     uid <- createTestUser
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     assertBool "Response code is 303" $ rsCode res == 303
@@ -43,8 +44,9 @@ testSuccessfulLogin conn = withTestEnvironment conn $ do
 testCantLoginWithInvalidUser :: Connection -> Assertion
 testCantLoginWithInvalidUser conn = withTestEnvironment conn $ do
     _ <- createTestUser
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
@@ -52,8 +54,9 @@ testCantLoginWithInvalidUser conn = withTestEnvironment conn $ do
 testCantLoginWithInvalidPassword :: Connection -> Assertion
 testCantLoginWithInvalidPassword conn = withTestEnvironment conn $ do
     _ <- createTestUser
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'

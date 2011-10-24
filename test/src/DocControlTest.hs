@@ -17,6 +17,7 @@ import Database.HDBC.PostgreSQL
 import Doc.DocState
 import Doc.DocControl
 import Company.Model
+import User.Locale
 
 
 docControlTests :: Connection -> Test
@@ -25,7 +26,7 @@ docControlTests conn =  testGroup "Templates"
                                testCase "Create document from template" $ testDocumentFromTemplate conn
                              , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
                            ]
-                     
+
 {-
                      [testGroup "sendDocumentErrorEmail1"
                            [
@@ -47,13 +48,15 @@ countingMailer counter mail = do
     modifyIORef counter $ (+) 1
 
  -}
- 
+
 testDocumentFromTemplate :: Connection -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
     doc <- addRandomDocumentWithAuthorAndCondition user isTemplate
     docs1 <- randomQuery $ GetDocumentsByUser user
-    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    globaltemplates <- readGlobalTemplates
+    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByUser user
@@ -63,11 +66,13 @@ testDocumentFromTemplateShared :: Connection -> Assertion
 testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
     (Company {companyid}) <- addNewCompany
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
-    doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate) 
+    doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate)
     _ <- randomUpdate $ ShareDocument $ documentid doc
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByUser user
-    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    globaltemplates <- readGlobalTemplates
+    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByUser user

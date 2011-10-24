@@ -138,7 +138,8 @@ validMail name m = do
 
 mailingContext :: Region -> Connection -> DB Context
 mailingContext r conn = do
-    ctx <- mkContext =<< localizedVersion (Scrive,r,defaultRegionLang r)  <$> readGlobalTemplates
+    globaltemplates <- readGlobalTemplates
+    ctx <- mkContext (mkLocaleFromRegion r) globaltemplates
     return $ ctx {
                 ctxdbconn = conn,
                 ctxhostpart = "http://dev.skrivapa.se"

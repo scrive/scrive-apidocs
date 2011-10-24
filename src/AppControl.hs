@@ -636,8 +636,7 @@ appHandler appConf appGlobals = do
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
-      -- work out the system, region and language
-      let systemServer = systemServerFromURL hostpart
+      -- work out the region and language
       doclocale <- getDocumentLocale
       userlocale <- getUserLocale conn muser
 
@@ -656,8 +655,10 @@ appHandler appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,getRegion userlocale, getLang userlocale) templates2
-                , ctxtemplatesforlocale = \l -> localizedVersion (systemServer, getRegion l, getLang l) templates2
+                , ctxtemplates = localizedVersion userlocale templates2
+                , ctxglobaltemplates = templates2
+                , ctxlocale = userlocale
+                , ctxdoclocale = doclocale
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -673,8 +674,6 @@ appHandler appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
-                , ctxdoclocale = doclocale
-                , ctxuserlocale = userlocale
                 , ctxdbconnstring = dbConfig appConf
                 }
       return ctx
@@ -821,7 +820,7 @@ handleLoginPost = do
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
                         _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          locale = ctxuserlocale ctx
+                          locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
                         logUserToContext muuser

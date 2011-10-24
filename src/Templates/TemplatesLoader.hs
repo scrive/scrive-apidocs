@@ -20,13 +20,10 @@ module Templates.TemplatesLoader
     , getTemplates
     , readGlobalTemplates
     , localizedVersion
-    , Localization
-    , systemServerFromURL
     ) where
 
 import Text.StringTemplate
 import Text.StringTemplate.Classes
-import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Map as Map
@@ -36,9 +33,7 @@ import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
 import Templates.TemplatesFiles
-import Misc
-import User.Lang
-import User.Region
+import User.Locale
 import Templates.TextTemplates
 import Templates.SystemTemplates
 import User.SystemServer
@@ -48,25 +43,23 @@ import User.SystemServer
 
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
-type KontrakcjaGlobalTemplates = Map.Map Localization KontrakcjaTemplates
-type Localization = (SystemServer,Region,Lang)
+type KontrakcjaGlobalTemplates = Map.Map Locale KontrakcjaTemplates
 
-localizedVersion::Localization -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
-localizedVersion localization mtemplates = mtemplates ! localization
+localizedVersion:: Locale -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
+localizedVersion locale mtemplates = mtemplates ! locale
 
 -- Fixme: Make this do only one read of all files !!
 readGlobalTemplates :: (Functor m, MonadIO m) => m KontrakcjaGlobalTemplates
 readGlobalTemplates =
-  let alllocalizations = (\s r l -> (s,r,l)) <$> allValues <*> allValues <*> allValues in
-  fmap Map.fromList $ forM alllocalizations $ \localization -> do
-    templates <- liftIO $ readTemplates localization
-    return (localization,templates)
+  fmap Map.fromList $ forM allLocales $ \locale -> do
+    templates <- liftIO $ readTemplates locale
+    return (locale,templates)
 
-readTemplates :: Localization -> IO KontrakcjaTemplates
-readTemplates (system, region, lang) = do
+readTemplates :: Locale -> IO KontrakcjaTemplates
+readTemplates locale = do
     ts <- mapM getTemplates templatesFilesPath
-    texts <- getTextTemplates region lang
-    stemplates <- getSystemTemplates system
+    texts <- getTextTemplates (getRegion locale) (getLang locale)
+    stemplates <- getSystemTemplates Scrive
     return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ stemplates ++ (concat ts) ++ texts
 
 --This is avaible only for special cases

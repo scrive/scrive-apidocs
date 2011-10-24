@@ -233,7 +233,7 @@ sealDocumentFile :: (MonadIO m, DBMonad m)
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -242,7 +242,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents ctx file
     BS.writeFile tmpin content
-    config <- runLocalTemplates ctxtemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
+    config <- runWithTemplates ctxlocale ctxglobaltemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
     (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
     case code of
@@ -269,8 +269,8 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              File{fileid = sealedfileid} <- 
-                  withPostgreSQL (ctxdbconnstring ctx) $ \conn -> 
+              File{fileid = sealedfileid} <-
+                  withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
                       ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
               res <- update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
               return res
