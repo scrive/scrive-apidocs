@@ -223,7 +223,7 @@ flashMessageNoBulkRemindsSent doctype = do
 flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishRestoreDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishRestoreDone" ()
-  
+
 flashMessageRubbishHardDeleteDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishHardDeleteDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishHardDeleteDone" ()
@@ -271,7 +271,7 @@ flashMessagePleaseSignWithEleg =
 flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
- 
+
 documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do
     ctx <- getContext
@@ -315,7 +315,7 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", return $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map signatoryAttachmentJSON $ 
+      , ("attachments", return $ JSArray $ map signatoryAttachmentJSON $
                         filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
    ]
     where
@@ -330,7 +330,7 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
 
 signatoryAttachmentJSON :: SignatoryAttachment -> JSValue
 signatoryAttachmentJSON sa = JSObject $ toJSObject $
-    [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
+    [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
       , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
       -- , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
     ]
@@ -369,14 +369,14 @@ placementJSON doc placement = JSObject $ toJSObject $
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
 
-{- 
+{-
 , signatorysndnameplacements        = []
     , signatorycompanyplacements        = []
     , signatorypersonalnumberplacements = []
     , signatorycompanynumberplacements  = []
     , signatoryemailplacements          = []
     , signatoryotherfields
-    
+
 
       field "current" $ current
       field "fstname" $ packToMString $ getFirstName signatorydetails
@@ -399,9 +399,9 @@ jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> 
                      else "viewer"
       field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)
       field "author" $ (isAuthor siglnk)
-      ]      
+      ]
       -}
-      
+
 processJSON :: (TemplatesMonad m) => Document -> m JSValue
 processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       [
@@ -440,16 +440,16 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
         bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
 
 fileJSON :: File ->  [(String,String)]
-fileJSON file = 
+fileJSON file =
     [  ("id",   show $ fileid file),
        ("name", BS.toString $ filename file)
-    ] 
- 
+    ]
+
 docForListJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> User -> Document -> m (JSObject JSValue)
 docForListJSON tl crtime user doc =
-  let link = case getSigLinkFor doc user of 
+  let link = case getSigLinkFor doc user of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
-        _                           -> LinkIssueDoc $ documentid doc 
+        _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   in fmap toJSObject $ propagateMonad  $
     [ ("fields" , jsonPack <$> docFieldsListForJSON tl crtime doc),
@@ -472,7 +472,7 @@ docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("time", return $ showDateAbbrev tl crtime (documentmtime doc)),
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
-    ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),  
+    ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),
     ("shared", return $ show $ (documentsharing doc)==Shared)
     ]
   where
@@ -501,7 +501,7 @@ signatoryFieldsListForJSON tl crtime doc sl = propagateMonad [
                     _                             -> Nothing
         open = maybereadinvite sl
 
-  
+
 
 {- |
     We want the documents to be ordered like the icons in the bottom
@@ -710,7 +710,7 @@ pageDocumentDesign ctx
    let
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        authorotherfields fields = sequence .
-         map (\((s, label, _), i) -> 
+         map (\((s, label, _), i) ->
            renderTemplateFM "customfield" $ do
              field "otherFieldValue" $ sfValue s
              field "otherFieldName"  $ label
@@ -757,7 +757,7 @@ pageDocumentDesign ctx
        fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
        fieldM "expirytext" $ getProcessText processexpirytext
-       
+
 
 documentRegionFields :: (Functor m, MonadIO m) => Document -> Fields m
 documentRegionFields document = do
@@ -874,7 +874,7 @@ csvLandPage count = renderTemplateFM "csvlandpage" $ do
 pageDocumentForViewer :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String
 pageDocumentForViewer _ document  msignlink =
   renderTemplateFM "pageDocumentForViewerContent" $  do
-       field "documentid" $ show $ documentid document 
+       field "documentid" $ show $ documentid document
        field "siglinkid" $ fmap (show . signatorylinkid) msignlink
        field "sigmagichash" $ fmap (show . signatorymagichash) msignlink
 

@@ -640,7 +640,6 @@ appHandler appConf appGlobals = do
       let systemServer = systemServerFromURL hostpart
       doclocale <- getDocumentLocale
       userlocale <- getUserLocale conn muser
-      let ctxlocale = fromMaybe userlocale doclocale
 
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -657,7 +656,8 @@ appHandler appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,getRegion ctxlocale, getLang ctxlocale) templates2
+                , ctxtemplates = localizedVersion (systemServer,getRegion userlocale, getLang userlocale) templates2
+                , ctxtemplatesforlocale = \l -> localizedVersion (systemServer, getRegion l, getLang l) templates2
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf

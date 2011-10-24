@@ -52,6 +52,9 @@ instance DBMonad TestKontra where
 
 instance TemplatesMonad TestKontra where
     getTemplates = ctxtemplates <$> getContext
+    getLocalTemplates haslocale = do
+      ctx <- getContext
+      return $ (ctxtemplatesforlocale ctx) (getLocale haslocale)
 
 instance KontraMonad TestKontra where
     getContext    = TK $ fst <$> get
@@ -216,6 +219,7 @@ mkContext templates = liftIO $ do
         , ctxproduction = False
         , ctxbackdooropen = False
         , ctxtemplates = templates
+        , ctxtemplatesforlocale = const templates
         , ctxesenforcer = enforcer
         , ctxtwconf = error "twconf is not defined"
         , ctxelegtransactions = []

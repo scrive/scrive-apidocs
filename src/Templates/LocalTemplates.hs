@@ -15,3 +15,4 @@ runLocalTemplates templates action = runReaderT (unLT action) templates
 
 instance TemplatesMonad LocalTemplates where
     getTemplates = LocalTemplates ask
+    getLocalTemplates = const $ LocalTemplates ask

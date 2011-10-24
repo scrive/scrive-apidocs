@@ -79,6 +79,7 @@ module Templates.Templates
     ( RenderTemplate(..)
     , renderTemplateF
     , renderTemplateFM
+    , renderLocalTemplateFM
     , readGlobalTemplates
     , templateList
     , KontrakcjaTemplates
@@ -105,10 +106,12 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Text.StringTemplate.Classes as HST
 
+import User.Locale
 import Templates.TemplatesLoader hiding (getTemplates)
 
 class (Functor a, MonadIO a) => TemplatesMonad a where
     getTemplates :: a KontrakcjaTemplates
+    getLocalTemplates :: HasLocale b => b -> a KontrakcjaTemplates
 
 -- | Filling template with a given name using given attributes.  It
 -- never fail, just returns empty message and writes something in the
@@ -119,6 +122,10 @@ class RenderTemplate a where
     renderTemplateM :: TemplatesMonad m => String -> a -> m String
     renderTemplateM name value = do
         templates <- getTemplates
+        renderTemplate templates name value
+    renderLocalTemplateM :: (HasLocale a, TemplatesMonad m) => a -> String -> a -> m String
+    renderLocalTemplateM locale name value = do
+        templates <- getLocalTemplates locale
         renderTemplate templates name value
 
 -- | Basic rendering interface It allows to pass some string
@@ -142,6 +149,11 @@ renderTemplateF ts name fields = do
 renderTemplateFM :: TemplatesMonad m => String -> Fields m -> m String
 renderTemplateFM name fields = do
     ts <- getTemplates
+    renderTemplateF ts name fields
+
+renderLocalTemplateFM :: (HasLocale a, TemplatesMonad m) => a -> String -> Fields m -> m String
+renderLocalTemplateFM locale name fields = do
+    ts <- getLocalTemplates locale
     renderTemplateF ts name fields
 
 type Fields m = State ([(String, m (SElem String))]) ()

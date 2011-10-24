@@ -47,16 +47,16 @@ gRight ac = do
       assertFailure (show m)
       return undefined
     Right d -> return d
-      
+
 
 testDocumentMails  :: Connection -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-  forM_ allValues $ \l ->   
+  forM_ allValues $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
         d <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        let docid = documentid d 
+        let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         _ <- gRight $ randomUpdate $ AttachFile docid
@@ -73,7 +73,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         req <- mkRequest POST []
         --Invitation Mails
         let checkMail s mg = do
-                              m <- fst <$> (runTestKontra req ctx $ mg) 
+                              m <- fst <$> (runTestKontra req ctx $ mg)
                               validMail (s ++ " "++ show doctype) m
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
@@ -87,10 +87,10 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Cancel" $ mailCancelDocumentByAuthor True Nothing  ctx doc
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
-        -- awaiting author email 
+        -- awaiting author email
         when (doctype == Contract) $ do
-          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
-        -- Virtual signing 
+          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
+        -- Virtual signing
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) (10 `minutesAfter` now) ip Nothing
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
@@ -101,39 +101,39 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
 
 testUserMails :: Connection -> Maybe String -> Assertion
 testUserMails conn mailTo = withTestEnvironment conn $ do
-  forM_ allValues $ \l ->  do  
+  forM_ allValues $ \l ->  do
     user <- addNewRandomAdvancedUser
     ctx <- mailingContext l conn
     req <- mkRequest POST []
     let checkMail s mg = do
-                           m <- fst <$> (runTestKontra req ctx $ mg) 
+                           m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
                            sendoutForManualChecking s req ctx mailTo m
-    checkMail "New account" $ do 
+    checkMail "New account" $ do
           al <- newAccountCreatedLink user
           newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al False
-    checkMail "New account by admin" $ do 
+    checkMail "New account by admin" $ do
           al <- newAccountCreatedLink user
           mailNewAccountCreatedByAdmin ctx (getSmartName user) (getEmail user) al Nothing
-    checkMail "New account after signing contract" $ do 
+    checkMail "New account after signing contract" $ do
           al <- newAccountCreatedLink user
-          mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al 
-    checkMail "Reset password mail" $ do 
+          mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al
+    checkMail "Reset password mail" $ do
           al <- newAccountCreatedLink user
-          resetPasswordMail (ctxhostpart ctx) user al 
-    
-    
+          resetPasswordMail (ctxhostpart ctx) user al
+
+
 -- MAIL TESTING UTILS
 validMail :: String -> Mail -> DB ()
 validMail name m = do
     let c = BS.toString $ content m
     let exml = xmlParse' name c
-    case (any isAlphaNum $ BS.toString $ title m) of 
+    case (any isAlphaNum $ BS.toString $ title m) of
          True -> assertSuccess
-         False -> assertFailure ("Empty title of mail " ++ name) 
-    case exml of 
+         False -> assertFailure ("Empty title of mail " ++ name)
+    case exml of
          Right _ -> assertSuccess
-         Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err) 
+         Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
 
 
 mailingContext :: Region -> Connection -> DB Context
@@ -152,14 +152,14 @@ sendoutForManualChecking titleprefix req ctx (Just email) m = do
             let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
                                                 email=BS.fromString email}],
                                  title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
-            a <- rand 10 arbitrary 
+            a <- rand 10 arbitrary
             success <- sendMail testMailer a mailToSend
             assertBool "Mail could not be send" success
-    assertSuccess 
+    assertSuccess
 
 testMailer:: Mailer
 testMailer = createSendgridMailer $ MailsSendgrid {
-        mailbackdooropen = False, 
+        mailbackdooropen = False,
         ourInfoEmail = "test@skrivapa.se",
         ourInfoEmailNiceName = "test",
         sendgridSMTP = "smtps://smtp.sendgrid.net",
