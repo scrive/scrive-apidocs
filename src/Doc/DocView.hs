@@ -278,17 +278,25 @@ documentJSON msl _crttime doc = do
     files <- documentfilesM doc
     sealedfiles <- documentsealedfilesM doc
     authorattachmentfiles <- mapM (runDB . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    signatoryattachmentsfiles <- catMaybes <$> (sequence [do
+                                             file <- runDB $ dbQuery $ GetFileByFileID fid 
+                                             case file of
+                                               Nothing -> return Nothing
+                                               Just f -> return $ Just (fid, f)
+                                          | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
+    
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
        ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
+       --("signatoryattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes ),
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
+       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
        ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification])
      ]
@@ -298,8 +306,8 @@ authorizationJSON EmailIdentification = JSString $ toJSString "email"
 authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
 
 
-signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
-signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad $
+signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> [(FileID, File)] -> SignatoryLink -> m JSValue
+signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagateMonad $
     [
         ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
       , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
@@ -315,7 +323,7 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", return $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map signatoryAttachmentJSON $ 
+      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $ 
                         filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
    ]
     where
@@ -328,12 +336,13 @@ signatoryJSON doc viewer siglink = fmap (JSObject . toJSObject) $ propagateMonad
                     _                             -> Nothing
 
 
-signatoryAttachmentJSON :: SignatoryAttachment -> JSValue
-signatoryAttachmentJSON sa = JSObject $ toJSObject $
-    [   ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
-      , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
-      -- , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> signatoryattachmentfile sa)
-    ]
+signatoryAttachmentJSON :: [(FileID, File)] -> SignatoryAttachment -> JSValue
+signatoryAttachmentJSON files sa = JSObject $ toJSObject $
+  let mfile = maybe Nothing (\fid -> lookup fid files) (signatoryattachmentfile sa)
+  in [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa) 
+     , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
+     , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
+     ]
 
 signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = JSArray $

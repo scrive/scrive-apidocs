@@ -1512,8 +1512,7 @@ saveSigAttachment docid name email fid = do
         where
           newsigatts = map addfile $ documentsignatoryattachments doc
           addfile a | email == signatoryattachmentemail a && name == signatoryattachmentname a =
-            a { signatoryattachmentfile = Just $ fid
-              }
+            a { signatoryattachmentfile = Just $ fid }
           addfile a = a
 
 {- |
