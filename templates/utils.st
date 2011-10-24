@@ -16,11 +16,9 @@ listyou=
 customFooter= <span/>
 ###
 poweredBySkrivaPaPara=
-    $if(!service)$
     <p>
       <small> $_poweredBySkrivaPaPara()$ <br/><a href="$ctxhostpart$">$ourServiceName()$</a></small>
     </p>
-    $endif$
 #####
 wrapHTML=
     <html>
