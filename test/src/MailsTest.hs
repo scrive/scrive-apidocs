@@ -114,7 +114,7 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
           newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al False
     checkMail "New account by admin" $ do
           al <- newAccountCreatedLink user
-          mailNewAccountCreatedByAdmin ctx (getSmartName user) (getEmail user) al Nothing
+          mailNewAccountCreatedByAdmin ctx (ctxlocale ctx) (getSmartName user) (getEmail user) al Nothing
     checkMail "New account after signing contract" $ do
           al <- newAccountCreatedLink user
           mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al

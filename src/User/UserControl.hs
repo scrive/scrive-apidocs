@@ -527,7 +527,7 @@ createNewUserByAdmin ctx names email _freetill custommessage locale = do
              now <- liftIO $ getMinutesTime
              _ <- runDBUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
-             mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
+             mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
