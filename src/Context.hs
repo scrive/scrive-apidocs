@@ -50,10 +50,3 @@ data Context = Context {
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
 }
-
-{- |
-    If there is a doc locale then we want to use it, but otherwise we
-    use the user's locale
--}
-instance HasLocale Context where
-  getLocale Context{ctxlocale} = ctxlocale

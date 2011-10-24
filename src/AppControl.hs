@@ -581,7 +581,7 @@ appHandler appConf appGlobals = do
     handle rq session ctx = do
       (res,ctx') <- toIO ctx . runKontra $
          do
-          res <- handleRoutes (getLocale ctx) `mplus` do
+          res <- handleRoutes (ctxlocale ctx) `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
@@ -827,11 +827,11 @@ handleLoginPost = do
                         return BackToReferer
                 Just _ -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
+                        return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
+                    return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
+        _ -> return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
 
 {- |
    Handles the logout, and sends user back to main page.
@@ -840,7 +840,7 @@ handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     ctx <- getContext
     logUserToContext Nothing
-    sendRedirect $ LinkHome (getLocale ctx)
+    sendRedirect $ LinkHome (ctxlocale ctx)
 
 {- |
    Serves out the static html files.
@@ -862,7 +862,7 @@ onlySuperUserGet action = do
     ctx@Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
-        else sendRedirect $ LinkLogin (getLocale ctx) NotLoggedAsSuperUser
+        else sendRedirect $ LinkLogin (ctxlocale ctx) NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.

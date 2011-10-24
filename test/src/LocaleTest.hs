@@ -98,6 +98,6 @@ testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
 createTestUser :: Region -> Lang -> DB UserID
 createTestUser region lang = do
     pwd <- createPassword $ BS.pack "admin"
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing defaultValue (mkLocale region lang)
+    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocale region lang)
     return userid
 

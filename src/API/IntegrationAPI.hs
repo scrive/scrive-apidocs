@@ -14,10 +14,10 @@ module API.IntegrationAPI (
     -- For tests (and only for tests)
     , IntegrationAPIFunction
     , embeddDocumentFrame
-    , createDocument     
-    , getDocuments       
-    , getDocument        
-    , setDocumentTag     
+    , createDocument
+    , getDocuments
+    , getDocument
+    , setDocumentTag
     , removeDocument
     ) where
 
@@ -149,7 +149,7 @@ embeddDocumentFrame = do
                      when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
                      ssid <- createServiceSession (Left $ companyid $ company) location
                      returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-      
+
 
 
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -222,12 +222,12 @@ userFromTMP uTMP company = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue (mkLocaleFromRegion defaultValue)
+                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
                 tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
                 when (not tos_accepted) $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
-                mtosuser <- runDBQuery $ GetUserByID (userid u)                
+                mtosuser <- runDBQuery $ GetUserByID (userid u)
                 when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
                 let tosuser = fromJust mtosuser
 
@@ -272,11 +272,11 @@ getDocuments = do
     linkeddocuments <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
     let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
-    -- We support only offers and contracts by API calls    
+    -- We support only offers and contracts by API calls
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
     api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
-    
+
 
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -328,7 +328,7 @@ connectUserToSessionGet _sid _uid _ssid = do
   bdy <- renderTemplateFM "connectredirect" $ do
     field "url" uri
     field "referer" referer
-  simpleResponse bdy  
+  simpleResponse bdy
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession sid cid ssid = do

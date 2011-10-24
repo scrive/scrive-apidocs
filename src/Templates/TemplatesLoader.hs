@@ -35,8 +35,6 @@ import System.Time
 import Templates.TemplatesFiles
 import User.Locale
 import Templates.TextTemplates
-import Templates.SystemTemplates
-import User.SystemServer
 
 {-Names of template files -}
 
@@ -59,8 +57,7 @@ readTemplates :: Locale -> IO KontrakcjaTemplates
 readTemplates locale = do
     ts <- mapM getTemplates templatesFilesPath
     texts <- getTextTemplates (getRegion locale) (getLang locale)
-    stemplates <- getSystemTemplates Scrive
-    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ stemplates ++ (concat ts) ++ texts
+    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
 
 --This is avaible only for special cases
 renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]

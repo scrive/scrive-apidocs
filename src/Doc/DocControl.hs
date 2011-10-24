@@ -1976,7 +1976,7 @@ handleSigAttach docid siglinkid mh = do
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
     Just user <- ctxmaybeuser <$> getContext
-    lang <- getLang <$> getContext
+    lang <- getLang . ctxlocale <$> getContext
     doctype <- getFieldWithDefault "" "documentType"
     allDocs <- case (doctype) of
         "Contract" -> getDocumentsForUserByType (Signable Contract) user

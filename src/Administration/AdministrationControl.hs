@@ -322,7 +322,7 @@ databaseCleanupWorker = do
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySuperUser $ do
-    ctx <- getContext
+    ctx@Context{ ctxlocale } <- getContext
     email' <- getAsStrictBS "email"
     let email = BSC.map toLower email'
     fstname <- getAsStrictBS "fstname"
@@ -330,9 +330,9 @@ handleCreateUser = onlySuperUser $ do
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
     region <- guardJustM $ readField "region"
-    if region == getRegion ctx
+    if region == getRegion ctxlocale
       then do
-        muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage Scrive (mkLocaleFromRegion region)
+        muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage (mkLocaleFromRegion region)
         when (isNothing muser) $
           addFlashM flashMessageUserWithSameEmailExists
       else do
@@ -342,16 +342,16 @@ handleCreateUser = onlySuperUser $ do
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m KontraLink
 handleCreateCompanyUser companyid = onlySuperUser $ do
-  ctx <- getContext
+  ctx@Context{ ctxlocale } <- getContext
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- getField "custommessage"
   region <- guardJustM $ readField "region"
-  if region == getRegion ctx
+  if region == getRegion ctxlocale
     then do
       madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
-      muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage Scrive (mkLocaleFromRegion region)
+      muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
       case muser of
         Just (User{userid}) -> do
           _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
@@ -394,11 +394,9 @@ getUserSettingsChange = do
   mregion <- readField "userregion"
   return $ \UserSettings {
     preferreddesignmode
-  , systemserver
   , locale
   } -> UserSettings {
     preferreddesignmode
-  , systemserver
   , locale = maybe locale mkLocaleFromRegion mregion
   }
 

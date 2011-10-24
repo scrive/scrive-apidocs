@@ -110,5 +110,5 @@ withMyTestEnvironment conn f =
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid
