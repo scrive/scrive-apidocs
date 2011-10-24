@@ -16,8 +16,11 @@ import User.Region
 data Locale = Locale Region Lang
   deriving (Bounded, Show, Read, Ord, Eq)
 
+-- I suggest that this returns Maybe Locale, where Nothing 
+-- signals an invalid combo; or it could be an error - EN
+
 mkLocale :: Region -> Lang -> Locale
-mkLocale region _locale = mkLocaleFromRegion region --implemented like this to restrict the regions and langs allowed
+mkLocale region _lang = mkLocaleFromRegion region --implemented like this to restrict the regions and langs allowed
 
 mkLocaleFromRegion :: Region -> Locale
 mkLocaleFromRegion region = Locale region (defaultRegionLang region)

@@ -19,6 +19,7 @@ import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocProcess
+import Doc.DocRegion
 import InputValidation
 import File.TransState
 import Kontra
@@ -679,6 +680,7 @@ handleIssueShowPost docid = withUserPost $ do
   updateattachments <- isFieldSet "updateattachments"
   switchtoadvanced  <- isFieldSet "changefunctionality"
   sigattachments    <- isFieldSet "sigattachments"
+  changedoclocale   <- isFieldSet "changedoclocale"
   -- Behold!
   case documentstatus document of
     Preparation | sign              -> handleIssueSign                 document
@@ -689,6 +691,7 @@ handleIssueShowPost docid = withUserPost $ do
     Preparation | updateattachments -> handleIssueUpdateAttachments    document
     Preparation | switchtoadvanced  -> handleIssueChangeFunctionality  document
     Preparation | sigattachments    -> handleIssueUpdateSigAttachments document
+    Preparation | changedoclocale   -> handleIssueLocaleChange         document
     Preparation                     -> handleIssueSave                 document
     AwaitingAuthor                  -> handleIssueSignByAuthor         document
     _ -> return $ LinkContracts
@@ -871,6 +874,23 @@ zipSigAttachments name desc emailsstring =
   let emails = [trim e | e <- splitOn ',' $ BS.toString emailsstring
                        , not $ Data.List.null $ trim e]
   in map (makeSigAttachment name desc . BS.fromString) emails
+
+handleIssueLocaleChange :: Kontrakcja m => Document -> m KontraLink
+handleIssueLocaleChange doc@Document{documentid} = do
+  ctx@Context{ctxtime} <- getContext
+  udoc <- guardRightM $ updateDocument ctx doc
+
+  docregion <- getCriticalField (return . maybe (getRegion udoc) fst . listToMaybe . reads) "docregion"
+
+  rdoc <- guardRightM . update $ SetDocumentLocale documentid (mkLocaleFromRegion docregion) ctxtime
+
+  when (not . regionelegavailable $ getRegionInfo rdoc) $ do
+    _ <- guardRightM . update $ SetEmailIdentification documentid ctxtime
+    return ()
+
+  signlast <- isFieldSet "signlast"
+
+  return (LinkDesignDoc (DesignStep3 documentid signlast))
 
 handleIssueUpdateSigAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateSigAttachments doc = do
@@ -1193,32 +1213,12 @@ makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = si
       where
         g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }
 
-asValidDocumentFunctionality :: User -> DocumentFunctionality -> String -> Result DocumentFunctionality
-asValidDocumentFunctionality user oldfunc input =
-  parseDocFunctionality input
-  >>= checkAllowed user oldfunc
-  where
-    parseDocFunctionality :: String -> Result DocumentFunctionality
-    parseDocFunctionality xs
-        | xs==(show AdvancedFunctionality) = return AdvancedFunctionality
-        | otherwise = return BasicFunctionality
-    {- |
-        Not much of an implementation yet, but this is a placeholder for somewhere
-        to validate that the user is actually allowed to change the document functionality
-        in this way.
-    -}
-    checkAllowed :: User -> DocumentFunctionality -> DocumentFunctionality -> Result DocumentFunctionality
-    checkAllowed _ oldfunc1 newfunc1
-      | oldfunc1 == newfunc1 = return newfunc1
-      | otherwise = return newfunc1 --probably want to check what sort of account the user has here
-
-
 {- |
    Save a document from data in the post params.
 
  -}
 updateDocument :: Kontrakcja m => Context -> Document -> m (Either String Document)
-updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfunctionality } = do
+updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctionality } = do
   -- each signatory has these predefined fields
   signatoriesfstnames        <- getAndConcat "signatoryfstname"
   signatoriessndnames        <- getAndConcat "signatorysndname"
@@ -1264,8 +1264,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   authorrole <- getFieldWithDefault "" "authorrole"
   authorsignorder <- (SignOrder . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
 
-  currentuser <- maybe mzero return $ ctxmaybeuser ctx
-  docfunctionality <- getCriticalField (asValidDocumentFunctionality currentuser documentfunctionality) "docfunctionality"
+  docfunctionality <- getCriticalField (return . maybe documentfunctionality fst . listToMaybe . reads) "docfunctionality"
 
   validmethods <- getAndConcat "validationmethod"
 

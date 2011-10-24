@@ -167,6 +167,7 @@ createDocument = do
    let doctype = toDocumentType $ fromJust mtype
    mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "template_id"
    involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP
+   mlocale <- fromJSONField "locale"
    tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
                     n <- fromJSONField "name"
                     v <- fromJSONField "value"
@@ -175,7 +176,7 @@ createDocument = do
    doc <- case mtemplate of
             Just _template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
             Nothing -> do
-                        d <- createAPIDocument company doctype title files involved tags
+                        d <- createAPIDocument company doctype title files involved tags mlocale
                         updateDocumentWithDocumentUI d
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
@@ -193,10 +194,11 @@ createAPIDocument :: Kontrakcja m
                   -> [(BS.ByteString,BS.ByteString)]
                   -> [SignatoryTMP]
                   -> [DocumentTag]
+                  -> Maybe Locale
                   -> IntegrationAPIFunction m Document
-createAPIDocument _ _ _ _ [] _  =
+createAPIDocument _ _ _ _ [] _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
-createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
+createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale = do
     now <- liftIO $ getMinutesTime
     company <- setCompanyInfoFromTMP authorTMP company'
     author <- userFromTMP authorTMP company
@@ -208,6 +210,8 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
             update $ AttachFile (documentid doc) (fileid file) now
     mapM_ (uncurry addAndAttachFile) files
     _ <- update $ SetDocumentTags (documentid doc) tags
+    when (isJust mlocale) $
+      ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
     doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'

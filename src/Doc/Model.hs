@@ -78,7 +78,7 @@ data CancelationReason = ManualCancel
 $(jsonableDeriveConvertible [t| CancelationReason |])
 
 data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Read)
 $(enumDeriveConvertible ''DocumentFunctionality)
 
 data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
@@ -236,13 +236,13 @@ unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
 
 
-data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User 
+data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AdminOnlySaveForUser Document where
   dbUpdate (AdminOnlySaveForUser docid user) = wrapDB $ \conn -> do
     unimplemented "AdminOnlySaveForUser"
 
-data ArchiveDocumentForAll = ArchiveDocumentForAll DocumentID 
+data ArchiveDocumentForAll = ArchiveDocumentForAll DocumentID
                              deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ArchiveDocumentForAll Document where
   dbUpdate (ArchiveDocumentForAll docid) = wrapDB $ \conn -> do
@@ -514,7 +514,7 @@ instance DBUpdate RestoreArchivedDocuments [Document] where
   dbUpdate (RestoreArchivedDocuments user docids) = wrapDB $ \conn -> do
     unimplemented "RestoreArchivedDocuments"
 
-data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID 
+data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID
                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveDocumentForUser Document where
   dbUpdate (SaveDocumentForUser documentid User{userid, usercompany} signatorylinkid1) = wrapDB $ \conn -> do
@@ -567,7 +567,7 @@ instance DBUpdate SetInvitationDeliveryStatus Document where
     unimplemented "SetInvitationDeliveryStatus"
 
 
-data ShareDocument = ShareDocument DocumentID 
+data ShareDocument = ShareDocument DocumentID
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ShareDocument Document where
   dbUpdate (ShareDocument docid) = wrapDB $ \conn -> do
@@ -587,7 +587,7 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = wrapDB $ \conn -> do
     unimplemented "SignLinkFromDetailsForTest"
 
-data SignableFromDocument = SignableFromDocument Document 
+data SignableFromDocument = SignableFromDocument Document
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignableFromDocument Document where
   dbUpdate (SignableFromDocument document) = wrapDB $ \conn -> do
@@ -601,13 +601,13 @@ instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor Document where
     unimplemented "SignableFromDocumentIDWithUpdatedAuthor"
 
 
-data StoreDocumentForTesting = StoreDocumentForTesting Document 
+data StoreDocumentForTesting = StoreDocumentForTesting Document
                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = wrapDB $ \conn -> do
     unimplemented "StoreDocumentForTesting"
 
-data TemplateFromDocument = TemplateFromDocument DocumentID 
+data TemplateFromDocument = TemplateFromDocument DocumentID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TemplateFromDocument Document where
   dbUpdate (TemplateFromDocument documentid) = wrapDB $ \conn -> do
