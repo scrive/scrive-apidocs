@@ -3,6 +3,7 @@ module LocaleTest (localeTests) where
 import Control.Applicative
 import Database.HDBC.PostgreSQL
 import Happstack.Server
+import Happstack.State (update,query)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -10,14 +11,19 @@ import qualified Data.ByteString.Char8 as BS
 
 import AppControl
 import DB.Classes
+import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
+import Doc.DocState
 import Context
+import MinutesTime
 import Redirect
 import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import User.Locale
 import User.Model
 import User.UserControl
+import Util.MonadUtils
 import Misc
 
 
@@ -25,6 +31,10 @@ localeTests :: Connection -> Test
 localeTests conn = testGroup "Locale" [
       testCase "restricts allowed locales" $ testRestrictsAllowedLocales
     , testCase "logged in locale switching" $ testLoggedInLocaleSwitching conn
+    , testCase "doc locale can be switched from sweden to britain" $
+               testDocumentLocaleSwitchToBritain conn
+    , testCase "doc locale can be switched from britain to sweden" $
+               testDocumentLocaleSwitchToSweden conn
     ]
 
 {- |
@@ -51,29 +61,29 @@ testRestrictsAllowedLocales = do
 testLoggedInLocaleSwitching :: Connection -> Assertion
 testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
     --create a new uk user and login
-    uid <- createTestUser REGION_GB LANG_EN
+    user <- createTestUser REGION_GB LANG_EN
     globaltemplates <- readGlobalTemplates
     ctx0 <- (\c -> c { ctxdbconn = conn, ctxlocale = mkLocale REGION_GB LANG_EN })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res1, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost >>= sendRedirect
-    assertLoggedInAndOnUploadPage uid res1 ctx1
-    assertUserLocale uid REGION_GB LANG_EN
-    assertContextLocale uid ctx1 REGION_GB LANG_EN
+    assertLoggedInAndOnUploadPage (userid user) res1 ctx1
+    assertUserLocale (userid user) REGION_GB LANG_EN
+    assertContextLocale (userid user) ctx1 REGION_GB LANG_EN
 
     --from the /upload page switch region to sweden
     req1 <- mkRequest POST [("region", inText "REGION_SE")]
     (res2, ctx2) <- runTestKontra req1 ctx1 $ handlePostUserLocale >>= sendRedirect
-    assertLoggedInAndOnUploadPage uid res2 ctx2
-    assertUserLocale uid REGION_SE LANG_SE
-    assertContextLocale uid ctx2 REGION_SE LANG_SE
+    assertLoggedInAndOnUploadPage (userid user) res2 ctx2
+    assertUserLocale (userid user) REGION_SE LANG_SE
+    assertContextLocale (userid user) ctx2 REGION_SE LANG_SE
 
     --now switch back again to uk
     req2 <- mkRequest POST [("region", inText "REGION_GB")]
     (res3, ctx3) <- runTestKontra req2 ctx2 $ handlePostUserLocale >>= sendRedirect
-    assertLoggedInAndOnUploadPage uid res3 ctx3
-    assertUserLocale uid REGION_GB LANG_EN
-    assertContextLocale uid ctx3 REGION_GB LANG_EN
+    assertLoggedInAndOnUploadPage (userid user) res3 ctx3
+    assertUserLocale (userid user) REGION_GB LANG_EN
+    assertContextLocale (userid user) ctx3 REGION_GB LANG_EN
   where
     assertUserLocale uid region lang = do
       Just user <- dbQuery $ GetUserByID uid
@@ -95,9 +105,65 @@ testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
       assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
       assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 
-createTestUser :: Region -> Lang -> DB UserID
+testDocumentLocaleSwitchToBritain :: Connection -> Assertion
+testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
+  user <- createTestUser REGION_SE LANG_SE
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  doc <- createTestElegDoc user (ctxtime ctx)
+
+  --make sure the doc locale matches the author locale
+  assertEqual "Initial region is Sweden" REGION_SE (getRegion doc)
+  assertEqual "Initial lang is Swedish" LANG_SE (getLang doc)
+
+  -- check that eleg is used
+  assertEqual "Eleg is used" [ELegitimationIdentification] (documentallowedidtypes doc)
+
+  -- post a switch to region gb
+  req <- mkRequest POST [("docregion", inText "REGION_GB")]
+  (res, _) <- runTestKontra req ctx $ handleIssueLocaleChangeAfterUpdate doc >>= sendRedirect
+
+  -- check the region was successfully changed to se
+  assertEqual "Response code is 303" 303 (rsCode res)
+  udoc <- guardJustM $ query $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "Switched region is Britain" REGION_GB (getRegion udoc)
+  assertEqual "Switched lang is English" LANG_EN (getLang udoc)
+
+  -- check that eleg is no longer used
+  assertEqual "Eleg use should be removed" [EmailIdentification] (documentallowedidtypes udoc)
+
+testDocumentLocaleSwitchToSweden :: Connection -> Assertion
+testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
+  user <- createTestUser REGION_GB LANG_EN
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  doc <- createTestElegDoc user (ctxtime ctx)
+
+  -- make sure the doc locale matches the author locale
+  assertEqual "Initial region is Britain" REGION_GB (getRegion doc)
+  assertEqual "Initial lang is English" LANG_EN (getLang doc)
+
+  -- post a switch to region se
+  req <- mkRequest POST [("docregion", inText "REGION_SE")]
+  (res, _) <- runTestKontra req ctx $ handleIssueLocaleChangeAfterUpdate doc >>= sendRedirect
+
+  -- check the region was successfully changed to gb
+  assertEqual "Response code is 303" 303 (rsCode res)
+  udoc <- guardJustM $ query $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "Switched region is Sweden" REGION_SE (getRegion udoc)
+  assertEqual "Switched lang is Swedish" LANG_SE (getLang udoc)
+
+createTestElegDoc :: User -> MinutesTime -> DB Document
+createTestElegDoc user ctxtime = do
+  doc <- addRandomDocumentWithAuthorAndCondition user
+           (\d -> documentstatus d == Preparation
+                  && documentfunctionality d == AdvancedFunctionality)
+  (Right elegdoc) <- update $ SetElegitimationIdentification (documentid doc) ctxtime
+  return elegdoc
+
+createTestUser :: Region -> Lang -> DB User
 createTestUser region lang = do
     pwd <- createPassword $ BS.pack "admin"
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocale region lang)
-    return userid
-
+    guardJustM . dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocale region lang)

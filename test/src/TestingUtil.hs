@@ -489,6 +489,7 @@ addRandomDocumentWithAuthor user = do
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++
                                             [asl { maybesignatory = Just (userid user) }]
+                 , documentregion = getRegion user
                  }
   update $ StoreDocumentForTesting adoc
 
@@ -525,6 +526,7 @@ addRandomDocumentWithAuthorAndCondition user p =  do
                                           maybeseeninfo = Nothing }) siglinks
   let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
   let adoc = doc { documentsignatorylinks = siglinksandauthor
+                 , documentregion = getRegion user
                  }
   if p adoc
     then do

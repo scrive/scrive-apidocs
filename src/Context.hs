@@ -38,8 +38,8 @@ data Context = Context {
     , ctxbackdooropen        :: Bool -- ^ Whether the testing backdoor is open?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
-    , ctxlocale              :: Locale
-    , ctxdoclocale           :: Maybe Locale
+    , ctxlocale              :: Locale -- ^ The current context locale
+    , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
     , ctxesenforcer          :: MVar () -- ^
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server

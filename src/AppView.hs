@@ -260,8 +260,8 @@ mainLinksFields locale = do
     field "linksignup"           $ show LinkSignup
 
 localeSwitcherFields :: MonadIO m => Context -> Maybe (Locale -> KontraLink) -> Fields m
-localeSwitcherFields ctx@Context{ ctxlocale } mlink = do
-  field "isdoclocale" $ isJust (ctxdoclocale ctx)
+localeSwitcherFields Context{ ctxlocale, ctxlocaleswitch } mlink = do
+  field "islocaleswitch" $ ctxlocaleswitch
   field "localesweden" $ getLang ctxlocale == LANG_SE
   field "localebritain" $ getLang ctxlocale == LANG_EN
   field "langsv" $ getLang ctxlocale == LANG_SE

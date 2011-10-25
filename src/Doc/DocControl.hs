@@ -876,21 +876,33 @@ zipSigAttachments name desc emailsstring =
   in map (makeSigAttachment name desc . BS.fromString) emails
 
 handleIssueLocaleChange :: Kontrakcja m => Document -> m KontraLink
-handleIssueLocaleChange doc@Document{documentid} = do
-  ctx@Context{ctxtime} <- getContext
+handleIssueLocaleChange doc = do
+  ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx doc
+  handleIssueLocaleChangeAfterUpdate udoc
 
-  docregion <- getCriticalField (return . maybe (getRegion udoc) fst . listToMaybe . reads) "docregion"
+{- |
+    Handles the locale change after the document has been updated
+    to capture the latest changes.  Separated this out to make it easier
+    to unit test, because mocking up the post variables required for
+    the updateDocument function would just be too much!
+-}
+handleIssueLocaleChangeAfterUpdate  :: Kontrakcja m => Document -> m KontraLink
+handleIssueLocaleChangeAfterUpdate doc@Document{documentid} = do
+  Context{ctxtime} <- getContext
 
-  rdoc <- guardRightM . update $ SetDocumentLocale documentid (mkLocaleFromRegion docregion) ctxtime
+  docregion <- getCriticalField (return . maybe (getRegion doc) fst . listToMaybe . reads) "docregion"
 
-  when (not . regionelegavailable $ getRegionInfo rdoc) $ do
+  udoc <- guardRightM . update $ SetDocumentLocale documentid (mkLocaleFromRegion docregion) ctxtime
+
+  when (not . regionelegavailable $ getRegionInfo udoc) $ do
     _ <- guardRightM . update $ SetEmailIdentification documentid ctxtime
     return ()
 
   signlast <- isFieldSet "signlast"
 
   return (LinkDesignDoc (DesignStep3 documentid signlast))
+
 
 handleIssueUpdateSigAttachments :: Kontrakcja m => Document -> m KontraLink
 handleIssueUpdateSigAttachments doc = do

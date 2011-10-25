@@ -347,7 +347,7 @@ header=
 ####
 localeSwitcher=
   <div class="localeSwitcher">
-    $if(!isdoclocale)$
+    $if(!islocaleswitch)$
     $if(!logged)$
     <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
     <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
