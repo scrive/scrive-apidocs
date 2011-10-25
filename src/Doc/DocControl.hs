@@ -1980,9 +1980,8 @@ handleSigAttach docid siglinkid mh = do
   ctx <- getContext
   content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
   file <- runDB $ dbUpdate $ NewFile attachname content
-  _ <- update $ SaveSigAttachment docid attachname email (fileid file)
-  return $ LinkSignDoc doc siglink
-
+  d <- guardRightM $ update $ SaveSigAttachment docid attachname email (fileid file)
+  return $ LinkSignDoc d siglink
 
 jsonDocumentsList ::  Kontrakcja m => m JSValue
 jsonDocumentsList = do
