@@ -16,6 +16,9 @@ module Util.JSON (
     , askJSON 
     -- | Simple runner
     , withJSON
+    , jsget
+    , jsmodify
+    , jsset
     )where
 
 import Text.JSON
@@ -26,6 +29,7 @@ import qualified Data.ByteString.Base64 as BASE64
 import Data.Ratio
 import Control.Monad.Identity
 import Data.Maybe
+import qualified Data.List.Utils as List
 
 getJSONField :: String -> JSObject JSValue -> Maybe JSValue
 getJSONField s = lookup s .fromJSObject
@@ -137,3 +141,65 @@ askJSON = liftM getJSON ask
 -- | Simple runner        
 withJSON :: (Monad m) => JSValue -> ReaderT JSValue m a -> m a
 withJSON j a = runReaderT a j
+
+-- JSON Object construction; partial functions
+
+class JSONPath a where
+  pathList :: a -> [String]
+  
+instance JSONPath String where
+  pathList a = [a]
+  
+instance JSONPath a => JSONPath [a] where
+  pathList a = concatMap pathList a
+
+jsempty :: JSValue
+jsempty = JSObject $ toJSObject []
+
+jsset :: (JSONPath path, JSON a) => path -> a -> JSValue -> Either String JSValue
+jsset path val _ | pathList path == [] = Right $ showJSON val
+jsset path val obj = let (p:ps) = pathList path in
+  modifyStrDef p (jsset ps val) jsempty obj
+
+jsget :: JSONPath path => path -> JSValue -> Either String JSValue
+jsget path obj = foldl (\a b -> a >>= getStr b) (Right obj) $ pathList path
+
+jsmodify :: JSONPath path => path -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
+jsmodify path f val | pathList path == [] = f val
+jsmodify path f obj = case jsget path obj of
+  Left s -> Left s
+  Right v -> case f v of
+    Left s -> Left s
+    Right v' -> jsset path v' obj
+
+getStr :: String -> JSValue -> Either String JSValue
+getStr k obj@(JSObject kvs) = case lookup k (fromJSObject kvs) of
+  Nothing -> Left $ "Key " ++ show k ++ " not found in : " ++ show obj
+  Just v -> Right v
+getStr _ obj = Left $ "Cannot get value on non-object: " ++ show obj
+
+getStrDef :: JSON a => String -> a -> JSValue -> Either String JSValue
+getStrDef k d (JSObject kvs) = case lookup k (fromJSObject kvs) of
+  Nothing -> Right $ showJSON d
+  Just v -> Right v
+getStrDef _ _ obj = Left $ "Cannot get value on non-object: " ++ show obj
+
+setStr :: JSON a => String -> a -> JSValue -> Either String JSValue
+setStr k v (JSObject jsobj) = Right $ JSObject $ toJSObject $ List.addToAL (fromJSObject jsobj) k $ showJSON v
+setStr _ _ obj            = Left $ "Cannot set value on non-object: " ++ show obj
+
+modifyStrDef :: JSON a => String -> (JSValue -> Either String JSValue) -> a -> JSValue -> Either String JSValue
+modifyStrDef k f d obj@(JSObject _) = case getStrDef k d obj of
+  Left s -> Left s
+  Right v -> case f v of
+    Left s -> Left s
+    Right v' -> setStr k v' obj
+modifyStrDef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+
+modifyStr :: String -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
+modifyStr k f obj@(JSObject _) = case getStr k obj of
+  Left s -> Left s
+  Right v -> case f v of
+    Left s -> Left s
+    Right v' -> setStr k v' obj
+modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
