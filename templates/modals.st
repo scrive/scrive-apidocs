@@ -208,7 +208,7 @@ modalWelcomeToSkrivaPa=
       <p>$_modalWelcomeToSkrivaPaBodyHint()$</p>
 
       <p>$_modalWelcomeToSkrivaPaBodyBestRegards()$<br/>
-        Team $ourServiceName()$</p>
+        Team Scrive</p>
     </div>
   </div>
   <div class="modal-footer">
@@ -618,7 +618,7 @@ modalSignedViewNotClosedNoAccount=
     <span class="modal-title">
       <h3>Du har undertecknat!</h3>
       <p>
-        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar $ourServiceName()$ ett verifikat,
+        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar Scrive ett verifikat,
         dokumentet blir bindande och en kopia skickas till din e-post.
       </p>
     </span>

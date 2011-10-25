@@ -17,9 +17,10 @@ import Happstack.Server
 import Context
 import TestingUtil
 import TestKontra as T
+import User.Locale
 
 redirectTests :: Test
-redirectTests = testGroup "RedirectTests" 
+redirectTests = testGroup "RedirectTests"
                   [testCase "return Right if Right" testGuardRight
                   ,testCase "return mzero if Left" testStringGuardMZeroLeft
                   ,testCase "finishWith if Left DBNotLoggedIn" testDBErrorGuardRedirectLeftDBNotLoggedIn
@@ -28,14 +29,16 @@ redirectTests = testGroup "RedirectTests"
 
 testGuardRight :: Assertion
 testGuardRight = withTestState $ do
-    ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+    globaltemplates <- readGlobalTemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (guardRight $ (Right ("hello" :: String) :: Either String String))
     assertEqual "should be equal" res "hello"
 
 testStringGuardMZeroLeft :: Assertion
 testStringGuardMZeroLeft = withTestState $ do
-    ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+    globaltemplates <- readGlobalTemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (mplus (guardRight $ (Left ("hello" :: String) :: Either String String))
                                        (return "hello"))
@@ -43,7 +46,8 @@ testStringGuardMZeroLeft = withTestState $ do
 
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
 testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
-  ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+  globaltemplates <- readGlobalTemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (res, ctx') <- runTestKontra req ctx (do
                                            _ <- guardRight $ Left DBNotLoggedIn
@@ -55,15 +59,16 @@ testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
 
 testDBErrorGuardMZeroLeft :: Assertion
 testDBErrorGuardMZeroLeft = withTestState $ do
-  ctx <- mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates
+  globaltemplates <- readGlobalTemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (res, _ctx') <- runTestKontra req ctx (mplus (guardRight $ (Left DBResourceNotAvailable))
                                        (return ("hello" :: String)))
   assertEqual "Should be equal" "hello" res
 
 assertMZero :: IO t -> IO ()
-assertMZero action = 
-  mplus 
+assertMZero action =
+  mplus
     (do
         _ <- action
         assertFailure "did not mzero")

@@ -2,12 +2,14 @@ module Doc.DocProcess (
   DocProcessInfo(..),
   getValueForProcess,
   renderTextForProcess,
-  renderTemplateForProcess)
+  renderTemplateForProcess,
+  renderLocalTextForProcess,
+  renderLocalTemplateForProcess)
 where
 
 import Doc.DocStateData
 import Templates.Templates
-
+import User.Locale
 
 class HasProcess a where
   getProcess :: a -> Maybe DocProcessInfo
@@ -25,6 +27,24 @@ class HasProcess a where
   renderTextForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> m String
   renderTextForProcess hasprocess fieldname =
       renderTemplateForProcess hasprocess fieldname $ do return ()
+
+renderLocalTemplateForProcess :: (HasLocale a, HasProcess a, TemplatesMonad m)
+                                 => a
+                                 -> (DocProcessInfo -> String)
+                                 -> Fields m
+                                 -> m String
+renderLocalTemplateForProcess hasprocess fieldname fields =
+  case getValueForProcess hasprocess fieldname of
+    (Just templatename) -> renderLocalTemplateFM hasprocess templatename fields
+    _ -> return ""
+
+renderLocalTextForProcess :: (HasLocale a, HasProcess a, TemplatesMonad m)
+                             => a
+                             -> (DocProcessInfo -> String)
+                             -> m String
+renderLocalTextForProcess hasprocess fieldname =
+  renderLocalTemplateForProcess hasprocess fieldname $ do return ()
+
 
 instance HasProcess DocumentType where
   getProcess (Signable Contract) = Just contractProcess
@@ -347,7 +367,7 @@ orderProcess =
   , processmailsignedstandardheader = "remindMailSignedOrderStandardHeader"
   , processmailnotsignedstandardheader = "remindMailNotSignedOrderStandardHeader"
   , processmailremindnotsigned = "remindMailNotSignedOrder"
-  , processmailconfirmbymailapi = "mailMailAPIConfirmOrder" 
+  , processmailconfirmbymailapi = "mailMailAPIConfirmOrder"
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages

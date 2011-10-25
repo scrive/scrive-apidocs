@@ -520,6 +520,25 @@ safeReady(function() {
 });
 
 safeReady(function() {
+  console.log($("#docregionselector option"));
+  $("#docregionselector option").overlay({
+    mask: standardDialogMask,
+    top: standardDialogTop,
+    fixed: false
+  });
+
+  $("#docregionselector").change(function() {
+    var val = $("#docregionselector").val();
+    $("#docregionselector option[value=" + val + "]").data("overlay").load();
+    if (val=="REGION_GB") {
+      $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
+    } else {
+      $("#docregionselector option[value=REGION_GB]").attr("selected", "selected");
+    }
+  });
+});
+
+safeReady(function() {
     $("#tobasic").overlay({
         mask: standardDialogMask,
         top: standardDialogTop,

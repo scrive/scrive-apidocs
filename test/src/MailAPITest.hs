@@ -37,10 +37,10 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "Parse mime document email_simple_onesig.eml" $ testParseMimes "test/mailapi/email_simple_onesig.eml"
     , testCase "Parse mime document email_outlook_three.eml" $ testParseMimes "test/mailapi/email_outlook_three.eml"
     , testCase "Parse mime document email_outlook_viktor.eml" $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
-    , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"      
+    , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"
     , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_three.eml" 4
     ]
-                    
+
 testParseMimes :: String -> Assertion
 testParseMimes mimepath = do
   cont <- readFile mimepath
@@ -58,8 +58,9 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir, ctxmaybeuser = muser })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     _ <- dbUpdate $ SetUserMailAPI uid $ Just UserMailAPI {
           umapiKey = read "ef545848bcd3f7d8"
         , umapiDailyLimit = 1
@@ -72,8 +73,9 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
 testFailureNoSuchUser :: Connection -> Assertion
 testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     (res, _) <- first jsonToStringList <$> runTestKontra req ctx (testAPI handleMailCommand)
     assertBool "error occured" $ isJust $ lookup "error" res
     assertBool "message matches regex 'User .* not found'" $
@@ -103,10 +105,10 @@ jsonToStringList = (mapSnd toString) . fromJSObject
         toString _ = error "Pattern not matched -> Waiting for JSON string, but other structure found"
 
 withMyTestEnvironment :: Connection -> (FilePath -> DB ()) -> Assertion
-withMyTestEnvironment conn f = 
+withMyTestEnvironment conn f =
   withSystemTempDirectory "mailapi-test-" (\d -> withTestEnvironment conn (f d))
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid

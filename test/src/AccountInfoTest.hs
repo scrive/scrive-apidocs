@@ -19,6 +19,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import User.Locale
 import User.Model
 import User.UserControl
 import User.Utils
@@ -115,8 +116,9 @@ upgradeCompanyForUser :: (MonadIO m, Functor m) =>
                             -> UpgradeInfo
                             -> m (Response, Context)
 upgradeCompanyForUser conn user (UpgradeInfo cname fstname sndname position phone) = do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("createcompany", inText "true")
                         , ("companyname", inText cname)

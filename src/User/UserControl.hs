@@ -55,7 +55,7 @@ handleUserGet = checkUserTOSGet $ do
          Just user -> do
            mcompany <- getCompanyForUser user
            showUser user mcompany createcompany >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
@@ -193,7 +193,7 @@ handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handlePostUserLocale :: Kontrakcja m => m KontraLink
 handlePostUserLocale = do
@@ -236,7 +236,7 @@ handlePostUserSecurity = do
              locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
            }
       return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+    Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
@@ -306,7 +306,7 @@ handlePostSharing = do
                       return $ LinkSharing emptyListParams
                   (_,True) -> return $ LinkSharing emptyListParams
                   _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
@@ -333,7 +333,7 @@ handlePostCompanyAccounts = do
                       handleTakeOverUserForCompany (fromJust memail)
                       return $ LinkCompanyAccounts emptyListParams
                   _ -> LinkCompanyAccounts <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
 handleDeleteCompanyUser user = do
@@ -496,7 +496,7 @@ createUser ctx names email madminuser mcompany' vip = do
                      | adminusercompanyid == companyid company -> mcompany'
                    _ -> Nothing
   let Context{ctxhostpart} = ctx
-  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) (getLocale ctx)
+  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
     Just user -> do
       let fullname = composeFullName names
@@ -518,26 +518,26 @@ createUserBySigning names email doclinkdata =
         return $ Just (user, actionid, magichash)
     )
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Locale -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage ss l = do
-    muser <- createInvitedUser names email (Just (ss, l))
+createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
+createNewUserByAdmin ctx names email _freetill custommessage locale = do
+    muser <- createInvitedUser names email (Just locale)
     case muser of
          Just user -> do
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
              _ <- runDBUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
-             mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
+             mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
-createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Locale) -> m (Maybe User)
+createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe Locale -> m (Maybe User)
 createInvitedUser names email mlocale = do
     ctx <- getContext
-    let (ss, l) = fromMaybe (systemServerFromURL $ ctxhostpart ctx, getLocale ctx) mlocale
+    let locale = fromMaybe (ctxlocale ctx) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss l
+    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
 
 {- |
    Guard against a POST with no logged in user.
@@ -548,7 +548,7 @@ withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -559,7 +559,7 @@ withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
+    Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
 
 {- |
    Runs an action only if currently logged in user is a company admin
@@ -594,7 +594,7 @@ checkUserTOSGet action = do
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> case (ctxcompany ctx) of
              Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
+             Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
 
 
 
@@ -686,7 +686,7 @@ handleAccountSetupGet aid hash = do
       extendActionEvalTimeToOneDayMinimum aid
       addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
       ctx <- getContext
-      sendRedirect $ LinkHome (getLocale ctx)
+      sendRedirect $ LinkHome (ctxlocale ctx)
     (False, Nothing) -> do
       -- this is a very disgusting page.  i didn't even know it existed
       content <- activatePageViewNotValidLink ""

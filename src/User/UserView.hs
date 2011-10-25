@@ -220,9 +220,9 @@ viralInviteMail ctx invitedemail setpasslink = do
     field "passwordlink" $ show setpasslink
 
 
-mailNewAccountCreatedByAdmin :: TemplatesMonad m => Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
-mailNewAccountCreatedByAdmin ctx personname email setpasslink custommessage = do
-  kontramail "mailNewAccountCreatedByAdmin" $ do
+mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
+mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessage = do
+  kontramaillocal locale "mailNewAccountCreatedByAdmin" $ do
     field "personname"    $ BS.toString personname
     field "email"         $ BS.toString email
     field "passwordlink"  $ show setpasslink

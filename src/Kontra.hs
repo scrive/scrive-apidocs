@@ -63,7 +63,9 @@ instance KontraMonad Kontra where
 
 instance TemplatesMonad Kontra where
     getTemplates = ctxtemplates <$> getContext
-
+    getLocalTemplates locale = do
+      Context{ctxglobaltemplates} <- getContext
+      return $ localizedVersion locale ctxglobaltemplates
 {- |
    Whether the user is an administrator.
 -}

@@ -8,7 +8,6 @@ module ActionScheduler (
     ) where
 
 import Control.Applicative
-import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader
 import Data.List
@@ -128,8 +127,9 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                templates <- getLocalizedTemplates $ (systemserver $ usersettings user, getRegion user, getLang user)
-                mail <- liftIO $ runLocalTemplates templates $ mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
+                globaltemplates <- getGlobalTemplates
+                mail <- liftIO $ runWithTemplates (getLocale user) globaltemplates $
+                          mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
@@ -174,16 +174,16 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
 
 evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
     deleteAction actionID
-    
+
 runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
   docs <- query $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
-  when (probs /= []) $ mailDocumentProblemsCheck $ 
-    "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++ 
-    intercalate ("</p>\n\n<p>" ++ (hostpart $ sdAppConf sd) ++ "/dave/document/") probs ++ 
+  when (probs /= []) $ mailDocumentProblemsCheck $
+    "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
+    intercalate ("</p>\n\n<p>" ++ (hostpart $ sdAppConf sd) ++ "/dave/document/") probs ++
     "</p>"
   return ()
 
@@ -208,10 +208,10 @@ deleteAction aid = do
     _ <- update $ DeleteAction aid
     return ()
 
-getLocalizedTemplates :: Localization -> ActionScheduler KontrakcjaTemplates
-getLocalizedTemplates lang = do
+getGlobalTemplates :: ActionScheduler KontrakcjaGlobalTemplates
+getGlobalTemplates = do
     sd <- ask
-    (_, templates) <- liftIO $ second (localizedVersion lang) <$> readMVar (sdTemplates sd)
+    (_, templates) <- liftIO $ readMVar (sdTemplates sd)
     return templates
 
 -- Old scheduler internal stuff

@@ -1,5 +1,5 @@
 ####
-signatoriesBox=  
+signatoriesBox=
 <div class="float-left signViewBodyBox">$signatories:{signatory|
   $if(signatory.current)$ $signatoryBox()$ $endif$ }$ </div>
 <div class="float-right signViewBodyBox">$signatories:{signatory|
@@ -31,7 +31,7 @@ orderremindagainbuttontext=$_orderremindagainbuttontext()$
 ####
 signatoryBox =
 <div class="signViewBodyRight  $if(signatory.author)$author$endif$">
-  <div class="signViewBodyRightTextContainer"> 
+  <div class="signViewBodyRightTextContainer">
   <div class="header">$signatory.fstname$ $signatory.sndname$</div>
    <span class="signatoryfields">
      $if(!addSignatoryScript)$
@@ -49,12 +49,12 @@ signatoryBox =
     </div>
    $endif$
    $if(signatory.personalnumber)$
-     <div class="field">  
+     <div class="field">
      $fieldvalue(value=signatory.personalnumber)$
      </div>
    $endif$
    $if(signatory.companynumber)$
-     <div class="field">  
+     <div class="field">
       $fieldvalue(value=signatory.companynumber)$
      </div>
    $endif$
@@ -65,14 +65,14 @@ signatoryBox =
            <span class="fieldvalue" style="display:none">$signatory.email$</span>
      </div>
    $endif$
-   $if(!signatory.secretary)$ 
+   $if(!signatory.secretary)$
    <div class="text">
-    <div class="icon status $signatory.status$"></div> 
+    <div class="icon status $signatory.status$"></div>
     $if(signatory.undeliveredEmail)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
     <span class="textstatus">$signatoryMessage()$</span>
    </div>
    $if(signatory.allowRemindForm)$ $reminderForm()$ $endif$
-   $if(signatory.allowEmailChange)$ $changeEmailForm()$ $endif$   
+   $if(signatory.allowEmailChange)$ $changeEmailForm()$ $endif$
   $else$
     <div class="text"> $secretaryMessage()$ </div>
   $endif$
@@ -94,7 +94,7 @@ $elseif(datamismatch)$
 
 $elseif(signatory.rejecteddate)$
     $_signatoryMessageIfSignatoryRejecteddate()$	$signatory.rejecteddate$
-$elseif(signatory.seendate)$        
+$elseif(signatory.seendate)$
     $_signatoryMessageIfSignatorySeendate()$ $signatory.seendate$
 $elseif(signatory.readdate)$
     $_signatoryMessageIfSignatoryReaddate()$ $signatory.readdate$
@@ -103,32 +103,32 @@ $elseif(signatory.deliveredEmail)$
 $else$
     $_signatoryMessageIfElse()$
 $endif$
-###       
-secretaryMessage = 
+###
+secretaryMessage =
     $process.authorissecretarytext$
 ### FORM and button for reminding message
 ###
-reminderForm = 
+reminderForm =
 <span>
-  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatory.id$">  
+  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatory.id$">
     <div class="$if(signatory.signdate)$ reminderForSignedIcon $else$ reminderForSendIcon $endif$"></div>
     <div class="sendLinkText">
         $if(signatory.signdate)$
             $process.remindagainbuttontext$
-        $else$ 
+        $else$
             $_sendReminder()$
         $endif$
-    </div> 
+    </div>
   </a>
   <form class="overlay" action="$signatory.linkremind$" method="POST" id="siglnk$signatory.id$">
     <div class="modal-container">
         <div class="modal-header">
             <span class="modal-icon message"></span>
             <span class="modal-title">
-                  <h2> 
+                  <h2>
                     $if(signatory.signdate)$
                         $process.remindagainbuttontext$
-                    $else$ 
+                    $else$
                         $_reminderFormHead()$
                     $endif$
                   </h2>
@@ -155,12 +155,12 @@ reminderForm =
             </a>
         </div>
     </div>
-  </form>     
-</span>       
+  </form>
+</span>
 ####
 #### For change signatory email
 ####
-changeEmailForm =  
+changeEmailForm =
 <div style="margin-top: 10px">
 <a class="btn-tiny blue replacebynextonclick">
                 <div class="left"></div>
@@ -178,7 +178,7 @@ changeEmailForm =
                 </div>
                 <div class="right"></div>
   </a>
-</form>     
+</form>
 </div>
 ####
 fieldvalue=

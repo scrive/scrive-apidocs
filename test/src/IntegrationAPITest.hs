@@ -41,7 +41,7 @@ integrationAPITests conn = testGroup "Integration API" [
     , testCase "test that you can set region (and not language) on new document and it works!" $ testNewDocumentSetRegion conn
     , testCase "test that se works as a region" $ testNewDocumentSetRegionSE conn
     , testCase "test that gb/en works as a locale" $ testNewDocumentSetRegionGBEN conn
-    , testCase "test that gb/sv works as a locale, but converts to gb/eb" $ testNewDocumentSetRegionGBSV conn    
+    , testCase "test that gb/sv works as a locale, but converts to gb/eb" $ testNewDocumentSetRegionGBSV conn
     , testCase "test that GB works as a region (all caps)" $ testNewDocumentSetRegionGB conn
     ]
 
@@ -165,7 +165,7 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
           _ -> error $ "No involved in document: " ++ show d
         _ -> error $ "No document returned: " ++ show doc
 
--- Requests body 
+-- Requests body
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
@@ -195,7 +195,9 @@ getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSOb
 -- Making requests
 makeAPIRequest :: IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> DB APIResponse
 makeAPIRequest handler req = wrapDB $ \conn -> do
-    ctx <- (\c -> c { ctxdbconn = conn }) <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    globaltemplates <- readGlobalTemplates
+    ctx <- (\c -> c { ctxdbconn = conn })
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
     fmap fst $ runTestKontra rq ctx $ testAPI handler
 
@@ -203,10 +205,10 @@ makeAPIRequest handler req = wrapDB $ \conn -> do
 createTestService :: DB ()
 createTestService = do
     pwd <- createPassword $ BS.pack "test_password"
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
     _ <- dbUpdate $ CreateService (ServiceID $ BS.pack "test_service") (Just pwd) userid
     return ()
-    
+
 testNewDocumentExtraFields :: Connection -> Assertion
 testNewDocumentExtraFields conn = withTestEnvironment conn $ do
   createTestService
@@ -226,7 +228,7 @@ testNewDocumentExtraFields conn = withTestEnvironment conn $ do
               assertBool ("value of second field was not val2, in " ++ show prs2) $ getJSONField "value" prs2 == Just (showJSON "val2")
             _ -> assertBool ("fields does not exist") False
           _ -> error $ "No involved in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc    
+        _ -> error $ "No document in return: " ++ show doc
 
 testNewDocumentLocale :: Connection -> Assertion
 testNewDocumentLocale conn = withTestEnvironment conn $ do
@@ -243,8 +245,8 @@ testNewDocumentLocale conn = withTestEnvironment conn $ do
             assertBool ("no region in locale, in " ++ show l) $ isJust $ getJSONField "region" l
             assertBool ("no language in locale, in " ++ show l) $ isJust $ getJSONField "language" l
           _ -> error $ "No locale in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc    
-        
+        _ -> error $ "No document in return: " ++ show doc
+
 testNewDocumentSetRegion :: Connection -> Assertion
 testNewDocumentSetRegion conn = withTestEnvironment conn $ do
   createTestService
@@ -260,7 +262,7 @@ testNewDocumentSetRegion conn = withTestEnvironment conn $ do
             assertBool ("no region in locale, in " ++ show l) $ getJSONField "region" l == Just (showJSON "gb")
             assertBool ("no language in locale, in " ++ show l) $ isJust $ getJSONField "language" l
           _ -> error $ "No locale in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc    
+        _ -> error $ "No document in return: " ++ show doc
 
 testNewDocumentSetRegionSE :: Connection -> Assertion
 testNewDocumentSetRegionSE conn = withTestEnvironment conn $ do
@@ -277,8 +279,8 @@ testNewDocumentSetRegionSE conn = withTestEnvironment conn $ do
             assertBool ("no region in locale, in " ++ show l) $ getJSONField "region" l == Just (showJSON "se")
             assertBool ("no language in locale, in " ++ show l) $ isJust $ getJSONField "language" l
           _ -> error $ "No locale in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc    
-        
+        _ -> error $ "No document in return: " ++ show doc
+
 testNewDocumentSetRegionGB :: Connection -> Assertion
 testNewDocumentSetRegionGB conn = withTestEnvironment conn $ do
   createTestService
@@ -294,7 +296,7 @@ testNewDocumentSetRegionGB conn = withTestEnvironment conn $ do
             assertBool ("no region in locale, in " ++ show l) $ getJSONField "region" l == Just (showJSON "gb")
             assertBool ("no language in locale, in " ++ show l) $ isJust $ getJSONField "language" l
           _ -> error $ "No locale in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc            
+        _ -> error $ "No document in return: " ++ show doc
 
 testNewDocumentSetRegionGBEN :: Connection -> Assertion
 testNewDocumentSetRegionGBEN conn = withTestEnvironment conn $ do
@@ -311,7 +313,7 @@ testNewDocumentSetRegionGBEN conn = withTestEnvironment conn $ do
             assertBool ("no region in locale, in " ++ show l) $ getJSONField "region" l == Just (showJSON "gb")
             assertBool ("no language in locale, in " ++ show l) $ getJSONField "language" l == Just (showJSON "en")
           _ -> error $ "No locale in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc    
+        _ -> error $ "No document in return: " ++ show doc
 
 testNewDocumentSetRegionGBSV :: Connection -> Assertion
 testNewDocumentSetRegionGBSV conn = withTestEnvironment conn $ do
@@ -328,8 +330,7 @@ testNewDocumentSetRegionGBSV conn = withTestEnvironment conn $ do
             assertBool ("no region in locale, in " ++ show l) $ getJSONField "region" l == Just (showJSON "gb")
             assertBool ("no language in locale, in " ++ show l) $ getJSONField "language" l == Just (showJSON "en")
           _ -> error $ "No locale in document: " ++ show d
-        _ -> error $ "No document in return: " ++ show doc    
-
+        _ -> error $ "No document in return: " ++ show doc
 
 -- Utils
 isError :: JSObject JSValue -> Bool
