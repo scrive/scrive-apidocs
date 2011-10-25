@@ -1,21 +1,23 @@
-module ELegitimation.Routes (handleRoutes) where
+module ELegitimation.Routes(handleRoutes) where
 
 import ELegitimation.BankID as BankID
-import Kontra(Kontra)
-import Happstack.StaticRouting (Route, dir, param, choice)
-import Routing (hPostNoXToken, hGet, hPost)
-import Happstack.Server (Response)
+import Kontra(Kontra, param)
+import Routing(hGet2, hGet4, hPost1, hPost3, toK1, toK2, toK3, toK4, hPostNoXToken3)
+import Happstack.Server(Response, dir)
 
-handleRoutes :: Route (Kontra Response)
-handleRoutes = choice
+handleRoutes :: [Kontra Response]
+handleRoutes = 
      [
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
-       dir "s" $ hGet                         $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken $ BankID.handleSignPostBankID
-     , dir "s" $ param "eleg" $ hPost         $ BankID.handleSignPostBankID -- FIXME: Why is this needed?
-     , dir "d" $ hGet                         $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost         $ BankID.handleIssuePostBankID
+       dir "s" $ hGet4                        $ toK4 $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPostNoXToken3 $ toK3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2                        $ toK2 $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1        $ toK1 $ BankID.handleIssuePostBankID
+     , dir "s" $ hGet4  $ toK4 $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPost3 $ toK3 $ BankID.handleSignPostBankID
+     , dir "d" $ hGet2  $ toK2 $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost1 $ toK1 $ BankID.handleIssuePostBankID
      ]
 
 
