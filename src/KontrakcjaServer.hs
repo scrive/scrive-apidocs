@@ -10,6 +10,7 @@ import Happstack.Server
   , simpleHTTPWithSocket
   , nullConf
   )
+import Happstack.StaticRouting (compile)
 import Happstack.State
   ( Component
   , Proxy(..)
@@ -26,7 +27,7 @@ import System.Console.GetOpt
 import System.Directory (createDirectoryIfMissing)
 import qualified AppLogger as Log
 import AppState (AppState)
-import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
+import AppControl (staticRoutes,appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
@@ -221,8 +222,10 @@ runKontrakcjaServer = Log.withLogger $ do
                                 --populateDBWithDocumentsIfEmpty
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
+                              let (routes,overlaps) = compile staticRoutes
+                              maybe (return ()) Log.server overlaps
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
-                                    (appHandler appConf appGlobals)
+                                    (appHandler routes appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates es_enforcer
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata

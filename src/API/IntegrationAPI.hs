@@ -26,8 +26,9 @@ import Data.Functor
 import Data.Maybe
 import DB.Classes
 import Doc.DocState
-import Happstack.Server hiding (simpleHTTP,host,body)
+import Happstack.Server (Response, finishWith, askRq, rqUri, look, toResponseBS)
 import Happstack.State (query, update)
+import Happstack.StaticRouting(Route, dir, choice)
 import KontraLink
 import MinutesTime
 import Misc
@@ -97,18 +98,21 @@ integrationService = do
                 else return Nothing
          Nothing -> return Nothing
 
-integrationAPI :: Kontra Response
-integrationAPI = dir "integration" $ msum [
-      dir "api" $ apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "new_document" createDocument              :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "document" getDocument                     :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
-    , dir "api" $ apiUnknownCall
-    , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSessionGet
-    , dir "connectuser" $ hPostNoXToken3 $ toK3 $ connectUserToSessionPost
-    , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
+integrationAPI :: Route (Kontra Response)
+integrationAPI = dir "integration" $ choice [
+      dir "api" $ 
+        choice 
+          [ apiCall "embed_document_frame" embeddDocumentFrame
+          , apiCall "new_document" createDocument
+          , apiCall "documents" getDocuments
+          , apiCall "document" getDocument
+          , apiCall "set_document_tag" setDocumentTag
+          , apiCall "remove_document" removeDocument
+          , apiUnknownCall
+          ]
+    , dir "connectuser" $ hGet $ toK3 $ connectUserToSessionGet
+    , dir "connectuser" $ hPostNoXToken $ toK3 $ connectUserToSessionPost
+    , dir "connectcompany" $ hGet $ toK3 $ connectCompanyToSession
     ]
 
 
