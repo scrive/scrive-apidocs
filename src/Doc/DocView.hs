@@ -776,6 +776,8 @@ documentRegionFields document = do
     regionFields = do
       field "haspeopleids" $ getRegionValue regionhaspeopleids
       field "iselegavailable" $ getRegionValue regionelegavailable
+      field "gb" $ REGION_GB == getRegion document
+      field "se" $ REGION_SE == getRegion document
 
 documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> Fields m
 documentAttachmentDesignFields docid atts = do
