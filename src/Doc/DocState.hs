@@ -55,7 +55,6 @@ module Doc.DocState
     , signatoryDetailsFromUser
     , GetUniqueSignatoryLinkID(..)
     , GetMagicHash(..)
-    , GetDocumentByFileID(..)
     , ErrorDocument(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
@@ -358,16 +357,6 @@ blankDocument =
           , documentregion               = defaultValue
           }
 
-{- |
-    Gets the document for the given FileID.  This includes documents where
-    documentdeleted = True.  If a document cannot be found then this is counted
-    as an error and a Left is returned.
- -}
-getDocumentByFileID :: FileID -> Query Documents (Either String Document)
-getDocumentByFileID fileid' = queryDocs $ \documents ->
-  case toList (documents @= fileid') of
-    [] -> Left $ "cannot find document for file #" ++ show fileid'
-    (document:_) -> Right document
 
 {- |
     Attaches a file to the indicated document.
@@ -1727,7 +1716,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'saveSigAttachment
                         , 'storeDocumentForTesting
                         , 'signLinkFromDetailsForTest
-                        , 'getDocumentByFileID
                         , 'errorDocument
                         , 'signableFromDocument
                         , 'signableFromDocumentIDWithUpdatedAuthor

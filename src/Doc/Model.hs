@@ -330,20 +330,6 @@ instance DBQuery FileModTime MinutesTime where
   dbQuery (FileModTime fid) = wrapDB $ \conn -> do
     unimplemented "FileModTime"
 
-#if 0
-data FileMovedToAWS = FileMovedToAWS FileID BS.ByteString BS.ByteString
-                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate FileMovedToAWS Document where
-  dbUpdate (FileMovedToAWS fid bucket url) = wrapDB $ \conn -> do
-    unimplemented "FileMovedToAWS"
-
-data FileMovedToDisk = FileMovedToDisk FileID FilePath
-                       deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate FileMovedToDisk Document where
-  dbUpdate (FileMovedToDisk fid filepath) = wrapDB $ \conn -> do
-    unimplemented "FileMovedToDisk"
-#endif
-
 data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByCompany [Document] where
@@ -361,13 +347,6 @@ data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
   dbQuery (GetDocumentByDocumentID did) = wrapDB $ \conn -> do
     unimplemented "GetDocumentByDocumentID"
-
--- FIXME: this is wrong, FileID may be in many documents
-data GetDocumentByFileID = GetDocumentByFileID FileID
-                           deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentByFileID Document where
-  dbQuery (GetDocumentByFileID fid) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentByFileID"
 
 
 data GetDocumentStats = GetDocumentStats
