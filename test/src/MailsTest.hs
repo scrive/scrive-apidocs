@@ -3,6 +3,7 @@ module MailsTest (mailsTests) where
 import Control.Applicative
 import Database.HDBC.PostgreSQL
 import Happstack.Server
+import Happstack.State (update)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -53,9 +54,14 @@ testDocumentMails  :: Connection -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-  forM_ allValues $ \l ->
+  forM_ allLocales $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
-        d <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
+        -- make  the context, user and document all use the same locale
+        ctx <- mailingContext l conn
+        _ <- runDBUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
+        d <- gRight . update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
@@ -69,7 +75,6 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
         doc <- gRight $ randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) now
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
-        ctx <- mailingContext l conn
         req <- mkRequest POST []
         --Invitation Mails
         let checkMail s mg = do
@@ -101,9 +106,11 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
 
 testUserMails :: Connection -> Maybe String -> Assertion
 testUserMails conn mailTo = withTestEnvironment conn $ do
-  forM_ allValues $ \l ->  do
-    user <- addNewRandomAdvancedUser
+  forM_ allLocales $ \l ->  do
+    -- make a user and context that use the same locale
     ctx <- mailingContext l conn
+    user <- addNewRandomAdvancedUserWithLocale l
+
     req <- mkRequest POST []
     let checkMail s mg = do
                            m <- fst <$> (runTestKontra req ctx $ mg)
@@ -135,11 +142,19 @@ validMail name m = do
          Right _ -> assertSuccess
          Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
 
+addNewRandomAdvancedUserWithLocale :: Locale -> DB User
+addNewRandomAdvancedUserWithLocale l = do
+  user <- addNewRandomAdvancedUser
+  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+           locale = l
+         }
+  (Just uuser) <- runDBQuery $ GetUserByID (userid user)
+  return uuser
 
-mailingContext :: Region -> Connection -> DB Context
-mailingContext r conn = do
+mailingContext :: Locale -> Connection -> DB Context
+mailingContext locale conn = do
     globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion r) globaltemplates
+    ctx <- mkContext locale globaltemplates
     return $ ctx {
                 ctxdbconn = conn,
                 ctxhostpart = "http://dev.skrivapa.se"
