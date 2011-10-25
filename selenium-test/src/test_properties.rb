@@ -44,7 +44,7 @@ class TestProperties
     @second_sig_attachment_pdf_path = props["second-sig-attachment-pdf-path"]
     
     
-    is_missing_url = @selenium_url.nil? || @kontrakcja_url.nil?
+    is_missing_url = @kontrakcja_url.nil?
     is_missing_tester = @tester_email.nil? || @tester_password.nil?
     is_missing_first_counterpart = @first_counterpart_email.nil? || @first_counterpart_password.nil? || @first_counterpart_fstname.nil? || @first_counterpart_sndname.nil?
     is_missing_second_counterpart = @second_counterpart_email.nil? || @second_counterpart_password.nil? || @second_counterpart_fstname.nil? || @second_counterpart_sndname.nil?
