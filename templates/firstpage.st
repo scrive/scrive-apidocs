@@ -20,7 +20,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 type="text/javascript"></script>
                <script src="$prefix$/js/jquery.MultiFile.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/tiny_mce/jquery.tinymce.js"  
+               <script src="$prefix$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
                <script type="text/javascript">
                 $javascriptLocalisation()$</script>
@@ -44,13 +44,13 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
-                                <img src="$ourFirstPageLogo()$" alt="$ourServiceName()$" class="logo" />
+                                <img src="/img/logo-scrive.png" alt="Scrive" class="logo" />
                                 <div class="leftMain">
-                                        
+
                                         $localeSwitcher()$
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>
-                                                <p class="introtext">$_h1Body()$ 
+                                                <p class="introtext">$_h1Body()$
                                                 </p>
                                                 <h3>$_h3CreateAccount()$</h3>
                                                 <p class="introtext">$_h3CreateAccountBody()$</p>

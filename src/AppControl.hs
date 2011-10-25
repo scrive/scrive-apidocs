@@ -115,7 +115,7 @@ data AppGlobals
 staticRoutes :: Route (Kontra Response)
 staticRoutes = choice 
      [ allLocaleDirs $ const $ hGetAllowHttp $ handleHomepage
-     , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . getLocale)
+     , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
      , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage
      , publicDir "sakerhet" "security" LinkSecurity handleSecurityPage
@@ -396,9 +396,9 @@ getUserLocale conn muser = do
   let browserlocale = getBrowserLocale rq
   let newlocale = firstOf [ activationlocale
                           , userlocale
+                          , doclocale
                           , urllocale
                           , currentcookielocale
-                          , doclocale
                           , Just browserlocale
                           ]
   let newlocalecookie = mkCookie "locale" (show newlocale)
@@ -644,11 +644,9 @@ appHandler handleRoutes appConf appGlobals = do
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
-      -- work out the system, region and language
-      let systemServer = systemServerFromURL hostpart
+      -- work out the region and language
       doclocale <- getDocumentLocale
       userlocale <- getUserLocale conn muser
-      let ctxlocale = fromMaybe userlocale doclocale
 
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -665,7 +663,10 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
-                , ctxtemplates = localizedVersion (systemServer,getRegion ctxlocale, getLang ctxlocale) templates2
+                , ctxtemplates = localizedVersion userlocale templates2
+                , ctxglobaltemplates = templates2
+                , ctxlocale = userlocale
+                , ctxlocaleswitch = isNothing $ doclocale
                 , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -681,8 +682,6 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
-                , ctxdoclocale = doclocale
-                , ctxuserlocale = userlocale
                 , ctxdbconnstring = dbConfig appConf
                 }
       return ctx
@@ -829,18 +828,18 @@ handleLoginPost = do
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
                         _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          locale = ctxuserlocale ctx
+                          locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
+                        return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin (getLocale ctx) $ InvalidLoginInfo linkemail
+                    return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
+        _ -> return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
 
 {- |
    Handles the logout, and sends user back to main page.
@@ -849,7 +848,7 @@ handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     ctx <- getContext
     logUserToContext Nothing
-    sendRedirect $ LinkHome (getLocale ctx)
+    sendRedirect $ LinkHome (ctxlocale ctx)
 
 {- |
    Ensures logged in as a super user
@@ -859,7 +858,7 @@ onlySuperUserGet action = do
     ctx@Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
     if isSuperUser ctxadminaccounts ctxmaybeuser
         then action
-        else sendRedirect $ LinkLogin (getLocale ctx) NotLoggedAsSuperUser
+        else sendRedirect $ LinkLogin (ctxlocale ctx) NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.

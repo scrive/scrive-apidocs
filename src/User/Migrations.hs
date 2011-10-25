@@ -8,7 +8,17 @@ import Misc
 import User.Region
 import User.Tables
 
-addRegionToUserSettings :: Migration  
+removeSystemServer :: Migration
+removeSystemServer =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 2
+  , mgrDo = wrapDB $ \conn -> do
+      _ <- run conn "ALTER TABLE users DROP COLUMN system_server CASCADE" []
+      return ()
+  }
+
+addRegionToUserSettings :: Migration
 addRegionToUserSettings =
   Migration {
     mgrTable = tableUsers

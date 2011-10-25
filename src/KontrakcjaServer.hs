@@ -1,5 +1,5 @@
-module KontrakcjaServer (defaultConf, 
-                         runKontrakcjaServer, 
+module KontrakcjaServer (defaultConf,
+                         runKontrakcjaServer,
                          runTest,
                          readAppConfig ) where
 
@@ -129,7 +129,7 @@ initDatabaseEntries conn iusers = do
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
               return ()
           Just _ -> return () -- user exist, do not add it
 
@@ -141,7 +141,7 @@ uploadFileToAmazon appConf = do
         Just file -> do
                    runReaderT (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file) conn
                    return True
-        _ -> return False 
+        _ -> return False
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do
@@ -217,7 +217,7 @@ runKontrakcjaServer = Log.withLogger $ do
                               ioRunDB conn $ do
                                 -- U.populateDBWithUsersIfEmpty
                                 F.populateDBWithFilesIfEmpty
-  
+
                                 -- this is not ready yet
                                 --populateDBWithDocumentsIfEmpty
                               let (iface,port) = httpBindAddress appConf

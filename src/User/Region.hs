@@ -30,7 +30,7 @@ defaultRegionLang REGION_SE = LANG_SE
 defaultRegionLang REGION_GB = LANG_EN
 
 regionFromHTTPHeader :: String -> Region
-regionFromHTTPHeader s = fromMaybe defaultValue $ msum $ map findRegion (splitOver "," s)
+regionFromHTTPHeader s = fromMaybe REGION_GB $ msum $ map findRegion (splitOver "," s)
   where
     findRegion str = find ((`isInfixOf` str) . codeFromLang . defaultRegionLang) allValues
 

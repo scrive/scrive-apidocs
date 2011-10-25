@@ -11,9 +11,9 @@
  5 fria signaturer per månad och 50 dokument i lagring.</p>",,"                    <h3>Free for personal use</h3>
                     <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
 "_Bemefit1","Minska kostnaderna",,"Reduced costs"
-"_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. $ourServiceName()$ är
+"_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. Scrive är
  ett skräddarsytt redskap som optimerar dina processer. Spara
- 50-250kr/dokument. ","Document handling is time consuming. Time is money. $ourServiceName()$ could save you 50kr to 250kr per document.","Document handling is time consuming. Time is money. $ourServiceName()$ could save you £5 to £25 per document."
+ 50-250kr/dokument. ","Document handling is time consuming. Time is money. Scrive could save you 50kr to 250kr per document.","Document handling is time consuming. Time is money. Scrive could save you £5 to £25 per document."
 "_Bemefit2","Snabbare avslut",,"Quick completion"
 "_Bemefit2Body","Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
  din omsättning.",,"Less time on admin means more time to grow your business.  Professional tools to increase your profit."
@@ -21,15 +21,15 @@
 "_Bemefit3Body","Arbeta när du vill och var du vill. Glöm problemen med att buda
  dokument jorden runt.",,"Work whenever and wherever you want. No more waiting for expensive couriers."
 "_Bemefit4","Starkare bevis",,"Peace of mind"
-"_Bemefit4Body","$ourServiceName()$ verifierar transaktionen och stärker din bevisposition
- vid konflikt.",,"$ourServiceName()$ verifies all transactions, providing firm ground in the event of a disagreement."
+"_Bemefit4Body","Scrive verifierar transaktionen och stärker din bevisposition
+ vid konflikt.",,"Scrive verifies all transactions, providing firm ground in the event of a disagreement."
 "_Bemefit5","100% kontroll",,"Full control"
 "_Bemefit5Body","Vår säkra lagring garanterar dokumentens integritet. Äntligen
  full kontroll. ",,"Our secure storage guarantees the integrity of your documents."
 "_Bemefit6","Minska frustrationen",,"Less frustration"
 "_Bemefit6Body","Det är sällan roligt att vända papper, leta efter förlorade dokument
- och jaga signaturer. $ourServiceName()$ lättar din och dina kunders administrativa
- börda.",,"Move to our paper-free workflow. $ourServiceName()$
+ och jaga signaturer. Scrive lättar din och dina kunders administrativa
+ börda.",,"Move to our paper-free workflow. Scrive
  eases administrative burden for you and your customers."
 "_Bemefit7","Spara på miljön",,"Good for the planet"
 "_Bemefit7Body","Visa att ni tar ansvar. Skippa pappersavtalandet och minska din
@@ -255,7 +255,7 @@
 "_QuoteOnVidBy","- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise",,"- Lisa Renander and Julia Hamrin, CEO and Sales Manager at Go
  Enterprise"
 "_QuotesHead","Kunder berättar",,"What our customers think"
-"_ReadUnderstoodTOS","Jag har läst och accepterar $ourServiceName()$ Allmänna Villkor",,"I have read and accept $ourServiceName()$ Terms of Service"
+"_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept Scrive Terms of Service"
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för ",,"Are you sure you want to send reminders to the parties involved in the "
 "_ReminderBodyIfMulti2"," dokument.          ",," documents?          "
 "_ReminderBodyIfSingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet ",,"Are you sure you want to send a reminder to the parties involved in the document "
@@ -292,18 +292,18 @@
 "_Sweden","Sverige",,"Sweden"
 "_Britain","Storbritanien",,"Britain"
 "_UserRegion","User Region:",,"User Region:"
-"_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. $ourServiceName()$ är skapat
- av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. $ourServiceName()$ is made
+"_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive är skapat
+ av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. Scrive is made
  by an ambitious, international team based in Stockholm."
-"_aboutPageH1","Om $ourServiceName()$ och gänget bakom",,"About $ourServiceName()$ and the team behind it"
+"_aboutPageH1","Om Scrive och gänget bakom",,"About Scrive and the team behind it"
 "_aboutPagePerson1","Lukas Duczko",,"Lukas Duczko"
 "_aboutPagePerson1Body","Lukas har en bakgrund från Handelshögskolan i Stockholm och från
  finanssektorn från sin tid som affärsutvecklare på Klarna. Han
- lämnade Klarna för att satsa uteslutande på $ourServiceName()$. $ourServiceName()$
+ lämnade Klarna för att satsa uteslutande på Scrive. Scrive
  är hans andra företagsengagemang efter bokningsbolaget SpokenWord
  AB.",,"Lukas studied at the Stockholm School of Economics. He has a finance background including working as a business
  developer at Klarna. He left Klarna to focus at his work at
- $ourServiceName()$. $ourServiceName()$ is his second start-up after the event company
+ Scrive. Scrive is his second start-up after the event company
  SpokenWord AB."
 "_aboutPagePerson1Contact","lukas@scrive.com<br />									+46 704 56 04 04",,"lukas@scrive.com<br />									+46 704 56 04 04"
 "_aboutPagePerson1Position","CEO",,"CEO"
@@ -311,11 +311,11 @@
 "_aboutPagePerson2Body","Gracjan har en bakgrund från Klarna som programmerare och från
  Krakow Technical University där han studerade som PhD och undervisade
  i programmeringsspråk. Han lämnade Klarna för att satsa uteslutande
- på $ourServiceName()$. $ourServiceName()$ är hans andra företagsengagemang efter
+ på Scrive. Scrive är hans andra företagsengagemang efter
  PDF-optimeringsföretaget ACCHSH. ",,"Gracjan has his background at the Swedish credit company Klarna
  as a programmer, and Krakow Technical University where he studied
  as a PhD student and taught programming languages. He left Klarna
- to focus on $ourServiceName()$. $ourServiceName()$ is his second start-up involvement
+ to focus on Scrive. Scrive is his second start-up involvement
  after PDF-optimisation company ACCHSH. "
 "_aboutPagePerson2Contact","gracjan@scrive.com",,"gracjan@scrive.com"
 "_aboutPagePerson2Position","CTO",,"CTO"
@@ -324,11 +324,11 @@
  han studerat redovisning och finansiering. Han har tidigare
  arbetat som affärsutvecklare åt familjeföretaget Kundia AB där
  han bland annat hjälpte till att utveckla kontrollsystem och
- affärsprocesser. $ourServiceName()$ är Viktors andra företagsengagemang
+ affärsprocesser. Scrive är Viktors andra företagsengagemang
  efter Mobile Mall.",,"Viktor has his background at the Stockholm School of Economics where
  he studied Accounting and Financial Management. He has previously worked as a business developer at the family company Kundia
  AB where he, among other things, helped develop control systems
- and business processes. $ourServiceName()$ is Viktor's second start-up involvement
+ and business processes. Scrive is Viktor's second start-up involvement
  after Mobile Mall."
 "_aboutPagePerson3Contact","viktor@scrive.com<br />									+46 708 88 47 49",,"viktor@scrive.com<br />									+46 708 88 47 49"
 "_aboutPagePerson3Position","Business Development",,"Business Development"
@@ -349,35 +349,35 @@
  arbetat som team leader för säkerhetsprojekt inom amerikanska
  militären. Han har även på egen hand utvecklat ett flertal applikationer
  för iPhone och Android. Idag backpackar Eric jorden runt och
- arbetar 100% med $ourServiceName()$ på distans.",,"Eric studied at the University of New Orleans and has
+ arbetar 100% med Scrive på distans.",,"Eric studied at the University of New Orleans and has
  previously worked as a team leader for security projects
  in the US military. He has also single-handedly developed several
  applications for iPhone and Android. Eric is at the moment back-packing
- around the world and remote-working full time at $ourServiceName()$."
+ around the world and remote-working full time at Scrive."
 "_aboutPagePerson5Contact","eric@scrive.com",,"eric@scrive.com"
 "_aboutPagePerson5Position","Development",,"Development"
 "_aboutPagePerson6","Emily May Green",,"Emily May Green"
 "_aboutPagePerson6Body","Emily har en bakgrund från University of Bristol och har tidigare
  arbetat som utvecklare på ett flertal finansbanker i London.
  Hon lämnade sin post som systemutvecklare på HSBC för att arbeta
- heltid med $ourServiceName()$ på distans.",,"Emily attended the University of Bristol and has
+ heltid med Scrive på distans.",,"Emily attended the University of Bristol and has
  worked as a developer at several different financial institutions
  in London. She left her position as systems developer at HSBC
- to work full time at $ourServiceName()$."
+ to work full time at Scrive."
 "_aboutPagePerson6Contact","emily@scrive.com",,"emily@scrive.com"
 "_aboutPagePerson6Position","Development and Testing",,"Development and Testing"
 "_aboutPagePerson7","Oskar Wallin Berglin",,"Oskar Wallin Berglin"
 "_aboutPagePerson7Body","Oskar är student på Handelshögskolan i Stockholm och arbetar
- 100 % med $ourServiceName()$ parallellt med sina studier. Entreprenörskap
+ 100 % med Scrive parallellt med sina studier. Entreprenörskap
  är ett stort intresse och han har tidigare bland annat drivit
  entreprenörsprojektet Snäll Skuldhjälp.",,"Oskar is a student at Stocholm School of Economics, and works
- 50% at $ourServiceName()$ in parallel to his studies. Entrepreneurship is a
+ 50% at Scrive in parallel to his studies. Entrepreneurship is a
  major interest of his and he has previously run an entrepreneurship
  project called Snäll Skuldhjälp."
 "_aboutPagePerson7Contact","oskar@scrive.com<br />									+46 709 85 08 67",,"oskar@scrive.com<br />									+46 709 85 08 67"
 "_aboutPagePerson7Position","Business Development",,"Business Development"
-"_aboutPageTitle","| Om $ourServiceName()$",,"| About $ourServiceName()$"
-"_aboutPageTopBody","<p>$ourServiceName()$ är en tjänst för att underteckna och arkivera avtal
+"_aboutPageTitle","| Om Scrive",,"| About Scrive"
+"_aboutPageTopBody","<p>Scrive är en tjänst för att underteckna och arkivera avtal
  elektroniskt. Vi hjälper våra kunder att minska sina kostnader,
  öka sin omsättning och spara frustration.</p><br /><p>Elektronisk
  dokumentsignering är en relativt ung bransch som är på stark
@@ -387,25 +387,25 @@
  att se kundens behov, vår kundnära personliga approach och vår
  förmåga att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade
  problem på sätt som verkar enkla och tilltalande för slutkund.</p><br
- /><p>$ourServiceName()$ grundades av Lukas Duczko och Gracjan Polak som
- lärde känna varandra under sin tid på kreditbolaget Klarna.</p>",,"<p>$ourServiceName()$ is a service for signing and storing contracts electronically.
+ /><p>Scrive grundades av Lukas Duczko och Gracjan Polak som
+ lärde känna varandra under sin tid på kreditbolaget Klarna.</p>",,"<p>Scrive is a service for signing and storing contracts electronically.
  We help our customers to lower their costs, increase their profits and reduce frustration.</p>							<br />							<p>Electronic
  document signing is a relatively young industry that is growing fast
  both in Sweden and internationally. We are a young company in
  rapid growth with about 10 employees today. We are confident
  that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve
  complex legal and security-related issues in a way that seems
- simple and appealing to the end user.</p> 							<br />							<p>$ourServiceName()$
+ simple and appealing to the end user.</p> 							<br />							<p>Scrive
  was founded by Lukas Duczko and Gracjan Polak who got to know
  each other at the Swedish credit company Klarna.</p>"
 "_accountFromSignFooterNoThx","Nej tack",,"No thanks"
 "_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes please, store"
-"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
- Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""$linkterms$"">$ourServiceName()$
+"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">Scrive
+ Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""$linkterms$"">Scrive
  Terms of Service</a>"
-"_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? $ourServiceName()$ kan även arkivera
+"_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? Scrive kan även arkivera
  ett original för din säkerhet. Det kostar ingenting.
- ",,"          Do you want to secure your original? $ourServiceName()$ can store
+ ",,"          Do you want to secure your original? Scrive can store
  it for your safety, free of charge.        "
 "_accountFromSignInputsConfirmPassword","Bekräfta lösenord",,"Confirm password"
 "_accountFromSignInputsPrivateAccount","Privatperson",,"Private person"
@@ -469,15 +469,15 @@
  problems. RIKA stands for research, idea, concept and action
  (in Swedish) - the four steps in a problem solving process."
 "_clientsPageCusomerVidWeb","www.goenterprise.se",,"www.goenterprise.se"
-"_clientsPageH1","Kundutlåtanden om $ourServiceName()$",,"Customer quotes about $ourServiceName()$"
+"_clientsPageH1","Kundutlåtanden om Scrive",,"Customer quotes about Scrive"
 "_clientsPageTitle","| Kunder",,"| Customers"
-"_clientsPageTopBody","<p>$ourServiceName()$ är en tjänst för att underteckna och arkivera avtal
+"_clientsPageTopBody","<p>Scrive är en tjänst för att underteckna och arkivera avtal
  elektroniskt. Vi hjälper våra kunder att minska sina kostnader,
  öka sin omsättning och spara frustration. </p>						<br />						<p>Vi
  är övertygade om att våra främsta styrkor är vår förmåga att
  se kundens behov, vår kundnära personliga approach och vår förmåga
  att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade
- problem på sätt som verkar enkla och tilltalande för slutkund.</p>",,"<p>$ourServiceName()$ is a service for signing and storing contracts electronically.
+ problem på sätt som verkar enkla och tilltalande för slutkund.</p>",,"<p>Scrive is a service for signing and storing contracts electronically.
  We help our customers to lower their costs, increase their
 profits and reduce frustration.</p>						<br />						<p>We are confident
  that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve
@@ -537,8 +537,8 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_contractsealingtextspartnerText","Parter",,"Parties"
 "_contractsealingtextssecretaryText","Ej undertecknande part",,"Non-signing party"
 "_contractsealingtextssignedText","Undertecknat",,"Signed"
-"_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av $ourServiceName()$ CM AB och styrker att
- dokument nummer $documentid$ har undertecknats",,"This verification was issued by $ourServiceName()$ and supports that the
+"_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive CM AB och styrker att
+ dokument nummer $documentid$ har undertecknats",,"This verification was issued by Scrive and supports that the
  document $documentid$ has been signed"
 "_contractsealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
  är säkert verifierad genom vår tjänst.",,"by the parties, and is legally binding. Italic data is safely
@@ -598,10 +598,10 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_dialogConfirmSendinviteBody2To"," till ",," to "
 "_dialogConfirmSendinviteBody3","Du har skapat fält för parterna att fylla i innan de undertecknar.
  Efter att alla har undertecknat kommer du att
- få ett mail med en länk till en sida på $ourServiceName()$ där du kan
+ få ett mail med en länk till en sida på Scrive där du kan
  granska parternas uppgifter och underteckna dokumentet. ",,"You have created fields for the parties to fill in before they
  sign. When all counterparts have signed,               you
- will receive an e-mail with a link to a $ourServiceName()$ page where you
+ will receive an e-mail with a link to a Scrive page where you
  can sign the document."
 "_dialogConfirmSendinviteBody4"," Vill du skicka inbjudan att fylla i och underteckna dokumentet",,"Do you want to send an invitation to fill in and sign the document"
 "_dialogConfirmSendinviteBody5"," till ",," to "
@@ -630,9 +630,9 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_dialogConfirmTextSendIfNotNormalOrFieldsTo"," till ",," to "
 "_dialogConfirmTextSendNormalBody1","Vill du skicka en inbjudan att underteckna dokumentet till ",,"Do you want to send an invitation to sign the document to "
 "_dialogConfirmTextSendNormalBody2","?               Efter att de har undertecknat kommer du att få
- ett mail med en länk till en sida på $ourServiceName()$ där du kan underteckna
+ ett mail med en länk till en sida på Scrive där du kan underteckna
  dokumentet.",,"?               After they have signed, you will receive an e-mail
- with a link to a $ourServiceName()$ page where you can sign the document."
+ with a link to a Scrive page where you can sign the document."
 "_dialogCsvupload1Body","            Du har valt att göra ett massutskick, för att genomföra
  detta krävs att du laddar upp ett dokument med formatet .csv
           ",,"            You have chosen to multi send. To complete this you
@@ -731,8 +731,8 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashAuthorSigned","Dokumentet har undertecknats.",,"The document has been signed."
 "_flashDocumentDraftSaved","Du har sparat dokumentet. ",,"Your document has been saved."
 "_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
-"_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos $ourServiceName()$.","Your original document has been saved by $ourServiceName()$.","Your original document has been saved by $ourServiceName()$."
-"_flashMessageAccountRemovedFromSign","Ditt original är borttaget från $ourServiceName()$.",,"Your original document has been removed from $ourServiceName()$"
+"_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
+"_flashMessageAccountRemovedFromSign","Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
 "_flashMessageAccountsDeleted","Account(s) successfully deleted (spec/translate me please).",,"The account(s) were successfully deleted."
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
@@ -772,8 +772,8 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageMissingRequiredField","Du har missat att fylla i ett obligatoriskt fält.",,"You missed some mandatory fields."
 "_flashMessageMultipleAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.",,"The selected attachments have been shared with your organisation."
 "_flashMessageMultipleTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
-"_flashMessageMustAcceptTOS","För att kunna använda tjänsten måste du acceptera $ourServiceName()$ Allmänna
- Villkor.",,"Please accept the $ourServiceName()$ Terms of Service to get started."
+"_flashMessageMustAcceptTOS","För att kunna använda tjänsten måste du acceptera Scrive Allmänna
+ Villkor.",,"Please accept the Scrive Terms of Service to get started."
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
  och två nummer.",,"$fieldnametitlecase$ must contain at least two letters and two
  digits."
@@ -784,8 +784,8 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageNoAccountType","Du måste välja kontotyp.",,"You must select an account type."
 "_flashMessageNoBulkContractRemindsSent","Tyvärr, det finns inga parter som återstår att underteckna.",,"Sorry there are no recipients left to sign."
 "_flashMessageNoBulkOfferRemindsSent","Tyvärr, det finns inga mottagare som återstår att acceptera.",,"Sorry there are no recipients left to accept."
-"_flashMessageNoDataInCSV","Kunde inte hitta några data i filen.",,"$ourServiceName()$ could not find any data in the file."
-"_flashMessageNoDataInCSVApartFromHeader","Kunde inte hitta några data i filen, kunde bara hitta titlar.",,"$ourServiceName()$ could not find any data in the file apart from column
+"_flashMessageNoDataInCSV","Kunde inte hitta några data i filen.",,"Scrive could not find any data in the file."
+"_flashMessageNoDataInCSVApartFromHeader","Kunde inte hitta några data i filen, kunde bara hitta titlar.",,"Scrive could not find any data in the file apart from column
  headers."
 "_flashMessageNoRemainedInvitationEmails","Du har redan skickat 10 inbjudningar till denna e-post. Vänligen
  försök senare.",,"You have sent 10 invitations to this email address. Please try
@@ -819,7 +819,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
-"_flashMessageUserActivated","Välkommen till $ourServiceName()$!",,"Welcome to $ourServiceName()$!"
+"_flashMessageUserActivated","Välkommen till Scrive!",,"Welcome to Scrive!"
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
 "_flashMessageCompanyCreated","A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
@@ -841,10 +841,10 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_friends","Vänner",,"Friends"
 "_from","från",,"from"
-"_h1","Varför krångla? - Signera med $ourServiceName()$!",,"Why struggle? Sign with $ourServiceName()$!"
-"_h1Body","Signera avtal och andra dokument elektroniskt med $ourServiceName()$.<br/>Våra kunder
+"_h1","Varför krångla? - Signera med Scrive!",,"Why struggle? Sign with Scrive!"
+"_h1Body","Signera avtal och andra dokument elektroniskt med Scrive.<br/>Våra kunder
  och våra kunders kunder älskar enkelheten.
-                               ",,"Sign contracts and other documents online with $ourServiceName()$.<br/>Our customers just love the simplicity.                                     "
+                               ",,"Sign contracts and other documents online with Scrive.<br/>Our customers just love the simplicity.                                     "
 "_h3CreateAccount","Skapa konto nu!",,"Create your account now."
 "_h3CreateAccountBody","1 månad full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial.  Easy signup."
 "_headerAccount","Konto",,"Account"
@@ -876,17 +876,17 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  med mottagarens e-post server eller mer troligt på att adressen
  $email$ inte existerar.       Processen har därmed avbrutits.
  Gör så här om du vill börja om:",,"We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because their mail server is experiencing difficulties, or because the address $email$ is incorrect. The process has been canceled. To restart it:"
-"_invitationMailUndeliveredContentInstruction","1. Kontrollera vilken som är mottagarens korrekta adress<br/>  
+"_invitationMailUndeliveredContentInstruction","1. Kontrollera vilken som är mottagarens korrekta adress<br/>
      2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
 "_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
-    underkonto på $ourServiceName()$ genom vilket du kan skriva avtal
+    underkonto på Scrive genom vilket du kan skriva avtal
    för organisationen <strong>$companyname$</strong>. Observera
  att detta konto inte    är avsett för privat bruk då samtliga
- dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a subaccount on $ourServiceName()$.  Using $ourServiceName()$ you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
+ dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a subaccount on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
 "_inviteCompanyAccountMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_inviteCompanyAccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
 "_inviteCompanyAccountMailTitle","Inbjudan från $supervisorname$ till underkonto",,"Invitation from $supervisorname$"
@@ -959,21 +959,21 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  is not able to provide the rigorous user controls and guaranties
  supplied by TrustWeaver."
 "_legalPageH2Intro","Inledning",,"Introduction"
-"_legalPageH2IntroBody","$ourServiceName()$ är en tjänst för att underteckna och arkivera avtal
+"_legalPageH2IntroBody","Scrive är en tjänst för att underteckna och arkivera avtal
  elektroniskt. Vi hjälper våra kunder att minska sina kostnader,
  öka omsättningen och spara frustration. Nedanstående material
- ska endast ses som en beskrivning av $ourServiceName()$ som företag och
+ ska endast ses som en beskrivning av Scrive som företag och
  som tjänst. Materialet är under inga omständigheter avsett som
- juridisk rådgivning.",,"$ourServiceName()$ is a service for signing and storing contracts electronically.
+ juridisk rådgivning.",,"Scrive is a service for signing and storing contracts electronically.
  We help our customers lower their costs, increase their
 profits and reduce frustration. The following mateials shall only
- be seen as a description of $ourServiceName()$ as a company and service.
+ be seen as a description of Scrive as a company and service.
  The material is under no circumstances intended as legal advice."
 "_legalPageH2IntroH31","Juridiskt syfte",,"Legal objective"
-"_legalPageH2IntroH31Body1","$ourServiceName()$´s juridiska syfte är att tillhandahålla bästa möjliga
+"_legalPageH2IntroH31Body1","Scrive´s juridiska syfte är att tillhandahålla bästa möjliga
  juridiska ramverk för att maximera den juridiska säkerheten,
  minimera riskexponeringen samt minimera antalet obehagliga överraskningar
- för våra användare.",,"$ourServiceName()$'s legal objective is to provide the best possible framework
+ för våra användare.",,"Scrive's legal objective is to provide the best possible framework
  to maximize legal security, minimize risk exposure, and minimize
  the number of unpleasant surprises for our users."
 "_legalPageH2IntroH31Body2","När det uppstår en tvist kring huruvida ett dokument har skrivits
@@ -1011,45 +1011,45 @@ profits and reduce frustration. The following mateials shall only
  When that party fulfills its burden of proof, it is the other
  party's burden to prove the opposite, and so the trial will continue until the court finally judge upon the presented evidence
  Whether the document is valid or not."
-"_legalPageH2IntroH31Body3","$ourServiceName()$´s syfte är att vara ett användbart redskap för båda
- parter i alla steg av processen. Genom att $ourServiceName()$ som oberoende
+"_legalPageH2IntroH31Body3","Scrive´s syfte är att vara ett användbart redskap för båda
+ parter i alla steg av processen. Genom att Scrive som oberoende
  tredje part bevittnat och lagrar bevismaterialet kan parterna
- använda $ourServiceName()$ som ett effektivt och trovärdigt redskap för
+ använda Scrive som ett effektivt och trovärdigt redskap för
  att kunna påvisa vad som egentligen gäller och komma överens
  utan att konflikten ska behöva utvecklas allt för långt. På
- så sätt hjälper $ourServiceName()$ att i tidiga stadier av osämja minimera
+ så sätt hjälper Scrive att i tidiga stadier av osämja minimera
  friktionen.  I de sällsynta fall en tvist går hela vägen till
- domstol har $ourServiceName()$ som syfte att kunna tillhandahålla hävdande
+ domstol har Scrive som syfte att kunna tillhandahålla hävdande
  part (den part som hävdar att dokumentet undertecknats av parterna)
  bästa möjliga bevismaterial för att denna framgångsrikt ska
- kunna påvisa sin ståndpunkt i domstol.",,"$ourServiceName()$'s aim is to be a useful tool for both parties in all steps
+ kunna påvisa sin ståndpunkt i domstol.",,"Scrive's aim is to be a useful tool for both parties in all steps
  of the process. By witnessing the transaction, collecting proof
- material and storing it, $ourServiceName()$ serves as an independent third
+ material and storing it, Scrive serves as an independent third
  party that easily shows all important actions commited by the
  involved parties, and thereby functions as a tool for preventing
  conflicts from evolving. In this way,
- $ourServiceName()$ helps to minimise the friction between parties at an early
+ Scrive helps to minimise the friction between parties at an early
  stage of the conflict. In rare cases where conflicts are tried
- in court, $ourServiceName()$ aims to provide the party claiming that a document
+ in court, Scrive aims to provide the party claiming that a document
  was signed the best proof material possible to strenghten the
  party's position in court."
 "_legalPageH2IntroH32","Oberoende ställning",,"Independent position"
-"_legalPageH2IntroH32Body","För att upprätthålla trovärdigheten i tjänsten är $ourServiceName()$ alltid
- oberoende. $ourServiceName()$ tar och kommer aldrig att ta ställning för
+"_legalPageH2IntroH32Body","För att upprätthålla trovärdigheten i tjänsten är Scrive alltid
+ oberoende. Scrive tar och kommer aldrig att ta ställning för
  någondera undertecknande part oavsett vem som är betalande kund
- till $ourServiceName()$. Vårt syfte är uteslutande att generera bästa
+ till Scrive. Vårt syfte är uteslutande att generera bästa
  möjliga bevismaterial som kan vara användbart för att styrka
  att ett dokument undertecknats av parterna. Vi gör allt för
  att skydda integriteten och kvaliteten i det bevismaterial som
- genereras genom $ourServiceName()$ och för att göra det så användbart
- som möjligt för våra slutanvändare.",,"To maintain the credibility of its service, $ourServiceName()$ is always
- Independent. $ourServiceName()$ never takes, and will not take the position
+ genereras genom Scrive och för att göra det så användbart
+ som möjligt för våra slutanvändare.",,"To maintain the credibility of its service, Scrive is always
+ Independent. Scrive never takes, and will not take the position
  of one side signing the contract regardless of who is the paying
  customer. Our purpose is to generate
  the best proof material possible to strengthen the fact that a document
  has been signed by the parties. We do everything we can to protect
  the integrity and quality of the proof material generated by
- $ourServiceName()$, and making it as useful as possible for the customers."
+ Scrive, and making it as useful as possible for the customers."
 "_legalPageH2IntroH33","Användarfilosofi",,"User philosophy"
 "_legalPageH2IntroH33Body1","Dokument undertecknas i många olika former i många olika situationer.
  Därför kan våra användares behov se väldigt olika ut, framförallt
@@ -1100,30 +1100,30 @@ profits and reduce frustration. The following mateials shall only
  styrka sin talan och att de framlagda bevismaterial som stödjer
  olika ståndpunkter sedan vägs mot varandra. Detta gäller även
  vid tvister gällande undertecknade dokument, exempelvis i avtalstvister.
- I $ourServiceName()$´s fall betyder det att inte endast de undertecknande
- parternas handlingar genom tjänsten $ourServiceName()$ kan inräknas som
+ I Scrive´s fall betyder det att inte endast de undertecknande
+ parternas handlingar genom tjänsten Scrive kan inräknas som
  bevismaterial, utan även parternas handlingar utanför tjänsten
  som exempelvis telefonsamtal, sms och e-mailkonversationer.
- $ourServiceName()$ kan givetvis endast utöva sitt juridiska uppdrag inom
+ Scrive kan givetvis endast utöva sitt juridiska uppdrag inom
  ramarna för tjänsten och tar aldrig, varken explicit eller implicit,
  något ansvar för vad användarna gör utanför ramarna för tjänsten.
- Följande är de viktigaste faktorerna inom $ourServiceName()$´s kontrollområde
+ Följande är de viktigaste faktorerna inom Scrive´s kontrollområde
  som påverkar styrkan hos bevismaterial genererade vid användning
- av tjänsten $ourServiceName()$:",,"Swedish law prevails in free assessment of evidence. This means
+ av tjänsten Scrive:",,"Swedish law prevails in free assessment of evidence. This means
  that litigants may present any evidence to support his claim,
  and that the presented evidence that supports different
  positions are considered  against each other This applies in
- trials concerning signed documents. In cases where $ourServiceName()$ is
- used, this means that not only evidence generated through $ourServiceName()$
+ trials concerning signed documents. In cases where Scrive is
+ used, this means that not only evidence generated through Scrive
  could be used as proof, but also evidence produced by the parties
  outside of the service e.g. phone conversations, text-message
- conversations and e-mail conversations. $ourServiceName()$ can obviously
+ conversations and e-mail conversations. Scrive can obviously
  only increase its legal mission within the context of the service,
  and will never, explicitly nor implicitly, take any responsibility
  for the user's actions outside of the context of the service.
- The following factors are the most important ones within $ourServiceName()$'s
+ The following factors are the most important ones within Scrive's
  area of control affecting the strength of the evidence generated
- when using $ourServiceName()$:"
+ when using Scrive:"
 "_legalPageH2KeyLegalBody2","<li>Verifikation av identitet</li>	<li>Dokumentsigneringsprocess</li>	<li>Generering
  av data</li>	<li>Dokumentförvaring</li>",,"<li>Verification of identity</li>	<li>Document signing process</li>	<li>Data
  generation</li>	<li>Data storage</li>"
@@ -1136,12 +1136,12 @@ profits and reduce frustration. The following mateials shall only
  dvs om den är giltig eller inte, utan i skillnaden i möjlighet
  att bevisa överenskommelsens existens, innehåll och identitet
  på deltagande parter. Orsaken är att olika metoder för att ingå
- avtal genererar olika mängd och kvalitet på bevismaterial. $ourServiceName()$
+ avtal genererar olika mängd och kvalitet på bevismaterial. Scrive
  erbjuder idag endast e-signering (e-post) och e-legitimation
  som metoder för identifiering av avtalsparter vid signering.
- $ourServiceName()$ planerar att inom kort expandera antalet metoder för
+ Scrive planerar att inom kort expandera antalet metoder för
  att göra tjänsten än mer användarvänlig för användaren. Nedan
- följer en detaljerad beskrivning av de två metoder som $ourServiceName()$
+ följer en detaljerad beskrivning av de två metoder som Scrive
  tillhandahåller idag.",,"Swedish law rarely regulates the form of signatures used. The
  main rule is that an agreement is legally binding, regardless
  of how it was confirmed (e.g. through a hand-shake, a statement,
@@ -1150,8 +1150,8 @@ profits and reduce frustration. The following mateials shall only
  rather the possibility to prove if an agreement exists at all,
  the content of it and who is involved in it. The reason for this
  is that different kinds of agreements generates different quality
- and quantity of evidence. Today, $ourServiceName()$ only offers e-mail and
- e-ID as methods of identifying parties when signing. $ourServiceName()$
+ and quantity of evidence. Today, Scrive only offers e-mail and
+ e-ID as methods of identifying parties when signing. Scrive
  plans to expand the number of methods provided to make the service
  even more user-friendly. Below, a description of the two methods
  provided today are presented."
@@ -1171,7 +1171,7 @@ profits and reduce frustration. The following mateials shall only
 "_legalPageH2KeyLegalH32Body2","<h4>Verifieringsmetod:</h4> Det finns tre delar av verifieringen.
  En aktiv del, en passiv del och IP-adressen. I ett första steg
  skickar vi en unik länk till e-postadressen som användaren måste
- klicka på för att kunna underteckna ett dokument på $ourServiceName()$
+ klicka på för att kunna underteckna ett dokument på Scrive
  med e-postadressen. I det andra steget, när dokumentet skrivits
  på av samtliga parter, skickar vi en bekräftelse till samtliga
  parter via e-post. Underlåtelse att reagera om en bekräftelse
@@ -1186,7 +1186,7 @@ profits and reduce frustration. The following mateials shall only
  the verification. One active part, one passive part and the
  IP-address. In the first step, we send an e-mail containing
  a unique link that the user has to click to sign a document
- via e-mail verification through $ourServiceName()$. In the second step,
+ via e-mail verification through Scrive. In the second step,
  when the document has been signed by all parties, a confirmation
  is sent to all parties by e-mail. Omission to react if a user
  for some reason incorrectly receives a confirmation can be used
@@ -1223,9 +1223,9 @@ profits and reduce frustration. The following mateials shall only
  identifiering av användaren krävs annan bevisning som knyter
  ett undertecknat dokument till en specifik identitet, exempelvis
  annan mailkommunikation från e-postkontot, telefonsamtal eller
- sms. Eftersom $ourServiceName()$ i dagsläget helt saknar metoder för registrering
+ sms. Eftersom Scrive i dagsläget helt saknar metoder för registrering
  av sådan övrig kommunikation räknar vi den som att den ligger
- utanför $ourServiceName()$´s kontrolldomän. Vi rekommenderar därmed våra
+ utanför Scrive´s kontrolldomän. Vi rekommenderar därmed våra
  användare att inte använda e-postkonton som hör till öppna domäner
  för identifiering vid signering av dokument. Det stora flertalet
  privata användare använder e-postkonton tillhörande just öppna
@@ -1240,9 +1240,9 @@ profits and reduce frustration. The following mateials shall only
  the identification of the user is nonexistent when creating
  such an account, other evidence is required to connect a signed
  document to a person, such as an e-mail conversation a phone
- conversation or something else. Today, $ourServiceName()$ does not have
+ conversation or something else. Today, Scrive does not have
  any methods for collecting such information, thus, this lies
- outside of $ourServiceName()$'s domain of control. Therefore we recommend
+ outside of Scrive's domain of control. Therefore we recommend
  our user not to use e-mail accounts provided by open distributors
  when signing a document. The vast majority of private e-mail
  users use this kind of open e-mail providers, therefore we discourage
@@ -1282,10 +1282,10 @@ profits and reduce frustration. The following mateials shall only
  partens identitet kommunicerar e-legitimationsklienten med certifikatsutfärdarens
  server som kontrollerar partens personuppgifter och om allting
  stämmer så accepteras partens identitet.</li>	<li>I sista steget
- kontrollerar $ourServiceName()$ partens e-legitimation mot personuppgifter
+ kontrollerar Scrive partens e-legitimation mot personuppgifter
  på avsedd undertecknande part enligt definition från dokumentutfärdaren.
  Om uppgifterna från e-legitimationen matchar med dokumentutfärdarens
- godkänns underskriften av $ourServiceName()$.</li>",,"<li>The first step of identification is when the user obtains
+ godkänns underskriften av Scrive.</li>",,"<li>The first step of identification is when the user obtains
  his e-ID by logging in at his online bank. To be able to log
  in at the bank, you first have to get an account in the bank
  and identify yourself using your ID or legal guardian.</li>	<li>Where the person installs his e-ID on the computer,
@@ -1295,10 +1295,10 @@ profits and reduce frustration. The following mateials shall only
  party identifies himself by writing the strong password selected
  previously. To confirm the party's identity, the e-ID client
  Communicates with the e-ID provider's server that confirms the
- party's ID. </li>	<li>In the last step, $ourServiceName()$ compares the
+ party's ID. </li>	<li>In the last step, Scrive compares the
  party's e-ID with the personal info given by the creator of
  the document. If everything matches, the signature is accepted
- by $ourServiceName()$.</li>"
+ by Scrive.</li>"
 "_legalPageH2KeyLegalH33Body3","<h4>Juridisk reflektion:</h4> Svensk lagstiftning likställer
  kvalificerade signaturer med vanliga handskrivna signaturer
  (det finns dock några få dokument som är undantagna från denna
@@ -1330,12 +1330,12 @@ profits and reduce frustration. The following mateials shall only
  garanteras: hur kan vi förhindra att till exempel avtal signeras
  av en bedragare i en situation då ett e-postkonto kapats eller
  verifikationskoden till en e-legitimation stulits? Svaret måste
- tyvärr bli att $ourServiceName()$ inte kan förhindra detta eftersom människors
- e-postkonton och koder ligger utanför $ourServiceName()$´s kontrolldomän.
+ tyvärr bli att Scrive inte kan förhindra detta eftersom människors
+ e-postkonton och koder ligger utanför Scrive´s kontrolldomän.
  Innan man drar några slutsatser av detta bör man dock fråga
  sig: vad är egentligen skillnaden mellan dagens standard med
  handskriven signatur och de elektroniska signeringsmetoder som
- $ourServiceName()$ tillhandahåller? Hur klarar handskrivna signaturer
+ Scrive tillhandahåller? Hur klarar handskrivna signaturer
  motsvarande frågeställning? Oss veterligen krävs inga stulna
  inloggningar eller teknisk kunskap för att förfalska en handskriven
  signatur, det räcker med papper och penna och hur säkert är
@@ -1345,13 +1345,13 @@ profits and reduce frustration. The following mateials shall only
  hårdvara) och dessutom möjliggör direkt övervakning vid själva
  signeringstillfället till exempel med hjälp av IP-adresser och
  avancerade övervakningssystem för förebyggande av bedrägeri.
- $ourServiceName()$ tillämpar IP-registrering och ser även över möjligheten
+ Scrive tillämpar IP-registrering och ser även över möjligheten
  att införa ovan nämnda övervakningssystem.",,"A controversial part of the discussion about electronic methods
  for identification deals with whether the integrity of the verification
  tool can be guaranteed: how to prevent contracts to be signed
  by an intruder if an e-mail account has been hijacked or the
- verification code for an e-ID has been stolen? Unfortunately the answer cannot be resolved by $ourServiceName()$, since
- this is outside of $ourServiceName()$'s domain of control. Before drawing
+ verification code for an e-ID has been stolen? Unfortunately the answer cannot be resolved by Scrive, since
+ this is outside of Scrive's domain of control. Before drawing
  any conclusions from this one should as oneself: what is really
  the difference between today's hand-written signatures  and
  the electronic signatures provided by Scirve? How well does
@@ -1361,9 +1361,9 @@ profits and reduce frustration. The following mateials shall only
  and a pen is needed, and how secure is that? Our conclusion
  is that electronic signatures by default is one step more
  secure than  hand-written ones, since the technology itself
- forms a barrier to intruders and allows $ourServiceName()$ to witness the
+ forms a barrier to intruders and allows Scrive to witness the
  transaction by storing proof e.g. IP-adresses and advanced
- surveillance systems for preventing frauds. $ourServiceName()$ uses IP-registration
+ surveillance systems for preventing frauds. Scrive uses IP-registration
  and is considering implementing the advanced surveillance systems
  mentioned above."
 "_legalPageH2Proof","Bevismaterial",,"Proof material"
@@ -1372,13 +1372,13 @@ profits and reduce frustration. The following mateials shall only
  systemet är stabilt och inte genererar felaktig information
  eller har luckor som tillåter att systemet kan manipuleras på
  oönskade sätt. Med grundliga rutiner och stabil teknologi säkerställer
- vi att tjänsten $ourServiceName()$ drivs av stabil och säker mjukvara.",,"To be able to generate strong proof materials, it is important
+ vi att tjänsten Scrive drivs av stabil och säker mjukvara.",,"To be able to generate strong proof materials, it is important
  that the system does not generate incorrect information, and
  that it does not have gaps in the system that allows it to be
  Manipulated in undesired ways. By thorough routines and stable
- technology, we ensure that the service $ourServiceName()$ is powered by
+ technology, we ensure that the service Scrive is powered by
  stable and secure software."
-"_legalPageH2ProofH31Body2","<h4>Haskell:</h4> Tjänsten $ourServiceName()$ är byggd på teknologin Haskell,
+"_legalPageH2ProofH31Body2","<h4>Haskell:</h4> Tjänsten Scrive är byggd på teknologin Haskell,
  som räknas som en av de mest stabila och pålitliga mjukvaruteknologier
  som någonsin utvecklats. En av anledningarna till detta är att
  Haskell är utvecklat för att minimera mänskliga felsteg i mjukvaruutvecklingen
@@ -1389,7 +1389,7 @@ profits and reduce frustration. The following mateials shall only
  stränga automatiska tester. I och med detta kan vissa problem
  omöjligen uppstå vid mjukvaruutveckling med Haskell och sannolikheten
  att vissa andra typer av problem uppstår blir betydligt mindre
- än vid användning av andra teknologier.",,"<h4>Haskell:</h4> The service $ourServiceName()$ is built upon the technology
+ än vid användning av andra teknologier.",,"<h4>Haskell:</h4> The service Scrive is built upon the technology
  is Haskell, which is counted as one of the most stable and reliable
  software technologies ever developed. One of the reasons for
  this is that Haskell is developed to minimize human error in
@@ -1431,7 +1431,7 @@ profits and reduce frustration. The following mateials shall only
  definierad grupp individer.</li>	<li>Samtliga anställda får
  underteckna strikta avtal som reglerar vad som är tillåtet inom
  ramarna för arbetsplatsen och samtliga anställda synas grundligt
- innan de kan få anställning på $ourServiceName()$.</li>	<li>Systemet loggar
+ innan de kan få anställning på Scrive.</li>	<li>Systemet loggar
  all aktivitet på våra servrar. Vi registrerar samtliga ändringar,
  när de utförts och av vem. Därmed finns alltid full spårbarhet
  av ändringar genomförda i systemet.</li>",,"<li>We limit the number of individuals with access to the core
@@ -1441,7 +1441,7 @@ profits and reduce frustration. The following mateials shall only
  group of individuals.</li>	<li>All employees have to sign strict
  contracts regulating what is allowed within the context of the
  work, and all employees are examined thoroughly before being
- employed at $ourServiceName()$.</li>	<li>The system logs all activities of our
+ employed at Scrive.</li>	<li>The system logs all activities of our
  our servers. We register all changes, when they occur, and
  who preforms them. Thereby, all changes in the system are traceable.</li>"
 "_legalPageH2ProofH32","Bevissäkring",,"Securing evidence"
@@ -1493,13 +1493,13 @@ profits and reduce frustration. The following mateials shall only
  steps to ensure that all parties involved understand that they
  are signing, and what they are signing:"
 "_legalPageH2SignProcessH31Body2Table1","		<td>1</td>		<td>Avsändare</td>		<td>Avsändaren skapar ett konto
- online på tjänsten $ourServiceName()$, kommunicerar med en person som
+ online på tjänsten Scrive, kommunicerar med en person som
  bjuder in till ett konto eller skapar ett konto i slutsteget
  då den har varit mottagande part i ett dokument skickat genom
- $ourServiceName()$. Avsändaren antas här ha blivit införstådd i tjänsten.</td>	",,"		<td>1</td>		<td>Sender</td>		<td>The sender creates an account
- online in $ourServiceName()$, communicates with another user who is invited
+ Scrive. Avsändaren antas här ha blivit införstådd i tjänsten.</td>	",,"		<td>1</td>		<td>Sender</td>		<td>The sender creates an account
+ online in Scrive, communicates with another user who is invited
  to an account, or creates an account in the last step of a signing
- process through $ourServiceName()$ in which it was a signatory. The sender
+ process through Scrive in which it was a signatory. The sender
  is assumed to understand the service.</td>	"
 "_legalPageH2SignProcessH31Body2Table10","		<td>10</td>		<td>Mottagare</td>		<td>Då mottagaren tryckt på
  knappen ”Underteckna” visas ett pop-up- fönster där sändaren
@@ -1513,12 +1513,12 @@ profits and reduce frustration. The following mateials shall only
  has been signed, an informative text appears, telling the recipient
  that the document has been signed.</td>	"
 "_legalPageH2SignProcessH31Body2Table12","		<td>12</td>		<td>Mottagare &amp; Avsändare</td>		<td>När samtliga
- parter undertecknat dokumentet stämplar $ourServiceName()$ det med dokumentuppgifter
+ parter undertecknat dokumentet stämplar Scrive det med dokumentuppgifter
  och med en kvalificerad signatur. Sedan skickas ett e-postmeddelande
  innehållandes det färdiga dokumentet och information om att
  dokumentet slutligen undertecknats av samtliga parter och är
  juridiskt bindande till alla avtalsparter.</td>	",,"		<td>12</td>		<td>Recipient &amp; Sender</td>		<td>When all
- parties have signed the document, $ourServiceName()$ stamps it with the
+ parties have signed the document, Scrive stamps it with the
  document information and a qualified signature. The document
  is then sent out to all involved parties by e-mail, telling
  them that the document has been signed, and that it is legally
@@ -1529,9 +1529,9 @@ profits and reduce frustration. The following mateials shall only
  with a welcome message containing information about the service
  and an activation link.</td>	"
 "_legalPageH2SignProcessH31Body2Table3","		<td>3</td>		<td>Avsändare</td>		<td>Efter att avsändaren klickat
- på länken fyller den i sina uppgifter på $ourServiceName()$, läser och
+ på länken fyller den i sina uppgifter på Scrive, läser och
  accepterar användarvillkoren.</td>	",,"		<td>3</td>		<td>Sender</td>		<td>After clicking the link, the
- personal information is filled into $ourServiceName()$, and the Terms Of
+ personal information is filled into Scrive, and the Terms Of
  Service are ridden and accepted.</td>	"
 "_legalPageH2SignProcessH31Body2Table4","		<td>4</td>		<td>Avsändare</td>		<td>När avsändaren ska bjuda
  in en motpart följer den en trestegsprocess. Först laddar den
@@ -1565,10 +1565,10 @@ profits and reduce frustration. The following mateials shall only
  signing process.</td>	"
 "_legalPageH2SignProcessH31Body2Table7","		<td>7</td>		<td>Mottagare</td>		<td>Då mottagaren klickar på
  länken som bifogas med e-postmeddelandet hamnar den i en vy
- på $ourServiceName()$ där vi informerar mottagaren om att den noggrant
+ på Scrive där vi informerar mottagaren om att den noggrant
  bör läsa all tillgänglig information i dokumentet samt de tillhörande
  kontaktuppgifterna.</td>	",,"		<td>7</td>		<td>Recipient</td>		<td>When the recipient clicks
- the link in the e-mail, a view inside $ourServiceName()$ appears where the
+ the link in the e-mail, a view inside Scrive appears where the
  recipient is informed that it should read the document carefully,
  and the associated contact information.</td>	"
 "_legalPageH2SignProcessH31Body2Table8","		<td>8</td>		<td>Mottagare</td>		<td>För att försäkra oss om
@@ -1624,20 +1624,20 @@ profits and reduce frustration. The following mateials shall only
 "_login","Logga in",,"Log in"
 "_loginModalForgotPasswordSendNewPassword","Skicka nytt lösenord",,"Send new password"
 "_mailAccountBySigningContractReminderContentBody","Du har inte bekräftat att du vill spara ditt dokument ""$documenttitle$""
- hos $ourServiceName()$. SkrivaPås system kommer att radera dokumentet
- automatiskt inom 72h. Det kostar ingenting att spara dokumentet.",,"Would you like to save  """"$documenttitle$""""  with $ourServiceName()$? Saving is free.  If you choose not to save, then $ourServiceName()$ will erase it after 72 hours."
+ hos Scrive. Scrives system kommer att radera dokumentet
+ automatiskt inom 72h. Det kostar ingenting att spara dokumentet.",,"Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningContractReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Set a password and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningContractReminderTitle","Du har inte säkrat ditt original",,"You have not saved your original"
 "_mailAccountBySigningOfferReminderContentBody","Du har inte bekräftat att du vill spara din offert ""$documenttitle$""
- hos $ourServiceName()$. SkrivaPås system kommer att radera offerten automatiskt
- inom 72h. Det kostar ingenting att spara offerten.",,"Would you like to save  """"$documenttitle$""""  with $ourServiceName()$? Saving is free.  If you choose not to save, then $ourServiceName()$ will erase it after 72 hours."
+ hos Scrive. Scrives system kommer att radera offerten automatiskt
+ inom 72h. Det kostar ingenting att spara offerten.",,"Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningOfferReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOfferReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
 "_mailAccountBySigningOrderReminderContentBody","Du har inte bekräftat att du vill spara din orderbekräftelse ""$documenttitle$""
- hos $ourServiceName()$. SkrivaPås system kommer att radera bekräftelsen automatiskt
- inom 72h. Det kostar ingenting att spara offerten.",,"Would you like to save  """"$documenttitle$""""  with $ourServiceName()$? Saving is free.  If you choose not to save, then $ourServiceName()$ will erase it after 72 hours."
+ hos Scrive. Scrives system kommer att radera bekräftelsen automatiskt
+ inom 72h. Det kostar ingenting att spara offerten.",,"Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
 "_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
@@ -1675,7 +1675,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailDocumentErrorContentBodySecond","ur technicians were notified about this issue. We will (probably)
  contact you when fix is available.",,"Our technicians were notified about this issue. We will contact you when a fix is available."
 "_mailDocumentErrorContentBodyThird","Processen har därmed avbrutits.",,"The process has therefore been canceled"
-"_mailDocumentErrorTitle","$ourServiceName()$ could no handle $documenttitle$",,"$ourServiceName()$ could not handle $documenttitle$"
+"_mailDocumentErrorTitle","Scrive could no handle $documenttitle$",,"Scrive could not handle $documenttitle$"
 "_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
 "_mailInvitationToSignContractContentIfSignatoryInstruction","<i>Så här går du vidare</i><br/>      1. Klicka på länken
@@ -1761,24 +1761,24 @@ profits and reduce frustration. The following mateials shall only
  or contact <a href=""mailto:$authoremail$"">$authorname$</a>."""
 "_mailMismatchSignatoryTitle","Problem med matchning av personuppgifter",,"Mismatched information"
 "_mailNewAccountCreatedByAdminContentBody","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Click to activate:<br/>"
-"_mailNewAccountCreatedByAdminContentHeaderBody","$creatorname$ har bjudit in dig till ett konto på tjänsten $ourServiceName()$.
-     $ourServiceName()$ är en tjänst för att skriva på och arkivera dokument
+"_mailNewAccountCreatedByAdminContentHeaderBody","$creatorname$ har bjudit in dig till ett konto på tjänsten Scrive.
+     Scrive är en tjänst för att skriva på och arkivera dokument
  elektroniskt.     Spara pengar, frustration och miljö och använd
- $ourServiceName()$ istället.     Du kan spara mellan 50-250kr/dokument!",,"$creatorname$ has invited you to $ourServiceName()$.  $ourServiceName()$ is a service for signing and archiving legal documents  electronically.  Save money, reduce frustration and help the environment.  Use  $ourServiceName()$ instead.   You can save between £5 to £25 per document."
+ Scrive istället.     Du kan spara mellan 50-250kr/dokument!",,"$creatorname$ has invited you to Scrive.  Scrive is a service for signing and archiving legal documents  electronically.  Save money, reduce frustration and help the environment.  Use  Scrive instead.   You can save between £5 to £25 per document."
 "_mailNewAccountCreatedByAdminContentUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_mailNewAccountCreatedByAdminTitle","Nytt konto",,"New account"
 "_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.",,"The verified offer is attached."
 "_mailOfferClosedContentOfferAccepted","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
- and $ourServiceName()$ has verified the confirmation."
+ and Scrive has verified the confirmation."
 "_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
- av $partylist:noescape()$  och $ourServiceName()$ har utfärdat ett verifikat
+ av $partylist:noescape()$  och Scrive har utfärdat ett verifikat
  för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
- accepted by $partylist:noescape()$  and $ourServiceName()$ has verified the confirmation."
+ accepted by $partylist:noescape()$  and Scrive has verified the confirmation."
 "_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$.",
@@ -1794,15 +1794,15 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_mailRejectOrderMailContentHasRejected","<strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has rejected the order
  <strong>$documenttitle$</strong>."
 "_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
- tjänsten $ourServiceName()$.    Det betyder nog att han/hon gillar vår
+ tjänsten Scrive.    Det betyder nog att han/hon gillar vår
  tjänst och tror du också skulle uppskatta den också.",,"$invitername$ has treated you to two months of free service with
- $ourServiceName()$.com. This means he/she likes our site and believes you
+ Scrive.com. This means he/she likes our site and believes you
 Would appreciate it too."
-"_mailViralInviteContentBodySecond","$ourServiceName()$ är en tjänst för att skriva på och arkivera dokument
+"_mailViralInviteContentBodySecond","Scrive är en tjänst för att skriva på och arkivera dokument
  elektroniskt.    Spara pengar, frustration och miljö och använd
- $ourServiceName()$ istället.     Du kan spara mellan 50-250kr/dokument!",,"$ourServiceName()$ is a service for signing and archiving legal documents
+ Scrive istället.     Du kan spara mellan 50-250kr/dokument!",,"Scrive is a service for signing and archiving legal documents
  electronically.  Save money, reduce frustration and help the environment.
- Use $ourServiceName()$ instead.  You can save between £5 to £25 per document."
+ Use Scrive instead.  You can save between £5 to £25 per document."
 "_mailViralInviteContentBodyThird","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Click to activate:<br/>"
 "_mailViralInviteContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_mailViralInviteTitle","Inbjudan från $invitername$",,"Invite from $invitername$"
@@ -1811,16 +1811,16 @@ Would appreciate it too."
 "_missingSignatoryNames","Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.",,"You have not entered names for one or several counterparts. Please try again."
 "_modalAccountRemovalActivateAccount","Aktivera konto",,"Activate account"
 "_modalAccountRemovalBody","Är du säker på att du vill radera dokumentet ""Non Disclosure
- and Immaterial Rights Agreement"" och ditt konto från $ourServiceName()$",,"Are you sure you want to delete the document ""Non Disclosure
- and Immaterial Rights Agreement"" and your account from $ourServiceName()$"
+ and Immaterial Rights Agreement"" och ditt konto från Scrive",,"Are you sure you want to delete the document ""Non Disclosure
+ and Immaterial Rights Agreement"" and your account from Scrive"
 "_modalAccountRemovalFooter","Radera konto",,"Delete account"
 "_modalAccountRemovalHeader","Är du säker?",,"Are you sure?"
-"_modalAccountRemovedBestRegards","Med vänliga hälsningar<br/>        Team $ourServiceName()$",,"Best regards<br/>        Team $ourServiceName()$"
+"_modalAccountRemovedBestRegards","Med vänliga hälsningar<br/>        Team Scrive",,"Best regards<br/>        Team Scrive"
 "_modalAccountRemovedBody","Din kopia av dokumentet ""$documenttitle$"" är nu raderat tillsammans
- från $ourServiceName()$ tillsammans med ditt konto.",,"Your duplicate for the document ""$documenttitle$"" is now deleted
- from $ourServiceName()$ together with your account."
+ från Scrive tillsammans med ditt konto.",,"Your duplicate for the document ""$documenttitle$"" is now deleted
+ from Scrive together with your account."
 "_modalAccountRemovedHeader","Raderat",,"Deleted"
-"_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar $ourServiceName()$ Allmänna Villkor",,"I have read and I accept $ourServiceName()$ Terms of Service"
+"_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and I accept Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
 "_modalAccountSetupFooter","Skapa konto!",,"Create account!"
 "_modalAccountSetupHeaderAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
@@ -1866,9 +1866,9 @@ Would appreciate it too."
  style=""color:#007CAC"">$signatory$</span>.",,"The offer has been saved to your account with user name <span
  style=""color:#007CAC"">$signatory$</span>."
 "_modalOfferSignedHasAccountHeader","Du har accepterat offerten!",,"You have accepted the offer!"
-"_modalOfferSignedNoAccountBody","        Offerten är nu bindande. $ourServiceName()$ har verifierat accepten
+"_modalOfferSignedNoAccountBody","        Offerten är nu bindande. Scrive har verifierat accepten
  och utfärdat ett verifikat. Ett original av den färdiga accepten
- har skickats till din inkorg.      ",,"       The offer is now binding. $ourServiceName()$ has verified the acceptance
+ har skickats till din inkorg.      ",,"       The offer is now binding. Scrive has verified the acceptance
  and generated a verification. An original has been sent to your
  e-mail address."
 "_modalOfferSignedNoAccountHeader","Du har accepterat offerten!",,"You have accepted the offer!"
@@ -1901,9 +1901,9 @@ Would appreciate it too."
          is now legally binding.        "
 "_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
 "_modalSignedViewClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
-"_modalSignedViewClosedNoAccountBody","        Dokumentet är nu bindande. $ourServiceName()$ har verifierat denna
+"_modalSignedViewClosedNoAccountBody","        Dokumentet är nu bindande. Scrive har verifierat denna
  transaktion och utfärdat ett verifikat. Vi har skickat ett original
- av dokumentet till din inkorg.      ",,"        The document is now binding. $ourServiceName()$ has verified this
+ av dokumentet till din inkorg.      ",,"        The document is now binding. Scrive has verified this
  transaction and generated a verification. An original document
  has been sent to your e-mail address.     "
 "_modalSignedViewClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
@@ -1959,39 +1959,39 @@ Would appreciate it too."
 "_modalSignedViewOrderNotClosedNoAccountBody","        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
       ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed."
 "_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
-"_modalWelcomeToSkrivaPaBodyBestRegards","Med vänliga hälsningar<br/>        Team $ourServiceName()$",,"Best regards<br/>        Team $ourServiceName()$"
+"_modalWelcomeToSkrivaPaBodyBestRegards","Med vänliga hälsningar<br/>        Team Scrive",,"Best regards<br/>        Team Scrive"
 "_modalWelcomeToSkrivaPaBodyHint","Tips: Testa med dig själv först.",,"Tip: Try signing a document with yourself to start with."
 "_modalWelcomeToSkrivaPaBodyInstructions","1. Ladda upp ett dokument<br/>        2. Fyll i motpartens uppgifter<br/>
         3. Underteckna och skicka iväg",,"1. Upload a document<br/>        2. Enter data about the counterpart<br/>
         3. Sign and send"
-"_modalWelcomeToSkrivaPaBodyMain","Med $ourServiceName()$ kan du skriva på och arkivera dokument elektroniskt.
+"_modalWelcomeToSkrivaPaBodyMain","Med Scrive kan du skriva på och arkivera dokument elektroniskt.
  Tjänsten går att använda för avtal, offerter och även andra
  typer av dokument. Givetvis kommer det inte att kosta någonting
  efter den fria månaden om du väljer att inte fortsätta. Det
- är superenkelt att komma igång, gör så här:",,"With $ourServiceName()$, you can sign and store documents electronically.
+ är superenkelt att komma igång, gör så här:",,"With Scrive, you can sign and store documents electronically.
  The service is suitable for contracts and offers, but also other
  types of documents. Of course this will not cost you anything
- if you choose not to continue using $ourServiceName()$ when the free trial
+ if you choose not to continue using Scrive when the free trial
  period is over. It is super easy to get started:"
 "_modalWelcomeToSkrivaPaFooter","Välkommen!",,"Welcome!"
-"_modalWelcomeToSkrivaPaHeader","Vi bjuder på 1 fri månad med $ourServiceName()$!",,"We give you one month free usage in $ourServiceName()$!"
+"_modalWelcomeToSkrivaPaHeader","Vi bjuder på 1 fri månad med Scrive!",,"We give you one month free usage in Scrive!"
 "_multiPartPartner","Parter",,"Parties"
 "_multipleSignatory","Massutskick",,"Multi send"
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."
 "_name","Namn",,"Name"
 "_nameFieldName","namn",,"name"
-"_newUserMailContentBodyFirst","Jag heter Lukas Duczko och är VD på $ourServiceName()$. Tack för att
+"_newUserMailContentBodyFirst","Jag heter Lukas Duczko och är VD på Scrive. Tack för att
  du har  skapat ett konto hos oss. När du aktiverat ditt konto
  kommer du  kunna använda tjänsten med full funktionalitet med
  kontoplanen  Business i 1 månad utan kostnad. Väljer du att
  inte fortsätta med en  betald kontoplan efter testperioden behåller
- du givetvis tillgång  till samtliga dina dokument på $ourServiceName()$
+ du givetvis tillgång  till samtliga dina dokument på Scrive
  och kan fortsätta använda  tjänsten genom vår fria kontoplan
- Free.",,"My name is Lukas Duczko and I am the CEO of $ourServiceName()$. Thank you
+ Free.",,"My name is Lukas Duczko and I am the CEO of Scrive. Thank you
 for creating an account with us. When you have activated your account you will be able to trial the full functionality
  of the Business plan for one month without any charge.
  If you choose not to continue with a paid subscription afterwards you will still have access to all your documents
- at $ourServiceName()$ and can keep using $ourServiceName()$  with our Free plan."
+ at Scrive and can keep using Scrive  with our Free plan."
 "_newUserMailContentBodySecond","Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka
  inte  att höra av dig med feedback eller bara en enkel hälsning.
  Din åsikt  är värdefull.",,"We hope you will be happy with our services. Please don't hesitate  to give us feedback or just a hello. We'd love to hear what you think."
@@ -2048,8 +2048,8 @@ for creating an account with us. When you have activated your account you will b
 "_offersealingtextspartnerText","Mottagare",,"Recipient"
 "_offersealingtextssecretaryText","Avsändare",,"Sender"
 "_offersealingtextssignedText","Offert accepterad",,"Offer accepted"
-"_offersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av $ourServiceName()$ CM AB och bekräftar att
- offertnummer $documentid$ har accepterats",,"This verification was issued by $ourServiceName()$ and supports that the
+"_offersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive CM AB och bekräftar att
+ offertnummer $documentid$ har accepterats",,"This verification was issued by Scrive and supports that the
  offer $documentid$ has been accepted"
 "_offersealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
  är verifierad genom vår tjänst.",,"by the parties, and is legally binding. Italic data is safely
@@ -2118,8 +2118,8 @@ for creating an account with us. When you have activated your account you will b
 "_ordersealingtextspartnerText","Mottagare",,"Recipient"
 "_ordersealingtextssecretaryText","Avsändare",,"Sender"
 "_ordersealingtextssignedText","Ordern bekräftad",,"Order confirmed"
-"_ordersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av $ourServiceName()$ CM AB och styrker att
- orderbekräftelsenummer $documentid$ har bekräftats",,"This verification was issued by $ourServiceName()$ and supports that the
+"_ordersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive CM AB och styrker att
+ orderbekräftelsenummer $documentid$ har bekräftats",,"This verification was issued by Scrive and supports that the
  order confirmation $documentid$ has been confirmed"
 "_ordersealingtextsverificationFooterRow2","av parterna och är juridiskt bindande. Kursiverad information
  är säkert verifierad genom vår tjänst.",,"by the parties, and is legally binding. Italic data is safely
@@ -2167,12 +2167,12 @@ for creating an account with us. When you have activated your account you will b
 "_pageDocumentForSignContentRejectFooterOwnMessage","Skriv eget meddelande",,"Write own message"
 "_pageDocumentForSignContentRejectFooterReject","Avvisa",,"Reject"
 "_pageDocumentForViewerHelpersPartyName","Namn på avtalspart",,"Name of party"
-"_pageFooterAbout","Om $ourServiceName()$",,"About $ourServiceName()$"
+"_pageFooterAbout","Om Scrive",,"About Scrive"
 "_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact us with feedback, queries &amp; requests </strong>"
-"_pageFooterContact2","<strong>Telefon</strong>      $ourServicePhone()$",,"<strong>Phone</strong>         $ourServicePhone()$"
+"_pageFooterContact2","<strong>Telefon</strong>      +46 (0)10-195 99 15",,"<strong>Phone</strong>         +46 (0)10-195 99 15"
 "_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17",,"<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
-"_pageFooterContact4","<strong>Maila $ourServiceName()$</strong>          <a href=""mailto:$ourServiceMail()$"">$ourServiceMail()$</a>",,"<strong>Send email to $ourServiceName()$</strong>          <a href=""mailto:$ourServiceMail()$"">$ourServiceMail()$</a>"
-"_pageFooterContact5","<strong>Adress</strong>     $ourServiceAdress()$",,"<strong>Address</strong>       $ourServiceAdress()$"
+"_pageFooterContact4","<strong>Maila Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>",,"<strong>Send email to Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>"
+"_pageFooterContact5","<strong>Adress</strong>     Scrive CM AB <BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>       Scrive CM AB <BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
 "_pageFooterCustomers","Kunder",,"Customers"
 "_pageFooterHome","Hem",,"Home"
 "_pageFooterLaw","Juridik",,"Legal"
@@ -2184,17 +2184,17 @@ for creating an account with us. When you have activated your account you will b
 "_pageFooterTOS","Allmäna Villkor",,"Terms of Service"
 "_pageFooterTerms","TRYGGHET OCH VILLKOR",,"SECURITY AND TERMS"
 "_pageFooterTheService","TJÄNSTEN",,"THE SERVICE"
-"_pageFooterTwitter","$ourServiceName()$ PÅ TWITTER",,"$ourServiceName()$ ON TWITTER"
+"_pageFooterTwitter","Scrive PÅ TWITTER",,"Scrive ON TWITTER"
 "_pagingFooterNext","Nästa",,"Next"
 "_pagingFooterPrevious","Bakåt",,"Back"
 "_partnerEmail","Personens e-mail",,"Person's email"
 "_partnerName","Namn på motpart",,"Counterpart's name"
 "_partnerNumber","Orgnr/Persnr",,"Corporate ID"
 "_partnerTitle","Titel, företag",,"Position, company"
-"_partnersPageH1","$ourServiceName()$´s Partners",,"$ourServiceName()$'s partners"
-"_partnersPageH1Body","$ourServiceName()$ är en tjänst för att underteckna och arkivera dokument
+"_partnersPageH1","Scrive´s Partners",,"Scrive's partners"
+"_partnersPageH1Body","Scrive är en tjänst för att underteckna och arkivera dokument
  elektroniskt. Vi har ett nära samarbete med ett flertal framstående
- aktörer inom datasäkerhet och signeringsteknik.",,"$ourServiceName()$ is a service for signing and storing documents online.
+ aktörer inom datasäkerhet och signeringsteknik.",,"Scrive is a service for signing and storing documents online.
  We cooperate closely with several leading players in data security
  and signing technology."
 "_partnersPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Vi har nära samarbete
@@ -2228,10 +2228,10 @@ for creating an account with us. When you have activated your account you will b
 "_partnersPagePartner2Web","www.trustweaver.com",,"www.trustweaver.com"
 "_partnersPagePartner3","Chalmers",,"Chalmers"
 "_partnersPagePartner3About","Chalmers är ett av världens mest prestigefyllda tekniska universitet.
- $ourServiceName()$ har ett nära samarbete med Chalmers Datasäkerhetsgrupp
+ Scrive har ett nära samarbete med Chalmers Datasäkerhetsgrupp
  och samverkar i framtagningen av morgondagens säkerhetslösningar
  för så kallade cloud tjänster. ",,"Chalmers Technical University is one of the most prestigious
- technical universities in the world. $ourServiceName()$ cooperates closely
+ technical universities in the world. Scrive cooperates closely
  with the data security group at Chalmers and participates in
  the development of the cloud sourced security solutions of the
  future."
@@ -2239,8 +2239,8 @@ for creating an account with us. When you have activated your account you will b
 "_partnersPagePartner3Web","www.chalmers.se",,"www.chalmers.se"
 "_partnersPageTitle","| Partners",,"| Partners"
 "_password","Lösenord",,"Password"
-"_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på $ourServiceName()$. Vänligen klicka
- på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your $ourServiceName()$ account. Please click to proceed. The link is valid for 12 hours:<br/>"
+"_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på Scrive. Vänligen klicka
+ på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your Scrive account. Please click to proceed. The link is valid for 12 hours:<br/>"
 "_passwordChangeLinkMailTitle","Nytt lösenord",,"New password"
 "_passwordFieldName","lösenord",,"password"
 "_paymentsadminpageAccount","For account: ",,"For account: "
@@ -2590,32 +2590,32 @@ for creating an account with us. When you have activated your account you will b
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
 "_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
 "_privacyPolicyPageH1","SEKRETESSPOLICY (2011:02)",,"PRIVACY POLICY (2011:02)"
-"_privacyPolicyPageH1Body","<p>All information Ni delger $ourServiceName()$ eller dess Tjänster hanteras
+"_privacyPolicyPageH1Body","<p>All information Ni delger Scrive eller dess Tjänster hanteras
  med största möjliga försiktighet och innehållets säkerhet har
- högsta prioritet för $ourServiceName()$. Er integritet är viktig för oss.</p><br
- /><p>Nedan följer en mer detaljerad beskrivning av hur $ourServiceName()$
+ högsta prioritet för Scrive. Er integritet är viktig för oss.</p><br
+ /><p>Nedan följer en mer detaljerad beskrivning av hur Scrive
  hanterar Er information. Vid vidare frågor, vänligen kontakta
- oss på info@scrive.com.</p>",,"<p>All the data You provide to $ourServiceName()$ or its Services is handled
+ oss på info@scrive.com.</p>",,"<p>All the data You provide to Scrive or its Services is handled
  with the highest caution possible and the security of the contents
- is of the highest priority to $ourServiceName()$. Your integrity is important
+ is of the highest priority to Scrive. Your integrity is important
  to us.</p><br /><p>A more detailed description of how your data
- is handled by $ourServiceName()$ follows below. If you have further questions,
+ is handled by Scrive follows below. If you have further questions,
  please contact us at info@scrive.com.</p>"
 "_privacyPolicyPageH21","Återförsäljning eller delgivning av information",,"Retailing or sharing of data"
-"_privacyPolicyPageH21Body","$ourServiceName()$ kommer inte att sälja, hyra eller låna ut eller på annat
+"_privacyPolicyPageH21Body","Scrive kommer inte att sälja, hyra eller låna ut eller på annat
  sätt till tredje part delge Er information insamlad genom Tjänsten
  eller genom Er kontakt med oss på annat sätt, än som uttryckligen
  överenskommits i de Allmänna Villkoren eller genom Ert skriftliga
  medgivande. Vi använder dock från tid till annan Användarinformation
  i anonymiserad form för att göra statistiska analyser som vi
- kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.",,"$ourServiceName()$ will not sell, rent out or lend, or in any other way share
+ kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.",,"Scrive will not sell, rent out or lend, or in any other way share
  data that you have provided us through the service or in any
  other way to a to a Third-party except for in those cases regulated
  by the Terms Of Service or your written approval. Though, we
  sometimes use anonymous user data for statistical analyses
  that are available to third parties or our partners."
 "_privacyPolicyPageH23","Webbläsarinformation på Hemsidan",,"Browser information in the homepage"
-"_privacyPolicyPageH23Body","$ourServiceName()$ analyserar våra webbloggar för att kontinuerligt utvärdera
+"_privacyPolicyPageH23Body","Scrive analyserar våra webbloggar för att kontinuerligt utvärdera
  hemsidans innehåll och hur det tillfredställer Användarnas behov.
  Loggarna använder ingen personligt identifierbar information.
  Vår server identifierar också användarnas IP-adresser. En IP-adress
@@ -2624,7 +2624,7 @@ for creating an account with us. When you have activated your account you will b
  Användare, analysera trender, följa Användares förflyttning
  och insamla statistisk data. Avtalsparternas IP-adresser visas
  i undertecknade avtals certifikat som en extra säkerhet och
- identifieringstjänst till avtalsparterna.",,"$ourServiceName()$ analysis its logs in purpose of continuously evaluate
+ identifieringstjänst till avtalsparterna.",,"Scrive analysis its logs in purpose of continuously evaluate
  the contents of the homepage and how it satisfies user needs.
  The logs does not contain any personal identifiable information.
  Our servers also identifies the user’s IP-addresses. An IP-address
@@ -2635,19 +2635,19 @@ for creating an account with us. When you have activated your account you will b
  the verification certificate for extra security and as an extra
  identification service to the parties."
 "_privacyPolicyPageH24","Användning av Cookies",,"Usage of Cookies"
-"_privacyPolicyPageH24Body","$ourServiceName()$ använder cookies för att förenkla Användarens login
+"_privacyPolicyPageH24Body","Scrive använder cookies för att förenkla Användarens login
  och kontohantering. Dessa cookies kommer inte att säljas, hyras
- eller lånas ut eller på annat sätt visas till tredje part.",,"$ourServiceName()$ uses cookies to simplify user log in and account management.
+ eller lånas ut eller på annat sätt visas till tredje part.",,"Scrive uses cookies to simplify user log in and account management.
  These cookies will not be sold, rented out or lent, or in
  any other way shared with a Third-party."
 "_privacyPolicyPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
- ni delger $ourServiceName()$ eller dess tjänster hanteras med största
- möjliga försiktighet.",,"Sign and store contracts online. All data you provide to $ourServiceName()$
+ ni delger Scrive eller dess tjänster hanteras med största
+ möjliga försiktighet.",,"Sign and store contracts online. All data you provide to Scrive
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
-"_queryColumnBody1","$ourServiceName()$ är en tjänst för att skriva på och arkivera avtal elektroniskt.
- Våra kunder och våra kunders kunder älskar enkelheten.",,"$ourServiceName()$ is a service for signing and storing contracts online.
+"_queryColumnBody1","Scrive är en tjänst för att skriva på och arkivera avtal elektroniskt.
+ Våra kunder och våra kunders kunder älskar enkelheten.",,"Scrive is a service for signing and storing contracts online.
  Our customers and their customers just love the simplicity."
 "_queryColumnBody2","Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga
  förpliktelser.",,"We give you a month of full functionality free of charge. No obligations."
@@ -2688,8 +2688,8 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedTitle","Påminnelse att underteckna  $documenttitle$",,"Reminder to sign  $documenttitle$"
 "_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> vill skicka
  <strong>$documenttitle$</strong>        till dig. Dokumentet
- har undertecknats av dig via tjänsten $ourServiceName()$. Dokumentet bifogas
- med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using $ourServiceName()$. Please find it attached."
+ har undertecknats av dig via tjänsten Scrive. Dokumentet bifogas
+ med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using Scrive. Please find it attached."
 "_remindMailSignedContractStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
  <strong>$documenttitle$</strong>  till dig. Dokumentet
  har undertecknats av dig. Dokumentet bifogas
@@ -2703,7 +2703,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer.. Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig. Orderbekräftelsen bifogas med
- detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using $ourServiceName()$.  Please find it attached."
+ detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using Scrive.  Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  Bekräftat. Orderbekräftelsen bifogas med
@@ -2749,7 +2749,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  are therefore always able to trace changes back to the very
  birth of the company."
 "_securityPageH2Haskell","Haskell",,"Haskell"
-"_securityPageH2HaskellBody","Systemet bakom tjänsten $ourServiceName()$ är baserat på Haskell. Haskell
+"_securityPageH2HaskellBody","Systemet bakom tjänsten Scrive är baserat på Haskell. Haskell
  är en robust teknik som utvecklats av några av de bästa matematiska
  programmerarna i världen. Två nyckelegenskaper hos tekniken
  är exceptionellt hög systemstabilitet och pålitlighet. Det gör
@@ -2759,7 +2759,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  av några av de mest säkerhetsmedvetna organisationerna i världen.
  Exempelvis använder USAs regering tekniken för att bygga sina
  plattformar för webbaserad lagring och delning av säkerhetsklassad
- information. ",,"The system behind $ourServiceName()$ is based on Haskell. Haskell is a robust
+ information. ",,"The system behind Scrive is based on Haskell. Haskell is a robust
  technology that was developed by some of the best mathematical
  programmers in the world. Two key properties of the technology
  is the high system stability and reliability that comes with
@@ -2790,7 +2790,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  dokument, och inte utsätter dokumentens integritet och juridiska
  trovärdighet för risk. Syftet är att dokument som behandlats
  genom tjänsten ska ha högsta möjliga trovärdighet vid eventuella
- tvister. Detta gör att $ourServiceName()$ måste hålla en hög säkerhetsprofil
+ tvister. Detta gör att Scrive måste hålla en hög säkerhetsprofil
  för att möta kundernas förväntningar.</li>	<li>Våra kunder använder
  vår tjänst till lagring av sina mest känsliga företagsdata.
  Att skydda dessa data tillräckligt bra är inte bra nog. Material
@@ -2799,7 +2799,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  that does not expose the integrity and the trustworthiness of
  the documents to any risk. The intention is that documents treated
  by the service shall have the highest trustworthiness possible
- in a possible dispute. Because of this, $ourServiceName()$ needs to maintain
+ in a possible dispute. Because of this, Scrive needs to maintain
  a high security standard to meet the expectations of our customers.</li>	<li>Our
  customer use our service for storage of their most sensitive
  company data. When protecting this kind of data, sufficiently
@@ -2816,14 +2816,14 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  och e-mail</li>	<li>	2048 bit kryptering, AES certifikat och
  RSA-nycklar för intern datatransfer mellan oss och våra partners</li>	<li>	Förändringshantering
  med flera steg av ändringsacceptans</li>	<li>	Strikt säkerhetspolicy
- för all $ourServiceName()$ personal</li>	<li>	Del i ledande säkerhetsforskning
+ för all Scrive personal</li>	<li>	Del i ledande säkerhetsforskning
  via partnerskap med Chalmers datasäkerhetsgrupp</li>",,"<li>	Haskell forms the base of our system</li>	<li>	TrustWeaver
  secure premium storage</li>	<li>	Most powerful SSL 256 bit encryption
  for communication with our users through webb and email</li>	<li>	2048
  bit encryption, AES certificate and RSA-keys for internal data
  transfer between us and our partners.</li>	<li>	Change management
  processes with several steps of approval</li>	<li>	Strict staff
- policy for all $ourServiceName()$ employees</li>	<li>	Participation in leading
+ policy for all Scrive employees</li>	<li>	Participation in leading
  security research through the data security group at Chalmers
  Technical University.</li>"
 "_securityPageH2SSL","SSL 256 kryptering",,"SSL 256 encryption"
@@ -2838,16 +2838,16 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  by the online services of the largest Swedish banks."
 "_securityPageH2Staff","Personalpolicy",,"Staff policy"
 "_securityPageH2StaffBody","Företagets VD och Tekniska chef är de enda individerna som har
- tillgång till $ourServiceName()$’s huvudservrar. Vi gör en bakgrundskontroll
+ tillgång till Scrive’s huvudservrar. Vi gör en bakgrundskontroll
  på alla anställda och alla måste underteckna strikta och ekonomiskt
  kraftfulla sekretessavtal gällande all känslig information som
  kan äventyra företagets eller våra kunders säkerhet.",,"The company's CEO and CTO are the only individuals with access
- to the $ourServiceName()$ main servers. We control the background of all
+ to the Scrive main servers. We control the background of all
  employees, who also are required to sign strict and economically
  powerful privacy contract concerning all sensitive information
  that could endanger the security of the company or our customers."
 "_securityPageH2TW","TrustWeaver lagring",,"TrustWeaver storage"
-"_securityPageH2TWBody","$ourServiceName()$ lagrar all juridisk data (läs mer under ”juridik”) hos
+"_securityPageH2TWBody","Scrive lagrar all juridisk data (läs mer under ”juridik”) hos
  TrustWeaver och vi erbjuder även våra kunder att lagra sina
  dokument hos dem. TrustWeavers tjänst, TrustWeaver On Demand,
  är installerad på två datacenter som är geografiskt separerade
@@ -2862,7 +2862,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  med dieselgeneratorer för backup, låsta och förseglade serverracket
  som endast kan öppnas med kopieringsskyddade nycklar. Alla ICC-kort
  är förseglade till ICC-kortsracket genom att använda specialdesignad
- säkerhetstejp.",,"$ourServiceName()$ stores all legal data (read more under ""Legal"") at TrustWeaver
+ säkerhetstejp.",,"Scrive stores all legal data (read more under ""Legal"") at TrustWeaver
  and we offer our customers to also save their documents in their
  storage. The TrustWeaver service, TrustWeaver On Demand, is
  installed in two data centers, geographically separated from
@@ -2879,9 +2879,9 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  rackets which can only be opened with copy protected keys. All
  ICC-cards are sealed in a ICC-card racket by specially designed
  adhesive security tape."
-"_securityPageMetaDescription","Signera och arkivera dina avtal elektroniskt. $ourServiceName()$ bevarar
+"_securityPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive bevarar
  din säkerhet och integritet så att du kan koncentrera dig på
- ditt arbete.",,"Sign and store your contracts online. $ourServiceName()$ preserves your security
+ ditt arbete.",,"Sign and store your contracts online. Scrive preserves your security
  and integrity so you can concentrate on your work."
 "_securityPageTitle","| Säkerhet",,"| Security"
 "_send","Skicka",,"Send"
@@ -2933,7 +2933,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signStepsBodyUploadBoxStep1Info","Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen
  för att gå vidare.    ",,"What type of document do you want to send? Click a document symbol
  to continue."
-"_signStepsBodyUploadBoxStep1TemplateSaved","Sparad på $ourServiceName()$",,"Saved in $ourServiceName()$"
+"_signStepsBodyUploadBoxStep1TemplateSaved","Sparad på Scrive",,"Saved in Scrive"
 "_signStepsBodyUploadBoxStep1UpLoadChooseFile","Välj fil från dator",,"Select file from computer"
 "_signStepsBodyUploadBoxStep1UpLoadOnlyPDF","OBS! Endast PDF",,"PDF only!"
 "_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil ",,"Select file"
@@ -2964,14 +2964,14 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signupLinkEmailPartClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    <br/>",,"Click to activate:<br/>    <br/>"
 "_signupLinkEmailPartUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_signupPageViewBodyBody","Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.",,"All inclusive. Standard account, free transactions and free storage."
-"_signupPageViewBodyHead","Gratis $ourServiceName()$ till och med 31 maj!",,"Free $ourServiceName()$ through May 31!"
+"_signupPageViewBodyHead","Gratis Scrive till och med 31 maj!",,"Free Scrive through May 31!"
 "_signupPageViewCreateAccount","Skapa konto !",,"Create account !"
 "_signupPageViewEmail","Fyll i din e-postadress",,"Enter your e-mail address"
 "_signupVipPageViewBody","Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.",,"All inclusive. Standard account, free transactions and free storage."
 "_signupVipPageViewCreateAccount","Skapa konto !",,"Create account !"
 "_signupVipPageViewEmail","Fyll i din e-postadress",,"Enter your e-mail address"
-"_signupVipPageViewHead","Gratis $ourServiceName()$ till och med 31 december!",,"Free $ourServiceName()$ through December 31!"
-"_skrivapa","$ourServiceName()$",,"$ourServiceName()$"
+"_signupVipPageViewHead","Gratis Scrive till och med 31 december!",,"Free Scrive through December 31!"
+"_skrivapa","Scrive",,"Scrive"
 "_standardBodyWrapperBody","14 dagar full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial. Easy signup."
 "_standardBodyWrapperHead","Skapa konto nu!",,"Create your account now."
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
@@ -2999,76 +2999,76 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_tbsGenerationMessage3",". Undertecknande parter är:",,". Signing parties are:"
 "_tbsYouSignWithEleg","Du undertecknar ""$documentname$"" med transaktionsnummer ""$documentnumber$"".
  Undertecknande parter är:$tbssigentries$",,"You are signing  ""$documentname$"" with transactional number ""$documentnumber$"". The signing parties are: $tbssigentries$"
-"_termsPageH1","$ourServiceName()$ ALLMÄNNA VILLKOR (2011:02)",,"$ourServiceName()$ TERMS OF SERVICE (2011:02)"
-"_termsPageH1Body","$ourServiceName()$ CM AB tillhandahåller en tjänst som äntligen löser de
+"_termsPageH1","Scrive ALLMÄNNA VILLKOR (2011:02)",,"Scrive TERMS OF SERVICE (2011:02)"
+"_termsPageH1Body","Scrive CM AB tillhandahåller en tjänst som äntligen löser de
  problem med pappershantering och organisering som de traditionella
  metoderna att underteckna dokument på distans – brev, fax och
  e-post – inte kunnat lösa, samtidigt som vi bibehåller en hög
  säkerhetsstandard. Vår absolut främsta prioritet är att skydda
- Er integritet och säkerhet i vår tjänst. $ourServiceName()$ Allmänna Villkor
+ Er integritet och säkerhet i vår tjänst. Scrive Allmänna Villkor
  (”Villkoren”) gäller för användning av hemsidan scrive.com
  (Tjänsten) och den elektroniska tjänsten för att administrera
  och som deltagande part underteckna dokument (""Part"" eller ""Avtalspart"") (också
  Tjänsten) och är ett avtal mellan Er som använder Tjänsten (”Användaren”
- eller ”Ni”) och $ourServiceName()$ CM AB (”Företaget” eller ”$ourServiceName()$”).
- Tjänsten tillhör $ourServiceName()$. Genom att använda hemsidan, skapa
+ eller ”Ni”) och Scrive CM AB (”Företaget” eller ”Scrive”).
+ Tjänsten tillhör Scrive. Genom att använda hemsidan, skapa
  ett konto och/eller genom att logga in på tjänsten accepterar
  ni Villkoren. Vid användning av Tjänsten för att underteckna
  dokument garanterar ni dessutom att ni har samtliga rättigheter
- som krävs för att lagligt underteckna dokumentet. $ourServiceName()$ reserverar
+ som krävs för att lagligt underteckna dokumentet. Scrive reserverar
  sig rätten att utan förpliktelser när som helst ändra, lägga
  till eller ta bort delar i Villkoren. Det är Ert eget ansvar
  att vara uppdaterad på Villkoren varje gång Ni använder Tjänsten.
  Er fortsatta användning av Tjänsten efter att ändringar i Villkoren
  gjorts innebär att Ni accepterar dessa ändringar. Så länge Ni
- respekterar Villkoren, erbjuder $ourServiceName()$ en personlig, icke-exklusiv,
- icke-överförbar, rätt att använda Tjänsten i enlighet med Villkoren.",,"$ourServiceName()$ CM AB provides $ourServiceName()$.com, a service that finally solves the problems with paperwork and organization which the traditional methods to sign the document at a distance - mail, fax and e-mail – are unable to solve, while maintaining a high security standard. Our main priority is to protect your privacy and the security of our service. $ourServiceName()$ Terms of Service (""Terms"") apply to the use of the site $ourServiceName()$.com (Service) and the electronic service for the administration and participant signing the document (""Party"" or ""Contractor"") (including service) and is an agreement between the persons who use the Service (""User"" or ""You"") and $ourServiceName()$ CM AB (the ""Company"" or ""$ourServiceName()$""). The Service belongs to $ourServiceName()$. By using the website, create an account and/or by logging onto the Service, you accept the Terms. When using the Service to sign documents, You are also guaranteeing that You have all rights necessary to legally sign the document. $ourServiceName()$ reserves the right to, at any time, amend, add or remove parts of these Terms. It is your own responsibility to be informed of any update of the Terms each time You use the Service. Your continued use of the Service after changes have been made in the Terms means that You accept those changes. As long as You respect these conditions, $ourServiceName()$ offers a personal, non-exclusive, non-transferable right to use the Service in accordance with the Terms."
+ respekterar Villkoren, erbjuder Scrive en personlig, icke-exklusiv,
+ icke-överförbar, rätt att använda Tjänsten i enlighet med Villkoren.",,"Scrive CM AB provides Scrive.com, a service that finally solves the problems with paperwork and organization which the traditional methods to sign the document at a distance - mail, fax and e-mail – are unable to solve, while maintaining a high security standard. Our main priority is to protect your privacy and the security of our service. Scrive Terms of Service (""Terms"") apply to the use of the site Scrive.com (Service) and the electronic service for the administration and participant signing the document (""Party"" or ""Contractor"") (including service) and is an agreement between the persons who use the Service (""User"" or ""You"") and Scrive CM AB (the ""Company"" or ""Scrive""). The Service belongs to Scrive. By using the website, create an account and/or by logging onto the Service, you accept the Terms. When using the Service to sign documents, You are also guaranteeing that You have all rights necessary to legally sign the document. Scrive reserves the right to, at any time, amend, add or remove parts of these Terms. It is your own responsibility to be informed of any update of the Terms each time You use the Service. Your continued use of the Service after changes have been made in the Terms means that You accept those changes. As long as You respect these conditions, Scrive offers a personal, non-exclusive, non-transferable right to use the Service in accordance with the Terms."
 "_termsPageH2Communication","6. Vår Kommunikation med Er",,"6. Our communication with You"
-"_termsPageH2CommunicationBody","Genom att öppna ett konto på Tjänsten ger Ni $ourServiceName()$ tillstånd
+"_termsPageH2CommunicationBody","Genom att öppna ett konto på Tjänsten ger Ni Scrive tillstånd
  att genom Tjänsten eller genom en representant kontakta Er via
  Er telefon eller e-postadress. Om Ni vill sluta få våra utskick
  via e-post ska Ni skicka ett e-postmeddelande till oss på support@scrive.com.
- Observera att $ourServiceName()$ fortfarande kommer att behöva kommunicera
+ Observera att Scrive fortfarande kommer att behöva kommunicera
  med Er via e-post om Era transaktioner och andra kontorelaterade
  frågor, och att dessa e-postmeddelanden inte är e-postreklam
- och inte elimineras genom ovanstående förfarande. ",,"By opening an account on the Service, You give permission to $ourServiceName()$ to, through the Service or through a representative, contact You via your telephone or e-mail address. If You do not wish to receive our mailings via email, please send an email to support@scrive.com. Please note that $ourServiceName()$ will still need to communicate with You via email about your transactions and other account-related issues, and that these emails are not commercial emails and will not be eliminated by the above procedure."
+ och inte elimineras genom ovanstående förfarande. ",,"By opening an account on the Service, You give permission to Scrive to, through the Service or through a representative, contact You via your telephone or e-mail address. If You do not wish to receive our mailings via email, please send an email to support@scrive.com. Please note that Scrive will still need to communicate with You via email about your transactions and other account-related issues, and that these emails are not commercial emails and will not be eliminated by the above procedure."
 "_termsPageH2Datahandeling","3. Datahanteringspolicy",,"3. Data Management Policy"
-"_termsPageH2DatahandelingBody1","$ourServiceName()$ Arkiv är ett säkert och smidigt dokumenthanterings-
- och arkiveringssystem som är en del av Tjänsten. $ourServiceName()$ lagrar
+"_termsPageH2DatahandelingBody1","Scrive Arkiv är ett säkert och smidigt dokumenthanterings-
+ och arkiveringssystem som är en del av Tjänsten. Scrive lagrar
  även användardata i syfte att stärka bevisstyrkan av dokument
  undertecknade genom Tjänsten. Båda dessa deltjänster kräver
  att vi samlar in och lagrar användardata automatiskt. Därför
- har vi en datahanteringspolicy.",,"$ourServiceName()$ Archive is a secure and easy document management and archiving system that is part of the Service. $ourServiceName()$ also stores user data in order to enhance the weight of the evidence of the document signed by the Service. Both of these services require that we collect and store user data automatically. Therefore we have a data management policy."
+ har vi en datahanteringspolicy.",,"Scrive Archive is a secure and easy document management and archiving system that is part of the Service. Scrive also stores user data in order to enhance the weight of the evidence of the document signed by the Service. Both of these services require that we collect and store user data automatically. Therefore we have a data management policy."
 "_termsPageH2DatahandelingBody2","<h4>a. Datahantering:</h4> Tjänsten lagrar automatiskt information
  om Användare, kommunikation och dokument. Vilken information
  som lagras och hur denna hanteras beskrivs närmare i vår sekretesspolicy.
- $ourServiceName()$ förbehåller sig rätten att fortsätta lagra denna information
+ Scrive förbehåller sig rätten att fortsätta lagra denna information
  på obegränsad tid på våra servrar, detta gäller även information
  från Användare som sagt upp eller blivit uppsagda från sitt
  konto och den information som Användaren själv valt att radera
- från sitt användarkonto. ",,"<H4>a. Data Management:</H4> The Service automatically stores information about users, communications and records. The information that is stored and how it is managed is described in detail in our Privacy Policy. $ourServiceName()$ reserves the right to continue to store this information indefinitely on our servers. This also includes information from users who have resigned or been dismissed from his account as well as the information that the user has chosen to delete from their user account."
+ från sitt användarkonto. ",,"<H4>a. Data Management:</H4> The Service automatically stores information about users, communications and records. The information that is stored and how it is managed is described in detail in our Privacy Policy. Scrive reserves the right to continue to store this information indefinitely on our servers. This also includes information from users who have resigned or been dismissed from his account as well as the information that the user has chosen to delete from their user account."
 "_termsPageH2DatahandelingBody3","<h4>b. PUL:</h4> I den mån Tjänsten kan komma att behandla personuppgifter
  i samband med fullgörandet av Villkoren ska kunden vara personuppgiftsansvarig
- och $ourServiceName()$ personuppgiftsbiträde (enligt definitionerna i
- personuppgiftslagen). $ourServiceName()$ får endast behandla personuppgifter
+ och Scrive personuppgiftsbiträde (enligt definitionerna i
+ personuppgiftslagen). Scrive får endast behandla personuppgifter
  enligt kundens instruktioner eller i den mån det krävs för att
- kunna uppfylla sina åtaganden enligt Villkoren.",,"<h4>b. PDA:</h4> To the extent that the Service may process personal information in connection with the performance of these Terms, Customer shall be responsible for personal information and will also be $ourServiceName()$’s personal data assistant (as defined in the Swedish Data Protection Act). $ourServiceName()$ may only process personal data according to customer's instructions or to the extent necessary to meet its obligations under the Terms."
-"_termsPageH2DatahandelingBody4","<h4>c. Datalagring:</h4> $ourServiceName()$ lagrar dokument som undertecknats
+ kunna uppfylla sina åtaganden enligt Villkoren.",,"<h4>b. PDA:</h4> To the extent that the Service may process personal information in connection with the performance of these Terms, Customer shall be responsible for personal information and will also be Scrive’s personal data assistant (as defined in the Swedish Data Protection Act). Scrive may only process personal data according to customer's instructions or to the extent necessary to meet its obligations under the Terms."
+"_termsPageH2DatahandelingBody4","<h4>c. Datalagring:</h4> Scrive lagrar dokument som undertecknats
  av alla parter mot en överenskommen årlig avgift. För dokument
  som inte är färdigställda och undertecknats av alla parter lagras
  dokumentet kostnadsfritt i 100 dagar efter att dokumentet skapats,
  Tjänsten lagrar dock max 1GB kostnadsfritt per konto. Efter
  överstigen tidsfrist eller lagringsmängd kan Ni välja om Ni
  vill fortsätta lagra era utkast genom att betala den överenskomna
- årliga lagringsavgiften. ",,"<h4>c. Data storage:</h4> $ourServiceName()$ stores documents signed by all parties against an agreed annual fee. For documents that are not completed and signed by all parties, $ourServiceName()$ stores the document fee free for 100 days after the document was created. The service stores max 1GB free per account. After the 100 days have been exceeded, You can choose time or amount of storage, if You want to continue storing your draft, by paying the agreed annual storage fee."
+ årliga lagringsavgiften. ",,"<h4>c. Data storage:</h4> Scrive stores documents signed by all parties against an agreed annual fee. For documents that are not completed and signed by all parties, Scrive stores the document fee free for 100 days after the document was created. The service stores max 1GB free per account. After the 100 days have been exceeded, You can choose time or amount of storage, if You want to continue storing your draft, by paying the agreed annual storage fee."
 "_termsPageH2Info","1. Information",,"1. Information"
 "_termsPageH2InfoBody","Det är Ert ansvar att utvärdera korrektheten, fullständigheten
  och användbarheten av all information, åsikter, råd, dokument,
- kontrakt, eller annat innehåll tillgängligt genom $ourServiceName()$.
+ kontrakt, eller annat innehåll tillgängligt genom Scrive.
  Ingen del av Tjänsten ska ses som juridisk rådgivning. Varken
- $ourServiceName()$ eller dess samarbetspartners ska vara ansvariga för
+ Scrive eller dess samarbetspartners ska vara ansvariga för
  några fel eller brister i innehållet eller för konsekvenserna
- av handlingar där man förlitat sig på innehållet.",,"It is your responsibility to evaluate the accuracy, completeness, or usefulness of any information, opinions, advice, documents, contracts, or other content available through $ourServiceName()$. No part of the Service shall be regarded as legal advice. Neither $ourServiceName()$ nor its affiliates shall be liable for any errors or omissions in the content, or for the consequences of actions based on reliance on any content."
+ av handlingar där man förlitat sig på innehållet.",,"It is your responsibility to evaluate the accuracy, completeness, or usefulness of any information, opinions, advice, documents, contracts, or other content available through Scrive. No part of the Service shall be regarded as legal advice. Neither Scrive nor its affiliates shall be liable for any errors or omissions in the content, or for the consequences of actions based on reliance on any content."
 "_termsPageH2Law","9. Tillämplig Lag och Jurisdiktion",,"9. Applicable Law and Jurisdiction"
 "_termsPageH2LawBody","Dokument som undertecknas genom Tjänsten ska – såvida inte annat
  anges i avtalet – regleras av och tolkas i enlighet med svensk
@@ -3081,46 +3081,46 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  domstolar som har jurisdiktion över Användaren eller någon av
  Användarens tillgångar.",,"Document signed by the Service shall - unless otherwise specified in the contract – be governed by and construed in accordance with Swedish law. These Terms and all issues concerning them and all issues relating to the Service is governed by and construed in accordance with Swedish law and must be examined by a Swedish court in the District Court of Stockholm. Regardless of the above procedure to resolve disagreements, we have the right to bring an action on outstanding debts in the courts having jurisdiction over the User or any of the user's assets."
 "_termsPageH2Ownerrights","7. Äganderättigheter",,"7. Proprietary Rights"
-"_termsPageH2OwnerrightsBody1","Ni bekräftar och accepterar att $ourServiceName()$ (eller Företagets licensgivare)
+"_termsPageH2OwnerrightsBody1","Ni bekräftar och accepterar att Scrive (eller Företagets licensgivare)
  innehar fullständig äganderätt till Tjänsten och alla intressen
  däri, inklusive immateriella rättigheter som finns i Tjänsten
  (oavsett om dessa rättigheter är registrerade eller inte, och
  oavsett var i världen dessa rättigheter förekommer). Ni bekräftar
- vidare att Tjänsten kan innehålla information som av $ourServiceName()$
+ vidare att Tjänsten kan innehålla information som av Scrive
  är avsedd att vara konfidentiell och att Ni inte, utan ett föregående
- skriftligt samtycke från $ourServiceName()$, skall lämna ut någon sådan
- information. Om inte annat skriftligen avtalats med $ourServiceName()$
+ skriftligt samtycke från Scrive, skall lämna ut någon sådan
+ information. Om inte annat skriftligen avtalats med Scrive
  skall inte något i Villkoren ge Er en rätt att använda något
  av Företagets firmanamn, varumärken, logotyper, domännamn eller
  annat särskiljande kännetecken. Förutom den begränsade licens
  som beviljas i detta kapitel punkt a, bekräftar och accepterar
- $ourServiceName()$ att $ourServiceName()$ inte enligt dessa Villkor erhåller någon
+ Scrive att Scrive inte enligt dessa Villkor erhåller någon
  rätt, äganderätt eller intressen från Er (eller Era licensgivare)
  i eller till något Material Ni skickar in, lägger upp, överför
  eller visar på eller genom Tjänsten, inklusive immateriella
  rättigheter som finns i detta Material (oavsett om dessa rättigheter
  är registrerade eller inte, och oavsett var i världen dessa
  rättigheter förekommer). Om Ni inte skriftligen avtalat annat
- med $ourServiceName()$, accepterar Ni att Ni är ansvarig för att skydda
- och upprätthålla dessa rättigheter och att $ourServiceName()$ inte har
+ med Scrive, accepterar Ni att Ni är ansvarig för att skydda
+ och upprätthålla dessa rättigheter och att Scrive inte har
  någon skyldighet att göra detta för Er räkning. Om Ni inte fått
- uttrycklig skriftlig tillåtelse från $ourServiceName()$, accepterar Ni
+ uttrycklig skriftlig tillåtelse från Scrive, accepterar Ni
  att Ni i Er användning av Tjänsterna inte skall använda något
  företags eller någon organisations varumärke, firmanamn eller
  logotyp på ett sätt som sannolikt kan eller är avsett att orsaka
  förväxling avseende ägaren eller behörig användare av sådana
- märken, namn eller logotyper.",,"You acknowledge and agree that $ourServiceName()$ (or the Company's licensors) own all property rights to the Service and all interests therein, including intellectual property rights contained in the Service (whether those rights are registered or not, and wherever in the World those rights may exist). You further acknowledge that the Service that may contain information of $ourServiceName()$ is intended to be confidential and that You may not, without the prior written consent from $ourServiceName()$, disclose any such information. Unless otherwise agreed in writing with $ourServiceName()$ nothing in the Terms gives You the right to use any of the Company trade names, trademarks, logos, domain names or other distinguishing marks. Except for the limited license granted in section 7 (a), $ourServiceName()$ acknowledges and agrees that $ourServiceName()$ under these conditions obtains no right, title or interest from You (or your licensors) in or to any content You submit, post, transmit or display on or through the Service, including intellectual property rights which subsist in that content (whether those rights are registered or not, and wherever in the world those rights may exist). If You have not agreed otherwise in writing with $ourServiceName()$, You agree that You are responsible for protecting and enforcing those rights and that $ourServiceName()$ does not have any obligation to do so on your behalf. If You have not received the express written permission from $ourServiceName()$, You agree that You in your use of the Services shall not use any company or organization's trademark, trade name or logo in a manner that is likely or intended to cause confusion about the owner or authorized user of such marks, names or logos."
-"_termsPageH2OwnerrightsBody2","<h4>a. Feedback:</h4> Ni godkänner att $ourServiceName()$ offentliggör
+ märken, namn eller logotyper.",,"You acknowledge and agree that Scrive (or the Company's licensors) own all property rights to the Service and all interests therein, including intellectual property rights contained in the Service (whether those rights are registered or not, and wherever in the World those rights may exist). You further acknowledge that the Service that may contain information of Scrive is intended to be confidential and that You may not, without the prior written consent from Scrive, disclose any such information. Unless otherwise agreed in writing with Scrive nothing in the Terms gives You the right to use any of the Company trade names, trademarks, logos, domain names or other distinguishing marks. Except for the limited license granted in section 7 (a), Scrive acknowledges and agrees that Scrive under these conditions obtains no right, title or interest from You (or your licensors) in or to any content You submit, post, transmit or display on or through the Service, including intellectual property rights which subsist in that content (whether those rights are registered or not, and wherever in the world those rights may exist). If You have not agreed otherwise in writing with Scrive, You agree that You are responsible for protecting and enforcing those rights and that Scrive does not have any obligation to do so on your behalf. If You have not received the express written permission from Scrive, You agree that You in your use of the Services shall not use any company or organization's trademark, trade name or logo in a manner that is likely or intended to cause confusion about the owner or authorized user of such marks, names or logos."
+"_termsPageH2OwnerrightsBody2","<h4>a. Feedback:</h4> Ni godkänner att Scrive offentliggör
  och på andra sätt kan använda Era kommentarer och feedback utan
  betalning eller annan förpliktelse jämtemot Er. Ni accepterar
- att alla kommentarer Ni gör om $ourServiceName()$ direkt till oss via
+ att alla kommentarer Ni gör om Scrive direkt till oss via
  e-post, via vårt kontaktformulär, eller på vårt forum, kan användas
  som omdömen om Tjänsten och kan användas i vår marknadsföring
  utan någon betalning eller annan förpliktelse mot Er. När Ni
- har delgivit $ourServiceName()$ feedback kan den inte längre ändras av
- Er.",,"<h4>a. Feedback:</h4> You agree that $ourServiceName()$ may, at its own option, publish and otherwise use your comments and feedback, without payment or other obligations to You. You agree that any comments You make about $ourServiceName()$ directly to us via email, via our contact form, or on our forums, may be used as attributes of the Service and may be used in our marketing without any payment or other obligation to You. Once You have served $ourServiceName()$ feedback it cannot be changed by You."
+ har delgivit Scrive feedback kan den inte längre ändras av
+ Er.",,"<h4>a. Feedback:</h4> You agree that Scrive may, at its own option, publish and otherwise use your comments and feedback, without payment or other obligations to You. You agree that any comments You make about Scrive directly to us via email, via our contact form, or on our forums, may be used as attributes of the Service and may be used in our marketing without any payment or other obligation to You. Once You have served Scrive feedback it cannot be changed by You."
 "_termsPageH2Responsability","8. Ansvarsbegränsning",,"8. Disclaimer"
-"_termsPageH2ResponsabilityBody","Ni accepterar att hålla $ourServiceName()$ och dess moderbolag, systerbolag,
+"_termsPageH2ResponsabilityBody","Ni accepterar att hålla Scrive och dess moderbolag, systerbolag,
  dotterbolag, filialer, tjänsteleverantörer, andra Användare,
  distributörer, licensgivare, tjänstemän, chefer och anställda
  fria från anspråk eller krav, inklusive alla advokatkostnader,
@@ -3128,9 +3128,9 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  slumpmässig, speciell, följande eller specifik skada, inklusive,
  men inte begränsat till, skador för utebliven vinst, goodwill,
  användning, data, eller andra ickefysiska förluster (även om
- $ourServiceName()$ har blivit delgivna denna möjlighet), och inklusive
+ Scrive har blivit delgivna denna möjlighet), och inklusive
  skador resulterande från: (i) dokument eller transaktioner skickade
- genom Tjänsten där $ourServiceName()$ inte varit en direkt avtalspart;
+ genom Tjänsten där Scrive inte varit en direkt avtalspart;
  (ii) användningen eller oförmågan att använda, inklusive fel/misstag,
  avbrott eller förseningar; otillåten access till eller ändring
  i Era dokument eller transaktioner; eller (iii) någon annan
@@ -3138,45 +3138,45 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  övergå, totalt, summan av det minsta beloppet av antingen (A)
  Era totala betalningar för användandet av Hemsidan och Tjänsten
  under detta avtal inom senaste 12-månadersperioden eller, (B)
- max femtusen kronor.",,"You agree to hold $ourServiceName()$ and its parent companies, sister companies, subsidiaries, affiliates, service providers, other Users, distributors, licensors, officers, directors and employees free from any claim or demand, including all attorneys' fees, from You or any Third-party for any direct, indirect, random, special, following or specific injury, including but not limited to, damages for loss of profits, goodwill, use, data or other intangible losses (even if $ourServiceName()$ has been notified of this option), and including injuries resulting from: (i) documents or transactions submitted by the Service where $ourServiceName()$ not been a direct party to the agreement, (ii) the use or inability to use, including errors/mistakes, interruptions or delays; unauthorized access to or alteration of your documents or transactions or (iii) any other issue relating to the Service. $ourServiceName()$'s responsibility shall not exceed, in total, the sum of the minimum amount of either (A) Your total payments for the use of the Website and the Service under these Terms within the past 12 months or, (B) maximum five thousand kronor."
+ max femtusen kronor.",,"You agree to hold Scrive and its parent companies, sister companies, subsidiaries, affiliates, service providers, other Users, distributors, licensors, officers, directors and employees free from any claim or demand, including all attorneys' fees, from You or any Third-party for any direct, indirect, random, special, following or specific injury, including but not limited to, damages for loss of profits, goodwill, use, data or other intangible losses (even if Scrive has been notified of this option), and including injuries resulting from: (i) documents or transactions submitted by the Service where Scrive not been a direct party to the agreement, (ii) the use or inability to use, including errors/mistakes, interruptions or delays; unauthorized access to or alteration of your documents or transactions or (iii) any other issue relating to the Service. Scrive's responsibility shall not exceed, in total, the sum of the minimum amount of either (A) Your total payments for the use of the Website and the Service under these Terms within the past 12 months or, (B) maximum five thousand kronor."
 "_termsPageH2Signprocess","4. Signerade dokument och signeringsprocess",,"4. Signed documents and the signing process"
-"_termsPageH2SignprocessBody1","$ourServiceName()$ tillhandahåller Tjänsten som ett verktyg för Användaren
+"_termsPageH2SignprocessBody1","Scrive tillhandahåller Tjänsten som ett verktyg för Användaren
  att kunna underteckna dokument med tredje part. Följande bestämmelser
- gäller för dokument undertecknade genom $ourServiceName()$.",,"$ourServiceName()$ provides the Service as a tool for the user to sign documents with third parties. The following rules apply to documents signed by $ourServiceName()$."
-"_termsPageH2SignprocessBody2","<h4>a. $ourServiceName()$ är aldrig en avtalspart:</h4> Som en del av Tjänsten
- stämplar $ourServiceName()$ dokument som undertecknats av alla parter
- med certifikat som bekräftar att $ourServiceName()$ bevittnat transaktionen.
- Syftet med att $ourServiceName()$ bevittnar transaktionen är att stärka
- dokumentets bevisstyrka i domstol. $ourServiceName()$ kan dock aldrig
+ gäller för dokument undertecknade genom Scrive.",,"Scrive provides the Service as a tool for the user to sign documents with third parties. The following rules apply to documents signed by Scrive."
+"_termsPageH2SignprocessBody2","<h4>a. Scrive är aldrig en avtalspart:</h4> Som en del av Tjänsten
+ stämplar Scrive dokument som undertecknats av alla parter
+ med certifikat som bekräftar att Scrive bevittnat transaktionen.
+ Syftet med att Scrive bevittnar transaktionen är att stärka
+ dokumentets bevisstyrka i domstol. Scrive kan dock aldrig
  genom denna procedur anses bli undertecknande part i dokumentet
- och $ourServiceName()$ skall inte ha något som helst ansvar gällande giltigheten,
+ och Scrive skall inte ha något som helst ansvar gällande giltigheten,
  verkställandet eller parternas efterlevande av sådana dokument.
-  $ourServiceName()$ kan endast anses bundet av innehållet i ett dokument
+  Scrive kan endast anses bundet av innehållet i ett dokument
  om en registrerad eller befullmäktigad firmatecknare genom en
  registrerad Användare av Tjänsten i eget namn och i Företagets
- räkning undertecknar ett dokument genom Tjänsten.",,"<h4>a. $ourServiceName()$ is never a party to the agreement:</h4> As part of the Service $ourServiceName()$ ensures that the document is signed by all parties by issuing a certificate confirming that $ourServiceName()$ has witnessed the transaction. The purpose of $ourServiceName()$ witnessing the transaction is to strengthen the document evidence, for the unlikely event that it is needed in a court of law. By this procedure $ourServiceName()$ is never considered to be a signatory of the document and $ourServiceName()$ shall have no liability whatsoever regarding the validity, content, enforcement or parties’ survivors of such documents. $ourServiceName()$ can only be bound by the contents of a document if a registered or authorized signatory by a registered user of the Service in its own name and on behalf of the Company signs a document through the Service."
-"_termsPageH2SignprocessBody3","<h4>b. Parternas förpliktelser och $ourServiceName()$´s ansvarsfirhet:</h4>
+ räkning undertecknar ett dokument genom Tjänsten.",,"<h4>a. Scrive is never a party to the agreement:</h4> As part of the Service Scrive ensures that the document is signed by all parties by issuing a certificate confirming that Scrive has witnessed the transaction. The purpose of Scrive witnessing the transaction is to strengthen the document evidence, for the unlikely event that it is needed in a court of law. By this procedure Scrive is never considered to be a signatory of the document and Scrive shall have no liability whatsoever regarding the validity, content, enforcement or parties’ survivors of such documents. Scrive can only be bound by the contents of a document if a registered or authorized signatory by a registered user of the Service in its own name and on behalf of the Company signs a document through the Service."
+"_termsPageH2SignprocessBody3","<h4>b. Parternas förpliktelser och Scrive´s ansvarsfirhet:</h4>
  När samtliga parter undertecknat ett dokument genom Tjänsten
  och dokumentets färdigställande bekräftats av Tjänsten blir
  de undertecknande parterna förpliktigade och berättigade i enlighet
- med överenskommelserna i dokumentet. $ourServiceName()$ blir dock aldrig
+ med överenskommelserna i dokumentet. Scrive blir dock aldrig
  ansvarigt eller på något som helst sätt skyldigt att övervaka
  eller ingripa om undertecknande parter bryter mot sina förpliktelser
  eller felaktigt utnyttjar sina rättigheter enligt överenskommelse
- i det undertecknade dokumentet.",,"<h4>b. The parties' obligations and $ourServiceName()$'s limitation of liability:</h4> Once all parties have signed a document through the Service, and document completion has been confirmed by the Service, the signatories have the obligations and rights in accordance with the agreement/s in the document. $ourServiceName()$ will never be responsible or in any way obligated to monitor or intervene, should the signatories not abide by their obligations in the agreement or improperly exercise their rights as agreed in the signed document."
-"_termsPageH2SignprocessBody4","<h4>c. Dispyter och extratjänsten $ourServiceName()$ Bevis:</h4> Om oenighet
+ i det undertecknade dokumentet.",,"<h4>b. The parties' obligations and Scrive's limitation of liability:</h4> Once all parties have signed a document through the Service, and document completion has been confirmed by the Service, the signatories have the obligations and rights in accordance with the agreement/s in the document. Scrive will never be responsible or in any way obligated to monitor or intervene, should the signatories not abide by their obligations in the agreement or improperly exercise their rights as agreed in the signed document."
+"_termsPageH2SignprocessBody4","<h4>c. Dispyter och extratjänsten Scrive Bevis:</h4> Om oenighet
  uppkommer mellan parterna med anledning av ett dokument som
- har färdigställts genom $ourServiceName()$, ska $ourServiceName()$ inte ha något
+ har färdigställts genom Scrive, ska Scrive inte ha något
  ansvar eller skyldighet med avseende på denna konflikt förutom
  genom företagets vanliga kundsupport hjälpa Användarna hitta
  och hantera den information som finns tillgänglig genom Tjänsten.
- För ytterligare bevismaterial tillhandahåller $ourServiceName()$ extratjänsten
- $ourServiceName()$ Bevis som ger Användaren möjligheten att mot betalning
+ För ytterligare bevismaterial tillhandahåller Scrive extratjänsten
+ Scrive Bevis som ger Användaren möjligheten att mot betalning
  och i enlighet med våra Särskilda Utdragsvillkor göra utdrag
- ur Företagets lagrade bevisunderlag.",,"<h4>c. Disputes and the extra service “$ourServiceName()$ Proof”:</h4> If any disagreement arises between the parties regarding a document that was prepared by $ourServiceName()$, $ourServiceName()$ will have no liability or obligation with respect to this conflict except through the company's usual customer support to help users find and manage the information available through the Service. For further evidence $ourServiceName()$ provides the extra service $ourServiceName()$ Proof that gives the user the ability to revert for payment in accordance with our Special Extract Terms of extracts from the Company recorded evidence base."
+ ur Företagets lagrade bevisunderlag.",,"<h4>c. Disputes and the extra service “Scrive Proof”:</h4> If any disagreement arises between the parties regarding a document that was prepared by Scrive, Scrive will have no liability or obligation with respect to this conflict except through the company's usual customer support to help users find and manage the information available through the Service. For further evidence Scrive provides the extra service Scrive Proof that gives the user the ability to revert for payment in accordance with our Special Extract Terms of extracts from the Company recorded evidence base."
 "_termsPageH2SignprocessBody5","<h4>d. Företagets kommunikation med inbjudna personer:</h4> Ni
- godkänner och befullmäktigar $ourServiceName()$ att genom Tjänsten eller
- genom representanter för $ourServiceName()$ kommunicera med av Er direkt
+ godkänner och befullmäktigar Scrive att genom Tjänsten eller
+ genom representanter för Scrive kommunicera med av Er direkt
  eller indirekt inbjudna personer (en indirekt inbjuden person
  är t.ex. åskådare som genom er tillåtelse bjudits in av någon
  av era direkt inbjuda personer) gällande de dokument som ska
@@ -3185,22 +3185,22 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  (2) granska undertecknande parters identitet, (3) veta huruvida
  dokumentet undertecknats eller inte undertecknats och förstå
  omständigheterna kring händelseförloppet och (4) i efterhand
- kunna granska av $ourServiceName()$ genererade och lagrade bevismaterial
+ kunna granska av Scrive genererade och lagrade bevismaterial
  kring transaktionen. Sådan information kan omfatta, men är inte
  begränsad till, ert namn, e-postadress, personnummer, fotografi
- och IP-adress.",,"<h4>d. $ourServiceName()$'s communications with invited guests:</h4> You agree and hereby authorize $ourServiceName()$ to, through the Service or by representatives of $ourServiceName()$, communicate with persons directly or indirectly invited by You (an indirect invited person is e.g. spectators invited through your permission by one of your directly invited individuals) regarding the documents to be signed and serve them the documents and information reasonably necessary to enable them to (1) review the document, (2) examine the signing parties’ identities, (3) to know whether the document is signed or not signed and understand the circumstances surrounding the events and (4) retrospectively examine the $ourServiceName()$ generated and stored evidence of the operation. Such information may include, but is not limited to, your name, email address, date of birth, photograph and IP address."
+ och IP-adress.",,"<h4>d. Scrive's communications with invited guests:</h4> You agree and hereby authorize Scrive to, through the Service or by representatives of Scrive, communicate with persons directly or indirectly invited by You (an indirect invited person is e.g. spectators invited through your permission by one of your directly invited individuals) regarding the documents to be signed and serve them the documents and information reasonably necessary to enable them to (1) review the document, (2) examine the signing parties’ identities, (3) to know whether the document is signed or not signed and understand the circumstances surrounding the events and (4) retrospectively examine the Scrive generated and stored evidence of the operation. Such information may include, but is not limited to, your name, email address, date of birth, photograph and IP address."
 "_termsPageH2SignprocessBody6","<h4>e. Företagets användning av dokument och information:</h4>
- Genom att delge $ourServiceName()$ dokument och/eller information som
+ Genom att delge Scrive dokument och/eller information som
  skall undertecknas och/eller administreras via Tjänsten, godkänner
- Ni att $ourServiceName()$ trycker sitt sigill och Era och inbjudna personers
- uppgifter på det färdigställda dokumentet och Ni ger $ourServiceName()$
+ Ni att Scrive trycker sitt sigill och Era och inbjudna personers
+ uppgifter på det färdigställda dokumentet och Ni ger Scrive
  tillstånd att automatiskt och/eller manuellt distribuera kopior
  av det färdigställda dokumentet till Er och alla deltagande
- personer.",,"e. Company's use of documents and information: By submitting $ourServiceName()$ documents and/or information to be signed and/or administered through the Service, You agree that $ourServiceName()$ may press its seal as well as your and your invited gusts’ information on the completed document, and You give permission $ourServiceName()$ to automatically and/or manually distribute copies of the completed document to You and all participating individuals."
-"_termsPageH2SignprocessBody7","<h4>f. Dokuments rättsliga verkan och $ourServiceName()$´s ansvarsfrihet:</h4>
- Alla påståenden gjorda av $ourServiceName()$ om giltigheten av dokument
+ personer.",,"e. Company's use of documents and information: By submitting Scrive documents and/or information to be signed and/or administered through the Service, You agree that Scrive may press its seal as well as your and your invited gusts’ information on the completed document, and You give permission Scrive to automatically and/or manually distribute copies of the completed document to You and all participating individuals."
+"_termsPageH2SignprocessBody7","<h4>f. Dokuments rättsliga verkan och Scrive´s ansvarsfrihet:</h4>
+ Alla påståenden gjorda av Scrive om giltigheten av dokument
  som undertecknats på elektronisk väg är inte avsedda för, och
- ska inte tolkas som, juridisk rådgivning. $ourServiceName()$ frånsäger
+ ska inte tolkas som, juridisk rådgivning. Scrive frånsäger
  sig allt ansvar för att säkerställa att dokument som undertecknats
  genom Tjänsten är giltiga eller tvingande enligt lagstiftningen
  i ett visst land, stat eller annan jurisdiktion.  Om Ni önskar
@@ -3208,27 +3208,27 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  Ni planerar att underteckna eller undertecknat genom Tjänsten,
  eller vill driva igenom ett dokument som undertecknats genom
  tjänsten, bör Ni rådgöra med en behörig jurist med lämplig juridisk
- sakkunskap.",,"<h4>f. Dokuments legal effect and $ourServiceName()$'s discharge:</h4> All statements made by $ourServiceName()$ regarding the validity of documents signed electronically are not intended to be, and should not be interpreted as, legal advice. $ourServiceName()$ disclaims any responsibility to ensure that the documents signed by the Service are valid or enforceable under the laws of a particular country, state or other jurisdiction. If You wish to review the validity or enforceability of any documents You plan to sign or signed by the Service, or want to push through a document signed by the Service, You should consult with appropriate legal expertise."
+ sakkunskap.",,"<h4>f. Dokuments legal effect and Scrive's discharge:</h4> All statements made by Scrive regarding the validity of documents signed electronically are not intended to be, and should not be interpreted as, legal advice. Scrive disclaims any responsibility to ensure that the documents signed by the Service are valid or enforceable under the laws of a particular country, state or other jurisdiction. If You wish to review the validity or enforceability of any documents You plan to sign or signed by the Service, or want to push through a document signed by the Service, You should consult with appropriate legal expertise."
 "_termsPageH2SignprocessBody8","<h4>g. Skatter:</h4> Ni accepterar att Ni och varje annan part
  som undertecknat ett dokument genom tjänsten själva ansvarar
  för (1) fastställandet av skatter som Ni kan vara skyldig till
  följd av sådana dokument, och (2) insamling, betalning och rapportering
  av nödvändig avgifter enligt gällande lag. Ni accepterar att
- $ourServiceName()$ inte har något ansvar att betala, samla in eller rapportera
+ Scrive inte har något ansvar att betala, samla in eller rapportera
  tillämpliga skatter i samband med Ert dokument, och Ni accepterar
- även att kompensera, försvara och hålla $ourServiceName()$ skadeslösa
+ även att kompensera, försvara och hålla Scrive skadeslösa
  från alla anspråk, krav, skadestånd, viten, böter, kostnader
- och andra utgifter relaterade till dokumentet.",,"<h4>g. Taxes:</h4> You agree that You and any other party signed a document through the Service itself is responsible for (a) the determination of taxes You may owe as a result of such documents, and (2) the collection, payment and reporting of required fees under the appropriate law. You agree to $ourServiceName()$ has no responsibility to pay, collect or report applicable taxes associated with your document, and You also agree to indemnify, defend and hold $ourServiceName()$ harmless from all claims, demands, damages, penalties, fines, costs and other expenses related to the document."
+ och andra utgifter relaterade till dokumentet.",,"<h4>g. Taxes:</h4> You agree that You and any other party signed a document through the Service itself is responsible for (a) the determination of taxes You may owe as a result of such documents, and (2) the collection, payment and reporting of required fees under the appropriate law. You agree to Scrive has no responsibility to pay, collect or report applicable taxes associated with your document, and You also agree to indemnify, defend and hold Scrive harmless from all claims, demands, damages, penalties, fines, costs and other expenses related to the document."
 "_termsPageH2Useraccounts","2. Användarkonton",,"2. User Accounts"
 "_termsPageH2UseraccountsBody1","Ni är ansvarig för att hemlighålla och skydda Er kontoinformation,
  inklusive koder, och ansvarar för all annan aktivitet som sker
- via Ert konto. Ni ska omedelbart meddela $ourServiceName()$ vid misstanke
+ via Ert konto. Ni ska omedelbart meddela Scrive vid misstanke
  om otillåten användning eller försök till användning av Ert
  konto eller Er kod, eller andra brott mot säkerheten. Ni får
  inte heller vid något tillfälle använda någon annans kod eller
  konto eller på annat ej auktoriserat vis försöka få tillgång
- till Tjänsten.",,"You are responsible for maintaining the confidentiality and to protect your account information, including codes, and You are also responsible for any other activity on your account. You shall immediately notify $ourServiceName()$ on suspicion of unauthorized use or attempted use of your account or your code, or other security breach. You must not, at any time, use someone else's code or account or in any other unauthorized way attempt to get access to the Service."
-"_termsPageH2UseraccountsBody2","<h4>a. Kontovillkor:</h4> Ni accepterar att Ni ska ge $ourServiceName()$
+ till Tjänsten.",,"You are responsible for maintaining the confidentiality and to protect your account information, including codes, and You are also responsible for any other activity on your account. You shall immediately notify Scrive on suspicion of unauthorized use or attempted use of your account or your code, or other security breach. You must not, at any time, use someone else's code or account or in any other unauthorized way attempt to get access to the Service."
+"_termsPageH2UseraccountsBody2","<h4>a. Kontovillkor:</h4> Ni accepterar att Ni ska ge Scrive
  korrekt, uppdaterad och fullständig information om Er själv
  och Er faktura-/betalinformation. Ni ska uppdatera all kontoinformation
  genom att följa de procedurer som Tjänsten tillhandahåller.
@@ -3240,29 +3240,29 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  eller presentation, eller för att försöka införskaffa något
  material, dokument, eller information på något annat sätt än
  genom den infrastruktur som skapats och gjorts tillgänglig av
- $ourServiceName()$ eller dess samarbetspartners i detta syfte. Ni accepterar
+ Scrive eller dess samarbetspartners i detta syfte. Ni accepterar
  att Ni inte kommer att göra något som utsätter Tjänstens infrastruktur,
  eller några system eller nätverk som är del av eller anknutna
- till Tjänsten för en orimlig belastning. ",,"<h4>a. Account Terms:</h4> You agree that You will give $ourServiceName()$ accurate, current and complete information about yourself and your invoice/payment information. You shall update all account information by following the procedures, which the Service provides. You may not use any automated device, program, algorithm, method, or any similar manual process, to access, acquire, copy, probe, index, manipulate, test or monitor any portion of the Service or any Content, or in any way reproduce or circumvent the Service's structure or presentation, or to attempt to obtain any materials, documents or information through any means other than the infrastructure created and made available by $ourServiceName()$, or its partners, to that end. You agree that You will not perform any action that exposes the Service's infrastructure, or subject any systems or networks that are part of or affiliated with the Service, to an excessive burden."
+ till Tjänsten för en orimlig belastning. ",,"<h4>a. Account Terms:</h4> You agree that You will give Scrive accurate, current and complete information about yourself and your invoice/payment information. You shall update all account information by following the procedures, which the Service provides. You may not use any automated device, program, algorithm, method, or any similar manual process, to access, acquire, copy, probe, index, manipulate, test or monitor any portion of the Service or any Content, or in any way reproduce or circumvent the Service's structure or presentation, or to attempt to obtain any materials, documents or information through any means other than the infrastructure created and made available by Scrive, or its partners, to that end. You agree that You will not perform any action that exposes the Service's infrastructure, or subject any systems or networks that are part of or affiliated with the Service, to an excessive burden."
 "_termsPageH2UseraccountsBody3","<h4>b. Användarinnehåll:</h4> Ni accepterar att Ni inte kommer
  att använda Tjänsten i illegala syften, för att störa Tjänsten
  eller för att sprida innehåll som bryter mot integritet, upphovsrätt
  eller ägarrätt för någon tredje part, eller för syften som av
- $ourServiceName()$ uppfattas som olagliga, obscena, kränkande, förolämpande,
- hotfulla, vulgära eller på andra sätt klandervärda. $ourServiceName()$
+ Scrive uppfattas som olagliga, obscena, kränkande, förolämpande,
+ hotfulla, vulgära eller på andra sätt klandervärda. Scrive
  är inte ansvarigt för misslyckanden eller förseningar av att
- ta bort sådant innehåll. $ourServiceName()$ har rätt, men inte någon skyldighet,
+ ta bort sådant innehåll. Scrive har rätt, men inte någon skyldighet,
  att övervaka allt användargenererat innehåll, inklusive kommentarer
  och kommunikation, för att avgöra huruvida Villkoren efterlevs
  av Användaren, för att tillgodose att lagar och regler efterföljs
  eller för att tillfredställa förfrågningar från en statlig myndighet.
- $ourServiceName()$ och dess samarbetspartners har rätt att när som helst
+ Scrive och dess samarbetspartners har rätt att när som helst
  ta bort, blockera och processa mot Användare och användarinnehåll
- som, enligt $ourServiceName()$ anses bryta mot Villkoren eller på annat
+ som, enligt Scrive anses bryta mot Villkoren eller på annat
  sätt bryter mot gällande lagar och regler. Ni är själv fullt
  ansvarig för innehållet i Ert konto och de transaktioner som
- görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes, to disrupt the Service or to disseminate content that violates privacy, copyright or proprietary right of any Third-party, or for purposes of $ourServiceName()$ that are or may be perceived as illegal, obscene, abusive, libelous, threatening, vulgar or otherwise reprehensible. $ourServiceName()$ is not responsible for any failure or delay in removing such content. $ourServiceName()$ has the right, but not the obligation, to monitor all user-generated content, including comments and communications, in order to determine whether conditions are complied with by the user, to ascertain that the laws and rules are abided by or to satisfy requests from a government agency. $ourServiceName()$ and its partners have the right to, at any time, delete, reject and litigate against users and user content, if $ourServiceName()$ deems it to violate the Terms or otherwise violate any applicable laws and regulations. You yourself are fully responsible for the contents of your account and transactions made with your account through the Service."
-"_termsPageH2UseraccountsBody4","<h4>c. Kostnader och betalning:</h4> $ourServiceName()$ tar betalt månadsvis
+ görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes, to disrupt the Service or to disseminate content that violates privacy, copyright or proprietary right of any Third-party, or for purposes of Scrive that are or may be perceived as illegal, obscene, abusive, libelous, threatening, vulgar or otherwise reprehensible. Scrive is not responsible for any failure or delay in removing such content. Scrive has the right, but not the obligation, to monitor all user-generated content, including comments and communications, in order to determine whether conditions are complied with by the user, to ascertain that the laws and rules are abided by or to satisfy requests from a government agency. Scrive and its partners have the right to, at any time, delete, reject and litigate against users and user content, if Scrive deems it to violate the Terms or otherwise violate any applicable laws and regulations. You yourself are fully responsible for the contents of your account and transactions made with your account through the Service."
+"_termsPageH2UseraccountsBody4","<h4>c. Kostnader och betalning:</h4> Scrive tar betalt månadsvis
  för Era upplupna kostnader enligt gällande prisplan genom fakturering
  eller genom att dra pengarna från Ert registrerade kreditkort.
  Våra fakturor förfaller till betalning 14 dagar efter fakturadatum.
@@ -3270,28 +3270,28 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  att debitera dröjsmålsränta från förfallodagen till datum för
  betalning. Räntan är 15% plus den aktuella statslåneräntan.
  Vi tillämpar en administrationsavgift om 50 SEK exklusive moms
- per faktura som understiger ett värde om 500 SEK.",,"<h4>c. Cost and payment:</h4> $ourServiceName()$ charges monthly for your pending charges under an existing price plan by billing or by pulling money from your registered credit card. Our invoices are due 14 days after invoice date. Reminders will be charged at a late payment fee of 50 SEK. We will charge interest from the due date to the date of payment. The interest rate is 15% plus the current government borrowing rate. We apply an administration fee of 50 SEK excluding VAT per invoice, which is below a value of 500 SEK."
+ per faktura som understiger ett värde om 500 SEK.",,"<h4>c. Cost and payment:</h4> Scrive charges monthly for your pending charges under an existing price plan by billing or by pulling money from your registered credit card. Our invoices are due 14 days after invoice date. Reminders will be charged at a late payment fee of 50 SEK. We will charge interest from the due date to the date of payment. The interest rate is 15% plus the current government borrowing rate. We apply an administration fee of 50 SEK excluding VAT per invoice, which is below a value of 500 SEK."
 "_termsPageH2UseraccountsBody5","<h4>d. Avbrott i Tjänsten eller uppsägning:</h4> Ni accepterar
- att $ourServiceName()$ när som helst, utan förvarning, kan frysa Ert konto
+ att Scrive när som helst, utan förvarning, kan frysa Ert konto
  eller på annat sätt stoppa Er tillgång till Tjänsten vid (1)
  misstankar om brott mot Villkoren, (2) våra försök att åtgärda
  säkerhetsbrister i mjukvaran eller för att skydda Innehåll,
  (3) modifiering av Tjänsten, (4) oväntade operativa avbrott
  eller problem, (5) försenade betalningar eller (6) uttrycklig
  åtgärdsförfrågan från lagorgan eller andra statliga myndigheter.
- Ni accepterar att $ourServiceName()$ också har rätt att med en veckas
+ Ni accepterar att Scrive också har rätt att med en veckas
  förvarning avsluta ert konto vid (1) konstaterade brott mot
  Villkoren, (2) Användares inaktivitet under mer än 12 månader,
  (3) betalning förfallen till kronofogden eller (4) uttrycklig
  åtgärdsförfrågan från lagorgan eller andra statliga myndigheter.
- $ourServiceName()$ kommer inte att vara skyldig Er eller någon tredje
- part för att Ert konto på Tjänsten frysts eller avslutats. ",,"<h4>d. Suspension of Service or termination:</h4> You agree to that $ourServiceName()$ at any time, without notice, may freeze your account or otherwise stop your access to the Service at (a) alleged breaches of the conditions, (2) our attempt to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action request from any legal authority or other government authorities. You agree to that $ourServiceName()$ also is entitled to, with a week's notice, terminate your account at (1) clear violations of the conditions, (2) User inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. $ourServiceName()$ will not be liable to You or any Third-party to your account based on the Service being frozen or terminated."
+ Scrive kommer inte att vara skyldig Er eller någon tredje
+ part för att Ert konto på Tjänsten frysts eller avslutats. ",,"<h4>d. Suspension of Service or termination:</h4> You agree to that Scrive at any time, without notice, may freeze your account or otherwise stop your access to the Service at (a) alleged breaches of the conditions, (2) our attempt to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action request from any legal authority or other government authorities. You agree to that Scrive also is entitled to, with a week's notice, terminate your account at (1) clear violations of the conditions, (2) User inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. Scrive will not be liable to You or any Third-party to your account based on the Service being frozen or terminated."
 "_termsPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
- ni delger $ourServiceName()$ eller dess tjänster hanteras med största
-Möjliga försiktighet.",,"Sign and store your contracts online. All information you share with $ourServiceName()$ and its services are handled with great care."
+ ni delger Scrive eller dess tjänster hanteras med största
+Möjliga försiktighet.",,"Sign and store your contracts online. All information you share with Scrive and its services are handled with great care."
 "_termsPageTitle","| Allmänna villkor",,"| Terms Of Service"
 "_timetosigninfo","Undertecknas senast:",,"Sign before:"
-"_title","$ourServiceName()$ | Signera och arkivera avtal elektroniskt",,"$ourServiceName()$ | Sign and store contracts online"
+"_title","Scrive | Signera och arkivera avtal elektroniskt",,"Scrive | Sign and store contracts online"
 "_tooltipcancelled","Status: Avbrutet",,"Status: Canceled"
 "_tooltipdelivered","Status: Levererat",,"Status: Delivered"
 "_tooltipdraft","Status: Utkast",,"Status: Draft"
@@ -3308,7 +3308,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_updateAttachmentsDialogUpLoadChooseFile","Välj fil",,"Select file"
 "_updateAttachmentsDialogUpLoadFooterAttach","Bifoga",,"Attach"
 "_updateAttachmentsDialogUpLoadOnlyPDF","OBS! Endast PDF",,"PDF only!"
-"_updateAttachmentsDialogUpLoadSaved","Sparad på $ourServiceName()$",,"Stored in $ourServiceName()$"
+"_updateAttachmentsDialogUpLoadSaved","Sparad på Scrive",,"Stored in Scrive"
 "_validationdropdownChooseVMethod","Välj verifieringsmetod",,"Select verification method"
 "_verifyingSignature","Verifierar signatur...",,"Verifying signature..."
 "_whohadsignedcontractinfoformailIfNotSigned","Har undertecknat:",,"Has signed:"
@@ -3323,9 +3323,9 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_youMustSetParnerEmail","Du måste ange e-post till motpart.",,"You must enter an email address to your counterpart."
 "_yourSigningPluginFailed","Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör. ",,"You sign plug-in failed to sign the document. Please contact your e-ID provider."
 "_mailMailAPIConfirmTitle","$documenttitle$ skickat",,"$documenttitle$ sent"
-"_mailMailAPIConfirmContractHeader","Kontraktet <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
-"_mailMailAPIConfirmOrderHeader","Order <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The order <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
-"_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with $ourServiceName()$ by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
+"_mailMailAPIConfirmContractHeader","Kontraktet <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
+"_mailMailAPIConfirmOrderHeader","Order <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The order <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
+"_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
 "_tweetAccount","skrivapa",,"scriveuk"
 "_mailsubheader"," Signera Dokument Online med Scrive",," Sign Documents Online with Scrive"

@@ -475,7 +475,7 @@ data DocumentProcess = Contract | Offer | Order
 
 data DocumentType = Signable DocumentProcess | Template DocumentProcess | Attachment | AttachmentTemplate
     deriving (Eq, Ord, Typeable)
-             
+
 -- | Terrible, I know. Better idea?
 doctypeFromString :: String -> DocumentType
 doctypeFromString "Signable Contract"  = Signable Contract
@@ -496,7 +496,7 @@ data DocumentRecordStatus = LiveDocument | QuarantinedDocument | DeletedDocument
     deriving (Eq, Ord, Typeable, Show)
 
 data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Typeable, Read)
 
 data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                 | ChargeNormal        -- value times number of people involved
@@ -515,7 +515,7 @@ data DocumentTag = DocumentTag {
 data DocumentUI = DocumentUI {
         documentmailfooter :: Maybe BS.ByteString
     } deriving (Eq, Ord, Typeable)
-    
+
 emptyDocumentUI :: DocumentUI
 emptyDocumentUI = DocumentUI {
                     documentmailfooter = Nothing
@@ -937,9 +937,9 @@ instance Version AuthorAttachment where
     mode = extension 1 (Proxy :: Proxy AuthorAttachment0)
 
 instance Migrate AuthorAttachment0 AuthorAttachment where
-    migrate (AuthorAttachment0 
-             { authorattachmentfile0 
-             }) = AuthorAttachment 
+    migrate (AuthorAttachment0
+             { authorattachmentfile0
+             }) = AuthorAttachment
                 { authorattachmentfile = unsafePerformIO $ update $ PutFileUnchecked authorattachmentfile0
                 }
 
@@ -966,12 +966,12 @@ instance Version SignatoryAttachment where
     mode = extension 1 (Proxy :: Proxy SignatoryAttachment0)
 
 instance Migrate SignatoryAttachment0 SignatoryAttachment where
-    migrate (SignatoryAttachment0 
+    migrate (SignatoryAttachment0
              { signatoryattachmentfile0
              , signatoryattachmentemail0
              , signatoryattachmentname0
              , signatoryattachmentdescription0
-             }) = SignatoryAttachment 
+             }) = SignatoryAttachment
                 { signatoryattachmentfile         = maybe Nothing (Just . unsafePerformIO . update . PutFileUnchecked) signatoryattachmentfile0
                 , signatoryattachmentemail        = signatoryattachmentemail0
                 , signatoryattachmentname         = signatoryattachmentname0
@@ -1893,35 +1893,35 @@ instance Migrate Document25 Document26 where
 
 instance Migrate Document26 Document27 where
     migrate ( Document26
-                { documentid26                 
-                , documenttitle26             
-                , documentsignatorylinks26    
-                , documentfiles26            
-                , documentsealedfiles26    
-                , documentstatus26       
-                , documenttype26          
-                , documentfunctionality26  
-                , documentctime26         
-                , documentmtime26         
-                , documentdaystosign26     
-                , documenttimeouttime26    
-                , documentinvitetime26    
-                , documentlog26           
-                , documentinvitetext26       
-                , documenttrustweaverreference26  
-                , documentallowedidtypes26    
-                , documentcsvupload26       
-                , documentcancelationreason26  
-                , documentsharing26        
-                , documentrejectioninfo26    
-                , documenttags26          
-                , documentservice26           
-                , documentoriginalcompany26    
-                , documentattachments26       
-                , documentrecordstatus26     
-                , documentquarantineexpiry26   
-                , documentauthorattachments26 
-                , documentsignatoryattachments26  
+                { documentid26
+                , documenttitle26
+                , documentsignatorylinks26
+                , documentfiles26
+                , documentsealedfiles26
+                , documentstatus26
+                , documenttype26
+                , documentfunctionality26
+                , documentctime26
+                , documentmtime26
+                , documentdaystosign26
+                , documenttimeouttime26
+                , documentinvitetime26
+                , documentlog26
+                , documentinvitetext26
+                , documenttrustweaverreference26
+                , documentallowedidtypes26
+                , documentcsvupload26
+                , documentcancelationreason26
+                , documentsharing26
+                , documentrejectioninfo26
+                , documenttags26
+                , documentservice26
+                , documentoriginalcompany26
+                , documentattachments26
+                , documentrecordstatus26
+                , documentquarantineexpiry26
+                , documentauthorattachments26
+                , documentsignatoryattachments26
                 }) = Document27
                 { documentid27                     = documentid26
                 , documenttitle27                  = documenttitle26
@@ -1957,35 +1957,35 @@ instance Migrate Document26 Document27 where
 
 instance Migrate Document27 Document28 where
     migrate ( Document27
-                { documentid27                 
-                , documenttitle27             
-                , documentsignatorylinks27    
-                , documentfiles27            
-                , documentsealedfiles27    
-                , documentstatus27       
-                , documenttype27          
-                , documentfunctionality27  
-                , documentctime27         
-                , documentmtime27         
-                , documentdaystosign27     
-                , documenttimeouttime27    
-                , documentinvitetime27    
-                , documentlog27           
-                , documentinvitetext27       
-                , documenttrustweaverreference27  
-                , documentallowedidtypes27    
-                , documentcsvupload27       
-                , documentcancelationreason27  
-                , documentsharing27        
-                , documentrejectioninfo27    
-                , documenttags27          
-                , documentservice27           
-                , documentoriginalcompany27    
-                , documentattachments27       
-                , documentrecordstatus27   
-                , documentauthorattachments27 
+                { documentid27
+                , documenttitle27
+                , documentsignatorylinks27
+                , documentfiles27
+                , documentsealedfiles27
+                , documentstatus27
+                , documenttype27
+                , documentfunctionality27
+                , documentctime27
+                , documentmtime27
+                , documentdaystosign27
+                , documenttimeouttime27
+                , documentinvitetime27
+                , documentlog27
+                , documentinvitetext27
+                , documenttrustweaverreference27
+                , documentallowedidtypes27
+                , documentcsvupload27
+                , documentcancelationreason27
+                , documentsharing27
+                , documentrejectioninfo27
+                , documenttags27
+                , documentservice27
+                , documentoriginalcompany27
+                , documentattachments27
+                , documentrecordstatus27
+                , documentauthorattachments27
                 , documentsignatoryattachments27
-                , documentui27  
+                , documentui27
                 }) = Document28
                 { documentid28                     = documentid27
                 , documenttitle28                  = documenttitle27
@@ -2020,35 +2020,35 @@ instance Migrate Document27 Document28 where
 
 instance Migrate Document28 Document29 where
     migrate ( Document28
-                { documentid28                 
-                , documenttitle28             
-                , documentsignatorylinks28    
-                , documentfiles28            
-                , documentsealedfiles28    
-                , documentstatus28       
-                , documenttype28          
-                , documentfunctionality28  
-                , documentctime28         
-                , documentmtime28         
-                , documentdaystosign28     
-                , documenttimeouttime28    
-                , documentinvitetime28    
-                , documentlog28           
-                , documentinvitetext28       
-                , documenttrustweaverreference28  
-                , documentallowedidtypes28    
-                , documentcsvupload28       
-                , documentcancelationreason28  
-                , documentsharing28        
-                , documentrejectioninfo28    
-                , documenttags28          
-                , documentservice28           
-                , documentoriginalcompany28    
-                , documentattachments28       
-                , documentdeleted28   
-                , documentauthorattachments28 
+                { documentid28
+                , documenttitle28
+                , documentsignatorylinks28
+                , documentfiles28
+                , documentsealedfiles28
+                , documentstatus28
+                , documenttype28
+                , documentfunctionality28
+                , documentctime28
+                , documentmtime28
+                , documentdaystosign28
+                , documenttimeouttime28
+                , documentinvitetime28
+                , documentlog28
+                , documentinvitetext28
+                , documenttrustweaverreference28
+                , documentallowedidtypes28
+                , documentcsvupload28
+                , documentcancelationreason28
+                , documentsharing28
+                , documentrejectioninfo28
+                , documenttags28
+                , documentservice28
+                , documentoriginalcompany28
+                , documentattachments28
+                , documentdeleted28
+                , documentauthorattachments28
                 , documentsignatoryattachments28
-                , documentui28  
+                , documentui28
                 }) = Document29
                 { documentid29                     = documentid28
                 , documenttitle29                  = documenttitle28
@@ -2094,34 +2094,34 @@ instance Migrate Document28 Document29 where
 
 instance Migrate Document29 Document30 where
     migrate ( Document29
-                { documentid29                 
-                , documenttitle29             
-                , documentsignatorylinks29    
-                , documentfiles29            
-                , documentsealedfiles29    
-                , documentstatus29       
-                , documenttype29          
-                , documentfunctionality29  
-                , documentctime29         
-                , documentmtime29         
-                , documentdaystosign29     
-                , documenttimeouttime29    
-                , documentinvitetime29    
-                , documentlog29           
-                , documentinvitetext29       
+                { documentid29
+                , documenttitle29
+                , documentsignatorylinks29
+                , documentfiles29
+                , documentsealedfiles29
+                , documentstatus29
+                , documenttype29
+                , documentfunctionality29
+                , documentctime29
+                , documentmtime29
+                , documentdaystosign29
+                , documenttimeouttime29
+                , documentinvitetime29
+                , documentlog29
+                , documentinvitetext29
                 , documenttrustweaverreference29
-                , documentallowedidtypes29    
-                , documentcsvupload29       
-                , documentcancelationreason29  
-                , documentsharing29        
-                , documentrejectioninfo29    
-                , documenttags29          
-                , documentservice29    
+                , documentallowedidtypes29
+                , documentcsvupload29
+                , documentcancelationreason29
+                , documentsharing29
+                , documentrejectioninfo29
+                , documenttags29
+                , documentservice29
                 , documentattachments29
-                , documentdeleted29   
-                , documentauthorattachments29 
+                , documentdeleted29
+                , documentauthorattachments29
                 , documentsignatoryattachments29
-                , documentui29  
+                , documentui29
                 }) = Document30
                 { documentid30                     = documentid29
                 , documenttitle30                  = documenttitle29
@@ -2173,35 +2173,35 @@ ensureDocumentHasNoUnsafePerformIO document =
 
 instance Migrate Document30 Document where
     migrate ( Document30
-        { documentid30                     
-        , documenttitle30                  
-        , documentsignatorylinks30         
-        , documentfiles30                  
-        , documentsealedfiles30            
-        , documentstatus30                 
-        , documenttype30                   
-        , documentfunctionality30          
-        , documentctime30                  
-        , documentmtime30                  
-        , documentdaystosign30             
-        , documenttimeouttime30            
-        , documentinvitetime30             
-        , documentlog30                    
-        , documentinvitetext30             
-        , documenttrustweaverreference30 = _ -- dropped     
-        , documentallowedidtypes30         
-        , documentcsvupload30              
-        , documentcancelationreason30      
-        , documentsharing30                
-        , documentrejectioninfo30          
-        , documenttags30                   
-        , documentservice30                
-        , documentattachments30 = _ -- dropped              
-        , documentdeleted30                
-        , documentauthorattachments30      
-        , documentsignatoryattachments30   
-        , documentui30                     
-        , documentregion30                 
+        { documentid30
+        , documenttitle30
+        , documentsignatorylinks30
+        , documentfiles30
+        , documentsealedfiles30
+        , documentstatus30
+        , documenttype30
+        , documentfunctionality30
+        , documentctime30
+        , documentmtime30
+        , documentdaystosign30
+        , documenttimeouttime30
+        , documentinvitetime30
+        , documentlog30
+        , documentinvitetext30
+        , documenttrustweaverreference30 = _ -- dropped
+        , documentallowedidtypes30
+        , documentcsvupload30
+        , documentcancelationreason30
+        , documentsharing30
+        , documentrejectioninfo30
+        , documenttags30
+        , documentservice30
+        , documentattachments30 = _ -- dropped
+        , documentdeleted30
+        , documentauthorattachments30
+        , documentsignatoryattachments30
+        , documentui30
+        , documentregion30
         }) = ensureDocumentHasNoUnsafePerformIO $ Document
         { documentid                     = documentid30
         , documenttitle                  = documenttitle30
@@ -2281,17 +2281,17 @@ type Documents = IxSet Document
 
 
 instance Indexable Document where
-  empty = 
+  empty =
     ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
             -- wait, wait, wait: the following is wrong, signatory link ids are valid only in
             -- the scope of a single document! FIXME
-          , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])           
+          , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])
           , ixFun $ ifDocumentNotDeleted (maybeToList . documenttimeouttime)
           , ixFun $ ifDocumentNotDeleted (\x -> [documenttype x] :: [DocumentType])
           , ixFun $ ifDocumentNotDeleted (\x -> documenttags x :: [DocumentTag])
           , ixFun $ ifDocumentNotDeleted (\x -> [documentservice x] :: [Maybe ServiceID])
           , ixFun $ ifDocumentNotDeleted (\x -> [documentstatus x] :: [DocumentStatus])
-          
+
           , ixFun $ ifDocumentNotDeleted (\x ->
                       (map Signatory . catMaybes . map maybesignatory $ undeletedSigLinks x) :: [Signatory])
           , ixFun $ ifDocumentNotDeleted (\x ->

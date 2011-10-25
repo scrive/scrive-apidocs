@@ -10,7 +10,7 @@
 -- standard data wrappers.
 -----------------------------------------------------------------------------
 module Templates.TemplatesUtils
-(option,soption,Option(..),markParity,kontramail,contextFields) where
+(option,soption,Option(..),markParity,kontramail,kontramaillocal,contextFields) where
 
 import Control.Monad.IO.Class
 import Data.Data
@@ -21,6 +21,7 @@ import Data.Char
 import qualified AppLogger as Log
 import qualified Data.ByteString.UTF8 as BS
 import Kontra
+import User.Locale
 
 {- Common templates - should be shared and it seams like a good place for them -}
 
@@ -69,15 +70,26 @@ markOdd f = do
     field "even" False
     field "odd"  True
 
+
+kontramaillocal :: (HasLocale a, TemplatesMonad m) => a -> String -> Fields m -> m Mail
+kontramaillocal haslocale = kontramail' (renderLocalTemplateFM haslocale)
+
 kontramail :: TemplatesMonad m  => String -> Fields m -> m Mail
-kontramail tname fields = do
-    Log.debug "Mail rendering by kontramail"
-    wholemail <- renderTemplateFM tname fields
+kontramail = kontramail' renderTemplateFM
+
+kontramail':: TemplatesMonad m
+              => (String -> Fields m -> m String)
+              -> String
+              -> Fields m
+              -> m Mail
+kontramail' renderFunc tname fields = do
+    Log.debug "Mail rendering by kontramail'"
+    wholemail <- renderFunc tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
-    Log.debug $ "kontramail->Title:" ++ title
+    Log.debug $ "kontramail'->Title:" ++ title
     return $ emptyMail  {   title   = BS.fromString title
                           , content = BS.fromString content
                         }
-                        
-contextFields ::(MonadIO m) => Context -> Fields m                       
+
+contextFields ::(MonadIO m) => Context -> Fields m
 contextFields ctx = field "ctxhostpart" (ctxhostpart ctx)

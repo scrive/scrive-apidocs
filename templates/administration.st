@@ -465,7 +465,6 @@ admincompanyusers=
               <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
               <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
-              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
          <tr>
@@ -531,7 +530,7 @@ userusagestats=
 	</div>
       </div>
     </div>
-####	    
+####
 companyusagestats=
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
@@ -714,7 +713,6 @@ pageStats=
               <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
               <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
                 </select>
-              <p>For now you'll need to switch your own region to match (sorry I'm a lazy dev -- em)</p>
             </td>
           </tr>
           <tr>
@@ -765,7 +763,7 @@ $backtoadminmainlink()$
   </tr>
 </thead>
 <tbody>
-$services:{service |<tr> 
+$services:{service |<tr>
     <td>$service.name$ </td>
     <td>$service.admin$ </td>
     <td>$service.location$ </td>
@@ -790,7 +788,7 @@ $services:{service |<tr>
 <BR/>
 <BR/>
 ###
-adminTranslations = 
+adminTranslations =
 
 
 <center><h2> Translation stats </h2>

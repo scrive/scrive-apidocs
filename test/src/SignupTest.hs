@@ -36,8 +36,9 @@ signupTests conn = testGroup "Signup" [
 
 testSignupAndActivate :: Connection -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -56,8 +57,9 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
 testViralInviteAndActivate :: Connection -> Assertion
 testViralInviteAndActivate conn = withTestEnvironment conn $ do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just inviter })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
    -- enter the email to invite
   (res1, ctx1) <- inviteToAccount ctx "emily@scrive.com"
@@ -76,8 +78,9 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
 
 testAcceptTOSToActivate :: Connection -> Assertion
 testAcceptTOSToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -91,8 +94,9 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
 
 testNeedPasswordToActivate :: Connection -> Assertion
 testNeedPasswordToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -106,8 +110,9 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
 
 testPasswordsMatchToActivate :: Connection -> Assertion
 testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"

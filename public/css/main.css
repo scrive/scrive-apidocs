@@ -3,7 +3,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp,
 small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary, time, mark, audio, video {
 	margin: 0;
 	padding: 0;
@@ -247,7 +247,7 @@ a.new-btn-small.black p {
 	background: url(../img/bg-header.jpg) repeat-x;
 	height: 430px;
 	min-width: 960px;
-	
+
 }
 
 #top-container .person {
@@ -1069,7 +1069,7 @@ a.new-btn-small.black p {
 
 
 #body-container .highlight-container .highlight-rows li.bottom a {
-	color: #35A4D6; 
+	color: #35A4D6;
 	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
@@ -1191,15 +1191,6 @@ div.price-plan-details {
 	min-width: 940px;
 }
 
-#top-slim-container .skrivapa-logo {
-	background: url(../img/logo-skrivapa-small.png);
-	display: block;
-	float: left;
-	height: 35px;
-	margin-top: 9px;
-	width: 137px;
-    margin-left: -8px;
-}
 #top-slim-container .scrive-logo {
     background: url(../img/logo-scrive-small.png);
     display: block;
@@ -1782,31 +1773,31 @@ top: 0px;
 }
 
 .group-portrait-image a.group {
-      background: url(../img/group-portrait-1.jpg) center no-repeat;      
+      background: url(../img/group-portrait-1.jpg) center no-repeat;
 }
 
 .group-portrait-image a.group:hover {
-      background: url(../img/group-portrait-2.jpg) center no-repeat;      
+      background: url(../img/group-portrait-2.jpg) center no-repeat;
 }
 
 .portrait-image a.lukas {
-      background: url(../img/lukas-portrait-1.jpg) center no-repeat;      
+      background: url(../img/lukas-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.lukas:hover {
-      background: url(../img/lukas-portrait-2.jpg) center no-repeat;      
+      background: url(../img/lukas-portrait-2.jpg) center no-repeat;
 }
 
 .portrait-image a.gracjan {
-      background: url(../img/gracjan-portrait-1.jpg) center no-repeat;      
+      background: url(../img/gracjan-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.gracjan:hover {
-      background: url(../img/gracjan-portrait-2.jpg) center no-repeat;      
+      background: url(../img/gracjan-portrait-2.jpg) center no-repeat;
 }
 
 .portrait-image a.viktor {
-      background: url(../img/viktor-portrait-1.jpg) center no-repeat;      
+      background: url(../img/viktor-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.viktor:hover {
@@ -1814,7 +1805,7 @@ top: 0px;
 }
 
 .portrait-image a.mariusz {
-      background: url(../img/mariusz-portrait-1.jpg) center no-repeat;      
+      background: url(../img/mariusz-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.mariusz:hover {
@@ -1822,7 +1813,7 @@ top: 0px;
 }
 
 .portrait-image a.eric {
-      background: url(../img/missing-portrait.png) center no-repeat;      
+      background: url(../img/missing-portrait.png) center no-repeat;
 }
 
 .portrait-image a.eric:hover {
@@ -1830,7 +1821,7 @@ top: 0px;
 }
 
 .portrait-image a.emily {
-      background: url(../img/emily-portrait-1.jpg) center no-repeat;      
+      background: url(../img/emily-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.emily:hover {
@@ -1838,7 +1829,7 @@ top: 0px;
 }
 
 .portrait-image a.oskar {
-      background: url(../img/missing-portrait.png) center no-repeat;      
+      background: url(../img/missing-portrait.png) center no-repeat;
 }
 
 .portrait-image a.oskar:hover {
@@ -1846,7 +1837,7 @@ top: 0px;
 }
 
 .portrait-image a.nazli {
-      background: url(../img/nazli-portrait-1.jpg) center no-repeat;      
+      background: url(../img/nazli-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.nazli:hover {
@@ -1854,7 +1845,7 @@ top: 0px;
 }
 
 .portrait-image a.belle {
-      background: url(../img/missing-portrait.png) center no-repeat;      
+      background: url(../img/missing-portrait.png) center no-repeat;
 }
 
 .portrait-image a.belle:hover {
@@ -2025,12 +2016,12 @@ top: 0px;
 	text-transform: uppercase;
 }
 
-.hidden { 
+.hidden {
    height:0px;
    width:0px;
    opacity:0;
-   -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; 
-   filter: alpha(opacity=0);                                      
+   -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+   filter: alpha(opacity=0);
 }
 
 input.grayed, textarea.grayed
