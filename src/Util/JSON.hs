@@ -196,10 +196,10 @@ modifyStrDef k f d obj@(JSObject _) = case getStrDef k d obj of
     Right v' -> setStr k v' obj
 modifyStrDef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
 
-modifyStr :: String -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
-modifyStr k f obj@(JSObject _) = case getStr k obj of
+_modifyStr :: String -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
+_modifyStr k f obj@(JSObject _) = case getStr k obj of
   Left s -> Left s
   Right v -> case f v of
     Left s -> Left s
     Right v' -> setStr k v' obj
-modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+_modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
