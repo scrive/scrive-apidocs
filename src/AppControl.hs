@@ -394,9 +394,9 @@ getUserLocale conn muser = do
   let browserlocale = getBrowserLocale rq
   let newlocale = firstOf [ activationlocale
                           , userlocale
+                          , doclocale
                           , urllocale
                           , currentcookielocale
-                          , doclocale
                           , Just browserlocale
                           ]
   let newlocalecookie = mkCookie "locale" (show newlocale)
