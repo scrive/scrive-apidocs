@@ -1,5 +1,5 @@
 module Templates.LocalTemplates (
-      LocalTemplates
+      LocalTemplates (..)
     , runWithTemplates
     ) where
 
