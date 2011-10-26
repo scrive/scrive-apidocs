@@ -9,7 +9,7 @@ import qualified Data.Map as Map
 import Data.List
 import Data.Char
 import Graphics.PDF.Text
-import Graphics.PDF
+import Graphics.PDF hiding (Box)
 import SealSpec
 
 winAnsiPostScriptEncode :: String -> String
@@ -243,6 +243,11 @@ contentsValueListFromPageID document' pagerefid =
         unRefID _ = error "unRefID not on ref"
     in contentlist
 
+data Box = Box Int String
+
+boxToString :: Box -> String
+boxToString (Box height content) = " q " ++ content ++ " Q " ++ "1 0 0 1 0 " ++ show (-height) ++ " cm "
+
 pagintext :: SealSpec -> String
 pagintext (SealSpec{documentNumber,initials,staticTexts }) = 
  let
@@ -271,14 +276,14 @@ pagintext (SealSpec{documentNumber,initials,staticTexts }) =
  show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60 :: Int) ++ " 18 l S " ++
  "Q "
 
-signatorybox :: SealingTexts -> Person -> String
-signatorybox sealingTexts (Person {fullname,company,companynumber,email}) = 
+signatoryBox :: SealingTexts -> Person -> Box
+signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) = 
  let
     orgnrtext = if companynumber=="" then "" else (orgNumberText sealingTexts) ++ " " ++ companynumber
     orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
     emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
     rightmargin = 595 - 46.5522
- in
+ in Box 42 $
  "BT " ++
  "0.806 0.719 0.51 0.504 k " ++
  "/TT1 1 Tf " ++
@@ -292,11 +297,7 @@ signatorybox sealingTexts (Person {fullname,company,companynumber,email}) =
  "/TT2 1 Tf " ++
  "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
  "(" ++ winAnsiPostScriptEncode email ++ ")Tj " ++
- "ET " ++ 
- -- "0.039 0.024 0.02 0 k " ++
- -- "566.479 678.209 -537.601 3.841 re " ++
- -- "f " ++
- "1 0 0 1 0 -42 cm "
+ "ET "
 
 makeManyLines :: PDFFont -> PDFFloat -> String -> [String]
 makeManyLines font width text' = result
@@ -319,61 +320,63 @@ makeManyLines font width text' = result
     textLines = takeWhileLength 0 "" textSplitWithLength
     result = map textOutLine textLines 
 
-logentry :: HistEntry -> String
-logentry (HistEntry {histdate,histcomment}) = 
- let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment) in
- "BT " ++
- "/TT2 1 Tf " ++
- "0.591 0.507 0.502 0.19 k " ++
- "10 0 0 10 46 520.8887 Tm " ++
- "(" ++ winAnsiPostScriptEncode histdate ++ ")Tj " ++
- "10 0 0 10 231 520.8887 Tm " ++
- "1.2 TL " ++
- concat outlines ++
- "ET 1 0 0 1 0 " ++ show ((-8) - length outlines * 12) ++ " cm "
+logEntryBox :: HistEntry -> Box
+logEntryBox (HistEntry {histdate,histcomment}) = 
+    let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment)
+    in
+        Box (8 + length outlines * 12) $ "BT " ++
+                "/TT2 1 Tf " ++
+                "0.591 0.507 0.502 0.19 k " ++
+                "10 0 0 10 46 520.8887 Tm " ++
+                "(" ++ winAnsiPostScriptEncode histdate ++ ")Tj " ++
+                "10 0 0 10 231 520.8887 Tm " ++
+                "1.2 TL " ++
+                concat outlines ++
+                "ET "
 
 
 lastpage :: SealSpec -> String
 lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
- "0.081 0.058 0.068 0 k " ++
- "/GS0 gs " ++
- "0.4 G " ++
- "581.839 14.37 -567.36 813.12 re " ++
- "S " ++
- "0.039 0.024 0.02 0 k " ++
- "566.479 731.97 -537.601 20.16 re " ++
- "S " ++
+    "/GS0 gs " ++
+    "0.4 G " ++
 
- "BT " ++
- "/TT0 1 Tf " ++
+    "0.081 0.058 0.068 0 k " ++
+    "581.839 14.37 -567.36 813.12 re " ++
+    "S " ++
+    "0.039 0.024 0.02 0 k " ++
+    "566.479 731.97 -537.601 20.16 re " ++
+    "S " ++
 
- "0.806 0.719 0.51 0.504 k " ++
- "21 0 0 21 39.8198 787.9463 Tm " ++
- "("++verificationTitle staticTexts++")Tj " ++
+    "BT " ++
+    "/TT0 1 Tf " ++
 
- "0.546 0.469 0.454 0.113 k " ++
- "12 0 0 12 39.8198 766.9555 Tm " ++
- "[("++docPrefix staticTexts++")55( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "21 0 0 21 39.8198 787.9463 Tm " ++
+    "(" ++ winAnsiPostScriptEncode (verificationTitle staticTexts) ++ ") Tj " ++
 
- "0.806 0.719 0.51 0.504 k " ++
- "12 0 0 12 39.8198 736.8555 Tm " ++
- "("++(partnerText  staticTexts)++")Tj " ++
- "ET " ++
+    "0.546 0.469 0.454 0.113 k " ++
+    "12 0 0 12 39.8198 766.9555 Tm " ++
+    "[(" ++ docPrefix staticTexts ++ ") 55 ( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
 
- -- every signatory on its own line, repeated every 64 pixels down
- "q " ++ concatMap (signatorybox staticTexts) persons ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "12 0 0 12 39.8198 736.8555 Tm " ++
+    "("++ winAnsiPostScriptEncode (partnerText staticTexts) ++ ")Tj " ++
+    "ET " ++
 
- (if secretaries/=[]
-  then
-     "1 0 0 1 0 -27 cm " ++
-     "BT " ++
-     "/TT0 1 Tf " ++
-     "0.806 0.719 0.51 0.504 k " ++
-     "12 0 0 12 39.8198 736.8555 Tm " ++
-     "("++(secretaryText staticTexts)++")Tj " ++
-     "ET " ++ concatMap (signatorybox staticTexts) secretaries
-  else "") ++
- "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
+    -- every signatory on its own line, repeated every 64 pixels down
+    "q " ++ concatMap (boxToString . signatoryBox staticTexts) persons ++
+
+    (if secretaries/=[]
+        then
+            "1 0 0 1 0 -27 cm " ++
+            "BT " ++
+            "/TT0 1 Tf " ++
+            "0.806 0.719 0.51 0.504 k " ++
+            "12 0 0 12 39.8198 736.8555 Tm " ++
+            "(" ++ (secretaryText staticTexts) ++ ")Tj " ++
+            "ET " ++ concatMap (boxToString . signatoryBox staticTexts) secretaries
+        else "") ++
+    "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
  
 
  -- Datum and Handelse
@@ -397,7 +400,7 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
 
 
  -- logentry
- concatMap logentry history ++
+ concatMap (boxToString . logEntryBox) history ++
 
  "Q " ++
 
