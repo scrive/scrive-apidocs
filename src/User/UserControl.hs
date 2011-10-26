@@ -85,20 +85,16 @@ handleUserPost = do
       if isNothing mcompany && createcompany
         then do
           -- they've submitted the modal so
-          -- check all the required fields have been filled in okay
-          mcname <- getRequiredField asValidCompanyName "companyname"
-          mfstname <- getRequiredField asValidName "fstname"
-          msndname <- getRequiredField asValidName "sndname"
-          mposition <- getRequiredField asValidPosition "companyposition"
-          mphone <- getRequiredField asValidPhone "phone"
-          case (mcname, mfstname, msndname, mposition, mphone) of
-            (Just _, Just _, Just _, Just _, Just _) -> do
+          -- check they've at least filled in a name
+          mcompanyname <- getRequiredField asValidCompanyName "companyname"
+          case mcompanyname of
+            Just _ -> do
               company <- runDBUpdate $ CreateCompany Nothing Nothing
               _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
               _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
               upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
               return (upgradeduser, Just flashMessageCompanyCreated, LinkAccount False)
-            _ -> return (user, Nothing, LinkAccount True)
+            Nothing -> return (user, Nothing, LinkAccount True)
         else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
