@@ -26,7 +26,7 @@ describe "sign up" do
     @driver.quit
   end
 
-  it "can be requested on front page and ensures users click the tos and enter a password to activate" do
+  it "can be requested on front page and ensures users click the tos and enter their name and a password to activate" do
 
     random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
     puts "using random email : " + random_email
@@ -50,6 +50,18 @@ describe "sign up" do
     #accept the tos
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
+    #make sure we get a red flash if we try to activate without filling in a name
+    (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
+    @wait.until { @driver.find_element :css => ".flash-container.red" }
+    @wait.until { @driver.find_element :id => "tosCBox" }
+
+    #accept the tos again
+    (@wait.until { @driver.find_element :id => "tosCBox" }).click
+
+    #fill in a name
+    (@wait.until { @driver.find_element :name => "fstname" }).send_keys "Random"
+    (@wait.until { @driver.find_element :name => "sndname" }).send_keys "Person"
+
     #make sure we get a red flash if we try to activate without filling in the password details
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
@@ -57,6 +69,10 @@ describe "sign up" do
 
     #accept the tos again
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
+
+    #fill in a name again
+    (@wait.until { @driver.find_element :name => "fstname" }).send_keys "Random"
+    (@wait.until { @driver.find_element :name => "sndname" }).send_keys "Person"
 
     #fill in the password details incorrectly and make sure we get red flash message
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
@@ -67,6 +83,10 @@ describe "sign up" do
 
     #accept the tos yet again
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
+
+    #fill in a name for the last time
+    (@wait.until { @driver.find_element :name => "fstname" }).send_keys "Random"
+    (@wait.until { @driver.find_element :name => "sndname" }).send_keys "Person"
 
     #fill in the password details correctly
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"

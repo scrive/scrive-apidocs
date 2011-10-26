@@ -680,7 +680,9 @@ handleAccountSetupGet aid hash = do
       sendRedirect LinkUpload
     (False, Just _action) -> do
       extendActionEvalTimeToOneDayMinimum aid
-      addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser)
+                                    (maybe "" (BS.toString . getFirstName) muser)
+                                    (maybe "" (BS.toString . getLastName) muser)
       ctx <- getContext
       sendRedirect $ LinkHome (ctxlocale ctx)
     (False, Nothing) -> do
@@ -813,16 +815,29 @@ handleActivate aid hash signupmethod actvuser = do
   Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
+  -- unless they're signing up from the sign view we require a fstname and a sndname
+  -- to be filled in
+  (mfstname, msndname) <-
+    case signupmethod of
+      BySigning -> return (Just $ getFirstName actvuser, Just $ getLastName actvuser)
+      _ -> do
+        mfn <- getRequiredField asValidName "fstname"
+        msn <- getRequiredField asValidName "sndname"
+        return (mfn, msn)
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
-  case (mtos, mpassword, mpassword2) of
-    (Just tos, Just password, Just password2) -> do
+  case (mtos, mfstname, msndname, mpassword, mpassword2) of
+    (Just tos, Just fstname, Just sndname, Just password, Just password2) -> do
       case checkPasswordsMatch password password2 of
         Right () ->
           if tos
             then do
               passwordhash <- liftIO $ createPassword password
               runDB $ do
+                _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
+                         userfstname = fstname
+                       , usersndname = sndname
+                       }
                 _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
@@ -842,7 +857,9 @@ handleActivate aid hash signupmethod actvuser = do
   where
     returnToAccountSetup :: Kontrakcja n => n (Maybe User)
     returnToAccountSetup = do
-      addFlashM $ modalAccountSetup $ LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser
+      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser)
+                                    (BS.toString $ getFirstName actvuser)
+                                    (BS.toString $ getLastName actvuser)
       return Nothing
 
 {- |

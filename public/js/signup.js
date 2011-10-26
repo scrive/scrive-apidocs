@@ -1,11 +1,12 @@
 safeReady(function() {
-  $("#passwordInfo").hide();
+  $("#signupInfo").hide();
 
   $("#tosCBox").change(function() {
     if ($("#tosCBox").attr("checked")) {
-      $("#passwordInfo").show();
+      $("#signupInfo").show();
+      $("#signupInfo input")[0].focus();
     } else {
-      $("#passwordInfo").hide();
+      $("#signupInfo").hide();
     }
   });
 });

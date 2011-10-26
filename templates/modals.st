@@ -163,7 +163,15 @@ modalAccountSetup=
           <input type="checkbox" id="tosCBox" name="tos" />
           <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
         </div>
-        <table id="passwordInfo"><tbody>
+        <table id="signupInfo"><tbody>
+            <tr>
+                <td>$_firstname()$:</td>
+                <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+            </tr>
+            <tr>
+                <td>$_lastname()$:</td>
+                <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+            </tr>
             <tr>
                 <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
                 <td><input type="password" name="password" autocomplete="off"/></td>

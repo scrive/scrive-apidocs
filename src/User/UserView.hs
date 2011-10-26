@@ -278,10 +278,12 @@ modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => KontraLink -> m FlashMessage
-modalAccountSetup signuplink = do
+modalAccountSetup :: MonadIO m => KontraLink -> String -> String -> m FlashMessage
+modalAccountSetup signuplink fstname sndname = do
   return $ toFlashTemplate Modal "modalAccountSetup" $
-    [("signuplink", show signuplink)]
+    [ ("signuplink", show signuplink)
+    , ("fstname", fstname)
+    , ("sndname", sndname) ]
 
 modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
 modalAccountRemoval doctitle activationlink removallink = do
