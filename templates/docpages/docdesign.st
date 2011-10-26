@@ -1,14 +1,14 @@
 #####
 pageDocumentDesign=
 <div style="display: none">
-  <script type="text/javascript"> 
+  <script type="text/javascript">
     var documentid = "$documentid$";
   </script>
 </div>
 <div id="signStepsWrapper" style="display:none">
 
   <div id="signStepsContainer" class="follow" >
-    
+
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">
         $if(template)$
@@ -19,7 +19,7 @@ pageDocumentDesign=
         $docname()$
       </span>
     </div>
-    
+
     <div id="signStepsMenu" class="signStepsMenu">
       <div id="step1select">
         <span class="step1select clickArea"></span>
@@ -32,7 +32,7 @@ pageDocumentDesign=
           $endif$
         </span>
       </div>
-      
+
       <div id="step2select" class="$if(step2)$current$endif$">
         <a href="#" class="step2select clickArea"></a>
         <a href="#" class="step2select step2icon"> </a>
@@ -44,7 +44,7 @@ pageDocumentDesign=
           $else$
           $_step2selectIfElse()$
           $endif$
-        </a>  
+        </a>
       </div>
       $if(!isbasic)$
       <!-- Basic stuff doesn't have step 3 -->
@@ -102,12 +102,12 @@ pageDocumentDesign=
                 <div class="signStepsBodyTitle">
                   <span>$_signStep2ContentPersons()$</span><span id="signorderlisttitle" class="float-right">$_signStep2ContentSignOrder()$</span>
                 </div>
-                
+
                 <div id="peopleList" class="signStepsBodyForms">
                   <ol>
                   </ol>
                 </div>
-                
+
                 <!--<div class="signStepsBodyAddField partCount">
                     <span>Visa</span>
                     <a href="">11-20</a>,
@@ -117,7 +117,7 @@ pageDocumentDesign=
               </div>
             </div>
             $endif$
-            
+
             <div id="personpane">
               <span class="persondetails authordetails">
                 <!-- 008 change/new -->
@@ -137,7 +137,7 @@ pageDocumentDesign=
                   <a class="plus" href="#"></a>
                   $endif$
                 </div>
-                
+
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
                   <span class="fields">
@@ -174,7 +174,7 @@ pageDocumentDesign=
                       <span style="display:none;" class="fieldid">company</span>
                       <span style="display:none;" class="fieldsigid">author</span>
                       <span style="display:none;" class="type">sig</span>
-                      
+
                       <span class="fieldvalue">$authorcompany$</span>
                       $dragndropIcon()$
                     </span>
@@ -210,12 +210,12 @@ pageDocumentDesign=
                     <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory"><span class="radiolabel">$_authorsignatoryradioSenderSign()$</span></input>
                     <br/>
                     <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary"><span class="radiolabel">$_authorsignatoryradioSenderNotSign()$</span></input>
-                  </div>                  
+                  </div>
                 </div>
               </span>
-              
+
             </div>
-            
+
             <div id="signStepsBodyFunctions">
               $if(!isbasic)$
               <div id="signStepsBodyFunctionsBox">
@@ -231,7 +231,7 @@ pageDocumentDesign=
                       <span class="btn-symbol green arrow-left"></span>
                     </div>
                     <div class="right"></div>
-                  </a>  
+                  </a>
                 </div>
               </div>
               $else$
@@ -285,7 +285,7 @@ pageDocumentDesign=
                     <div class="label" style="">
                       <span>$process.sendbuttontext$</span>
                       <span class="btn-symbol green arrow-left" ></span>
-                    </div> 
+                    </div>
                     <div class="right"></div>
                   </a>
                 </div>
@@ -296,7 +296,7 @@ pageDocumentDesign=
                     <div class="label" style="width:134px;">
                        <span style="padding-left:9px;padding-right:9px">$process.signbuttontext$</span>
                       <span class="btn-symbol cross"></span>
-                    </div> 
+                    </div>
                     <div class="right"></div>
                   </a>
                 </div>
@@ -305,20 +305,20 @@ pageDocumentDesign=
               $endif$
             </div>
           </div>
-        </div>  
+        </div>
 
         $if(!isbasic)$
         <div id="signStep3Content" $if(!step3)$ style="display: none" $endif$>
 
           <div id="signStepsBody">
-            
+
             <div id="signStepsBodyLeft" class="step3">
               <div class="options">
                 <p>
                   <span>
-                    <input style="position:relative;top:2px" 
-                           type="checkbox" 
-                           class="addremovecheckbox flashOnOn" 
+                    <input style="position:relative;top:2px"
+                           type="checkbox"
+                           class="addremovecheckbox flashOnOn"
                            flashtype="red"
                            rel="#daystosignbox"
                            location="#datetosigncontainer"
@@ -331,17 +331,17 @@ pageDocumentDesign=
                     <div id="datetosigncontainer" style="padding-left:20px">  </div>
                   </span>
                 </p>
-                
-                
-                <!-- 
+
+
+                <!--
                      <p class="signStepsBodySaveMethods">
-                       <label for="c">Lagring</label> 
+                       <label for="c">Lagring</label>
                        <select id="c">
                          <option value="1">Standard</option>
                          <option value="2">Trustweaver</option>
-                         
+
                          <option value="3">Option 3</option>
-                       </select> 
+                       </select>
                      </p>
                      -->
               </div>
@@ -370,10 +370,14 @@ pageDocumentDesign=
                 </small>
               </div>
             </div>
-            
-            <div class="border"></div>   
-            <div id="signStepsBodyRight" class="step3">      
-              <!-- 015 new -->
+
+            <div class="border"></div>
+            <div id="signStepsBodyRight" class="step3">
+              <label for="docregionselector">$_documentLanguageLabel()$:</label>
+              <select id="docregionselector">
+                <option value="REGION_GB" $if(region.gb)$selected="selected"$endif$ rel="#dialog-confirm-region-gb">$_English()$</option>
+                <option value="REGION_SE" $if(region.se)$selected="selected"$endif$  rel="#dialog-confirm-region-se">$_Swedish()$</option>
+              </select>
             </div>
             <div class="border"></div>
 
@@ -381,7 +385,7 @@ pageDocumentDesign=
               <div class="signStepsBodyFunctionsBox options">
                 <!--
                     <p>
-                      <label for="d">Metod</label> 
+                      <label for="d">Metod</label>
                       <select id="d">
                         <option value="1">e-post</option>
                         <option value="2">e-legitimation</option>
@@ -390,8 +394,8 @@ pageDocumentDesign=
                     </p>
                     -->
                 <!-- 013 changed sign button tag -->
-                
-                
+
+
               </div>
               $if(template)$
               <a class="btn-small green center submiter saveTemplate">
@@ -413,7 +417,7 @@ pageDocumentDesign=
                   style="position:relative;top:2px" type="checkbox"
                   class="sendcheckbox" on=".sendbutton"
                   off=".signbutton" autocomplete="off" name="signlast"
-                   $if(signlast)$checked="checked" value="on"$else$value="off"$endif$ > 
+                   $if(signlast)$checked="checked" value="on"$else$value="off"$endif$ >
                   <label for="switchercheckbox" class="usual" style="margin-left:3px;">$_switchercheckboxSignLast()$</label>
                   <label class="secretary"
                   style="margin-left:3px;display:none;">$_switchercheckboxNotSignatory()$</label></input>
@@ -426,7 +430,7 @@ pageDocumentDesign=
 		                  <span>$process.sendbuttontext$</span>
                       <span class="btn-symbol green arrow-left"
                             style="position:relative;top:3px;right:0px"></span>
-	                  </div> 
+	                  </div>
                     <div class="right"></div>
                   </a>
                 </div>
@@ -437,7 +441,7 @@ pageDocumentDesign=
                     <div class="label" style="width: 120px;">
                     <span>$process.signbuttontext$</span>
                       <span class="icon cross"></span>
-                    </div> 
+                    </div>
                     <div class="right"></div>
                   </a>
                 </div>
@@ -446,16 +450,16 @@ pageDocumentDesign=
               $endif$
 
             </div>
-            
-          </div>            
+
+          </div>
         </div>
         $endif$
       </form>
     </div>
   </div>
   $pageDocumentForAuthorHelpersLocalDialogs()$
-  
-</div>  
+
+</div>
 <div id="documentBox">
   <script type="text/javascript">
     var signingOrderEnabled = false;
@@ -478,7 +482,7 @@ pageDocumentDesign=
   </span>
   <span class="csvfileinfo"><a href="#" class="csvinfo$if(!isvalidcsv)$ csvinvalid$endif$" rel="#dialog-csvupload-2">Granska data</a></span>
   <span class="persondetails">
-    
+
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
@@ -499,7 +503,7 @@ pageDocumentDesign=
       <a href="#" class="plus"></a>
       $endif$
     </div>
-    
+
     <!-- 013 changed -->
     <div class="sigentry signStepsBodyForms $if(isbasic)$dragDisabled$endif$" id="peopleDetails">
 
@@ -580,7 +584,7 @@ $if(!isbasic)$
 <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
 $endif$
 #####
-validationdropdown= 
+validationdropdown=
 <div>
   <span>$_validationdropdownChooseVMethod()$</span>
   <select name="validationmethod"
@@ -588,7 +592,7 @@ validationdropdown=
     <option value="email" $if(emailselected)$selected="selected"$endif$>$_email()$</option>
     <option value="eleg" $if(elegselected)$selected="selected"$endif$>$_eleg()$</option>
   </select>
-</div> 
+</div>
 #####
 emailhidden=
 <input type="hidden" value="email" name="validationmethod" />
@@ -596,10 +600,10 @@ emailhidden=
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
   $loadingdialog()$
-  
+
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
     <input type="hidden" name="sigattachments" value="true" />
-    
+
     <div class="modal-container" style="width:740px;left:-50px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
@@ -610,7 +614,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-body" style="padding-left:20px;padding-right:20px;">
         <div class="modal-content">
-          <div style="padding-bottom:10px;">     
+          <div style="padding-bottom:10px;">
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
           <div class="sigattachmentlist">
@@ -644,7 +648,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                     <ul class="selectedsigs">
                       $a.signatories:{s|
                       <li>
-                        $s.signame$ 
+                        $s.signame$
                         <a href="#" class="remove">x</a>
                         <span style="display:none" class="sigemail">$s.sigemail$</span>
                       </li>
@@ -698,13 +702,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div id="attachmentbuttons">
             <div class="signStepsBodyUploadBox">
               <div>
-                <span id="signStepsBodyUploadTextContainer"> 
+                <span id="signStepsBodyUploadTextContainer">
                   <span class="header">$_updateAttachmentsDialogUpLoad()$</span><br/>
-                  <span class="text">$_updateAttachmentsDialogUpLoadOnlyPDF()$</span> 
+                  <span class="text">$_updateAttachmentsDialogUpLoadOnlyPDF()$</span>
                 </span>
               </div>
               <div class="signStepsButtonContainer">
-                <a class="btn-small green">  
+                <a class="btn-small green">
                   <div class="left"> </div>
                   <div class="label" style="width:100px">$_updateAttachmentsDialogUpLoadChooseFile()$</div>
                   <div class="right"> </div>
@@ -715,13 +719,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
             $if(!fromservice)$
             <div class="signStepsBodyUploadBox">
               <div>
-                <span id="signStepsBodyUploadTextContainer"> 
+                <span id="signStepsBodyUploadTextContainer">
                   <span class="header">$_updateAttachmentsDialogUpLoadChooseAttachment()$</span><br/>
                   <span class="text">$_updateAttachmentsDialogUpLoadSaved()$</span>
                 </span>
               </div>
               <div class="signStepsButtonContainer">
-                <a id="showexistingattachments" class="btn-small green">  
+                <a id="showexistingattachments" class="btn-small green">
                   <div class="left"> </div>
                   <div class="label" style="width:100px">$_updateAttachmentsDialogUpLoadChooseExistingAttachment()$</div>
                   <div class="right"> </div>
@@ -794,13 +798,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div>$_dialogCsvupload1Body()$</div>
           <div class="signStepsBodyUploadBox" style="right: 0px; left: 0px; float: none; margin-left: auto; margin-right: auto;">
             <div>
-              <span id="signStepsBodyUploadTextContainer"> 
+              <span id="signStepsBodyUploadTextContainer">
                 <span class="header">$_dialogCsvupload1ChooseFileToUpLoad()$</span><br/>
                 <span class="text">$_dialogCsvupload1CSVOnly()$</span>
               </span>
             </div>
             <div class="signStepsButtonContainer">
-              <a class="btn-small green">  
+              <a class="btn-small green">
                 <div class="left"> </div>
                 <div class="label" style="width:100px">$_dialogCsvupload1ChooseFile()$</div>
                 <div class="right"> </div>
@@ -816,7 +820,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
   </form>
-  
+
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-2" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
     <div class="modal-container csv-dialog-2-container">
@@ -924,13 +928,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
 </div>
 </div>
 <div class="modal-footer">
-  
-  <a class="cancel float-left" style="height:40px;">  
+
+  <a class="cancel float-left" style="height:40px;">
           <div class="label">$_dialogCsvupload2CSVMultiChooseFile()$</div>
     <input class="multiFileInput submitOnUpload" style="width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
     <div class="filelist" style="display:none;"></div>
   </a>
-  
+
   <a class="btn-small green float-right close" href="#">
     <div class="left"></div>
           <div class="label"><p>$_save()$</p></div>
@@ -938,6 +942,64 @@ pageDocumentForAuthorHelpersLocalDialogs=
   </a>
 </div>
 </div>
+</form>
+
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-region-gb" rel=".stepForm">
+  <input type="hidden" name="changedoclocale" value="true" />
+  <input type="hidden" name="docregion" value="REGION_GB"/>
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+          <h2 id="dialog-title">$_signInEnglish()$</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        $_signInEnglishConfirmText()$
+      </div>
+    </div>
+    <div class="modal-footer">
+        <a  class="close cancel float-left">$_cancel()$</a>
+      <a href="#" class="btn-small green float-right submit">
+        <div class="left"></div>
+        <div class="label">
+            <span>$_signInEnglish()$</span>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
+
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-region-se" rel=".stepForm">
+  <input type="hidden" name="changedoclocale" value="true" />
+  <input type="hidden" name="docregion" value="REGION_SE" />
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+          <h2 id="dialog-title">$_signInSwedish()$</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        $_signInSwedishConfirmText()$
+      </div>
+    </div>
+    <div class="modal-footer">
+        <a  class="close cancel float-left">$_cancel()$</a>
+      <a href="#" class="btn-small green float-right submit">
+        <div class="left"></div>
+        <div class="label">
+            <span>$_signInSwedish()$</span>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
 </form>
 
 <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-advanced" rel=".stepForm">
@@ -953,7 +1015,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-          <p>$_dialogConfirmAdvancedBody()$</p>
+        <p>$_dialogConfirmAdvancedBody()$</p>
       </div>
     </div>
     <div class="modal-footer">
@@ -984,7 +1046,39 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-content">
         <p>
             $_dialogConfirmBasicChangeToBody()$</p>
-        <p> 
+        <p>
+            $_dialogConfirmBasicChangeToBody2()$</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+        <a  class="close cancel float-left">$_cancel()$</a>
+      <a href="#" class="btn-small green float-right submiter tobasic">
+        <div class="left"></div>
+        <div class="label">
+            <span>$_dialogConfirmBasicChangeToChangeProcess()$</span>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
+
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
+  <input type="hidden" name="changefunctionality" value="true" />
+  <input type="hidden" name="tobasic" value="true" />
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+          <h2 id="dialog-title">$_dialogConfirmBasicChangeToHead()$</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>
+            $_dialogConfirmBasicChangeToBody()$</p>
+        <p>
             $_dialogConfirmBasicChangeToBody2()$</p>
       </div>
     </div>
@@ -1003,7 +1097,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
 <form method="post" name="form" action="$linkissuedoc$"
       class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
-      rel=".stepForm">  
+      rel=".stepForm">
   <div class="modal-container">
     <div class="modal-header">
       <span class="modal-icon message"></span>
@@ -1049,12 +1143,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <img src="/img/nordea.png" alt="Nordea Eleg" />
         </a>
       </span>
-      
+
     </div>
   </div>
 </form>
 
-<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
+<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">
   <div class="modal-container">
     <div class="modal-header">
       <span class="modal-icon message"></span>
@@ -1067,7 +1161,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        $if(!process.isauthorsend)$ 
+        $if(!process.isauthorsend)$
         <div id="dialog-confirm-text-send">
             <p>$_dialogConfirmSendinviteBody()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody2To()$<span class="Xinvited">Invited</span>?</p>
         </div>
@@ -1129,11 +1223,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </a>
     </div>
   </div>
-</form>  
+</form>
 
 <div class="hidden" id="hiddenttimestuffbox">
   <div id="daystosignbox">
-    <span> 
+    <span>
         $process.expirytext$ <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />$_signStepsBodyDaysLeftToSign()$</span>
     <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div>
   </div>

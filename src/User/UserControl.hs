@@ -55,7 +55,7 @@ handleUserGet = checkUserTOSGet $ do
          Just user -> do
            mcompany <- getCompanyForUser user
            showUser user mcompany createcompany >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
@@ -85,20 +85,16 @@ handleUserPost = do
       if isNothing mcompany && createcompany
         then do
           -- they've submitted the modal so
-          -- check all the required fields have been filled in okay
-          mcname <- getRequiredField asValidCompanyName "companyname"
-          mfstname <- getRequiredField asValidName "fstname"
-          msndname <- getRequiredField asValidName "sndname"
-          mposition <- getRequiredField asValidPosition "companyposition"
-          mphone <- getRequiredField asValidPhone "phone"
-          case (mcname, mfstname, msndname, mposition, mphone) of
-            (Just _, Just _, Just _, Just _, Just _) -> do
+          -- check they've at least filled in a name
+          mcompanyname <- getRequiredField asValidCompanyName "companyname"
+          case mcompanyname of
+            Just _ -> do
               company <- runDBUpdate $ CreateCompany Nothing Nothing
               _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
               _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
               upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
               return (upgradeduser, Just flashMessageCompanyCreated, LinkAccount False)
-            _ -> return (user, Nothing, LinkAccount True)
+            Nothing -> return (user, Nothing, LinkAccount True)
         else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
@@ -193,7 +189,7 @@ handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
          Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handlePostUserLocale :: Kontrakcja m => m KontraLink
 handlePostUserLocale = do
@@ -236,7 +232,7 @@ handlePostUserSecurity = do
              locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
            }
       return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+    Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
@@ -306,7 +302,7 @@ handlePostSharing = do
                       return $ LinkSharing emptyListParams
                   (_,True) -> return $ LinkSharing emptyListParams
                   _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
 handleAddFriend User{userid} email = do
@@ -333,7 +329,7 @@ handlePostCompanyAccounts = do
                       handleTakeOverUserForCompany (fromJust memail)
                       return $ LinkCompanyAccounts emptyListParams
                   _ -> LinkCompanyAccounts <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
 handleDeleteCompanyUser user = do
@@ -496,7 +492,7 @@ createUser ctx names email madminuser mcompany' vip = do
                      | adminusercompanyid == companyid company -> mcompany'
                    _ -> Nothing
   let Context{ctxhostpart} = ctx
-  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (systemServerFromURL ctxhostpart) (getLocale ctx)
+  muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
     Just user -> do
       let fullname = composeFullName names
@@ -518,26 +514,26 @@ createUserBySigning names email doclinkdata =
         return $ Just (user, actionid, magichash)
     )
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> SystemServer -> Locale -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage ss l = do
-    muser <- createInvitedUser names email (Just (ss, l))
+createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
+createNewUserByAdmin ctx names email _freetill custommessage locale = do
+    muser <- createInvitedUser names email (Just locale)
     case muser of
          Just user -> do
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
              _ <- runDBUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
-             mail <- mailNewAccountCreatedByAdmin ctx fullname email chpwdlink custommessage
+             mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
-createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe (SystemServer, Locale) -> m (Maybe User)
+createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe Locale -> m (Maybe User)
 createInvitedUser names email mlocale = do
     ctx <- getContext
-    let (ss, l) = fromMaybe (systemServerFromURL $ ctxhostpart ctx, getLocale ctx) mlocale
+    let locale = fromMaybe (ctxlocale ctx) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing ss l
+    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
 
 {- |
    Guard against a POST with no logged in user.
@@ -548,7 +544,7 @@ withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
-         Nothing -> return $ LinkLogin (getLocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -559,7 +555,7 @@ withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
+    Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
 
 {- |
    Runs an action only if currently logged in user is a company admin
@@ -594,7 +590,7 @@ checkUserTOSGet action = do
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> case (ctxcompany ctx) of
              Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin (getLocale ctx) NotLogged
+             Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
 
 
 
@@ -684,9 +680,11 @@ handleAccountSetupGet aid hash = do
       sendRedirect LinkUpload
     (False, Just _action) -> do
       extendActionEvalTimeToOneDayMinimum aid
-      addFlashM . modalAccountSetup $ LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser
+      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser)
+                                    (maybe "" (BS.toString . getFirstName) muser)
+                                    (maybe "" (BS.toString . getLastName) muser)
       ctx <- getContext
-      sendRedirect $ LinkHome (getLocale ctx)
+      sendRedirect $ LinkHome (ctxlocale ctx)
     (False, Nothing) -> do
       -- this is a very disgusting page.  i didn't even know it existed
       content <- activatePageViewNotValidLink ""
@@ -817,16 +815,29 @@ handleActivate aid hash signupmethod actvuser = do
   Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
+  -- unless they're signing up from the sign view we require a fstname and a sndname
+  -- to be filled in
+  (mfstname, msndname) <-
+    case signupmethod of
+      BySigning -> return (Just $ getFirstName actvuser, Just $ getLastName actvuser)
+      _ -> do
+        mfn <- getRequiredField asValidName "fstname"
+        msn <- getRequiredField asValidName "sndname"
+        return (mfn, msn)
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
-  case (mtos, mpassword, mpassword2) of
-    (Just tos, Just password, Just password2) -> do
+  case (mtos, mfstname, msndname, mpassword, mpassword2) of
+    (Just tos, Just fstname, Just sndname, Just password, Just password2) -> do
       case checkPasswordsMatch password password2 of
         Right () ->
           if tos
             then do
               passwordhash <- liftIO $ createPassword password
               runDB $ do
+                _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
+                         userfstname = fstname
+                       , usersndname = sndname
+                       }
                 _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
@@ -846,7 +857,9 @@ handleActivate aid hash signupmethod actvuser = do
   where
     returnToAccountSetup :: Kontrakcja n => n (Maybe User)
     returnToAccountSetup = do
-      addFlashM $ modalAccountSetup $ LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser
+      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser)
+                                    (BS.toString $ getFirstName actvuser)
+                                    (BS.toString $ getLastName actvuser)
       return Nothing
 
 {- |

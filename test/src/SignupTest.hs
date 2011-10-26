@@ -2,6 +2,7 @@ module SignupTest (signupTests) where
 
 import Control.Applicative
 import Control.Monad.State
+import Data.Maybe
 import Database.HDBC.PostgreSQL
 import Happstack.Server
 import Happstack.State (query)
@@ -24,20 +25,24 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import User.UserControl
+import Util.HasSomeUserInfo
 
 signupTests :: Connection -> Test
 signupTests conn = testGroup "Signup" [
       testCase "can self signup and activate an account" $ testSignupAndActivate conn
     , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
     , testCase "must accept tos to activate an account" $ testAcceptTOSToActivate conn
+    , testCase "must enter first name to activate an account" $ testNeedFirstNameToActivate conn
+    , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate conn
     , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
     , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
     ]
 
 testSignupAndActivate :: Connection -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -50,14 +55,15 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "password12" "password12"
-  assertAccountActivatedFor uid (res3, ctx3)
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
 
 testViralInviteAndActivate :: Connection -> Assertion
 testViralInviteAndActivate conn = withTestEnvironment conn $ do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just inviter })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
    -- enter the email to invite
   (res1, ctx1) <- inviteToAccount ctx "emily@scrive.com"
@@ -71,13 +77,14 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "password12" "password12"
-  assertAccountActivated (res3, ctx3)
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
 testAcceptTOSToActivate :: Connection -> Assertion
 testAcceptTOSToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -86,13 +93,14 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without accepting the tos
-  (res3, ctx3) <- activateAccount ctx1 aid token False "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedPasswordToActivate :: Connection -> Assertion
-testNeedPasswordToActivate conn = withTestEnvironment conn $ do
+testNeedFirstNameToActivate :: Connection -> Assertion
+testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -101,13 +109,46 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
+  assertAccountActivationFailed (res3, ctx3)
+
+testNeedLastNameToActivate :: Connection -> Assertion
+testNeedLastNameToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated _uid token) = actionType action
+
+  -- activate the account without entering passwords
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
+  assertAccountActivationFailed (res3, ctx3)
+
+testNeedPasswordToActivate :: Connection -> Assertion
+testNeedPasswordToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated _uid token) = actionType action
+
+  -- activate the account without entering passwords
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
 testPasswordsMatchToActivate :: Connection -> Assertion
 testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -116,7 +157,7 @@ testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account using mismatched passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "password12" "password21"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password21"
   assertAccountActivationFailed (res3, ctx3)
 
 signupForAccount :: MonadIO m => Context -> String -> m (Response, Context)
@@ -168,29 +209,34 @@ assertActivationPageOK (res, ctx) = do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool "Flash message has type indicating is modal" $ head (ctxflashmessages ctx) `isFlashOfType` Modal
 
-activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> m (Response, Context)
-activateAccount ctx aid token tos password password2 = do
+activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> String -> String -> m (Response, Context)
+activateAccount ctx aid token tos fstname sndname password password2 = do
   let tosValue = if tos
                    then "on"
                    else "off"
   req <- mkRequest POST [ ("tos", inText tosValue)
+                        , ("fstname", inText fstname)
+                        , ("sndname", inText sndname)
                         , ("password", inText password)
                         , ("password2", inText password2)
                         ]
   runTestKontra req ctx $ handleAccountSetupPost aid token >>= sendRedirect
 
-assertAccountActivatedFor :: MonadIO m => UserID -> (Response, Context) -> m ()
-assertAccountActivatedFor uid (res, ctx) = do
+assertAccountActivatedFor :: MonadIO m => UserID -> String -> String -> (Response, Context) -> m ()
+assertAccountActivatedFor uid fstname sndname (res, ctx) = do
   assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
-  assertAccountActivated (res, ctx)
+  assertAccountActivated fstname sndname (res, ctx)
 
-assertAccountActivated :: MonadIO m => (Response, Context) -> m ()
-assertAccountActivated (res, ctx) = do
+assertAccountActivated :: MonadIO m => String -> String -> (Response, Context) -> m ()
+assertAccountActivated fstname sndname (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "Location is /upload" (Just "/upload") (T.getHeader "location" (rsHeaders res))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   --shouldn't this flash just indicate success and not that it's signing related?!
   assertBool "Flash message has type indicating signing related" $ head (ctxflashmessages ctx) `isFlashOfType` SigningRelated
+  assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
+  assertEqual "First name was set" (Just fstname) (fmap (BS.toString . getFirstName) $ ctxmaybeuser ctx)
+  assertEqual "Second name was set" (Just sndname) (fmap (BS.toString . getLastName) $ ctxmaybeuser ctx)
 
 assertAccountActivationFailed :: MonadIO m => (Response, Context) -> m ()
 assertAccountActivationFailed (res, ctx) = do

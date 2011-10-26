@@ -163,7 +163,15 @@ modalAccountSetup=
           <input type="checkbox" id="tosCBox" name="tos" />
           <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
         </div>
-        <table id="passwordInfo"><tbody>
+        <table id="signupInfo"><tbody>
+            <tr>
+                <td>$_firstname()$:</td>
+                <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+            </tr>
+            <tr>
+                <td>$_lastname()$:</td>
+                <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+            </tr>
             <tr>
                 <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
                 <td><input type="password" name="password" autocomplete="off"/></td>
@@ -208,7 +216,7 @@ modalWelcomeToSkrivaPa=
       <p>$_modalWelcomeToSkrivaPaBodyHint()$</p>
 
       <p>$_modalWelcomeToSkrivaPaBodyBestRegards()$<br/>
-        Team $ourServiceName()$</p>
+        Team Scrive</p>
     </div>
   </div>
   <div class="modal-footer">
@@ -618,7 +626,7 @@ modalSignedViewNotClosedNoAccount=
     <span class="modal-title">
       <h3>Du har undertecknat!</h3>
       <p>
-        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar $ourServiceName()$ ett verifikat,
+        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar Scrive ett verifikat,
         dokumentet blir bindande och en kopia skickas till din e-post.
       </p>
     </span>

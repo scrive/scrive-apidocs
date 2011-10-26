@@ -27,7 +27,8 @@ import File.Model ()
 
 migrationsList :: [Migration]
 migrationsList = [addRegionToUserSettings
-                 ,addServiceAndCompanyToStats]
+                 ,addServiceAndCompanyToStats
+                 ,removeSystemServer]
 
 tablesList :: [Table]
 tablesList = [

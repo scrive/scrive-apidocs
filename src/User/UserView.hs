@@ -220,9 +220,9 @@ viralInviteMail ctx invitedemail setpasslink = do
     field "passwordlink" $ show setpasslink
 
 
-mailNewAccountCreatedByAdmin :: TemplatesMonad m => Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
-mailNewAccountCreatedByAdmin ctx personname email setpasslink custommessage = do
-  kontramail "mailNewAccountCreatedByAdmin" $ do
+mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
+mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessage = do
+  kontramaillocal locale "mailNewAccountCreatedByAdmin" $ do
     field "personname"    $ BS.toString personname
     field "email"         $ BS.toString email
     field "passwordlink"  $ show setpasslink
@@ -278,10 +278,12 @@ modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
     toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: MonadIO m => KontraLink -> m FlashMessage
-modalAccountSetup signuplink = do
+modalAccountSetup :: MonadIO m => KontraLink -> String -> String -> m FlashMessage
+modalAccountSetup signuplink fstname sndname = do
   return $ toFlashTemplate Modal "modalAccountSetup" $
-    [("signuplink", show signuplink)]
+    [ ("signuplink", show signuplink)
+    , ("fstname", fstname)
+    , ("sndname", sndname) ]
 
 modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
 modalAccountRemoval doctitle activationlink removallink = do

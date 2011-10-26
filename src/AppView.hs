@@ -196,8 +196,8 @@ standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Locale -> 
 standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
-    mainLinksFields $ getLocale ctx
-    staticLinksFields $ getLocale ctx
+    mainLinksFields $ ctxlocale ctx
+    staticLinksFields $ ctxlocale ctx
     localeSwitcherFields ctx mpubliclink
     contextInfoFields ctx
     publicSafeFlagField ctx loginOn (isJust mpubliclink)
@@ -239,8 +239,8 @@ firstPage ctx loginOn referer email =
     renderTemplateFM "firstPage" $ do
         contextInfoFields ctx
         publicSafeFlagField ctx loginOn True
-        mainLinksFields $ getLocale ctx
-        staticLinksFields $ getLocale ctx
+        mainLinksFields $ ctxlocale ctx
+        staticLinksFields $ ctxlocale ctx
         localeSwitcherFields ctx (Just LinkHome)
         loginModal loginOn referer email
 
@@ -260,12 +260,12 @@ mainLinksFields locale = do
     field "linksignup"           $ show LinkSignup
 
 localeSwitcherFields :: MonadIO m => Context -> Maybe (Locale -> KontraLink) -> Fields m
-localeSwitcherFields ctx mlink = do
-  field "isdoclocale" $ isJust (ctxdoclocale ctx)
-  field "localesweden" $ getLang ctx == LANG_SE
-  field "localebritain" $ getLang ctx == LANG_EN
-  field "langsv" $ getLang ctx == LANG_SE
-  field "langen" $ getLang ctx == LANG_EN
+localeSwitcherFields Context{ ctxlocale, ctxlocaleswitch } mlink = do
+  field "islocaleswitch" $ ctxlocaleswitch
+  field "localesweden" $ getLang ctxlocale == LANG_SE
+  field "localebritain" $ getLang ctxlocale == LANG_EN
+  field "langsv" $ getLang ctxlocale == LANG_SE
+  field "langen" $ getLang ctxlocale == LANG_EN
   field "linklocaleswitch" $ show LinkLocaleSwitch
   field "linksesv" $ fmap (\l -> show $ l (mkLocale REGION_SE LANG_SE)) mlink
   field "linkgben" $ fmap (\l -> show $ l (mkLocale REGION_GB LANG_EN)) mlink
@@ -290,14 +290,14 @@ staticLinksFields locale = do
    into templates.
 -}
 contextInfoFields :: TemplatesMonad m => Context -> Fields m
-contextInfoFields ctx = do
+contextInfoFields ctx@Context{ ctxlocale } = do
     field "logged" $ isJust (ctxmaybeuser ctx)
     fieldFL "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
-    field "ctxregion" $ codeFromRegion (getRegion ctx)
-    field "ctxlang" $ codeFromLang (getLang ctx)
+    field "ctxregion" $ codeFromRegion (getRegion ctxlocale)
+    field "ctxlang" $ codeFromLang (getLang ctxlocale)
 
 {- |
     Only public safe is explicitely set as a public page,

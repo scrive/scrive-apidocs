@@ -1,14 +1,14 @@
 /* 003  I removed the starting / on all image-urls */
 
 /* 003 new: html */
-html 
+html
 {
     /* will always show a scroll */
     overflow-y: scroll;
 }
 
 /* 003 moved body to the top */
-body 
+body
 {
     /* 002 new font-family */
     font-family: 'Segoe UI', arial, verdana, 'lucida sans unicode', tahoma, sans-serif;
@@ -22,7 +22,7 @@ body
 /* 003 new */
 a img
 {
-    border: 0;	
+    border: 0;
 }
 
 
@@ -81,7 +81,7 @@ a img
     background-image: url(images/status_signed.png);
     background-repeat: no-repeat;
     padding-left: 20px;
-    background-position: 4px; 
+    background-position: 4px;
 }
 
 /* dont know if you want to cascade these changes to all submit-buttons? */
@@ -224,7 +224,7 @@ a img
     background-color: #b3b5bd;
 }
 
-.bodycolorbg 
+.bodycolorbg
 {
     background-color: #fafafa;
 }
@@ -234,9 +234,9 @@ a img
     background-color: #fafafa;
 }
 
-#selectable tr.ui-selecting, #selectable tr.ui-selecting td 
-{ 
-    background: #e6e6e6; 
+#selectable tr.ui-selecting, #selectable tr.ui-selecting td
+{
+    background: #e6e6e6;
 }
 
 #selectable tr.ui-selected, #selectable tr.ui-selected td,
@@ -305,7 +305,7 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 /*width: 470px !important; 003l remove*/
 }
 
-#nav ul 
+#nav ul
 {
     display: inline;
     list-style: none outside none;
@@ -314,13 +314,13 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 }
 
 
-#nav li 
+#nav li
 {
     float: left;
     margin-left: 1px;
 }
 
-#nav li a 
+#nav li a
 {
     cursor: pointer;
     display: block;
@@ -335,11 +335,11 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     color: #999999; /* 003l new/changed */
     font-weight: bold; /* 003l new */
     width: 151px;
-    
+
     background: url("images/ButtonTOPUnactive.png") no-repeat scroll left top transparent; /* 003l new */
 }
 
-#nav li a.active 
+#nav li a.active
 {
     background: url("images/ButtonTOP.png") no-repeat scroll left top transparent;
     /* 003l remove font-weight: bold; */
@@ -382,12 +382,12 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 }
 
 
-.para 
+.para
 {
     text-align: justify;
 }
 
-.topnavi 
+.topnavi
 {
     padding-left: 2em;
     padding-right: 2em;
@@ -396,26 +396,26 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     font-weight: bold;
 }
 
-.topnavi a 
+.topnavi a
 {
     text-decoration: none;
     text-color: inherit;
     color: #fafafa;
 }
 
-.selected a 
+.selected a
 {
     color: #9fb3b5;
     background-color:  #fafafa;
 }
 
-.selected 
-{ 
+.selected
+{
     font-size: 130%;
     background-color:  #fafafa;
 }
 
-.mainContainer 
+.mainContainer
 {
     /* overflow: auto; 004 remove */
     /* margin-bottom: 25px; */
@@ -423,7 +423,7 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     margin-top: 25px;
 }
 
-.mainContainer a 
+.mainContainer a
 {
     color: #007cac;
     text-decoration: none;
@@ -437,7 +437,7 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
   font: 13px/34px "Helvetica Neue";
 }
 
-.mainContainer .headline 
+.mainContainer .headline
 {
     font-weight: bold;
     font-size: 130%;
@@ -479,27 +479,27 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     left: 211px;
 }
 
-.contactabout, .contactabout a 
+.contactabout, .contactabout a
 {
     color: #FFFFFF;
     text-decoration: none;
     font-size: 11px;
 }
 
-.centerdiv 
+.centerdiv
 {
-    margin-left: auto; 
+    margin-left: auto;
     margin-right: auto;
 }
 
-.centerdivnarrow 
+.centerdivnarrow
 {
-    margin-left: auto; 
+    margin-left: auto;
     margin-right: auto;
     width: 300px;
 }
 
-.small 
+.small
 {
     font-size: small;
 }
@@ -511,11 +511,11 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     margin: auto;
 }
 
-a.button 
+a.button
 {
     color: black !important;
 }
-.button 
+.button
 {
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -536,12 +536,12 @@ a.button
     white-space:nowrap;
     cursor: pointer;
 }
-a.secbutton 
+a.secbutton
 {
     color: white;
 }
 
-.secbutton 
+.secbutton
 {
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -566,12 +566,12 @@ a.secbutton
     white-space:nowrap;
 }
 
-a.bigbutton 
+a.bigbutton
 
 color: white;
 }
 
-.bigbutton 
+.bigbutton
 {
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -597,7 +597,7 @@ color: white;
     white-space:nowrap;
 }
 
-#documentBox 
+#documentBox
 {
     overflow: auto;
     text-align: center;
@@ -645,11 +645,11 @@ img.waiting
     position: relative;
 }
 
-.accounttable 
+.accounttable
 {
     border-collapse:collapse;
     border-width: 1px;
-    padding: 10px; 
+    padding: 10px;
     width: 800px;
     margin: 15px auto 10px;
 }
@@ -674,9 +674,9 @@ img.waiting
 }
 
 .doctable {
-    
+
     border-collapse:collapse;
-    padding: 10px; 
+    padding: 10px;
     width:938px;
     margin: 10px auto 10px;
 }
@@ -687,7 +687,7 @@ img.waiting
 
 .doctable td
 {
-    border-style: none none solid none; 
+    border-style: none none solid none;
     border-width: 1px;
     border-color: gray;
     font-weight: normal;
@@ -753,7 +753,7 @@ img.waiting
     border-color: gray;
 }
 
-.docview 
+.docview
 {
     margin: 0px auto;
     width: 960px;
@@ -834,7 +834,7 @@ img.waiting
     margin: 2px 0 2px 0;
 }
 
-/* 
+/*
    002 new: #footerContainer2 .footerCategoryHeader instead of .footerCategoryHeader
    */
 #footerContainer2 .footerCategoryHeader
@@ -851,12 +851,12 @@ img.waiting
 
 #footerContainer2 a:hover
 {
-    text-decoration: underline;	
+    text-decoration: underline;
 }
 
 #footerContainer2 a:active
 {
-    color: #535353;	
+    color: #535353;
 }
 
 /* 002 changed a lot in #copy */
@@ -891,7 +891,7 @@ input , button, a.button
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     -khtml-border-radius: 2px;
-    border-radius: 2px;   
+    border-radius: 2px;
     background-color: #FFFFFF;
     margin: 3px auto 3px 0px;
 }
@@ -942,23 +942,23 @@ a.button {
 /* Localized */
 
 
-.author, .signatory 
+.author, .signatory
 {
     margin-bottom:10px;
 }
 
 
-.hidden 
+.hidden
 {
     display:none;
     height:0px;
     width:0px;
 }
 
-/** 
+/**
    If you have display:none; for an input submit in Chrome it
    will not submit when you press enter.  This is a hacky
-   way of getting round this. 
+   way of getting round this.
 **/
 input[type=submit].hidden
 {
@@ -1079,7 +1079,7 @@ input[type=submit].hidden
 }
 #signStepsMenu div.current img
 {
-    top: 4px;	
+    top: 4px;
 }
 /**/
 #signStepsTitleRow
@@ -1112,18 +1112,18 @@ input[type=submit].hidden
     display: inline-block;
     float: right;
     margin: 4px 10px 0 18px;
-    
-    
+
+
 }
 
 #signStepsTitleRow .download a{
-    color: #999999;  
+    color: #999999;
     text-transform: uppercase;
 }
 
 
 #signStepsTitleRow .download a:hover{
-  color: #FFFFFF;  
+  color: #FFFFFF;
 }
 
 #signStepsTitleRow .docname
@@ -1193,7 +1193,7 @@ input[type=submit].hidden
 
 .floppyIcon{
     background-image: url(images/iconFloppy.png);
-}    
+}
 .arrowDownIcon{
     background-image: url(images/iconArrowDown.png);
 }
@@ -1211,7 +1211,7 @@ input[type=submit].hidden
     position: absolute;
 }
 
-.uploadButton .icon , 
+.uploadButton .icon ,
 .signStepsButton .icon
 {
     width: 11px;
@@ -1319,10 +1319,10 @@ input[type=submit].hidden
 
 }
 .documentTypeBox.selected, .signStepsBodyUploadBox.selected{
-    
+
     border: 1px solid #CCCCFF;
     background-color: #F0F0FF
-    
+
 }
 
 .documentTypeBox a{
@@ -1398,7 +1398,7 @@ input.multiFileInput {
 }
 #signStepsBodyRight.step3{
    display:inline-block;
-   width: 310px;
+   width: 290px;
    float: left;
    padding-top: 5px;
 }
@@ -1412,7 +1412,7 @@ input.multiFileInput {
     padding: 7px 6px 0 0px;
 }
 */
-.signViewBodyRight 
+.signViewBodyRight
 {
     float: right;
     border-top: 1px solid #E0E0E0;
@@ -1441,7 +1441,7 @@ input.multiFileInput {
     float: left;
     position: relative;
     padding: 14px 0px 5px 0px;
-    margin-top: 20px;	
+    margin-top: 20px;
 }
 
 .signViewBodyRightTextContainer
@@ -1467,7 +1467,7 @@ input.multiFileInput {
 {
     margin-top: 5px;
     color: #666666;
-    font-size: 11px; 
+    font-size: 11px;
 }
 
 #signViewBodyLeftTextContainer .btn-small
@@ -1502,7 +1502,7 @@ input.multiFileInput {
 }
 /* 015 new */
 .border {
-   background-color: #ecedf3; 
+   background-color: #ecedf3;
    width: 1px;
    height: 130px;
    display:inline-block;
@@ -1557,7 +1557,7 @@ input.multiFileInput {
 {
     margin-top: 7px;
     /* width: 55px; 013 removed */
-    height: 17px;	
+    height: 17px;
 }
 
 
@@ -1566,7 +1566,7 @@ input.multiFileInput {
 	float: left;
 	margin-right: 10px;
  }
- 
+
 
 /* 008 new starts */
 .signStepsBodyIcons a,
@@ -1618,7 +1618,7 @@ input.multiFileInput {
     padding-left: 23px;
     margin-top: 2px;
     margin-bottom: 2px;
-    
+
 }
 
 .signStepsBodyAttachments a, .signStepsBodySigAttachments a
@@ -1769,7 +1769,7 @@ input.multiFileInput {
     margin-top:3px;
     margin-right:3px;
     margin-left:3px;
-    
+
 }
 
 
@@ -1898,7 +1898,7 @@ input.multiFileInput {
     height: 16px;
     background-position: 0 1px;
     background-repeat: no-repeat;
-    
+
 }
 
 #signStepsBodyFunctionsBox ul a
@@ -1980,14 +1980,15 @@ form {
    padding-top: 2px;
    width: 290px;
    float:left;
-   
+
 }
 
 #signStepsBodyRight.step3
 {
-   padding-top: 16px;
+   padding-top: 2px;
+   padding-left: 20px;
    padding-bottom: 7px;
-  
+
 }
 
 /* 013 changed */
@@ -2007,7 +2008,7 @@ form {
   width:100%;
   height:40px;
   margin:15px 30% 0 30%;
-  
+
 }
 */
 /* 013 new */
@@ -2100,7 +2101,7 @@ form {
     width: 5px;
     float: left;
     position: relative;
-    
+
     margin-top: 15px;
 }
 
@@ -2123,7 +2124,7 @@ form {
     float: left;
     position: relative;
     margin-top: 10px;
-    padding: 0px,0px,5px,5px;	
+    padding: 0px,0px,5px,5px;
 }
 
 #signViewNotificationContainerLeft
@@ -2141,7 +2142,7 @@ form {
     font-weight: bold;
     margin-top: 25px;
     margin-left: 15px;
-    text-align:center; 
+    text-align:center;
 }
 
 #signViewNotificationContainer .text
@@ -2149,14 +2150,14 @@ form {
     color:#595A59;
     font-size: 11px;
     margin-top: 15px;
-    margin-left: 15px;  
+    margin-left: 15px;
 }
 
 #signViewNotificationContainerRight .anchor
 {
     font-size: 11px;
     text-align:right;
-    margin-right: 25px;	
+    margin-right: 25px;
 }
 
 #signViewNotificationContainerRight .anchor a
@@ -2169,7 +2170,7 @@ form {
 {
     /* 002 float: left;*/
     margin-top: 30px;
-    
+
     background: none repeat scroll 0 0 white;
     -moz-border-radius: 4px;
     -moz-box-sizing: border-box;
@@ -2191,7 +2192,7 @@ form {
 {
     /* 002 float: left;*/
     margin-top: 30px;
-    
+
     background: none repeat scroll 0 0 white;
     -moz-border-radius: 4px;
     -moz-box-sizing: border-box;
@@ -2321,7 +2322,7 @@ form {
     width: 700px;
 }
 
-#personpane 
+#personpane
 {
     display: block;
     float: left;
@@ -2461,13 +2462,13 @@ form {
 }
 
 .signViewBodyForms .dragfield input {
-    background-image: url(images/iconPen.png); 
+    background-image: url(images/iconPen.png);
     background-repeat: no-repeat;
     background-position: 3px 3px;
 }
 
 .newfield input.newfieldbox {
-    background-image: url(images/iconPen.png); 
+    background-image: url(images/iconPen.png);
     background-repeat: no-repeat;
     background-position: 3px 3px;
     width: 105px;
@@ -2490,13 +2491,13 @@ form {
     width: 333px;
 }
 
-.signStepsBodyIcons .partnumber 
+.signStepsBodyIcons .partnumber
 {
   width:auto;
   display:block;
   font-weight: bold;
   font-size: 10pt;
-  
+
 }
 
 .signStepsBodyIcons .man{
@@ -2622,11 +2623,11 @@ a#nextstep {
 
 
 /* Generic CSS reset */
-.newdesign html, .newdesign  body, .newdesign  div, .newdesign  span, .newdesign  applet, .newdesign  object, .newdesign  iframe, .newdesign  h1, .newdesign  h2, .newdesign  h3, .newdesign  h4, .newdesign  h5, .newdesign  h6, .newdesign  p, .newdesign  blockquote, .newdesign  pre, .newdesign 
-a, .newdesign  abbr, .newdesign  acronym, .newdesign  address, .newdesign  big, .newdesign  cite, .newdesign  code, .newdesign  del, .newdesign  dfn, .newdesign  em, .newdesign  img, .newdesign  ins, .newdesign  kbd, .newdesign  q, .newdesign  s, .newdesign  samp, .newdesign 
-small, .newdesign  strike, .newdesign  strong, .newdesign  sub, .newdesign  sup, .newdesign  tt, .newdesign  var, .newdesign  b, .newdesign  u, .newdesign  i, .newdesign  center, .newdesign  dl, .newdesign  dt, .newdesign  dd, .newdesign  ol, .newdesign  ul, .newdesign  li, .newdesign 
-fieldset, .newdesign  form, .newdesign  label, .newdesign  legend, .newdesign  table, .newdesign  caption, .newdesign  tbody, .newdesign  tfoot, .newdesign  thead, .newdesign  tr, .newdesign  th, .newdesign  td, .newdesign 
-article, .newdesign  aside, .newdesign  canvas, .newdesign  details, .newdesign  embed, .newdesign  figure, .newdesign  figcaption, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  
+.newdesign html, .newdesign  body, .newdesign  div, .newdesign  span, .newdesign  applet, .newdesign  object, .newdesign  iframe, .newdesign  h1, .newdesign  h2, .newdesign  h3, .newdesign  h4, .newdesign  h5, .newdesign  h6, .newdesign  p, .newdesign  blockquote, .newdesign  pre, .newdesign
+a, .newdesign  abbr, .newdesign  acronym, .newdesign  address, .newdesign  big, .newdesign  cite, .newdesign  code, .newdesign  del, .newdesign  dfn, .newdesign  em, .newdesign  img, .newdesign  ins, .newdesign  kbd, .newdesign  q, .newdesign  s, .newdesign  samp, .newdesign
+small, .newdesign  strike, .newdesign  strong, .newdesign  sub, .newdesign  sup, .newdesign  tt, .newdesign  var, .newdesign  b, .newdesign  u, .newdesign  i, .newdesign  center, .newdesign  dl, .newdesign  dt, .newdesign  dd, .newdesign  ol, .newdesign  ul, .newdesign  li, .newdesign
+fieldset, .newdesign  form, .newdesign  label, .newdesign  legend, .newdesign  table, .newdesign  caption, .newdesign  tbody, .newdesign  tfoot, .newdesign  thead, .newdesign  tr, .newdesign  th, .newdesign  td, .newdesign
+article, .newdesign  aside, .newdesign  canvas, .newdesign  details, .newdesign  embed, .newdesign  figure, .newdesign  figcaption, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign
 menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section, .newdesign  summary, .newdesign  time, .newdesign  mark, .newdesign  audio, .newdesign  video {
         margin: 0;
         padding: 0;
@@ -2717,7 +2718,7 @@ input#cancel {
     position:relative;
     top: 2px;
     margin:2px;
-    
+
 }
 
 .signViewBodyRightTextContainer .icon.status{
@@ -2735,7 +2736,7 @@ width: 690px;
 
 .currentSignatoryBox{
 float: left;
-width: 340px;    
+width: 340px;
 }
 
 .otherSignatoriesBox{
@@ -2743,9 +2744,9 @@ width: 340px;
 /*width: 340px;    */
 }
 .signatoryLockIcon{
- margin-right: 5px;   
- margin-top: 5px;   
- float:right;  
+ margin-right: 5px;
+ margin-top: 5px;
+ float:right;
 }
 .signViewBodyRight .field {
     border: 1px solid #6782A5;
@@ -2764,7 +2765,7 @@ width: 340px;
     margin:0px;
     padding:0px;
     color:#414241;
-    width:200px   
+    width:200px
 }
 
 
@@ -2808,7 +2809,7 @@ width: 340px;
 }
 
 .otherSignatoriesBox .signViewBodyRight .field .icon  {
-   background:none; 
+   background:none;
 }
 
 .reminderForSignedIcon  {
@@ -2853,7 +2854,7 @@ width: 340px;
 
 .templatedDialogContainer{
     margin-top: 16px;
-    
+
 }
 .templatedDialogContainer .searchBox{
     margin-top: 40px;

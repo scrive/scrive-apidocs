@@ -1,10 +1,10 @@
 /* Main and only flash messages module
  * Usage
  *   FlashMessages.add({ color : "red | green | blue" , content: "Text to be displayed"})
- * 
+ *
  * Adding next flash messages when previous one is active will deactivate previous one.
  */
-  
+
 $(function(){
 
 /* Flash mesage contains text and color.
@@ -19,14 +19,14 @@ var FlashMessage = Backbone.Model.extend({
   },
   isActive : function() {
       return this.has("active");
-  }, 
+  },
   activate : function(){
       if (!this.isActive()){
           this.set({"active": "true"});
           var current = this;
           setTimeout(function(){current.deactivate();},10000);
       }
-  },  
+  },
   deactivate: function() {
       this.trigger("deactivate");
   }
@@ -48,12 +48,12 @@ var FlashMessagesList = Backbone.Collection.extend({
                 this.at(i).deactivate();
             this.last().activate();
         }
-        
+
     },
     closeCurrent: function() {
         if (!this.isEmpty() && this.first().isActive())
             this.first().deactivate();
-      
+
     }
 });
 
@@ -73,8 +73,8 @@ var FlashMessageView = Backbone.View.extend({
     render: function () {
         this.el = $("<div class='flash-container " + this.model.get("color") + "'/>")
             .append($("<div class='flash-content'> </div>")
-                    .append("<div class='"+localization.outLogoClass+" float-left'></div>")
-                    .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )                                
+                    .append("<div class='scrive-logo float-left'></div>")
+                    .append("<div class='flash-icon " + this.model.get("color") + "'></div>" )
                     .append($("<div class='flash-body'></div>").append(this.model.get("content")))
                     .append("<div class='flash-close modal-close'></div>")
                    );
@@ -108,7 +108,7 @@ var FlashMessagesView = Backbone.View.extend({
         var el = this.el;
         if (this.model.isEmpty())
             this.el.hide();
-        else { 
+        else {
             this.el.empty();
             var el = this.el;
             this.model.forEach(function(e){
@@ -116,10 +116,10 @@ var FlashMessagesView = Backbone.View.extend({
                     el.append(e.view.el);
             });
            if (this.el.css("display") == "none")
-               this.el.slideDown(800, function() { 
+               this.el.slideDown(800, function() {
                    el.css("height","");
                    el.show();
-                   
+
             });
         }
     },

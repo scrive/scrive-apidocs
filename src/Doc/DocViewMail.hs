@@ -3,7 +3,8 @@ module Doc.DocViewMail (
     , mailCancelDocumentByAuthorContent
     , mailDocumentAwaitingForAuthor
     , mailDocumentClosed
-    , mailDocumentError
+    , mailDocumentErrorForAuthor
+    , mailDocumentErrorForSignatory
     , mailDocumentRejected
     , mailDocumentRemind
     , mailDocumentRemindContent
@@ -40,6 +41,7 @@ import qualified Data.ByteString.UTF8 as BS
 import File.TransState
 import Control.Monad.Trans
 import AppView
+import User.Locale
 
 mailDocumentRemind :: TemplatesMonad m
                    => Maybe BS.ByteString
@@ -64,7 +66,7 @@ mailDocumentRemindContent cm c d s =
          _                                       -> remindMailSignedContent False cm c d s
 
 remindMailNotSigned :: TemplatesMonad m
-                    => Bool 
+                    => Bool
                     -> Maybe BS.ByteString
                     -> Context
                     -> Document
@@ -74,7 +76,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
     let creatorname = maybe "" (BS.toString . getSmartName) $ getAuthorSigLink document
     let mainfile =  head $ (documentfiles document) ++ [FileID 0]
     authorattachmentfiles <- mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
-    documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
+    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         fieldM "header" $ do
             header <- if isNothing customMessage
                          then remindMailNotSignedStandardHeader document signlink
@@ -84,11 +86,11 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
             if forMail
                then if (isNothing customMessage)
                        then mailFooter ctx document
-                       else renderTemplateFM "customFooter" $
+                       else renderLocalTemplateFM document "customFooter" $
                                 field "creatorname" creatorname
                     else do
                         this <- mailFooter ctx document
-                        with <- renderTemplateFM "customFooter" $
+                        with <- renderLocalTemplateFM document "customFooter" $
                             field "creatorname" creatorname
                         replaceOnEdit this with
         field "partners" $ map (BS.toString . getSmartName) $ partyList document
@@ -104,7 +106,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
         field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
         -- We try to use generic templates and this is why we return a tuple
-        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa -> 
+        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa ->
                         (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
         field "nojavascriptmagic" $ True
         field "javascriptmagic" $ False
@@ -118,10 +120,10 @@ remindMailSigned :: TemplatesMonad m
                  -> m Mail
 remindMailSigned _forMail customMessage ctx document signlink = do
     sheader <- remindMailSignedStandardHeader document signlink
-    documentMail ctx document "remindMailSigned" $ do
+    documentMailWithDocLocale ctx document "remindMailSigned" $ do
             fieldM "header" $ makeEditable "customtext" $  fromMaybe sheader (BS.toString <$> customMessage)
             fieldM "footer" $ mailFooter ctx document
-    
+
 
 remindMailNotSignedContent :: TemplatesMonad m
                            => Bool
@@ -131,10 +133,10 @@ remindMailNotSignedContent :: TemplatesMonad m
                            -> SignatoryLink
                            -> m String
 remindMailNotSignedContent forMail customMessage ctx document signlink =
-    (BS.toString . content) <$> remindMailNotSigned  forMail customMessage ctx document signlink
-    
+    (BS.toString . content) <$> remindMailNotSigned forMail customMessage ctx document signlink
+
 remindMailSignedContent :: TemplatesMonad m
-                        => Bool 
+                        => Bool
                         -> (Maybe BS.ByteString)
                         -> Context
                         -> Document
@@ -148,7 +150,7 @@ remindMailSignedStandardHeader :: TemplatesMonad m
                                -> SignatoryLink
                                -> m String
 remindMailSignedStandardHeader document signlink =
-    renderTemplateForProcess document processmailsignedstandardheader $ do
+    renderLocalTemplateForProcess document processmailsignedstandardheader $ do
         let mauthorsiglink = getAuthorSigLink document
             creatorname = maybe BS.empty getSmartName mauthorsiglink
         field "documenttitle" $ BS.toString $ documenttitle document
@@ -161,7 +163,7 @@ remindMailNotSignedStandardHeader :: TemplatesMonad m
                                   -> SignatoryLink
                                   -> m String
 remindMailNotSignedStandardHeader document signlink =
-    renderTemplateForProcess document processmailnotsignedstandardheader $ do
+    renderLocalTemplateForProcess document processmailnotsignedstandardheader $ do
         let mauthorsiglink = getAuthorSigLink document
             creatorname = maybe (BS.fromString "") getSmartName mauthorsiglink
         field "documenttitle" $ BS.toString $ documenttitle document
@@ -176,11 +178,11 @@ mailDocumentRejected :: TemplatesMonad m
                      -> SignatoryLink
                      -> m Mail
 mailDocumentRejected customMessage ctx document rejector = do
-   documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
+   documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         field "rejectorName" $ getSmartName rejector
         fieldM "footer" $ mailFooter ctx document
         field "customMessage" $ customMessage
-        
+
 
 mailRejectMailContent :: TemplatesMonad m
                       => Maybe String
@@ -188,13 +190,16 @@ mailRejectMailContent :: TemplatesMonad m
                       -> Document
                       -> SignatoryLink
                       -> m String
-mailRejectMailContent customMessage ctx  document  rejector =
+mailRejectMailContent customMessage ctx  document rejector =
      (BS.toString . content) <$> mailDocumentRejected customMessage ctx document rejector
-     
-mailDocumentError :: TemplatesMonad m => Context -> Document -> m Mail
-mailDocumentError ctx document = do
-   documentMail ctx document "mailDocumentError" $ return ()
 
+mailDocumentErrorForAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> a -> m Mail
+mailDocumentErrorForAuthor ctx document authorlocale = do
+   documentMail authorlocale ctx document "mailDocumentError" $ return ()
+
+mailDocumentErrorForSignatory :: TemplatesMonad m => Context -> Document -> m Mail
+mailDocumentErrorForSignatory ctx document = do
+   documentMailWithDocLocale ctx document "mailDocumentError" $ return ()
 
 
 data InvitationTo = Sign | View deriving (Eq,Show)
@@ -203,7 +208,7 @@ fieldsInvitationTo :: (TemplatesMonad m) => InvitationTo -> Fields m
 fieldsInvitationTo a = do
     field "sign" (a == Sign)
     field "view" (a == View)
-    
+
 mailInvitation :: TemplatesMonad m
                                   => Bool
                                   -> Context
@@ -221,19 +226,19 @@ mailInvitation forMail
     let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
     let personname = maybe "" (BS.toString . getSmartName) msiglink
     let mainfile =  head $ (documentfiles document) ++ [FileID 0] -- There always should be main file but tests fail without it
-    documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
+    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
         fieldsInvitationTo invitationto
         field "nojavascriptmagic" $ forMail
-        field "javascriptmagic" $ not forMail    
+        field "javascriptmagic" $ not forMail
         fieldM "header" $ do
             header <- if BS.null documentinvitetext
                          then if issignatory || not forMail
-                                 then renderTemplateForProcess document processmailinvitationtosigndefaultheader $ do
+                                 then renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
                                      field "creatorname" $ creatorname
                                      field "personname" $ personname
                                      field "documenttitle" $ BS.toString documenttitle
                                      field "service" $ isJust $ documentservice document
-                                 else renderTemplateFM "mailInvitationToViewDefaultHeader" $ do
+                                 else renderLocalTemplateFM document "mailInvitationToViewDefaultHeader" $ do
                                      field "creatorname" creatorname
                                      field "personname" personname
                                      field "documenttitle" $ BS.toString documenttitle
@@ -244,11 +249,11 @@ mailInvitation forMail
             if forMail
                then if BS.null documentinvitetext
                        then mailFooter ctx document
-                       else renderTemplateFM "customFooter" $ do
+                       else renderLocalTemplateFM document "customFooter" $ do
                                 field "creatorname" creatorname
                     else do
                         this <- mailFooter ctx document
-                        with <- renderTemplateFM "customFooter" $ do
+                        with <- renderLocalTemplateFM document "customFooter" $ do
                             field "creatorname" creatorname
                         replaceOnEdit this with
         fieldM "link" $ do
@@ -264,13 +269,13 @@ mailInvitation forMail
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
         field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
         -- We try to use generic templates and this is why we return a tuple
-        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa -> 
-                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))                    
+        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa ->
+                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
 
-            
-            
+
+
 mailInvitationContent :: TemplatesMonad m
-                     => Bool 
+                     => Bool
                      -> Context
                      -> InvitationTo
                      -> Document
@@ -281,15 +286,15 @@ mailInvitationContent  forMail ctx invitationto document msiglink = do
 
 mailDocumentClosed :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentClosed ctx document= do
-   partylist <- renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
-   documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
+   partylist <- renderLocalListTemplate document $ map (BS.toString . getSmartName) $ partyList document
+   documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         field "partylist" $ partylist
         fieldM "footer" $ mailFooter ctx document
 
-mailDocumentAwaitingForAuthor :: TemplatesMonad m => Context -> Document  -> m Mail
-mailDocumentAwaitingForAuthor ctx document = do
-    signatories <- renderListTemplate $ map (BS.toString . getSmartName) $ partySignedList document
-    documentMail ctx document "mailDocumentAwaitingForAuthor" $ do
+mailDocumentAwaitingForAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> a -> m Mail
+mailDocumentAwaitingForAuthor ctx document authorlocale = do
+    signatories <- renderLocalListTemplate authorlocale $ map (BS.toString . getSmartName) $ partySignedList document
+    documentMail authorlocale ctx document "mailDocumentAwaitingForAuthor" $ do
         field "authorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
         field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc $ documentid document)
         field "partylist" signatories
@@ -300,39 +305,39 @@ mailCancelDocumentByAuthorContent :: TemplatesMonad m
                                   -> Context
                                   -> Document
                                   -> m String
-mailCancelDocumentByAuthorContent forMail customMessage ctx document = 
+mailCancelDocumentByAuthorContent forMail customMessage ctx document =
     (BS.toString . content) <$> mailCancelDocumentByAuthor forMail customMessage ctx document
 
 mailCancelDocumentByAuthor :: TemplatesMonad m
-                           => Bool 
+                           => Bool
                            -> Maybe BS.ByteString
                            -> Context
                            -> Document
                            -> m Mail
 mailCancelDocumentByAuthor forMail customMessage ctx document = do
-    mail <- documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailcancelbyauthor) $ do
+    mail <- documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailcancelbyauthor) $ do
         let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
         fieldM "header" $ do
             header <- case customMessage of
                            Just c -> return $ BS.toString c
-                           Nothing -> renderTemplateForProcess document processmailcancelbyauthorstandardheader $ do
+                           Nothing -> renderLocalTemplateForProcess document processmailcancelbyauthorstandardheader $ do
                                field "partylist" $ map (BS.toString . getSmartName) $ partyList document
             makeEditable "customtext" header
         fieldM "footer" $ do
             if forMail
                then if isNothing customMessage
                        then mailFooter ctx document
-                       else renderTemplateFM "customFooter" $
+                       else renderLocalTemplateFM document "customFooter" $
                                 field "creatorname" creatorname
                     else do
                         this <- mailFooter ctx document
-                        with <- renderTemplateFM "customFooter" $
+                        with <- renderLocalTemplateFM document "customFooter" $
                             field "creatorname" creatorname
                         replaceOnEdit this with
     return $ mail { from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
-                        => Context 
+                        => Context
                         -> Document
                         -> String
                         -> String
@@ -343,7 +348,7 @@ mailMismatchSignatory :: TemplatesMonad m
                         -> Bool
                         -> m Mail
 mailMismatchSignatory ctx document authoremail authorname doclink signame badname msg isbad = do
-   documentMail ctx document "mailMismatchSignatory" $ do
+   documentMailWithDocLocale ctx document "mailMismatchSignatory" $ do
         field "authorname" authorname
         field "signame" signame
         field "badname" badname
@@ -351,10 +356,10 @@ mailMismatchSignatory ctx document authoremail authorname doclink signame badnam
         field "doclink" doclink
         field "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
 
-mailMismatchAuthor :: TemplatesMonad m => Context -> Document -> String -> String -> String -> m Mail
-mailMismatchAuthor ctx document authorname badname bademail = do
+mailMismatchAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> String -> String -> String -> a -> m Mail
+mailMismatchAuthor ctx document authorname badname bademail authorlocale = do
     let Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
-    documentMail ctx document "mailMismatchAuthor" $ do
+    documentMail authorlocale ctx document "mailMismatchAuthor" $ do
         field "messages" $ concat $ map para $ lines msg
         field "authorname" authorname
         field "doclink" $ ctxhostpart ctx ++ (show $ LinkDesignDoc $ DesignStep2 (documentid document)
@@ -383,7 +388,7 @@ mailFooter ctx doc = do
     mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
     case (documentmailfooter $ documentui doc) `mplus` (join $ servicemailfooter <$> serviceui <$> mservice) of
          Just footer -> return $ BS.toString footer
-         Nothing -> renderTemplateFM "poweredBySkrivaPaPara" $ field "ctxhostpart" $ ctxhostpart ctx
+         Nothing -> renderLocalTemplateFM doc "poweredBySkrivaPaPara" $ field "ctxhostpart" $ ctxhostpart ctx
 
 makeFullLink :: TemplatesMonad m => Context -> Document -> String -> m String
 makeFullLink ctx doc link = do
@@ -393,50 +398,52 @@ makeFullLink ctx doc link = do
          Nothing -> return $ ctxhostpart ctx ++ link
 
 mailMailAPIConfirm :: TemplatesMonad m
-                      => Context 
+                      => Context
                       -> Document
                       -> SignatoryLink
                       -> m Mail
 mailMailAPIConfirm ctx document siglink = do
   let issignatory = (elem SignatoryPartner . signatoryroles) siglink
-  documentMail ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
+  documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
         fieldM "footer" $ mailFooter ctx document
         fieldM "timetosigninfo" $ do
             case (documenttimeouttime document) of
-                 Just time -> renderTemplateFM "timetosigninfo" $ do
+                 Just time -> renderLocalTemplateFM document "timetosigninfo" $ do
                                   field "time" $ show time
                  Nothing -> return ""
         fieldM "partnersinfo" $ do
-             renderListTemplate $ map (BS.toString . getSmartName) $ partyList document
+             renderLocalListTemplate document $ map (BS.toString . getSmartName) $ partyList document
         fieldM "whohadsignedinfo" $ do
              do
                    signedlist <- if (not $ null $ partySignedList document)
-                                    then fmap Just $ renderListTemplate $  map (BS.toString . getSmartName) $ partySignedList document
+                                    then fmap Just $ renderLocalListTemplate document $  map (BS.toString . getSmartName) $ partySignedList document
                                     else return Nothing
-                   renderTemplateForProcess document processwhohadsignedinfoformail $ do
+                   renderLocalTemplateForProcess document processwhohadsignedinfoformail $ do
                        field "signedlist" signedlist
-        field "issignatory" $ issignatory 
+        field "issignatory" $ issignatory
         field "isattachments" $ False
         field "hassigattachments" $ False
         field "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
-                   
+
 
 mailMailApiError:: MailAddress -> String -> Mail
-mailMailApiError from err = 
+mailMailApiError from err =
       emptyMail  {  to = [from]
                   , title   = BS.fromString "Error while parsing request"
                   , content = BS.fromString err
                  }
-                 
-documentMail :: (MonadIO m,Functor m,TemplatesMonad m) => Context -> Document -> String -> Fields m -> m Mail
-documentMail ctx doc mailname otherfields = do
+
+documentMailWithDocLocale :: (MonadIO m,Functor m,TemplatesMonad m) => Context -> Document -> String -> Fields m -> m Mail
+documentMailWithDocLocale ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields
+
+documentMail :: (MonadIO m,Functor m,TemplatesMonad m, HasLocale a) =>  a -> Context -> Document -> String -> Fields m -> m Mail
+documentMail haslocale ctx doc mailname otherfields = do
     mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
-    let allfields = do 
+    let allfields = do
         contextFields ctx
         field "documenttitle" $ BS.toString $ documenttitle doc
         field "creatorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink doc
         when (isJust mservice) $
             fieldF "service" $ serviceFields "" mservice
         otherfields
-    kontramail mailname allfields
-        
+    kontramaillocal haslocale mailname allfields

@@ -11,17 +11,29 @@ class TestContext
   end
 
   def createWebDriver
+    params = {}
     if @props.browser.nil? then
-      @driver = Selenium::WebDriver.for(:remote, :url => @props.selenium_url)
+      browser = nil
     elsif @props.browser.downcase == "firefox" then
-      @driver = Selenium::WebDriver.for(:remote, :desired_capabilities => :firefox, :url => @props.selenium_url)
+      browser = :firefox
     elsif @props.browser.downcase == "chrome" then
-      @driver = Selenium::WebDriver.for(:remote, :desired_capabilities => :chrome, :url => @props.selenium_url)
+      browser = :chrome
     elsif @props.browser.downcase == "ie" then
-      @driver = Selenium::WebDriver.for(:remote, :desired_capabilities => :ie, :url => @props.selenium_url)
+      browser = :ie
     else
       raise "browser can be left unspecified or one of firefox, chrome, & ie"
     end
+    if !@props.selenium_url.nil? then
+      params[:url] = @props.selenium_url
+      if !browser.nil?
+        params[:desired_capabilities] = browser
+      end
+      browser = :remote
+    end
+    if browser.nil? then
+      raise "either browser or selenium_url must be specified"
+    end
+    @driver = Selenium::WebDriver.for(browser, params)
   end
   
   def createKontrakcjaURL url

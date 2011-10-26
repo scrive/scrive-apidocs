@@ -16,7 +16,6 @@ import qualified AppLogger as Log
 import Misc
 import Util.FlashUtil
 import DBError
-import User.Locale
 import User.UserView
 import Util.KontraLinkUtils
 
@@ -64,21 +63,21 @@ redirectKontraResponse link = do
 
 class GuardRight a where
   guardRight :: (Kontrakcja m) => Either a b -> m b
-  
+
 instance GuardRight String where
   guardRight (Right b) = return b
   guardRight (Left  a) = do
     Log.debug a
     mzero
-    
+
 instance GuardRight DBError where
   guardRight (Right b)            = return b
   guardRight (Left DBNotLoggedIn) = do
     ctx <- getContext
-    r <- sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+    r <- sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
     finishWith r
   guardRight _                    = mzero
-  
+
 {- |
    Get the value from a Right or log an error and mzero if it is a left
  -}
@@ -91,6 +90,6 @@ guardLoggedIn = do
   case ctxmaybeuser of
     Nothing -> do
       ctx <- getContext
-      r <- sendRedirect $ LinkLogin (getLocale ctx) NotLogged
+      r <- sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
       finishWith r
     Just _ -> return ()

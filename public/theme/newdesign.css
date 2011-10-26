@@ -1,8 +1,3 @@
-.skrivapa-logo {
-	background: url(../img/logo-skrivapa-small.png) no-repeat;
-	height: 34px;
-	width: 137px; 
-}
 
 .scrive-logo {
     background: url(../img/logo-scrive-small.png) no-repeat;
@@ -84,15 +79,15 @@
 #top-slim-container .login-button:hover
 {
   color: #FFFFFF;
-}  
+}
 
 .content , .newdesign .content{
     margin:0 auto;
     width:960px;
     position: relative;
 }
-  
-  
+
+
 #top-slim-container .user-container {
         top: 2px;
 }
@@ -452,7 +447,7 @@
 #tab-viewer .tabs li.active a {
 	color: #fff;
     padding-top:0px;
-    
+
 }
 
 #tab-viewer .tabs li.active {
@@ -466,7 +461,7 @@
 	border-width: 0 1px 1px 1px;
 	font: 10px "Lucida Grande";
 	-moz-border-radius: 0 0 5px 5px;
-	-webkit-border-radius: 0 0 5px 5px;	
+	-webkit-border-radius: 0 0 5px 5px;
 }
 
 .tab-container a{
@@ -855,7 +850,7 @@
 }
 
 .modal-container .modal-content ul li {
-	
+
 }
 
 .modal-container .modal-content .spacer {
@@ -882,12 +877,12 @@
 
 .modal-container .modal-footer .btn-big{
     padding-bottom:10px;
-    
+
 }
 
 .modal-container .modal-footer .btn-small{
     padding-bottom:10px;
-    
+
 }
 .modal-container .modal-footer a.cancel {
 	color: #e91600;

@@ -36,7 +36,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -56,7 +56,6 @@ tableUsers = Table {
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
-       , ("system_server", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        ] -> return TVRvalid
@@ -80,7 +79,6 @@ tableUsers = Table {
           ++ ", email TEXT NOT NULL"
           ++ ", preferred_design_mode SMALLINT NULL"
           ++ ", lang SMALLINT NOT NULL"
-          ++ ", system_server SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
           ++ ", region SMALLINT NOT NULL"
           ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"

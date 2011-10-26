@@ -58,6 +58,7 @@ instance (APIContext c, Kontrakcja m) => DBMonad (APIFunction m c) where
 
 instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
     getTemplates = liftKontra getTemplates
+    getLocalTemplates = liftKontra . getLocalTemplates
 
 instance Kontrakcja m => KontraMonad (APIFunction m c) where
     getContext    = liftKontra getContext
