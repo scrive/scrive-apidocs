@@ -166,22 +166,15 @@ jsget path obj = foldl (\a b -> a >>= getStr b) (Right obj) $ pathList path
 
 jsmodify :: JSONPath path => path -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
 jsmodify path f val | pathList path == [] = f val
-jsmodify path f obj = case jsget path obj of
-  Left s -> Left s
-  Right v -> case f v of
-    Left s -> Left s
-    Right v' -> jsset path v' obj
+jsmodify path f obj = jsget path obj >>= f >>= \v -> jsset path v obj
 
 getStr :: String -> JSValue -> Either String JSValue
-getStr k obj@(JSObject kvs) = case lookup k (fromJSObject kvs) of
-  Nothing -> Left $ "Key " ++ show k ++ " not found in : " ++ show obj
-  Just v -> Right v
+getStr k obj@(JSObject kvs) = maybe (Left $ "Key " ++ show k ++ " not found in : " ++ show obj) 
+                              Right $ lookup k (fromJSObject kvs)
 getStr _ obj = Left $ "Cannot get value on non-object: " ++ show obj
 
 getStrDef :: JSON a => String -> a -> JSValue -> Either String JSValue
-getStrDef k d (JSObject kvs) = case lookup k (fromJSObject kvs) of
-  Nothing -> Right $ showJSON d
-  Just v -> Right v
+getStrDef k d (JSObject kvs) = maybe (Right $ showJSON d) Right $ lookup k (fromJSObject kvs)
 getStrDef _ _ obj = Left $ "Cannot get value on non-object: " ++ show obj
 
 setStr :: JSON a => String -> a -> JSValue -> Either String JSValue
@@ -189,17 +182,9 @@ setStr k v (JSObject jsobj) = Right $ JSObject $ toJSObject $ List.addToAL (from
 setStr _ _ obj            = Left $ "Cannot set value on non-object: " ++ show obj
 
 modifyStrDef :: JSON a => String -> (JSValue -> Either String JSValue) -> a -> JSValue -> Either String JSValue
-modifyStrDef k f d obj@(JSObject _) = case getStrDef k d obj of
-  Left s -> Left s
-  Right v -> case f v of
-    Left s -> Left s
-    Right v' -> setStr k v' obj
-modifyStrDef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+modifyStrDef k f d obj@(JSObject _) = getStrDef k d obj >>= f >>= \v -> setStr k v obj
+modifyStrDef _ _ _ obj              = Left $ "Cannot set value on non-object: " ++ show obj
 
 _modifyStr :: String -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
-_modifyStr k f obj@(JSObject _) = case getStr k obj of
-  Left s -> Left s
-  Right v -> case f v of
-    Left s -> Left s
-    Right v' -> setStr k v' obj
+_modifyStr k f obj@(JSObject _) = getStr k obj >>= f >>= \v -> setStr k v obj
 _modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
