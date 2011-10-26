@@ -12,6 +12,7 @@ import Data.Maybe
 import DB.Derive
 import Misc
 import User.Lang
+import Data.Char
 
 data Region = REGION_SE
               | REGION_GB
@@ -23,7 +24,7 @@ codeFromRegion REGION_SE = "se"
 codeFromRegion REGION_GB = "gb"
 
 regionFromCode :: String -> Maybe Region
-regionFromCode s = find ((== s) . codeFromRegion) allValues
+regionFromCode s = find ((== map toLower s) . codeFromRegion) allValues
 
 defaultRegionLang :: Region -> Lang
 defaultRegionLang REGION_SE = LANG_SE
