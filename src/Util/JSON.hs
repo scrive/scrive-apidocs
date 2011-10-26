@@ -18,6 +18,8 @@ module Util.JSON (
     , withJSON
     , jsget
     , jsmodify
+    , jsgetdef
+    , jsmodifydef
     , jsset
     )where
 
@@ -164,9 +166,21 @@ jsset path val obj = let (p:ps) = pathList path in
 jsget :: JSONPath path => path -> JSValue -> Either String JSValue
 jsget path obj = foldl (\a b -> a >>= getStr b) (Right obj) $ pathList path
 
+jsgetdef :: JSONPath path => path -> JSValue -> JSValue -> Either String JSValue
+jsgetdef path _ val | pathList path == [] = Right val
+jsgetdef path d obj | [p] <- pathList path = getStrDef p d obj
+jsgetdef path d obj = let (p:ps) = pathList path in
+  getStr p obj >>= jsgetdef ps d
+
 jsmodify :: JSONPath path => path -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
 jsmodify path f val | pathList path == [] = f val
-jsmodify path f obj = jsget path obj >>= f >>= \v -> jsset path v obj
+jsmodify path f obj@(JSObject _) = jsget path obj >>= f >>= \v -> jsset path v obj
+jsmodify _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+
+jsmodifydef :: JSONPath path => path -> (JSValue -> Either String JSValue) -> JSValue -> JSValue -> Either String JSValue
+jsmodifydef path f _ val | pathList path == [] = f val
+jsmodifydef path f d obj@(JSObject _) = jsgetdef path d obj >>= f >>= \v -> jsset path v obj
+jsmodifydef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
 
 getStr :: String -> JSValue -> Either String JSValue
 getStr k obj@(JSObject kvs) = maybe (Left $ "Key " ++ show k ++ " not found in : " ++ show obj) 
