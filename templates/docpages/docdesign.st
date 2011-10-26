@@ -373,10 +373,10 @@ pageDocumentDesign=
 
             <div class="border"></div>
             <div id="signStepsBodyRight" class="step3">
-              <label for="docregionselector">Document Language:</label>
+              <label for="docregionselector">$_documentLanguageLabel()$:</label>
               <select id="docregionselector">
-                <option value="REGION_GB" $if(region.gb)$selected="selected"$endif$ rel="#dialog-confirm-region-gb">English</option>
-                <option value="REGION_SE" $if(region.se)$selected="selected"$endif$  rel="#dialog-confirm-region-se">Swedish</option>
+                <option value="REGION_GB" $if(region.gb)$selected="selected"$endif$ rel="#dialog-confirm-region-gb">$_English()$</option>
+                <option value="REGION_SE" $if(region.se)$selected="selected"$endif$  rel="#dialog-confirm-region-se">$_Swedish()$</option>
               </select>
             </div>
             <div class="border"></div>
@@ -951,15 +951,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">Sign in English</h2>
+          <h2 id="dialog-title">$_signInEnglish()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>Please confirm that you would like the parts to sign in English.</p>
-        <p>This means that all emails sent to the parts about this document will be written in English.</p>
-        <p>Swedish options for using social security numbers and e-legitimation will be removed.</p>
+        $_signInEnglishConfirmText()$
       </div>
     </div>
     <div class="modal-footer">
@@ -967,7 +965,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <a href="#" class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-            <span>OK</span>
+            <span>$_signInEnglish()$</span>
         </div>
         <div class="right"></div>
       </a>
@@ -982,15 +980,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">Sign in Swedish</h2>
+          <h2 id="dialog-title">$_signInSwedish()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>Please confirm that you would like the parts to sign in Swedish.</p>
-        <p>This means that all emails sent to the parts about this document will be written in Swedish.</p>
-        <p>Swedish options for using social security numbers and e-legitimation will be added.</p>
+        $_signInSwedishConfirmText()$
       </div>
     </div>
     <div class="modal-footer">
@@ -998,7 +994,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <a href="#" class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-            <span>OK</span>
+            <span>$_signInSwedish()$</span>
         </div>
         <div class="right"></div>
       </a>
