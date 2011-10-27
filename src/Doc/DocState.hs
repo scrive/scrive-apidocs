@@ -17,6 +17,7 @@ module Doc.DocState
     , AttachFile(..)
     , AttachSealedFile(..)
     , AuthorSignDocument(..)
+    , ChangeMainfile(..)
     , AuthorSendDocument(..)
     , RejectDocument(..)
     , GetDocumentByDocumentID(..)
@@ -367,8 +368,15 @@ attachSealedFile :: DocumentID
                  -> Update Documents (Either String Document)
 attachSealedFile documentid fid = do
   modifySignable documentid $ \document ->
-    Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] }
+    Right $ document { documentsealedfiles = [fid] }
 
+
+changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
+changeMainfile did fid = do
+    modifySignable did $ \doc ->
+        if (documentstatus doc == Closed)
+         then Right $ doc { documentsealedfiles = [fid] }
+         else Right $ doc { documentfiles = [fid] }   
 {- |
     Updates an existing document, typically this stores information collected
     from the doc design view.  If there is a problem, such as the document not existing,
@@ -1568,6 +1576,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
+                        , 'changeMainfile
                         , 'markDocumentSeen
                         , 'markInvitationRead
                         , 'setInvitationDeliveryStatus

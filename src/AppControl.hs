@@ -20,7 +20,6 @@ import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
-import Company.Model
 import DB.Classes
 import Doc.DocState
 import InputValidation
@@ -77,10 +76,8 @@ import qualified Data.Map as Map
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-import InspectXMLInstances ()
-import InspectXML
 import Util.MonadUtils
-import ForkAction
+
 
 {- |
   Global application data
@@ -259,6 +256,8 @@ handleRoutes locale = msum $
      , dir "adminonly" $ dir "db" $ hGet0 $ toK0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
      
+     , dir "adminonly" $ dir "documents" $ hGet0 $ toK0 $ Administration.showDocumentsDaylyList
+     
      , dir "adminonly" $ dir "allstatscsv" $ Stats.handleDocStatsCSV
      , dir "adminonly" $ dir "userstatscsv" $ Stats.handleUserStatsCSV
        
@@ -282,10 +281,11 @@ handleRoutes locale = msum $
      --, dir "adminonly" $ dir "migratesigaccounts" $ hGet0 $ toK0 $ Administration.migrateSigAccounts
      --, dir "adminonly" $ dir "migratecompanies" $ hGet0 $ toK0 $ Administration.migrateCompanies
 
-     , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ sysdump
+     , dir "adminonly" $ dir "sysdump" $ hGet0 $ toK0 $ Administration.sysdump
 
      , dir "adminonly" $ dir "reseal" $ hPost1 $ toK1 $ Administration.resealFile
-       
+     , dir "adminonly" $ dir "replacemainfile" $ hPost1 $ toK1 $ Administration.replaceMainFile
+          
      , dir "adminonly" $ dir "docproblems" $ hGet0 $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "adminonly" $ dir "backdoor" $ hGet1 $ toK1 $ Administration.handleBackdoorQuery
@@ -308,12 +308,12 @@ handleRoutes locale = msum $
      -- never ever use this
      , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ onlySuperUser $ hGet2 $ toK2 $ handleChangeServicePasswordAdminOnly      
        
-     , dir "adminonly" $ dir "log" $ onlySuperUser $ hGet1 $ toK1 $ serveLogDirectory
+     , dir "adminonly" $ dir "log" $ onlySuperUser $ hGet1 $ toK1 $ Administration.serveLogDirectory
 
   
-     , dir "dave" $ dir "document" $ hGet1 $ toK1 $ daveDocument
-     , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ daveUser
-     , dir "dave" $ dir "company"  $ hGet1 $ toK1 $ daveCompany
+     , dir "dave" $ dir "document" $ hGet1 $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "user"     $ hGet1 $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "company"  $ hGet1 $ toK1 $ Administration.daveCompany
 
      -- account stuff
      , dir "logout"      $ hGet0  $ toK0 $ handleLogout
@@ -852,53 +852,3 @@ serveHTMLFiles =  do
                                       (const $ return Nothing))
   renderFromBody V.TopNone V.kontrakcja $ BS.toString s
 
-{- |
-   Ensures logged in as a super user
--}
-onlySuperUserGet :: Kontrakcja m => m Response -> m Response
-onlySuperUserGet action = do
-    ctx@Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
-    if isSuperUser ctxadminaccounts ctxmaybeuser
-        then action
-        else sendRedirect $ LinkLogin (getLocale ctx) NotLoggedAsSuperUser
-
-{- |
-   Used by super users to inspect a particular document.
--}
-daveDocument :: Kontrakcja m => DocumentID -> m Response
-daveDocument documentid = onlySuperUserGet $ do
-    document <- queryOrFail $ GetDocumentByDocumentID documentid
-    V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
-
-{- |
-   Used by super users to inspect a particular user.
--}
-daveUser :: Kontrakcja m => UserID -> m Response
-daveUser userid = onlySuperUserGet $ do
-    user <- runDBOrFail $ dbQuery $ GetUserByID userid
-    V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
-    
-{- |
-    Used by super users to inspect a company in xml.
--}
-daveCompany :: Kontrakcja m => CompanyID -> m Response
-daveCompany companyid = onlySuperUserGet $ do
-  company <- runDBOrFail $ dbQuery $ GetCompany companyid
-  V.renderFromBody V.TopNone V.kontrakcja $ inspectXML company
-
-sysdump :: Kontrakcja m => m Response
-sysdump = onlySuperUserGet $ do
-    dump <- liftIO getAllActionAsString
-    ok $ addHeader "refresh" "5" $ toResponse dump
-
-
-serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
-                   String
-                  -> m Response
-serveLogDirectory filename = do
-    contents <- liftIO $ getDirectoryContents "log"
-    when (filename `notElem` contents) $ do
-        Log.debug $ "Log '" ++ filename ++ "' not found"
-        mzero
-    (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
-    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout

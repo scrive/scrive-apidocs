@@ -1011,6 +1011,8 @@ handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
    contents <- liftIO $ getFileIDContents ctx fileid'
+   liftIO $ putStrLn $ show "Getting file " ++ show fileid'
+   liftIO $ putStrLn $ show "Content is " ++ show contents
    if BS.null contents
       then mzero
       else do

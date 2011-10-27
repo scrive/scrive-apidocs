@@ -11,6 +11,7 @@ module MinutesTime
        , showDateAbbrev
        , showDateDMY
        , showDateOnly
+       , parseDateOnly
        , showDateYMD
        , showMinutesTimeForAPI
        , toMinutes
@@ -75,6 +76,13 @@ showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %
 showDateOnly :: MinutesTime -> String
 showDateOnly mt | toSeconds mt == 0 = ""
                 | otherwise = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d" mt
+
+parseDateOnly :: String -> Maybe MinutesTime 
+parseDateOnly s =  do
+    t <- parseTime defaultTimeLocale "%Y-%m-%d" s
+    startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
+    let val = diffDays t startOfTime
+    return $ fromMinutes (fromIntegral $ val *24*60)
 
 {- |
     Use this to tell formatting functions the locale

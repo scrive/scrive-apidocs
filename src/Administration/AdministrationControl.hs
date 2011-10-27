@@ -23,6 +23,7 @@ module Administration.AdministrationControl(
           , showStats
           , showServicesPage
           , showAdminTranslations
+          , showDocumentsDaylyList
           , indexDB
           , getUsersDetailsToCSV
           , handleUserChange
@@ -37,7 +38,13 @@ module Administration.AdministrationControl(
           , handleFixForBug510
           , handleFixForAdminOnlyBug
           , resealFile
+          , replaceMainFile
           , handleCheckSigLinkIDUniqueness
+          , daveDocument
+          , daveUser
+          , daveCompany
+          , sysdump
+          , serveLogDirectory
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -86,6 +93,12 @@ import ActionSchedulerState
 import Doc.DocInfo
 import InputValidation
 import User.Utils
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS
+import InspectXMLInstances ()
+import InspectXML
+import ForkAction 
+import File.TransState
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -837,18 +850,32 @@ resealFile docid = onlySuperUser $ do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> mzero
-    Just doc -> case (documentfiles doc,documentsealedfiles doc, documentstatus doc) of  
-                     ((_:_),[], Closed) -> do
-                         ctx <- getContext
-                         Log.debug "Document is valid for resealing sealing"
-                         res <- sealDocument ctx doc
-                         case res of
-                           Left  _ -> Log.debug "We failed to reseal the document"
-                           Right _ -> Log.debug "Ok, so the document has been resealed"
-                         return LoopBack
-                     _ -> do
-                         Log.debug "Document is not valid for resealing sealing"
-                         mzero
+    Just doc -> do
+        ctx <- getContext
+        Log.debug "Document is valid for resealing sealing"
+        res <- sealDocument ctx doc
+        case res of
+            Left  _ -> Log.debug "We failed to reseal the document"
+            Right _ -> Log.debug "Ok, so the document has been resealed"
+        return LoopBack
+        
+replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
+replaceMainFile did = onlySuperUser $ do
+  Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
+  doc <- guardJustM $ query $ GetDocumentByDocumentID did  
+  input <- getDataFnM (lookInput "file")
+  case (input, documentfiles doc) of
+       (Input contentspec _ _contentType, cf:_)  -> do
+            content <- case contentspec of
+                Left filepath -> liftIO $ BSL.readFile filepath
+                Right c -> return c
+            fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)    
+            file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
+            _ <- update $ ChangeMainfile did (fileid file)
+            return LoopBack
+       _ -> mzero
+
+
 
 handleCheckSigLinkIDUniqueness :: Kontrakcja m => m String
 handleCheckSigLinkIDUniqueness = do
@@ -856,3 +883,76 @@ handleCheckSigLinkIDUniqueness = do
   if length siglinkids == length (nub siglinkids)
      then return "Signatory link ids are unique globally."
      else return "Signatory link ids are NOT unique globally."
+
+showDocumentsDaylyList ::  Kontrakcja m => m (Either KontraLink String)
+showDocumentsDaylyList = onlySuperUserGet $ do
+    now <- getMinutesTime
+    day <- fromMaybe now <$> parseDateOnly <$> getFieldWithDefault "" "day"
+    srvs  <- runDBQuery $ GetServices
+    documents <- join <$> (sequence $ map (query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    liftIO $ putStrLn $ show documents
+    adminDocumentsDaylyList day $ filter (dayMatch day) documents
+ where    
+    dayMatch day doc = (documentctime doc >= day) && (documentctime doc <= ((24*60) `minutesAfter` day))
+                       || ((documentctime doc <= day) && (documentmtime doc >= day))
+                       
+                       
+                       
+                       
+{- |
+   Used by super users to inspect a particular document.
+-}
+daveDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
+daveDocument documentid = onlySuperUserGet $ do
+    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    renderTemplateFM  "daveDocument" $ do
+        field "daveBody" $  inspectXML document
+        field "id" $ show documentid 
+        field "closed" $ documentstatus document == Closed
+        
+
+
+{- |
+   Used by super users to inspect a particular user.
+-}
+daveUser :: Kontrakcja m => UserID ->  m (Either KontraLink String)
+daveUser userid = onlySuperUserGet $ do
+    user <- runDBOrFail $ dbQuery $ GetUserByID userid
+    return $ inspectXML user
+    
+{- |
+    Used by super users to inspect a company in xml.
+-}
+daveCompany :: Kontrakcja m => CompanyID -> m (Either KontraLink String)
+daveCompany companyid = onlySuperUserGet $ do
+  company <- runDBOrFail $ dbQuery $ GetCompany companyid
+  return $ inspectXML company                       
+  
+  
+  
+{- |
+   Ensures logged in as a super user
+-}
+onlySuperUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
+onlySuperUserGet action = do
+    ctx@Context{ ctxadminaccounts, ctxmaybeuser } <- getContext
+    if isSuperUser ctxadminaccounts ctxmaybeuser
+        then Right <$> action
+        else return $ Left $ LinkLogin (getLocale ctx) NotLoggedAsSuperUser
+
+sysdump :: Kontrakcja m => m (Either KontraLink Response)
+sysdump = onlySuperUserGet $ do
+    dump <- liftIO getAllActionAsString
+    ok $ addHeader "refresh" "5" $ toResponse dump
+
+
+serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
+                   String
+                  -> m Response
+serveLogDirectory filename = do 
+    contents <- liftIO $ getDirectoryContents "log"
+    when (filename `notElem` contents) $ do
+        Log.debug $ "Log '" ++ filename ++ "' not found"
+        mzero
+    (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
+    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout  
