@@ -10,6 +10,7 @@ javascriptLocalisation =
              , problemWithPDF : "$_problemWithPDF()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
              , offerSignatory : "$_offerSignatory()$"
+             , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
              , secretaryCantSign : "$_secretaryCantSign()$"
              , cantSendReminder: function(listtype){
                     return "$_cantSendReminder1()$" + listtype + "$_cantSendReminder2()$"
