@@ -276,29 +276,6 @@ pagintext (SealSpec{documentNumber,initials,staticTexts }) =
  show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60 :: Int) ++ " 18 l S " ++
  "Q "
 
-signatoryBox :: SealingTexts -> Person -> Box
-signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) = 
- let
-    orgnrtext = if companynumber=="" then "" else (orgNumberText sealingTexts) ++ " " ++ companynumber
-    orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
-    emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
-    rightmargin = 595 - 46.5522
- in Box 42 $
- "BT " ++
- "0.806 0.719 0.51 0.504 k " ++
- "/TT1 1 Tf " ++
- "10 0 0 10 46.5522 707.3906 Tm " ++
- "(" ++ winAnsiPostScriptEncode fullname ++ ")Tj " ++
- "/TT0 1 Tf " ++
- "10 0 0 10 46.5522 695.9906 Tm " ++
- "(" ++ winAnsiPostScriptEncode company ++ ")Tj " ++
- "10 0 0 10 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
- "(" ++ winAnsiPostScriptEncode orgnrtext ++ ")Tj " ++
- "/TT2 1 Tf " ++
- "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
- "(" ++ winAnsiPostScriptEncode email ++ ")Tj " ++
- "ET "
-
 makeManyLines :: PDFFont -> PDFFloat -> String -> [String]
 makeManyLines font width text' = result
     where
@@ -320,29 +297,84 @@ makeManyLines font width text' = result
     textLines = takeWhileLength 0 "" textSplitWithLength
     result = map textOutLine textLines 
 
-logEntryBox :: HistEntry -> Box
-logEntryBox (HistEntry {histdate,histcomment}) = 
-    let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment)
-    in
-        Box (8 + length outlines * 12) $ 
-                "1 0 0 1 0 26 cm " ++
-                "1 0 0 1 0 26 cm " ++
-                "1 0 0 1 0 26 cm " ++
-                "1 0 0 1 0 100 cm " ++
-                "BT " ++
-                "/TT2 1 Tf " ++
-                "0.591 0.507 0.502 0.19 k " ++
-                "10 0 0 10 46 520.8887 Tm " ++
-                "(" ++ winAnsiPostScriptEncode histdate ++ ")Tj " ++
-                "10 0 0 10 231 520.8887 Tm " ++
-                "1.2 TL " ++
-                concat outlines ++
-                "ET "
+
+
+
+verificationTextBox :: SealingTexts -> Box
+verificationTextBox staticTexts = Box 22 $
+    "BT " ++
+    "/TT0 1 Tf " ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "21 0 0 21 39.8198 787.9463 Tm " ++
+    "(" ++ winAnsiPostScriptEncode (verificationTitle staticTexts) ++ ") Tj " ++
+    "ET "
+
+documentNumberTextBox :: SealingTexts -> String -> Box
+documentNumberTextBox staticTexts documentNumber = Box 30 $
+    "1 0 0 1 0 22 cm " ++
+    "BT " ++
+    "/TT0 1 Tf " ++
+    "0.546 0.469 0.454 0.113 k " ++
+    "12 0 0 12 39.8198 766.9555 Tm " ++
+    "[(" ++ docPrefix staticTexts ++ ") 55 ( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
+    "ET "
+
+partnerTextBox :: SealingTexts -> Box
+partnerTextBox staticTexts = Box 0 $
+    "1 0 0 1 0 22 cm " ++
+    "1 0 0 1 0 30 cm " ++
+    "0.039 0.024 0.02 0 k " ++
+    "566.479 731.97 -537.601 20.16 re " ++
+    "S " ++
+    "BT " ++
+    "/TT0 1 Tf " ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "12 0 0 12 39.8198 736.8555 Tm " ++
+    "("++ winAnsiPostScriptEncode (partnerText staticTexts) ++ ")Tj " ++
+    "ET "
+
+secretaryBox :: SealingTexts -> Box
+secretaryBox staticTexts = Box 27 $
+            "1 0 0 1 0 17 cm " ++
+            "BT " ++
+            "/TT0 1 Tf " ++
+            "0.806 0.719 0.51 0.504 k " ++
+            "12 0 0 12 39.8198 736.8555 Tm " ++
+            "(" ++ secretaryText staticTexts ++ ")Tj " ++
+            "ET "
+
+signatoryBox :: SealingTexts -> Person -> Box
+signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) = 
+ let
+    orgnrtext = if companynumber=="" then "" else (orgNumberText sealingTexts) ++ " " ++ companynumber
+    orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
+    emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
+    rightmargin = 595 - 46.5522
+ in Box 42 $
+    "1 0 0 1 0 22 cm " ++
+    "1 0 0 1 0 26 cm " ++
+    "BT " ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "/TT1 1 Tf " ++
+    "10 0 0 10 46.5522 707.3906 Tm " ++
+    "(" ++ winAnsiPostScriptEncode fullname ++ ")Tj " ++
+    "/TT0 1 Tf " ++
+    "10 0 0 10 46.5522 695.9906 Tm " ++
+    "(" ++ winAnsiPostScriptEncode company ++ ")Tj " ++
+    "10 0 0 10 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
+    "(" ++ winAnsiPostScriptEncode orgnrtext ++ ")Tj " ++
+    "/TT2 1 Tf " ++
+    "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
+    "(" ++ winAnsiPostScriptEncode email ++ ")Tj " ++
+    "ET "
+
 
 handlingBox :: SealingTexts -> Box
 handlingBox staticTexts = Box 26 $
+    "1 0 0 1 0 22 cm " ++
     "1 0 0 1 0 26 cm " ++
     "1 0 0 1 0 100 cm " ++
+    "1 0 0 1 0 30 cm " ++
     "0.4 G " ++
     "566.479 566.85 -537.601 20.16 re " ++
     "S " ++
@@ -356,9 +388,11 @@ handlingBox staticTexts = Box 26 $
 
 dateAndHistoryBox :: SealingTexts -> Box
 dateAndHistoryBox staticTexts = Box 26 $
+    "1 0 0 1 0 22 cm " ++
     "1 0 0 1 0 26 cm " ++
     "1 0 0 1 0 26 cm " ++
     "1 0 0 1 0 100 cm " ++
+    "1 0 0 1 0 30 cm " ++
     "0.4 G " ++
     "566.479 540.93 -537.601 20.16 re " ++
     "S " ++
@@ -371,46 +405,26 @@ dateAndHistoryBox staticTexts = Box 26 $
     "("++ historyText staticTexts ++")Tj " ++
     "ET "
 
-secretaryBox :: SealingTexts -> Box
-secretaryBox staticTexts = Box 27 $
-            "1 0 0 1 0 -27 cm " ++
-            "BT " ++
-            "/TT0 1 Tf " ++
-            "0.806 0.719 0.51 0.504 k " ++
-            "12 0 0 12 39.8198 736.8555 Tm " ++
-            "(" ++ secretaryText staticTexts ++ ")Tj " ++
-            "ET "
-
-
-verificationTextBox :: SealingTexts -> Box
-verificationTextBox staticTexts = Box 0 $
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.806 0.719 0.51 0.504 k " ++
-    "21 0 0 21 39.8198 787.9463 Tm " ++
-    "(" ++ winAnsiPostScriptEncode (verificationTitle staticTexts) ++ ") Tj " ++
-    "ET "
-
-documentNumberTextBox :: SealingTexts -> String -> Box
-documentNumberTextBox staticTexts documentNumber = Box 0 $
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.546 0.469 0.454 0.113 k " ++
-    "12 0 0 12 39.8198 766.9555 Tm " ++
-    "[(" ++ docPrefix staticTexts ++ ") 55 ( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
-    "ET "
-
-partnerTextBox :: SealingTexts -> Box
-partnerTextBox staticTexts = Box 0 $
-    "0.039 0.024 0.02 0 k " ++
-    "566.479 731.97 -537.601 20.16 re " ++
-    "S " ++
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.806 0.719 0.51 0.504 k " ++
-    "12 0 0 12 39.8198 736.8555 Tm " ++
-    "("++ winAnsiPostScriptEncode (partnerText staticTexts) ++ ")Tj " ++
-    "ET "
+logEntryBox :: HistEntry -> Box
+logEntryBox (HistEntry {histdate,histcomment}) = 
+    let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment)
+    in
+        Box (8 + length outlines * 12) $ 
+                "1 0 0 1 0 30 cm " ++
+                "1 0 0 1 0 22 cm " ++
+                "1 0 0 1 0 26 cm " ++
+                "1 0 0 1 0 26 cm " ++
+                "1 0 0 1 0 26 cm " ++
+                "1 0 0 1 0 100 cm " ++
+                "BT " ++
+                "/TT2 1 Tf " ++
+                "0.591 0.507 0.502 0.19 k " ++
+                "10 0 0 10 46 520.8887 Tm " ++
+                "(" ++ winAnsiPostScriptEncode histdate ++ ")Tj " ++
+                "10 0 0 10 231 520.8887 Tm " ++
+                "1.2 TL " ++
+                concat outlines ++
+                "ET "
 
 lastpage :: SealSpec -> String
 lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
