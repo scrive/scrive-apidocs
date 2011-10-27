@@ -858,14 +858,14 @@ $daveBody:noescape()$
 <BR/>
 $if(closed)$
   <form method="post" action="/adminonly/reseal/$id$">
-    <input type="submit" value="Reseal"/>
+    <input type="submit" value="Reseal"> </input>
   </form>
   <form method="post" action="/adminonly/replacemainfile/$id$" enctype="multipart/form-data">
-    <input type="file" name="file"> <input type="submit" value="Reupload sealed file"/>
+    <input type="file" name="file"> </input> <input type="submit" value="Reupload sealed file"></input>
   </form>
 $else$
   <form method="post" action="/adminonly/replacemainfile/$id$" enctype="multipart/form-data">
-    <input type="file" name="file"> <input type="submit" value="Reupload main file"/>
+    <input type="file" name="file"> </input> <input type="submit" value="Reupload main file"/>
   </form>
 $endif$
 <BR/>
