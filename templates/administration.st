@@ -55,6 +55,9 @@ adminsmain=
             </a>
           </td>
           <td style="height:50px">
+            <a href="/adminonly/documents">
+              <button style="width:150px">Documents</button>
+            </a>
           </td>
         </tr>
     </tbody></table>
@@ -800,3 +803,70 @@ adminTranslations =
 </center>
 
 ####
+daylydocumentinfo = 
+
+
+$backtoadminmainlink()$
+<div>
+<h4 style="margin-left:200px">Documents </h4>
+<p> Lists documents that could be touched durring this time, check dave for more details. Time can be moved +- 2h midnight due to timezones </p>
+
+<BR/>
+<form>
+<BR/>
+ <input type='text' name='day' value='$day$'/> <input type='submit' value='Reload'/>
+<BR/>
+<BR/>
+</form>
+<table style="text-align:left;">
+<thead>
+  <tr>
+      <th style="width: 160px;"> Dates (Creation / Change)</th>
+      <th style="width: 160px;"> Author </th>
+      <th style="width: 100px;"> Title </th>
+      <th style="width: 100px;"> Service </th>
+      <th style="width: 100px;"> Status </th>
+      <th style="width: 100px;"> Type </th>
+      <th style="width: 160px;"> Signatories </th>
+      <th style="width: 80px;"> Admin </th>
+  </tr>
+</thead>
+<tbody>
+$documents:{document |<tr style="border:4px solid #DDDDDD"> 
+    <td style="border:2px solid #DDDDDD"> $document.ctime$ <BR/>
+                                          $document.mtime$
+    </td>
+    <td style="border:2px solid #DDDDDD">$document.author.name$ <BR/> $document.author.email$ <BR/> $document.author.company$ </td>
+    <td style="border:2px solid #DDDDDD">$document.title$ </td>
+    <td style="border:2px solid #DDDDDD"> $if(document.service)$ $document.service$ $else$ Scrive $endif$</td>
+    <td style="border:2px solid #DDDDDD">$document.status$ </td>
+    <td style="border:2px solid #DDDDDD">$document.type$ </td>
+    <td style="border:2px solid #DDDDDD">$document.signatories: {sig | $sig$ <br/>}$ </td>
+    <td style="border:2px solid #DDDDDD"><a href='/dave/document/$document.id$'> DAVE </a> </td>
+</tr>}$
+</tbody>
+</table>
+</div>
+####
+daveDocument= 
+$daveBody:noescape()$ 
+
+<div style="border:10px solid red;padding:10px">
+<center> <h1>This option is extreme. Use this only if really needed </h1></center>
+<BR/>
+<BR/>
+<BR/>
+$if(closed)$
+  <form method="post" action="/adminonly/reseal/$id$">
+    <input type="submit" value="Reseal"/>
+  </form>
+  <form method="post" action="/adminonly/replacemainfile/$id$" enctype="multipart/form-data">
+    <input type="file" name="file"> <input type="submit" value="Reupload sealed file"/>
+  </form>
+$else$
+  <form method="post" action="/adminonly/replacemainfile/$id$" enctype="multipart/form-data">
+    <input type="file" name="file"> <input type="submit" value="Reupload main file"/>
+  </form>
+$endif$
+<BR/>
+</div>

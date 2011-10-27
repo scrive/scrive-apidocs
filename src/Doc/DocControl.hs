@@ -623,12 +623,14 @@ handleIssueShowGet docid =
               addFlash (OperationFailed, fromJust mMismatchMessage)
             ctx2 <- getContext -- need to get new context because we may have added flash msg
             step <- getDesignStep (documentid document)
+            filesforattachments' <- mapassocM (runDBQuery . GetFileByFileID) $ map authorattachmentfile $ documentauthorattachments document
+            let filesforattachments = [(fid, f) | (fid, Just f) <- filesforattachments']
             case (documentstatus document) of
               Preparation -> do
                 mattachments <- getDocsByLoggedInUser
                 case mattachments of
-                  Left _ -> Right <$> pageDocumentDesign ctx2 document step []
-                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments)
+                  Left _ -> Right <$> pageDocumentDesign ctx2 document step [] filesforattachments
+                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments) filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- friends can just look (but not touch)
@@ -1064,6 +1066,8 @@ handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
    contents <- liftIO $ getFileIDContents ctx fileid'
+   liftIO $ putStrLn $ show "Getting file " ++ show fileid'
+   liftIO $ putStrLn $ show "Content is " ++ show contents
    if BS.null contents
       then mzero
       else do

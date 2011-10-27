@@ -22,6 +22,7 @@ module Administration.AdministrationView(
           , databaseContent
           , statsPage
           , servicesAdminPage
+          , adminDocumentsDaylyList
           , adminTranslationsPage
           , adminUserUsageStatsPage
           , adminCompanyUsageStatsPage
@@ -52,6 +53,8 @@ import Company.Model
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
+import Util.SignatoryLinkUtils
+import MinutesTime
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => m String
@@ -135,7 +138,7 @@ adminUserStatisticsPage morefields =
   renderTemplateFM "statisticsPage" $ do
     morefields
     field "adminlink" $ show $ LinkAdminOnly
-
+ 
 adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
                                               -> [(String, Int)]
                                               -> [(String,Int)]
@@ -170,6 +173,26 @@ adminCompanyUsageStatsPage companyid morefields =
         field "adminlink" $ show $ LinkAdminOnly
         field "companyid" $ show companyid
         morefields
+
+adminDocumentsDaylyList :: TemplatesMonad m => MinutesTime -> [Document] -> m String
+adminDocumentsDaylyList t docs = do
+    renderTemplateFM "daylydocumentinfo" $ do
+       fieldFL "documents" $ for docs $ \doc -> do
+           field "id" $ show $ documentid doc
+           field "title" $ documenttitle doc
+           field "service" $ fmap show $ documentservice doc
+           field "type" $ show $ documenttype doc
+           field "status" $ take 20 $ show $ documentstatus doc
+           field "signatories" $ map getSmartName $ documentsignatorylinks doc
+           fieldF "author" $ do
+               field "name"    $ fmap getSmartName    $ getAuthorSigLink doc
+               field "email"   $ fmap getEmail        $ getAuthorSigLink doc
+               field "company" $ fmap getCompanyName  $ getAuthorSigLink doc
+           field "ctime" $ showMinutesTimeForAPI $ documentctime doc
+           field "mtime" $ showMinutesTimeForAPI $ documentmtime doc
+       field "adminlink" $ show $ LinkAdminOnly
+       field "day" $ showDateOnly t
+
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
 allUsersTable users =
