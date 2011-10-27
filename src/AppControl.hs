@@ -338,6 +338,9 @@ handleRoutes locale = msum $
      , dir "invite"      $ hPostNoXToken0 $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp0 $ toK0 $ UserControl.handleQuestion
 
+     -- someone wants a phone call
+     , dir "phone" $ hPostAllowHttp0 $ toK0 $ UserControl.handlePhoneCallRequest
+
      -- a general purpose blank page
      --, dir "/blank" $ hGet0 $ toK0 $ simpleResponse ""
 

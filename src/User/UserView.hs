@@ -52,6 +52,7 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
+    flashMessageWeWillCallYouSoon,
     flashUserIsAlreadyCompanyAccount,
     flashMessageUserInvitedAsCompanyAccount,
     flashMessageUserHasBecomeCompanyAccount,
@@ -276,7 +277,8 @@ modalInviteUserAsCompanyAccount fstname sndname email =
 
 modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
-    toModal <$> renderTemplateM "modalWelcomeToSkrivaPa" ()
+    toModal <$> (renderTemplateFM "modalWelcomeToSkrivaPa" $ do
+      field "phonelink" $ show LinkRequestPhoneCall)
 
 modalAccountSetup :: MonadIO m => KontraLink -> String -> String -> m FlashMessage
 modalAccountSetup signuplink fstname sndname = do
@@ -300,6 +302,11 @@ modalAccountRemoved doctitle = do
 flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
 flashMessageThanksForTheQuestion =
     toFlashMsg OperationDone <$> renderTemplateM "flashMessageThanksForTheQuestion" ()
+
+flashMessageWeWillCallYouSoon :: TemplatesMonad m => String -> m FlashMessage
+flashMessageWeWillCallYouSoon phone =
+    toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageWeWillCallYouSoon" $ do
+        field "phone" phone)
 
 flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
 flashMessageLoginRedirectReason reason =

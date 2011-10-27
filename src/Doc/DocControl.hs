@@ -453,7 +453,9 @@ handleDeclineAccountFromSign documentid
                              magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  handleAccountRemovalFromSign actionid magichash
+  userid <- guardJust $ maybesignatory signatorylink
+  user <- guardJustM $ runDBQuery $ GetUserByID userid
+  handleAccountRemovalFromSign user signatorylink actionid magichash
   addFlashM flashMessageAccountRemovedFromSign
   return $ LinkSignDoc document signatorylink
 
@@ -485,7 +487,8 @@ signDocument documentid
     Left _ -> mzero
     Right (doc, olddoc) -> do
       postDocumentChangeAction doc olddoc (Just signatorylinkid1)
-      handleAfterSigning doc signatorylinkid1
+      udoc <- guardJustM $ query $ GetDocumentByDocumentID documentid
+      handleAfterSigning udoc signatorylinkid1
 
 {- |
     Call after signing in order to save the document for any new user,
@@ -506,6 +509,8 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
       case muser of
         Just (user, actionid, magichash) -> do
           _ <- update $ SaveDocumentForUser documentid user signatorylinkid
+          Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
+          Log.debug $ "doc " ++ (show document)
           if isClosed document
             then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
             else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash

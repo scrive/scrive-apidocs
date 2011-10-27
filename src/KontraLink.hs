@@ -101,6 +101,7 @@ data KontraLink
     | LinkDaveDocument DocumentID
     | LinkFile FileID BS.ByteString
     | LinkAskQuestion
+    | LinkRequestPhoneCall
     | LinkInvite
     | LinkPayExView (Maybe PaymentId)
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
@@ -214,6 +215,7 @@ instance Show KontraLink where
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
+    showsPrec _ (LinkRequestPhoneCall) = (++) "/phone"
     showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
     showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid

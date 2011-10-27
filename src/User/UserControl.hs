@@ -636,6 +636,35 @@ handleQuestion = do
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
+handlePhoneCallRequest :: Kontrakcja m => m KontraLink
+handlePhoneCallRequest = do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  mphone <- getOptionalField asValidPhone "phone"
+  case mphone of
+    Nothing -> return ()
+    Just phone -> do
+      let content = "<p>User " ++ (BS.toString $ getFirstName user) ++ " "
+                    ++ (BS.toString $ getLastName user) ++ " "
+                    ++ "&lt;" ++ (BS.toString $ getEmail user) ++ "&gt; "
+                    ++ "has requested a call on "
+                    ++ "&lt;" ++ (BS.toString phone) ++ "&gt;.  "
+                    ++ "They have just signed the TOS, "
+                    ++ "and they're setup with lang "
+                    ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
+      scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
+            to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
+          , title = BS.fromString $ "Phone Call Request"
+          , content = BS.fromString $ content
+      }
+      _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
+              userphone = phone
+            }
+      _ <- addUserPhoneAfterTOS user
+      addFlashM $ flashMessageWeWillCallYouSoon (BS.toString phone)
+      return ()
+  return LoopBack
+
 handleGetBecomeCompanyAccount :: Kontrakcja m => UserID -> m (Either KontraLink Response)
 handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
   addFlashM modalDoYouWantToBeCompanyAccount
@@ -712,6 +741,7 @@ handleAccountSetupFromSign aid hash = do
           case mactivateduser of
             Just activateduser -> do
               _ <- addUserSaveAfterSignStatEvent activateduser
+              addFlashM modalWelcomeToSkrivaPa
               return ()
             Nothing -> return ()
           return mactivateduser
@@ -732,10 +762,7 @@ handleAccountSetupPost aid hash = do
           mactivateduser <- handleActivate aid hash signupmethod user
           when (isJust mactivateduser) $ do
               addFlashM flashMessageUserActivated
-              --do we want this instead? it was in the code, but never called
-              -- before i refactored this a bit.  if not we should delete the function
-              -- properly.
-              -- addFlashM modalWelcomeToSkrivaPa
+              addFlashM modalWelcomeToSkrivaPa
               return ()
           return ()
       getHomeOrUploadLink
@@ -921,14 +948,16 @@ handleAccountRemovalGet aid hash = do
   addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
   sendRedirect $ LinkSignDoc doc sig
 
-handleAccountRemovalFromSign :: Kontrakcja m => ActionID -> MagicHash -> m ()
-handleAccountRemovalFromSign aid hash = do
-  _doc <- handleAccountRemoval' aid hash
+handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
+handleAccountRemovalFromSign user siglink aid hash = do
+  doc <- removeAccountFromSignAction aid hash
+  _ <- guardRightM $ update . ArchiveDocuments user $ [documentid doc]
+  _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 
 handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountRemovalPost aid hash = do
-  doc <- handleAccountRemoval' aid hash
+  doc <- removeAccountFromSignAction aid hash
   addFlashM $ modalAccountRemoved $ documenttitle doc
   getHomeOrUploadLink
 
@@ -936,8 +965,8 @@ handleAccountRemovalPost aid hash = do
     Helper function for performing account removal (these are accounts setup
     by signing), this'll return the document that was removed.
 -}
-handleAccountRemoval' :: Kontrakcja m => ActionID -> MagicHash -> m Document
-handleAccountRemoval' aid hash = do
+removeAccountFromSignAction :: Kontrakcja m => ActionID -> MagicHash -> m Document
+removeAccountFromSignAction aid hash = do
   action <- guardJustM $ getAccountCreatedBySigningIDAction aid
   let AccountCreatedBySigning _ _ (docid, _) token = actionType action
   guard $ hash == token

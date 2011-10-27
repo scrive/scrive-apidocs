@@ -138,13 +138,11 @@ adminUserStatisticsPage morefields =
 
 adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
                                               -> [(String, Int)]
-                                              -> [(String,Int)]
                                               -> m String
-adminFunctionalityStatsPage userstats docstats siglinkstats =
+adminFunctionalityStatsPage userstats docstats =
   renderTemplateFM "adminFunctionalityStatsPage" $ do
     fieldFL "userfunctionalitystats" $ map functionalityStatFields userstats
     fieldFL "docfunctionalitystats" $ map functionalityStatFields docstats
-    fieldFL "siglinkfunctionalitystats" $ map functionalityStatFields siglinkstats
     field "adminlink" $ show $ LinkAdminOnly
   where
     functionalityStatFields (label, count) = do

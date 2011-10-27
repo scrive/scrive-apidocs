@@ -679,15 +679,8 @@ showFunctionalityStats = onlySuperUser $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
   documents <- query $ GetDocuments $ currentServiceID ctx
-  let docsAndSigLinks = concat $ map (\d -> zip (repeat d) (documentsignatorylinks d)) documents
-  parts <- mapM (\(doc, siglink) -> case maybesignatory siglink of
-                             Just signerid -> do
-                               msigner <- runDBQuery $ GetUserByID signerid
-                               return (doc, siglink, msigner)
-                             Nothing -> return (doc, siglink, Nothing)) docsAndSigLinks
   content <- adminFunctionalityStatsPage (mkStats ctxtime users)
                                          (mkStats ctxtime documents)
-                                         (mkStats ctxtime parts)
   renderFromBody TopEmpty kontrakcja content
   where
     mkStats :: HasFunctionalityStats a => MinutesTime -> [a] -> [(String, Int)]
@@ -724,15 +717,6 @@ instance HasFunctionalityStats User where
       Just tostime -> aRecentDate time < tostime
       Nothing -> False
   getStatDefinitions = []
-
-instance HasFunctionalityStats (Document, SignatoryLink, Maybe User) where
-  isRecent time (doc, _siglink, _msignuser) = isRecent time doc
-  getStatDefinitions =
-    [ ("rejected TOS after signing", rejectedTOS)
-    ]
-    where
-      rejectedTOS (_doc, siglink, msignuser) =
-        (isJust $ maybesigninfo siglink) && (isNothing $ msignuser >>= userhasacceptedtermsofservice)
 
 showAdminTranslations :: Kontrakcja m => m String
 showAdminTranslations = do

@@ -255,7 +255,7 @@
 "_QuoteOnVidBy","- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise",,"- Lisa Renander and Julia Hamrin, CEO and Sales Manager at Go
  Enterprise"
 "_QuotesHead","Kunder berättar",,"What our customers think"
-"_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept Scrive Terms of Service"
+"_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för ",,"Are you sure you want to send reminders to the parties involved in the "
 "_ReminderBodyIfMulti2"," dokument.          ",," documents?          "
 "_ReminderBodyIfSingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet ",,"Are you sure you want to send a reminder to the parties involved in the document "
@@ -399,14 +399,10 @@
  was founded by Lukas Duczko and Gracjan Polak who got to know
  each other at the Swedish credit company Klarna.</p>"
 "_accountFromSignFooterNoThx","Nej tack",,"No thanks"
-"_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes please, store"
+"_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes, please store"
 "_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">Scrive
- Allmänna Villkor</a>",,"I have read and I accept <a target=""_blank"" href=""$linkterms$"">Scrive
- Terms of Service</a>"
-"_accountFromSignInputsBodySecureOriginal","          Vill du säkra ditt original? Scrive kan även arkivera
- ett original för din säkerhet. Det kostar ingenting.
- ",,"          Do you want to secure your original? Scrive can store
- it for your safety, free of charge.        "
+ Allmänna Villkor</a>",,"I have read and accept the <a target=""_blank"" href=""$linkterms$"">Scrive Terms of Service</a>"
+"_accountFromSignInputsBodySecureOriginal","Vill du säkra ditt original? Scrive kan även arkivera ett original för din säkerhet. Det kostar ingenting.",,"Do you want to secure your original? Scrive can store it for you safely and free of charge."
 "_accountFromSignInputsConfirmPassword","Bekräfta lösenord",,"Confirm password"
 "_accountFromSignInputsPrivateAccount","Privatperson",,"Private person"
 "_activatePageViewNotValidLinkBody","Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen
@@ -819,6 +815,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
+"_flashMessageWeWillCallYouSoon","Thanks.  We'll call you at $phone$ within the next 24 hours.",,"Thanks.  We'll call you at $phone$ within the next 24 hours."
 "_flashMessageUserActivated","Välkommen till Scrive!",,"Welcome to Scrive!"
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
@@ -1820,7 +1817,7 @@ Would appreciate it too."
  från Scrive tillsammans med ditt konto.",,"Your duplicate for the document ""$documenttitle$"" is now deleted
  from Scrive together with your account."
 "_modalAccountRemovedHeader","Raderat",,"Deleted"
-"_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and I accept Scrive Terms of Service"
+"_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
 "_modalAccountSetupFooter","Skapa konto!",,"Create account!"
 "_modalAccountSetupHeaderAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
@@ -1901,12 +1898,9 @@ Would appreciate it too."
          is now legally binding.        "
 "_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
 "_modalSignedViewClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
-"_modalSignedViewClosedNoAccountBody","        Dokumentet är nu bindande. Scrive har verifierat denna
- transaktion och utfärdat ett verifikat. Vi har skickat ett original
- av dokumentet till din inkorg.      ",,"        The document is now binding. Scrive has verified this
- transaction and generated a verification. An original document
- has been sent to your e-mail address.     "
+"_modalSignedViewClosedNoAccountBody","Dokumentet är nu bindande. Scrive har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.",,"The document is now binding. Scrive has verified this transaction and generated a verification. An original document has been sent to your e-mail address."
 "_modalSignedViewClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
+"_modalSignedViewNotClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
 "_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte
       undertecknat. När alla undertecknat blir dokumentet bindande
         och en kopia skickas till din e-post.      ",,"        $partyUnsignedListString:noescape()$ has not yet
@@ -1922,6 +1916,7 @@ Would appreciate it too."
         signed. When everyone involved has signed, the document
           becomes legally binding and a duplicate is sent to
  your e-mail address."
+"_modalSignedViewNotClosedNoAccountBody","$partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar Scrive ett verifikat, dokumentet blir bindande och en kopia skickas till din e-post.",,"$partyUnsignedListString:noescape()$ have not signed. When they have signed the document will become binding and a copy emailed to all."
 "_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ",,"          The document has been saved to your account.
   "
 "_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
@@ -1960,6 +1955,7 @@ Would appreciate it too."
       ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed."
 "_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
 "_modalWelcomeToSkrivaPaBodyBestRegards","Med vänliga hälsningar<br/>        Team Scrive",,"Best regards<br/>        Team Scrive"
+"_modalWelcomeToSkrivaPaBodyPhoneQuestion","Want to ask some questions about Scrive?  If you enter your phone number we'll give you a call.",,"Want to ask some questions about Scrive?  If you enter your phone number and we'll give you a call."
 "_modalWelcomeToSkrivaPaBodyHint","Tips: Testa med dig själv först.",,"Tip: Try signing a document with yourself to start with."
 "_modalWelcomeToSkrivaPaBodyInstructions","1. Ladda upp ett dokument<br/>        2. Fyll i motpartens uppgifter<br/>
         3. Underteckna och skicka iväg",,"1. Upload a document<br/>        2. Enter data about the counterpart<br/>
