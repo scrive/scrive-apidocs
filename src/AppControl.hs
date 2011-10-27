@@ -853,3 +853,4 @@ serveHTMLFiles =  do
   s <- guardJustM $ (liftIO $ catch (fmap Just $ BS.readFile ("html/" ++ fileName))
                                       (const $ return Nothing))
   renderFromBody V.TopNone V.kontrakcja $ BS.toString s
+ 

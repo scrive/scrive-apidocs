@@ -779,10 +779,8 @@ testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author 
-         (isSignable &&^ (not . isAwaitingAuthor) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . filter (not . isAuthor) . documentsignatorylinks))
-  let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ CloseDocument (documentid doc)]
+         (isSignable &&^ (isAwaitingAuthor ||^ isPending) &&^ (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks)))
+  etdoc <- msum [randomUpdate $ CloseDocument (documentid doc)]
   validTest $ assertLeft etdoc
 
 testCloseDocumentNotSignableNothing :: DB ()
