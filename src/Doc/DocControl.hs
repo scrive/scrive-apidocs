@@ -21,6 +21,7 @@ import Doc.DocViewMail
 import Doc.DocProcess
 import InputValidation
 import File.TransState
+import qualified File.State as OldFiles
 import Kontra
 import KontraLink
 import ListUtil
@@ -1015,6 +1016,12 @@ handleFileGet fileid' _title = do
    contents <- liftIO $ getFileIDContents ctx fileid'
    liftIO $ putStrLn $ show "Getting file " ++ show fileid'
    liftIO $ putStrLn $ show "Content is " ++ show contents
+   
+   Log.debug "Debuging for Lukas last template files issue"
+   f1<- ioRunDB (ctxdbconn ctx) . dbQuery $ GetFileByFileID fileid'
+   f2 <- liftIO $ query $ OldFiles.GetFileByFileID fileid'
+   Log.debug $ "Current file " ++ show f1
+   Log.debug $ "Old file " ++ show f2
    if BS.null contents
       then mzero
       else do
