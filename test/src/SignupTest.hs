@@ -231,9 +231,10 @@ assertAccountActivated :: MonadIO m => String -> String -> (Response, Context) -
 assertAccountActivated fstname sndname (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "Location is /upload" (Just "/upload") (T.getHeader "location" (rsHeaders res))
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
+  assertEqual "A flash message & dialog was added" 2 (length $ ctxflashmessages ctx)
   --shouldn't this flash just indicate success and not that it's signing related?!
-  assertBool "Flash message has type indicating signing related" $ head (ctxflashmessages ctx) `isFlashOfType` SigningRelated
+  assertBool "Flash message has type indicating signing related" $ any (`isFlashOfType` SigningRelated) (ctxflashmessages ctx)
+  assertBool "There's also a modal" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
   assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
   assertEqual "First name was set" (Just fstname) (fmap (BS.toString . getFirstName) $ ctxmaybeuser ctx)
   assertEqual "Second name was set" (Just sndname) (fmap (BS.toString . getLastName) $ ctxmaybeuser ctx)
