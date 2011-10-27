@@ -1022,6 +1022,12 @@ handleFileGet fileid' _title = do
    f2 <- liftIO $ query $ OldFiles.GetFileByFileID fileid'
    Log.debug $ "Current file " ++ show f1
    Log.debug $ "Old file " ++ show f2
+   case (f1,f2) of 
+        (Just  ff1,Just ff2) -> do
+            (Log.debug . show . BS.length) =<< liftIO (getFileContents ctx ff1)
+            (Log.debug . show . BS.length) =<< liftIO (getFileContents ctx ff2)
+        _ -> return ()
+   
    if BS.null contents
       then mzero
       else do
