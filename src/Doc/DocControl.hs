@@ -63,7 +63,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-
+import Database.HDBC.PostgreSQL
 import ForkAction
 
 {-
@@ -89,12 +89,14 @@ postDocumentChangeAction document@Document  { documentstatus
       (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) $ documentsignatorylinks document) &&
       (not $ hasSigned $ getAuthorSigLink document) &&
       (isSignatory $ getAuthorSigLink document) = do
+          Log.debug $ "Sending doc to awaiting aturho from pending"
           ctx <- getContext
           d <- guardRightM $ update $ PendingToAwaitingAuthor documentid (ctxtime ctx)
           postDocumentChangeAction d olddocument msignalinkid
     | (documentstatus == Pending ||
        documentstatus == AwaitingAuthor) &&
       (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
+          Log.debug $ "sending doc to closed from pending or awaiting author"
           ctx <- getContext
           d <- guardRightM $ update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
           postDocumentChangeAction d olddocument msignalinkid
@@ -123,14 +125,17 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
+        Log.debug $ "Sealing doc from prep to closed"
         _ <- addDocumentCloseStatEvents document
-        ctx@Context{ctxlocale, ctxglobaltemplates, ctxdbconn} <- getContext
+        ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           threadDelay 5000
-          enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
-          case enewdoc of
-            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
-            Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
+          withPostgreSQL (ctxdbconnstring ctx) $ \conn -> do
+          
+           enewdoc <- runReaderT (sealDocument ctx document) conn
+           case enewdoc of
+             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
+             Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
     -- main action: sendAwaitingEmail
@@ -144,11 +149,13 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
+        Log.debug $ " sealing doc from pending/aa to closed"
         _ <- addDocumentCloseStatEvents document
-        ctx@Context{ctxlocale, ctxglobaltemplates, ctxdbconn} <- getContext
+        ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
-          enewdoc <- runReaderT (sealDocument ctx document) ctxdbconn
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ 
+         withPostgreSQL (ctxdbconnstring ctx) $ \conn -> do
+          enewdoc <- runReaderT (sealDocument ctx document) conn
           case enewdoc of
             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
             Left errmsg -> do
@@ -1017,7 +1024,7 @@ handleIssueSave document = do
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor document = do
     unless (document `allowsIdentification` EmailIdentification) mzero
-    doc <- guardRightM $ closeDocument (documentid document) Nothing
+    doc <- guardRightM $ authorSignDocumentFinal (documentid document) Nothing
     postDocumentChangeAction doc document Nothing
     addFlashM flashAuthorSigned
     return $ LinkIssueDoc (documentid document)

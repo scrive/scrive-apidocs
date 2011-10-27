@@ -40,6 +40,7 @@ import Util.SignatoryLinkUtils
 import File.TransState
 import DB.Classes
 import Database.HDBC.PostgreSQL
+import Control.Applicative
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -269,10 +270,13 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
+              Log.debug $ "Addeing new sealed file to DB"
               File{fileid = sealedfileid} <-
                   withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
                       ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
+              Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
               res <- update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+              Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
               return res
       ExitFailure _ ->
           do

@@ -383,7 +383,7 @@ attachSealedFile :: DocumentID
                  -> MinutesTime
                  -> Update Documents (Either String Document)
 attachSealedFile documentid fid time = do
-  modifySignable documentid $ guardStatus "attach a file to" Pending $ \document ->
+  modifySignable documentid $ \document ->
     Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] 
                      , documentmtime = time }
       
