@@ -4,12 +4,12 @@ import Seal
 import SealSpec
 
 simple_text_test :: SealSpec
-simple_text_test = SealSpec 
+simple_text_test = SealSpec
     { input = "test/simple text test.pdf"
     , output = "test/simple text test sealed.pdf"
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
-    , secretaries = [Person 
+    , secretaries = [Person
           { fullname = "Belinda Rossman (secretary)"
           , email = "belinda@rossman.de"
           , company = "Rossman, CO"
@@ -20,60 +20,29 @@ simple_text_test = SealSpec
           , companyverified = False
           , numberverified = True
           }]
-    , persons = 
-        [ Person 
-          { fullname = "Lukas Duczko"
+    , persons = map (\num ->
+         Person
+          { fullname = "Lukas Duczko " ++ show num
           , email = "lukas@duczko.se"
           , company = "CEO, SkrivaPå"
-          , personalnumber = "123456-4567"
-          , companynumber = "123456-4567"
+          , personalnumber = "123456-4567-" ++ show num
+          , companynumber = "00006-4567" ++ show num
           , fullnameverified = False
           , emailverified = True
           , companyverified = False
           , numberverified = True
-          }
-        , Person 
-          { fullname = "Lukas Duczko"
-          , email = "lukas@duczko.se"
-          , company = "CEO, SkrivaPå"
-          , personalnumber = "123456-4567"
-          , companynumber = "123456-4567"
-          , fullnameverified = False
-          , emailverified = True
-          , companyverified = False
-          , numberverified = True
-          }
-        , Person 
-          { fullname = "åöäÖÅÄ Lukas Duczko"
-          , email = "lukas@duczko.se"
-          , company = "CEO, SkrivaPå"
-          , personalnumber = ""
-          , companynumber = ""
-          , fullnameverified = False
-          , emailverified = True
-          , companyverified = False
-          , numberverified = True
-          }
-        
-        ]
+          }) [1..30::Int]
     , initials = "LD, LD"
-      , history = [ HistEntry { histdate = "2010-09-01 13:34"
-                              , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
-                              }
-                  , HistEntry { histdate = "One year later"
-                              , histcomment = "Still mucking around with PDFs some more. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
-                              }
-                  , HistEntry { histdate = "10 years later"
-                              , histcomment = "Really soon now öåä ÖÅÄ. Swedish works. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
-                              }
-                  ]
+      , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
+                                         , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
+                                         }) [10..99::Int]
     -- should be in 4 corners, aligned
     , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
                , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085}
                , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
-    , staticTexts = sampleSealingTexts                        
+    , staticTexts = sampleSealingTexts
     }
 
 
@@ -99,4 +68,3 @@ main = do
     inp <- getContents
     let spec = read inp
     process spec
-

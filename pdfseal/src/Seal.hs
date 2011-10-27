@@ -211,8 +211,8 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
 
 
-placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
-placeSeals fields sealrefid sealtext paginrefid pagintext' sealmarkerformrefid = do
+placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
+placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagew = 595
         pageh = 842
@@ -225,8 +225,9 @@ placeSeals fields sealrefid sealtext paginrefid pagintext' sealmarkerformrefid =
 
     modify $ \document' -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document'
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
-    lastpage' <- addPageToDocument pagevalue
-    modify $ \document' -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document' [(lastpage',sealtext)]
+    flip mapM_ sealtexts $ \sealtext -> do
+        lastpage' <- addPageToDocument pagevalue
+        modify $ \document' -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document' [(lastpage',sealtext)]
 
 
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
@@ -247,6 +248,17 @@ data Box = Box Int String
 
 boxToString :: Box -> String
 boxToString (Box height content) = " q " ++ content ++ " Q " ++ "1 0 0 1 0 " ++ show (-height) ++ " cm "
+
+groupBoxesUpToHeight :: Int -> [Box] -> [[Box]]
+groupBoxesUpToHeight height boxes = helper boxes
+    where
+        worker _ currentBoxes [] = (currentBoxes,[])
+        worker currentHeight currentBoxes rest@((x@(Box h _)):xs) 
+                                               | currentHeight + h < height = worker (currentHeight + h) (x:currentBoxes) xs
+                                               | otherwise = (currentBoxes, rest)
+        helper boxes' = case worker 0 [] boxes' of
+                            (cb, []) -> [reverse cb]
+                            (cb, rest) -> reverse cb : helper rest
 
 pagintext :: SealSpec -> String
 pagintext (SealSpec{documentNumber,initials,staticTexts }) = 
@@ -320,7 +332,7 @@ documentNumberTextBox staticTexts documentNumber = Box 30 $
     "ET "
 
 partnerTextBox :: SealingTexts -> Box
-partnerTextBox staticTexts = Box 0 $
+partnerTextBox staticTexts = Box 30 $
     "1 0 0 1 0 22 cm " ++
     "1 0 0 1 0 30 cm " ++
     "0.039 0.024 0.02 0 k " ++
@@ -336,6 +348,7 @@ partnerTextBox staticTexts = Box 0 $
 secretaryBox :: SealingTexts -> Box
 secretaryBox staticTexts = Box 27 $
             "1 0 0 1 0 17 cm " ++
+            "1 0 0 1 0 30 cm " ++
             "BT " ++
             "/TT0 1 Tf " ++
             "0.806 0.719 0.51 0.504 k " ++
@@ -353,6 +366,7 @@ signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
  in Box 42 $
     "1 0 0 1 0 22 cm " ++
     "1 0 0 1 0 26 cm " ++
+    "1 0 0 1 0 30 cm " ++
     "BT " ++
     "0.806 0.719 0.51 0.504 k " ++
     "/TT1 1 Tf " ++
@@ -375,6 +389,7 @@ handlingBox staticTexts = Box 26 $
     "1 0 0 1 0 26 cm " ++
     "1 0 0 1 0 100 cm " ++
     "1 0 0 1 0 30 cm " ++
+    "1 0 0 1 0 30 cm " ++
     "0.4 G " ++
     "566.479 566.85 -537.601 20.16 re " ++
     "S " ++
@@ -392,6 +407,7 @@ dateAndHistoryBox staticTexts = Box 26 $
     "1 0 0 1 0 26 cm " ++
     "1 0 0 1 0 26 cm " ++
     "1 0 0 1 0 100 cm " ++
+    "1 0 0 1 0 30 cm " ++
     "1 0 0 1 0 30 cm " ++
     "0.4 G " ++
     "566.479 540.93 -537.601 20.16 re " ++
@@ -411,6 +427,7 @@ logEntryBox (HistEntry {histdate,histcomment}) =
     in
         Box (8 + length outlines * 12) $ 
                 "1 0 0 1 0 30 cm " ++
+                "1 0 0 1 0 30 cm " ++
                 "1 0 0 1 0 22 cm " ++
                 "1 0 0 1 0 26 cm " ++
                 "1 0 0 1 0 26 cm " ++
@@ -426,19 +443,9 @@ logEntryBox (HistEntry {histdate,histcomment}) =
                 concat outlines ++
                 "ET "
 
-lastpage :: SealSpec -> String
-lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
-    "/GS0 gs " ++
-    "0.4 G " ++
-
-    -- Frame around whole page
-    "0.081 0.058 0.068 0 k " ++
-    "581.839 14.37 -567.36 813.12 re " ++
-    "S " ++
-
-    "q " ++
-    concatMap boxToString 
-              ( [verificationTextBox staticTexts] ++
+verificationPagesContents :: SealSpec -> [String]
+verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
+    let boxes = [verificationTextBox staticTexts] ++
                 [documentNumberTextBox staticTexts documentNumber] ++
                 [partnerTextBox staticTexts] ++
 
@@ -457,7 +464,20 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
 
                 -- logentry
                 map (logEntryBox) history 
-              ) ++
+        groupedBoxes = groupBoxesUpToHeight 650 boxes
+        groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
+    in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->   
+
+    "/GS0 gs " ++
+    "0.4 G " ++
+
+    -- Frame around whole page
+    "0.081 0.058 0.068 0 k " ++
+    "581.839 14.37 -567.36 813.12 re " ++
+    "S " ++
+
+    "q " ++
+    concatMap boxToString thisPageBoxes ++
     "Q " ++
 
     -- "0.039 0.024 0.02 0 k " ++
@@ -472,7 +492,7 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
     intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
     "0.546 0.469 0.454 0.113 k " ++
     "10 0 0 10 46.5522 31.5469 Tm " ++
-    "(1/1)Tj " ++
+    "(" ++ show thisNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj " ++
     "ET " ++ rightcornerseal2 
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
@@ -536,8 +556,8 @@ process (sealSpec@SealSpec
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
               sealmarkerform <- pageToForm sealmarkerpage2
               let pagintext1 = pagintext sealSpec
-              let sealtext = lastpage sealSpec
-              placeSeals fields newsealcontents sealtext newpagincontents pagintext1 sealmarkerform
+              let sealtexts = verificationPagesContents sealSpec
+              placeSeals fields newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
     writeFileX output outputdoc
     return ()
 
