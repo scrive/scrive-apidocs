@@ -324,7 +324,12 @@ logEntryBox :: HistEntry -> Box
 logEntryBox (HistEntry {histdate,histcomment}) = 
     let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment)
     in
-        Box (8 + length outlines * 12) $ "BT " ++
+        Box (8 + length outlines * 12) $ 
+                "1 0 0 1 0 26 cm " ++
+                "1 0 0 1 0 26 cm " ++
+                "1 0 0 1 0 26 cm " ++
+                "1 0 0 1 0 100 cm " ++
+                "BT " ++
                 "/TT2 1 Tf " ++
                 "0.591 0.507 0.502 0.19 k " ++
                 "10 0 0 10 46 520.8887 Tm " ++
@@ -334,90 +339,127 @@ logEntryBox (HistEntry {histdate,histcomment}) =
                 concat outlines ++
                 "ET "
 
+handlingBox :: SealingTexts -> Box
+handlingBox staticTexts = Box 26 $
+    "1 0 0 1 0 26 cm " ++
+    "1 0 0 1 0 100 cm " ++
+    "0.4 G " ++
+    "566.479 566.85 -537.601 20.16 re " ++
+    "S " ++
+    "BT " ++
+    "0.784 0.698 0.475 0.533 k " ++
+    "/TT0 1 Tf " ++
+    "0 Tc 0 Tw " ++
+    "12 0 0 12 40 571.9502 Tm " ++
+    "[("++ eventsText staticTexts ++")]TJ " ++
+    "ET "
+
+dateAndHistoryBox :: SealingTexts -> Box
+dateAndHistoryBox staticTexts = Box 26 $
+    "1 0 0 1 0 26 cm " ++
+    "1 0 0 1 0 26 cm " ++
+    "1 0 0 1 0 100 cm " ++
+    "0.4 G " ++
+    "566.479 540.93 -537.601 20.16 re " ++
+    "S " ++
+    "BT " ++
+    "0.784 0.698 0.475 0.533 k " ++
+    "/TT0 1 Tf " ++
+    "11 0 0 11 40 546.3926 Tm " ++
+    "("++ dateText staticTexts ++")Tj " ++
+    "11 0 0 11 225 546.3926 Tm " ++
+    "("++ historyText staticTexts ++")Tj " ++
+    "ET "
+
+secretaryBox :: SealingTexts -> Box
+secretaryBox staticTexts = Box 27 $
+            "1 0 0 1 0 -27 cm " ++
+            "BT " ++
+            "/TT0 1 Tf " ++
+            "0.806 0.719 0.51 0.504 k " ++
+            "12 0 0 12 39.8198 736.8555 Tm " ++
+            "(" ++ secretaryText staticTexts ++ ")Tj " ++
+            "ET "
+
+
+verificationTextBox :: SealingTexts -> Box
+verificationTextBox staticTexts = Box 0 $
+    "BT " ++
+    "/TT0 1 Tf " ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "21 0 0 21 39.8198 787.9463 Tm " ++
+    "(" ++ winAnsiPostScriptEncode (verificationTitle staticTexts) ++ ") Tj " ++
+    "ET "
+
+documentNumberTextBox :: SealingTexts -> String -> Box
+documentNumberTextBox staticTexts documentNumber = Box 0 $
+    "BT " ++
+    "/TT0 1 Tf " ++
+    "0.546 0.469 0.454 0.113 k " ++
+    "12 0 0 12 39.8198 766.9555 Tm " ++
+    "[(" ++ docPrefix staticTexts ++ ") 55 ( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
+    "ET "
+
+partnerTextBox :: SealingTexts -> Box
+partnerTextBox staticTexts = Box 0 $
+    "0.039 0.024 0.02 0 k " ++
+    "566.479 731.97 -537.601 20.16 re " ++
+    "S " ++
+    "BT " ++
+    "/TT0 1 Tf " ++
+    "0.806 0.719 0.51 0.504 k " ++
+    "12 0 0 12 39.8198 736.8555 Tm " ++
+    "("++ winAnsiPostScriptEncode (partnerText staticTexts) ++ ")Tj " ++
+    "ET "
 
 lastpage :: SealSpec -> String
 lastpage (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
     "/GS0 gs " ++
     "0.4 G " ++
 
+    -- Frame around whole page
     "0.081 0.058 0.068 0 k " ++
     "581.839 14.37 -567.36 813.12 re " ++
     "S " ++
-    "0.039 0.024 0.02 0 k " ++
-    "566.479 731.97 -537.601 20.16 re " ++
+
+    "q " ++
+    concatMap boxToString 
+              ( [verificationTextBox staticTexts] ++
+                [documentNumberTextBox staticTexts documentNumber] ++
+                [partnerTextBox staticTexts] ++
+
+                -- every signatory on its own line, repeated every 64 pixels down
+                map (signatoryBox staticTexts) persons ++
+
+                (case secretaries of
+                     [] -> []
+                     _ -> [secretaryBox staticTexts] ++
+                          map (signatoryBox staticTexts) secretaries
+                ) ++
+ 
+                -- Datum and Handelse
+                [handlingBox staticTexts] ++
+                [dateAndHistoryBox staticTexts] ++
+
+                -- logentry
+                map (logEntryBox) history 
+              ) ++
+    "Q " ++
+
+    -- "0.039 0.024 0.02 0 k " ++
+    "571.856 24.7 -548.354 64.55 re " ++
     "S " ++
 
     "BT " ++
+    "0.625 0.537 0.53 0.257 k " ++
     "/TT0 1 Tf " ++
-
-    "0.806 0.719 0.51 0.504 k " ++
-    "21 0 0 21 39.8198 787.9463 Tm " ++
-    "(" ++ winAnsiPostScriptEncode (verificationTitle staticTexts) ++ ") Tj " ++
-
+    "8 0 0 8 39.8198 74.2334 Tm " ++
+    "1.2 TL " ++
+    intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
     "0.546 0.469 0.454 0.113 k " ++
-    "12 0 0 12 39.8198 766.9555 Tm " ++
-    "[(" ++ docPrefix staticTexts ++ ") 55 ( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
-
-    "0.806 0.719 0.51 0.504 k " ++
-    "12 0 0 12 39.8198 736.8555 Tm " ++
-    "("++ winAnsiPostScriptEncode (partnerText staticTexts) ++ ")Tj " ++
-    "ET " ++
-
-    -- every signatory on its own line, repeated every 64 pixels down
-    "q " ++ concatMap (boxToString . signatoryBox staticTexts) persons ++
-
-    (if secretaries/=[]
-        then
-            "1 0 0 1 0 -27 cm " ++
-            "BT " ++
-            "/TT0 1 Tf " ++
-            "0.806 0.719 0.51 0.504 k " ++
-            "12 0 0 12 39.8198 736.8555 Tm " ++
-            "(" ++ (secretaryText staticTexts) ++ ")Tj " ++
-            "ET " ++ concatMap (boxToString . signatoryBox staticTexts) secretaries
-        else "") ++
-    "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
- 
-
- -- Datum and Handelse
- "0.4 G " ++
- "566.479 540.93 -537.601 20.16 re " ++
- "S " ++
- "566.479 566.85 -537.601 20.16 re " ++
- "S " ++
-
- "BT " ++
- "0.784 0.698 0.475 0.533 k " ++
- "/TT0 1 Tf " ++
- "0 Tc 0 Tw " ++
- "12 0 0 12 40 571.9502 Tm " ++
- "[("++(eventsText staticTexts)++")]TJ " ++
- "11 0 0 11 40 546.3926 Tm " ++
- "("++(dateText staticTexts)++")Tj " ++
- "11 0 0 11 225 546.3926 Tm " ++
- "("++(historyText staticTexts)++")Tj " ++
- "ET " ++ 
-
-
- -- logentry
- concatMap (boxToString . logEntryBox) history ++
-
- "Q " ++
-
- -- "0.039 0.024 0.02 0 k " ++
- "571.856 24.7 -548.354 64.55 re " ++
- "S " ++
-
- "BT " ++
- "0.625 0.537 0.53 0.257 k " ++
- "/TT0 1 Tf " ++
- "8 0 0 8 39.8198 74.2334 Tm " ++
- "1.2 TL " ++
- intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
- "0.546 0.469 0.454 0.113 k " ++
- "10 0 0 10 46.5522 31.5469 Tm " ++
- "(1/1)Tj " ++
- "ET " ++ rightcornerseal2 
+    "10 0 0 10 46.5522 31.5469 Tm " ++
+    "(1/1)Tj " ++
+    "ET " ++ rightcornerseal2 
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments
