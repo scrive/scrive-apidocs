@@ -838,7 +838,7 @@ $documents:{document |<tr style="border:4px solid #DDDDDD">
     <td style="border:2px solid #DDDDDD"> $document.ctime$ <BR/>
                                           $document.mtime$
     </td>
-    <td style="border:2px solid #DDDDDD">$document.author$ </td>
+    <td style="border:2px solid #DDDDDD">$document.author.name$ <BR/> $document.author.email$ <BR/> $document.author.company$ </td>
     <td style="border:2px solid #DDDDDD">$document.title$ </td>
     <td style="border:2px solid #DDDDDD"> $if(document.service)$ $document.service$ $else$ Scrive $endif$</td>
     <td style="border:2px solid #DDDDDD">$document.status$ </td>

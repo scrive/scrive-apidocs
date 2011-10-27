@@ -182,9 +182,12 @@ adminDocumentsDaylyList t docs = do
            field "title" $ documenttitle doc
            field "service" $ fmap show $ documentservice doc
            field "type" $ show $ documenttype doc
-           field "status" $ show $ documentstatus doc
+           field "status" $ take 20 $ show $ documentstatus doc
            field "signatories" $ map getSmartName $ documentsignatorylinks doc
-           field "author" $ fmap getSmartName $ getAuthorSigLink doc
+           fieldF "author" $ do
+               field "name"    $ fmap getSmartName    $ getAuthorSigLink doc
+               field "email"   $ fmap getEmail        $ getAuthorSigLink doc
+               field "company" $ fmap getCompanyName  $ getAuthorSigLink doc
            field "ctime" $ showMinutesTimeForAPI $ documentctime doc
            field "mtime" $ showMinutesTimeForAPI $ documentmtime doc
        field "adminlink" $ show $ LinkAdminOnly
