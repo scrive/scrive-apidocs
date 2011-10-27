@@ -94,8 +94,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "when I attach a file, the file is attached" conn testDocumentAttachHasAttachment,
   
   testThat "when I attach a sealed file to a bad docid, it always returns left" conn testNoDocumentAttachSealedAlwaysLeft,
-  testThat "when I attach a sealed file to a real doc not in pending, it always returns left" conn testDocumentAttachSealedNotPendingLeft,
-  testThat "when I attach a sealed file to a real doc in pending, it always returns Right" conn testDocumentAttachSealedPendingRight,
+  testThat "when I attach a sealed file to a real doc, it always returns Right" conn testDocumentAttachSealedPendingRight,
   {-
   testThat "when I call updateDocument, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentAlwaysLeft,
   testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentAlwaysLeft,
@@ -260,25 +259,16 @@ testDocumentAttachSealedPendingRight :: DB ()
 testDocumentAttachSealedPendingRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable)
+  fid <- rand 10 arbitrary
   --execute
-  edoc <- randomUpdate $ AttachSealedFile (documentid doc)
+  edoc <- randomUpdate $ AttachSealedFile (documentid doc) fid
   --assert
   validTest $ do
     assertRight edoc
-    assertInvariants $ fromRight edoc
+    assertBool "Should have new file attached, but it's not" $ fid `elem` documentsealedfiles (fromRight edoc)
 
 
-testDocumentAttachSealedNotPendingLeft :: DB ()
-testDocumentAttachSealedNotPendingLeft = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
-  --execute
-  edoc <- randomUpdate $ AttachSealedFile (documentid doc)
-  --assert
-  validTest $ do
-    assertLeft edoc
 {-
 testNotPreparationUpdateDocumentAlwaysLeft :: DB ()
 testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
@@ -779,10 +769,8 @@ testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author 
-         (isSignable &&^ (not . isAwaitingAuthor) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . filter (not . isAuthor) . documentsignatorylinks))
-  let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ CloseDocument (documentid doc)]
+         (isSignable &&^ (isAwaitingAuthor ||^ isPending) &&^ (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks)))
+  etdoc <- msum [randomUpdate $ CloseDocument (documentid doc)]
   validTest $ assertLeft etdoc
 
 testCloseDocumentNotSignableNothing :: DB ()

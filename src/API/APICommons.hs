@@ -7,7 +7,7 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Constans and data structures used by many other API's
+-- Constants and data structures used by many other API's
 -- Some low level helpers.
 --
 -- !! Constants described here should be used between all API's
@@ -110,6 +110,8 @@ data DOCUMENT_TYPE =
     | DOCUMENT_TYPE_OFFER
     | DOCUMENT_TYPE_CONTRACT_TEMPLATE
     | DOCUMENT_TYPE_OFFER_TEMPLATE
+    | DOCUMENT_TYPE_ORDER
+    | DOCUMENT_TYPE_ORDER_TEMPLATE
     deriving (Bounded,Ord,Eq)
 
 instance SafeEnum DOCUMENT_TYPE where
@@ -117,10 +119,14 @@ instance SafeEnum DOCUMENT_TYPE where
     fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 2
     fromSafeEnum DOCUMENT_TYPE_OFFER             = 3
     fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE    = 4
+    fromSafeEnum DOCUMENT_TYPE_ORDER             = 5
+    fromSafeEnum DOCUMENT_TYPE_ORDER_TEMPLATE    = 6
     toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
     toSafeEnum 2 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
     toSafeEnum 3 = Just DOCUMENT_TYPE_OFFER
     toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
+    toSafeEnum 5 = Just DOCUMENT_TYPE_ORDER
+    toSafeEnum 6 = Just DOCUMENT_TYPE_ORDER_TEMPLATE
     toSafeEnum _ = Nothing
 
 toDocumentType :: DOCUMENT_TYPE -> DocumentType
@@ -128,6 +134,8 @@ toDocumentType DOCUMENT_TYPE_CONTRACT          = Signable Contract
 toDocumentType DOCUMENT_TYPE_OFFER             = Signable Offer
 toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
 toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE    = Template Offer
+toDocumentType DOCUMENT_TYPE_ORDER             = Signable Order
+toDocumentType DOCUMENT_TYPE_ORDER_TEMPLATE    = Template Order
 
 {- Building JSON structure representing object in any API response
    TODO: Something is WRONG FOR ATTACHMENTS HERE
@@ -136,8 +144,10 @@ api_document_type :: Document ->  DOCUMENT_TYPE
 api_document_type doc
     | Template Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
     | Template Offer    == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
+    | Template Order    == documenttype doc = DOCUMENT_TYPE_ORDER_TEMPLATE
     | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
     | Signable Offer    == documenttype doc = DOCUMENT_TYPE_OFFER
+    | Signable Order    == documenttype doc = DOCUMENT_TYPE_ORDER
     | otherwise                             = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
 
 
@@ -188,13 +198,13 @@ api_signatory sl = JSObject $ toJSObject $
       sfToJS sf name = (name, showJSON $ BS.toString $ sfValue sf)
       fields = for (filter (not . isFieldCustom) $ signatoryfields $ signatorydetails sl) $
         \sf -> case sfType sf of
-          FirstNameFT -> sfToJS sf "fstname"
-          LastNameFT -> sfToJS sf "sndname"
-          CompanyFT -> sfToJS sf "company"
-          CompanyNumberFT -> sfToJS sf "companynr"
+          FirstNameFT      -> sfToJS sf "fstname"
+          LastNameFT       -> sfToJS sf "sndname"
+          CompanyFT        -> sfToJS sf "company"
+          CompanyNumberFT  -> sfToJS sf "companynr"
           PersonalNumberFT -> sfToJS sf "personalnr"
-          EmailFT -> sfToJS sf "email"
-          CustomFT _ _ -> error "api_signatory: impossible happened"
+          EmailFT          -> sfToJS sf "email"
+          CustomFT _ _     -> error "api_signatory: impossible happened"
 
 api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [

@@ -16,6 +16,7 @@ module Doc.DocState
     , DeleteDocumentRecordIfRequired(..)
     , AttachFile(..)
     , AttachSealedFile(..)
+    , ChangeMainfile(..)
     , RejectDocument(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
@@ -371,7 +372,7 @@ attachFile documentid fid time = do
   modifySignableOrTemplate documentid $ guardStatus "attach a file to" Preparation $ \document ->
     Right $ document { documentfiles = documentfiles document ++ [fid]
                      , documentmtime = time}
-
+    
 {- |
     Attaches a sealed file to the indicated document.
     If there is a problem, such as the document not existing,
@@ -382,22 +383,31 @@ attachSealedFile :: DocumentID
                  -> MinutesTime
                  -> Update Documents (Either String Document)
 attachSealedFile documentid fid time = do
-  modifySignable documentid $ guardStatus "attach a file to" Pending $ \document ->
+  modifySignable documentid $ \document -> 
     Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] 
-                     , documentmtime = time }
+                          , documentmtime = time }
+
+                                          
       
-modifysiglink :: Document -> SignatoryLinkID -> (SignatoryLink -> SignatoryLink) -> Either String Document
-modifysiglink doc slid f = case getSigLinkFor doc slid of
-    Nothing -> Left $ "No signatory for document " ++ show (documentid doc) ++ " and signatorylinkid " ++ show slid
-    Just _ -> Right $ doc { documentsignatorylinks = mapIf (isSigLinkFor slid) f $ documentsignatorylinks doc }
-      
-{- | Set the maybecompany for a signatorylink
- -}
+
+changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
+changeMainfile did fid = do
+    modifySignable did $ \doc ->
+        if (documentstatus doc == Closed)
+         then Right $ doc { documentsealedfiles = [fid] }
+         else Right $ doc { documentfiles = [fid] }   
+
 setSignatoryCompany :: DocumentID -> SignatoryLinkID -> CompanyID -> Update Documents (Either String Document)
 setSignatoryCompany documentid slid cid = do
   modifySignable documentid $ \doc -> 
     modifysiglink doc slid (\sl -> sl { maybecompany = Just cid })    
     
+modifysiglink :: Document -> SignatoryLinkID -> (SignatoryLink -> SignatoryLink) -> Either String Document
+modifysiglink doc slid f = case getSigLinkFor doc slid of
+    Nothing -> Left $ "No signatory for document " ++ show (documentid doc) ++ " and signatorylinkid " ++ show slid
+    Just _ -> Right $ doc { documentsignatorylinks = mapIf (isSigLinkFor slid) f $ documentsignatorylinks doc }
+    
+   
 {- | Remove the maybecompany for a signatorylink
  -}
 removeSignatoryCompany :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
@@ -1678,6 +1688,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
+                        , 'changeMainfile
                         , 'markDocumentSeen
                         , 'markInvitationRead
                         , 'setInvitationDeliveryStatus

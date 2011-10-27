@@ -649,7 +649,7 @@ safeReady(function() {
             });
             $("select.signatoryselector option").detach();
             var select = $("select.signatoryselector");
-            select.append($("<option selected>" + localization.offerSignatory + "</option>"));
+            select.append($("<option selected>" + localization.sigattachmessage + "</option>"));
             select.append(sigoptions);
         },
         fixed:false
