@@ -372,7 +372,7 @@ attachFile documentid fid time = do
   modifySignableOrTemplate documentid $ guardStatus "attach a file to" Preparation $ \document ->
     Right $ document { documentfiles = documentfiles document ++ [fid]
                      , documentmtime = time}
-
+    
 {- |
     Attaches a sealed file to the indicated document.
     If there is a problem, such as the document not existing,
@@ -383,9 +383,11 @@ attachSealedFile :: DocumentID
                  -> MinutesTime
                  -> Update Documents (Either String Document)
 attachSealedFile documentid fid time = do
-  modifySignable documentid $ \document ->
+  modifySignable documentid $ \document -> 
     Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] 
-                     , documentmtime = time }
+                          , documentmtime = time }
+
+                                          
       
 
 changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
