@@ -652,3 +652,12 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 8) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
+
+pair :: a -> b -> (a, b)
+pair a b = (a, b)
+
+mapassoc :: (a -> b) -> [a] -> [(a, b)]
+mapassoc f l = map (\a -> pair a $ f a) l
+
+mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
+mapassocM f l = mapM (\a -> (return . pair a) =<< f a) l

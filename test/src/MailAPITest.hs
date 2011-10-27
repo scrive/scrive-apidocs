@@ -16,6 +16,8 @@ import System.IO.Temp
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
+import Control.Concurrent
+import Control.Monad.Trans
 
 import API.MailAPI
 import DB.Classes
@@ -27,6 +29,9 @@ import User.Model
 import TestingUtil
 import Templates.TemplatesLoader
 import TestKontra as T
+import Doc.DocControl
+import Doc.DocInfo
+import qualified AppLogger as Log
 
 mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
@@ -39,6 +44,8 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "Parse mime document email_outlook_viktor.eml" $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
     , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"      
     , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_three.eml" 4
+    , testCase "test lukas's error email" $ testSuccessfulDocCreation conn "test/mailapi/lukas_mail_error.eml" 2
+    , testCase "test eric's error email" $ testSuccessfulDocCreation conn "test/mailapi/eric_email_error.eml" 2    
     ]
                     
 testParseMimes :: String -> Assertion
@@ -50,7 +57,7 @@ testParseMimes mimepath = do
       --typesOfParts = map fst allParts
       pdfs = filter isPDF allParts
       plains = filter isPlain allParts
-  assertBool ("SHould be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
+  assertBool ("Should be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
   assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
 testSuccessfulDocCreation :: Connection -> String -> Int -> Assertion
@@ -66,8 +73,30 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
         , umapiSentToday = 0
     }
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
-    wrapDB rollback
-    successChecks sigs $ jsonToStringList res
+    wrapDB rollback 
+    Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
+    let res' = jsonToStringList res
+    successChecks sigs res'
+    let mdocid = lookup "documentid" res'
+    assertBool "documentid is given" $ isJust mdocid
+    Just doc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    imgreq <- mkRequest GET []
+    let keepTrying 0 = return ()
+        keepTrying (n::Int) = do
+              (imgres, _) <- runTestKontra imgreq ctx $ showPreview (documentid doc) (head $ documentfiles doc)
+              case imgres of
+               Left _ -> do
+                 Log.debug $ "retrying img req . . ."
+                 --Log.debug $ "Code was " ++ show (rsCode imgres)
+                 threadDelay (1000::Int)
+                 keepTrying (n - 1)
+               Right _ -> do
+                 return ()
+    Log.debug $ "doing img request"
+    liftIO $ keepTrying 100
+    Just doc' <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    assertBool "document is in error!" $ not $ isDocumentError doc'
+
 
 testFailureNoSuchUser :: Connection -> Assertion
 testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do

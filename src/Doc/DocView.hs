@@ -706,6 +706,7 @@ pageDocumentDesign :: TemplatesMonad m
                    -> Document
                    -> (Maybe DesignStep)
                    -> [Document]
+                   -> [(FileID, File)]
                    -> m String
 pageDocumentDesign ctx
   document@Document {
@@ -715,7 +716,8 @@ pageDocumentDesign ctx
     , documentinvitetext
   }
   step
-  attachments =
+  attachments 
+  files =
    let
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        authorotherfields fields = sequence .
@@ -744,7 +746,7 @@ pageDocumentDesign ctx
        documentInfoFields document
        documentViewFields document
        designViewFields step
-       documentAttachmentDesignFields documentid (documentauthorattachments document)
+       documentAttachmentDesignFields documentid (documentauthorattachments document) files
        documentAuthorAttachments attachments
        documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
        fieldF "process" processFields
@@ -777,17 +779,19 @@ documentRegionFields document = do
       field "haspeopleids" $ getRegionValue regionhaspeopleids
       field "iselegavailable" $ getRegionValue regionelegavailable
 
-documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> Fields m
-documentAttachmentDesignFields docid atts = do
+documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> [(FileID, File)] -> Fields m
+documentAttachmentDesignFields docid atts files = do
   field "isattachments" $ not $ null atts
   field "attachmentcount" $ length atts
-  fieldFL "attachments" $ map attachmentFields atts
+  fieldFL "attachments" $ catMaybes $ map attachmentFields atts
   where
-    attachmentFields AuthorAttachment{authorattachmentfile = fileid} = do
-      field "attachmentid" $ show fileid
-      -- FiXME
-      -- field "attachmentname" $ filename
-      field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
+    attachmentFields AuthorAttachment{authorattachmentfile = fileid} = 
+      case lookup fileid files of
+        Nothing -> Nothing 
+        Just file -> Just $ do
+          field "attachmentid" $ show fileid
+          field "attachmentname" $ filename file
+          field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
 
 documentFunctionalityFields :: MonadIO m => Document -> Fields m
 documentFunctionalityFields Document{documentfunctionality} = do

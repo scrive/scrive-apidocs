@@ -131,7 +131,7 @@ var DocumentStandarView = Backbone.View.extend({
                         }
                 });
     },
-      authorAttachmentBox : function() {
+    authorAttachmentBox : function() {
       var document = this.model;
       var signatory = document.currentSignatory();
       var box = $("<div id='signViewAttachmentBox'/>");   
