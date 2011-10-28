@@ -1954,23 +1954,9 @@ Would appreciate it too."
 "_modalSignedViewOrderNotClosedNoAccountBody","        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
       ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed."
 "_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
-"_modalWelcomeToSkrivaPaBodyBestRegards","Med vänliga hälsningar<br/>        Team Scrive",,"Best regards<br/>        Team Scrive"
-"_modalWelcomeToSkrivaPaBodyPhoneQuestion","Want to ask some questions about Scrive?  If you enter your phone number we'll give you a call.",,"Want to ask some questions about Scrive?  If you enter your phone number and we'll give you a call."
-"_modalWelcomeToSkrivaPaBodyHint","Tips: Testa med dig själv först.",,"Tip: Try signing a document with yourself to start with."
-"_modalWelcomeToSkrivaPaBodyInstructions","1. Ladda upp ett dokument<br/>        2. Fyll i motpartens uppgifter<br/>
-        3. Underteckna och skicka iväg",,"1. Upload a document<br/>        2. Enter data about the counterpart<br/>
-        3. Sign and send"
-"_modalWelcomeToSkrivaPaBodyMain","Med Scrive kan du skriva på och arkivera dokument elektroniskt.
- Tjänsten går att använda för avtal, offerter och även andra
- typer av dokument. Givetvis kommer det inte att kosta någonting
- efter den fria månaden om du väljer att inte fortsätta. Det
- är superenkelt att komma igång, gör så här:",,"With Scrive, you can sign and store documents electronically.
- The service is suitable for contracts and offers, but also other
- types of documents. Of course this will not cost you anything
- if you choose not to continue using Scrive when the free trial
- period is over. It is super easy to get started:"
-"_modalWelcomeToSkrivaPaFooter","Välkommen!",,"Welcome!"
-"_modalWelcomeToSkrivaPaHeader","Vi bjuder på 1 fri månad med Scrive!",,"We give you one month free usage in Scrive!"
+"_modalWelcomeToSkrivaPaBodyMain","<p>Välkommen! Du kan använda vår service för att få handlingar undertecknade snabbt och smidigt. Det är verkligen enkelt.</p><p>Om du vill veta mer eller behöver någon hjälp, lämna oss ditt nummer och så återkommer vi till dig.</p>",,"<p>Welcome!  You can use our service to get documents signed quickly and smoothly.  It's really easy.</p><p>If you like to learn more, or need any help, please leave us your number and we'll get back to you.</p>"
+"_modalWelcomeToSkrivaPaFooter","Välkommen!",,"Welcome"
+"_modalWelcomeToSkrivaPaHeader","Scrive",,"Scrive"
 "_multiPartPartner","Parter",,"Parties"
 "_multipleSignatory","Massutskick",,"Multi send"
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."

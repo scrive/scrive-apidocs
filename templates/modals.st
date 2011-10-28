@@ -212,20 +212,12 @@ modalWelcomeToSkrivaPa=
       <div class="modal-content">
         <p>$_modalWelcomeToSkrivaPaBodyMain()$</p>
 
-        <p>$_modalWelcomeToSkrivaPaBodyInstructions()$</p>
-
-        <p>$_modalWelcomeToSkrivaPaBodyHint()$</p>
-
-        <p>$_modalWelcomeToSkrivaPaBodyPhoneQuestion()$</p>
-
         <table>
           <tr>
             <td style="padding-left:10px;padding-right:10px;">$_phone()$:</td>
             <td><input type="text" name="phone" id="phone"/></td>
           </tr>
         </table>
-
-        <p>$_modalWelcomeToSkrivaPaBodyBestRegards()$</p>
 
       </div>
     </div>
