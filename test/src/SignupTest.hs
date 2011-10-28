@@ -14,6 +14,7 @@ import qualified Data.ByteString.UTF8 as BS
 import ActionSchedulerState
 import AppControl
 import Context
+import DB.Classes
 import DB.Types
 import FlashMessage
 import MinutesTime
@@ -26,6 +27,7 @@ import TestKontra as T
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 
 signupTests :: Connection -> Test
 signupTests conn = testGroup "Signup" [
@@ -36,7 +38,47 @@ signupTests conn = testGroup "Signup" [
     , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate conn
     , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
     , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
+    , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber conn
+    , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber conn
     ]
+
+testUserEnteringPhoneNumber :: Connection -> Assertion
+testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  req <- mkRequest POST [ ("phone", inText "12345")
+                        ]
+  (res, ctx') <- runTestKontra req ctx $ handlePhoneCallRequest >>= sendRedirect
+
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
+  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+
+  uuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
+  assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
+
+  emailactions <- getEmailActions
+  assertEqual "An email was sent" 1 (length emailactions)
+
+testUserNotEnteringPhoneNumber :: Connection -> Assertion
+testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
+  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  req <- mkRequest POST [ ("phone", inText "")
+                        ]
+  (res, ctx') <- runTestKontra req ctx $ handlePhoneCallRequest >>= sendRedirect
+
+  assertEqual "Response code is 303" 303 (rsCode res)
+  assertEqual "No flash message was added" 0 (length $ ctxflashmessages ctx')
+
+  emailactions <- getEmailActions
+  assertEqual "No email was sent" 0 (length emailactions)
 
 testSignupAndActivate :: Connection -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
@@ -248,6 +290,19 @@ assertAccountActivationFailed (res, ctx) = do
   -- if they don't accept the tos then the flash is signing related, not sure why
   assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
   assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
+
+getEmailActions :: MonadIO m => m [Action]
+getEmailActions = do
+  now <- getMinutesTime
+  let expirytime = 1 `minutesAfter` now
+  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
+  return $ filter isEmailAction allactions
+
+isEmailAction :: Action -> Bool
+isEmailAction action =
+  case actionType action of
+    (EmailSendout _) -> True
+    _ -> False
 
 getViralInviteActions :: MonadIO m => m [Action]
 getViralInviteActions = do
