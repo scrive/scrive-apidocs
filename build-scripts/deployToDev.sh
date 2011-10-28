@@ -8,7 +8,7 @@ ssh dev@dev.scrive.com rm -rf kontrakcja.cabal dist texts templates public files
 ssh dev@dev.scrive.com tar -zxf kontrakcja-master-dist-$1.tar.gz
 
 ssh dev@dev.scrive.com /home/dev/.cabal/bin/cabal update
-ssh dev@dev.scrive.com /home/dev/.cabal/bin/cabal install --only-dependencies
+ssh dev@dev.scrive.com cd;/home/dev/.cabal/bin/cabal install --only-dependencies
 
 ssh dev@dev.scrive.com ./restart.sh
 
