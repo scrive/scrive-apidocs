@@ -36,6 +36,8 @@ signupTests conn = testGroup "Signup" [
     , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate conn
     , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
     , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
+    , testCase "if users enter phone number info@skrivapa.se is mailed" $ testUserEnteringPhoneNumber conn
+    , testCase "if users don't enter phone number info@skrivapa.se isn't mailed" $ testUserNotEnteringPhoneNumber conn
     ]
 
 testSignupAndActivate :: Connection -> Assertion

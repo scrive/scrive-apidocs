@@ -12,7 +12,7 @@ require "selenium-test/src/doc_helper.rb"
 describe "sign view" do
 
   before(:each) do
-    @wait = Selenium::WebDriver::Wait.new(:timeout => 30)
+    @wait = Selenium::WebDriver::Wait.new(:timeout => 60)
 
     @ctx = TestContext.new
     @driver = @ctx.createWebDriver
