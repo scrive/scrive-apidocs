@@ -2,14 +2,12 @@
 pageOrdersList=
 $loadingdialog()$
 <div>
-  <form method="post" action="$currentlink$" class="listForm"  enctype="multipart/form-data" >
 	<div id="tab-viewer">
 	  <div class="tab-header">
     $docListRubbishBinLink()$
 	  </div>
 	  $docListTabs()$
    </div>
-   </form>
 </div>
 
 

@@ -22,6 +22,7 @@ import Doc.DocProcess
 import Doc.DocRegion
 import InputValidation
 import File.TransState
+import qualified File.State as OldFiles
 import Kontra
 import KontraLink
 import ListUtil
@@ -1080,6 +1081,19 @@ handleFileGet fileid' _title = do
    contents <- liftIO $ getFileIDContents ctx fileid'
    liftIO $ putStrLn $ show "Getting file " ++ show fileid'
    liftIO $ putStrLn $ show "Content is " ++ show contents
+   
+   Log.debug "Debuging for Lukas last template files issue"
+   let fileShow fl= "FileInfo:" ++ (show $ fileid fl)  ++ "\n" ++ (BS.toString $ filename fl) ++ "\n" ++ (show $ filestorage fl)
+   f1<- ioRunDB (ctxdbconn ctx) . dbQuery $ GetFileByFileID fileid'
+   f2 <- liftIO $ query $ OldFiles.GetFileByFileID fileid'
+   case (f1,f2) of 
+        (Just  ff1,Just ff2) -> do
+             Log.debug $ "Current file " ++ (fileShow ff1)
+             Log.debug $ "Old file " ++ (fileShow ff2)
+             (Log.debug . show . BS.length) =<< liftIO (getFileContents ctx ff1)
+             (Log.debug . show . BS.length) =<< liftIO (getFileContents ctx ff2)
+        _ -> return ()
+   
    if BS.null contents
       then mzero
       else do
