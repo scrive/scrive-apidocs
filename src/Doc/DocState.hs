@@ -374,9 +374,11 @@ attachSealedFile documentid fid = do
 changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
 changeMainfile did fid = do
     modifySignable did $ \doc ->
-        if (documentstatus doc == Closed)
-         then Right $ doc { documentsealedfiles = [fid] }
+        if (documentstatus doc == Closed || allHadSigned doc)
+         then Right $ doc { documentsealedfiles = [fid] , documentstatus = Closed}
          else Right $ doc { documentfiles = [fid] }   
+    where
+        allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 {- |
     Updates an existing document, typically this stores information collected
     from the doc design view.  If there is a problem, such as the document not existing,
