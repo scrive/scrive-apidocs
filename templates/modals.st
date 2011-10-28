@@ -210,7 +210,7 @@ modalWelcomeToSkrivaPa=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>$_modalWelcomeToSkrivaPaBodyMain()$</p>
+        $_modalWelcomeToSkrivaPaBodyMain()$
 
         <table>
           <tr>
