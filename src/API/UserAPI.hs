@@ -25,7 +25,8 @@ import Doc.DocViewMail
 import Mails.MailsData
 
 import Happstack.State
-import Happstack.Server
+import Happstack.Server(Response)
+import Happstack.StaticRouting(Route, dir, choice)
 import Control.Monad
 import Data.Functor
 import Data.List
@@ -66,12 +67,13 @@ apiUser = do
                then return $ Just user
                else return Nothing
 
-userAPI :: Kontra Response
-userAPI =  dir "api" $ dir "userapi" $ msum [
-      apiCall "sendnewdocument" sendNewDocument   :: Kontrakcja m => m Response
-    , apiCall "sendFromTemplate" sendFromTemplate :: Kontrakcja m => m Response
-    , apiCall "document" getDocument              :: Kontrakcja m => m Response
-    , apiCall "sendReminder" sendReminder         :: Kontrakcja m => m Response
+userAPI :: Route (Kontra Response)
+userAPI =  
+  dir "api" $ dir "userapi" $ choice 
+    [ apiCall "sendnewdocument" sendNewDocument
+    , apiCall "sendFromTemplate" sendFromTemplate
+    , apiCall "document" getDocument
+    , apiCall "sendReminder" sendReminder
     , apiUnknownCall
     ]
 

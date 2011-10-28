@@ -22,6 +22,7 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host)
+import Happstack.StaticRouting(Route, Path)
 import Happstack.State (update)
 import Text.JSON
 import Text.JSON.String
@@ -85,7 +86,7 @@ apiContextForMail = do
                                         , ito      = to
                                         }
 
-mailAPI :: Kontrakcja m => m Response
+mailAPI :: (Kontrakcja m, Path m (m Response) Response Response) => Route (m Response)
 mailAPI = apiCall "mailapi" handleMailCommand
 
 maybeFail :: (Monad m) => String -> Maybe a -> m a
