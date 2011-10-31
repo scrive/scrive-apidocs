@@ -216,7 +216,6 @@ pageFooter=
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
         <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
-        <li><a href="http://api.scrive.com/index.php?title=Scrive_by_Mail">Scrive by Mail</a></li>
       </ul>
       <br />
       <strong>$_pageFooterTerms()$</strong>
@@ -231,7 +230,6 @@ pageFooter=
       <ul>
         <li><a href="$linkhome$">$_pageFooterHome()$</a></li>
         <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
-        <li><a href="http://support.skrivapa.se">$_pageFooterSupportFeedback()$</a></li>
         <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
         <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->

@@ -44,8 +44,8 @@ ourServiceFullName SkrivaPa    = "SkrivaPå CM AB"
 ourServiceFullName Scrive = "Scrive"
 
 ourServiceAdress :: SystemServer -> String
-ourServiceAdress SkrivaPa    = "SkrivaPå CM AB <BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
-ourServiceAdress Scrive = "Scrive CM AB <BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
+ourServiceAdress SkrivaPa    = "SkrivaPå CM AB<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
+ourServiceAdress Scrive = "Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
 
 ourServicePhone :: SystemServer -> String
 ourServicePhone SkrivaPa    = "010-195 99 15"

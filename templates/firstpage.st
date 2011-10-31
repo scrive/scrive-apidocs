@@ -260,9 +260,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="price-plan-annotation">
                                 $_priceplanPageVAT()$
                                 </div>
-                                <div class="price-plan-details">
-                                  $_BelowPriceTable1()$
-                                </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
