@@ -757,3 +757,14 @@ isFlashOfType (FlashTemplate ft _ _) t = ft == t
 getFlashType :: FlashMessage -> FlashType
 getFlashType (FlashMessage ft _) = ft
 getFlashType (FlashTemplate ft _ _) = ft
+
+instance Arbitrary Locale where
+  arbitrary = do  
+    (a, b) <- arbitrary
+    return $ mkLocale a b
+
+instance Arbitrary Region where
+  arbitrary = elements [REGION_SE, REGION_GB]
+  
+instance Arbitrary Lang where
+  arbitrary = elements [LANG_SE, LANG_EN]

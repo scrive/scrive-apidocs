@@ -28,6 +28,9 @@ import Test.QuickCheck
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
+  
+  testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
+  
   testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
   
   testThat "CloseDocument fails when doc is not signable" conn testCloseDocumentNotSignableNothing,
@@ -124,6 +127,12 @@ docStateTests conn = testGroup "DocState" [
   testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId,
   testProperty "jsonableDeriveConvertibleId" propjsonableDeriveConvertibleId
   ]
+
+testSetDocumentLocaleNotLeft :: DB ()
+testSetDocumentLocaleNotLeft = doTimes 10 $ do
+  edoc <- randomUpdate $ SetDocumentLocale
+  validTest $ do
+    assertLeft edoc
 
 testNewDocumentDependencies :: DB ()
 testNewDocumentDependencies = doTimes 10 $ do
