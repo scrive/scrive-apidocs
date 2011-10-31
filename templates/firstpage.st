@@ -60,7 +60,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         name="email"
                                                         infotext="$_FillInEmail()$"
                                                         autocomplete="off"
-                                                        /> <a href="#" class="submit new-btn-small green2 center"><p>$_CreateAccount()$</p></a>
+                                                        /> <a href="#" class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
@@ -173,7 +173,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="clearfix"></div>
-                                <div class="slide">
+                                <div class="slide" style="display:none">
                                     <div class="slide-container">
                                         <h2>$_QuotesHead()$</h2>
                                         <div class="slide-content active">
@@ -226,7 +226,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </ul>
                                         </div>
                                 </div>
-                                <div class="drop-shadow-container">
+                                <div class="drop-shadow-container" style="display:none">
                                         <div class="drop-shadow"></div>
                                 </div>
                                 <div class="price-plan-container">

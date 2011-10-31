@@ -37,7 +37,7 @@
 "_Bemefit8","Image branding",,"Improve perception"
 "_Bemefit8Body","Visa era kunder att ni är i framkant och gillar att tänka i nya
  banor.",,"Show your customers how you're using the latest technology for mutual benefit."
-"_ButtonCreateAccount","Skapa konto!",,"Create account!"
+"_ButtonCreateAccount","Testa nu",,"Try now"
 "_CantRemoveActiveDocuments","Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
@@ -841,12 +841,11 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_friends","Vänner",,"Friends"
 "_from","från",,"from"
-"_h1","Varför krångla? - Signera med $ourServiceName()$!",,"Why struggle? Sign with $ourServiceName()$!"
-"_h1Body","Signera avtal och andra dokument elektroniskt med $ourServiceName()$.<br/>Våra kunder
- och våra kunders kunder älskar enkelheten.           
-                               ",,"Sign contracts and other documents online with $ourServiceName()$.<br/>Our customers just love the simplicity.                                     "
-"_h3CreateAccount","Skapa konto nu!",,"Create your account now."
-"_h3CreateAccountBody","1 månad full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial.  Easy signup."
+"_h1","Signera offerter och avtal med $ourServiceName()$.",,"Sign tenders and contracts with $ourServiceName()$!"
+"_h1Body","Stäng affärerna snabbare. Mindre 
+administrativt krångel. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
+"_h3CreateAccount","100 fria signaturer!",,"100 free signatures!"
+"_h3CreateAccountBody","Inga förpliktelser, inga kostnader. Skapa konto och kom igång på under 3 minuter.",,"No commitments, no costs. Create account and get started in less than 3 minutes."
 "_headerAccount","Konto",,"Account"
 "_headerArchive","Arkiv",,"Archive"
 "_headerInvite","Bjud in",,"Invite"
