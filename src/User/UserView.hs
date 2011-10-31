@@ -59,7 +59,8 @@ module User.UserView (
 
     --modals
     modalNewPasswordView,
-
+    modalUserSignupDone,
+    
     --utils
     userBasicFields,
     
@@ -435,6 +436,9 @@ modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => m FlashMessage
 modalDoYouWantToBeCompanyAccount =
   toModal <$> renderTemplateM "modalDoYouWantToBeCompanyAccount" ()
 
+modalUserSignupDone :: TemplatesMonad m => m FlashMessage
+modalUserSignupDone =
+  toModal <$> renderTemplateM "modalUserSignupDone" ()
 
 -------------------------------------------------------------------------------
 
