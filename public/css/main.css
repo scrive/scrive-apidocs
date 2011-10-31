@@ -2138,3 +2138,9 @@ input.grayed, textarea.grayed
 	margin: auto;
 }
 
+.logos img {
+    margin-top: 17px;
+    margin-bottom: 17px;
+    padding-right: 15px;
+    padding-left: 15px;
+}

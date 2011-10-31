@@ -90,24 +90,14 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         </div>
                 </div>
                 <div id="nav-container">
-                        <div class="content">
-                                <div class="col left campaign-play campaign-play-video">
-                                        <div class="icon one"></div>
-                                        <a href="#"><h3>$_StepsH3Send()$</h3>
-                                        <p>$_StepsH3SendBody()$</p></a>
-                                </div>
-                                <div class="divider-hor"></div>
-                                <div class="col centre campaign-play campaign-play-video">
-                                        <div class="icon two"></div>
-                                        <a href="#"><h3>$_StepsH3Sign()$</h3>
-                                        <p>$_StepsH3SignBody()$</p></a>
-                                </div>
-                                <div class="divider-hor"></div>
-                                <div class="col right campaign-play campaign-play-video">
-                                        <div class="icon three"></div>
-                                        <a href="#"><h3>$_StepsH3Store()$</h3>
-                                        <p>$_StepsH3StoreBody()$</p></a>
-                                </div>
+                        <div class="content logos">
+                          <img src="/img/logo/coopkonsum.png" />
+                          <img src="/img/logo/paynova.png" />
+                          <img src="/img/logo/mynewsdesk.png" />
+                          <img src="/img/logo/qalllogo.png" />
+                          <img src="/img/logo/accenturelogo.png" />
+                          <img src="/img/logo/resursbemanning.png" />
+                          <img src="/img/logo/stockholmschool.png" />
                         </div>
                         <div class="bottom-border"></div>
                 </div>
