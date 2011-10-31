@@ -4,7 +4,6 @@ import Doc.DocStateData
 import Util.SignatoryLinkUtils
 import MinutesTime
 import Doc.DocInfo
-import Doc.DocProcess
 import Doc.DocUtils
 import Misc
 import Util.HasSomeUserInfo
