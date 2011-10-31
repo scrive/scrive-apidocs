@@ -313,7 +313,8 @@ header=
                                 <a href="$linkhome$" class="$ourLogoClass()$"></a>
                                 $localeSwitcher()$
                                 $if(logged)$
-                                
+      
+                                <!--
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
@@ -329,7 +330,7 @@ header=
                                  </div>
                                  </form>
                                 </span>
-                                 
+                                 -->
                                <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
                                <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
                                <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
