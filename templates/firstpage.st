@@ -66,6 +66,13 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="rightMain">
+                                  <span id="moveleft">
+                                  <a href="$linkabout$"
+                                  class="document-button">$_pageFooterAbout()$</a>
+                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
+                                  <a href="$linkpriceplan$"
+                                  class="document-button">$_pageFooterPrices()$</a>
+                                  </span>
                                         $if(logged)$
                                         <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
                                         $else$

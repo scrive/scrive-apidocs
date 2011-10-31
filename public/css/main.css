@@ -348,6 +348,34 @@ a.new-btn-small.black p {
     font-weight: bold;
 }
 
+#top-container #moveleft {
+	display: block;
+	height: 28px;
+	padding-left: 47px;
+	padding-top: 15px;
+	position: absolute;
+	right: 170px;
+	top: 3px;
+    z-index: 10;
+}
+
+#top-container .document-button:hover
+{
+  color: #FFFFFF;
+}  
+
+#moveleft2
+{
+	display: block;
+	height: 28px;
+	padding-left: 47px;
+	padding-top: 15px;
+	position: absolute;
+	right: 160px;
+	top: -14px;
+    z-index: 10;
+}
+
 #top-container .enter-button:hover {
 	color: #fff;
 }
@@ -1227,6 +1255,18 @@ div.price-plan-details {
 	text-decoration: none;
     font-weight: bold;
 }
+
+#top-container .document-button {
+        color: #999;
+        float: right;
+        font: 14px/18px "Helvetica Neue";
+        margin-top: 17px;
+        padding-bottom: 5px;
+        padding-left: 15px;
+        text-shadow: #000 0 1px 3px;
+        text-decoration: none;
+}
+
 
 .user-container {
 	height: 150px;
