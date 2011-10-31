@@ -753,3 +753,7 @@ testAPI f = do
 isFlashOfType :: FlashMessage -> FlashType -> Bool
 isFlashOfType (FlashMessage ft _) t = ft == t
 isFlashOfType (FlashTemplate ft _ _) t = ft == t
+
+getFlashType :: FlashMessage -> FlashType
+getFlashType (FlashMessage ft _) = ft
+getFlashType (FlashTemplate ft _ _) = ft
