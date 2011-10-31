@@ -1977,6 +1977,7 @@ top: 0px;
 .nicetext h1 {
 	color: #000;
 	font: 14px "Copse";
+    text-transform: uppercase;
 }
 
 .nicetext h2 {
@@ -2136,3 +2137,4 @@ input.grayed, textarea.grayed
 	left: 0;
 	margin: auto;
 }
+
