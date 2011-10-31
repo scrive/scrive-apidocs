@@ -37,7 +37,7 @@
 "_Bemefit8","Image branding",,"Improve perception"
 "_Bemefit8Body","Visa era kunder att ni är i framkant och gillar att tänka i nya
  banor.",,"Show your customers how you're using the latest technology for mutual benefit."
-"_ButtonCreateAccount","Skapa konto!",,"Create account!"
+"_ButtonCreateAccount","Testa nu",,"Try now"
 "_CantRemoveActiveDocuments","Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
@@ -48,13 +48,13 @@
 "_English"," Engelska ",,"English"
 "_FillInEmail","Fyll i din e-postadress",,"Enter your email address"
 "_HeadAccountSettings","Kontoinställningar",,"Account settings"
-"_HeadMailApi","Mail API",,"Mail API"
+"_HeadMailApi","Scrive by Mail",,"Scrive by Mail"
 "_HeadUserInfo","Användaruppgifter",,"User info"
 "_InfoSelectTemplate"," Klicka på den mall du vill använda för att starta processen",,"  Click a template you want to use to start the process"
 "_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
 "_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
-"_MailAPIEnable","Aktivera Mail API",,"Enable Mail API"
+"_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
 "_MailAPILimitHead","Begränsningar",,"Limits"
 "_MailAPILimitsDaily","Daglig begränsning för processade mail",,"Daily limit of processed e-mails"
 "_MailAPILimitsProcessedToday","Mail processade idag:",,"Emails processed today:"
@@ -291,7 +291,7 @@
 "_UserLanguage","Användarspråk:",,"User language:"
 "_Sweden","Sverige",,"Sweden"
 "_Britain","Storbritanien",,"Britain"
-"_UserRegion","User Region:",,"User Region:"
+"_UserRegion","Land:",,"Country/Region:"
 "_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive är skapat
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. Scrive is made
  by an ambitious, international team based in Stockholm."
@@ -838,12 +838,11 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_friends","Vänner",,"Friends"
 "_from","från",,"from"
-"_h1","Varför krångla? - Signera med Scrive!",,"Why struggle? Sign with Scrive!"
-"_h1Body","Signera avtal och andra dokument elektroniskt med Scrive.<br/>Våra kunder
- och våra kunders kunder älskar enkelheten.
-                               ",,"Sign contracts and other documents online with Scrive.<br/>Our customers just love the simplicity.                                     "
-"_h3CreateAccount","Skapa konto nu!",,"Create your account now."
-"_h3CreateAccountBody","1 månad full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial.  Easy signup."
+"_h1","Signera offerter och avtal med $ourServiceName()$.",,"Sign tenders and contracts with $ourServiceName()$!"
+"_h1Body","Stäng affärerna snabbare. Mindre 
+administrativt krångel. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
+"_h3CreateAccount","100 fria signaturer!",,"100 free signatures!"
+"_h3CreateAccountBody","Ingen inlåsning, inga konstigheter.",,"No commitments, cancel any time."
 "_headerAccount","Konto",,"Account"
 "_headerArchive","Arkiv",,"Archive"
 "_headerInvite","Bjud in",,"Invite"
@@ -1962,21 +1961,15 @@ Would appreciate it too."
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."
 "_name","Namn",,"Name"
 "_nameFieldName","namn",,"name"
-"_newUserMailContentBodyFirst","Jag heter Lukas Duczko och är VD på Scrive. Tack för att
- du har  skapat ett konto hos oss. När du aktiverat ditt konto
- kommer du  kunna använda tjänsten med full funktionalitet med
- kontoplanen  Business i 1 månad utan kostnad. Väljer du att
- inte fortsätta med en  betald kontoplan efter testperioden behåller
- du givetvis tillgång  till samtliga dina dokument på Scrive
- och kan fortsätta använda  tjänsten genom vår fria kontoplan
- Free.",,"My name is Lukas Duczko and I am the CEO of Scrive. Thank you
-for creating an account with us. When you have activated your account you will be able to trial the full functionality
- of the Business plan for one month without any charge.
- If you choose not to continue with a paid subscription afterwards you will still have access to all your documents
- at Scrive and can keep using Scrive  with our Free plan."
-"_newUserMailContentBodySecond","Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka
- inte  att höra av dig med feedback eller bara en enkel hälsning.
- Din åsikt  är värdefull.",,"We hope you will be happy with our services. Please don't hesitate  to give us feedback or just a hello. We'd love to hear what you think."
+"_newUserMailContentBodyFirst","“Jag heter Lukas Duczko och är VD på $ourServiceName()$. Tack för att 
+du skapat ett konto hos oss. När du aktiverat ditt konto får du 
+100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I´m the CEO of Scrive. 
+Thank you for creating an account with us. When you have 
+activated your account you will get 100 signatures that you can 
+use free of charge."
+"_newUserMailContentBodySecond","",,"We hope you will be happy with our services. Please don't 
+hesitate to give us feedback or just a hello. Your opinions are 
+valuable."
 "_newUserMailContentBodyThird","Du aktiverar ditt konto genom att klicka på länken nedan. Länken
  är  giltig i 12 timmar.<br/>",,"Click to activate, the link is valid for 12 hours:<br/>"
 "_newUserMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
@@ -2038,7 +2031,7 @@ for creating an account with us. When you have activated your account you will b
  verified by our service."
 "_offersealingtextsverificationFooterRow3","Du kan kontrollera offerten mot vår databas genom följande länk:",,"Verify the offer against our database by following the link:"
 "_offersealingtextsverificationTitle","Acceptverifikat",,"Acceptance verification"
-"_offersendtext","Skicka offert",,"Send offer"
+"_offersendtext","Skicka",,"Send"
 "_offersignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för
  att meddela ",,"When you reject, an e-mail is sent to notify "
 "_offersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".          ",,".             You can review the message below and adjust it by clicking ""Write own message""."
@@ -2110,14 +2103,14 @@ for creating an account with us. When you have activated your account you will b
  länk: ",,"Verify the order confirmation against our database by following
  the link:"
 "_ordersealingtextsverificationTitle","Orderbekräftelse",,"Order confirmation"
-"_ordersendtext","Skicka order",,"Send order"
+"_ordersendtext","Skicka",,"Send"
 "_ordersignatorycancelmodaltitleBody"," När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela ",,"When you reject, an e-mail is sent to notify "
 "_ordersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".          ",,".        You can review the message below and adjust it by clicking ""Write own message""."
 "_ordersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to reject?"
-"_ordersignatorysignmodalcontentlast","Genom att klicka 'bekräfta order' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.",,"Confirm the order <span class='documenttitle' /> by clicking 'Confirm order'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
-"_ordersignatorysignmodalcontentnotlast","Genom att klicka 'bekräfta order' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.",,"Confirm the order <span class='documenttitle' /> by clicking 'Confirm order'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
+"_ordersignatorysignmodalcontentlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.",,"Confirm the order <span class='documenttitle' /> by clicking 'Confirm'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
+"_ordersignatorysignmodalcontentnotlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.",,"Confirm the order <span class='documenttitle' /> by clicking 'Confirm'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
 "_ordersignatorysignmodaltitle","Är du säker att du vill bekräfta ordern?",,"Are you sure you want to confirm the order?"
-"_ordersignbuttontext","Bekräfta order",,"Confirm order"
+"_ordersignbuttontext","Bekräfta",,"Confirm"
 "_ordersignedinfoheader","Ordern bekräftad",,"Order confirmed"
 "_ordersignedinfotextFrom","från",,"from"
 "_ordersignedinfotextHasConfirmed","har bekräftat ordern",,"has confirmed the order"
@@ -2128,7 +2121,7 @@ for creating an account with us. When you have activated your account you will b
 "_orderstep1text","Välj orderbekräftelse",,"Select order confirmation"
 "_ordertitle","ORDER-BEKRÄFTELSE",,"ORDER CONFIRMATION"
 "_orderuploadname","ORDER-BEKRÄFTELSE",,"ORDER CONFIRMATION"
-"_orderuploadprompttext","Välj den orderbekräftelse som du vill skicka till.",,"Select an order confirmation you want to send to your counterpart."
+"_orderuploadprompttext","Välj den orderbekräftelse som du vill skicka till motpart för bekräftelse.",,"Select an order confirmation you want to send to your counterpart for confirmation."
 "_orgnumber","Org. nr",,"Company Reg No"
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"
 "_pageAttachmentDownloadPDF","Ladda ned PDF",,"Download PDF"
@@ -2628,13 +2621,11 @@ for creating an account with us. When you have activated your account you will b
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
-"_queryColumnBody1","Scrive är en tjänst för att skriva på och arkivera avtal elektroniskt.
- Våra kunder och våra kunders kunder älskar enkelheten.",,"Scrive is a service for signing and storing contracts online.
- Our customers and their customers just love the simplicity."
-"_queryColumnBody2","Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga
- förpliktelser.",,"We give you a month of full functionality free of charge. No obligations."
+"_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. $ourServiceName()$ gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and 
+simply better."
+"_queryColumnBody2","100 fria signaturer. Ingen inlåsning, inga konstigheter.",,"100 free signatures. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
-"_queryColumnHead","Avtala redan idag!",,"Sign documents today!"
+"_queryColumnHead","Varför vänta?",,"Why wait?"
 "_queryColumnPhone","Telefon: 010-195 99 15",,"Phone: +46 (0)10-195 99 15"
 "_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
@@ -2915,7 +2906,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signStepsBodyUploadBoxStep1Info","Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen
  för att gå vidare.    ",,"What type of document do you want to send? Click a document symbol
  to continue."
-"_signStepsBodyUploadBoxStep1TemplateSaved","Sparad på Scrive",,"Saved in Scrive"
+"_signStepsBodyUploadBoxStep1TemplateSaved","Som du sparat hos $ourServiceName()$",,"Saved in $ourServiceName()$"
 "_signStepsBodyUploadBoxStep1UpLoadChooseFile","Välj fil från dator",,"Select file from computer"
 "_signStepsBodyUploadBoxStep1UpLoadOnlyPDF","OBS! Endast PDF",,"PDF only!"
 "_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil ",,"Select file"
@@ -2954,8 +2945,8 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signupVipPageViewEmail","Fyll i din e-postadress",,"Enter your e-mail address"
 "_signupVipPageViewHead","Gratis Scrive till och med 31 december!",,"Free Scrive through December 31!"
 "_skrivapa","Scrive",,"Scrive"
-"_standardBodyWrapperBody","14 dagar full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial. Easy signup."
-"_standardBodyWrapperHead","Skapa konto nu!",,"Create your account now."
+"_standardBodyWrapperBody","Ingen inlåsning, inga konstigheter.",,"No commitment. Cancel any time."
+"_standardBodyWrapperHead","100 fria signaturer",,"100 free signatures!"
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
 "_step1select","Välj dokument",,"Select document"
 "_step1selectIfTemplate","Välj mall",,"Select template"
@@ -3316,6 +3307,11 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_createCompanyFormPreamble","För att skapa ett företag vänligen fyll i följande information:",,"To create a company please complete the following information:"
 "_documentLanguageLabel","Dokumentets språk",,"Document Language"
 "_signInEnglish","Signera på engelska",,"Sign in English"
+"_modalUserSignupDoneHeader","Konto skapat",,"Account Saved"
+"_modalUserSignupDoneBody","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
+ till din inkorg.",,"Your account has been created! An email containing your account
+ details has been sent to your inbox."
+"_GoBack","Gå tillbaks",,"Go back"
 "_signInEnglishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
 "_signInSwedish","Signera på svenska",,"Sign in Swedish"
 "_signInSwedishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på svenska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på svenska.</p><p>Personnummer och e-legitimation är alternativ som tillkommer då de även är möjliga i Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in Swedish.</p><p>This means that all emails sent to the parts about this document will be written in Swedish.</p><p>Swedish options for using social security numbers and e-legitimation will be added.</p>"

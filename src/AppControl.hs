@@ -787,7 +787,8 @@ signup vip _freetill =  do
           maccount <- UserControl.createUser ctx (BS.empty, BS.empty) email Nothing Nothing vip
           case maccount of
             Just _account ->  do
-              addFlashM flashMessageUserSignupDone
+              --addFlashM flashMessageUserSignupDone
+              addFlashM modalUserSignupDone
               return LoopBack
             Nothing -> do
               addFlashM flashMessageUserWithSameEmailExists

@@ -97,6 +97,7 @@ table {
     padding-top: 10px;
     text-decoration: none;
     width: 136px;
+    font-weight: bold;
 }
 
 .new-btn-small p {
@@ -252,11 +253,11 @@ a.new-btn-small.black p {
 
 #top-container .person {
 	background: url(../img/persons.jpg);
-	top: 34px;
-	height: 396px;
-	left: 453px;
+	top: 67px;
+	height: 363px;
+	left: 493px;
 	position: absolute;
-	width: 433px;
+	width: 390px;
 	z-index: 0;
 }
 
@@ -343,7 +344,36 @@ a.new-btn-small.black p {
 	text-shadow: #000 0 1px 3px;
 	top: 21px;
 	width: 95px;
-        z-index: 10;
+    z-index: 10;
+    font-weight: bold;
+}
+
+#top-container #moveleft {
+	display: block;
+	height: 28px;
+	padding-left: 47px;
+	padding-top: 15px;
+	position: absolute;
+	right: 170px;
+	top: 3px;
+    z-index: 10;
+}
+
+#top-container .document-button:hover
+{
+  color: #FFFFFF;
+}  
+
+#moveleft2
+{
+	display: block;
+	height: 28px;
+	padding-left: 47px;
+	padding-top: 15px;
+	position: absolute;
+	right: 160px;
+	top: -14px;
+    z-index: 10;
 }
 
 #top-container .enter-button:hover {
@@ -892,7 +922,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	border: 1px solid #ccc;
 	height: 250px;
-	margin-top: 65px;
+	margin-top: 35px;
 	position: relative;
 	width: 938px;
 	z-index: 1;
@@ -1214,7 +1244,20 @@ div.price-plan-details {
 	padding-left: 28px;
 	text-shadow: #000 0 1px 3px;
 	text-decoration: none;
+    font-weight: bold;
 }
+
+#top-container .document-button {
+        color: #999;
+        float: right;
+        font: 14px/18px "Helvetica Neue";
+        margin-top: 17px;
+        padding-bottom: 5px;
+        padding-left: 15px;
+        text-shadow: #000 0 1px 3px;
+        text-decoration: none;
+}
+
 
 .user-container {
 	height: 150px;
@@ -1925,6 +1968,7 @@ top: 0px;
 .nicetext h1 {
 	color: #000;
 	font: 14px "Copse";
+    text-transform: uppercase;
 }
 
 .nicetext h2 {
@@ -2083,4 +2127,11 @@ input.grayed, textarea.grayed
 	right: 0;
 	left: 0;
 	margin: auto;
+}
+
+.logos img {
+    margin-top: 17px;
+    margin-bottom: 17px;
+    padding-right: 15px;
+    padding-left: 15px;
 }

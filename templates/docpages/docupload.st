@@ -13,7 +13,7 @@ orderuploadprompttext=$_orderuploadprompttext()$
 ####
 uploadPage=   
 $loadingdialog()$
-<div id="signStepsContainer">
+<div id="signStepsContainer" class="uploading">
   
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer">
@@ -73,7 +73,9 @@ $elseif(!showTemplates)$
     <p class="text" style="padding-top:30px">
         $selectedprocess.uploadprompttext$
     </p>
-    <a class="backicon float-left" href="$linkupload$"></a>
+    <p style="padding-top:25px;">
+      <a class="backicon float-left" href="$linkupload$"></a> &nbsp;$_GoBack()$
+    </p>
  </div>
 </td>
 <td>
@@ -147,7 +149,7 @@ var documentsTable = KontraList.init({
     }),
     headerExtras : jQuery("<div class='float-left basicinfo'>" +
                             "<p>$_InfoSelectTemplate()$</p>" +
-                            "<a class='backicon float-left' href='$linkupload$?doctype=$processid$'></a>" +
+                            "<p style='padding-top:25px;'><a class='backicon float-left' href='$linkupload$?doctype=$processid$'></a></p> &nbsp;$_GoBack()$" +
                           "</div>")
 
 });

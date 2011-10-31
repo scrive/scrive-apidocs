@@ -152,7 +152,7 @@ standardBodyWrapper=
                                                      autocomplete="off"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
-                                                                           float-right"><p>$_createaccount()$!</p></a>
+                                                                           float-right"><p>$_ButtonCreateAccount()$!</p></a>
                                               <input type="submit" class="hidden" />
                                             </form>
                                           </div>
@@ -180,7 +180,7 @@ queryColumn=
                                                         autocomplete="off"
                                                         /><br /><br />
 
-                                                        <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
@@ -216,7 +216,6 @@ pageFooter=
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
         <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
-        <li><a href="http://api.scrive.com/index.php?title=Scrive_by_Mail">Scrive by Mail</a></li>
       </ul>
       <br />
       <strong>$_pageFooterTerms()$</strong>
@@ -231,7 +230,6 @@ pageFooter=
       <ul>
         <li><a href="$linkhome$">$_pageFooterHome()$</a></li>
         <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
-        <li><a href="http://support.skrivapa.se">$_pageFooterSupportFeedback()$</a></li>
         <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
         <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
@@ -316,6 +314,7 @@ header=
                                 $localeSwitcher()$
                                 $if(logged)$
 
+                                <!--
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
@@ -331,15 +330,26 @@ header=
                                  </div>
                                  </form>
                                 </span>
-
-     <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
-     <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
-     <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
-     <a href="$linkupload$" class="document-button">$_headerSend()$</a>
+                                 -->
+                               <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
+                               <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
+                               <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
+                               <a href="$linkupload$" class="document-button">$_headerSend()$</a>
 
                                 $else$
+
                                 <a href="#" class="login-button"><p>$_login()$</p></a>
+
+                                  <span id="moveleft2">
+                                  <a href="$linkabout$"
+                                  class="document-button">$_pageFooterAbout()$</a>
+                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
+                                  <a href="$linkpriceplan$"
+                                  class="document-button">$_pageFooterPrices()$</a>
+                                  </span>
+
                                 $endif$
+
                             </div>
 
             <div class="clearboth"></div>

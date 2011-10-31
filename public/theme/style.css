@@ -2709,7 +2709,7 @@ input#cancel {
 }
 
 .searchBox{
-    width: 250px;
+    
 }
 .centered {
     margin: 10%;
@@ -2992,3 +2992,9 @@ a#attachmentback {
     border-bottom: solid 1px black;
     height: 2em;
 }
+
+.uploading .searchBox {
+    margin-right: 330px;
+    
+}
+

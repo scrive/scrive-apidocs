@@ -124,9 +124,9 @@ pageDocumentDesign=
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">$_personpanePart1()$</span>
                   $if(!isbasic)$
-                  $if(!process.isauthorsend)$
+                  
                   <a href="#man2" class="man"></a>
-                  $endif$
+                  
                   <a href="#" class="signingOrder"></a>
                   <select id="authorsignorder" name="authorsignorder" class="float-right">
                     <option value="1">1</option>
@@ -489,11 +489,7 @@ pageDocumentDesign=
       $if(isbasic)$
       <input type="hidden" name="signatoryrole" value="signatory"/>
       $else$
-      $if(process.isauthorsend)$
-      <input type="hidden" name="signatoryrole" value="signatory"/>
-      $else$
       <a href="#" class="man"></a>
-      $endif$
       <a href="#" class="csv single" rel="#dialog-csvupload-1"></a>
       <a href="#" class="csv multi" rel="#dialog-csvupload-2" style="display:none;"></a>
       <a href="#" class="signingOrder"></a>

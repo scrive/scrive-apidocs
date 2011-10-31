@@ -60,12 +60,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         name="email"
                                                         infotext="$_FillInEmail()$"
                                                         autocomplete="off"
-                                                        /> <a href="#" class="submit new-btn-small green2 center"><p>$_CreateAccount()$</p></a>
+                                                        /> <a href="#" class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
                                 </div>
                                 <div class="rightMain">
+                                  <span id="moveleft">
+                                  <a href="$linkabout$"
+                                  class="document-button">$_pageFooterAbout()$</a>
+                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
+                                  <a href="$linkpriceplan$"
+                                  class="document-button">$_pageFooterPrices()$</a>
+                                  </span>
                                         $if(logged)$
                                         <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
                                         $else$
@@ -83,24 +90,14 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         </div>
                 </div>
                 <div id="nav-container">
-                        <div class="content">
-                                <div class="col left campaign-play campaign-play-video">
-                                        <div class="icon one"></div>
-                                        <a href="#"><h3>$_StepsH3Send()$</h3>
-                                        <p>$_StepsH3SendBody()$</p></a>
-                                </div>
-                                <div class="divider-hor"></div>
-                                <div class="col centre campaign-play campaign-play-video">
-                                        <div class="icon two"></div>
-                                        <a href="#"><h3>$_StepsH3Sign()$</h3>
-                                        <p>$_StepsH3SignBody()$</p></a>
-                                </div>
-                                <div class="divider-hor"></div>
-                                <div class="col right campaign-play campaign-play-video">
-                                        <div class="icon three"></div>
-                                        <a href="#"><h3>$_StepsH3Store()$</h3>
-                                        <p>$_StepsH3StoreBody()$</p></a>
-                                </div>
+                        <div class="content logos">
+                          <img src="/img/logo/coopkonsum.png" />
+                          <img src="/img/logo/paynova.png" />
+                          <img src="/img/logo/mynewsdesk.png" />
+                          <img src="/img/logo/qalllogo.png" />
+                          <img src="/img/logo/accenturelogo.png" />
+                          <img src="/img/logo/resursbemanning.png" />
+                          <img src="/img/logo/stockholmschool.png" />
                         </div>
                         <div class="bottom-border"></div>
                 </div>
@@ -166,7 +163,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="clearfix"></div>
-                                <div class="slide">
+                                <div class="slide" style="display:none">
                                     <div class="slide-container">
                                         <h2>$_QuotesHead()$</h2>
                                         <div class="slide-content active">
@@ -219,7 +216,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </ul>
                                         </div>
                                 </div>
-                                <div class="drop-shadow-container">
+                                <div class="drop-shadow-container" style="display:none">
                                         <div class="drop-shadow"></div>
                                 </div>
                                 <div class="price-plan-container">
@@ -252,9 +249,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 </div>
                                 <div class="price-plan-annotation">
                                 $_priceplanPageVAT()$
-                                </div>
-                                <div class="price-plan-details">
-                                  $_BelowPriceTable1()$
                                 </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
