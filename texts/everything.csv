@@ -2645,13 +2645,11 @@ for creating an account with us. When you have activated your account you will b
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
-"_queryColumnBody1","$ourServiceName()$ är en tjänst för att skriva på och arkivera avtal elektroniskt.
- Våra kunder och våra kunders kunder älskar enkelheten.",,"$ourServiceName()$ is a service for signing and storing contracts online.
- Our customers and their customers just love the simplicity."
-"_queryColumnBody2","Vi bjuder på 14 dagar full funktionalitet utan kostnad. Inga
- förpliktelser.",,"We give you a month of full functionality free of charge. No obligations."
+"_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. $ourServiceName()$ gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and 
+simply better."
+"_queryColumnBody2","100 fria signaturer. Ingen inlåsning, inga konstigheter.",,"100 free signatures. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
-"_queryColumnHead","Avtala redan idag!",,"Sign documents today!"
+"_queryColumnHead","Varför vänta?",,"Why wait?"
 "_queryColumnPhone","Telefon: 010-195 99 15",,"Phone: +46 (0)10-195 99 15"
 "_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
@@ -2971,8 +2969,8 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signupVipPageViewEmail","Fyll i din e-postadress",,"Enter your e-mail address"
 "_signupVipPageViewHead","Gratis $ourServiceName()$ till och med 31 december!",,"Free $ourServiceName()$ through December 31!"
 "_skrivapa","$ourServiceName()$",,"$ourServiceName()$"
-"_standardBodyWrapperBody","14 dagar full funktionalitet utan kostnad. Inga förpliktelser.",,"1 month free trial. Easy signup."
-"_standardBodyWrapperHead","Skapa konto nu!",,"Create your account now."
+"_standardBodyWrapperBody","Ingen inlåsning, inga konstigheter.",,"No commitment. Cancel any time."
+"_standardBodyWrapperHead","100 fria signaturer",,"100 free signatures!"
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
 "_step1select","Välj dokument",,"Select document"
 "_step1selectIfTemplate","Välj mall",,"Select template"

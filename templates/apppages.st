@@ -152,7 +152,7 @@ standardBodyWrapper=
                                                      autocomplete="off"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
-                                                                           float-right"><p>$_createaccount()$!</p></a>
+                                                                           float-right"><p>$_ButtonCreateAccount()$!</p></a>
                                               <input type="submit" class="hidden" />
                                             </form>
                                           </div>
@@ -180,7 +180,7 @@ queryColumn=
                                                         autocomplete="off"
                                                         /><br /><br />
 
-                                                        <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
