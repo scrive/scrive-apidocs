@@ -1979,21 +1979,15 @@ Would appreciate it too."
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."
 "_name","Namn",,"Name"
 "_nameFieldName","namn",,"name"
-"_newUserMailContentBodyFirst","Jag heter Lukas Duczko och är VD på $ourServiceName()$. Tack för att
- du har  skapat ett konto hos oss. När du aktiverat ditt konto
- kommer du  kunna använda tjänsten med full funktionalitet med
- kontoplanen  Business i 1 månad utan kostnad. Väljer du att
- inte fortsätta med en  betald kontoplan efter testperioden behåller
- du givetvis tillgång  till samtliga dina dokument på $ourServiceName()$
- och kan fortsätta använda  tjänsten genom vår fria kontoplan
- Free.",,"My name is Lukas Duczko and I am the CEO of $ourServiceName()$. Thank you
-for creating an account with us. When you have activated your account you will be able to trial the full functionality
- of the Business plan for one month without any charge.
- If you choose not to continue with a paid subscription afterwards you will still have access to all your documents
- at $ourServiceName()$ and can keep using $ourServiceName()$  with our Free plan."
-"_newUserMailContentBodySecond","Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka
- inte  att höra av dig med feedback eller bara en enkel hälsning.
- Din åsikt  är värdefull.",,"We hope you will be happy with our services. Please don't hesitate  to give us feedback or just a hello. We'd love to hear what you think."
+"_newUserMailContentBodyFirst","“Jag heter Lukas Duczko och är VD på $ourServiceName()$. Tack för att 
+du skapat ett konto hos oss. När du aktiverat ditt konto får du 
+100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I´m the CEO of Scrive. 
+Thank you for creating an account with us. When you have 
+activated your account you will get 100 signatures that you can 
+use free of charge."
+"_newUserMailContentBodySecond","",,"We hope you will be happy with our services. Please don't 
+hesitate to give us feedback or just a hello. Your opinions are 
+valuable."
 "_newUserMailContentBodyThird","Du aktiverar ditt konto genom att klicka på länken nedan. Länken
  är  giltig i 12 timmar.<br/>",,"Click to activate, the link is valid for 12 hours:<br/>"
 "_newUserMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
