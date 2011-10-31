@@ -2924,7 +2924,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signStepsBodyUploadBoxStep1Info","Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen
  för att gå vidare.    ",,"What type of document do you want to send? Click a document symbol
  to continue."
-"_signStepsBodyUploadBoxStep1TemplateSaved","Sparad på $ourServiceName()$",,"Saved in $ourServiceName()$"
+"_signStepsBodyUploadBoxStep1TemplateSaved","Som du sparat hos $ourServiceName()$",,"Saved in $ourServiceName()$"
 "_signStepsBodyUploadBoxStep1UpLoadChooseFile","Välj fil från dator",,"Select file from computer"
 "_signStepsBodyUploadBoxStep1UpLoadOnlyPDF","OBS! Endast PDF",,"PDF only!"
 "_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil ",,"Select file"
@@ -3324,3 +3324,4 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_modalUserSignupDoneBody","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till din inkorg.",,"Your account has been created! An email containing your account
  details has been sent to your inbox."
+"_GoBack","Gå tillbaks",,"”Go back"

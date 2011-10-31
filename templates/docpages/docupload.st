@@ -73,7 +73,9 @@ $elseif(!showTemplates)$
     <p class="text" style="padding-top:30px">
         $selectedprocess.uploadprompttext$
     </p>
-    <a class="backicon float-left" href="$linkupload$"></a>
+    <p style="padding-top:30px;">
+      <a class="backicon float-left" href="$linkupload$"></a> &nbsp;$_GoBack()$
+    </p>
  </div>
 </td>
 <td>
