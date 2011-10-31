@@ -838,7 +838,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_friends","Vänner",,"Friends"
 "_from","från",,"from"
-"_h1","Signera offerter och avtal med $ourServiceName()$.",,"Sign tenders and contracts with $ourServiceName()$!"
+"_h1","Signera offerter och avtal med Scrive.",,"Sign tenders and contracts with Scrive!"
 "_h1Body","Stäng affärerna snabbare. Mindre 
 administrativt krångel. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
 "_h3CreateAccount","100 fria signaturer!",,"100 free signatures!"
@@ -1961,7 +1961,7 @@ Would appreciate it too."
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."
 "_name","Namn",,"Name"
 "_nameFieldName","namn",,"name"
-"_newUserMailContentBodyFirst","“Jag heter Lukas Duczko och är VD på $ourServiceName()$. Tack för att 
+"_newUserMailContentBodyFirst","“Jag heter Lukas Duczko och är VD på Scrive. Tack för att 
 du skapat ett konto hos oss. När du aktiverat ditt konto får du 
 100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I´m the CEO of Scrive. 
 Thank you for creating an account with us. When you have 
@@ -2147,7 +2147,7 @@ valuable."
 "_pageFooterContact2","<strong>Telefon</strong>      +46 (0)10-195 99 15",,"<strong>Phone</strong>         +46 (0)10-195 99 15"
 "_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17",,"<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
 "_pageFooterContact4","<strong>Maila Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>",,"<strong>Send email to Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>"
-"_pageFooterContact5","<strong>Adress</strong>     Scrive CM AB <BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>       Scrive CM AB <BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
+"_pageFooterContact5","<strong>Adress</strong>     Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>       Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
 "_pageFooterCustomers","Kunder",,"Customers"
 "_pageFooterHome","Hem",,"Home"
 "_pageFooterLaw","Juridik",,"Legal"
@@ -2621,7 +2621,7 @@ valuable."
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
-"_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. $ourServiceName()$ gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and 
+"_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and 
 simply better."
 "_queryColumnBody2","100 fria signaturer. Ingen inlåsning, inga konstigheter.",,"100 free signatures. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
@@ -2906,7 +2906,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signStepsBodyUploadBoxStep1Info","Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen
  för att gå vidare.    ",,"What type of document do you want to send? Click a document symbol
  to continue."
-"_signStepsBodyUploadBoxStep1TemplateSaved","Som du sparat hos $ourServiceName()$",,"Saved in $ourServiceName()$"
+"_signStepsBodyUploadBoxStep1TemplateSaved","Som du sparat hos Scrive",,"Saved in Scrive"
 "_signStepsBodyUploadBoxStep1UpLoadChooseFile","Välj fil från dator",,"Select file from computer"
 "_signStepsBodyUploadBoxStep1UpLoadOnlyPDF","OBS! Endast PDF",,"PDF only!"
 "_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil ",,"Select file"
