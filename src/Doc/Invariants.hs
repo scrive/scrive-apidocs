@@ -49,7 +49,6 @@ documentInvariants = [ documentHasOneAuthor
                      , maxCustomFields
                      , closedWhenAllSigned
                      , hasSignedAttachments
-                     , sendOnlyProcessesDontHaveAuthorsWhoSign
                      , basicDocsDontHaveCSVs
                      , basicDocsDontHaveDaysToSign
                      , basicDocsDontHaveMultipleCounterparts
@@ -221,16 +220,6 @@ maxCustomFields _ document =
   assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
     m <= maxfields
 
-{- |
-    Author is unable to sign processes which are author send only.
-    This includes offers and orders.
--}
-sendOnlyProcessesDontHaveAuthorsWhoSign :: MinutesTime -> Document -> Maybe String
-sendOnlyProcessesDontHaveAuthorsWhoSign _ document =
-  let sendonlyprocess = Just True == getValueForProcess document processauthorsend
-      authorsigning = Just True == (fmap isSignatory $ getAuthorSigLink document) in
-  assertInvariant ("doc has type " ++ (show $ documenttype document) ++ " and has a signing author") 
-                  (sendonlyprocess =>> not authorsigning)
                   
 {- |
     Documents in basic mode don't have csvs
