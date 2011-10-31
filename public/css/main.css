@@ -253,11 +253,11 @@ a.new-btn-small.black p {
 
 #top-container .person {
 	background: url(../img/persons.jpg);
-	top: 34px;
-	height: 396px;
-	left: 453px;
+	top: 67px;
+	height: 363px;
+	left: 493px;
 	position: absolute;
-	width: 433px;
+	width: 390px;
 	z-index: 0;
 }
 
