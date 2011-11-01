@@ -247,16 +247,15 @@ window.DocumentDataFiller = {
         $(".documenttitle", object).text(title);
         
         // Filling unsigned signatories
-        var unsignedpartynotcurrent = "";
+        var unsignedpartynotcurrent = [localization.you];
         var signatories = _.select(document.signatories(), function(signatory){
             return signatory.signs() && !signatory.hasSigned() && !signatory.current();
         });
-        for(var i=0;i<signatories.length;i++) {
-               unsignedpartynotcurrent += signatories[i].smartname();
-           if (i < signatories[i].length - 1)
-               unsignedpartynotcurrent += ",";
-        }
-        $(".unsignedpartynotcurrent", object).text(unsignedpartynotcurrent);
+        
+        for(var i=0;i<signatories.length;i++)
+            unsignedpartynotcurrent.push(signatories[i].smartname());
+        var ls = listString(unsignedpartynotcurrent);
+        $(".unsignedpartynotcurrent", object).html(ls);
         // Something more can come up
     }
 }

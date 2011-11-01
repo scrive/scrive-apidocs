@@ -417,7 +417,7 @@
 "_addressFieldName","adress",,"address"
 "_addsigattachmentlink","BEGÄR BILAGA",,"REQUEST ATTACHMENT"
 "_and","och",,"and"
-"_listand"," och ",,", and "
+"_commaand"," och ",,", and "
 "_appendixListAttachment","Bilagor:",,"Attachments:"
 "_atLeastOneSignatoryRequired","Du måste ha minst en undertecknande part.",,"You must add at least one signing party."
 "_authorsignatoryradioSenderNotSign","Ej undertecknande part",,"Non-signing party"
@@ -547,7 +547,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  att meddela ",,"When you have rejected, Scrive sends an e-mail to notify"
 "_contractsignatorycancelmodaltitleHead","Avvisa",,"Reject"
 "_contractsignatorysignmodalcontentlast","När du undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
-"_contractsignatorysignmodalcontentnotlast","När du och <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you and  <span class='unsignedpartynotcurrent'/> signed the contract will become legally binding and the completed contract will be sent to your e-mail."
+"_contractsignatorysignmodalcontentnotlast","När <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When <span class='unsignedpartynotcurrent'/> have signed, the contract will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodaltitle","Är du säker att du vill underteckna?",,"Are you sure you want to sign?"
 "_contractsignbuttontext","Signera",,"Sign"
 "_contractsignedinfoheader","Färdigställt",,"Finished"
@@ -898,7 +898,7 @@ administrativt krångel. Nöjdare kunder.",,"Close deals faster. Less administra
  kvalificerad signatur. Den kvalificerade signaturen går inte
  att förvanska och därmed säkerställer den att dokumentet inte
  förvanskats efter stämpling. Den kvalificerade signaturen går
- att kontrollera i bland annat Adobe Reader.",,"When all parties have signed a document we encrypt it and send
+ att kontrollera i bland annat Adobe Reader.",,"When all parties have signed a document, we encrypt it and send
  it to TrustWeaver where it is supplied with a qualified signature.
  The qualified signature is impossible to impair, and the document
  is thereby protected against distortion after stamping. The qualified
@@ -1793,8 +1793,7 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
  tjänsten Scrive.    Det betyder nog att han/hon gillar vår
  tjänst och tror du också skulle uppskatta den också.",,"$invitername$ has treated you to two months of free service with
- Scrive.com. This means he/she likes our site and believes you
-Would appreciate it too."
+ Scrive. This means he/she likes our site and believes you would appreciate it too."
 "_mailViralInviteContentBodySecond","Scrive är en tjänst för att skriva på och arkivera dokument
  elektroniskt.    Spara pengar, frustration och miljö och använd
  Scrive istället.     Du kan spara mellan 50-250kr/dokument!",,"Scrive is a service for signing and archiving legal documents
@@ -1881,38 +1880,34 @@ Would appreciate it too."
 "_modalSendInviteViewHeader","Dokumentet <strong>$documenttitle$</strong> skickat!",,"The document <strong>$documenttitle$</strong> has been sent!"
 "_modalSignInviteViewBodyIfElse","En inbjudan att underteckna har nu skickats till        $partyListButAuthor:noescape()$.",,"An invitation to sign has been sent to $partyListButAuthor:noescape()$."
 "_modalSignInviteViewBodyIfSigned","Du har undertecknat dokumentet $documenttitle$ och dokumentet
- har färdigställts.",,"You have signed the document $documenttitle$ and the document
- has been completed."
+ har färdigställts.",,"You have signed the document $documenttitle$ and the document has been completed."
 "_modalSignInviteViewHeaderIfElse","Du har undertecknat!",,"You have signed!"
 "_modalSignInviteViewHeaderIfSigned","Du har undertecknat dokumentet <strong>$documenttitle$</strong>!",,"You have signed the document <strong>$documenttitle$</strong>!"
 "_modalSignedViewClosedHasAccountLoggedInBodySaved","        Dokumentet har sparats till ditt konto.      ",,"          The document has been saved to your account.
   "
 "_modalSignedViewClosedHasAccountLoggedInBodySigned","        $partyListString:noescape()$ har nu undertecknat och
-        dokumentet är bindande.     ",,"        $partyListString:noescape()$ has signed, and the document
+        dokumentet är bindande.     ",,"        $partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ signed, and the document
          is now legally binding.        "
 "_modalSignedViewClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
 "_modalSignedViewClosedHasAccountNotLoggedInBodySaved","          Dokumentet har sparats till ditt konto.        ",,"          The document has been saved to your account.
   "
 "_modalSignedViewClosedHasAccountNotLoggedInBodySigned","          $partyListString:noescape()$ har nu undertecknat och
-          dokumentet är bindande.        ",,"          $partyListString:noescape()$ has signed, and the document
+          dokumentet är bindande.        ",,"          $partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ signed, and the document
          is now legally binding.        "
 "_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
-"_modalSignedViewClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
+"_modalSignedViewClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document called $documenttitle$"
 "_modalSignedViewClosedNoAccountBody","Dokumentet är nu bindande. Scrive har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.",,"The document is now binding. Scrive has verified this transaction and generated a verification. An original document has been sent to your e-mail address."
 "_modalSignedViewClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
 "_modalSignedViewNotClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
 "_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte
       undertecknat. När alla undertecknat blir dokumentet bindande
-        och en kopia skickas till din e-post.      ",,"        $partyUnsignedListString:noescape()$ has not yet
-      signed. When everyone involved has signed, the document
-          becomes legally binding and a duplicate is sent to
- your e-mail address.      "
+        och en kopia skickas till din e-post.      ",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet signed. When everyone involved has signed, the document becomes legally binding and a digital copy is sent to your e-mail address."
 "_modalSignedViewNotClosedHasAccountLoggedInBodySaved","        Dokumentet har sparats till ditt konto.      ",,"        The document has been saved to your account.        "
-"_modalSignedViewNotClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
+"_modalSignedViewNotClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document called $documenttitle$"
 "_modalSignedViewNotClosedHasAccountNotLoggedInBodyNotSigned","          $partyUnsignedListString:noescape()$ har ännu inte
           undertecknat. När alla undertecknat blir dokumentet
  bindande          och en kopia skickas till din e-post.
-    ",,"          $partyUnsignedListString:noescape()$ has not yet
+    ",,"          $partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$  not yet
         signed. When everyone involved has signed, the document
           becomes legally binding and a duplicate is sent to
  your e-mail address."
@@ -1922,13 +1917,13 @@ Would appreciate it too."
 "_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
 "_modalSignedViewNotClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
 "_modalSignedViewOrderClosedHasAccountLoggedInBodyConfirmed","        $partyListString:noescape()$ har nu bekräftat ordern.
-      ",,"        $partyListString:noescape()$ has now confirmed the order.
+      ",,"        $partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ now confirmed the order.
     "
 "_modalSignedViewOrderClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ",,"        The order confirmation has been saved to your account.
    "
 "_modalSignedViewOrderClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
 "_modalSignedViewOrderClosedHasAccountNotLoggedInBodyConfirmed","          $partyListString:noescape()$ har nu bekräftat ordern.
-        ",,"          $partyListString:noescape()$ has now confirmed the
+        ",,"          $partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ now confirmed the
  order.    "
 "_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.
     ",,"          The order confirmation has been saved to your account.
@@ -1939,20 +1934,20 @@ Would appreciate it too."
  address.   "
 "_modalSignedViewOrderClosedNoAccountHeader","	Du har bekräftat ordern!",,"	You have confirmed the order!"
 "_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned","        $partyUnsignedListString:noescape()$ har ännu inte
-      bekräftat.      ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed.
+      bekräftat.      ",,"        $partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed.
    "
 "_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved","        Orderbekräftelsen har sparats till ditt konto.      ",,"        The order confirmation has been saved to your account.
    "
 "_modalSignedViewOrderNotClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed","          $partyUnsignedListString:noescape()$ har ännu inte
-          bekräftat.        ",,"          $partyUnsignedListString:noescape()$ has not yet confirmed.
+          bekräftat.        ",,"          $partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed.
    "
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved","          Orderbekräftelsen har sparats till ditt konto.
     ",,"          The order confirmation has been saved to your account."
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
 "_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
 "_modalSignedViewOrderNotClosedNoAccountBody","        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
-      ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed."
+      ",,"        $partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed."
 "_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
 "_modalWelcomeToSkrivaPaBodyMain","<p>Välkommen! Du kan använda vår service för att få handlingar undertecknade snabbt och smidigt. Det är verkligen enkelt.</p><p>Om du vill veta mer eller behöver någon hjälp, lämna oss ditt nummer och så återkommer vi till dig.</p>",,"<p>Welcome!  You can use Scrive to get documents signed quickly and smoothly.  It's really easy.</p><p>If you would like to learn more, or need any help, please leave Scrive your number and we'll get back to you.</p>"
 "_modalWelcomeToSkrivaPaFooter","Välkommen!",,"Welcome"

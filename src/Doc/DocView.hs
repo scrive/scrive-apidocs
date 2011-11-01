@@ -158,6 +158,8 @@ modalSignedFields document@Document{ documenttitle } = do
   fieldM "partyListString" . renderListTemplate . map (BS.toString . getSmartName) $ partyList document
   field "signatory" . listToMaybe $ map (BS.toString . getEmail ) $ partyList document
   field "documenttitle" $ BS.toString documenttitle
+  field "unsignedlistplural" $ length (partyUnsignedList document) /= 1
+  field "partylistplural" $ length (partyList document) /= 1
 
 loginFields :: MonadIO m => Locale -> Document -> SignatoryLink -> Bool -> Fields m
 loginFields locale document signatorylink isloggedin = do

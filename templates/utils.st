@@ -108,3 +108,5 @@ loadingdialog=
   </div>
 </div>
 ####
+englishHasSP=$if(pl)$have$else$has$endif$
+##

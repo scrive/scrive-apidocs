@@ -75,7 +75,7 @@ javascriptLocalisation =
              , select : "$_options()$"
              , of : "$_of()$"
              , and : "$_and()$"
-             , listand : "$_listand()$"
+             , commaand : "$_commaand()$"
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
