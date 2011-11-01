@@ -13,7 +13,6 @@ import Session
 import ActionSchedulerState
 import Data.Data
 import Misc
-import API.Service.ServiceState
 
 -- |top-level application state
 data AppState = AppState
@@ -26,7 +25,7 @@ instance Version AppState
 
 -- |top-level application component
 instance Component AppState where
-  type Dependencies AppState = Documents :+: Sessions :+: PaymentAccountModels :+: Actions :+: Services :+: End
+  type Dependencies AppState = Documents :+: Sessions :+: PaymentAccountModels :+: Actions :+: End
   initialValue = AppState
 
 
