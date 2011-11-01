@@ -15,7 +15,6 @@ import Data.Data
 import Misc
 import API.Service.ServiceState
 import Company.CompanyState
-import User.UserState
 
 -- |top-level application state
 data AppState = AppState
@@ -28,7 +27,7 @@ instance Version AppState
 
 -- |top-level application component
 instance Component AppState where
-  type Dependencies AppState = Documents :+: Sessions :+: Users :+: PaymentAccountModels :+: Actions :+: Companies :+: Services :+: End
+  type Dependencies AppState = Documents :+: Sessions :+: PaymentAccountModels :+: Actions :+: Companies :+: Services :+: End
   initialValue = AppState
 
 
