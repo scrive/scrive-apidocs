@@ -21,8 +21,7 @@ import Doc.DocViewMail
 import Doc.DocProcess
 import Doc.DocRegion
 import InputValidation
-import File.TransState
-import qualified File.State as OldFiles
+import File.Model
 import Kontra
 import KontraLink
 import ListUtil

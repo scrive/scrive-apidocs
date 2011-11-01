@@ -29,7 +29,7 @@ import Data.List hiding (insert)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import File.TransState
+import File.Model
 
 --import Happstack.State
 

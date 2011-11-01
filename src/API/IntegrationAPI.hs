@@ -56,7 +56,7 @@ import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
-import File.TransState
+import File.Model
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)

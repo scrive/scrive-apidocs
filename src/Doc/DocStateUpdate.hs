@@ -30,7 +30,7 @@ import User.Model
 import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
-import File.TransState
+import File.Model
 import DB.Classes
 import Data.Either
 
