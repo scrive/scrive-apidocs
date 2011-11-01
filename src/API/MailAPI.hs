@@ -26,6 +26,7 @@ import Happstack.StaticRouting(Route, Path)
 import Happstack.State (update)
 import Text.JSON
 import Text.JSON.String
+import Codec.MIME.Decode
 import qualified Codec.MIME.Parse as MIME
 import qualified Codec.MIME.Type as MIME
 import qualified Data.ByteString as BS
@@ -125,7 +126,7 @@ parseEmailMessage content =
   from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
   to   = maybe BS.empty BS.fromString $ lookup "to"   (MIME.mime_val_headers mime)
   isOutlook = maybe False ("Outlook" `isInfixOf`) $ lookup "x-mailer" (MIME.mime_val_headers mime) 
-  subject = maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
+  subject = decodeWords $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
   charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
   recode mimetype content' =
         case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
@@ -148,7 +149,7 @@ parseEmailMessage content =
   Log.debug $ "recodedPlain body: " ++ recodedPlain
   json <- (ErrorT . return) $ if '{' == (head $ strip recodedPlain)
                               then runGetJSON readJSObject recodedPlain
-                              else parseSimpleEmail (BS.toString subject) recodedPlain
+                              else parseSimpleEmail subject recodedPlain
   Log.debug $ "Json returned from parsing: " ++ show json
   return (json,pdfBinary,from,to)
 

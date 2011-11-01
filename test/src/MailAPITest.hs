@@ -18,6 +18,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
 import Control.Concurrent
 import Control.Monad.Trans
+import Data.List
 
 import API.MailAPI
 import DB.Classes
@@ -46,6 +47,8 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_three.eml" 4
     , testCase "test lukas's error email" $ testSuccessfulDocCreation conn "test/mailapi/lukas_mail_error.eml" 2
     , testCase "test eric's error email" $ testSuccessfulDocCreation conn "test/mailapi/eric_email_error.eml" 2    
+    , testCase "test lukas's funny title" $ testSuccessfulDocCreation conn "test/mailapi/email_weird_subject.eml" 2
+    , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_viktor.eml" 3
     ]
 
 testParseMimes :: String -> Assertion
@@ -81,6 +84,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     let mdocid = lookup "documentid" res'
     assertBool "documentid is given" $ isJust mdocid
     Just doc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
     imgreq <- mkRequest GET []
     let keepTrying 0 = return ()
         keepTrying (n::Int) = do
