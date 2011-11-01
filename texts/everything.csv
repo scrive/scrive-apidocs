@@ -41,7 +41,7 @@
 "_CantRemoveActiveDocuments","Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
-"_CompanyAccounts","Underkonton",,"Subaccounts"
+"_CompanyAccounts","Underkonton",,"Sub Accounts"
 "_CreateAccount","Skapa konto!",,"Create account!"
 "_Document","Dokument",,"Document"
 "_DownloadPDF","Ladda ned PDF",,"Download PDF"
@@ -266,9 +266,9 @@
 "_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
 "_SaveChanges","Spara ändringar",,"Save changes"
 "_SaveSettings","Spara inställningar",,"Save changes"
-"_SearchCompanyAccount","Sök underkonto",,"Search subaccount"
-"_SearchDoc","Sök dokument",,"Search document"
-"_SearchTemplate","Sök  mall",,"Search template"
+"_SearchCompanyAccount","Sök underkonto",,"Search Sub Accounts"
+"_SearchDoc","Sök dokument",,"Search documents"
+"_SearchTemplate","Sök  mall",,"Search templates"
 "_SendReminder","Skicka påminnelse",,"Send reminder"
 "_SortAttachment","Bilaga",,"Attachment"
 "_SortCompany","Företag ",,"Company"
@@ -822,7 +822,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
 "_flashMessageCompanyCreated","A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
 "_flashMessageUserHasBecomeSubaccount","Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
- och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a subaccount to the main account $supervisor.fullnamePlusEmail$
+ och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a sub account to the main account $supervisor.fullnamePlusEmail$
  and the rights to your documents have been transferred."
 "_flashMessageUserHasLiveDocs","Unable to remove account(s) as there are some remaining documents
  that need to be finalised (spec/translate me please).",,"Unable to remove account(s) as there are some remaining documents
@@ -883,7 +883,7 @@ administrativt krångel. Nöjdare kunder.",,"Close deals faster. Less administra
     underkonto på Scrive genom vilket du kan skriva avtal
    för organisationen <strong>$companyname$</strong>. Observera
  att detta konto inte    är avsett för privat bruk då samtliga
- dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a subaccount on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
+ dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a sub account on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
 "_inviteCompanyAccountMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_inviteCompanyAccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
 "_inviteCompanyAccountMailTitle","Inbjudan från $supervisorname$ till underkonto",,"Invitation from $supervisorname$"
@@ -1651,7 +1651,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailCancelOrderByAuthorContentBody","<strong>$creatorname$</strong>   har valt att återkalla
  orderbekräftelsen  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$."
-"_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a subaccount."
+"_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
 "_mailCompanyAccountAcceptedTitle","Kontoförfrågan",,"Account enquiry"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
@@ -1718,7 +1718,7 @@ profits and reduce frustration. The following mateials shall only
  se och administrera dina avtal, dock tar huvudkontot över ägarskapet
  över samtliga dokument i ditt konto.",,"The user $supervisor.fullnamePlusEmail$ has requested to become
  to become the supervisor of your account. If you accept, your
- account will become their subaccount. You will still
+ account will become their sub account. You will still
  be able to see and administrate your agreements and the supervising
  account will take over the ownership over all your documents."
 "_mailInviteUserAsCompanyAccountContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om
@@ -1728,9 +1728,9 @@ profits and reduce frustration. The following mateials shall only
 "_mailInviteUserAsCompanyAccountContentInstructionSecond","<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
  <li>Spara ned samtliga privata dokument till din dator</li>
  <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
- <li>Acceptera</li> <li>Ditt konto är nu underkonto</li>",,"<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now  a subaccount</li>"
+ <li>Acceptera</li> <li>Ditt konto är nu underkonto</li>",,"<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now a sub account</li>"
 "_mailInviteUserAsCompanyAccountContentLink","Detta är länken nedan",,"This is the link below"
-"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till underkonto",,"Subaccount inquiry"
+"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till underkonto",,"Sub account inquiry"
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar",,"Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
@@ -1832,19 +1832,19 @@ Would appreciate it too."
  your	           documents will be transferred to the main account.
  Are	          you sure you want to accept?	        "
 "_modalDoYouWantToBeSubaccountFooterAccept","Acceptera",,"Accept"
-"_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli underkonto?",,"Do you want to accept to become subaccount?"
+"_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli underkonto?",,"Do accept becoming a sub account?"
 "_modalErrorBody","Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
 "_modalErrorHeader","Oops, ett fel har uppstått",,"Oops, an error has occurred"
 "_modalInviteUserAsSubaccountBodySendRequest","Skicka en förfrågan till användaren att bli ett underkonto
          under ditt konto. Det betyder att du blir
  huvudkonto och kommer att ta över ägarskapet över samtliga underkontots
- dokument. 	        ",,"Send a request to the user to become subaccount to your
-      account. This means that you will become	           main
- account, and the ownership of all the documents in the subaccount
+ dokument. 	        ",,"Send a request to the user to become a sub account to your
+      account. This means that you will become	         the  main
+ account, and the ownership of all the documents in the sub account
  will be transferred to you.	          "
 "_modalInviteUserAsSubaccountBodySendSure","	          Är du säker att du vill skicka förfrågan till användaren
- att bli	          underkonto?	        ",,"	          Are you sure you want to send a request to become
-          subaccount?	        "
+ att bli	          underkonto?	        ",,"	          Are you sure you want to send a request to become a
+          sub account?	        "
 "_modalInviteUserAsSubaccountFooterSendRequest","Skicka förfrågan",,"Send request"
 "_modalInviteUserAsSubaccountHeaderSendRequest","Skicka förfrågan?",,"Send request?"
 "_modalLoginForSaveViewBody","Ditt konto har skapats. En aktiveringslänk har skickats till
@@ -2220,7 +2220,7 @@ valuable."
 "_passwordChangeLinkMailTitle","Nytt lösenord",,"New password"
 "_passwordFieldName","lösenord",,"password"
 "_paymentsadminpageAccount","For account: ",,"For account: "
-"_paymentsadminpageAccountSubHead","Payment for account and subaccounts ",,"Payment for account and subaccounts "
+"_paymentsadminpageAccountSubHead","Payment for account and subaccounts ",,"Payment for account and sub accounts "
 "_paymentsadminpageHead","This page shows prices for all account types",,"This page shows prices for all account types"
 "_paymentsadminpageSignatureCreditCard","For credit card signature:",,"For credit card signature:"
 "_paymentsadminpageSignatureEleg","For e-ID signature:",,"For e-ID signature:"
@@ -2234,10 +2234,10 @@ valuable."
 "_paymentsadminpageStorageOtherTemplate","Template:  ",,"Template:  "
 "_paymentsadminpageStorageSubHead","Payment storage of signed documents",,"Payment storage of signed documents"
 "_paymentsadminpageStorageTW","For TrustWeaver: ",,"For TrustWeaver: "
-"_paymentsadminpageSubaccount","For subaccount: ",,"For subaccount: "
+"_paymentsadminpageSubaccount","For subaccount: ",,"For sub account: "
 "_paymentsadminpagesuperuserAccountAccount","For account: ",,"For account: "
-"_paymentsadminpagesuperuserAccountSubAccount","For subaccount: ",,"For subaccount: "
-"_paymentsadminpagesuperuserAccountSubHead","Payment for account and subaccounts ",,"Payment for account and subaccounts "
+"_paymentsadminpagesuperuserAccountSubAccount","For subaccount: ",,"For sub account: "
+"_paymentsadminpagesuperuserAccountSubHead","Payment for account and subaccounts ",,"Payment for account and sub accounts "
 "_paymentsadminpagesuperuserHead","  This page shows prices for all account types ",,"  This page shows prices for all account types "
 "_paymentsadminpagesuperuserSignatureCreditCard","For credit card signature:",,"For credit card signature:"
 "_paymentsadminpagesuperuserSignatureEleg","For e-ID signature:",,"For e-ID signature:"
