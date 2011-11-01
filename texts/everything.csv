@@ -408,7 +408,7 @@
 "_activatePageViewNotValidLinkBody","Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen
  fyll i        din mailadress så skickar vi en ny aktiveringslänk
  omedelbart.      ",,"We are sorry, your activation link is older than 12 hours. Please
- enter your e-mail address and we will send you a new activation
+ enter your e-mail address and Scrive will send you a new activation
  link immediately."
 "_activatePageViewNotValidLinkEmail","E-mail:",,"E-mail:"
 "_addRequiredAttachments","Var vänlig bifoga begärda bilagor.",,"Please upload requested attachments."
@@ -462,7 +462,7 @@
  står för research, idé, koncept och action – de fyra stegen
  i en problemlösningsprocess.",,"Go Enterprise is a young management consultancy company that
  is passionate about growth, entrepreneurship and social development.
- Through our RIKA concept, we inspire to take action and solve
+ Through our RIKA concept, we inspire action and solve
  problems. RIKA stands for research, idea, concept and action
  (in Swedish) - the four steps in a problem solving process."
 "_clientsPageCusomerVidWeb","www.goenterprise.se",,"www.goenterprise.se"
@@ -475,7 +475,7 @@
  se kundens behov, vår kundnära personliga approach och vår förmåga
  att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade
  problem på sätt som verkar enkla och tilltalande för slutkund.</p>",,"<p>Scrive is a service for signing and storing contracts electronically.
- We help our customers to lower their costs, increase their
+ We help our customers lower their costs, increase their
 profits and reduce frustration.</p>						<br />						<p>We are confident
  that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve
  complex legal and security-related issues in a way that seems
@@ -544,7 +544,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  the link:"
 "_contractsendtext","Skicka",,"Send"
 "_contractsignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för
- att meddela ",,"When you have rejected, we send an e-mail to notify"
+ att meddela ",,"When you have rejected, Scrive sends an e-mail to notify"
 "_contractsignatorycancelmodaltitleHead","Avvisa",,"Reject"
 "_contractsignatorysignmodalcontentlast","När du undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodalcontentnotlast","När du och <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you and  <span class='unsignedpartynotcurrent'/> signed the contract will become legally binding and the completed contract will be sent to your e-mail."
@@ -2169,11 +2169,10 @@ use free of charge."
 "_partnersPageH1Body","Scrive är en tjänst för att underteckna och arkivera dokument
  elektroniskt. Vi har ett nära samarbete med ett flertal framstående
  aktörer inom datasäkerhet och signeringsteknik.",,"Scrive is a service for signing and storing documents online.
- We cooperate closely with several leading players in data security
+ Scrive cooperates closely with several leading players in data security
  and signing technology."
 "_partnersPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Vi har nära samarbete
- med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik.",,"Sign and store your contracts online. We cooperate closely with
- several leading players in data security and signing technology."
+ med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik.",,"Sign and store your contracts online. Scrive cooperates closely with several leading players in data security and signing technology."
 "_partnersPagePartner1","Logica",,"Logica"
 "_partnersPagePartner1About","Logica är ett ledande internationellt IT-tjänstföretag som skapar
  värde genom att integrera människor, affärer och IT. Logica
@@ -2271,7 +2270,7 @@ use free of charge."
 "_priceplanPageBelowTable3","                    <h2>Rabatter till ej vinstdrivande organisationer</h2>
                     <p>Vi gillar engagemang och eldsjälar som
  vill förändra. Därför stödjer vi ej vinstdrivande organisationer
- genom att erbjuda bra rabatter på våra listpriser.</p>",,"                    <h2>Discounts for non-profit organisations</h2>                     <p>We appreciate dedicated enthusiasts who  want to make a change. Therefore we support non-profit organisations  by offering them discounts on our list prices.</p>"
+ genom att erbjuda bra rabatter på våra listpriser.</p>",,"                    <h2>Discounts for non-profit organisations</h2>                     <p>We appreciate dedicated enthusiasts who  want to make a difference. Therefore we support non-profit organisations  by offering them discounts on our list prices.</p>"
 "_priceplanPageH1","Priser",,"Prices"
 "_priceplanPageH1Body1","Skriva på dokument snabbt, smidigt och säkert!",,"Sign documents quickly, simply and securely."
 "_priceplanPageH1Body2","Registrera dig på under minuten och testa 14 dagar redan idag.",,"Registration takes less than a minute. Try it out for free
@@ -2661,25 +2660,25 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> vill skicka
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten Scrive. Dokumentet bifogas
- med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document using Scrive. Please find it attached."
+ med detta mail.",,"<strong>$author$</strong> requested that we send the document called <strong>$documenttitle$</strong> to you. You have signed this document using Scrive. Please find it attached."
 "_remindMailSignedContractStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka dokumentet
  <strong>$documenttitle$</strong>  till dig. Dokumentet
  har undertecknats av dig. Dokumentet bifogas
- med detta mail.",,"<strong>$author$</strong> requested that we send document  <strong>$documenttitle$</strong> to you. You have signed this document. Please find it attached."
+ med detta mail.",,"<strong>$author$</strong> requested that we send the document called <strong>$documenttitle$</strong> to you. You have signed this document. Please find it attached."
 "_remindMailSignedOfferStandardHeaderSendRequest","<strong>$author$</strong> vill skicka offerten
   <strong>$documenttitle$</strong>        till dig. Den accepterade
- offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. Please find it attached."
-"_remindMailSignedOfferStandardHeaderSendRequestWithService","<strong>$author$</strong> har  har begärt att vi ska skicka offerten
+ offerten bifogas med detta mail.",,"<strong>$author$</strong> requested that we send the order-confirmation called <strong>$documenttitle$</strong> to you. Please find it attached."
+"_remindMailSignedOfferStandardHeaderSendRequestWithService","<strong>$author$</strong> har har begärt att vi ska skicka offerten
   <strong>$documenttitle$</strong>        till dig. Offerten
  har accepterats av dig. Den accepterade
- offerten bifogas med detta mail.",,"<strong>$author$</strong> has requested that we send the order-confirmation  <strong>$documenttitle$</strong> to you. You have accepted this offer.. Please find it attached."
+ offerten bifogas med detta mail.",,"<strong>$author$</strong> requested that we send the order-confirmation called <strong>$documenttitle$</strong> to you. You have accepted this offer. Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequest","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig. Orderbekräftelsen bifogas med
- detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>  .  You have confirmed it using Scrive.  Please find it attached."
+ detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation called <strong>$documenttitle$</strong> .  You have confirmed it using Scrive.  Please find it attached."
 "_remindMailSignedOrderStandardHeaderSendRequestWithService","<strong>$author$</strong> har begärt att vi ska skicka orderbekräftelsen
  <strong>$documenttitle$</strong>        till dig som du har
  Bekräftat. Orderbekräftelsen bifogas med
- detta mail.",,"<strong>$author$</strong>requested that we send the order confirmation<strong>$documenttitle$</strong>. Please find it attached."
+ detta mail.",,"<strong>$author$</strong> requested that we send the order confirmation called <strong>$documenttitle$</strong> to you. Please find it attached."
 "_reminderFormFooterOwnMessage"," Skriv eget meddelande ",,"Write own message"
 "_reminderFormHead","Skicka påminnelse ",,"Send reminder"
 "_reminderFormSendReminder","Skicka påminnelse ",,"Send reminder"
