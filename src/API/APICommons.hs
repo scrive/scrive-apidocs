@@ -213,7 +213,7 @@ api_document_tag tag = JSObject $ toJSObject [
                        
 api_file :: BS.ByteString -> BS.ByteString -> JSValue
 api_file name content = 
-  let base64data = BS.unpack (Base64.encode content) in
+  let base64data = BS.toString (Base64.encode content) in
   JSObject $ toJSObject [ ("name", showJSON $ BS.toString name)
                         , ("content", showJSON base64data)]
 
