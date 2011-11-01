@@ -1734,7 +1734,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar",,"Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
- e-legitimation.",,"We are sorry, the information given to us in <a href=""$doclink$"">$documenttitle$</a>
+ e-legitimation.",,"We are sorry, the information given to Scrive in <a href=""$doclink$"">$documenttitle$</a>
  does not match information from  <a href=""mailto:$bademail$"">$badname$</a>'s
  E-legitimation."
 "_mailMismatchAuthorContentBodySecond","Avtalsprocessen för <a href=""$doclink$"">$documenttitle$</a> har
@@ -1747,7 +1747,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailMismatchSignatoryContentBestRegards","Med Vänliga Hälsningar",,"Best regards"
 "_mailMismatchSignatoryContentBodyFirst","Vi beklagar, men någon av de uppgifter <a href=""mailto:$authoremail$"">$authorname$</a>
  har angivit i <a href=""$doclink$"">$documenttitle$</a> matchar
- inte personuppgifterna hos $badname$s e-legitmation.",,"We are sorry, some of the information given to us in <a href=""$doclink$"">$documenttitle$</a>
+ inte personuppgifterna hos $badname$s e-legitmation.",,"We are sorry, some of the information given to Scrive in <a href=""$doclink$"">$documenttitle$</a>
  does not match information from <a href=""mailto:$bademail$"">$badname$</a>'s
  E-legitimation."
 "_mailMismatchSignatoryContentBodyIfMessages","<strong>Felrapport:</strong>",,"<strong>Bug report:</strong>"
@@ -1954,7 +1954,7 @@ Would appreciate it too."
 "_modalSignedViewOrderNotClosedNoAccountBody","        $partyUnsignedListString:noescape()$ har ännu inte bekräftat.
       ",,"        $partyUnsignedListString:noescape()$ has not yet confirmed."
 "_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
-"_modalWelcomeToSkrivaPaBodyMain","<p>Välkommen! Du kan använda vår service för att få handlingar undertecknade snabbt och smidigt. Det är verkligen enkelt.</p><p>Om du vill veta mer eller behöver någon hjälp, lämna oss ditt nummer och så återkommer vi till dig.</p>",,"<p>Welcome!  You can use our service to get documents signed quickly and smoothly.  It's really easy.</p><p>If you like to learn more, or need any help, please leave us your number and we'll get back to you.</p>"
+"_modalWelcomeToSkrivaPaBodyMain","<p>Välkommen! Du kan använda vår service för att få handlingar undertecknade snabbt och smidigt. Det är verkligen enkelt.</p><p>Om du vill veta mer eller behöver någon hjälp, lämna oss ditt nummer och så återkommer vi till dig.</p>",,"<p>Welcome!  You can use Scrive to get documents signed quickly and smoothly.  It's really easy.</p><p>If you would like to learn more, or need any help, please leave Scrive your number and we'll get back to you.</p>"
 "_modalWelcomeToSkrivaPaFooter","Välkommen!",,"Welcome"
 "_modalWelcomeToSkrivaPaHeader","Scrive",,"Scrive"
 "_multiPartPartner","Parter",,"Parties"
@@ -1968,9 +1968,7 @@ du skapat ett konto hos oss. När du aktiverat ditt konto får du
 Thank you for creating an account with us. When you have 
 activated your account you will get 100 signatures that you can 
 use free of charge."
-"_newUserMailContentBodySecond","",,"We hope you will be happy with our services. Please don't 
-hesitate to give us feedback or just a hello. Your opinions are 
-valuable."
+"_newUserMailContentBodySecond","",,"We hope you will be happy with Scrive. Please don't hesitate to give us feedback or just a hello. Your opinions are valuable."
 "_newUserMailContentBodyThird","Du aktiverar ditt konto genom att klicka på länken nedan. Länken
  är  giltig i 12 timmar.<br/>",,"Click to activate, the link is valid for 12 hours:<br/>"
 "_newUserMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
@@ -2144,7 +2142,7 @@ valuable."
 "_pageDocumentForSignContentRejectFooterReject","Avvisa",,"Reject"
 "_pageDocumentForViewerHelpersPartyName","Namn på avtalspart",,"Name of party"
 "_pageFooterAbout","Om Scrive",,"About Scrive"
-"_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact us with feedback, queries &amp; requests </strong>"
+"_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact Scrive with feedback, queries &amp; requests </strong>"
 "_pageFooterContact2","<strong>Telefon</strong>      +46 (0)10-195 99 15",,"<strong>Phone</strong>         +46 (0)10-195 99 15"
 "_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17",,"<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
 "_pageFooterContact4","<strong>Maila Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>",,"<strong>Send email to Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>"
@@ -2576,7 +2574,7 @@ valuable."
  is of the highest priority to Scrive. Your integrity is important
  to us.</p><br /><p>A more detailed description of how your data
  is handled by Scrive follows below. If you have further questions,
- please contact us at info@scrive.com.</p>"
+ please contact Scrive at info@scrive.com.</p>"
 "_privacyPolicyPageH21","Återförsäljning eller delgivning av information",,"Retailing or sharing of data"
 "_privacyPolicyPageH21Body","Scrive kommer inte att sälja, hyra eller låna ut eller på annat
  sätt till tredje part delge Er information insamlad genom Tjänsten
@@ -2585,7 +2583,7 @@ valuable."
  medgivande. Vi använder dock från tid till annan Användarinformation
  i anonymiserad form för att göra statistiska analyser som vi
  kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.",,"Scrive will not sell, rent out or lend, or in any other way share
- data that you have provided us through the service or in any
+ data that you have provided to Scrive through the service or in any
  other way to a to a Third-party except for in those cases regulated
  by the Terms Of Service or your written approval. Though, we
  sometimes use anonymous user data for statistical analyses
@@ -2700,7 +2698,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  där det är möjligt att matematiskt bevisa, och på så sätt garantera,
  att vissa saker omöjligen kan hända. Vi utvecklar även vårt
  system i nära samarbete med ovan nämnda forskningsteam.",,"Together with Google, Intel and Klarna, the data security group
- at Chalmers Technical University has selected us to bre part
+ at Chalmers Technical University has selected Scrive to be part
  of their web security research program. They are, at the moment,
  working on the next generation of secure data flow programs.
  This second generation is the very first one in which it is possible
@@ -2768,7 +2766,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  för att möta kundernas förväntningar.</li>	<li>Våra kunder använder
  vår tjänst till lagring av sina mest känsliga företagsdata.
  Att skydda dessa data tillräckligt bra är inte bra nog. Material
- och dokument måste vara 100 % skyddade och säkra.</li>",,"<li>Our customers must be able to trust us as a provider of a
+ och dokument måste vara 100 % skyddade och säkra.</li>",,"<li>Scrive's customers must be able to trust us as a provider of a
  premium service handling and protecting their legal documents,
  that does not expose the integrity and the trustworthiness of
  the documents to any risk. The intention is that documents treated
@@ -2795,7 +2793,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  secure premium storage</li>	<li>	Most powerful SSL 256 bit encryption
  for communication with our users through webb and email</li>	<li>	2048
  bit encryption, AES certificate and RSA-keys for internal data
- transfer between us and our partners.</li>	<li>	Change management
+ transfer between Scrive and our partners.</li>	<li>	Change management
  processes with several steps of approval</li>	<li>	Strict staff
  policy for all Scrive employees</li>	<li>	Participation in leading
  security research through the data security group at Chalmers
@@ -3092,7 +3090,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  som omdömen om Tjänsten och kan användas i vår marknadsföring
  utan någon betalning eller annan förpliktelse mot Er. När Ni
  har delgivit Scrive feedback kan den inte längre ändras av
- Er.",,"<h4>a. Feedback:</h4> You agree that Scrive may, at its own option, publish and otherwise use your comments and feedback, without payment or other obligations to You. You agree that any comments You make about Scrive directly to us via email, via our contact form, or on our forums, may be used as attributes of the Service and may be used in our marketing without any payment or other obligation to You. Once You have served Scrive feedback it cannot be changed by You."
+ Er.",,"<h4>a. Feedback:</h4> You agree that Scrive may, at its own option, publish and otherwise use your comments and feedback, without payment or other obligations to You. You agree that any comments you make about Scrive directly to Scrive via email, via our contact form, or on our forums, may be used as attributes of the Service and may be used in our marketing without any payment or other obligation to You. Once You have served Scrive feedback it cannot be changed by You."
 "_termsPageH2Responsability","8. Ansvarsbegränsning",,"8. Disclaimer"
 "_termsPageH2ResponsabilityBody","Ni accepterar att hålla Scrive och dess moderbolag, systerbolag,
  dotterbolag, filialer, tjänsteleverantörer, andra Användare,
