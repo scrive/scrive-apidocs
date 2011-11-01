@@ -39,7 +39,7 @@ import Text.JSON
 import MinutesTime
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified  Codec.Binary.Base64 as BASE64
+import qualified Data.ByteString.Base64 as Base64 
 import API.API
 import Doc.DocStorage
 import Doc.DocControl
@@ -213,7 +213,7 @@ api_document_tag tag = JSObject $ toJSObject [
                        
 api_file :: BS.ByteString -> BS.ByteString -> JSValue
 api_file name content = 
-  let base64data = BASE64.encode (BS.unpack content) in
+  let base64data = BS.unpack (Base64.encode content) in
   JSObject $ toJSObject [ ("name", showJSON $ BS.toString name)
                         , ("content", showJSON base64data)]
 
