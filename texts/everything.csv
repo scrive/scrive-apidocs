@@ -522,7 +522,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_contractpendingauthornotsignedinfotext","Vänligen var noga med att granska dokumentet och kontrollera
  parterna till höger innan du undertecknar.",,"Please review the document thoroughly and verify that the parties
  are correct before you sign."
-"_contractrejectbuttontext","Avvisa dokument",,"Reject document"
+"_contractrejectbuttontext","Avvisa dokument",,"Return document"
 "_contractremindagainbuttontext","Skicka dokumentet igen",,"Send document again"
 "_contractrestartbuttontext","Starta om dokument",,"Restart the document"
 "_contractsealingtexts","Verifikat",,"Verification"
@@ -544,8 +544,8 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
  the link:"
 "_contractsendtext","Skicka",,"Send"
 "_contractsignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för
- att meddela ",,"When you have rejected, Scrive sends an e-mail to notify"
-"_contractsignatorycancelmodaltitleHead","Avvisa",,"Reject"
+ att meddela ",,"When you have returned a document, Scrive sends an e-mail to notify"
+"_contractsignatorycancelmodaltitleHead","Avvisa",,"Return"
 "_contractsignatorysignmodalcontentlast","När du undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodalcontentnotlast","När <span class='unsignedpartynotcurrent'/> undertecknat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When <span class='unsignedpartynotcurrent'/> have signed, the contract will become legally binding and the completed contract will be sent to your e-mail."
 "_contractsignatorysignmodaltitle","Är du säker att du vill underteckna?",,"Are you sure you want to sign?"
@@ -691,12 +691,12 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_documentInfoTextPendingSignedbymeImauthorHead","Väntar på motpart",,"Waiting for counterpart"
 "_documentInfoTextPreparationBody","Dokumentet är i förberedelsefasen.",,"The document is in the preparation phase."
 "_documentInfoTextPreparationHead","Förberedelse",,"Preparation"
-"_documentInfoTextRejectedElseImauthorBody","Dokumentet har avvisats av en motpart",,"The document has been rejected by a counterpart."
-"_documentInfoTextRejectedElseImauthorHead","Avvisat",,"Rejected"
-"_documentInfoTextRejectedNotsignedbymeImauthorBody","Dokumentet har avvisats av en motpart.",,"The document has been rejected by a counterpart."
-"_documentInfoTextRejectedNotsignedbymeImauthorHead","Avvisat",,"Rejected"
-"_documentInfoTextRejectedSignedbymeImauthorBody","Dokumentet har avvisats av en motpart.",,"The document has been rejected by a counterpart."
-"_documentInfoTextRejectedSignedbymeImauthorHead","Avvisat",,"Rejected"
+"_documentInfoTextRejectedElseImauthorBody","Dokumentet har avvisats av en motpart",,"The document has been returned by a counterpart."
+"_documentInfoTextRejectedElseImauthorHead","Avvisat",,"Returned"
+"_documentInfoTextRejectedNotsignedbymeImauthorBody","Dokumentet har avvisats av en motpart.",,"The document has been returned by a counterpart."
+"_documentInfoTextRejectedNotsignedbymeImauthorHead","Avvisat",,"Returned"
+"_documentInfoTextRejectedSignedbymeImauthorBody","Dokumentet har avvisats av en motpart.",,"The document has been returned by a counterpart."
+"_documentInfoTextRejectedSignedbymeImauthorHead","Avvisat",,"Returned"
 "_documentInfoTextSignedbymeAwaitingauthorBody","Du har undertecknat och vi inväntar övriga parter.",,"You have signed and are waiting for the other parties."
 "_documentInfoTextSignedbymeAwaitingauthorHead","Väntar på motpart",,"Waiting for counterpart"
 "_documentInfoTextTimedoutElseImauthorBody","Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum
@@ -1678,7 +1678,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignContractContentIfSignatoryInstruction","<i>Så här går du vidare</i><br/>      1. Klicka på länken
  <br/>      <a href=""$link$"">$link$</a><br/>      2. Granska
  online<br/>      3. Underteckna (eller avvisa)<br/>       4.
- Färdig",,"<i>To continue:</i><br/>      1. Click the link <br/>       <a href=""$link$"">$link$</a><br/>      2. Review online<br/>       3. Sign  (or decline)<br/>       4. Done"
+ Färdig",,"<i>To continue:</i><br/>      1. Click the link <br/>       <a href=""$link$"">$link$</a><br/>      2. Review online<br/>       3. Sign (or return)<br/>       4. Done"
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignContractContentSender","Avsändare:",,"Sender:"
@@ -1689,25 +1689,25 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignOfferContentIfSignatoryInstruction","1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
       2. Granska online<br/>      3. Acceptera offert (eller
  avvisa)<br/>       4. Färdig",,"1. Click the link <br/>      <a href=""$link$"">$link$</a><br/>
-      2. Review online<br/>      3. Accept offer (or decline)<br/>
+      2. Review online<br/>      3. Accept offer (or return)<br/>
        4. Done"
 "_mailInvitationToSignOfferContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOfferContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOfferContentSender","Avsändare:",,"Sender:"
 "_mailInvitationToSignOfferDefaultHeader","<strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong> till dig och önskar din accept.      Acceptera eller avvisa offerten genom
- att följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the offer <strong>$documenttitle$</strong> to you and wants you to accept it.     To accept or reject the offer:"
+ att följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the offer <strong>$documenttitle$</strong> to you and wants you to accept it.     To accept or return the offer:"
 "_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
  Nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
 "_mailInvitationToSignOrderContentIfSignatoryInstruction","1. Klicka på länken <br/>      <a href=""$link$"">$link$</a><br/>
       2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>
        4. Färdig",,"1. Click the link <br/>      <a href=""$link$"">$link$</a><br/>
-      2. Confirm your order <br/>      3. Sign or  (or decline)<br/>
+      2. Confirm your order <br/>      3. Sign (or return)<br/>
        4. Done"
 "_mailInvitationToSignOrderContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOrderContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOrderContentSender","Avsändare:",,"Sender:"
 "_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
- följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or reject the order:"
+ följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order:"
 "_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
 "_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
@@ -1781,14 +1781,14 @@ profits and reduce frustration. The following mateials shall only
  accepted by $partylist:noescape()$.",
 "_mailRejectContractMailContentContractRejected","<strong>$rejectorName$</strong> har avvisat att underteckna
  dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen
- är därmed avbruten.",,"<strong>$rejectorName$</strong> has  rejected
+ är därmed avbruten.",,"<strong>$rejectorName$</strong> has  returned
 the document <strong>$documenttitle$</strong>. The agreement
  process is therefore canceled."
-"_mailRejectMailTitle","Avvisat: $documenttitle$",,"Rejected: $documenttitle$"
+"_mailRejectMailTitle","Avvisat: $documenttitle$",,"Returned: $documenttitle$"
 "_mailRejectOfferMailContentOfferRejected","<strong>$rejectorName$</strong> har avvisat offerten
- <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has rejected the offer
+ <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has returned the offer
  <strong>$documenttitle$</strong>."
-"_mailRejectOrderMailContentHasRejected","<strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has rejected the order
+"_mailRejectOrderMailContentHasRejected","<strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has returned the order
  <strong>$documenttitle$</strong>."
 "_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
  tjänsten Scrive.    Det betyder nog att han/hon gillar vår
@@ -1875,7 +1875,7 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a PDF over 2 MB. Please try again with a smaller document."
 "_modalPdfTooBigTitle","För stora fil ",,"Cannot store file"
 "_modalRejectedViewBody","Ett meddelande har skickats till $partyList:noescape()$.",,"A message has been sent to $partyList:noescape()$."
-"_modalRejectedViewHeader","Du har avvisat dokumentet $documenttitle$",,"You have rejected the document $documenttitle$"
+"_modalRejectedViewHeader","Du har avvisat dokumentet $documenttitle$",,"You have returned the document $documenttitle$"
 "_modalSendInviteViewBody","En inbjudan att underteckna har nu skickats        till $partyListButAuthor:noescape()$.",,"An invitation to sign has been sent to $partyListButAuthor:noescape()$."
 "_modalSendInviteViewHeader","Dokumentet <strong>$documenttitle$</strong> skickat!",,"The document <strong>$documenttitle$</strong> has been sent!"
 "_modalSignInviteViewBodyIfElse","En inbjudan att underteckna har nu skickats till        $partyListButAuthor:noescape()$.",,"An invitation to sign has been sent to $partyListButAuthor:noescape()$."
@@ -2006,7 +2006,7 @@ use free of charge."
  recipient."
 "_offerpendingauthornotsignedinfoheader","Granska innan accept",,"Please review before you accept"
 "_offerpendingauthornotsignedinfotext","Vänligen var noga med att granska offerten innan du accepterar.",,"Please review the offer thoroughly before you accept it."
-"_offerrejectbuttontext","Avvisa offert",,"Reject offer"
+"_offerrejectbuttontext","Avvisa offert",,"Return offer"
 "_offerremindagainbuttontext","Skicka offert igen",,"Send offer again"
 "_offerrestartbuttontext","Starta om offert",,"Restart offer"
 "_offersealingtextsdateText","Datum",,"Date"
@@ -2027,9 +2027,9 @@ use free of charge."
 "_offersealingtextsverificationTitle","Acceptverifikat",,"Acceptance verification"
 "_offersendtext","Skicka",,"Send"
 "_offersignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för
- att meddela ",,"When you reject, an e-mail is sent to notify "
+ att meddela ",,"When you return a document, an e-mail is sent to notify "
 "_offersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".          ",,".             You can review the message below and adjust it by clicking ""Write own message""."
-"_offersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to reject?"
+"_offersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to return the document?"
 "_offersignatorysignmodalcontentlast"," Genom att klicka på 'acceptera offert' kommer du att acceptera offerten <span class='documenttitle'/>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.",,"Accept the offer  <span class='documenttitle'/> by clicking 'Accept offer'. When you have accepted the offer, the finished document will be sent to you and your counterparts."
 "_offersignatorysignmodalcontentnotlast"," Genom att klicka på 'acceptera offert' kommer du att acceptera offerten <span class='documenttitle'/>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.",,"Accept the offer  <span class='documenttitle'/> by clicking 'Accept offer'. When you have accepted the offer, the finished document will be sent to you and your counterparts."
 "_offersignatorysignmodaltitle","Är du säker att du vill acceptera offerten?",,"Are you sure you want to accept the offer?"
@@ -2076,7 +2076,7 @@ use free of charge."
  by the recipient."
 "_orderpendingauthornotsignedinfoheader","Granska innan bekräftelse",,"Please review before you confirm"
 "_orderpendingauthornotsignedinfotext","Vänligen var noga med att granska ordern innan du bekräftar.",,"Please review the order thoroughly before you confirm it."
-"_orderrejectbuttontext","Avvisa order",,"Reject order"
+"_orderrejectbuttontext","Avvisa order",,"Return order"
 "_orderremindagainbuttontext","Skicka orderbekräftelse igen",,"Send order confirmation again"
 "_orderrestartbuttontext","Starta om order",,"Restart the order"
 "_ordersealingtextsdateText","Datum",,"Date"
@@ -2098,9 +2098,9 @@ use free of charge."
  the link:"
 "_ordersealingtextsverificationTitle","Orderbekräftelse",,"Order confirmation"
 "_ordersendtext","Skicka",,"Send"
-"_ordersignatorycancelmodaltitleBody"," När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela ",,"When you reject, an e-mail is sent to notify "
+"_ordersignatorycancelmodaltitleBody"," När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela ",,"When you return a document, an e-mail is sent to notify "
 "_ordersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".          ",,".        You can review the message below and adjust it by clicking ""Write own message""."
-"_ordersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to reject?"
+"_ordersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to return the document?"
 "_ordersignatorysignmodalcontentlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.",,"Confirm the order <span class='documenttitle' /> by clicking 'Confirm'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
 "_ordersignatorysignmodalcontentnotlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern <span class='documenttitle' />. När du har bekräftat order skickas ett slutgiltigt dokument till din och avsändarens inkorg.",,"Confirm the order <span class='documenttitle' /> by clicking 'Confirm'. When you have confirmed the order, the finished document will be sent to you and your counterparts."
 "_ordersignatorysignmodaltitle","Är du säker att du vill bekräfta ordern?",,"Are you sure you want to confirm the order?"
@@ -2134,7 +2134,7 @@ use free of charge."
 "_pageDocumentForSignContentElegBody3"," för att läsa mer.",," to read more"
 "_pageDocumentForSignContentElegSubhead","Välj typ av e-legitimation",,"Select type of e-ID"
 "_pageDocumentForSignContentRejectFooterOwnMessage","Skriv eget meddelande",,"Write own message"
-"_pageDocumentForSignContentRejectFooterReject","Avvisa",,"Reject"
+"_pageDocumentForSignContentRejectFooterReject","Avvisa",,"Return"
 "_pageDocumentForViewerHelpersPartyName","Namn på avtalspart",,"Name of party"
 "_pageFooterAbout","Om Scrive",,"About Scrive"
 "_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact Scrive with feedback, queries &amp; requests </strong>"
@@ -2625,7 +2625,7 @@ simply better."
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på
  Länken    <a href=""$link$"">$link$</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
-         4. Färdig <BR/> $footer:noescape()$",,"<i>To continue</i><br/>        1. Click the link         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or reject)<br/>         4. Done <BR/> $footer:noescape()$"
+         4. Färdig <BR/> $footer:noescape()$",,"<i>To continue</i><br/>        1. Click the link         <a href=""$link$"">$link$</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
@@ -2635,22 +2635,22 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
         2. Granska online<br/>        3.  Acceptera offert (eller
  avvisa)<br/>        4. Färdig <BR/> $footer:noescape()$",,"1. Click the link        <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
- reject)<br/>        4. Done <BR/> $footer:noescape()$"
+ return)<br/>        4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedOfferContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
- offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or rejected the order  <strong>$documenttitle$</strong> yet. To do so:"
+ offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the order  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOrderContentInstruction","1. Klicka på länken      <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
  avvisa)<br/>         4. Färdig <BR/> $footer:noescape()$",,"1. Click the link       <a href=""$link$"">$link$</a><br/>
         2. Review online<br/>        3. Confirm the order (or
- reject)<br/>         4. Done <BR/> $footer:noescape()$"
+ return)<br/>         4. Done <BR/> $footer:noescape()$"
 "_remindMailNotSignedOrderContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
- genom att följa instruktionerna nedan.",,"<strong>$author$</strong> wants to remind you that you haven't  confirmed or rejected the order <strong>$documenttitle$</strong> yet. To do so:"
+ genom att följa instruktionerna nedan.",,"<strong>$author$</strong> wants to remind you that you haven't  confirmed or returned the order <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedTitle","Påminnelse att underteckna  $documenttitle$",,"Reminder to sign  $documenttitle$"
 "_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> vill skicka
  <strong>$documenttitle$</strong>        till dig. Dokumentet
@@ -2914,7 +2914,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_signatoryMessageIfSignatoryDatamismatch","Felaktig e-legitmation",,"Incorrect e-ID"
 "_signatoryMessageIfSignatoryDeliveredEmail","Levererat ",,"Delivered"
 "_signatoryMessageIfSignatoryReaddate","Läst e-post ",,"Email read"
-"_signatoryMessageIfSignatoryRejected","Avvisat",,"Rejected"
+"_signatoryMessageIfSignatoryRejected","Avvisat",,"Returned"
 "_signatoryMessageIfSignatorySeendate","Granskat online",,"Reviewed online"
 "_signatoryMessageIfTimedout","Förfallodatum har passerat",,"Expired"
 "_signatoryMessageIfSigned","Signerat ",,"Signed"
