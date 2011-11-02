@@ -362,6 +362,7 @@ a.new-btn-small.black p {
 #top-container #moveleft a {
     padding: 0px;
     margin-left: 20px;
+    font-weight: bold;
 }
 
 #top-container .document-button:hover
