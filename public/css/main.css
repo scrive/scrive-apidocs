@@ -388,9 +388,9 @@ a.new-btn-small.black p {
 
 .localeSwitcher {
   display: inline-block;
-  width: 76px;
   position:relative;
   z-index:100;
+  padding-right: 20px;
 }
 
 #top-container .localeSwitcher {
@@ -401,6 +401,7 @@ a.new-btn-small.black p {
 #top-slim-container .localeSwitcher {
     float: right;
     top: 17px;
+  padding-right: 20px;
 }
 
 .localeSwitcher div {
@@ -1255,6 +1256,10 @@ div.price-plan-details {
 	text-shadow: #000 0 1px 3px;
 	text-decoration: none;
     font-weight: bold;
+}
+
+.login-button p {
+    padding-left: 4px;
 }
 
 #top-container .document-button {
@@ -2145,3 +2150,4 @@ input.grayed, textarea.grayed
     padding-right: 15px;
     padding-left: 15px;
 }
+

@@ -337,21 +337,22 @@ header=
                                <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
                                <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
                                <a href="$linkupload$" class="document-button">$_headerSend()$</a>
-
+                                $localeSwitcher()$
                                 $else$
 
                                 <a href="#" class="login-button"><p>$_login()$</p></a>
 
                                   <span id="moveleft2">
-                                  <a href="$linkabout$"
+                                <a href="$linkabout$"
                                   class="document-button">$_pageFooterAbout()$</a>
                                   <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
                                   <a href="$linkpriceplan$"
                                   class="document-button">$_pageFooterPrices()$</a>
+                                $localeSwitcher()$
                                   </span>
 
                                 $endif$
-                                $localeSwitcher()$
+
                             </div>
 
             <div class="clearboth"></div>
