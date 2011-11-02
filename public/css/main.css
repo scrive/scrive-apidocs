@@ -2144,10 +2144,14 @@ input.grayed, textarea.grayed
 	margin: auto;
 }
 
+.logos {
+    text-align: center;
+}
+
 .logos img {
     margin-top: 17px;
     margin-bottom: 17px;
-    padding-right: 15px;
-    padding-left: 15px;
+    padding-right: 18px;
+    padding-left: 18px;
 }
 
