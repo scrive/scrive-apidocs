@@ -310,8 +310,10 @@ loginBox=
 header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
-                                <a href="$linkhome$" class="scrive-logo"></a>
-                                $localeSwitcher()$
+                                <a href="$linkhome$"
+                                class="scrive-logo"></a>
+
+
                                 $if(logged)$
 
                                 <!--
@@ -349,7 +351,7 @@ header=
                                   </span>
 
                                 $endif$
-
+                                $localeSwitcher()$
                             </div>
 
             <div class="clearboth"></div>

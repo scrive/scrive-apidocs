@@ -47,7 +47,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <img src="/img/logo-scrive.png" alt="Scrive" class="logo" />
                                 <div class="leftMain">
 
-                                        $localeSwitcher()$
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>
                                                 <p class="introtext">$_h1Body()$
@@ -66,6 +65,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="rightMain">
+                                        $localeSwitcher()$
                                   <span id="moveleft">
                                   <a href="$linkabout$"
                                   class="document-button">$_pageFooterAbout()$</a>
