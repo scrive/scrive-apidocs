@@ -37,7 +37,7 @@
 "_Bemefit8","Image branding",,"Improve perception"
 "_Bemefit8Body","Visa era kunder att ni är i framkant och gillar att tänka i nya
  banor.",,"Show your customers how you're using the latest technology for mutual benefit."
-"_ButtonCreateAccount","Testa nu",,"Try now"
+"_ButtonCreateAccount","Skapa konto!",,"Create account!"
 "_CantRemoveActiveDocuments","Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
@@ -839,11 +839,10 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_friends","Vänner",,"Friends"
 "_from","från",,"from"
-"_h1","Signera offerter och avtal med Scrive.",,"Sign tenders and contracts with Scrive!"
-"_h1Body","Stäng affärerna snabbare. Mindre 
-administrativt krångel. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
+"_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
+"_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
 "_h3CreateAccount","100 fria signaturer!",,"100 free signatures!"
-"_h3CreateAccountBody","Ingen inlåsning, inga konstigheter.",,"No commitments, cancel any time."
+"_h3CreateAccountBody","Kom igång omedelbart. Inga installationer. Inga dolda kostnader.",,"Get started instantly. No installation. No hidden costs."
 "_headerAccount","Konto",,"Account"
 "_headerArchive","Arkiv",,"Archive"
 "_headerInvite","Bjud in",,"Invite"
