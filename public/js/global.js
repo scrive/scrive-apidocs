@@ -1759,3 +1759,11 @@ safeReady(function () {
 safeReady(function() {
     $(".dateinput").datepicker();
 });
+
+safeReady(function() {
+    $(".openmodal").overlay({
+        mask: standardDialogMask,
+        top: standardDialogTop,
+        fixed: false
+    });
+});

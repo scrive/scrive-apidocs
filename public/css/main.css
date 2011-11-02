@@ -347,10 +347,6 @@ a.new-btn-small.black p {
 	margin-bottom: 8px;
 }
 
-#top-container .intro-container a {
-    margin-left: 5px;
-    display: inline-block;
-}
 
 #top-container .intro-container input {
 	width: 200px;
@@ -640,15 +636,15 @@ a.new-btn-small.black p {
 	min-width: 940px;
 }
 
-#body-container .spacer70 {
+.spacer70 {
 	height: 70px;
 }
 
-#body-container .spacer50 {
+.spacer50 {
 	height: 50px;
 }
 
-#body-container .spacer40 {
+.spacer40 {
 	height: 40px;
 }
 
@@ -2189,6 +2185,8 @@ input.grayed, textarea.grayed
 
 .benefitstitle {
     text-align: center;
+    font-family: Copse;
+    font-weight: normal;
 }
 
 .benefitsbox {
@@ -2208,7 +2206,7 @@ input.grayed, textarea.grayed
 .productdescriptionbox {
 	background: #fff;
 	border: 1px solid #ccc;
-	height: 250px;
+	height: 265px;
 	padding-top: 35px;
 	position: relative;
 	/*width: 938px;*/
@@ -2216,4 +2214,36 @@ input.grayed, textarea.grayed
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
     border-radius: 5px 5px 5px 5px;
+}
+
+form.requestAccount {
+    height: 40px;
+
+}
+
+a {
+    color: #35A4D6;
+}
+
+#top-container .intro-container form.requestAccount a {
+    margin-left: 5px;
+    display: inline-block;
+}
+
+#legalmodal div img
+{
+    margin-right: 15px;
+}
+
+#legalmodal p.introtext
+{
+    padding-top: 50px;
+    font-size: 1.2em;
+    line-height: 1.4em;
+}
+
+#legalmodal .modal-body 
+{
+    /*height: 750px;*/
+    /*overflow: scroll;*/
 }
