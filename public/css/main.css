@@ -359,6 +359,11 @@ a.new-btn-small.black p {
     z-index: 10;
 }
 
+#top-container #moveleft a {
+    padding: 0px;
+    margin-left: 20px;
+}
+
 #top-container .document-button:hover
 {
   color: #FFFFFF;
