@@ -236,6 +236,34 @@ a.new-btn-small.black p {
 	width: 73px;
 }
 
+.icon.cloud {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/cloud.png);
+}
+
+.icon.mail {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/mail.png);
+}
+
+.icon.api {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/api.png);
+}
+
+.icon.question {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/question.png);
+}
+
 #wrap {
 	left: 0;
 	position: absolute;
@@ -2155,3 +2183,6 @@ input.grayed, textarea.grayed
     padding-left: 18px;
 }
 
+.benefitstitle {
+    text-align: center;
+}

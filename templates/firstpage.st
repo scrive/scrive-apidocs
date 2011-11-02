@@ -103,6 +103,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="body-container">
                         <div class="content">
                                 <div class="spacer50"></div>
+                                <h2 class="benefitstitle">$_benefitsTitle()$</h2>
+                                <div class="spacer50"></div>
                                 <div class="grid 4x4">
                                         <div class="col">
                                                 <div class="icon-container">
@@ -118,13 +120,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h2>$_Bemefit2()$</h2>
                                                 <p>$_Bemefit2Body()$</p>
                                         </div>
-                                        <div class="col">
-                                                <div class="icon-container">
-                                                        <div class="icon globe"></div>
-                                                </div>
-                                                <h2>$_Bemefit3()$</h2>
-                                                <p>$_Bemefit3Body()$</p>
-                                        </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon seal"></div>
@@ -139,26 +134,38 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h2>$_Bemefit5()$</h2>
                                                 <p>$_Bemefit5Body()$</p>
                                         </div>
+                                </div>
+                                <div class="spacer50"></div>
+                                <h2 class="benefitstitle">$_productDescriptionTitle()$</h2>
+                                <div class="spacer50"></div>
+                                <div class="grid 4x4">
                                         <div class="col">
                                                 <div class="icon-container">
-                                                        <div class="icon face"></div>
+                                                        <div class="icon cloud"></div>
                                                 </div>
-                                                <h2>$_Bemefit6()$</h2>
-                                                <p>$_Bemefit6Body()$</p>
+                                                <h2>$_Product1()$</h2>
+                                                <p>$_Product1Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
-                                                        <div class="icon paper"></div>
+                                                        <div class="icon mail"></div>
                                                 </div>
-                                                <h2>$_Bemefit7()$</h2>
-                                                <p>$_Bemefit7Body()$</p>
+                                                <h2>$_Product2()$</h2>
+                                                <p>$_Product2Body()$</p>
                                         </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
-                                                        <div class="icon ipad"></div>
+                                                        <div class="icon api"></div>
                                                 </div>
-                                                <h2>$_Bemefit8()$</h2>
-                                                <p>$_Bemefit8Body()$</p>
+                                                <h2>$_Product3()$</h2>
+                                                <p>$_Product3Body()$</p>
+                                        </div>
+                                        <div class="col">
+                                                <div class="icon-container">
+                                                        <div class="icon question"></div>
+                                                </div>
+                                                <h2>$_Product4()$</h2>
+                                                <p>$_Product4Body()$</p>
                                         </div>
                                 </div>
                                 <div class="clearfix"></div>
