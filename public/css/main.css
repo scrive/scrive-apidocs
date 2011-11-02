@@ -271,14 +271,14 @@ a.new-btn-small.black p {
 	float: left;
 	position: relative;
 	width: 460px;
-        z-index: 1;
+    z-index: 1;
 }
 
 #top-container .rightMain {
 	float: left;
 	position: relative;
 	width: 460px;
-    z-index: 2;
+    z-index: 100;
 }
 
 /* Intro text */
@@ -387,11 +387,10 @@ a.new-btn-small.black p {
 }
 
 .localeSwitcher {
-  float: left;
   display: inline-block;
   width: 76px;
-  position: relative;
-  top: 20px;
+  position:relative;
+  z-index:100;
 }
 
 #top-container .localeSwitcher {
