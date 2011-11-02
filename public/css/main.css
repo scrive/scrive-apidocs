@@ -763,6 +763,10 @@ a.new-btn-small.black p {
 	width: 220px;
 }
 
+.col.leftm {
+    margin-left:10px;
+}
+
 #body-container .grid .col.no-margin {
 	margin: 0;
 }
@@ -2185,4 +2189,31 @@ input.grayed, textarea.grayed
 
 .benefitstitle {
     text-align: center;
+}
+
+.benefitsbox {
+	background: #fff;
+	border: 1px solid #ccc;
+	height: 250px;
+	padding-top: 35px;
+	position: relative;
+	/*width: 938px;*/
+	z-index: 1;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+    border-radius: 5px 5px 5px 5px;
+
+}
+
+.productdescriptionbox {
+	background: #fff;
+	border: 1px solid #ccc;
+	height: 250px;
+	padding-top: 35px;
+	position: relative;
+	/*width: 938px;*/
+	z-index: 1;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+    border-radius: 5px 5px 5px 5px;
 }

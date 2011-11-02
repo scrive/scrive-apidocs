@@ -103,10 +103,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="body-container">
                         <div class="content">
                                 <div class="spacer50"></div>
+                                <div class="benefitsbox">
                                 <h2 class="benefitstitle">$_benefitsTitle()$</h2>
                                 <div class="spacer50"></div>
                                 <div class="grid 4x4">
-                                        <div class="col">
+                                        <div class="col leftm">
                                                 <div class="icon-container">
                                                         <div class="icon money"></div>
                                                 </div>
@@ -120,14 +121,14 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h2>$_Bemefit2()$</h2>
                                                 <p>$_Bemefit2Body()$</p>
                                         </div>
-                                        <div class="col no-margin">
+                                        <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon seal"></div>
                                                 </div>
                                                 <h2>$_Bemefit4()$</h2>
                                                 <p>$_Bemefit4Body()$</p>
                                         </div>
-                                        <div class="col">
+                                        <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon safe"></div>
                                                 </div>
@@ -135,11 +136,13 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <p>$_Bemefit5Body()$</p>
                                         </div>
                                 </div>
+                                </div>
                                 <div class="spacer50"></div>
+                                <div class="productdescriptionbox">
                                 <h2 class="benefitstitle">$_productDescriptionTitle()$</h2>
                                 <div class="spacer50"></div>
                                 <div class="grid 4x4">
-                                        <div class="col">
+                                        <div class="col leftm">
                                                 <div class="icon-container">
                                                         <div class="icon cloud"></div>
                                                 </div>
@@ -153,20 +156,21 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h2>$_Product2()$</h2>
                                                 <p>$_Product2Body()$</p>
                                         </div>
-                                        <div class="col no-margin">
+                                        <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon api"></div>
                                                 </div>
                                                 <h2>$_Product3()$</h2>
                                                 <p>$_Product3Body()$</p>
                                         </div>
-                                        <div class="col">
+                                        <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon question"></div>
                                                 </div>
                                                 <h2>$_Product4()$</h2>
                                                 <p>$_Product4Body()$</p>
                                         </div>
+                                </div>
                                 </div>
                                 <div class="clearfix"></div>
                                 <div class="slide" style="display:none">
