@@ -2239,11 +2239,12 @@ a {
 {
     padding-top: 50px;
     font-size: 1.2em;
-    line-height: 1.4em;
+    /*line-height: 1.4em;*/
 }
 
-#legalmodal .modal-body 
+#legalmodal .modal-body p
 {
+    line-height: 1.4em;
     /*height: 750px;*/
     /*overflow: scroll;*/
 }
