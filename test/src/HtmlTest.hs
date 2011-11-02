@@ -115,7 +115,7 @@ checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
       _ <- mapM (checkXMLForUnecessaryDoubleDivs templatename) children
       assertSuccess
   where isDivElem :: Content Posn -> Bool
-        isDivElem (CElem (Elem n _ _) _) | map toLower n == "div" = True
+        isDivElem (CElem (Elem n _ _) _) = map toLower n == "div"
         isDivElem _ = False
 checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 
