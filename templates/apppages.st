@@ -165,7 +165,7 @@ standardBodyWrapper=
       </body>
 ####
 queryColumn=
-<div class="white thin box">
+<div class="white thin box createaccountbox">
                                                 <h4>$_queryColumnHead()$</h4>
 <br />
 <p>$_queryColumnBody1()$</p>
