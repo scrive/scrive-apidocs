@@ -114,7 +114,7 @@ function listString(names) {
 function listStringMany(names) {
     var name0 = names.shift();
     if (names.length === 1)
-        return "<strong>" + name0 + "</strong>" + localization.commaand + "<strong>" + names[0] + "</strong>";
+        return "<strong>" + name0 + "</strong>" + localization.listand + "<strong>" + names[0] + "</strong>";
     return "<strong>" + name0 + "</strong>, " + listStringMany(names);
 }
 

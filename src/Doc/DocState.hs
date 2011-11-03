@@ -393,9 +393,11 @@ attachSealedFile documentid fid time = do
 changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
 changeMainfile did fid = do
     modifySignable did $ \doc ->
-        if (documentstatus doc == Closed)
-         then Right $ doc { documentsealedfiles = [fid] }
+        if (documentstatus doc == Closed || allHadSigned doc)
+         then Right $ doc { documentsealedfiles = [fid] , documentstatus = Closed}
          else Right $ doc { documentfiles = [fid] }   
+    where
+        allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 
 setSignatoryCompany :: DocumentID -> SignatoryLinkID -> CompanyID -> Update Documents (Either String Document)
 setSignatoryCompany documentid slid cid = do
