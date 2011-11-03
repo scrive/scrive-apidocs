@@ -2179,8 +2179,8 @@ input.grayed, textarea.grayed
 .logos img {
     margin-top: 17px;
     margin-bottom: 17px;
-    padding-right: 18px;
-    padding-left: 18px;
+    padding-right: 40px;
+    padding-left: 40px;
 }
 
 .benefitstitle {
