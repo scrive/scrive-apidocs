@@ -90,10 +90,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="nav-container">
                         <div class="content logos">
                           <img src="/img/logo/coopkonsum.png" />
-                          <img src="/img/logo/paynova.png" />
                           <img src="/img/logo/mynewsdesk.png" />
                           <img src="/img/logo/qalllogo.png" />
-                          <img src="/img/logo/resursbemanning.png" />
                           <img src="/img/logo/upsales.png" />
                         </div>
                         <div class="bottom-border"></div>
