@@ -16,11 +16,15 @@ module Util.JSON (
     , askJSON 
     -- | Simple runner
     , withJSON
+    , jsempty
     , jsget
     , jsmodify
     , jsgetdef
     , jsmodifydef
     , jsset
+    , fromJSONString
+    , fromJSONRational
+    , fromJSONArray
     )where
 
 import Text.JSON
@@ -32,6 +36,18 @@ import Data.Ratio
 import Control.Monad.Identity
 import Data.Maybe
 import qualified Data.List.Utils as List
+
+fromJSONString :: JSValue -> String
+fromJSONString (JSString s) = fromJSString s
+fromJSONString x = error $ "Expected JSString but found " ++ show x
+
+fromJSONRational :: JSValue -> Double
+fromJSONRational (JSRational _ r) = fromRational r
+fromJSONRational x = error $ "Expected JSString but found " ++ show x
+
+fromJSONArray :: JSValue -> [JSValue]
+fromJSONArray (JSArray a) = a
+fromJSONArray x = error $ "Expected JSArray but found " ++ show x
 
 getJSONField :: String -> JSObject JSValue -> Maybe JSValue
 getJSONField s = lookup s .fromJSObject

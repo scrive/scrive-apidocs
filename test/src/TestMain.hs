@@ -87,6 +87,10 @@ import JSONUtilTest
 import FileTest
 #endif
 
+#ifndef NO_DOCJSON
+import Doc.TestJSON
+#endif
+
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
@@ -158,6 +162,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_FILE
       , ("file", const $ fileTests conn )
+#endif
+#ifndef NO_DOCJSON
+      , ("docjson", const $ documentJSONTests)
 #endif
           ]
 
