@@ -23,6 +23,7 @@ import Database.HDBC
 import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
 import Util.MonadUtils
+import Data.Convertible
 
 -- query typeclasses
 class DBQuery q r | q -> r where
@@ -112,8 +113,19 @@ data DBException
     , tmoExpected :: Integer
     , tmoGiven :: Integer
     }
+  | RowLengthMismatch
+    { originalQuery :: String
+    , expected :: Int
+    , delivered :: Int
+    }
+  | CannotConvertSqlValue
+    { originalQuery :: String
+    , position :: Int
+    , convertError :: ConvertError
+    }
   | CannotParseRow
     { originalQuery :: String
+    , message :: String
     }
     deriving Typeable
 
@@ -122,7 +134,9 @@ instance E.Exception DBException
 instance Show DBException where
   show SQLError{sqlError} = "SQL error: " ++ seErrorMsg sqlError
   show NoObject{} = "Query result error: No object returned when there had to be one"
-  show CannotParseRow{} = "Query result error: cannot parse row of sql values"
+  show RowLengthMismatch{expected,delivered} = "Expected row length of " ++ show expected ++ " got " ++ show delivered
+  show CannotConvertSqlValue{position,convertError} = "Cannot convert param " ++ show position ++ " because of " ++ show convertError
+  show CannotParseRow{message} = message
   show TooManyObjects{tmoExpected, tmoGiven} =
     "Query result error: Too many objects returned/affected by query (" ++ show tmoExpected ++ " expected, " ++ show tmoGiven ++ " given)"
 

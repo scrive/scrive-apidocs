@@ -1,4 +1,10 @@
-module DB.Utils where
+module DB.Utils
+  ( getUniqueID
+  , oneRowAffectedGuard
+  , oneObjectReturnedGuard
+  , checkIfOneObjectReturned
+  , fetchValues
+  ) where
 
 import Data.Int
 import Database.HDBC as HDBC
@@ -10,6 +16,7 @@ import DB.Model
 import Happstack.State()
 import Control.Monad.IO.Class
 import Control.Monad
+import Data.Convertible
 
 getUniqueID :: Table -> DB Int64
 getUniqueID table = do
@@ -44,17 +51,44 @@ checkIfOneObjectReturned xs =
   oneObjectReturnedGuard xs
     >>= return . maybe False (const True)
 
-fetchValues :: (MonadIO m) => Statement -> ([SqlValue] -> Maybe a) -> m [a]
-fetchValues st decode = liftM reverse (worker [])
+
+class FetcherArity a where
+    type FetcherResult a :: *
+    executeFetcher' :: Int -> a -> [SqlValue] -> Either DBException (FetcherResult a)
+    fetcherArity :: a -> Int
+
+instance FetcherArity (Either DBException r) where
+    type FetcherResult (Either DBException r) = r
+
+    executeFetcher' _ action [] = action
+    executeFetcher' n _ xs = 
+      Left $ RowLengthMismatch "" n (n + length xs)
+
+    fetcherArity _ = 0
+
+instance (FetcherArity b, Convertible SqlValue t) => FetcherArity (t -> b) where
+    type FetcherResult (t -> b) = FetcherResult b
+
+    executeFetcher' n action (x:xs) = 
+      case safeFromSql x of
+        Right value -> executeFetcher' (n+1) (action value) xs
+        Left cnvError -> Left $ CannotConvertSqlValue "" n cnvError
+
+    executeFetcher' n action _ = do
+      Left $ RowLengthMismatch "" (n + fetcherArity action) n
+
+    fetcherArity action = 1 + fetcherArity (action undefined) 
+
+fetchValues :: (MonadIO m, FetcherArity fetcher) => Statement -> fetcher -> m [FetcherResult fetcher]
+fetchValues st decoder = liftM reverse (worker [])
   where
     worker acc = do
       mrow <- liftIO $ fetchRow st
       case mrow of
         Nothing -> return acc
         Just row -> 
-          case decode row of
-            Just value -> worker (value : acc)
-            Nothing -> do
+          case executeFetcher' 0 decoder row of
+            Right value -> worker (value : acc)
+            Left left -> do
                    liftIO $ finish st
-                   liftIO $ E.throwIO $ CannotParseRow (HDBC.originalQuery st)
-
+                   liftIO $ E.throwIO $ left { DB.originalQuery = HDBC.originalQuery st }

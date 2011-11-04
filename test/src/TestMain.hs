@@ -82,6 +82,9 @@ import APICommonsTest
 #ifndef NO_JSON
 import JSONUtilTest
 #endif
+#ifndef NO_SQLUTILS
+import SQLUtilsTest
+#endif
 
 #ifndef NO_FILE
 import FileTest
@@ -159,7 +162,10 @@ allTests conn = tail tests
 #ifndef NO_FILE
       , ("file", const $ fileTests conn )
 #endif
-          ]
+#ifndef NO_SQLUTILS
+      , ("sqlutil", const $ sqlUtilsTests )
+#endif
+      ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []
