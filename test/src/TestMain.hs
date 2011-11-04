@@ -83,6 +83,10 @@ import APICommonsTest
 import JSONUtilTest
 #endif
 
+#ifndef NO_FILE
+import FileTest
+#endif
+
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
@@ -152,7 +156,10 @@ allTests conn = tail tests
 #ifndef NO_JSON
       , ("jsonutil", const $ jsonUtilTests )
 #endif
-      ]
+#ifndef NO_FILE
+      , ("file", const $ fileTests conn )
+#endif
+          ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
 testsToRun _ [] = []

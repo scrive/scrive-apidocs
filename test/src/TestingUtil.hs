@@ -563,7 +563,7 @@ untilCondition cond gen = do
 addRandomDocumentWithAuthor' :: User -> DB Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
-doNTimes :: Int -> IO () -> IO ()
+doNTimes :: (Monad m) => Int -> m () -> m ()
 doNTimes 0 _ = return ()
 doNTimes n a = do
   _ <- a
