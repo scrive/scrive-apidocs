@@ -101,7 +101,7 @@ instance DBUpdate CreateCompany Company where
           , toSql msid
           ] ++ replicate 6 (toSql "")
       return ()
-    dbQuery (GetCompany cid) >>= maybe (E.throw NoObject) return
+    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject "") return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where

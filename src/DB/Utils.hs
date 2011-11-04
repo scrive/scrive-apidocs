@@ -1,11 +1,11 @@
 module DB.Utils where
 
 import Data.Int
-import Database.HDBC
+import Database.HDBC as HDBC
 import System.Random
 import qualified Control.Exception as E
 
-import DB.Classes
+import DB.Classes as DB
 import DB.Model
 import Happstack.State()
 import Control.Monad.IO.Class
@@ -23,19 +23,21 @@ oneRowAffectedGuard :: Monad m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
 oneRowAffectedGuard 1 = return True
 oneRowAffectedGuard n =
-  E.throw TooManyObjects {
-      tmoExpected = 1
-    , tmoGiven = n
-  }
+  E.throw TooManyObjects 
+     { DB.originalQuery = ""
+     , tmoExpected = 1
+     , tmoGiven = n
+     }
 
 oneObjectReturnedGuard :: Monad m => [a] -> m (Maybe a)
 oneObjectReturnedGuard []  = return Nothing
 oneObjectReturnedGuard [x] = return $ Just x
 oneObjectReturnedGuard xs  =
-  E.throw TooManyObjects {
-      tmoExpected = 1
-    , tmoGiven = fromIntegral $ length xs
-  }
+  E.throw TooManyObjects 
+     { DB.originalQuery = ""
+     , tmoExpected = 1
+     , tmoGiven = fromIntegral $ length xs
+     }
 
 checkIfOneObjectReturned :: Monad m => [a] -> m Bool
 checkIfOneObjectReturned xs =
@@ -54,5 +56,5 @@ fetchValues st decode = liftM reverse (worker [])
             Just value -> worker (value : acc)
             Nothing -> do
                    liftIO $ finish st
-                   liftIO $ E.throwIO CannotParseRow
+                   liftIO $ E.throwIO $ CannotParseRow (HDBC.originalQuery st)
 

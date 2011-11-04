@@ -22,7 +22,6 @@ import Data.Typeable
 import Database.HDBC
 import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
-
 import Util.MonadUtils
 
 -- query typeclasses
@@ -79,7 +78,7 @@ runDB f = do
   where
     -- we catch only SqlError/DBException here
     handlers = [
-        E.Handler (return . Left . SQLError)
+        E.Handler (return . Left . SQLError "")
       , E.Handler (return . Left)
       ]
 
@@ -95,24 +94,35 @@ runDBQuery = runDB . dbQuery
 runDBUpdate :: (DBMonad m, DBUpdate q r) => q -> m r
 runDBUpdate = runDB . dbUpdate
 
+
+
+
 -- Exceptions
 
-data DBException =
-    SQLError SqlError
+data DBException 
+  = SQLError 
+    { originalQuery :: String
+    , sqlError :: SqlError
+    }
   | NoObject
-  | TooManyObjects {
-      tmoExpected :: Integer
+    { originalQuery :: String
+    }
+  | TooManyObjects 
+    { originalQuery :: String
+    , tmoExpected :: Integer
     , tmoGiven :: Integer
-  }
+    }
   | CannotParseRow
+    { originalQuery :: String
+    }
     deriving Typeable
 
 instance E.Exception DBException
 
 instance Show DBException where
-  show (SQLError e) = "SQL error: " ++ seErrorMsg e
-  show NoObject = "Query result error: No object returned when there had to be one"
-  show CannotParseRow = "Query result error: cannot parse row of sql values"
+  show SQLError{sqlError} = "SQL error: " ++ seErrorMsg sqlError
+  show NoObject{} = "Query result error: No object returned when there had to be one"
+  show CannotParseRow{} = "Query result error: cannot parse row of sql values"
   show TooManyObjects{tmoExpected, tmoGiven} =
     "Query result error: Too many objects returned/affected by query (" ++ show tmoExpected ++ " expected, " ++ show tmoGiven ++ " given)"
 

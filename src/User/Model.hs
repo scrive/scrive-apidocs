@@ -281,7 +281,7 @@ data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Passw
 instance DBUpdate AddUser (Maybe User) where
   dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
     let handle e = case e of
-          NoObject -> return Nothing
+          NoObject{} -> return Nothing
           _ -> E.throw e
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
