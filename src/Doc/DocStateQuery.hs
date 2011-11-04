@@ -33,11 +33,10 @@ module Doc.DocStateQuery
 import DB.Types
 import DB.Classes
 import DBError
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocUtils
 import Company.Model
 import Kontra
-import Happstack.State (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Doc.DocInfo
@@ -76,7 +75,7 @@ getDocByDocID docid = do
   case (ctxmaybeuser, ctxcompany) of
     (Nothing, Nothing) -> return $ Left DBNotLoggedIn
     (Just user, _) -> do
-      mdoc <- query $ GetDocumentByDocumentID docid
+      mdoc <- doc_query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
           Log.debug "Does not exist"
@@ -88,7 +87,7 @@ getDocByDocID docid = do
             True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
-      mdoc <- query $ GetDocumentByDocumentID docid
+      mdoc <- doc_query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
         Just doc -> if any ((== (Just . companyid $ company)) . maybecompany) (documentsignatorylinks doc)
@@ -107,7 +106,7 @@ getDocsByLoggedInUser = do
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
-      docs <- query $ GetDocuments (currentServiceID ctx)
+      docs <- doc_query $ GetDocuments (currentServiceID ctx)
       usersImFriendsWith <- runDBQuery $ GetUsersByFriendUserID (userid user)
       return $ Right [ doc | doc <- docs
                            , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]
@@ -125,7 +124,7 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
                                    -> MagicHash
                                    -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
-  mdoc <- query $ GetDocumentByDocumentID docid
+  mdoc <- doc_query $ GetDocumentByDocumentID docid
   case mdoc of
     Just doc | isSigLinkFor mh (getSigLinkFor doc sigid) -> return $ Right doc
     _ -> return $ Left DBResourceNotAvailable

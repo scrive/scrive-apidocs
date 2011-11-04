@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
@@ -11,7 +10,7 @@ import DB.Types
 import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
 import Doc.DocStorage

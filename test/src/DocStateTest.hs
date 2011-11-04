@@ -4,7 +4,7 @@ module DocStateTest (docStateTests) where
 
 import DB.Classes
 import User.Model
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocUtils
 import Doc.DocStateData()
 import Misc
@@ -15,7 +15,6 @@ import Company.Model
 import Doc.Invariants
 import MinutesTime
 
-import Happstack.State
 import Data.Maybe
 import Data.Convertible(convert)
 import Database.HDBC(SqlValue)
@@ -118,8 +117,7 @@ docStateTests conn = testGroup "DocState" [
   
   testThat "removeDocumentAttachment fails if not in preparation" conn testRemoveDocumentAttachmentFailsIfNotPreparation,
   testThat "removeDocumentAttachment doesn't fail if there's no attachments" conn testRemoveDocumentAttachmentOk,
-  
-  
+    
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
   testThat "documentFromSignatoryData succeeds when document exists" conn testDocumentFromSignatoryDataSucceedsExists,
@@ -153,7 +151,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   Right doc <- randomUpdate $ NewDocument author mcompany
   -- execute
-  mdoc <- query $ GetDocumentByDocumentID (documentid doc)
+  mdoc <- doc_query $ GetDocumentByDocumentID (documentid doc)
   -- assert
   validTest $ do
     assertJust mdoc
@@ -167,7 +165,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   Right doc <- randomUpdate $ NewDocument author mcompany
-  docs <- query $ GetDocuments Nothing
+  docs <- doc_query $ GetDocuments Nothing
   -- assert
   validTest $ do
     assertJust $ find (sameDocID doc) docs
@@ -183,7 +181,7 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute
-  enewdoc <- update $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- doc_update $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -200,7 +198,7 @@ testDocumentUpdateCanChangeTitle = doTimes 10 $ do
   
   --execute
   let sd = signatoryDetailsFromUser author Nothing
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -288,7 +286,7 @@ testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute      
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f AdvancedFunctionality
 
   --assert
   validTest $ assertLeft enewdoc
@@ -304,7 +302,7 @@ testPreparationUpdateDocumentAlwaysRight = doTimes 10 $ do
   let sd = signatoryDetailsFromUser author Nothing
                      
   --execute
-  enewdoc <- update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   
   --assert
   validTest $ do
@@ -327,7 +325,7 @@ testNotPreparationUpdateDocumentSimpleAlwaysLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   let sd = signatoryDetailsFromUser author Nothing
   --execute
-  edoc <- update $ UpdateDocumentSimple (documentid doc) (sd, author) []
+  edoc <- doc_update $ UpdateDocumentSimple (documentid doc) (sd, author) []
   --assert
   validTest $ assertLeft edoc
 
@@ -337,7 +335,7 @@ testPreparationUpdateDocumentSimpleAlwaysRight = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
-  edoc <- update $ UpdateDocumentSimple (documentid doc) (emptySignatoryDetails, author) []
+  edoc <- doc_update $ UpdateDocumentSimple (documentid doc) (emptySignatoryDetails, author) []
   --assert
   validTest $ do
     assertRight edoc
@@ -350,7 +348,7 @@ testNoDocumentUpdateDocumentSimpleAlwaysLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   --execute
   -- non-existent docid
-  edoc <- update $ UpdateDocumentSimple a (emptySignatoryDetails, author) []  
+  edoc <- doc_update $ UpdateDocumentSimple a (emptySignatoryDetails, author) []  
   --assert
   validTest $ assertLeft edoc
     
@@ -380,7 +378,7 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   csvupload <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
   --execute                     
-  edoc <- update $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
+  edoc <- doc_update $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
   --assert
   validTest $ assertLeft edoc
 
@@ -396,7 +394,7 @@ testPreparationAttachCSVUploadIndexNeg = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute                     
-  edoc <- update $ AttachCSVUpload (documentid doc) csvupload
+  edoc <- doc_update $ AttachCSVUpload (documentid doc) csvupload
   --assert
   validTest $ assertLeft edoc
 
@@ -411,7 +409,7 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
     csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc)) 
                   $ rand 10 arbitrary
     --execute                     
-    edoc <- update $ AttachCSVUpload (documentid doc) csvupload
+    edoc <- doc_update $ AttachCSVUpload (documentid doc) csvupload
     --assert
     validTest $ assertLeft edoc
 
@@ -419,13 +417,13 @@ testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomAdvancedUser
   docid <- addRandomDocumentWithAuthor user
-  tmpdoc <- fmap fromJust $ query $ GetDocumentByDocumentID docid
+  tmpdoc <- fmap fromJust $ doc_query $ GetDocumentByDocumentID docid
   doc <- if (isTemplate tmpdoc)
          then return tmpdoc
-         else fmap fromRight $ update (TemplateFromDocument docid)
+         else fmap fromRight $ doc_update (TemplateFromDocument docid)
   newuser <- addNewRandomAdvancedUser
   mt <- rand 10 arbitrary
-  doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) mt
+  doc' <- fmap fromRight $ doc_update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) mt
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks doc'
   let isCustom (SignatoryField { sfType = CustomFT _ _ }) = True
@@ -490,7 +488,7 @@ testTimeoutDocumentNonSignableLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   -- execute
-  etdoc <- update $ TimeoutDocument (documentid doc) mt
+  etdoc <- doc_update $ TimeoutDocument (documentid doc) mt
   validTest $ assertLeft etdoc
     
 testTimeoutDocumentSignableNotPendingLeft :: DB ()
