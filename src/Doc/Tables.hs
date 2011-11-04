@@ -96,29 +96,6 @@ tableDocuments = Table {
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
-tableFiles :: Table
-tableFiles = Table {
-    tblName = "files"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("storage", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        runRaw conn $ "CREATE TABLE files ("
-          ++ "  id BIGINT NOT NULL"
-          ++ ", name TEXT NOT NULL"
-          ++ ", storage TEXT NULL"
-          ++ ", content BYTEA NULL"
-          ++ ", CONSTRAINT pk_files PRIMARY KEY (id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = return ()
-  }
 
 tableAuthorAttachments :: Table
 tableAuthorAttachments = Table {
