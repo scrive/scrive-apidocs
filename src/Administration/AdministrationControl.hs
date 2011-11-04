@@ -98,7 +98,7 @@ import qualified Data.ByteString.UTF8 as BS
 import InspectXMLInstances ()
 import InspectXML
 import ForkAction 
-import File.TransState
+import File.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response

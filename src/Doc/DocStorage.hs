@@ -39,7 +39,7 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import qualified MemCache
 import ForkAction
-import File.TransState
+import File.Model
 import DB.Classes
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}

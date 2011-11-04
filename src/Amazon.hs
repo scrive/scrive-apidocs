@@ -20,7 +20,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
 import File.File
-import File.TransState
+import File.Model
 import Misc (concatChunks)
 import qualified AppLogger as Log
 import DB.Classes

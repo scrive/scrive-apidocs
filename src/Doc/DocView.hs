@@ -94,7 +94,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
 --import Happstack.State (query)
-import File.TransState
+import File.Model
 import DB.Classes
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage

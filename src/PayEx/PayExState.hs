@@ -19,6 +19,7 @@ module PayEx.PayExState
       , GetPaymentsThatNeedCheck(..))
     where
 
+import DB.Derive
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import Data.Generics
@@ -26,7 +27,7 @@ import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
-import User.UserState (UserID(..), PaymentMethod(..))
+import User.Model (UserID(..))
 import Doc.DocState
 import MinutesTime
 import Payments.PaymentsState(Money(..))
@@ -78,6 +79,13 @@ instance Show PaymentId where
 instance Read PaymentId where
   readsPrec prec = let make (i,v) = (PaymentId i,v)
                      in map make . readsPrec prec
+
+data PaymentMethod = CreditCard | Invoice | Undefined
+    deriving (Eq, Ord, Typeable, Data, Read, Show, Bounded)
+
+$(enumDeriveConvertible ''PaymentMethod)
+$(deriveSerialize ''PaymentMethod)
+instance Version PaymentMethod
 
 $(deriveSerialize ''PaymentId)
 instance Version PaymentId

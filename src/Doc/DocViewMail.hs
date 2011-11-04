@@ -38,7 +38,7 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 -- import Happstack.State (query)
-import File.TransState
+import File.Model
 import Control.Monad.Trans
 import AppView
 import User.Locale
