@@ -6,7 +6,6 @@ module User.Model (
   , module User.Password
   , module User.UserID
   , Email(..)
-  , ExternalUserID(..)
   , DesignMode(..)
   , InviteType(..)
   , SignupMethod(..)
@@ -69,11 +68,6 @@ newtype Email = Email { unEmail :: BS.ByteString }
   deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
-
-newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
-  deriving (Eq, Ord)
-$(newtypeDeriveConvertible ''ExternalUserID)
-$(newtypeDeriveUnderlyingReadShow ''ExternalUserID)
 
 -- enums
 data DesignMode = BasicMode | AdvancedMode
