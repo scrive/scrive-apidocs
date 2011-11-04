@@ -22,6 +22,7 @@ import API.Service.Model
 import Doc.DocProcess
 import Doc.DocState
 import Doc.DocUtils
+import File.FileID
 import Kontra
 import KontraLink
 import Mails.SendMail

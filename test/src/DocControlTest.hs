@@ -14,7 +14,7 @@ import TestKontra as T
 import Misc
 import Context
 import Database.HDBC.PostgreSQL
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocControl
 import Company.Model
 import User.Locale

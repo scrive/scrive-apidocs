@@ -18,7 +18,6 @@ import DB.Types
 import DBError
 import Doc.Transitory
 import Kontra
-import Happstack.State     (update)
 import MinutesTime
 import GHC.Word
 import Util.SignatoryLinkUtils
@@ -33,6 +32,7 @@ import User.Utils
 import File.Model
 import DB.Classes
 import Data.Either
+import File.FileID
 
 {- |
    Mark document seen securely.
@@ -45,7 +45,7 @@ markDocumentSeen :: Kontrakcja m
                  -> GHC.Word.Word32
                  -> m (Either String Document)
 markDocumentSeen docid sigid mh time ipnum =
-  update $ MarkDocumentSeen docid sigid mh time ipnum
+  doc_update $ MarkDocumentSeen docid sigid mh time ipnum
 
 {- |
    Securely
@@ -113,7 +113,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
-          doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
+          _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx)
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
@@ -135,7 +135,7 @@ authorSendDocument did = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
-          doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
+          _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx))
   
 {- |

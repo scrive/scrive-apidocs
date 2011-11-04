@@ -120,6 +120,7 @@ import InputValidation
 import Control.Applicative
 import Doc.DocInfo
 import Data.List
+import File.FileID
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D

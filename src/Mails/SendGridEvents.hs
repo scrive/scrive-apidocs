@@ -22,7 +22,7 @@ import KontraLink
 import Misc
 import Data.Maybe
 import qualified Mails.MailsUtil as Mail
-import Doc.DocState
+import Doc.Transitory
 import ActionSchedulerState
 import Happstack.State
 import Mails.SendMail
@@ -39,6 +39,7 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import User.Model
 import Happstack.Server
+import DB.Classes
 
 data SendgridEvent =
     SendgridEvent {
@@ -120,7 +121,7 @@ readString :: Kontrakcja m => String -> m String
 readString name = fromMaybe "" <$> getField name
 
 -- | Main routing table after getting sendgrid event.
-routeToHandler :: Kontrakcja m => SendgridEvent -> m ()
+routeToHandler :: (Kontrakcja m, DBMonad m) => SendgridEvent -> m ()
 routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, event}) = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     let signemail = fromMaybe "" (BS.toString . getEmail <$> getSignatoryLinkFromDocumentByID doc signlinkid)
@@ -155,7 +156,7 @@ handleDeliveredInvitation docid signlinkid = do
                  mail <- mailDeliveredInvitation doc signlink
                  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink doc] }
          Nothing -> return ()
-    _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
+    _ <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
 
 mailDeliveredInvitation :: Kontrakcja m =>  Document -> SignatoryLink -> m Mail
@@ -167,12 +168,12 @@ mailDeliveredInvitation doc signlink = kontramail  "invitationMailDeliveredAfter
 handleOpenedInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleOpenedInvitation docid signlinkid = do
     now <- liftIO $ getMinutesTime
-    _ <- update $ MarkInvitationRead docid signlinkid now
+    _ <- doc_update $ MarkInvitationRead docid signlinkid now
     return ()
 
 handleDeferredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleDeferredInvitation docid signlinkid = do
-    mdoc <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
+    mdoc <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
     case mdoc of
          Right doc -> do
              ctx <- getContext
@@ -193,7 +194,7 @@ handleUndeliveredInvitation docid signlinkid = do
     ctx <- getContext
     case getSignatoryLinkFromDocumentByID doc signlinkid of
          Just signlink -> do
-             _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
+             _ <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
              mail <- mailUndeliveredInvitation ctx doc signlink
              scheduleEmailSendout (ctxesenforcer ctx) $ mail {  to = [getMailAddress $ fromJust $ getAuthorSigLink doc]  }
          Nothing -> return ()

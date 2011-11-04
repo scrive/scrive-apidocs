@@ -58,9 +58,11 @@ import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.KontraLinkUtils
 import Doc.API
+import File.FileID
 
 import Control.Concurrent
 import Control.Monad.Error
+import Control.Monad.Reader
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -374,15 +376,18 @@ publicDir swedish english link handler = choice [
   , dir english $ hGetAllowHttp $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
   ]
 
+
+--deriving instance ServerMonad (ReaderT c (ServerPartT m))
+
 {- |
     If the current request is referring to a document then this will
     return the locale of that document.
 -}
-getDocumentLocale :: (ServerMonad m, MonadIO m) => m (Maybe Locale)
-getDocumentLocale = do
+getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
+getDocumentLocale conn = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-  mdoclocales <- mapM (DocControl.getDocumentLocale . DocumentID) docids
+  mdoclocales <- runReaderT (mapM (DocControl.getDocumentLocale . DocumentID) docids) conn
   return . listToMaybe $ catMaybes mdoclocales
 
 {- |
@@ -401,7 +406,7 @@ getUserLocale conn muser = do
       urllocale = case (urlregion, urllang) of
                     (Just region, Just lang) -> Just $ mkLocale region lang
                     _ -> Nothing
-  doclocale <- getDocumentLocale
+  doclocale <- getDocumentLocale conn
   let browserlocale = getBrowserLocale rq
   let newlocale = firstOf [ activationlocale
                           , userlocale
@@ -657,7 +662,7 @@ appHandler handleRoutes appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the region and language
-      doclocale <- getDocumentLocale
+      doclocale <- getDocumentLocale conn
       userlocale <- getUserLocale conn muser
 
       let elegtrans = getELegTransactions session

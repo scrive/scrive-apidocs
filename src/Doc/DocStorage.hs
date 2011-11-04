@@ -41,6 +41,7 @@ import qualified MemCache
 import ForkAction
 import File.Model
 import DB.Classes
+import File.FileID
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)

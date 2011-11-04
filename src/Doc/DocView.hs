@@ -96,6 +96,7 @@ import Data.List (intercalate)
 --import Happstack.State (query)
 import File.Model
 import DB.Classes
+import File.FileID
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()

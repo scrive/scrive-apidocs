@@ -21,7 +21,6 @@ module Doc.DocStateData
     , FieldDefinition(..)
     , FieldPlacement(..)
     , File(..)
-    , FileID(..)
     , FileStorage(..)
     , IdentificationType(..)
     , JpegPages(..)

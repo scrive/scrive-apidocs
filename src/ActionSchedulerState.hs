@@ -50,6 +50,7 @@ import Misc
 import MinutesTime
 import Mails.MailsData
 import User.Model
+import File.FileID
 
 data SchedulerData a b c = SchedulerData {
       sdAppConf      :: a

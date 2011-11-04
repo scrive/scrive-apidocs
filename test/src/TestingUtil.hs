@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances #-}
+{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -18,6 +18,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
 
+import File.FileID
 import API.API
 import DB.Classes
 import DB.Types
@@ -592,10 +593,15 @@ validTest = return . Just
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: MonadIO m => a -> m b
+  randomQuery :: (MonadIO m, DBMonad m) => a -> m b
 
+#ifndef DOCUMENTS_IN_POSTGRES
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
+#else
+instance (DBQuery ev res) => RandomQuery ev res where
+  randomQuery = runDBQuery
+#endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
@@ -604,10 +610,15 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: MonadIO m => a -> m b
+  randomUpdate :: (MonadIO m, DBMonad m) => a -> m b
 
+#ifndef DOCUMENTS_IN_POSTGRES
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
+#else
+instance (DBUpdate ev res) => RandomUpdate ev res where
+  randomUpdate = runDBUpdate
+#endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
