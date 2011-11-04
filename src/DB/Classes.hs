@@ -104,6 +104,7 @@ data DBException =
       tmoExpected :: Integer
     , tmoGiven :: Integer
   }
+  | CannotParseRow
     deriving Typeable
 
 instance E.Exception DBException
@@ -111,6 +112,7 @@ instance E.Exception DBException
 instance Show DBException where
   show (SQLError e) = "SQL error: " ++ seErrorMsg e
   show NoObject = "Query result error: No object returned when there had to be one"
+  show CannotParseRow = "Query result error: cannot parse row of sql values"
   show TooManyObjects{tmoExpected, tmoGiven} =
     "Query result error: Too many objects returned/affected by query (" ++ show tmoExpected ++ " expected, " ++ show tmoGiven ++ " given)"
 

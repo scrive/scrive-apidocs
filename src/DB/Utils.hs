@@ -8,7 +8,8 @@ import qualified Control.Exception as E
 import DB.Classes
 import DB.Model
 import Happstack.State()
-
+import Control.Monad.IO.Class
+import Control.Monad
 
 getUniqueID :: Table -> DB Int64
 getUniqueID table = do
@@ -40,3 +41,18 @@ checkIfOneObjectReturned :: Monad m => [a] -> m Bool
 checkIfOneObjectReturned xs =
   oneObjectReturnedGuard xs
     >>= return . maybe False (const True)
+
+fetchValues :: (MonadIO m) => Statement -> ([SqlValue] -> Maybe a) -> m [a]
+fetchValues st decode = liftM reverse (worker [])
+  where
+    worker acc = do
+      mrow <- liftIO $ fetchRow st
+      case mrow of
+        Nothing -> return acc
+        Just row -> 
+          case decode row of
+            Just value -> worker (value : acc)
+            Nothing -> do
+                   liftIO $ finish st
+                   liftIO $ E.throwIO CannotParseRow
+
