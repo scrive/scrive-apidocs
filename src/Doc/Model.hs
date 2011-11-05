@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-orphans #-}
 {-# LANGUAGE CPP #-}
 
 module Doc.Model
@@ -8,6 +8,8 @@ module Doc.Model
   , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
+
+  , PutDocumentUnchecked(..)
   , AuthorAttachment(..)
   , DocumentID(..)
   , SignatoryAttachment(..)
@@ -132,13 +134,118 @@ import Company.Model
 import MinutesTime
 import Doc.DocStateData
 import Data.Data
---import Data.Int
+import Database.HDBC
+import Database.HDBC.PostgreSQL
 import Data.Word
 import qualified Data.ByteString.Char8 as BS
 import qualified Mails.MailsUtil as Mail
+import Data.Maybe
+import Misc
+import Data.Convertible
+import Data.List
+
+data SqlField = SqlField String SqlValue
+
+instance Convertible SqlValue SqlValue where
+    safeConvert = return . id
+
+sqlField :: (Convertible v SqlValue) => String -> v -> SqlField
+sqlField name value = SqlField name (toSql value)
+
+-- here we can add encoding and better error reporting in case conversion fails
+mkInsertStatement :: String -> [SqlField] -> String
+mkInsertStatement tableName fields =
+   "INSERT INTO " ++ tableName ++
+   " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
+   " VALUES (" ++ concat (intersperse "," (map (const "?") fields)) ++ ")"
+   where
+     name (SqlField x _) = x
+
+runInsertStatement :: Connection -> String -> [SqlField] -> IO Integer
+runInsertStatement conn tableName fields =
+  run conn (mkInsertStatement tableName fields) (map value fields)
+  where
+    value (SqlField _ v) = v
 
 unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
+
+data PutDocumentUnchecked = PutDocumentUnchecked Document
+                            deriving (Eq, Ord, Show, Typeable)
+instance DBUpdate PutDocumentUnchecked Document where
+  dbUpdate (PutDocumentUnchecked document) = do
+    let Document { documentid
+                 , documenttitle
+                 , documentsignatorylinks
+                 , documentfiles
+                 , documentsealedfiles
+                 , documentstatus
+                 , documenttype
+                 , documentfunctionality
+                 , documentctime
+                 , documentmtime
+                 , documentdaystosign
+                 , documenttimeouttime
+                 , documentinvitetime
+                 , documentlog
+                 , documentinvitetext
+                 , documentallowedidtypes
+                 , documentcsvupload
+                 , documentcancelationreason
+                 , documentsharing
+                 , documentrejectioninfo
+                 , documenttags
+                 , documentservice
+                 , documentdeleted
+                 , documentauthorattachments
+                 , documentsignatoryattachments
+                 , documentui
+                 , documentregion
+                 } = document
+        (simpletype :: Int, process) = case documenttype of
+                                  Signable x -> (1, Just x)
+                                  Template x -> (2, Just x)
+                                  Attachment -> (3, Nothing)
+                                  AttachmentTemplate -> (4, Nothing)
+
+    _ <- wrapDB $ \conn -> runInsertStatement conn "documents"
+                                     [ sqlField "id" documentid
+                                     , sqlField "tags" documenttags
+                                     , sqlField "file_id" (listToMaybe documentfiles)
+                                     , sqlField "sealed_file_id" (listToMaybe documentsealedfiles)
+                                     , sqlField "status" documentstatus
+                                     , sqlField "error_text" $ case documentstatus of
+                                                                 DocumentError msg -> toSql msg
+                                                                 _ -> SqlNull
+                                     , sqlField "type" simpletype
+                                     , sqlField "process" process
+
+                                     , sqlField "functionality" documentfunctionality
+                                     , sqlField "ctime" documentctime
+                                     , sqlField "mtime" documentmtime
+                                     , sqlField "days_to_sign" documentdaystosign
+                                     , sqlField "timeout_time" (fmap unTimeoutTime documenttimeouttime)
+                                     , sqlField "invite_time" (fmap signtime documentinvitetime)
+                                     , sqlField "invite_ipnumber" (fmap signipnumber documentinvitetime)
+                                     , sqlField "invite_text" documentinvitetext
+                                     , sqlField "log" documentlog
+                                     , sqlField "allowed_id_types" documentallowedidtypes
+                                     , sqlField "csv_title" $ csvtitle `fmap` documentcsvupload
+                                     , sqlField "csv_contents" $ csvcontents `fmap` documentcsvupload
+                                     , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` documentcsvupload
+                                     , sqlField "cancelation_reason" documentcancelationreason
+                                     , sqlField "sharing" documentsharing
+                                     , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
+                                     , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
+                                     , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
+                                     , sqlField "service" documentservice
+                                     , sqlField "deleted" documentdeleted
+                                     -- , toSql documentauthorattachments      -- many to many
+                                     -- , toSql documentsignatoryattachments   -- many to many
+                                     -- , toSql documentui  -- should go into separate table?
+                                     , sqlField "region" documentregion
+                                     ]
+    return document
 
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
@@ -635,7 +742,7 @@ instance DBUpdate AddDocumentAttachment (Either String Document) where
   dbUpdate (AddDocumentAttachment docid fid) = wrapDB $ \conn -> do
     unimplemented "AddDocumentAttachment"
 
-data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID 
+data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDocumentAttachment (Either String Document) where
   dbUpdate (RemoveDocumentAttachment docid fid) = wrapDB $ \conn -> do
