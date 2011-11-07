@@ -19,11 +19,9 @@ viewCompanyAccounts =
   new Cell({name: "$_companyposition()$", width:"50px", field:"position" }),
   new Cell({name: "$_phone()$", width:"105px", field:"phone" }),
   new Cell({name: "$_email()$", width:"100px", field:"email" })
-,
-  new Cell({name: "adder", width:"40px", field:"isunsaved", special: "adder"})
   ]})
   });
-    
+
   jQuery(function(){
   //uncomment this to add it
   // but it's still not done!
@@ -32,8 +30,8 @@ viewCompanyAccounts =
 </script>
 
 <div>
-  <form method="post" action="$currentlink$" class="listForm">
-    <div id="tab-viewer">
+  <div id="tab-viewer">
+    <form method="post" action="$currentlink$" class="listForm">
 	  <div class="tab-header"></div>
 	  <ul class="tabs">
 	    <li><a href="/account">$_HeadUserInfo()$</a></li>
@@ -45,15 +43,20 @@ viewCompanyAccounts =
 	  <div class="tab-container">
 	    <div class="tab-content">
 	      <div class="col float-left">
-	        <div class="tab-dd">
-              <div class="tab-dd-button">
-		        <a href="javascript:;"><p>$_options()$</p></a>
-              </div>
-		      <ul class="tab-dd-opts">
-		        <li><a href="javascript:;" class="subaccount-add-sub">$_AddCompanyAccount()$</a></li>
-		        <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
-		      </ul>
+	        <div class="tab-dd float-left">
+                  <div class="tab-dd-button">
+                    <a href="javascript:;"><p>$_options()$</p></a>
+                  </div>
+                  <ul class="tab-dd-opts">
+                    <li><a href="javascript:;" class="subaccount-add-sub">$_AddCompanyAccount()$</a></li>
+                    <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
+                  </ul>
 	        </div>
+                <a class="btn-tiny green float-left" href="#" rel="#dialog-add-company-user" id="addcompanyuserlink">
+                  <div class="left"></div>
+                  <div class="label"><p>New Account</p></div>
+                  <div class="right"></div>
+                </a>
 	      </div>
 	      <div class="col float-right">
 	        $searchBox(infotext=_SearchCompanyAccount())$
@@ -81,7 +84,7 @@ viewCompanyAccounts =
                   <a href="$currentlink$&amp;sorting=sndnameREV">$_lastname()$<em> ▼</em></a>
                   $else$
                   <a href="$currentlink$&amp;sorting=sndname">$_lastname()$</a>
-                  $endif$   
+                  $endif$
                 </th>
 		        <th style="width: 60px;">
                   $if(params.sorting.companypositionREV)$
@@ -90,7 +93,7 @@ viewCompanyAccounts =
                   <a href="$currentlink$&amp;sorting=companypositionREV">$_companyposition()$<em> ▼</em></a>
                   $else$
                   <a href="$currentlink$&amp;sorting=companyposition">$_companyposition()$</a>
-                  $endif$ 
+                  $endif$
                 </th>
 		        <th style="width: 115px;">
                   $if(params.sorting.phoneREV)$
@@ -99,7 +102,7 @@ viewCompanyAccounts =
                   <a href="$currentlink$&amp;sorting=phoneREV">$_phone()$<em> ▼</em></a>
                   $else$
                   <a href="$currentlink$&amp;sorting=phone">$_phone()$</a>
-                  $endif$ 
+                  $endif$
                 </th>
 		        <th style="width: 110px;">
                   $if(params.sorting.emailREV)$
@@ -108,7 +111,7 @@ viewCompanyAccounts =
                   <a href="$currentlink$&amp;sorting=emailREV">$_email()$<em> ▼</em></a>
                   $else$
                   <a href="$currentlink$&amp;sorting=email">$_email()$</a>
-                  $endif$ 
+                  $endif$
                 </th>
 		        <th style="width: 52px;text-align:center"> <a class="icon small add subaccount-add-sub"> </a></th>
 		      </tr>
@@ -137,9 +140,60 @@ viewCompanyAccounts =
 	      $pagingFooter()$
 	    </div>
       </div>
-    </div>
-  </form>
+    </form>
+    $modalAddCompanyAccount()$
+  </div>
   $listLocalDialogs()$
   <script> var useremail = "$user.email$"; </script>
 </div>
-###
+####
+modalAddCompanyAccount=
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-add-company-user" rel=".listForm">
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>New Account</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div>
+            <p>
+            Invite a new or existing user to join your company.
+            </p>
+          </div>
+          <input type="hidden" name="add" value="true" />
+          <div class="account-body">
+            <table>
+              <tr>
+                  <td>$_firstname()$:</td>
+                  <td><input type="text" name="fstname" autocomplete="off" /></td>
+              </tr>
+              <tr>
+                  <td>$_lastname()$:</td>
+                  <td><input type="text" name="sndname" autocomplete="off" /></td>
+              </tr>
+              <tr>
+                  <td>$_email()$:</td>
+                  <td><input type="email" name="email" autocomplete="off"/></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <input type="submit" class="hidden" />
+      </div>
+      <div class="modal-footer">
+        <a class="cancel close float-left" style="height:40px;">
+          <div class="label">$_cancel()$</div>
+        </a>
+        <a class="btn-small green float-right submit" href="#">
+          <div class="left"></div>
+          <div class="label"><p>Invite</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+#####
