@@ -620,21 +620,30 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: (MonadIO m) => Either CompanyID UserID -> String ->  m SessionId
-createServiceSession userorcompany loc= do
-    sd <- liftIO emptySessionData
+createServiceSession:: MonadIO m => Either CompanyID UserID -> String ->  m SessionId
+createServiceSession userorcompany loc = do
+    now <- liftIO getMinutesTime
     moldsession <- case userorcompany of
       Right uid -> query $ GetSessionByUserId uid
-      Left cid -> query $ GetSessionByCompanyId cid
+      Left  cid -> query $ GetSessionByCompanyId cid
     case moldsession of
-      Just s -> return $ sessionId s
-      Nothing -> do
-        session <-  update $ NewSession $  sd {
-          userID = either (const Nothing) Just userorcompany
-          , company = either Just (const Nothing) userorcompany
-          , location = loc
-          }
-        return $ sessionId  session
+      Just s -> if now >= expires (sessionData s)
+                then do
+                  _ <- update $ DelSession $ sessionId s
+                  newSession' userorcompany loc
+                else return $ sessionId s
+      Nothing -> newSession' userorcompany loc
+
+newSession' :: MonadIO m => Either CompanyID UserID -> String -> m SessionId
+newSession' userorcompany loc = do
+  sd <- liftIO emptySessionData
+  session <-  update $ NewSession $  sd {
+    userID = either (const Nothing) Just userorcompany
+    , company = either Just (const Nothing) userorcompany
+    , location = loc
+    }
+  return $ sessionId  session
+
 
 -- This is used to connect user or company to session when it was created by same service
 loadServiceSession :: (MonadIO m, Functor m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
