@@ -633,14 +633,6 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  $("#addcompanyuserlink").overlay({
-        mask: standardDialogMask,
-        top: standardDialogTop,
-        fixed:false
-    });
-});
-
-safeReady(function() {
     var personpane = $("#personpane");
     $("#addsigattachmentlink").overlay({
         mask: standardDialogMask,
