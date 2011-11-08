@@ -510,12 +510,12 @@ checkResetSignatoryData doc sigs =
   let authors    = [ r | (_, r) <- sigs, SignatoryAuthor `elem` r]
       nonauthors = [ r | (_, r) <- sigs, SignatoryAuthor `notElem` r]
       isbasic = documentfunctionality doc == BasicFunctionality
-      allowspartner _ = getValueForProcess doc processauthorsend /= Just True
+      disallowspartner _ = getValueForProcess doc processauthorsend /= Just True
   in catMaybes $
       [trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc),
        trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors),
-       trueOrMessage (isbasic =>> (length nonauthors == 1)) $ "Should have exactly one signatory since it's basic functionality",
-       trueOrMessage (isbasic =>> all (allowspartner =>>^ (SignatoryPartner `elem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
+       trueOrMessage (isbasic =>> (length nonauthors <= 1)) $ "Should be at most one signatory since it's basic functionality",
+       trueOrMessage (isbasic =>> all (disallowspartner =>>^ (SignatoryPartner `notElem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
        trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" ]
   
 resetSignatoryDetails :: DocumentID
@@ -528,6 +528,7 @@ resetSignatoryDetails documentid signatories time =
     [] -> do
       -- this reassigns signlinkid and magic hash each time we call it
       signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
+      -- copy the author's user and company
       let signatorylinks2 = mapIf isAuthor (\sl -> sl { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                                       , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                                       }) signatorylinks
@@ -541,6 +542,9 @@ resetSignatoryDetails documentid signatories time =
     A cut down version of updateDocument that requires fewer parameters.  This is used by the integration api.
     If there is a problem, such as the document not existing,
     or the document not being in preparation mode then a Left is returned.
+    DEPRECATED; Don't use this.
+    Gracjan, please don't migrate this function to Postgres
+     -- Eric
 -}
 updateDocumentSimple::DocumentID -> (SignatoryDetails, User) -> [SignatoryDetails] -> Update Documents (Either String Document)
 updateDocumentSimple did (authordetails,author) signatories = do
