@@ -145,6 +145,17 @@ import Data.Convertible
 import Data.List
 import Doc.Tables
 import Control.Applicative
+--import Doc.DocStateUtils
+import Doc.DocProcess
+import Doc.DocStateCommon
+import System.Random
+--import Happstack.Server
+--import Happstack.State
+--import Happstack.Util.Common
+--import Numeric
+--import Data.Int
+import Control.Monad.IO.Class
+--import Control.Monad
 
 data SqlField = SqlField String String SqlValue
 
@@ -173,10 +184,12 @@ mkInsertStatement tableName fields =
                            
 
 runInsertStatement :: Connection -> String -> [SqlField] -> IO Integer
-runInsertStatement conn tableName fields =
-  run conn (mkInsertStatement tableName fields) (map value fields)
+runInsertStatement conn tableName fields = do
+  liftIO $ putStrLn $ statement
+  run conn statement (map value fields)
   where
     value (SqlField _ _ v) = v
+    statement = mkInsertStatement tableName fields
 
 unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
@@ -320,6 +333,126 @@ selectDocumentsSQL = "SELECT id" ++
 fetchDocuments :: Statement -> IO [Document]
 fetchDocuments st = do
   fetchValues st decodeRowAsDocument
+
+
+selectSignatoryLinksSQL :: String
+selectSignatoryLinksSQL = "SELECT id" ++
+                          ", document_id" ++
+                          ", user_id" ++
+                          ", company_id" ++
+                          ", fields" ++
+                          ", sign_order" ++
+                          ", token" ++
+                          ", sign_time" ++
+                          ", sign_ip" ++
+                          ", seen_time" ++
+                          ", seen_ip" ++
+                          ", read_invitation" ++
+                          ", invitation_delivery_status" ++
+                          ", signinfo_text" ++
+                          ", signinfo_signature" ++
+                          ", signinfo_certificate" ++
+                          ", signinfo_provider" ++
+                          ", signinfo_first_name_verified" ++
+                          ", signinfo_last_name_verified" ++
+                          ", signinfo_personal_number_verified" ++
+                          ", roles" ++
+                          ", deleted" ++
+                          ", really_deleted" ++
+                          " FROM signatory_links "
+
+
+decodeRowAsSignatoryLink :: SignatoryLinkID
+                         -> DocumentID
+                         -> Maybe UserID
+                         -> Maybe CompanyID
+                         -> [SignatoryField]
+                         -> SignOrder
+                         -> MagicHash
+                         -> Maybe MinutesTime
+                         -> Maybe Word32
+                         -> Maybe MinutesTime
+                         -> Maybe Word32
+                         -> Maybe MinutesTime
+                         -> Mail.MailsDeliveryStatus
+                         -> Maybe String
+                         -> Maybe String
+                         -> Maybe String
+                         -> Maybe SignatureProvider
+                         -> Maybe Bool
+                         -> Maybe Bool
+                         -> Maybe Bool
+                         -> [SignatoryRole]
+                         -> Bool
+                         -> Bool
+                         -> Either DBException SignatoryLink
+decodeRowAsSignatoryLink slid
+                         _document_id
+                         user_id
+                         company_id
+                         fields
+                         sign_order
+                         token
+                         sign_time
+                         sign_ip
+                         seen_time
+                         seen_ip
+                         read_invitation
+                         invitation_delivery_status
+                         signinfo_text
+                         signinfo_signature
+                         signinfo_certificate
+                         signinfo_provider
+                         signinfo_first_name_verified
+                         signinfo_last_name_verified
+                         signinfo_personal_number_verified
+                         roles
+                         deleted
+                         really_deleted =
+    (return $ SignatoryLink
+    { signatorylinkid = slid
+    , signatorydetails = SignatoryDetails 
+                         { signatorysignorder = sign_order
+                         , signatoryfields = fields
+                         }
+    , signatorymagichash = token       
+    , maybesignatory     = user_id        
+    , maybesupervisor    = Nothing        
+    , maybecompany       = company_id        
+    , maybesigninfo      = case (sign_time, sign_ip) of
+                             (Just st, Just sip) -> Just (SignInfo st sip)
+                             _ -> Nothing
+    , maybeseeninfo      = case (seen_time, seen_ip) of
+                             (Just st, Just sip) -> Just (SignInfo st sip)
+                             _ -> Nothing        
+    , maybereadinvite    = read_invitation        
+    , invitationdeliverystatus = invitation_delivery_status  
+    , signatorysignatureinfo = do -- Maybe Monad
+        signinfo_text' <- signinfo_text
+        signinfo_signature' <- signinfo_signature
+        signinfo_certificate' <- signinfo_certificate
+        signinfo_provider' <- signinfo_provider
+        signinfo_first_name_verified' <- signinfo_first_name_verified
+        signinfo_last_name_verified' <- signinfo_last_name_verified
+        signinfo_personal_number_verified' <- signinfo_personal_number_verified
+        return $ SignatureInfo { signatureinfotext        = signinfo_text'
+                               , signatureinfosignature   = signinfo_signature'
+                               , signatureinfocertificate = signinfo_certificate'
+                               , signatureinfoprovider    = signinfo_provider'
+                               , signaturefstnameverified = signinfo_first_name_verified'
+                               , signaturelstnameverified = signinfo_last_name_verified'
+                               , signaturepersnumverified = signinfo_personal_number_verified'
+                               }
+    
+    , signatoryroles     = roles        
+    , signatorylinkdeleted  = deleted     
+    , signatorylinkreallydeleted = really_deleted 
+    }) :: Either DBException SignatoryLink
+
+fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
+fetchSignatoryLinks st = do
+  fetchValues st decodeRowAsSignatoryLink
+
                               
 data PutDocumentUnchecked = PutDocumentUnchecked Document
                             deriving (Eq, Ord, Show, Typeable)
@@ -372,11 +505,11 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      , sqlField "process" process
 
                                      , sqlField "functionality" documentfunctionality
-                                     , sqlFieldType "ctime" "timestamp" documentctime
-                                     , sqlFieldType "mtime" "timestamp" documentmtime
+                                     , sqlFieldType "ctime" "timestamp" $ toSeconds documentctime
+                                     , sqlFieldType "mtime" "timestamp" $ toSeconds documentmtime
                                      , sqlField "days_to_sign" documentdaystosign
-                                     , sqlFieldType "timeout_time" "timestamp" (fmap unTimeoutTime documenttimeouttime)
-                                     , sqlFieldType "invite_time" "timestamp" (fmap signtime documentinvitetime)
+                                     , sqlFieldType "timeout_time" "timestamp" $ fmap (toSeconds . unTimeoutTime) documenttimeouttime
+                                     , sqlFieldType "invite_time" "timestamp" $ fmap (toSeconds . signtime) documentinvitetime
                                      , sqlField "invite_ip" (fmap signipnumber documentinvitetime)
                                      , sqlField "invite_text" documentinvitetext
                                      , sqlField "log" documentlog
@@ -386,7 +519,7 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` documentcsvupload
                                      , sqlField "cancelation_reason" documentcancelationreason
                                      , sqlField "sharing" documentsharing
-                                     , sqlFieldType "rejection_time" "timestamp" $ fst3 `fmap` documentrejectioninfo
+                                     , sqlFieldType "rejection_time" "timestamp" $ fmap toSeconds $ fst3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
                                      , sqlField "service" documentservice
@@ -528,8 +661,15 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
   dbQuery (GetDocumentByDocumentID did) = wrapDB $ \conn -> do
     st <- prepare conn $ selectDocumentsSQL ++ " WHERE id = ? AND deleted = FALSE"
     _ <- execute st [toSql did]
-    us <- fetchDocuments st
-    oneObjectReturnedGuard us
+    docs <- fetchDocuments st
+    mdoc <- oneObjectReturnedGuard docs
+    case mdoc of
+      Nothing -> return Nothing
+      Just doc -> do
+                stx <- prepare conn $ selectSignatoryLinksSQL ++ " WHERE document_id = ? AND deleted = FALSE"
+                _ <- execute stx [toSql did]
+                sls <- fetchSignatoryLinks stx
+                return (Just (doc { documentsignatorylinks = sls }))
 
 
 
@@ -652,12 +792,48 @@ data NewDocument = NewDocument User (Maybe Company) BS.ByteString DocumentType M
                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate NewDocument (Either String Document) where
   dbUpdate (NewDocument user mcompany title documenttype ctime) = do
-    wrapDB $ \conn -> runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
-    did <- DocumentID <$> getUniqueID tableDocuments
-    wrapDB $ \conn -> runInsertStatement conn "documents" 
+  if fmap companyid mcompany /= usercompany user
+    then return $ Left "company and user don't match"
+    else do
+      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+      let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
+                        then [SignatoryAuthor]
+                        else [SignatoryPartner, SignatoryAuthor]
+      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+
+      magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+    
+      let authorlink0 = signLinkFromDetails'
+                        (signatoryDetailsFromUser user mcompany)
+                        authorRoles linkid magichash
+
+      let authorlink = authorlink0 {
+                         maybesignatory = Just $ userid user, 
+                         maybecompany = usercompany user }
+
+      let doc = blankDocument {
+                  documenttitle                = title
+                , documentsignatorylinks       = [authorlink]
+                , documenttype                 = documenttype
+                , documentregion               = getRegion user
+                , documentfunctionality        = newDocumentFunctionality documenttype user
+                , documentctime                = ctime
+                , documentmtime                = ctime
+                , documentservice              = userservice user
+                , documentauthorattachments    = []
+                , documentsignatoryattachments = []
+                } `appendHistory` [DocumentHistoryCreated ctime]
+
+      wrapDB $ \conn -> runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
+      did <- DocumentID <$> getUniqueID tableDocuments
+
+      -- here we emulate old behaviour and use current time instead of the one specified above
+      -- FIXME: should use time given from above (I think0
+      now <- liftIO $ getMinutesTime
+      wrapDB $ \conn -> runInsertStatement conn "documents" 
             [ sqlField "id" did
             , sqlField "status" Preparation
-            , sqlField "functionality" BasicFunctionality
+            , sqlField "functionality" $ newDocumentFunctionality documenttype user
             , sqlField "title" title
             , sqlField "log" "[]"
             , sqlField "invite_text" ""
@@ -666,13 +842,24 @@ instance DBUpdate NewDocument (Either String Document) where
             , sqlField "process" (1::Int)
             , sqlField "sharing" (1::Int)
             , sqlField "tags" "[]"
-            , sqlField "region" (1::Int)
+            , sqlField "region" $ getRegion user
             , sqlField "deleted" False
-            , sqlFieldType "mtime" "timestamp" ctime
-            , sqlFieldType "ctime" "timestamp" ctime
+            , sqlFieldType "mtime" "timestamp" $ now
+            , sqlFieldType "ctime" "timestamp" $ now
+            , sqlField "service_id" $ userservice user
             ]
-    v <- dbQuery $ GetDocumentByDocumentID did
-    return $ maybe (Left "no such document") Right v
+      slid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      wrapDB $ \conn -> runInsertStatement conn "signatory_links"
+                      [ sqlField "id" slid
+                      , sqlField "document_id" did
+                      , sqlField "user_id" (userid user)
+                      , sqlField "roles" [SignatoryAuthor]
+                      , sqlField "company_id" (companyid `fmap` mcompany)
+                      , sqlField "token" magichash
+                      , sqlField "fields" $ signatoryfields $ signatorydetails authorlink
+                      ]
+      v <- dbQuery $ GetDocumentByDocumentID did
+      return $ maybe (Left "no such document") Right v
 
 data ReallyDeleteDocuments = ReallyDeleteDocuments User [(DocumentID, [User])]
                              deriving (Eq, Ord, Show, Typeable)

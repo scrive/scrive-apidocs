@@ -47,11 +47,13 @@ tablesList = [
   , tableFiles
 #ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments
-#endif
+  , tableSignatoryLinks
   -- this is not ready yet
-  {-, tableAuthorAttachments
+  {-
+  , tableAuthorAttachments
   , tableSignatoryAttachments
-  , tableSignatoryLinks-}
+  -}
+#endif
   ]
 
 checkDBConsistency :: DB ()
