@@ -615,7 +615,11 @@
                 this.prepareOptions();
             }
             if (this.headerExtras != undefined) {
-                this.pretableboxleft.append(this.headerExtras);
+                if (typeof(this.headerExtras) == "function") {
+                    this.pretableboxleft.append(this.headerExtras());
+                } else {
+                    this.pretableboxleft.append(this.headerExtras);
+                }
             }
             if (!this.schema.filtering().disabled()) {
                 var searchBox = $("<div class='searchBox float-right'/>");
