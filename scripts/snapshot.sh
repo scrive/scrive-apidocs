@@ -64,7 +64,7 @@ base64 -d "$signed64" > "$signedmime"
 tar zcf "$finalfile" "$signedmime" "$zipfile"
 #push to amazon
 echo "Pushing to amazon"
-s3cmd -c "$repo/scripts/s3cfg" --acl-private put "$finalfile" s3://skrivapa-snapshots
+s3cmd --acl-private put "$finalfile" s3://skrivapa-snapshots
 #check hash from amazon
 echo "Not checking amazon sum"
 #echo "Checking amazon md5 sum"

@@ -181,9 +181,9 @@ onlyAuthor did action = do
  -}
 signableFromTemplateWithUpdatedAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
-  Context{ ctxmaybeuser = Just user} <- getContext
+  Context{ ctxmaybeuser = Just user, ctxtime} <- getContext
   mcompany <- getCompanyForUser user
-  transActionNotAvailable <$> update (SignableFromDocumentIDWithUpdatedAuthor user mcompany did)
+  transActionNotAvailable <$> update (SignableFromDocumentIDWithUpdatedAuthor user mcompany did ctxtime)
 
 updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [FileID] -> [FileID] -> m (Either DBError Document)
 updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
