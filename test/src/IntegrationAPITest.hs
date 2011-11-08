@@ -26,7 +26,8 @@ import Util.JSON
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
-      testCase "Test creating a document from template" $ testDocumentCreationFromTemplate conn      
+      testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
+    , testCase "Test creating a contract from template" $ testDocumentCreationFromTemplateContract conn
     , testCase "Testing if we can create sample document" $ testDocumentCreation conn
     , testCase "Accessing documents created by the API" $ testDocumentsAccess conn
     , testCase "Accessing documents in embedded frame" $ testDocumentAccessEmbeddedPage conn
