@@ -51,6 +51,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>
                                                 <p class="introtext">$_h1Body()$</p>
+                                                <h3>$_legalTitleFrontPage()$</h3>
+                                                <p class="introtext">$_legalBodyFrontPage()$</p>
                                                 <h3>$_h3CreateAccount()$</h3>
                                                 <p class="introtext">$_h3CreateAccountBody()$</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
@@ -58,8 +60,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                   <a href="#" class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                   <input type="submit" class="hidden" />
                                                 </form>
-                                                <h3>$_legalTitleFrontPage()$</h3>
-                                                <p class="introtext">$_legalBodyFrontPage()$</p>
                                         </div>
                                 </div>
                                 <div class="rightMain">
@@ -72,9 +72,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                   class="document-button">$_pageFooterPrices()$</a>
                                   </span>
                                         $if(logged)$
-                                        <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
+                                        <a href="$linkupload$" class="enter-button"><div>$_enter()$</div></a>
                                         $else$
-                                        <a href="#" class="enter-button login-button"><p>$_login()$</p></a>
+                                        <a href="#" class="enter-button login-button"><div>$_login()$</div></a>
                                         $endif$
                                         <div class="campaign-container">
                                                 <div class="campaign-play campaign-play-video"></div>
@@ -89,142 +89,89 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </div>
                 <div id="nav-container">
                         <div class="content logos">
-                          <img src="/img/logo/coopkonsum.png" />
+                          <img class="first" src="/img/logo/coopkonsum.png" />
                           <img src="/img/logo/mynewsdesk.png" />
                           <img src="/img/logo/qalllogo.png" />
-                          <img src="/img/logo/upsales.png" />
+                          <img class="last" src="/img/logo/upsales.png" />
                         </div>
                         <div class="bottom-border"></div>
                 </div>
                 <div id="body-container">
                         <div class="content">
-                                <div class="spacer50"></div>
+                                <div class="spacer40"></div>
                                 <div class="benefitsbox">
                                 <h2 class="benefitstitle">$_benefitsTitle()$</h2>
-                                <div class="spacer50"></div>
+                                <div class="spacer20"></div>
                                 <div class="grid 4x4">
-                                        <div class="col leftm">
+                                        <div class="col float-right">
                                                 <div class="icon-container">
-                                                        <div class="icon money"></div>
+                                                        <div class="icon-money"></div>
                                                 </div>
                                                 <h2>$_Bemefit1()$</h2>
                                                 <p>$_Bemefit1Body()$</p>
                                         </div>
-                                        <div class="col">
+                                        <div class="col float-left">
                                                 <div class="icon-container">
-                                                        <div class="icon watch"></div>
+                                                        <div class="icon-watch"></div>
                                                 </div>
                                                 <h2>$_Bemefit2()$</h2>
                                                 <p>$_Bemefit2Body()$</p>
                                         </div>
-                                        <div class="col">
+                                        <div class="col float-right">
                                                 <div class="icon-container">
-                                                        <div class="icon seal"></div>
+                                                        <div class="icon-seal"></div>
                                                 </div>
                                                 <h2>$_Bemefit4()$</h2>
                                                 <p>$_Bemefit4Body()$</p>
                                         </div>
-                                        <div class="col no-margin">
+                                        <div class="col float-left">
                                                 <div class="icon-container">
-                                                        <div class="icon safe"></div>
+                                                        <div class="icon-safe"></div>
                                                 </div>
                                                 <h2>$_Bemefit5()$</h2>
                                                 <p>$_Bemefit5Body()$</p>
                                         </div>
                                 </div>
                                 </div>
-                                <div class="spacer50"></div>
+                                
                                 <div class="productdescriptionbox">
                                 <h2 class="benefitstitle">$_productDescriptionTitle()$</h2>
-                                <div class="spacer50"></div>
+                                <div class="spacer20"></div>
                                 <div class="grid 4x4">
-                                        <div class="col leftm">
+                                       <div class="col  float-left">
                                                 <div class="icon-container">
-                                                        <div class="icon cloud"></div>
-                                                </div>
-                                                <h2>$_Product1()$</h2>
-                                                <p>$_Product1Body()$</p>
-                                        </div>
-                                        <div class="col">
-                                                <div class="icon-container">
-                                                        <div class="icon mail"></div>
-                                                </div>
-                                                <h2>$_Product2()$</h2>
-                                                <p>$_Product2Body()$</p>
-                                        </div>
-                                        <div class="col">
-                                                <div class="icon-container">
-                                                        <div class="icon api"></div>
-                                                </div>
-                                                <h2>$_Product3()$</h2>
-                                                <p>$_Product3Body()$</p>
-                                        </div>
-                                        <div class="col no-margin">
-                                                <div class="icon-container">
-                                                        <div class="icon question"></div>
+                                                        <div class="icon-question"></div>
                                                 </div>
                                                 <h2>$_Product4()$</h2>
                                                 <p>$_Product4Body()$</p>
                                         </div>
+                                        <div class="col float-right">
+                                                <div class="icon-container">
+                                                        <div class="icon-cloud"></div>
+                                                </div>
+                                                <h2>$_Product1()$</h2>
+                                                <p>$_Product1Body()$</p>
+                                        </div>
+                                        <div class="col  float-left">
+                                                <div class="icon-container">
+                                                        <div class="icon-mail"></div>
+                                                </div>
+                                                <h2>$_Product2()$</h2>
+                                                <p>$_Product2Body()$</p>
+                                        </div>
+                                        <div class="col  float-right">
+                                                <div class="icon-container">
+                                                        <div class="icon-api"></div>
+                                                </div>
+                                                <h2>$_Product3()$</h2>
+                                                <p>$_Product3Body()$</p>
+                                        </div>
+                 
                                 </div>
                                 </div>
+                                <div class="spacer50"></div>
                                 <div class="clearfix"></div>
-                                <div class="slide" style="display:none">
-                                    <div class="slide-container">
-                                        <h2>$_QuotesHead()$</h2>
-                                        <div class="slide-content active">
-                							<div class="portrait-image"><img src="/img/logo-accountfactory.jpg"/></div>
-                                            <blockquote>$_Quote1()$</blockquote>
-                                            <em>$_Quote1By()$</em>
-                                        </div>
-                                    <div class="slide-content">
-                                        <div class="portrait-image"><img src="/img/logo-greenhatpeople.jpg"/></div>
-                                        <blockquote>$_Quote2()$</blockquote>
-                                        <em>$_Quote2By()$</em>
-                                    </div>
-                                    <div class="slide-content">
-								        <div class="portrait-image"><img src="/img/logo-eventbook.jpg"/></div>
-                                        <blockquote>$_Quote3()$</blockquote>
-                                        <em>$_Quote3By()$</em>
-                                    </div>
-                                    <div class="slide-content">
-								        <div class="portrait-image"><img src="/img/logo-accenture.jpg"/></div>
-                                        <blockquote>$_Quote4()$</blockquote>
-                                        <em>$_Quote4By()$</em>
-                                    </div>
-                                    <div class="slide-content">
-								        <div class="portrait-image"><img src="/img/logo-coop.jpg"/></div>
-                                        <blockquote>$_Quote5()$</blockquote>
-                                        <em>$_Quote5By()$</em>
-                                    </div>
-                                    <div class="slide-content">
-								        <div class="portrait-image"></div>
-                                        <blockquote>$_Quote6()$</blockquote>
-                                        <em>$_Quote6By()$</em>
-                                    </div>
-                                </div>
-                                        <div class="slide-nav">
-                                                <ul>
-                                                        <li class="active"></li>
-                                                        <li></li>
-                                                        <li></li>
-                                                        <li></li>
-                                                        <li></li>
-                                                        <li></li>
-                                                </ul>
-                                        </div>
-                                        <div class="bubble">
-                                                <h2>$_PartnersHead()$</h2>
-                                                <ul>
-                                                        <li><a href="$linkpartners$"><img src="/img/partner-trustweaver.png"  /></a></li>
-                                                        <li><a href="$linkpartners$"><img src="/img/partner-logica.png" /></a></li>
-                                                        <li><a href="$linkpartners$"><img src="/img/partner-chalmers.png" /></a></li>
-                                                </ul>
-                                        </div>
-                                </div>
-                                <div class="drop-shadow-container" style="display:none">
-                                        <div class="drop-shadow"></div>
-                                </div>
+                               
                                 <div class="price-plan-container">
                                         <table class="price-plan">
                                                 <tr>$_PriceTableHead()$

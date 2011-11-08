@@ -380,9 +380,8 @@ $nicemail(
 newUserMailMainP=
 <p>$_hi()$,</p>
 <p>$_newUserMailContentBodyFirst()$</p>
-<p>$_newUserMailContentBodySecond()$</p>
 <p>$_newUserMailContentBodyUserName()$ $email$</p>
-<p>$_newUserMailContentBodyThird()$ <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
+<p>$_newUserMailContentBodySecond()$ <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
 </p>
 ####
 #### INVITE TO COMPANY MAIL
