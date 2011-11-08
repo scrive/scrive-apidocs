@@ -160,30 +160,76 @@ createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
    mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
-   when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
+   when (isNothing mcompany_id) $ 
+     throwApiError API_ERROR_MISSING_VALUE "No company id provided"
    company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
    mtitle <- fromJSONField "title"
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
    files <- getFiles
    mtype <- liftMM (return . toSafeEnum) (fromJSONField "type")
-   when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
+   when (isNothing mtype) $ 
+     throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
-   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "template_id"
+   mtemplateids <- fromJSONField "template_id"
+   Log.integration $ "got this template from json " ++ show mtemplateids
    involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP
    mlocale <- fromJSONField "locale"
    tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
-                    n <- fromJSONField "name"
-                    v <- fromJSONField "value"
-                    when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
-                    return $ Just $ DocumentTag (fromJust n) (fromJust v)
-   doc <- case mtemplate of
-            Just _template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
-            Nothing -> do
-                        d <- createAPIDocument company doctype title files involved tags mlocale
-                        updateDocumentWithDocumentUI d
+     n <- fromJSONField "name"
+     v <- fromJSONField "value"
+     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
+     return $ Just $ DocumentTag (fromJust n) (fromJust v)
+   createFun <- case mtemplateids of
+     Just templateids -> -- they want a template
+       case maybeRead templateids of
+         Nothing -> throwApiError API_ERROR_PARSING $ "Invalid documentid " ++ templateids
+         Just templateid -> do
+           mtemplate <- query $ GetDocumentByDocumentID templateid                 
+           case mtemplate of
+             Nothing -> throwApiError API_ERROR_NO_DOCUMENT $ "The template you requested does not exits " ++ show templateids
+             Just _template -> 
+               return $ createDocFromTemplate templateid title
+     Nothing -> return $ createDocFromFiles title doctype files
+   d <- createAPIDocument company involved tags mlocale createFun
+   doc <- updateDocumentWithDocumentUI d
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
+createDocFromTemplate ::(APIContext c, Kontrakcja m) =>
+                        DocumentID
+                        -> BS.ByteString
+                        -> User
+                        -> Maybe Company
+                        -> MinutesTime
+                        -> APIFunction m c (Maybe Document)
+createDocFromTemplate templateid title user mcompany time = do
+  edoc <- update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid time
+  when (isLeft edoc) $
+    throwApiError API_ERROR_OTHER $ "Cannot create document!"
+  let doc = fromRight edoc
+  edoc' <- update $ SetDocumentTitle (documentid doc) title time
+  when (isLeft edoc') $ 
+    Log.integration $ "Could not set title on doc " ++ show (documentid doc)
+  return $ either (const $ Just doc) Just edoc'
+
+createDocFromFiles :: (Kontrakcja m, APIContext c) =>
+                      BS.ByteString
+                      -> DocumentType
+                      -> [(BS.ByteString, BS.ByteString)]
+                      -> User
+                      -> Maybe Company
+                      -> MinutesTime
+                      -> APIFunction m c (Maybe Document)
+createDocFromFiles title doctype files user mcompany time = do
+  edoc <- update $ NewDocument user mcompany title doctype time
+  case edoc of
+    Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
+    Right doc -> do
+      let addAndAttachFile name content = do
+            file <- runDB $ dbUpdate $ NewFile name content
+            update $ AttachFile (documentid doc) (fileid file) time
+      mapM_ (uncurry addAndAttachFile) files
+      return $ Just doc
 
 updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
@@ -193,16 +239,14 @@ updateDocumentWithDocumentUI doc = do
 
 createAPIDocument :: Kontrakcja m
                   => Company
-                  -> DocumentType
-                  -> BS.ByteString
-                  -> [(BS.ByteString,BS.ByteString)]
                   -> [SignatoryTMP]
                   -> [DocumentTag]
                   -> Maybe Locale
+                  -> (User -> Maybe Company -> MinutesTime -> IntegrationAPIFunction m (Maybe Document))
                   -> IntegrationAPIFunction m Document
-createAPIDocument _ _ _ _ [] _ _  =
+createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
-createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale = do
+createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
   
     when (maybe False (notElem SignatoryAuthor) $ toSignatoryRoles authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
@@ -215,13 +259,9 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale
     author <- userFromTMP authorTMP company
     
     ctx <- getContext
-    mdoc <- update $ NewDocument author (Just company) title doctype now
-    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
-    let doc = fromRight mdoc
-    let addAndAttachFile name content = do
-            file <- runDB $ dbUpdate $ NewFile name content
-            update $ AttachFile (documentid doc) (fileid file) now
-    mapM_ (uncurry addAndAttachFile) files
+    mdoc <- createFun author (Just company) now
+    when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
+    let doc = fromJust mdoc
     _ <- update $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
       ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now

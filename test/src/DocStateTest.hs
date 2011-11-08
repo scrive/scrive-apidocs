@@ -424,7 +424,8 @@ testCreateFromSharedTemplate = do
          then return tmpdoc
          else fmap fromRight $ update (TemplateFromDocument docid)
   newuser <- addNewRandomAdvancedUser
-  doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc)
+  mt <- rand 10 arbitrary
+  doc' <- fmap fromRight $ update $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) mt
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks doc'
   let isCustom (SignatoryField { sfType = CustomFT _ _ }) = True

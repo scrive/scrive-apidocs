@@ -1399,8 +1399,8 @@ signableFromDocument doc = insertNewDocument $ templateToDocument doc
    This is due to the fact that author personal data could get changed.  Also the company
    data may have changed.
 -}
-signableFromDocumentIDWithUpdatedAuthor :: User -> Maybe Company -> DocumentID -> Update Documents (Either String Document)
-signableFromDocumentIDWithUpdatedAuthor user mcompany docid = 
+signableFromDocumentIDWithUpdatedAuthor :: User -> Maybe Company -> DocumentID -> MinutesTime -> Update Documents (Either String Document)
+signableFromDocumentIDWithUpdatedAuthor user mcompany docid time = 
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
@@ -1408,6 +1408,7 @@ signableFromDocumentIDWithUpdatedAuthor user mcompany docid =
         (templateToDocument doc) {
               documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
                                        -- FIXME: Need to remove authorfields?
+              , documentctime = time
         }
     where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
           replaceAuthorSigLink sl

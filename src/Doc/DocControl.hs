@@ -1846,7 +1846,7 @@ idmethodFromString idmethod
 
 handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
-  Context { ctxmaybeuser } <- getContext
+  Context { ctxmaybeuser, ctxtime } <- getContext
   docid <- readField "template"
   Log.debug $ show "Creating document from template : " ++ show docid
   case docid of
@@ -1863,7 +1863,7 @@ handleCreateFromTemplate = withUserPost $ do
                     then do
                       Log.debug $ show "Valid persmision to create from template"
                       mcompany <- getCompanyForUser user
-                      update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did
+                      update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did ctxtime
                     else mzero
       case enewdoc of
         Right newdoc -> do
