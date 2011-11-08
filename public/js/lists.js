@@ -17,9 +17,9 @@
  *
  *  On load or when some changes occur (like new sorting set) this table will download new data from server (using this url param)
  *  as an JSON object, drop current table content and fill in with fetched data. Checkout skrivapa.se/docs to see an example.
- * 
- *  There are some utils in ListUtils.hs to parse sorting, paging or 
- *  
+ *
+ *  There are some utils in ListUtils.hs to parse sorting, paging or
+ *
  *  There will be more documetation coming when module is more stable
  */
 
@@ -38,7 +38,7 @@
             else
                 return this.get("field");
         },
-        
+
         width : function(){
             return this.get("width");
         },
@@ -56,9 +56,6 @@
         },
         isRendered: function() {
             return this.get("special") != undefined && this.get("special") == "rendered";
-        },
-        isAdder: function() {
-            return this.get("special") != undefined && this.get("special") == "adder";
         },
         rendering: function(value, mainrow, model) {
             return this.get("rendering")(value, mainrow, model);
@@ -100,7 +97,7 @@
             else {
                 this.set({order : true, current : field});
                 this.updateSessionStorage();
-            }    
+            }
         },
         sortOnFunction : function(field){
             var sorting = this;
@@ -112,14 +109,14 @@
         },
         setSessionStorageNamespace: function(namespace) {
             this.set({namespace: namespace});
-            if (SessionStorage.get(namespace,"sorting") != undefined 
-                && SessionStorage.get(namespace,"sorting_order") != undefined 
+            if (SessionStorage.get(namespace,"sorting") != undefined
+                && SessionStorage.get(namespace,"sorting_order") != undefined
                 && !this.disabled())
                     this.set({
                         current: SessionStorage.get(namespace,"sorting"),
                         order :  SessionStorage.get(namespace,"sorting_order") == "true"
                     });
-                    
+
         }
     });
 
@@ -206,16 +203,16 @@
                     a.click(paging.changePageFunction(i));
                     pages.append(a);
                 }
-                
+
             }
             if (paging.itemMax() >= paging.itemMin())
                 main.append(items);
             if (paging.pageMax() > 0)
                 main.append(pages);
             this.el.append(main);
-            
+
         }
-        
+
     });
 
     var FilteringView = Backbone.View.extend({
@@ -252,7 +249,7 @@
             paging: new Paging({disabled: true}),
             options : [],
             extraParams : {}
-            
+
         },
         initialize : function() {
             _.bindAll(this, 'change');
@@ -269,7 +266,7 @@
         allowSelect : function(){
             for(var i=0;i<this.size();i++)
                 if (this.cell(i).isSelect()) return true;
-            return false;        
+            return false;
         },
         filtering: function(){
             return this.get("filtering");
@@ -305,7 +302,7 @@
             return params;
         }
     })
-    
+
     var ListObject = Backbone.Model.extend({
         defaults : {
             fields: [],
@@ -413,9 +410,9 @@
         },
         render: function () {
             if (this.el.size() === 1)
-                for(var j = 0; j < this.model.subfieldsSize(); j++)  
+                for(var j = 0; j < this.model.subfieldsSize(); j++)
                     this.el = this.el.add($("<tr />"));
-            
+
             this.el.empty();
             var mainrow = this.el.first();
             for(var i = 0; i < this.schema.size(); i++) {
@@ -431,13 +428,11 @@
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     else if(cell.isLink() && this.model.hasLink() && value != undefined)
                         td.append($("<a href='"+this.model.link()+"'>"+value+"</a>"));
-                    else if(cell.isAdder() && this.model.isUnsaved()) 
-                        td.append($('<a href="#" class="icon small ok add"></a><a href="#" class="icon small minus remove"></a>'));
-                }    
+                }
                 else if (value != undefined) {
                     var span = $("<span >"+value+"</span>")
                     td.html(span)
-                }    
+                }
                 mainrow.append(td);
             }
             for(var j=0;j<this.model.subfieldsSize();j++) {
@@ -453,7 +448,7 @@
                             div.text(value);
                     }
                     subrow.append(td);
-                    
+
                 }
                 if (this.model.isExpanded())
                     subrow.css("display","");
@@ -473,7 +468,7 @@
                 if (this.checkbox != undefined)
                     this.checkbox.removeAttr("checked");
             }
-            
+
         },
         selectCheck: function(e){
             this.model.toggleSelect();
@@ -509,7 +504,7 @@
         makeElementsViews : function(ms){
             this.el.empty();
             this.prerender();
-            for(var i=0;i<ms.length;i++) 
+            for(var i=0;i<ms.length;i++)
                 new ListObjectView({
                     model: ms.at(i),
                     schema : this.schema,
@@ -531,8 +526,8 @@
             this.tablebox.append(this.table).append(this.tableboxfooter);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
             this.main.append(this.pretablebox).append(this.tablebox);
-            
-            
+
+
             if (this.schema.optionsAvaible())
                 this.prepareOptions();
             if (this.headerExtras != undefined)
@@ -564,9 +559,9 @@
                         if (model.hasSelected())
                             return onSelectFunction(model.getSelected());
                         else
-                            return function(){};   
+                            return function(){};
                     }
-                return e;    
+                return e;
             });
             var select = Select.init({name: localization.select ,options: options, cssClass: "float-left"})
             this.pretableboxleft.append(select.input());
@@ -579,9 +574,7 @@
                var th = $("<th>")
                if (cell.isSpecial() && cell.isSelect())
                    th.append(this.checkbox = $("<input type='checkbox' class='selectall'>"));
-               else if(cell.isAdder())
-                   th.append($('<a class="icon small add"></a>'));
-               else { 
+               else {
                    var a = $("<a/>");
                    var text = cell.name();
                    if (this.schema.sorting().isSortable(cell.field())) {
@@ -603,7 +596,7 @@
                headline.append(th);
             }
             return $("<thead />").append(headline);
-            
+
         },
         render: function () {
             //We mark header checkbox only if one is defined and all elements are selected
@@ -616,12 +609,12 @@
             var body = this.tbody;
             var odd = true;
             this.model.forEach( function(e) {
-                if(e.view != undefined) {   
+                if(e.view != undefined) {
                     body.append(e.view.el);
                     if (odd)
                         e.view.el.addClass("odd");
                     odd = !odd;
-                }   
+                }
             });
             return this;
         },
@@ -638,10 +631,7 @@
             var l = this.model.schema.size();
             for(var i = 0; i < l; i++) {
                 var cell = this.model.schema.cell(i);
-                if(cell.isAdder())
-                    obj[cell.field()] = true;
-                else
-                    fields[cell.field()] = "";
+                fields[cell.field()] = "";
             }
             obj.fields = fields;
             this.model.add(new ListObject(obj));
@@ -674,7 +664,7 @@
         {
        this.model.fetch({data: this.schema.getSchemaUrlParams(),   processData:  true, cache : false});
         }
-        
+
     }
 
-})(window); 
+})(window);
