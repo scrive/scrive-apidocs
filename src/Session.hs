@@ -336,6 +336,9 @@ instance Indexable Session where
                                    Nothing -> []
                                    Just userid -> [userid]
                         )
+                , ixFun (\x -> case company (sessionData x) of
+                            Nothing -> []
+                            Just cid -> [cid])
                 ]
 
 instance Component (Sessions) where
@@ -368,6 +371,10 @@ getSession sessionId = (return . getOne . (@= sessionId)) =<< ask
 -- | Get the session data associated with the supplied 'UserID'.
 getSessionByUserId :: UserID -> Query Sessions (Maybe (Session))
 getSessionByUserId userId = (return . getOne . (@= userId)) =<< ask
+
+-- | Get the session data associated with the supplied 'UserID'.
+getSessionByCompanyId :: CompanyID -> Query Sessions (Maybe (Session))
+getSessionByCompanyId companyId = (return . getOne . (@= companyId)) =<< ask
 
 -- | Update the 'Session'.
 --
@@ -408,6 +415,7 @@ dropExpired now = do
 $(mkMethods ''Sessions
   [ 'getSession
   , 'getSessionByUserId
+  , 'getSessionByCompanyId
   , 'updateSession
   , 'delSession
   , 'newSession
@@ -612,15 +620,30 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: (MonadIO m) => Either CompanyID UserID -> String ->  m SessionId
-createServiceSession userorcompany loc= do
-    sd <- liftIO emptySessionData
-    session <-  update $ NewSession $  sd {
-              userID = either (const Nothing) Just userorcompany
-            , company = either Just (const Nothing) userorcompany
-            , location = loc
-            }
-    return $ sessionId  session
+createServiceSession:: MonadIO m => Either CompanyID UserID -> String ->  m SessionId
+createServiceSession userorcompany loc = do
+    now <- liftIO getMinutesTime
+    moldsession <- case userorcompany of
+      Right uid -> query $ GetSessionByUserId uid
+      Left  cid -> query $ GetSessionByCompanyId cid
+    case moldsession of
+      Just s -> if now >= expires (sessionData s)
+                then do
+                  _ <- update $ DelSession $ sessionId s
+                  newSession' userorcompany loc
+                else return $ sessionId s
+      Nothing -> newSession' userorcompany loc
+
+newSession' :: MonadIO m => Either CompanyID UserID -> String -> m SessionId
+newSession' userorcompany loc = do
+  sd <- liftIO emptySessionData
+  session <-  update $ NewSession $  sd {
+    userID = either (const Nothing) Just userorcompany
+    , company = either Just (const Nothing) userorcompany
+    , location = loc
+    }
+  return $ sessionId  session
+
 
 -- This is used to connect user or company to session when it was created by same service
 loadServiceSession :: (MonadIO m, Functor m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
