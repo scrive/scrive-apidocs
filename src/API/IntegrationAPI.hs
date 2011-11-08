@@ -61,7 +61,7 @@ import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (integration)
-
+import Doc.DocProcess
 
 {- |
   Definition of integration API
@@ -203,11 +203,20 @@ createAPIDocument :: Kontrakcja m
 createAPIDocument _ _ _ _ [] _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale = do
+  
+    when (maybe False (notElem SignatoryAuthor) $ toSignatoryRoles authorTMP) $
+      throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
+  
+    when (any (maybe False (elem SignatoryAuthor) . toSignatoryRoles) signTMPS) $
+      throwApiError API_ERROR_ILLEGAL_VALUE "Only one author is allowed."
+
     now <- liftIO $ getMinutesTime
     company <- setCompanyInfoFromTMP authorTMP company'
     author <- userFromTMP authorTMP company
+    
+    ctx <- getContext
     mdoc <- update $ NewDocument author (Just company) title doctype now
-    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem created a document | This may be because the company and author don't match"
+    when (isLeft mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromRight mdoc
     let addAndAttachFile name content = do
             file <- runDB $ dbUpdate $ NewFile name content
@@ -216,7 +225,21 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale
     _ <- update $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
       ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
-    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
+    let mauthorsiglink = getAuthorSigLink doc
+    when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Problem creating document."
+    let authorsiglink = fromJust mauthorsiglink
+        authorroles = fromMaybe (signatoryroles authorsiglink) (toSignatoryRoles authorTMP)
+        defsigroles = [SignatoryPartner]
+        nonauthordetails = map toSignatoryDetails signTMPS
+        nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
+        sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
+        disallowspartner = getValueForProcess doc processauthorsend /= Just True
+    when (any hasFieldsAndPlacements (toSignatoryDetails authorTMP : nonauthordetails) ||
+          length nonauthordetails > 1 ||
+          (disallowspartner && SignatoryPartner `elem` authorroles)) $
+      ignore $ update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+    doc' <- update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
+    when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 

@@ -22,9 +22,13 @@ module Util.JSON (
     , jsgetdef
     , jsmodifydef
     , jsset
+    , jsrem
     , fromJSONString
     , fromJSONRational
     , fromJSONArray
+    , JSONPath()
+    , pathList
+    , jsonType
     )where
 
 import Text.JSON
@@ -198,6 +202,11 @@ jsmodifydef path f _ val | pathList path == [] = f val
 jsmodifydef path f d obj@(JSObject _) = jsgetdef path d obj >>= f >>= \v -> jsset path v obj
 jsmodifydef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
 
+jsrem :: JSONPath path => path -> JSValue -> Either String JSValue
+jsrem path val | pathList path == [] = Right val
+jsrem path val | [p] <-pathList path = remStr p val
+jsrem path val = jsmodify (init $ pathList path) (remStr (last $ pathList path)) val
+
 getStr :: String -> JSValue -> Either String JSValue
 getStr k obj@(JSObject kvs) = maybe (Left $ "Key " ++ show k ++ " not found in : " ++ show obj) 
                               Right $ lookup k (fromJSObject kvs)
@@ -215,6 +224,20 @@ modifyStrDef :: JSON a => String -> (JSValue -> Either String JSValue) -> a -> J
 modifyStrDef k f d obj@(JSObject _) = getStrDef k d obj >>= f >>= \v -> setStr k v obj
 modifyStrDef _ _ _ obj              = Left $ "Cannot set value on non-object: " ++ show obj
 
+remStr :: String -> JSValue -> Either String JSValue
+remStr k (JSObject jsobj) = case lookup k (fromJSObject jsobj) of
+  Nothing -> Left  $ "Key " ++ show k ++ " not found in : " ++ show jsobj
+  Just _  -> Right $ JSObject $ toJSObject $ filter ((/=) k . fst) $ fromJSObject jsobj
+remStr _ obj = Left $ "Cannot remove value on non-object: " ++ show obj
+
 _modifyStr :: String -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
 _modifyStr k f obj@(JSObject _) = getStr k obj >>= f >>= \v -> setStr k v obj
 _modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+
+jsonType :: JSValue -> String
+jsonType (JSString _) = "string"
+jsonType (JSObject _) = "object"
+jsonType (JSRational _ _) = "number"
+jsonType (JSBool _) = "bool"
+jsonType (JSNull) = "null"
+jsonType (JSArray _) = "array"
