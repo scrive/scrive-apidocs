@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module DB.Migrations (
     checkDBConsistency
   ) where
@@ -17,7 +18,9 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
---import Doc.Tables
+#ifdef DOCUMENTS_IN_POSTGRES
+import Doc.Tables
+#endif
 import User.Migrations
 import User.Tables
 import Stats.Tables
@@ -42,10 +45,11 @@ tablesList = [
   , tableDocStatEvents
   , tableUserStatEvents
   , tableFiles
+#ifdef DOCUMENTS_IN_POSTGRES
+  , tableDocuments
+#endif
   -- this is not ready yet
-  {-, tableDocuments
-  , tableFiles
-  , tableAuthorAttachments
+  {-, tableAuthorAttachments
   , tableSignatoryAttachments
   , tableSignatoryLinks-}
   ]

@@ -68,6 +68,7 @@ import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
 import Doc.JpegPages
+import Database.HDBC
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -78,6 +79,13 @@ newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
     deriving (Eq, Ord, Typeable, Data)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
+
+instance Convertible TimeoutTime SqlValue where
+    safeConvert tm = safeConvert (unTimeoutTime tm)
+
+instance Convertible SqlValue TimeoutTime where
+    safeConvert sv = TimeoutTime `fmap` safeConvert sv
+
 newtype SignOrder = SignOrder { unSignOrder :: Integer }
     deriving (Eq, Ord, Typeable)
 

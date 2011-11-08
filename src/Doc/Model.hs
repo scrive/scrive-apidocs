@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-orphans -fcontext-stack=50 -fno-warn-unused-do-bind #-}
 {-# LANGUAGE CPP #-}
 
 module Doc.Model
@@ -123,7 +123,7 @@ import API.Service.Model
 import DB.Classes
 --import DB.Derive
 import DB.Types
---import DB.Utils
+import DB.Utils
 import File.File
 import File.FileID
 --import User.Region
@@ -143,33 +143,184 @@ import Data.Maybe
 import Misc
 import Data.Convertible
 import Data.List
+import Doc.Tables
+import Control.Applicative
 
-data SqlField = SqlField String SqlValue
+data SqlField = SqlField String String SqlValue
 
 instance Convertible SqlValue SqlValue where
     safeConvert = return . id
 
 sqlField :: (Convertible v SqlValue) => String -> v -> SqlField
-sqlField name value = SqlField name (toSql value)
+sqlField name value = SqlField name "" (toSql value)
+
+sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
+sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
 -- here we can add encoding and better error reporting in case conversion fails
 mkInsertStatement :: String -> [SqlField] -> String
 mkInsertStatement tableName fields =
    "INSERT INTO " ++ tableName ++
    " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
-   " VALUES (" ++ concat (intersperse "," (map (const "?") fields)) ++ ")"
+   " VALUES (" ++ concat (intersperse "," (map xtype fields)) ++ ")"
    where
-     name (SqlField x _) = x
+     name (SqlField x _ _) = x
+     xtype (SqlField _ x _) = insertType x
+     insertType "" = "?"
+     insertType "timestamp" = "to_timestamp(?)"
+     insertType "base64" = "decode(?, 'base64')"
+     insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
+                           
 
 runInsertStatement :: Connection -> String -> [SqlField] -> IO Integer
 runInsertStatement conn tableName fields =
   run conn (mkInsertStatement tableName fields) (map value fields)
   where
-    value (SqlField _ v) = v
+    value (SqlField _ _ v) = v
 
 unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
 
+
+decodeRowAsDocument :: DocumentID
+                    -> BS.ByteString
+                    -> Maybe FileID
+                    -> Maybe FileID
+                    -> DocumentStatus
+                    -> Int
+                    -> Maybe DocumentProcess
+                    -> DocumentFunctionality
+                    -> MinutesTime
+                    -> MinutesTime
+                    -> Maybe Int
+                    -> Maybe TimeoutTime
+                    -> Maybe MinutesTime
+                    -> Maybe Word32
+                    -> [DocumentLogEntry]
+                    -> BS.ByteString
+                    -> [IdentificationType]
+                    -> Maybe BS.ByteString
+                    -> Maybe [[BS.ByteString]]
+                    -> Maybe Int
+                    -> Maybe CancelationReason
+                    -> DocumentSharing
+                    -> Maybe MinutesTime
+                    -> Maybe BS.ByteString
+                    -> Maybe SignatoryLinkID
+                    -> [DocumentTag]
+                    -> Maybe ServiceID
+                    -> Bool
+                    -> Region
+                    -> Either DBException Document
+decodeRowAsDocument did
+                    title
+                    file_id
+                    sealed_file_id
+                    status
+                    simple_type
+                    process
+                    functionality
+                    ctime
+                    mtime
+                    days_to_sign
+                    timeout_time
+                    invite_time
+                    invite_ip
+                    dlog
+                    invite_text
+                    allowed_id_types
+                    csv_title
+                    csv_contents
+                    csv_signatory_index
+                    cancelationreason
+                    sharing
+                    rejection_time
+                    rejection_signatory_link_id
+                    rejection_reason
+                    tags
+                    service
+                    deleted
+                    --authorattachments
+                    --signatoryattachments
+                    region = (Right $ Document { documentid = did
+                                               , documenttitle = title
+                                               , documentsignatorylinks = []
+                                               , documentfiles = maybeToList file_id
+                                               , documentsealedfiles = maybeToList sealed_file_id
+                                               , documentstatus = status
+                                               , documenttype = case (simple_type, process) of
+                                                                  (1, Just p) -> Signable p
+                                                                  (2, Just p) -> Template p
+                                                                  (3, _) -> Attachment
+                                                                  (4, _) -> AttachmentTemplate
+                                                                  (_,_) -> error "Illegal simpletype"
+                                               , documentfunctionality = functionality
+                                               , documentctime = ctime
+                                               , documentmtime = mtime
+                                               , documentdaystosign = days_to_sign
+                                               , documenttimeouttime = timeout_time
+                                               , documentinvitetime = case invite_time of
+                                                                        Nothing -> Nothing
+                                                                        Just t -> Just (SignInfo t (maybe 0 id invite_ip))
+                                               , documentlog = dlog
+                                               , documentinvitetext = invite_text
+                                               , documentallowedidtypes = allowed_id_types
+                                               , documentcsvupload = case (csv_title, csv_contents, csv_signatory_index) of
+                                                                       (Just t, Just c, Just si) -> Just (CSVUpload t c si)
+                                                                       _ -> Nothing
+                                               , documentcancelationreason = cancelationreason
+                                               , documentsharing = sharing
+                                               , documentrejectioninfo = case (rejection_time, rejection_reason, rejection_signatory_link_id) of
+                                                                           (Just t, Just r, Just sl) -> Just (t, r, sl)
+                                                                           _ -> Nothing
+                                               , documenttags = tags
+                                               , documentservice = service
+                                               , documentdeleted = deleted
+                                               , documentauthorattachments = []
+                                               , documentsignatoryattachments = []
+                                               , documentui = emptyDocumentUI
+                                               , documentregion = region
+                                               }) :: Either DBException Document
+
+selectDocumentsSQL :: String
+selectDocumentsSQL = "SELECT id" ++
+                     ",title" ++
+                     ",file_id" ++
+                     ",sealed_file_id" ++
+                     ",status" ++
+                     ",type" ++
+                     ",process" ++
+                     ",functionality" ++
+                     ",EXTRACT(EPOCH FROM ctime)" ++
+                     ",EXTRACT(EPOCH FROM mtime)" ++
+                     ",days_to_sign" ++
+                     ",EXTRACT(EPOCH FROM timeout_time)" ++
+                     ",EXTRACT(EPOCH FROM invite_time)" ++
+                     ",invite_ip" ++
+                     ",log" ++
+                     ",invite_text" ++
+                     ",allowed_id_types" ++
+                     ",csv_title" ++
+                     ",csv_contents" ++
+                     ",csv_signatory_index" ++
+                     ",cancelation_reason" ++
+                     ",sharing" ++
+                     ",EXTRACT(EPOCH FROM rejection_time)" ++
+                     ",rejection_signatory_link_id" ++
+                     ",rejection_reason" ++
+                     ",tags" ++
+                     ",service_id" ++
+                     ",deleted" ++
+                     --authorattachments
+                     --signatoryattachments
+                     --",ui" ++
+                     ",region " ++
+                     "FROM documents "
+
+fetchDocuments :: Statement -> IO [Document]
+fetchDocuments st = do
+  fetchValues st decodeRowAsDocument
+                              
 data PutDocumentUnchecked = PutDocumentUnchecked Document
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate PutDocumentUnchecked Document where
@@ -221,12 +372,12 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      , sqlField "process" process
 
                                      , sqlField "functionality" documentfunctionality
-                                     , sqlField "ctime" documentctime
-                                     , sqlField "mtime" documentmtime
+                                     , sqlFieldType "ctime" "timestamp" documentctime
+                                     , sqlFieldType "mtime" "timestamp" documentmtime
                                      , sqlField "days_to_sign" documentdaystosign
-                                     , sqlField "timeout_time" (fmap unTimeoutTime documenttimeouttime)
-                                     , sqlField "invite_time" (fmap signtime documentinvitetime)
-                                     , sqlField "invite_ipnumber" (fmap signipnumber documentinvitetime)
+                                     , sqlFieldType "timeout_time" "timestamp" (fmap unTimeoutTime documenttimeouttime)
+                                     , sqlFieldType "invite_time" "timestamp" (fmap signtime documentinvitetime)
+                                     , sqlField "invite_ip" (fmap signipnumber documentinvitetime)
                                      , sqlField "invite_text" documentinvitetext
                                      , sqlField "log" documentlog
                                      , sqlField "allowed_id_types" documentallowedidtypes
@@ -235,7 +386,7 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` documentcsvupload
                                      , sqlField "cancelation_reason" documentcancelationreason
                                      , sqlField "sharing" documentsharing
-                                     , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
+                                     , sqlFieldType "rejection_time" "timestamp" $ fst3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
                                      , sqlField "service" documentservice
@@ -375,7 +526,11 @@ data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
   dbQuery (GetDocumentByDocumentID did) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentByDocumentID"
+    st <- prepare conn $ selectDocumentsSQL ++ " WHERE id = ? AND deleted = FALSE"
+    _ <- execute st [toSql did]
+    us <- fetchDocuments st
+    oneObjectReturnedGuard us
+
 
 
 data GetDocumentStats = GetDocumentStats
@@ -496,8 +651,28 @@ instance DBUpdate MigrateDocumentSigLinkCompanies (Either String Document) where
 data NewDocument = NewDocument User (Maybe Company) BS.ByteString DocumentType MinutesTime
                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate NewDocument (Either String Document) where
-  dbUpdate (NewDocument user mcompany title documenttype ctime) = wrapDB $ \conn -> do
-    unimplemented "NewDocument"
+  dbUpdate (NewDocument user mcompany title documenttype ctime) = do
+    wrapDB $ \conn -> runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
+    did <- DocumentID <$> getUniqueID tableDocuments
+    wrapDB $ \conn -> runInsertStatement conn "documents" 
+            [ sqlField "id" did
+            , sqlField "status" Preparation
+            , sqlField "functionality" BasicFunctionality
+            , sqlField "title" title
+            , sqlField "log" "[]"
+            , sqlField "invite_text" ""
+            , sqlField "allowed_id_types" (1::Int)
+            , sqlField "type" (1::Int)
+            , sqlField "process" (1::Int)
+            , sqlField "sharing" (1::Int)
+            , sqlField "tags" "[]"
+            , sqlField "region" (1::Int)
+            , sqlField "deleted" False
+            , sqlFieldType "mtime" "timestamp" ctime
+            , sqlFieldType "ctime" "timestamp" ctime
+            ]
+    v <- dbQuery $ GetDocumentByDocumentID did
+    return $ maybe (Left "no such document") Right v
 
 data ReallyDeleteDocuments = ReallyDeleteDocuments User [(DocumentID, [User])]
                              deriving (Eq, Ord, Show, Typeable)
