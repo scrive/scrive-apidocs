@@ -10,10 +10,8 @@
  vi ett supportfritt konto för alla mindre användare. 1 användare,
  5 fria signaturer per månad och 50 dokument i lagring.</p>",,"                    <h3>Free for personal use</h3>
                     <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
-"_Bemefit1","Minska kostnaderna",,"Reduced costs"
-"_Bemefit1Body","Dokumenthantering är tidskrävande. Tid är pengar. Scrive är
- ett skräddarsytt redskap som optimerar dina processer. Spara
- 50-250kr/dokument. ","Document handling is time consuming. Time is money. Scrive could save you 50kr to 250kr per document.","Document handling is time consuming. Time is money. Scrive could save you £5 to £25 per document."
+"_Bemefit1","Nöjdare kunder",,"More satisfied customers"
+"_Bemefit1Body","Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers´ customers. Scrive decrease the administrative burden of all parties. "
 "_Bemefit2","Snabbare avslut",,"Quick completion"
 "_Bemefit2Body","Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
  din omsättning.",,"Less time on admin means more time to grow your business.  Professional tools to increase your profit."
@@ -183,7 +181,7 @@
 
     <h4>Offert</h4>
                        <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
-                                                        </td>","<td>                                                                 <h4>35 kr/signature</h4>                                     <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>32.50 kr/signature</h4>                                                   <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>30 kr/signature</h4>                                                <a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>                                                                 <h4>Negotiable</h4>                                                                 <a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>
+                                                        </td>","<td>                                                                 <h4>35 kr/signature</h4>                                     <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>32.50 kr/signature</h4>                                                   <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>30 kr/signature</h4>                                                <a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>                                                                 <h4>Tender</h4>                                                                 <a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>
         <h4>£3.50/signature</h4>
                                     <a href=""$linkpriceplan$"">Detailed
  price plan</a>
@@ -200,7 +198,7 @@
 
  </td>
   <td>
-          <h4>Negotiable</h4>
+          <h4>Tender</h4>
                             <a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>"
 "_PriceTableRow1","<td>5 användare</td>
@@ -209,7 +207,7 @@
                                                   <td>Offert</td>",,"<td>5 users</td>
                 <td>15 users</td>
                                  <td>50 users</td>
-                                                  <td>Negotiable</td>"
+                                                  <td>Tender</td>"
 "_PriceTableRow2","<td>500 signaturer/år</td>
                       <td>1000 signaturer/år</td>
                                              <td>2000 signaturer/år</td>
@@ -222,7 +220,7 @@
 "_PriceTableRow3","<td>500 dok laging</td>
                    <td>Obegränsad lagring</td>
                                           <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>",,"<td>Storage for 500 documents</td>                                                         <td>Unlimited storage</td>                                                         <td>Unlimited storage</td>                                                         <td>Negotiable</td>"
+                                                        <td>Offert</td>",,"<td>Storage for 500 documents</td>                                                         <td>Unlimited storage</td>                                                         <td>Unlimited storage</td>                                                         <td>Tender</td>"
 "_PriceTableRow4","<td>Basfunktioner</td>
                   <td>Basfunktioner</td>
                                     <td>Advancerade funktioner</td>
@@ -2283,7 +2281,7 @@ use free of charge."
  kr/signatur</p>                                </th>
                          <th>
      <h3>Enterprise</h3>                                    <p>Offert</p></th>
-                                ","<th><h2>Price plan</h2>                                </th>                                <th>                                     <h3>Small</h3>                                     <p>35kr/signature</p>                                </th>                                 <th>                                     <h3>Team</h3>                                     <p>32.5kr/signature</p>                                </th>                                 <th>                                     <h3>Business</h3>                                     <p>30 kr/signature</p>                                </th>                                 <th>                                     <h3>Enterprise</h3>                                     <p>Negotiable</p></th>                                ","<th><h2>Price plan</h2>                                </th>
+                                ","<th><h2>Price plan</h2>                                </th>                                <th>                                     <h3>Small</h3>                                     <p>35kr/signature</p>                                </th>                                 <th>                                     <h3>Team</h3>                                     <p>32.5kr/signature</p>                                </th>                                 <th>                                     <h3>Business</h3>                                     <p>30 kr/signature</p>                                </th>                                 <th>                                     <h3>Enterprise</h3>                                     <p>Tender</p></th>                                ","<th><h2>Price plan</h2>                                </th>
                                <th>
            <h3>Small</h3>
  <p>£3.50/signature</p>                                </th>
@@ -2295,7 +2293,7 @@ use free of charge."
      <p>£3.00/signature</p>                                </th>
                                 <th>
             <h3>Enterprise</h3>
-       <p>Negotiable</p></th>                                "
+       <p>Tender</p></th>                                "
 "_priceplanPageTableHighlightedColumn","                            <li class=""top"">
                 <h3>Business</h3>
      <p>30 kr/signatur</p>                            </li>
@@ -2324,7 +2322,7 @@ use free of charge."
      <p>£3.00/signature</p>                            </li>
                             <li>50</li>
        <li class=""odd"">2 000</li>
- <li>Unlimited</li>                            <li class=""odd"">Negotiable</li>
+ <li>Unlimited</li>                            <li class=""odd"">Tender</li>
                             <li>2 x 1h</li>
            <li class=""odd"">4h</li>
   <li>Phone</li>                            <li class=""odd"">✓</li>
@@ -2350,7 +2348,7 @@ use free of charge."
                                 <td>Offert</td>",,"                                <td>Number of users</td>
                             <td>5</td>
           <td>15</td>                                <td>50</td>
-                                <td>Negotiable</td>"
+                                <td>Tender</td>"
 "_priceplanPageTableRow10","                                <td>E-signering</td>
                         <td>✓</td>
       <td>✓</td>                                <td>✓</td>
@@ -2517,21 +2515,21 @@ use free of charge."
                                 <td>Uppgradera</td>
                        <td>Uppgradera</td>
               <td>Offert</td>
- <td>Offert</td>",,"                                <td>Trustweaver premium storage</td>                                 <td>Upgrade</td>                                 <td>Upgrade</td>                                 <td>Negotiable</td>                                <td>Negotiable</td>"
+ <td>Offert</td>",,"                                <td>Trustweaver premium storage</td>                                 <td>Upgrade</td>                                 <td>Upgrade</td>                                 <td>Tender</td>                                <td>Tender</td>"
 "_priceplanPageTableRow5","                                <td>Uppstartsutbildning</td>
                                 <td>0.5 h</td>
                   <td>1 h</td>
   <td>2 x 1 h</td>                                <td>Offert</td>",,"                                <td>Startup training</td>
                              <td>0.5 h</td>
                <td>1 h</td>                                <td>2
- x 1 h</td>                                <td>Negotiable</td>"
+ x 1 h</td>                                <td>Tender</td>"
 "_priceplanPageTableRow6","                                <td>Hjälp med konfiguration</td>
                                 <td>1 h</td>
                 <td>2 h</td>                                <td>4
  h</td>                                <td>Offert</td>",,"                                <td>Configuration help</td>
                                <td>1 h</td>
                <td>2 h</td>                                <td>4
- h</td>                                <td>Negotiable</td>"
+ h</td>                                <td>Tender</td>"
 "_priceplanPageTableRow7","                                <td>Support</td>
                     <td>E-post</td>
        <td>Telefon</td>                                <td>Telefon</td>
@@ -3306,15 +3304,15 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_signInEnglishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
 "_signInSwedish","Signera på svenska",,"Sign in Swedish"
 "_signInSwedishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på svenska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på svenska.</p><p>Personnummer och e-legitimation är alternativ som tillkommer då de även är möjliga i Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in Swedish.</p><p>This means that all emails sent to the parts about this document will be written in Swedish.</p><p>Swedish options for using social security numbers and e-legitimation will be added.</p>"
-"_benefitsTitle","Varför Scrive?",,"Why Scrive?"
-"_productDescriptionTitle","Hur fungerar Scrive?",,"How to Scrive?"
+"_benefitsTitle","Fördelar",,"Benefits"
+"_productDescriptionTitle","Produkter",,"Products"
 "_Product1","Scrive by Cloud",,"Scrive by Cloud"
-"_Product1Body","Skicka inbjudan att signera ditt dokument från tjänsten online. Logga in och följ en process i tre enkla steg. <a href='#' class='campaign-play-video'>Se demo</a>",,"Send invite to sign your document from the online service. Log in and follow a simple three step process. <a href='#' class='campaign-play-video'>See demo</a>"
+"_Product1Body","Skicka inbjudan att signera ditt dokument från tjänsten online. Logga in och följ en process i tre enkla steg. <BR/> <a href='#' class='campaign-play-video'>Se demo</a>",,"Send invite to sign your document from the online service. Log in and follow a simple three step process. <BR/> <a href='#' class='campaign-play-video'>See demo</a>"
 "_Product2","Scrive by Mail",,"Scrive by Mail"
 "_Product2Body","Skicka inbjudan att signera ditt dokument direkt från din mailklient. Inga installationer, inget krångel. Det kan inte bli enklare.",,"Send invite to sign your document directly from your mail client. No installations, no hassle. Cant be simpler."
 "_Product3","Scrive API",,"Scrive API"
 "_Product3Body","Vill ni integrera tjänsten i era arbetsflöden? Vi tillhandahåller ett API med full integration av vår tjänst. Ändra färg och form efter vad som passar er bäst.",,"Do you want to integrate the service in your workflows? We provide an API with full integration of our service. Change color and forms after what fits you best."
-"_Product4","När passar Scrive?",,"When to Scrive?"
+"_Product4","Alla typer av dokument",,"All types of documents"
 "_Product4Body","Scrive fungerar för alla dina processer och passar för alla typer av dokument. Skicka till exempel avtal, offerter eller orderbekräftelser med Scrive.",,"Scrive works for all types of processes and fits all types of documents. For example you can send contracts, tenders or order confirmations through Scrive."
 "_legalModalTitle","Artikel med John Kihlman, doktor i avtalsrätt",,""
 "_legalTitleFrontPage","Juridiskt bindande såklart",,"Legally binding of course"
