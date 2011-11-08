@@ -16,7 +16,7 @@ module Routing ( hGet
                , hGetAjax
                , https
                , RedirectOrContent, allowHttp
-               , toK0, toK1, toK2, toK3, toK4, toK5
+               , toK0, toK1, toK2, toK3, toK4, toK5, toK6
                , ToResp, toResp
                  )where
 
@@ -166,3 +166,5 @@ toK4 = id
 toK5 :: (a -> b -> c -> d -> e -> Kontra f) -> (a -> b -> c -> d -> e -> Kontra f)
 toK5 = id
 
+toK6 :: (a -> b -> c -> d -> e -> f -> Kontra g) -> (a -> b -> c -> d -> e -> f -> Kontra g)
+toK6 = id
