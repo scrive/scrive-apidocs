@@ -491,10 +491,62 @@
         }
     });
 
+    window.Loading = Backbone.Model.extend({
+        defaults: {
+          loading: true,
+          colcount: 0
+        },
+        initialize: function(args) {
+          this.set({ colcount: args.schema.size() });
+        },
+        isLoading: function() {
+            return this.get("loading");
+        },
+        start: function() {
+            this.set({ loading: true });
+        },
+        stop: function() {
+            this.set({ loading: false });
+        },
+        colCount: function() {
+            return this.get("colcount");
+        }
+    });
+
+    window.LoadingView = Backbone.View.extend({
+        model: Loading,
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.model.view = this;
+            this.colcount = args.colcount;
+            this.render();
+        },
+        render: function() {
+          if (this.model.isLoading() &&
+                this.loader == undefined) {
+            var cell = $("<td>");
+            cell.attr("style", "text-align:center;");
+            cell.attr("colspan", this.colcount);
+            cell.append($("<img src='/theme/images/wait30trans.gif' style='margin:30px'>"));
+
+            var row = $("<tr></tr>");
+            row.append(cell);
+
+            this.loader = row;
+            this.el.empty();
+            this.el.prepend(this.loader);
+          } else if (!this.model.isLoading() &&
+                       this.loader != undefined) {
+            this.loader.remove();
+            this.loader = undefined;
+          }
+        }
+    });
+
     var ListView = Backbone.View.extend({
         events: {
-            "click .selectall": "toggleSelectAll",
-            "click .add": "addNew"
+            "click .selectall": "toggleSelectAll"
         },
         initialize: function(args) {
             _.bindAll(this, 'render', 'makeElementsViews', 'toggleSelectAll');
@@ -502,12 +554,19 @@
             this.model.bind('change', this.render);
             this.model.view = this;
             this.schema = args.schema;
+            this.loading = args.loading;
             this.headerExtras = args.headerExtras;
             this.bottomExtras = args.bottomExtras;
+            this.makeElementsViews([]);
         },
         makeElementsViews: function(ms) {
             this.el.empty();
             this.prerender();
+            new LoadingView({
+                model: this.loading,
+                colcount: this.schema.size(),
+                el: this.tbody
+            });
             for (var i = 0; i < ms.length; i++) {
                 new ListObjectView({
                     model: ms.at(i),
@@ -636,27 +695,16 @@
             } else {
                 this.model.selectNone();
             }
-        },
-        addNew: function() {
-            console.log("addNew");
-            var obj = {};//new ListObject();
-            var fields = {};
-            var l = this.model.schema.size();
-            for (var i = 0; i < l; i++) {
-                var cell = this.model.schema.cell(i);
-                fields[cell.field()] = "";
-            }
-            obj.fields = fields;
-            this.model.add(new ListObject(obj));
-            this.model.trigger('render');
-            console.log(this);
         }
     });
 
     window.KontraList = {
         init: function(args) {
-            _.bindAll(this, 'recall');
+            _.bindAll(this, 'recall', 'beforeFetch', 'afterFetch');
             this.schema = args.schema;
+            this.loading = new Loading({
+                schema: this.schema
+            });
             if (args.name != undefined) {
                 this.schema.setSessionStorageNamespace(args.name);
             }
@@ -666,6 +714,7 @@
             this.view = new ListView({
                 model: this.model,
                 schema: args.schema,
+                loading: this.loading,
                 el: $("<div/>"),
                 headerExtras: args.headerExtras,
                 bottomExtras: args.bottomExtras
@@ -674,10 +723,19 @@
             this.recall();
             return this;
         },
+        beforeFetch: function() {
+            this.loading.start();
+        },
+        afterFetch: function() {
+            this.loading.stop();
+        },
         recall: function() {
+            this.beforeFetch();
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
-                               cache: false });
+                               cache: false,
+                               success: this.afterFetch
+            });
         }
     };
 })(window);
