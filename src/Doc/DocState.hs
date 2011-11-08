@@ -121,6 +121,8 @@ import Control.Applicative
 import Doc.DocInfo
 import Data.List
 import File.FileID
+import Doc.DocStateCommon
+
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
@@ -260,17 +262,6 @@ getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = queryDocs $ \documents ->
   IxSet.toList $ (documents @= Pending) @< TimeoutTime now
 
-{- |
-    Determines whether a new document should have either Advanced or Basic
-    functionality according to the document's type and the user's preferences.
--}
-newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
-newDocumentFunctionality documenttype user =
-  case (getValueForProcess documenttype processbasicavailable, 
-        preferreddesignmode $ usersettings user) of
-    (Just True, Nothing) -> BasicFunctionality
-    (Just True, Just BasicMode) -> BasicFunctionality
-    _ -> AdvancedFunctionality
 
 {- |
     Creates and saves a new document that's authored by the given user,
@@ -319,44 +310,6 @@ setDocumentLocale did locale time =
   modifySignableOrTemplate did $ guardStatus "set locale for" Preparation $ \document ->
     Right $ document { documentregion = getRegion locale
                      , documentmtime = time}
-
-{- |
-    A blank document containing default values that need to be set before
-    saving.
--}
-blankDocument :: Document
-blankDocument =
-          Document
-          { documentid                   = DocumentID 0
-          , documenttitle                = BS.empty
-          , documentsignatorylinks       = []
-          , documentfiles                = []
-          , documentstatus               = Preparation
-          , documenttype                 = Signable Contract
-          , documentfunctionality        = BasicFunctionality
-          , documentctime                = fromSeconds 0 
-          , documentmtime                = fromSeconds 0
-          , documentdaystosign           = Nothing
-          , documenttimeouttime          = Nothing
-          , documentlog                  = []
-          , documentinvitetext           = BS.empty
-          , documentsealedfiles          = []
-          -- , documenttrustweaverreference = Nothing
-          , documentallowedidtypes       = []
-          , documentcsvupload            = Nothing
-          , documentcancelationreason    = Nothing
-          , documentinvitetime           = Nothing
-          , documentsharing              = Private
-          , documentrejectioninfo        = Nothing
-          , documenttags                 = []
-          , documentui                   = emptyDocumentUI
-          , documentservice              = Nothing
-          , documentauthorattachments    = []
-          , documentdeleted              = False
-          , documentsignatoryattachments = []
-          -- , documentattachments          = []
-          , documentregion               = defaultValue
-          }
 
 
 {- |
@@ -1331,24 +1284,10 @@ changeSignatoryEmailWhenUndelivered did slid mnewuser email = modifySignable did
 signLinkFromDetails :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetails details roles = do
           sg <- ask
-          linkid <- getUnique sg SignatoryLinkID
+          linkid <- getUnique64 sg SignatoryLinkID
           magichash <- getRandom
-          return $ SignatoryLink
-                     { signatorylinkid = linkid
-                     , signatorydetails = details
-                     , signatorymagichash = magichash
-                     , maybesignatory = Nothing
-                     , maybesupervisor = Nothing  -- This field is now deprecated should use maybecompany instead
-                     , maybecompany = Nothing
-                     , maybesigninfo  = Nothing
-                     , maybeseeninfo  = Nothing
-                     , maybereadinvite = Nothing
-                     , invitationdeliverystatus = Unknown
-                     , signatorysignatureinfo = Nothing
-                     , signatoryroles = roles
-                     , signatorylinkdeleted = False
-                     , signatorylinkreallydeleted = False
-                     }
+          return $ signLinkFromDetails' details roles linkid magichash
+
 
 signLinkFromDetailsForTest :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetailsForTest = signLinkFromDetails
@@ -1359,7 +1298,7 @@ signLinkFromDetailsForTest = signLinkFromDetails
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
 getUniqueSignatoryLinkID = do
   sg <- ask
-  linkid <- getUnique sg SignatoryLinkID
+  linkid <- getUnique64 sg SignatoryLinkID
   return linkid
 
 {- |
