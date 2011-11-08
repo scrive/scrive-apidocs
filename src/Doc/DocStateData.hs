@@ -75,7 +75,7 @@ newtype Author = Author { unAuthor :: UserID }
 
 newtype DocumentID = DocumentID { unDocumentID :: Int64 }
     deriving (Eq, Ord, Typeable, Data) -- Data needed by PayEx modules
-newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
+newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int64 }
     deriving (Eq, Ord, Typeable, Data)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
@@ -135,13 +135,17 @@ data FieldDefinition = FieldDefinition
     }
     deriving (Eq, Ord, Typeable)
 
-data FieldType =
-    FirstNameFT | LastNameFT | CompanyFT | PersonalNumberFT
-  | CompanyNumberFT | EmailFT | CustomFT BS.ByteString Bool -- label filledbyauthor
+data FieldType = FirstNameFT
+               | LastNameFT
+               | CompanyFT
+               | PersonalNumberFT
+               | CompanyNumberFT
+               | EmailFT
+               | CustomFT BS.ByteString Bool -- label filledbyauthor
     deriving (Eq, Ord, Data, Typeable)
 
-data SignatoryField = SignatoryField {
-    sfType       :: FieldType
+data SignatoryField = SignatoryField
+  { sfType       :: FieldType
   , sfValue      :: BS.ByteString
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Data, Typeable)
