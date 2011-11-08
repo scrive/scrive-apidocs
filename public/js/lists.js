@@ -516,31 +516,51 @@
     window.LoadingView = Backbone.View.extend({
         model: Loading,
         initialize: function(args) {
-            _.bindAll(this, 'render');
+            _.bindAll(this, 'render', 'makeLoader', 'removeLoader');
             this.model.bind('change', this.render);
             this.model.view = this;
             this.colcount = args.colcount;
             this.render();
         },
         render: function() {
-          if (this.model.isLoading() &&
-                this.loader == undefined) {
-            var cell = $("<td>");
-            cell.attr("style", "text-align:center;");
-            cell.attr("colspan", this.colcount);
-            cell.append($("<img src='/theme/images/wait30trans.gif' style='margin:30px'>"));
+          if (this.model.isLoading() && !this.isLoader()) {
+            var img = $("<img src='/theme/images/wait30trans.gif' style='margin:30px'>");
+            var overlay = $("<div>");
+            overlay.append(img);
 
-            var row = $("<tr></tr>");
-            row.append(cell);
+            //some css stuff that centres the load icon in the overlay
+            //on top of the background this.el
+            overlay.css("position", "absolute");
+            overlay.css("margin", "auto");
+            overlay.css("height", "90px");
+            overlay.css("top", "0px");
+            overlay.css("bottom", "0px");
+            overlay.css("left", "0px");
+            overlay.css("right", "0px");
+            overlay.css("text-align", "center");
+            overlay.css("display", "none");
 
-            this.loader = row;
-            this.el.empty();
-            this.el.prepend(this.loader);
-          } else if (!this.model.isLoading() &&
-                       this.loader != undefined) {
-            this.loader.remove();
-            this.loader = undefined;
+            this.el.css("position", "relative");
+            this.makeLoader(overlay);
+
+            this.loader.fadeIn(2000);
+            this.el.css("opacity", 0.5);
+            //this.el.css("opacity", "0.5");
+          } else if (!this.model.isLoading() && this.isLoader()) {
+            this.removeLoader();
+            this.el.fadeTo(500, 1.0);
           }
+        },
+        isLoader: function() {
+          return this.loader != undefined;
+        },
+        makeLoader: function(elem) {
+          this.loader = elem;
+          this.el.prepend(this.loader);
+        },
+        removeLoader: function() {
+          this.loader.remove();
+          this.loader = undefined;
         }
     });
 
@@ -565,7 +585,7 @@
             new LoadingView({
                 model: this.loading,
                 colcount: this.schema.size(),
-                el: this.tbody
+                el: this.table
             });
             for (var i = 0; i < ms.length; i++) {
                 new ListObjectView({
@@ -582,7 +602,7 @@
             this.pretableboxright = $("<div class='col float-right'/>");
             this.pretablebox = $("<div class='tab-content'/>");
             this.tablebox = $("<div class='tab-table'/>");
-            this.table = $("<table/>");
+            this.table = $("<table />");
             this.theader = this.prerenderheader();
             this.tbody = $("<tbody>");
             this.tableboxfooter = $("<div/>");
