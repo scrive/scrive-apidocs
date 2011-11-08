@@ -1956,15 +1956,14 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."
 "_name","Namn",,"Name"
 "_nameFieldName","namn",,"name"
-"_newUserMailContentBodyFirst","“Jag heter Lukas Duczko och är VD på Scrive. Tack för att 
-du skapat ett konto hos oss. När du aktiverat ditt konto får du 
-100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I´m the CEO of Scrive. 
-Thank you for creating an account with us. When you have 
-activated your account you will get 100 signatures that you can 
+"_newUserMailContentBodyFirst","Jag heter Lukas Duczko och är VD på Scrive. Tack för att
+du skapat ett konto hos oss. När du aktiverat ditt konto får du
+100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I´m the CEO of Scrive.
+Thank you for creating an account with us. When you have
+activated your account you will get 100 signatures that you can
 use free of charge."
-"_newUserMailContentBodySecond","",,"We hope you will be happy with Scrive. Please don't hesitate to give us feedback or just a hello. Your opinions are valuable."
-"_newUserMailContentBodyThird","Du aktiverar ditt konto genom att klicka på länken nedan. Länken
- är  giltig i 12 timmar.<br/>",,"Click to activate, the link is valid for 12 hours:<br/>"
+"_newUserMailContentBodySecond","Du aktiverar ditt konto genom att klicka på länken nedan. Länken
+ är  giltig i 12 timmar: ",,"Click to activate, the link is valid for 12 hours: "
 "_newUserMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_newUserMailTitle","Nytt konto",,"New account"
 "_niceEmail","E-post",,"The person's email"
@@ -2615,7 +2614,7 @@ use free of charge."
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
-"_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and 
+"_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and
 simply better."
 "_queryColumnBody2","100 fria signaturer. Ingen inlåsning, inga konstigheter.",,"100 free signatures. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
@@ -3322,3 +3321,6 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_legalModalTitle","Artikel med John Kihlman, doktor i avtalsrätt",,""
 "_legalTitleFrontPage","Juridiskt bindande såklart",,"Legally binding of course"
 "_legalBodyFrontPage","Orolig för juridiken? Inte experterna. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"Worried about the legality? The experts are not."
+"_modalAddCompanyAccountTitle","Nytt Konto",,"New Account"
+"_modalAddCompanyAccountInviteButtonText","Bjud in",,"Invite"
+"_newCompanyAccountButtonText","Nytt Konto",,"New Account"

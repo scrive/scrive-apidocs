@@ -272,12 +272,12 @@ companyAccountsSearchFunc s user = userMatch user s -- split s so we support spa
                       || match s' (getEmail u)
 
 companyAccountsSortFunc :: SortingFunction User
-companyAccountsSortFunc "fstname" = viewComparing getFirstName
-companyAccountsSortFunc "fstnameREV" = viewComparingRev getFirstName
-companyAccountsSortFunc "sndname" = viewComparing getLastName
-companyAccountsSortFunc "sndnameREV" = viewComparingRev getLastName
-companyAccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
-companyAccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
+companyAccountsSortFunc "firstname" = viewComparing getFirstName
+companyAccountsSortFunc "firstnameREV" = viewComparingRev getFirstName
+companyAccountsSortFunc "lastname" = viewComparing getLastName
+companyAccountsSortFunc "lastnameREV" = viewComparingRev getLastName
+companyAccountsSortFunc "position" = viewComparing $ usercompanyposition . userinfo
+companyAccountsSortFunc "positionREV" = viewComparingRev $ usercompanyposition . userinfo
 companyAccountsSortFunc "phone" = viewComparing $  userphone . userinfo
 companyAccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
 companyAccountsSortFunc "email" = viewComparing getEmail

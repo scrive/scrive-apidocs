@@ -185,6 +185,7 @@ embeddedErrorPage=
 $doctype()$
 <html>
 <head>
+$standardHeaderContents()$
 <script type="text/javascript" src="/js/postmessage.js"></script>
 <script>
 function propagateError() {
