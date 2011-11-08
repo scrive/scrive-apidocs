@@ -530,8 +530,13 @@
 
             if (this.schema.optionsAvaible())
                 this.prepareOptions();
-            if (this.headerExtras != undefined)
-                this.pretableboxleft.append(this.headerExtras);
+            if (this.headerExtras != undefined) {
+                if (typeof(this.headerExtras) == "function") {
+                    this.pretableboxleft.append(this.headerExtras());
+                } else {
+                    this.pretableboxleft.append(this.headerExtras);
+                }
+            }
             if (!this.schema.filtering().disabled())
             {   var searchBox = $("<div class='searchBox float-right'/>");
                 new FilteringView({model: this.schema.filtering(), el: searchBox});
