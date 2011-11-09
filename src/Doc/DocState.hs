@@ -46,7 +46,6 @@ module Doc.DocState
     , TimeoutDocument(..)
     , UpdateDocumentSimple(..)
     , AttachCSVUpload(..)
-    , GetDocumentsByDocumentID(..)
     , AddDocumentAttachment(..)
     , RemoveDocumentAttachment(..)
     , CloseDocument(..)
@@ -591,19 +590,6 @@ attachCSVUpload documentid csvupload =
           (Left s, _) -> return $ Left s
           (Right _, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use attachCSVUpload"
-
-{- |
-    A bulk version of getDocumentsByDocumentID, this will get a list of
-    documents corresponding to the given list of document ids.  This would return documents
-    where documentdeleted = True.  If one of the documents doesn't exist then this returns
-    a Left.
--}
-getDocumentsByDocumentID :: [DocumentID] -> Query Documents (Either String [Document])
-getDocumentsByDocumentID docids = queryDocs $ \documents ->
-  let relevantdocs = documents @+ docids in
-  if (length docids == size relevantdocs)
-    then Right . toList $ relevantdocs
-    else Left "documents don't exist for all the given ids"
 
 addDocumentAttachment :: DocumentID -> FileID -> Update Documents (Either String Document)
 addDocumentAttachment docid fileid = 
@@ -1673,7 +1659,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocumentSimple
                         , 'attachCSVUpload
-                        , 'getDocumentsByDocumentID
                         , 'addDocumentAttachment
                         , 'removeDocumentAttachment                          
                         , 'updateSigAttachments
