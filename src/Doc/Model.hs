@@ -180,7 +180,7 @@ mkInsertStatement tableName fields =
      insertType "timestamp" = "to_timestamp(?)"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
-                           
+
 
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields = do
@@ -202,7 +202,7 @@ mkUpdateStatement tableName fields =
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkUpdateStatement: invalid insert type " ++ ytype
      one field = name field ++ "=" ++ xtype field
-                           
+
 
 runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runUpdateStatement tableName fields whereClause whereValues = do
@@ -213,7 +213,7 @@ runUpdateStatement tableName fields whereClause whereValues = do
 
 
 getOneDocumentAffected :: String -> Integer -> DocumentID -> DB (Either String Document)
-getOneDocumentAffected text r did = 
+getOneDocumentAffected text r did =
   case r of
     0 -> do
       return (Left (text ++ " did not affect any rows"))
@@ -247,11 +247,75 @@ unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
 
 
+checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
+checkEqualBy name func obj1 obj2
+  | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
+  | otherwise              = Nothing
+
+assertEqualDocuments :: (Monad m) => Document -> Document -> m ()
+assertEqualDocuments d1 d2 | null inequalities = return ()
+                           | otherwise = error message
+  where
+    message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
+    showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
+    sl1 = documentsignatorylinks d1
+    sl2 = documentsignatorylinks d2
+    checkSigLink s1 s2 = map (\f -> f s1 s2)
+                         [ checkEqualBy "signatorylinkid" signatorylinkid
+                         , checkEqualBy "signatorydetails" signatorydetails
+                         , checkEqualBy "signatorymagichash" signatorymagichash
+                         , checkEqualBy "maybesignatory" maybesignatory
+                         , checkEqualBy "maybesupervisor" maybesupervisor
+                         , checkEqualBy "maybecompany" maybecompany
+                         , checkEqualBy "maybesigninfo" maybesigninfo
+                         , checkEqualBy "maybeseeninfo" maybeseeninfo
+                         , checkEqualBy "maybereadinvite" maybereadinvite
+                         , checkEqualBy "invitationdeliverystatus" invitationdeliverystatus
+                         , checkEqualBy "signatorysignatureinfo" signatorysignatureinfo
+                         , checkEqualBy "signatoryroles" (sort . signatoryroles)
+                         , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
+                         , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
+                         ]
+
+    inequalities = catMaybes $ map (\f -> f d1 d2)
+                   [ checkEqualBy "documentid" documentid
+                   , checkEqualBy "documenttitle" documenttitle
+                   , checkEqualBy "documentfiles" documentfiles
+                   , checkEqualBy "documentsealedfiles" documentsealedfiles
+                   , checkEqualBy "documentstatus" documentstatus
+                   , checkEqualBy "documenttype" documenttype
+                   , checkEqualBy "documentfunctionality" documentfunctionality
+                   , checkEqualBy "documentctime" documentctime
+                   , checkEqualBy "documentmtime" documentmtime
+                   , checkEqualBy "documentdaystosign" documentdaystosign
+                   , checkEqualBy "documenttimeouttime" documenttimeouttime
+                   , checkEqualBy "documentinvitetime" documentinvitetime
+                   , checkEqualBy "documentlog" documentlog
+                   , checkEqualBy "documentinvitetext" documentinvitetext
+                   , checkEqualBy "documentallowedidtypes" documentallowedidtypes
+                   , checkEqualBy "documentcsvupload" documentcsvupload
+                   , checkEqualBy "documentcancelationreason" documentcancelationreason
+                   , checkEqualBy "documentsharing" documentsharing
+                   , checkEqualBy "documentrejectioninfo" documentrejectioninfo
+                   , checkEqualBy "documenttags" documenttags
+                   , checkEqualBy "documentservice" documentservice
+                   , checkEqualBy "documentdeleted" documentdeleted
+                   , checkEqualBy "documentauthorattachments" documentauthorattachments
+                   , checkEqualBy "documentsignatoryattachments" documentsignatoryattachments
+                   , checkEqualBy "documentui" documentui
+                   , checkEqualBy "documentregion" documentregion
+                   , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
+                   ] ++
+                   concat (zipWith checkSigLink sl1 sl2)
+
+
+
 decodeRowAsDocument :: DocumentID
                     -> BS.ByteString
                     -> Maybe FileID
                     -> Maybe FileID
                     -> DocumentStatus
+                    -> Maybe String
                     -> Int
                     -> Maybe DocumentProcess
                     -> DocumentFunctionality
@@ -282,6 +346,7 @@ decodeRowAsDocument did
                     file_id
                     sealed_file_id
                     status
+                    error_text
                     simple_type
                     process
                     functionality
@@ -312,7 +377,10 @@ decodeRowAsDocument did
                                                , documentsignatorylinks = []
                                                , documentfiles = maybeToList file_id
                                                , documentsealedfiles = maybeToList sealed_file_id
-                                               , documentstatus = status
+                                               , documentstatus = case (status, error_text) of
+                                                                    (DocumentError{}, Just text) -> DocumentError text
+                                                                    (DocumentError{}, Nothing) -> DocumentError "document error"
+                                                                    _ -> status
                                                , documenttype = case (simple_type, process) of
                                                                   (1, Just p) -> Signable p
                                                                   (2, Just p) -> Template p
@@ -353,6 +421,7 @@ selectDocumentsSQL = "SELECT id" ++
                      ",file_id" ++
                      ",sealed_file_id" ++
                      ",status" ++
+                     ",error_text" ++
                      ",type" ++
                      ",process" ++
                      ",functionality" ++
@@ -463,22 +532,22 @@ decodeRowAsSignatoryLink slid
                          really_deleted =
     (return $ SignatoryLink
     { signatorylinkid = slid
-    , signatorydetails = SignatoryDetails 
+    , signatorydetails = SignatoryDetails
                          { signatorysignorder = sign_order
                          , signatoryfields = fields
                          }
-    , signatorymagichash = token       
-    , maybesignatory     = user_id        
-    , maybesupervisor    = Nothing        
-    , maybecompany       = company_id        
+    , signatorymagichash = token
+    , maybesignatory     = user_id
+    , maybesupervisor    = Nothing
+    , maybecompany       = company_id
     , maybesigninfo      = case (sign_time, sign_ip) of
                              (Just st, Just sip) -> Just (SignInfo st sip)
                              _ -> Nothing
     , maybeseeninfo      = case (seen_time, seen_ip) of
                              (Just st, Just sip) -> Just (SignInfo st sip)
-                             _ -> Nothing        
-    , maybereadinvite    = read_invitation        
-    , invitationdeliverystatus = invitation_delivery_status  
+                             _ -> Nothing
+    , maybereadinvite    = read_invitation
+    , invitationdeliverystatus = invitation_delivery_status
     , signatorysignatureinfo = do -- Maybe Monad
         signinfo_text' <- signinfo_text
         signinfo_signature' <- signinfo_signature
@@ -495,17 +564,17 @@ decodeRowAsSignatoryLink slid
                                , signaturelstnameverified = signinfo_last_name_verified'
                                , signaturepersnumverified = signinfo_personal_number_verified'
                                }
-    
-    , signatoryroles     = roles        
-    , signatorylinkdeleted  = deleted     
-    , signatorylinkreallydeleted = really_deleted 
+
+    , signatoryroles     = roles
+    , signatorylinkdeleted  = deleted
+    , signatorylinkreallydeleted = really_deleted
     }) :: Either DBException SignatoryLink
 
 fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
 fetchSignatoryLinks st = do
   fetchValues st decodeRowAsSignatoryLink
 
-                              
+
 data PutDocumentUnchecked = PutDocumentUnchecked Document
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate PutDocumentUnchecked Document where
@@ -581,9 +650,37 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      ]
     when (rowsInserted /= 1) $
          error "PutDocumentUnchecked did not manage to insert a row"
+
+    _ <- flip mapM documentsignatorylinks $ \link -> do
+             r1 <- runInsertStatement "signatory_links"
+                      [ sqlField "id" $ signatorylinkid link
+                      , sqlField "document_id" documentid
+                      , sqlField "user_id" $ maybesignatory link
+                      , sqlField "roles" $ signatoryroles link
+                      , sqlField "company_id" $ maybecompany link
+                      , sqlField "token" $ signatorymagichash link
+                      , sqlField "fields" $ signatoryfields $ signatorydetails link
+                      , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
+                      , sqlFieldType "sign_time" "timestamp" $ signtime `fmap` maybesigninfo link
+                      , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
+                      , sqlFieldType "seen_time" "timestamp" $ signtime `fmap` maybeseeninfo link
+                      , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+                      , sqlField "read_invitation" $ maybereadinvite link
+                      , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
+                      , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+                      , sqlField "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+                      , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+                      , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+                      , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+                      , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+                      , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+                      , sqlField "deleted" $ signatorylinkdeleted link
+                      , sqlField "really_deleted" $ signatorylinkreallydeleted link
+                      ]
+             when (r1 /= 1) $
+                  error "PutDocumentUnchecked:Inert signatory_links did not manage to insert a row"
     Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
-    when (document /= newdocument) $
-         error "GetDocumentByDocumentID . PutDocumentUnchecked is not identity"
+    assertEqualDocuments document newdocument
     return newdocument
 
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
@@ -618,14 +715,25 @@ instance DBUpdate AttachCSVUpload (Either String Document) where
 data AttachFile = AttachFile DocumentID FileID MinutesTime
                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachFile (Either String Document) where
-  dbUpdate (AttachFile docid fid time) = wrapDB $ \conn -> do
-    unimplemented "AttachFile"
+  dbUpdate (AttachFile did fid time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "file_id" $ fid
+         ]
+         "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
+    getOneDocumentAffected "AttachFile" r did
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachSealedFile (Either String Document) where
-  dbUpdate (AttachSealedFile docid fid) = wrapDB $ \conn -> do
-    unimplemented "AttachSealedFile"
+  dbUpdate (AttachSealedFile did fid) = do
+    r <- runUpdateStatement "documents"
+         [ -- sqlFieldType "mtime" "timestamp" $ time
+         --,
+           sqlField "sealed_file_id" $ fid
+         ]
+         "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
+    getOneDocumentAffected "AttachSealedFile" r did
 
 data AuthorSendDocument = AuthorSendDocument DocumentID MinutesTime Word32 (Maybe SignatureInfo)
                           deriving (Eq, Ord, Show, Typeable)
@@ -862,13 +970,13 @@ instance DBUpdate NewDocument (Either String Document) where
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
       magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
-    
+
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
                         authorRoles linkid magichash
 
       let authorlink = authorlink0 {
-                         maybesignatory = Just $ userid user, 
+                         maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
 
       let doc = blankDocument {
@@ -888,7 +996,7 @@ instance DBUpdate NewDocument (Either String Document) where
       -- here we emulate old behaviour and use current time instead of the one specified above
       -- FIXME: should use time given from above (I think0
       now <- liftIO $ getMinutesTime
-      runInsertStatement "documents" 
+      runInsertStatement "documents"
             [ sqlField "id" did
             , sqlField "status" Preparation
             , sqlField "functionality" $ newDocumentFunctionality documenttype user
@@ -959,8 +1067,13 @@ instance DBUpdate SaveSigAttachment (Either String Document) where
 data SetDocumentTags = SetDocumentTags DocumentID [DocumentTag]
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTags (Either String Document) where
-  dbUpdate (SetDocumentTags docid doctags) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentTags"
+  dbUpdate (SetDocumentTags did doctags) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "tags" $ doctags
+         -- , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentTags" r did
 
 
 data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime
@@ -996,8 +1109,13 @@ instance DBUpdate RemoveSignatoryUser (Either String Document) where
 data SetInviteText = SetInviteText DocumentID BS.ByteString MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInviteText (Either String Document) where
-  dbUpdate (SetInviteText docid text time) = wrapDB $ \conn -> do
-    unimplemented "SetInviteText"
+  dbUpdate (SetInviteText did text time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "invite_text" $ text
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetInviteText" r did
 
 data SetDaysToSign = SetDaysToSign DocumentID Int MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
@@ -1014,21 +1132,31 @@ instance DBUpdate RemoveDaysToSign (Either String Document) where
 data SetDocumentFunctionality = SetDocumentFunctionality DocumentID DocumentFunctionality MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentFunctionality (Either String Document) where
-  dbUpdate (SetDocumentFunctionality did docfunc time) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentFunctionality"
+  dbUpdate (SetDocumentFunctionality did docfunc time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "functionality" $ docfunc
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentFunctionality" r did
 
 
 data SetDocumentTitle = SetDocumentTitle DocumentID BS.ByteString MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTitle (Either String Document) where
-  dbUpdate (SetDocumentTitle docid doctitle mtime) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentTitle"
+  dbUpdate (SetDocumentTitle did doctitle time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "title" $ doctitle
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentTitle" r did
 
 data SetDocumentLocale = SetDocumentLocale DocumentID Locale MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentLocale (Either String Document) where
   dbUpdate (SetDocumentLocale did locale time) = do
-    r <- runUpdateStatement "documents" 
+    r <- runUpdateStatement "documents"
          [ sqlField "region" $ getRegion locale
          , sqlFieldType "mtime" "timestamp" $ time
          ]
@@ -1045,7 +1173,7 @@ data SetDocumentUI = SetDocumentUI DocumentID DocumentUI
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentUI (Either String Document) where
   dbUpdate (SetDocumentUI did documentui) = do
-    r <- runUpdateStatement "documents" 
+    r <- runUpdateStatement "documents"
          [ sqlField "mail_footer" $ documentmailfooter documentui
          -- , sqlFieldType "mtime" "timestamp" $ time
          ]
@@ -1089,7 +1217,7 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
       magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
-    
+
       let link = signLinkFromDetails' details
                         roles linkid magichash
 
@@ -1130,14 +1258,14 @@ data TimeoutDocument = TimeoutDocument DocumentID MinutesTime
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TimeoutDocument (Either String Document) where
   dbUpdate (TimeoutDocument did time) = do
-    r <- runUpdateStatement "documents" 
+    r <- runUpdateStatement "documents"
          [ sqlField "status" $ Timedout
          , sqlFieldType "mtime" "timestamp" $ time
          ]
-         "WHERE id = ? AND type = ? AND status = ? " [ toSql did
-                                                     , toSql (toDocumentSimpleType (Signable undefined))
-                                                     , toSql Pending 
-                                                     ]
+         "WHERE id = ? AND type = ? AND status = ?" [ toSql did
+                                                    , toSql (toDocumentSimpleType (Signable undefined))
+                                                    , toSql Pending
+                                                    ]
     getOneDocumentAffected "TimeoutDocument" r did
 
 data UpdateDocument = UpdateDocument MinutesTime DocumentID BS.ByteString [(SignatoryDetails,[SignatoryRole])] (Maybe Int)
