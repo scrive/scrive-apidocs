@@ -135,7 +135,6 @@ import MinutesTime
 import Doc.DocStateData
 import Data.Data
 import Database.HDBC
-import Database.HDBC.PostgreSQL
 import Data.Word
 import qualified Data.ByteString.Char8 as BS
 import qualified Mails.MailsUtil as Mail
@@ -156,6 +155,7 @@ import System.Random
 --import Data.Int
 import Control.Monad.IO.Class
 --import Control.Monad
+import qualified Control.Exception as E
 
 data SqlField = SqlField String String SqlValue
 
@@ -183,13 +183,53 @@ mkInsertStatement tableName fields =
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
                            
 
-runInsertStatement :: Connection -> String -> [SqlField] -> IO Integer
-runInsertStatement conn tableName fields = do
-  liftIO $ putStrLn $ statement
-  run conn statement (map value fields)
+runInsertStatement :: String -> [SqlField] -> DB Integer
+runInsertStatement tableName fields = do
+  wrapDB $ \conn -> run conn statement (map value fields)
   where
     value (SqlField _ _ v) = v
     statement = mkInsertStatement tableName fields
+
+-- here we can add encoding and better error reporting in case conversion fails
+mkUpdateStatement :: String -> [SqlField] -> String
+mkUpdateStatement tableName fields =
+   "UPDATE " ++ tableName ++
+   " SET " ++ concat (intersperse "," (map one fields)) ++ " "
+   where
+     name (SqlField x _ _) = x
+     xtype (SqlField _ x _) = insertType x
+     insertType "" = "?"
+     insertType "timestamp" = "to_timestamp(?)"
+     insertType "base64" = "decode(?, 'base64')"
+     insertType ytype = error $ "mkUpdateStatement: invalid insert type " ++ ytype
+     one field = name field ++ "=" ++ xtype field
+                           
+
+runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
+runUpdateStatement tableName fields whereClause whereValues = do
+  wrapDB $ \conn -> run conn statement (map value fields ++ whereValues)
+  where
+    value (SqlField _ _ v) = v
+    statement = mkUpdateStatement tableName fields ++ whereClause
+
+
+getOneDocumentAffected :: String -> Integer -> DocumentID -> DB (Either String Document)
+getOneDocumentAffected text r did = 
+  case r of
+    0 -> do
+      return (Left (text ++ " did not affect any rows"))
+    1 -> do
+      mnewdoc <- dbQuery $ GetDocumentByDocumentID did
+      case mnewdoc of
+        Nothing -> return (Left ("Document #" ++ show did ++ " diappeared after " ++ text))
+        Just newdoc -> return (Right newdoc)
+    _ -> do
+      -- here we really want to abort transaction, as we have affected more rows that we wanted
+      -- something is seriously wrong!
+      liftIO $ E.throwIO TooManyObjects { DB.Classes.originalQuery = ""
+                                        , tmoExpected = 1
+                                        , tmoGiven = fromIntegral r
+                                        }
 
 unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
@@ -492,7 +532,7 @@ instance DBUpdate PutDocumentUnchecked Document where
                                   Attachment -> (3, Nothing)
                                   AttachmentTemplate -> (4, Nothing)
 
-    _ <- wrapDB $ \conn -> runInsertStatement conn "documents"
+    _ <- runInsertStatement "documents"
                                      [ sqlField "id" documentid
                                      , sqlField "tags" documenttags
                                      , sqlField "file_id" (listToMaybe documentfiles)
@@ -830,7 +870,7 @@ instance DBUpdate NewDocument (Either String Document) where
       -- here we emulate old behaviour and use current time instead of the one specified above
       -- FIXME: should use time given from above (I think0
       now <- liftIO $ getMinutesTime
-      wrapDB $ \conn -> runInsertStatement conn "documents" 
+      runInsertStatement "documents" 
             [ sqlField "id" did
             , sqlField "status" Preparation
             , sqlField "functionality" $ newDocumentFunctionality documenttype user
@@ -849,7 +889,7 @@ instance DBUpdate NewDocument (Either String Document) where
             , sqlField "service_id" $ userservice user
             ]
       slid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
-      wrapDB $ \conn -> runInsertStatement conn "signatory_links"
+      _ <- runInsertStatement "signatory_links"
                       [ sqlField "id" slid
                       , sqlField "document_id" did
                       , sqlField "user_id" (userid user)
@@ -969,8 +1009,13 @@ instance DBUpdate SetDocumentTitle (Either String Document) where
 data SetDocumentLocale = SetDocumentLocale DocumentID Locale MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentLocale (Either String Document) where
-  dbUpdate (SetDocumentLocale did locale time) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentLocale"
+  dbUpdate (SetDocumentLocale did locale time) = do
+    r <- runUpdateStatement "documents" 
+         [ sqlField "region" $ getRegion locale
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentLocale" r did
 
 data SetDocumentTrustWeaverReference = SetDocumentTrustWeaverReference DocumentID String
                                        deriving (Eq, Ord, Show, Typeable)
@@ -1026,10 +1071,10 @@ instance DBUpdate SignableFromDocument (Either String Document) where
     unimplemented "SignableFromDocument"
 
 
-data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID
+data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID MinutesTime
                                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where
-  dbUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid) = wrapDB $ \conn -> do
+  dbUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid time) = wrapDB $ \conn -> do
     unimplemented "SignableFromDocumentIDWithUpdatedAuthor"
 
 
