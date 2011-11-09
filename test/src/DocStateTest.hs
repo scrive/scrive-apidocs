@@ -122,8 +122,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
   testThat "documentFromSignatoryData succeeds when document exists" conn testDocumentFromSignatoryDataSucceedsExists,
   testThat "TimeoutDocument fails when document is not signable" conn testTimeoutDocumentNonSignableLeft,
-  testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId,
-  testProperty "jsonableDeriveConvertibleId" propjsonableDeriveConvertibleId
+  testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId
   ]
 
 testSetDocumentLocaleNotLeft :: DB ()
@@ -170,6 +169,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   validTest $ do
     assertJust $ find (sameDocID doc) docs
     assertInvariants $ fromJust $ find (sameDocID doc) docs
+
 {-
 testDocumentUpdateDoesNotChangeID :: DB ()
 testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
@@ -809,6 +809,3 @@ propbitfieldDeriveConvertibleId :: [SignatoryRole] -> Bool
 propbitfieldDeriveConvertibleId ss =
   let ss' = nub (sort ss)
   in ss' == convert (convert ss' :: SqlValue)
-
-propjsonableDeriveConvertibleId :: DocumentStatus -> Bool
-propjsonableDeriveConvertibleId ss = ss == convert (convert ss :: SqlValue)
