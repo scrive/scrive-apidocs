@@ -271,7 +271,12 @@ testDocumentAttachSealedPendingRight :: DB ()
 testDocumentAttachSealedPendingRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable)
+  doc <- addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedTypes = [ Signable Offer
+                                                                                              , Signable Contract
+                                                                                              , Signable Offer
+                                                                                              ]
+                                                                 , randomDocumentAllowedStatuses = [Closed]
+                                                                 })
   file <- addNewRandomFile
   --execute
   edoc <- randomUpdate $ AttachSealedFile (documentid doc) (fileid file)
@@ -557,14 +562,19 @@ testSignDocumentNotLeft = doTimes 10 $ do
 testPreparationToPendingNotSignableLeft :: DB ()
 testPreparationToPendingNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
+         }
   etdoc <- randomUpdate $ PreparationToPending (documentid doc)
   validTest $ assertLeft etdoc
   
 testPreparationToPendingSignableNotPreparationLeft :: DB ()
 testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPreparation))
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = documentAllStatuses \\ [Preparation]
+         }
   etdoc <- randomUpdate $ PreparationToPending (documentid doc)
   validTest $ assertLeft etdoc
 
@@ -576,11 +586,13 @@ testPreparationToPendingNotLeft = doTimes 100 $ do
 testPreparationToPendingSignablePreparationRight :: DB ()
 testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author
-         (isSignable &&^ isPreparation &&^ 
-          (any isSignatory . documentsignatorylinks) &&^
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [Preparation]
+         , randomDocumentCondition = (any isSignatory . documentsignatorylinks) &&^
           ((==) 1 . length . documentfiles) &&^
-          ((==) 1 . length . filter isAuthor . documentsignatorylinks))
+          ((==) 1 . length . filter isAuthor . documentsignatorylinks)
+         } 
   etdoc <- randomUpdate $ PreparationToPending (documentid doc)
   validTest $ do
     assertRight etdoc
@@ -660,7 +672,10 @@ testMarkInvitationReadDocDoesntExist = doTimes 10 $ do
 testMarkDocumentSeenNotSignableLeft :: DB ()
 testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
+         }
+
   validTest (forEachSignatoryLink doc $ \sl ->             
               when (isNothing $ maybeseeninfo sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
@@ -669,7 +684,10 @@ testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
 testMarkDocumentSeenClosedOrPreparationLeft :: DB ()
 testMarkDocumentSeenClosedOrPreparationLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isClosed ||^ isPreparation))
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [Closed, Preparation]
+         }
   validTest (forEachSignatoryLink doc $ \sl -> 
               when (isNothing $ maybeseeninfo sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
@@ -773,8 +791,12 @@ testSetDocumentUIRight = doTimes 10 $ do
 testCloseDocumentSignableAwaitingAuthorJust :: DB ()
 testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author 
-           ((hasSeen . getAuthorSigLink) &&^ isSignable &&^ isAwaitingAuthor &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [AwaitingAuthor]
+         , randomDocumentCondition = ((hasSeen . getAuthorSigLink) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
+         }
+ 
   let Just sl = getAuthorSigLink doc
   etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
                  randomUpdate $ CloseDocument (documentid doc)]
@@ -783,8 +805,12 @@ testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
 testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author 
-         (isSignable &&^ (isAwaitingAuthor ||^ isPending) &&^ (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks)))
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [AwaitingAuthor, Pending]
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+
   etdoc <- msum [randomUpdate $ CloseDocument (documentid doc)]
   validTest $ assertLeft etdoc
 

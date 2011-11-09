@@ -211,16 +211,31 @@ instance Arbitrary DocumentID where
     ds <- arbitrary
     return $ DocumentID ds
 
+documentAllTypes :: [DocumentType]
+documentAllTypes = [ Signable Contract
+                   , Signable Order
+                   , Signable Offer
+                   , Template Contract
+                   , Template Order
+                   , Template Offer
+                   , Attachment
+                   , AttachmentTemplate
+                   ]
+
+documentSignableTypes :: [DocumentType]
+documentSignableTypes = [ Signable Contract
+                        , Signable Order
+                        , Signable Offer
+                        ]
+
+documentTemplateTypes :: [DocumentType]
+documentTemplateTypes = [ Template Contract
+                        , Template Order
+                        , Template Offer
+                        ]
+
 instance Arbitrary DocumentType where
-  arbitrary = elements [ Signable Contract
-                       , Signable Order
-                       , Signable Offer
-                       , Template Contract
-                       , Template Order
-                       , Template Offer
-                       , Attachment
-                       , AttachmentTemplate
-                       ]
+  arbitrary = elements documentAllTypes
 
 
 instance Arbitrary Document where
@@ -235,16 +250,19 @@ instance Arbitrary Document where
                            , documentallowedidtypes = [ids]
                            }
 
+documentAllStatuses :: [DocumentStatus]
+documentAllStatuses = [ Preparation
+                      , Pending
+                      , Closed
+                      , Canceled
+                      , Timedout
+                      , Rejected
+                      , AwaitingAuthor
+                      , DocumentError "Bad document."
+                      ]
+
 instance Arbitrary DocumentStatus where
-  arbitrary = elements [ Preparation
-                       , Pending
-                       , Closed
-                       , Canceled
-                       , Timedout
-                       , Rejected
-                       , AwaitingAuthor
-                       , DocumentError "Bad document."
-                       ]
+  arbitrary = elements documentAllStatuses
 
 nonemptybs :: Gen BS.ByteString
 nonemptybs = do
@@ -490,28 +508,41 @@ emptySignatoryDetails = SignatoryDetails
     , signatorysignorder = SignOrder 1
     }
 
+data RandomDocumentAllows = RandomDocumentAllows
+                          { randomDocumentAllowedTypes :: [DocumentType]
+                          , randomDocumentAllowedStatuses :: [DocumentStatus]
+                          , randomDocumentAuthor :: User
+                          , randomDocumentCondition :: Document -> Bool
+                          }
+
+randomDocumentAllowsDefault :: User -> RandomDocumentAllows
+randomDocumentAllowsDefault user = RandomDocumentAllows
+                              { randomDocumentAllowedTypes = [ Signable Contract
+                                                             , Signable Order
+                                                             , Signable Offer
+                                                             , Template Contract
+                                                             , Template Order
+                                                             , Template Offer
+                                                             , Attachment
+                                                             , AttachmentTemplate
+                                                             ]
+                              , randomDocumentAllowedStatuses = [ Preparation
+                                                                , Pending
+                                                                , Closed
+                                                                , Canceled
+                                                                , Timedout
+                                                                , Rejected
+                                                                , AwaitingAuthor
+                                                                , DocumentError "Bad document."
+                                                                ]
+                              , randomDocumentAuthor = user
+                              , randomDocumentCondition = const True
+                              }
+
 addRandomDocumentWithAuthor :: User -> DB DocumentID
-addRandomDocumentWithAuthor user = do
-  rs <- rand 10 arbitrary
-  let roles = SignatoryAuthor : rs
-  doc <- rand 10 arbitrary
-  slsab <- rand 10 arbitrary
-  let sls = 1 + abs slsab
-  sldets <- rand 10 (vectorOf sls arbitrary)
-  slr <- rand 1000 (vectorOf sls $ elements [[], [SignatoryPartner]])
-  slinks <- sequence $ zipWith (\a r -> doc_update $ (SignLinkFromDetailsForTest a r)) sldets slr
+addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocumentAllowsDefault user)
 
-  mcompany <- case usercompany user of
-    Nothing -> return Nothing
-    Just cid -> dbQuery $ GetCompany cid
 
-  asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-  asl <- doc_update $ SignLinkFromDetailsForTest asd roles
-  let adoc = doc { documentsignatorylinks = slinks ++
-                                            [asl { maybesignatory = Just (userid user) }]
-                 , documentregion = getRegion user
-                 }
-  doc_update $ StoreDocumentForTesting adoc
 
 getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
 getRandomAuthorRoles doc =
@@ -523,9 +554,21 @@ getPossibleAuthorRoles doc = [SignatoryAuthor] :
     Just True -> []
     _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
 
+
+
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
-addRandomDocumentWithAuthorAndCondition user p =  do
-  doc <- rand 10 arbitrary
+addRandomDocumentWithAuthorAndCondition user p = 
+  addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
+
+addRandomDocument :: RandomDocumentAllows -> DB Document
+addRandomDocument rda = do
+  let user = randomDocumentAuthor rda
+      p = randomDocumentCondition rda
+  doc' <- rand 10 arbitrary
+  xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
+  status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
+  let doc = doc' { documenttype = xtype, documentstatus = status }
+
   roles <- getRandomAuthorRoles doc
 
   mcompany <- case usercompany user of
@@ -561,16 +604,16 @@ addRandomDocumentWithAuthorAndCondition user p =  do
           Nothing -> do
             assertFailure "Could not store document."
             return doc
-          Just doc' -> do
-            return doc'
+          Just doc'' -> do
+            return doc''
       else do
         --uncomment this to find out why the doc was rejected
         --print adoc
         --print $ "rejecting doc: " ++ fromJust d
-        addRandomDocumentWithAuthorAndCondition user p
+        addRandomDocument rda
     else do
       --print adoc
-      addRandomDocumentWithAuthorAndCondition user p
+      addRandomDocument rda
 
 rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do
