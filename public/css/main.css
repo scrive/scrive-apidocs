@@ -332,7 +332,7 @@ a.new-btn-small.black p {
 #top-container .rightMain {
 	float: left;
 	position: relative;
-	width: 500px;
+	width: 490px;
     z-index: 100;
 }
 
@@ -402,12 +402,12 @@ a.new-btn-small.black p {
 #top-container #moveleft {
 	display: block;
 	height: 28px;
-	padding-left: 47px;
+	padding-left: 30px;
 	padding-top: 15px;
 	position: absolute;
-	right: 176px;
+        right: 170px;
 	top: 3px;
-    z-index: 10;
+        z-index: 10;
 }
 
 #top-container #moveleft a {
@@ -456,9 +456,9 @@ a.new-btn-small.black p {
 }
 
 .localeSwitcher div {
-  display: inline-block;
+  float: left;
+  padding-left: 5px;
 }
-
 .login-container .body, .recovery-container .body {
     margin:auto;
     min-height: 122px;
@@ -766,7 +766,6 @@ a.new-btn-small.black p {
 
 #footer-container .col.right ul li strong {
 	color: #000;
-	display: block;
 	font: 14px "Copse";
 }
 
@@ -2212,21 +2211,21 @@ input.grayed, textarea.grayed
 }
 
 .benefitsbox {
-	height: 480px;
+	height: 500px;
 	position: relative;
 	width: 476px;
 	z-index: 1;
-        display: inline-block;
+        float: left;
     
 
 }
 
 .productdescriptionbox {
-	height: 480px;
+	height: 500px;
 	position: relative;
 	width: 476px;
 	z-index: 1;
-        display: inline-block;
+        float: right;
 }
 
 form.requestAccount {
@@ -2264,4 +2263,9 @@ a {
 
 .createaccountbox {
     height: 250px;
+}
+
+.contactus strong{
+    color: #000000;
+    font: 14px "Copse";
 }

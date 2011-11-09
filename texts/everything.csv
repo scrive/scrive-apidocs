@@ -2134,13 +2134,14 @@ use free of charge."
 "_pageDocumentForViewerHelpersPartyName","Namn på avtalspart",,"Name of party"
 "_pageFooterAbout","Om Scrive",,"About Scrive"
 "_pageFooterContact1","<strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>",,"<strong>Contact Scrive with feedback, queries &amp; requests </strong>"
-"_pageFooterContact2","<strong>Telefon</strong>      +46 (0)10-195 99 15",,"<strong>Phone</strong>         +46 (0)10-195 99 15"
-"_pageFooterContact3","<strong>Kontorstider</strong>          måndag-fredag 09-17",,"<strong>Office hours</strong>          Monday-Friday 9 am-5 pm"
-"_pageFooterContact4","<strong>Maila Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>",,"<strong>Send email to Scrive</strong>          <a href=""mailto:info@scrive.com"">info@scrive.com</a>"
-"_pageFooterContact5","<strong>Adress</strong>     Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>       Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
-"_pageFooterContact6","<strong>Bloggar</strong>     <a href='http://blogg.scrive.com'>Svenska</a><BR/><a href='http://blog.scrive.com'>Engelska</a><br/><a href='http://labs.scrive.com'>Tekniska</a>",,"<strong>Blogs</strong>     <a href='http://blog.scrive.com'>English</a><br/><a href='http://blogg.scrive.com'>Swedish</a><BR/><a href='http://labs.scrive.com'>Technical</a>"
-"_pageFooterContact7","<strong>Twitter</strong><a href='http://twitter.com/scrive'>Sverige</a><br /><a href='http://twitter.com/scriveuk'>Storbritannien</a>",,"<strong>Twitter</strong><a href='http://twitter.com/scriveuk'>UK</a><br /><a href='http://twitter.com/scrive'>Sweden</a>"
+"_pageFooterContact2","<strong>Telefon</strong>   <BR/>   +46 (0)10-195 99 15",,"<strong>Phone</strong>     <BR/>    +46 (0)10-195 99 15"
+"_pageFooterContact3","<strong>Kontorstider</strong>     <BR/>     måndag-fredag 09-17",,"<strong>Office hours</strong>    <BR/>      Monday-Friday 9 am-5 pm"
+"_pageFooterContact4","<strong>Maila Scrive</strong>     <BR/>     <a href=""mailto:info@scrive.com"">info@scrive.com</a>",,"<strong>Send email to Scrive</strong>    <BR/>      <a href=""mailto:info@scrive.com"">info@scrive.com</a>"
+"_pageFooterContact5","<strong>Adress</strong>  <BR/>   Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>  <BR/>     Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
+"_pageFooterContact6","<strong>Bloggar</strong>  <BR/>   <a href='http://blogg.scrive.com'>Svenska</a><BR/><a href='http://blog.scrive.com'>Engelska</a><br/><a href='http://labs.scrive.com'>Tekniska</a>",,"<strong>Blogs</strong>   <BR/>  <a href='http://blog.scrive.com'>English</a><br/><a href='http://blogg.scrive.com'>Swedish</a><BR/><a href='http://labs.scrive.com'>Technical</a>"
+"_pageFooterContact7","<strong>Twitter</strong><BR/><a href='http://twitter.com/scrive'>Sverige</a><br /><a href='http://twitter.com/scriveuk'>Storbritannien</a>",,"<strong>Twitter</strong><BR/><a href='http://twitter.com/scriveuk'>UK</a><br /><a href='http://twitter.com/scrive'>Sweden</a>"
 "_pageFooterCustomers","Kunder",,"Customers"
+"_pageFooterContactUs","Kontakta Scrive",,"Contact Scrive"
 "_pageFooterHome","Hem",,"Home"
 "_pageFooterLaw","Juridik",,"Legal"
 "_pageFooterPartners","Partners",,"Partners"
@@ -2271,6 +2272,7 @@ use free of charge."
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
+"_contactUsPageMetaDescription", "Kontakta Scrive",, "Contact Scrive" 
 "_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>
                               <th>
           <h3>Small</h3>                                    <p>35

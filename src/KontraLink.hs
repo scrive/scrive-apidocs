@@ -51,6 +51,7 @@ data KontraLink
     | LinkAbout Locale
     | LinkPartners Locale
     | LinkClients Locale
+    | LinkContactUs Locale
     | LinkLogin Locale LoginRedirectReason
     | LinkLogout
     | LinkSignup
@@ -148,6 +149,9 @@ instance Show KontraLink where
     showsPrec _ (LinkClients locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kunder"
       | otherwise = (++) $ localeFolder locale ++ "/clients"
+    showsPrec _ (LinkContactUs locale)  
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kontakta"
+      | otherwise = (++) $ localeFolder locale ++ "/contact"
     showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login"
     showsPrec _ (LinkLogin locale (InvalidLoginInfo email)) = (++) $ localeFolder locale ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
     showsPrec _ (LinkLogin locale _) = (++) $ localeFolder locale ++ "/?logging"
