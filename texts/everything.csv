@@ -3294,7 +3294,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_createCompany","Skapa företag",,"Create Company"
 "_createCompanyExplanation","När ett företag är skapat kommer du att bli en administratör och kommer kunna bjuda in dina kollegor till underkonton.",,"When a company is created you will be made an admin user and will be able to invite your colleagues to join you."
 "_createCompanyFormPreamble","För att skapa ett företag vänligen fyll i följande information:",,"To create a company please complete the following information:"
-"_documentLanguageLabel","Dokumentets språk",,"Document Language"
+"_documentLanguageLabel","Mottagares språk",,"Recipient's language"
 "_signInEnglish","Signera på engelska",,"Sign in English"
 "_modalUserSignupDoneHeader","Konto skapat",,"Account Saved"
 "_modalUserSignupDoneBody","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
