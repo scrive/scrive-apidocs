@@ -27,7 +27,8 @@ var UploadButtonModel = Backbone.Model.extend({
       width: 200,
       maxlength : 1,
       submitOnUpload : false,
-      size : "small" 
+      size : "small",
+      showLoadingDialog : true
   },
   width : function(){
        return this.get("width");
@@ -100,7 +101,8 @@ var UploadButtonView = Backbone.View.extend({
             list: list,
             onFileAppend: function() {
                 if (model.submitOnUpload()) {
-                    LoadingDialog.open(localization.loadingFile);
+                    if(model.get('showLoadingDialog'))
+                        LoadingDialog.open(localization.loadingFile);
                     if (model.hasSubmit())
                     {
                         model.submit().addInputs(list);

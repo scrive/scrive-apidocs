@@ -3,7 +3,7 @@ module Doc.JSON
          jsonDocumentForSignatory
        , jsonDocumentID
        , jsonDocumentType
-       , jsonSigAttachment
+       , jsonSigAttachmentWithFile
        )
 where
 
@@ -48,11 +48,13 @@ jsonDocumentForSignatory doc =
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
-jsonSigAttachment :: SignatoryAttachment -> JSValue
-jsonSigAttachment sa =
+jsonSigAttachmentWithFile :: SignatoryAttachment -> File -> JSValue
+jsonSigAttachmentWithFile sa file =
   fromRight $ (Right jsempty) >>=
   (jsset "name" $ signatoryattachmentname sa) >>=
   (jsset "description" $ signatoryattachmentdescription sa) >>=
   (case signatoryattachmentfile sa of
       Nothing -> jsset "requested" True
-      Just fid -> jsset "fileid" $ show fid)
+      Just _  -> jsset "file" $ fromRight ((Right jsempty) >>=
+                                           (jsset "id" $ show (fileid file)) >>=
+                                           (jsset "name" $ (filename file))))

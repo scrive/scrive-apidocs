@@ -57,6 +57,7 @@ import qualified User.UserControl as UserControl
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.KontraLinkUtils
+import Doc.API
 
 import Control.Concurrent
 import Control.Monad.Error
@@ -350,6 +351,7 @@ staticRoutes = choice
 
      , userAPI
      , integrationAPI
+     , documentApi
      -- static files
      , remainingPath GET $ msum 
          [ allowHttp $ serveHTMLFiles

@@ -95,6 +95,9 @@ jsonError :: Either String JSValue
 jsonError = (Right jsempty) >>=
             jsset "status" "error"
             
+setJsonType :: (Monad m) => Response -> m Response
+setJsonType r = return $ setHeader "Content-Type" "application/json" r
+
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m) => APIMonad m JSValue -> m Response
@@ -102,26 +105,31 @@ api acc = do
   r <- runAPIMonad acc
   case r of 
     BadInput ->
-      badRequest $ toResponse $ encode $
-      jsonError >>=
-      jsset "message" "The input sent was invalid. Please try again."
+      badRequest (toResponse $ encode $ fromRight $
+                  jsonError >>=
+                  jsset "message" "The input sent was invalid. Please try again.") >>=
+      setJsonType
     Forbidden ->
-      forbidden $ toResponse $ encode $ 
-      jsonError >>=
-      jsset "message" "The resource you are trying to access does not exist or you do not have permission to access it."
+      forbidden (toResponse $ encode $ fromRight $ 
+                 jsonError >>=
+                 jsset "message" "The resource you are trying to access does not exist or you do not have permission to access it.") >>=
+      setJsonType
     NotLoggedIn -> 
-      unauthorized $ toResponse $ encode $
-      jsonError >>=
-      jsset "message" "You must identify yourself to access this resource." >>=
-      jsset "url" "http://scrive.com/api/user/login"
+      unauthorized (toResponse $ encode $ fromRight $
+                    jsonError >>=
+                    jsset "message" "You must identify yourself to access this resource." >>=
+                    jsset "url" "http://scrive.com/api/user/login") >>=
+      setJsonType
     ServerError ->
-      internalServerError $ toResponse $ encode $
-      jsonError >>=
-      jsset "message" "We're sorry. The server just does not know what to do."
+      internalServerError (toResponse $ encode $ fromRight $
+                           jsonError >>=
+                           jsset "message" "We're sorry. The server just does not know what to do.") >>=
+      setJsonType
     ActionNotAvailable ->
-      forbidden $ toResponse $ toResponse $ encode $
-      jsonError >>=
-      jsset "message" "The action you requested is not available on this resource."
+      forbidden (toResponse $ toResponse $ encode $ fromRight $
+                 jsonError >>=
+                 jsset "message" "The action you requested is not available on this resource.") >>=
+      setJsonType
     OK v -> ok $ toResponse $ encode v
     Created v -> 
       (ok $ toResponse $ encode v) >>=
@@ -237,16 +245,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- doc exists
   -- doc magichash/siglink match
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
-  -- pdf exists  
-  mfile <- lift $ getDataFn' (lookInput "file")
-  when (isNothing mfile) $
-    apiBadInput
-  let Just (Input contentspec _ _contentType) = mfile
-
-  content1 <- case contentspec of
-    Left filepath -> lift $ liftIO $ BSL.readFile filepath
-    Right content -> return content
-    
+  
   -- siglink exists
   siglink :: SignatoryLink <- apiGuard $ getSigLinkFor doc sid
   let email = getEmail siglink
@@ -260,19 +259,29 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have no file
   when (isJust $ signatoryattachmentfile $ fromJust msigattach)
     apiActionNotAvailable
+
+  -- pdf exists  
+  mfile <- lift $ getDataFn' (lookInput "file")
+  when (isNothing mfile) $
+    apiBadInput
+  let Just (Input contentspec (Just filename) _contentType) = mfile
+
+  content1 <- case contentspec of
+    Left filepath -> lift $ liftIO $ BSL.readFile filepath
+    Right content -> return content
   
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- lift $ getContext
   content <- lift $ liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
   
-  file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString aname) content
+  file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   d <- apiGuardL $ update $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
   
-  apiOK $ jsonSigAttachment sigattach'
+  apiOK $ jsonSigAttachmentWithFile sigattach' file
   
 -- helpers
 

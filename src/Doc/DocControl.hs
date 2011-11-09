@@ -1513,11 +1513,6 @@ handleDocumentUploadNoLogin docid content1 filename = do
   return ()
 
 
-basename :: String -> String
-basename filename =
-    case break (\x -> (x=='\\') || (x=='/')) filename of
-      (_,(_:rest)) -> basename rest
-      _ -> takeWhile ((/=) '.') filename
 
 handleIssueNewDocument :: Kontrakcja m => m KontraLink
 handleIssueNewDocument = withUserPost $ do

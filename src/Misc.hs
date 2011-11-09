@@ -665,3 +665,9 @@ mapassoc f l = map (\a -> pair a $ f a) l
 
 mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
 mapassocM f l = mapM (\a -> (return . pair a) =<< f a) l
+
+basename :: String -> String
+basename filename =
+  case break (\x -> (x=='\\') || (x=='/')) filename of
+    (_,(_:rest)) -> basename rest
+    _            -> takeWhile ((/=) '.') filename
