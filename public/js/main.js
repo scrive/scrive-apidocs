@@ -147,25 +147,6 @@ $(document).ready(function() {
     });
 
     $('a.submit').altSubmit();
-
-    $('.subaccount-add-sub').click(function() {
-        var container = $('#selectable');
-        if ($('.newSubaccount', container).size() == 0) {
-            var newrow = $('<tr class="odd newSubaccount">' + '<td><input type="checkbox" name="subcheck" class="check" /></td>' + '<td><input type="text" name="fstname" infotext="' + localization.fstname + '" value="' + localization.fstname + '" class="infotext grayed" /></td>' + '<td><input type="text" name="sndname" infotext="' + localization.sndname + '" value="' + localization.sndname + '" class="infotext grayed" /></td>' + '<td><input type="text" name="companyposition" infotext="' + localization.companyposition + '" value="' + localization.companyposition + '" class="infotext grayed" /></td>' + '<td><input type="text" name="phone" infotext="' + localization.phone + '" value="' + localization.phone + '" class="infotext grayed" /></td>' + '<td><input type="email" name="email" infotext="' + localization.email + '" value="' + localization.email + '" class="infotext grayed" /></td>' + '<td style="text-align:center">' + '<a href="javascript:;" class="icon small ok add"></a>' + '<a href="javascript:;" class="icon small minus remove"></a>' + '</td>' + '</tr>');
-            $("tr", container).toggleClass('odd');
-            container.prepend(newrow);
-            $(".add", newrow).click(function() {
-                var form = $(this).parents("form");
-                form.append("<input type='hidden' name='add' value='YES'>").submit();
-            });
-                $(".remove", newrow).click(function() {
-                $('.newSubaccount', container).remove();
-                $("tr", container).toggleClass('odd');
-                    return false;
-            });
-        }
-        return false;
-    });
 });
 
 function repeatSlide() {
