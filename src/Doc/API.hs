@@ -148,7 +148,8 @@ documentApi = choice [
   dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
   dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
-  dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment
+  dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
+  dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
   ]
               
 apiResponseFromDBError :: DBError -> APIResponse a
@@ -281,7 +282,40 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
   
-  apiOK $ jsonSigAttachmentWithFile sigattach' file
+  apiCreated $ jsonSigAttachmentWithFile sigattach' (Just file)
+
+documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
+documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
+  magichash <- getMagicHash
+  slid <- getSigLinkID
+  -- doc exists
+  -- doc magichash/siglink match
+  doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
+  
+  -- siglink exists
+  siglink :: SignatoryLink <- apiGuard $ getSigLinkFor doc sid
+  let email = getEmail siglink
+  
+  -- sigattachexists
+  let msigattach = getSignatoryAttachment email (BS.fromString aname) doc
+  when (isNothing msigattach)
+    apiForbidden
+
+  let Just sigattach = msigattach
+
+  -- attachment must have a file
+  when (isNothing $ signatoryattachmentfile sigattach)
+    apiActionNotAvailable
+
+  let Just fileid = signatoryattachmentfile sigattach
+
+  d <- apiGuardL $ update $ DeleteSigAttachment (documentid doc) email fileid
+  
+  -- let's dig the attachment out again
+  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  
+  apiOK $ jsonSigAttachmentWithFile sigattach' Nothing
+
   
 -- helpers
 

@@ -64,11 +64,25 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
             lasttd.append($("<img>").attr('src', "/theme/images/wait30trans.gif"));
         } else if (attachment.hasFile()) {  
             var filelink = $("<a target='_blank'/>").text(attachment.file().name()).attr("href",attachment.file().downloadLink());
+            var path = document.location.pathname.split("/");
+            var deleteurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file?" + "slid=" + path[3] + "&mh=" + path[4];
             var removelink = $("<a href='' style='padding-left: 2em'>x</a>").click(function(){
-                new Submit({
-                    method : "POST",
-                    deletesigattachment : attachment.file().fileid()
-                }).send();
+                attachment.loading();
+                $.ajax(deleteurl, {
+                    type: 'DELETE',
+                    success: function(d) {
+                        attachment.unset('file');
+                        attachment.notLoading();
+                    },
+                    error: function() {
+                        attachment.notLoading();
+                        console.log("error");
+                    }
+                });
+//                new Submit({
+//                    method : "POST",
+//                    deletesigattachment : attachment.file().fileid()
+//                }).send();
                 return false;         
             });
             lasttd.append(filelink);
@@ -219,8 +233,10 @@ window.Signatory = Backbone.Model.extend({
         return this.get("attachments");
     },
     canSign : function() {
-        var canSign = this.document().pending() &&  this.signs() &&  !this.hasSigned() &&
-                            this.signorder() == this.document().signorder();
+        var canSign = this.document().pending() &&  
+            this.signs() &&  
+            !this.hasSigned() &&
+            this.signorder() == this.document().signorder();
         return canSign;
     },
     allAttachemntHaveFile : function() {

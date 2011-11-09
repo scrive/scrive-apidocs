@@ -48,13 +48,13 @@ jsonDocumentForSignatory doc =
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
-jsonSigAttachmentWithFile :: SignatoryAttachment -> File -> JSValue
-jsonSigAttachmentWithFile sa file =
+jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe File -> JSValue
+jsonSigAttachmentWithFile sa mfile =
   fromRight $ (Right jsempty) >>=
   (jsset "name" $ signatoryattachmentname sa) >>=
   (jsset "description" $ signatoryattachmentdescription sa) >>=
-  (case signatoryattachmentfile sa of
-      Nothing -> jsset "requested" True
-      Just _  -> jsset "file" $ fromRight ((Right jsempty) >>=
-                                           (jsset "id" $ show (fileid file)) >>=
-                                           (jsset "name" $ (filename file))))
+  (case mfile of
+      Nothing   -> jsset "requested" True
+      Just file -> jsset "file" $ fromRight ((Right jsempty) >>=
+                                             (jsset "id" $ show (fileid file)) >>=
+                                             (jsset "name" $ (filename file))))
