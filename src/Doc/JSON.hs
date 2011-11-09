@@ -3,6 +3,7 @@ module Doc.JSON
          jsonDocumentForSignatory
        , jsonDocumentID
        , jsonDocumentType
+       , jsonSigAttachmentWithFile
        )
 where
 
@@ -10,7 +11,6 @@ import Doc.DocStateData
 import Text.JSON
 import Util.JSON
 import Misc
-
 
 jsonDocumentType :: DocumentType -> JSValue
 jsonDocumentType (Signable Contract) = showJSON (1 :: Int)
@@ -45,3 +45,16 @@ jsonDocumentForSignatory doc =
   (jsset "type"        $ jsonDocumentType $ documenttype doc)     >>=       
   (jsset "status"      $ jsonDocumentStatus $ documentstatus doc) >>=
   (jsset "authorization" $ jsonIdentificationType $ documentallowedidtypes doc)
+
+-- I really want to add a url to the file in the json, but the only
+-- url at the moment requires a sigid/mh pair
+jsonSigAttachmentWithFile :: SignatoryAttachment -> File -> JSValue
+jsonSigAttachmentWithFile sa file =
+  fromRight $ (Right jsempty) >>=
+  (jsset "name" $ signatoryattachmentname sa) >>=
+  (jsset "description" $ signatoryattachmentdescription sa) >>=
+  (case signatoryattachmentfile sa of
+      Nothing -> jsset "requested" True
+      Just _  -> jsset "file" $ fromRight ((Right jsempty) >>=
+                                           (jsset "id" $ show (fileid file)) >>=
+                                           (jsset "name" $ (filename file))))

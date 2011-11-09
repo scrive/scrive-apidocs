@@ -97,6 +97,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>
+        <script src="/js/jquery.form.js"
+                type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>

@@ -11,11 +11,21 @@ window.Submit = Backbone.Model.extend({
     defaults : {
         url : "",
         method : "GET",
-        inputs : jQuery()
+        inputs : jQuery(),
+        onSend : function () {},
+        // for ajax submission
+        ajax : false,
+        ajaxsuccess: function() {},
+        expectedType: null
     },
     ignored : function(k)
     {
-      return k == "url" || k == "method" || k == "inputs";
+      return k == "url" || 
+            k == "method" || 
+            k == "inputs" || 
+            k == "ajax" || 
+            k == "ajaxsuccess" ||
+            k == "expectedType";
     },
     add: function(k,v)
     {
@@ -51,10 +61,14 @@ window.Submit = Backbone.Model.extend({
              input.attr("value", val[i]);
              form.append(input);
             }
-        
         }
         form.append(this.get("inputs"));
         $("body").append(form);
+
+        if (this.get('ajax'))
+            form.ajaxForm({success: this.get('ajaxsuccess'),
+                           dataType: this.get('expectedType')});
         form.submit();
+        this.get('onSend')();
     }})
 })(window); 
