@@ -7,15 +7,19 @@
 window.SignatoryAttachment = Backbone.Model.extend({
     defaults: {
         name : "",
-        description : ""
+        description : "",
+        loading: false
     },
     initialize: function(args) {
       if (args.file != undefined)
-        this.set({"file" : new File( _.extend(args.file,{document : args.signatory.document() })) });
+        this.set({"file" : new File( _.extend(args.file, {document : args.signatory.document()}))});
       return this;
     },
     file : function() {
         return this.get("file");
+    },
+    setFile: function(file) {
+        return this.set({'file': file});
     },
     description : function() {
         return this.get("description");
@@ -28,6 +32,15 @@ window.SignatoryAttachment = Backbone.Model.extend({
     },
     signatory : function() {
         return this.get("signatory");
+    },
+    loading : function() {
+        this.set({loading : true});
+    },
+    notLoading : function() {
+        this.set({loading : false});
+    },
+    isLoading : function() {
+        return this.get('loading');
     }
 });
 
@@ -41,43 +54,59 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
         this.render();
     },
     render : function(){
-           var attachment = this.model;
-           var row = this.el;
-           row.append($("<td/>").text(attachment.name()));
-           row.append($("<td/>").text(attachment.description()));
-           var lasttd = $("<td/>");
-           if (attachment.hasFile())
-           {  var filelink = $("<a target='_blank'/>").text(attachment.file().name()).attr("href",attachment.file().downloadLink());
-              var removelink = $("<a href='' style='padding-left: 2em'>x</a>").click(function(){
-                   new Submit({
-                                method : "POST",
-                                deletesigattachment : attachment.file().fileid()
-                            }).send();
-                   return false;         
-                    });
-              lasttd.append(filelink);
-              lasttd.append(removelink);
-            }
-           else    
-           {
-                var uploadbutton = UploadButton.init({
-                   width: 200,
-                   name: "sigattach",
-                   text: localization.signatoryAttachmentUploadButton,
-                   submitOnUpload : true,
-                   submit : new Submit({
-                                method : "POST",
-                                attachname : attachment.name(),
-                                sigattachment : "YES"
-                            }) 
-                    
-                });
-                lasttd.append(uploadbutton.input());
-
-            } 
-           row.append(lasttd);
-           return this;
- 
+        var attachment = this.model;
+        var row = this.el;
+        row.children().remove();
+        row.append($("<td/>").text(attachment.name()));
+        row.append($("<td/>").text(attachment.description()));
+        var lasttd = $("<td/>");
+        if (attachment.get('loading')){
+            lasttd.append($("<img>").attr('src', "/theme/images/wait30trans.gif"));
+        } else if (attachment.hasFile()) {  
+            var filelink = $("<a target='_blank'/>").text(attachment.file().name()).attr("href",attachment.file().downloadLink());
+            var removelink = $("<a href='' style='padding-left: 2em'>x</a>").click(function(){
+                new Submit({
+                    method : "POST",
+                    deletesigattachment : attachment.file().fileid()
+                }).send();
+                return false;         
+            });
+            lasttd.append(filelink);
+            lasttd.append(removelink);
+        } else {
+            var path = document.location.pathname.split("/");
+            var uploadurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file?" + "slid=" + path[3] + "&mh=" + path[4];
+            var uploadbutton = UploadButton.init({
+                width: 200,
+                name: "file",
+                text: localization.signatoryAttachmentUploadButton,
+                submitOnUpload : true,
+                showLoadingDialog: false,
+                onClick : function () {
+                    attachment.loading();
+                },
+                submit : new Submit({
+                    method : "POST",
+                    url : uploadurl,
+                    attachname : attachment.name(),
+                    sigattachment : "YES",
+                    ajax: true,
+                    expectedType: 'json',
+                    onSend: function() {
+                        attachment.loading();
+                    },
+                    ajaxsuccess: function(d) {
+                        if (d) {
+                            attachment.setFile(new File(_.extend(d.file, {document: attachment.signatory().document() })));
+                            attachment.notLoading();
+                        }
+                    }
+                }) 
+            });
+            lasttd.append(uploadbutton.input());
+        } 
+        row.append(lasttd);
+        return this;
     }
 });    
 

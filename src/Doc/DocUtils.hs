@@ -354,6 +354,12 @@ addTag _ (n,v) = [DocumentTag n v]
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
+getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
+getSignatoryAttachment email name doc =
+  find (\sl -> email == signatoryattachmentemail sl &&
+               name  == signatoryattachmentname sl) $ 
+  documentsignatoryattachments doc
+
 buildattach :: String -> Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
