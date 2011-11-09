@@ -76,7 +76,6 @@ module Doc.Model
   , TimeoutDocument(..)
   , UpdateDocumentSimple(..)
   , AttachCSVUpload(..)
-  , GetDocumentsByDocumentID(..)
   , AddDocumentAttachment(..)
   , RemoveDocumentAttachment(..)
   , CloseDocument(..)
@@ -154,7 +153,7 @@ import System.Random
 --import Numeric
 --import Data.Int
 import Control.Monad.IO.Class
---import Control.Monad
+import Control.Monad
 import qualified Control.Exception as E
 
 data SqlField = SqlField String String SqlValue
@@ -230,6 +229,19 @@ getOneDocumentAffected text r did =
                                         , tmoExpected = 1
                                         , tmoGiven = fromIntegral r
                                         }
+
+
+toDocumentSimpleType :: DocumentType -> Int
+toDocumentSimpleType (Signable _) = 1
+toDocumentSimpleType (Template _) = 2
+toDocumentSimpleType (Attachment) = 3
+toDocumentSimpleType (AttachmentTemplate) = 4
+
+toDocumentProcess :: DocumentType -> Maybe DocumentProcess
+toDocumentProcess (Signable p) = Just p
+toDocumentProcess (Template p) = Just p
+toDocumentProcess (Attachment) = Nothing
+toDocumentProcess (AttachmentTemplate) = Nothing
 
 unimplemented :: String -> a
 unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
@@ -526,14 +538,12 @@ instance DBUpdate PutDocumentUnchecked Document where
                  , documentui
                  , documentregion
                  } = document
-        (simpletype :: Int, process) = case documenttype of
-                                  Signable x -> (1, Just x)
-                                  Template x -> (2, Just x)
-                                  Attachment -> (3, Nothing)
-                                  AttachmentTemplate -> (4, Nothing)
+        simpletype = toDocumentSimpleType documenttype
+        process = toDocumentProcess documenttype
 
-    _ <- runInsertStatement "documents"
+    rowsInserted <- runInsertStatement "documents"
                                      [ sqlField "id" documentid
+                                     , sqlField "title" documenttitle
                                      , sqlField "tags" documenttags
                                      , sqlField "file_id" (listToMaybe documentfiles)
                                      , sqlField "sealed_file_id" (listToMaybe documentsealedfiles)
@@ -562,14 +572,19 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      , sqlFieldType "rejection_time" "timestamp" $ fmap toSeconds $ fst3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
-                                     , sqlField "service" documentservice
+                                     , sqlField "service_id" documentservice
                                      , sqlField "deleted" documentdeleted
                                      -- , toSql documentauthorattachments      -- many to many
                                      -- , toSql documentsignatoryattachments   -- many to many
                                      -- , toSql documentui  -- should go into separate table?
                                      , sqlField "region" documentregion
                                      ]
-    return document
+    when (rowsInserted /= 1) $
+         error "PutDocumentUnchecked did not manage to insert a row"
+    Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
+    when (document /= newdocument) $
+         error "GetDocumentByDocumentID . PutDocumentUnchecked is not identity"
+    return newdocument
 
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
@@ -729,7 +744,16 @@ data GetDocuments = GetDocuments (Maybe ServiceID)
                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments mserviceid) = wrapDB $ \conn -> do
-    unimplemented "GetDocuments"
+    st <- prepare conn $ selectDocumentsSQL
+    _ <- execute st []
+    docs <- fetchDocuments st
+
+    let fetchSignatoryLinksOfDocument doc = do
+             stx <- prepare conn $ selectSignatoryLinksSQL ++ " WHERE document_id = ?"
+             _ <- execute stx [toSql (documentid doc)]
+             sls <- fetchSignatoryLinks stx
+             return (doc { documentsignatorylinks = sls })
+    mapM fetchSignatoryLinksOfDocument docs
 
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
@@ -748,13 +772,6 @@ data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceI
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = wrapDB $ \conn -> do
     unimplemented "GetDocumentsByCompanyAndTags"
-
-data GetDocumentsByDocumentID = GetDocumentsByDocumentID [DocumentID]
-                                deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByDocumentID [Document] where
-  dbQuery (GetDocumentsByDocumentID docids) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsByDocumentID"
-
 
 data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
@@ -836,6 +853,9 @@ instance DBUpdate NewDocument (Either String Document) where
     then return $ Left "company and user don't match"
     else do
       wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+      wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+      did <- DocumentID <$> getUniqueID tableDocuments
+
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
                         else [SignatoryPartner, SignatoryAuthor]
@@ -864,8 +884,6 @@ instance DBUpdate NewDocument (Either String Document) where
                 , documentsignatoryattachments = []
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
-      wrapDB $ \conn -> runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
-      did <- DocumentID <$> getUniqueID tableDocuments
 
       -- here we emulate old behaviour and use current time instead of the one specified above
       -- FIXME: should use time given from above (I think0
@@ -1026,8 +1044,13 @@ instance DBUpdate SetDocumentTrustWeaverReference (Either String Document) where
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentUI (Either String Document) where
-  dbUpdate (SetDocumentUI documentid documentui) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentUI"
+  dbUpdate (SetDocumentUI did documentui) = do
+    r <- runUpdateStatement "documents" 
+         [ sqlField "mail_footer" $ documentmailfooter documentui
+         -- , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentUI" r did
 
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID Mail.MailsDeliveryStatus
@@ -1061,8 +1084,16 @@ instance DBUpdate ResetSignatoryDetails (Either String Document) where
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
                                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
-  dbUpdate (SignLinkFromDetailsForTest details roles) = wrapDB $ \conn -> do
-    unimplemented "SignLinkFromDetailsForTest"
+  dbUpdate (SignLinkFromDetailsForTest details roles) = do
+      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+
+      magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+    
+      let link = signLinkFromDetails' details
+                        roles linkid magichash
+
+      return link
 
 data SignableFromDocument = SignableFromDocument Document
                             deriving (Eq, Ord, Show, Typeable)
@@ -1081,8 +1112,13 @@ instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Documen
 data StoreDocumentForTesting = StoreDocumentForTesting Document
                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate StoreDocumentForTesting DocumentID where
-  dbUpdate (StoreDocumentForTesting document) = wrapDB $ \conn -> do
-    unimplemented "StoreDocumentForTesting"
+  dbUpdate (StoreDocumentForTesting document) = do
+    -- FIXME: this requires more thinking...
+    wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+    did <- DocumentID <$> getUniqueID tableDocuments
+    doc <- dbUpdate (PutDocumentUnchecked (document { documentid = did }))
+    return (documentid doc)
+
 
 data TemplateFromDocument = TemplateFromDocument DocumentID
                             deriving (Eq, Ord, Show, Typeable)
@@ -1093,8 +1129,16 @@ instance DBUpdate TemplateFromDocument (Either String Document) where
 data TimeoutDocument = TimeoutDocument DocumentID MinutesTime
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TimeoutDocument (Either String Document) where
-  dbUpdate (TimeoutDocument documentid time) = wrapDB $ \conn -> do
-    unimplemented "TimeoutDocument"
+  dbUpdate (TimeoutDocument did time) = do
+    r <- runUpdateStatement "documents" 
+         [ sqlField "status" $ Timedout
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ? AND type = ? AND status = ? " [ toSql did
+                                                     , toSql (toDocumentSimpleType (Signable undefined))
+                                                     , toSql Pending 
+                                                     ]
+    getOneDocumentAffected "TimeoutDocument" r did
 
 data UpdateDocument = UpdateDocument MinutesTime DocumentID BS.ByteString [(SignatoryDetails,[SignatoryRole])] (Maybe Int)
                       BS.ByteString (SignatoryDetails, [SignatoryRole], UserID, Maybe CompanyID) [IdentificationType]

@@ -16,7 +16,8 @@ tableDocuments = Table {
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("sealed_file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("title", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("status", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("status", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("error_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("process", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("functionality", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
@@ -50,7 +51,8 @@ tableDocuments = Table {
           ++ ", file_id BIGINT NULL"
           ++ ", sealed_file_id BIGINT NULL"
           ++ ", title TEXT NOT NULL"
-          ++ ", status TEXT NOT NULL"
+          ++ ", status SMALLINT NOT NULL"
+          ++ ", error_text TEXT NULL DEFAULT NULL"
           ++ ", type SMALLINT NOT NULL"
           ++ ", process SMALLINT NULL"
           ++ ", functionality SMALLINT NOT NULL"
