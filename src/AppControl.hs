@@ -112,7 +112,7 @@ data AppGlobals
    the function for any given path and method.
 -}
 staticRoutes :: Route (Kontra Response)
-staticRoutes = choice 
+staticRoutes = choice
      [ allLocaleDirs $ const $ hGetAllowHttp $ handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
@@ -259,7 +259,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "functionalitystats" $ hGet $ toK0 $ Administration.showFunctionalityStats
-     , dir "adminonly" $ dir "db" $ remainingPath GET $ https $ msum 
+     , dir "adminonly" $ dir "db" $ remainingPath GET $ https $ msum
                [ Administration.indexDB >>= toResp
                , onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
                ]
@@ -353,7 +353,7 @@ staticRoutes = choice
      , integrationAPI
      , documentApi
      -- static files
-     , remainingPath GET $ msum 
+     , remainingPath GET $ msum
          [ allowHttp $ serveHTMLFiles
          , allowHttp $ serveDirectory DisableBrowsing [] "public"
          ]
@@ -773,28 +773,21 @@ signup vip _freetill =  do
     Nothing -> return LoopBack
     Just email -> do
       muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
-      case  muser of
-        Just user ->
-          if isNothing $ userhasacceptedtermsofservice user
-          then do
-            al <- newAccountCreatedLink user
-            mail <- newUserMail ctxhostpart email email al vip
-            scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
-            addFlashM flashMessageNewActivationLinkSend
-            return LoopBack
-          else do
-            addFlashM flashMessageUserWithSameEmailExists
-            return LoopBack
-        Nothing -> do
-          maccount <- UserControl.createUser ctx (BS.empty, BS.empty) email Nothing Nothing vip
-          case maccount of
-            Just _account ->  do
-              --addFlashM flashMessageUserSignupDone
-              addFlashM modalUserSignupDone
-              return LoopBack
-            Nothing -> do
-              addFlashM flashMessageUserWithSameEmailExists
-              return LoopBack
+      case (muser, muser >>= userhasacceptedtermsofservice) of
+        (Just user, Nothing) -> do
+          -- there is an existing user that hasn't been activated, so resend the details
+          al <- newAccountCreatedLink user
+          mail <- newUserMail ctxhostpart email email al vip
+          scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
+        (Nothing, Nothing) -> do
+          -- this email address is new to the system, so create the user
+          _mnewuser <- UserControl.createUser ctx (BS.empty, BS.empty) email Nothing Nothing vip
+          return ()
+        (_, _) -> return ()
+      -- whatever happens we want the same outcome, we just claim we sent the activation link,
+      -- because we don't want any security problems with user information leaks
+      addFlashM $ modalUserSignupDone (Email email)
+      return LoopBack
 
 {- |
    Sends a new activation link mail, which is really just a new user mail.
@@ -871,4 +864,4 @@ serveHTMLFiles =  do
   s <- guardJustM $ (liftIO $ catch (fmap Just $ BS.readFile ("html/" ++ fileName))
                                       (const $ return Nothing))
   renderFromBody V.TopNone V.kontrakcja $ BS.toString s
- 
+
