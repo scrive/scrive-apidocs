@@ -573,7 +573,7 @@ data DocumentHistoryEntry
     deriving (Eq, Ord, Typeable)
 
 data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
-    deriving (Typeable, Show, Data)
+    deriving (Typeable, Show, Data, Eq, Ord)
 
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
@@ -712,6 +712,7 @@ $(deriveSerialize ''SignatoryAttachment)
 $(deriveSerialize ''AuthorAttachment)
 
 
+#ifndef DOCUMENTS_IN_POSTGRES
 instance Eq Document where
     a == b = documentid a == documentid b
 
@@ -720,6 +721,12 @@ instance Ord Document where
                 | otherwise = compare (documentmtime b,documenttitle a,documentid a)
                                       (documentmtime a,documenttitle b,documentid b)
                               -- see above: we use reverse time here!
+#else
+
+deriving instance Eq Document
+deriving instance Ord Document
+
+#endif
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
