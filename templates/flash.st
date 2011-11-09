@@ -98,9 +98,6 @@ flashMessageChangePasswordEmailSend=
 flashMessageNoRemainedPasswordReminderEmails=
 	$_flashMessageNoRemainedPasswordReminderEmails()$
 ####
-flashMessageNewActivationLinkSend=
-	$_flashMessageNewActivationLinkSend()$
-
 ###
 flashMessageUserSignupDone=	$_flashMessageUserSignupDone()$
 ###
