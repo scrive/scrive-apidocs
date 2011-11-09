@@ -19,19 +19,23 @@ viewCompanyAccounts =
 
 <script>
 
-  var addCompanyButton = Button.init({
-      color: "green",
-      size: "tiny",
-      text: "$_newCompanyAccountButtonText()$"
-    }).input();
+  var createAddCompanyButton = function() {
+    var addCompanyButton = Button.init({
+        color: "green",
+        size: "tiny",
+        text: "$_newCompanyAccountButtonText()$"
+      }).input();
 
-  //improve this please
-  addCompanyButton.overlay({
-    target: jQuery("#dialog-add-company-user"),
-    mask: standardDialogMask,
-    top: standardDialogTop,
-    fixed: false
-  });
+    //maybe make a component for this sort of button?
+    addCompanyButton.overlay({
+      target: jQuery("#dialog-add-company-user"),
+      mask: standardDialogMask,
+      top: standardDialogTop,
+      fixed: false
+    });
+
+    return addCompanyButton;
+  };
 
   var companyAccountsTable = KontraList.init({
     name : "CompanyAccountsTable",
@@ -82,7 +86,7 @@ viewCompanyAccounts =
            }
          }]
     }),
-    headerExtras: addCompanyButton
+    headerExtras: createAddCompanyButton
   });
 
   jQuery(function(){
