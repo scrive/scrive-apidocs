@@ -124,9 +124,9 @@ pageDocumentDesign=
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">$_personpanePart1()$</span>
                   $if(!isbasic)$
-                  
+
                   <a href="#man2" class="man"></a>
-                  
+
                   <a href="#" class="signingOrder"></a>
                   <select id="authorsignorder" name="authorsignorder" class="float-right">
                     <option value="1">1</option>
@@ -345,10 +345,21 @@ pageDocumentDesign=
                      </p>
                      -->
               </div>
+              <div>
+                <label for="docregionselector">$_documentLanguageLabel()$:</label>
+                <select id="docregionselector">
+                  <option value="REGION_GB" $if(region.gb)$selected="selected"$endif$ rel="#dialog-confirm-region-gb">$_English()$</option>
+                  <option value="REGION_SE" $if(region.se)$selected="selected"$endif$  rel="#dialog-confirm-region-se">$_Swedish()$</option>
+                </select>
+              </div>
               <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">$_editinvitetextlink()$</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
+            </div>
+
+            <div class="border"></div>
+            <div id="signStepsBodyRight" class="step3">
               <div class="signStepsBodyAttachments">
                 <small>
                   <a rel="#update-attachments-dialog" href="#"
@@ -369,15 +380,6 @@ pageDocumentDesign=
                      style="padding-top:3px" id="addsigattachmentlink">$_addsigattachmentlink()$</a>
                 </small>
               </div>
-            </div>
-
-            <div class="border"></div>
-            <div id="signStepsBodyRight" class="step3">
-              <label for="docregionselector">$_documentLanguageLabel()$:</label>
-              <select id="docregionselector">
-                <option value="REGION_GB" $if(region.gb)$selected="selected"$endif$ rel="#dialog-confirm-region-gb">$_English()$</option>
-                <option value="REGION_SE" $if(region.se)$selected="selected"$endif$  rel="#dialog-confirm-region-se">$_Swedish()$</option>
-              </select>
             </div>
             <div class="border"></div>
 

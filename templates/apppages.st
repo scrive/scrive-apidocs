@@ -234,7 +234,7 @@ pageFooter=
         <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
         <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
         <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
-        <!--<li><a href="/board.html">Board of Advisors</a></li>-->
+        <li><a href="$linkcontactus$">$_pageFooterContactUs()$</a></li>
       </ul>
     </div>
     $if(publicsafe)$

@@ -124,7 +124,7 @@ staticRoutes = choice
      , publicDir "om-scrive" "about" LinkAbout handleAboutPage
      , publicDir "partners" "partners" LinkPartners handlePartnersPage -- FIXME: Same dirs for two languages is broken
      , publicDir "kunder" "clients" LinkClients handleClientsPage
-
+     , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
@@ -495,6 +495,9 @@ handlePartnersPage = handleWholePage partnersPage
 
 handleClientsPage :: Kontra Response
 handleClientsPage = handleWholePage clientsPage
+
+handleContactUsPage :: Kontra Response
+handleContactUsPage = handleWholePage contactUsPage
 
 handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do
