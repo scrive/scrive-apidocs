@@ -24,6 +24,7 @@ import Data.List
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
+import File.FileID
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
@@ -210,8 +211,9 @@ testDocumentAttachNotPreparationLeft = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  file <- addNewRandomFile
   --execute
-  edoc <- randomUpdate $ AttachFile (documentid doc)
+  edoc <- randomUpdate $ AttachFile (documentid doc) (fileid file)
   --assert
   validTest $ do
     assertLeft edoc
@@ -221,8 +223,9 @@ testDocumentAttachPreparationRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  file <- addNewRandomFile
   --execute
-  edoc <- randomUpdate $ AttachFile (documentid doc)
+  edoc <- randomUpdate $ AttachFile (documentid doc) (fileid file)
   --assert
   validTest $ do
     assertRight edoc
@@ -232,9 +235,10 @@ testDocumentAttachPreparationRight = doTimes 10 $ do
 testNoDocumentAttachAlwaysLeft :: DB ()
 testNoDocumentAttachAlwaysLeft = doTimes 10 $ do
   -- setup
+  file <- addNewRandomFile
   --execute
   -- non-existent docid
-  edoc <- randomUpdate $ AttachFile
+  edoc <- randomUpdate $ (\docid -> AttachFile docid (fileid file))
   --assert
   validTest $ do
     assertLeft edoc
@@ -244,9 +248,9 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  a <- rand 10 arbitrary
+  file <- addNewRandomFile
   --execute
-  edoc <- randomUpdate $ AttachFile (documentid doc) a
+  edoc <- randomUpdate $ AttachFile (documentid doc) (fileid file)
   --assert
   validTest $ do
     assertRight edoc
@@ -256,9 +260,10 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
 testNoDocumentAttachSealedAlwaysLeft :: DB ()
 testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
   -- setup
+  file <- addNewRandomFile
   --execute
   -- non-existent docid
-  edoc <- randomUpdate $ AttachSealedFile
+  edoc <- randomUpdate $ (\docid -> AttachSealedFile docid (fileid file))
   --assert
   validTest $ assertLeft edoc
   
@@ -267,13 +272,13 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable)
-  fid <- rand 10 arbitrary
+  file <- addNewRandomFile
   --execute
-  edoc <- randomUpdate $ AttachSealedFile (documentid doc) fid
+  edoc <- randomUpdate $ AttachSealedFile (documentid doc) (fileid file)
   --assert
   validTest $ do
     assertRight edoc
-    assertBool "Should have new file attached, but it's not" $ fid `elem` documentsealedfiles (fromRight edoc)
+    assertBool "Should have new file attached, but it's not" $ (fileid file) `elem` documentsealedfiles (fromRight edoc)
 
 
 {-
@@ -437,8 +442,9 @@ testAddDocumentAttachmentFailsIfNotPreparation :: DB ()
 testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  file <- addNewRandomFile
   --execute                     
-  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc)
+  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file)
   --assert
   validTest $ assertLeft edoc
   
@@ -446,8 +452,9 @@ testAddDocumentAttachmentOk :: DB ()
 testAddDocumentAttachmentOk = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  file <- addNewRandomFile
   --execute                     
-  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) 
+  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file) 
   --assert
   validTest $ assertRight edoc
           
@@ -456,7 +463,7 @@ testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute                     
-  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc)
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
   --assert
   validTest $ assertLeft edoc
   
@@ -465,7 +472,7 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute                     
-  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) 
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
   --assert
   validTest $ assertRight edoc
 

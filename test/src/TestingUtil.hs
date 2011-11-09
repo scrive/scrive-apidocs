@@ -9,7 +9,11 @@ import Control.Applicative
 import System.Random
 import Test.QuickCheck
 import Happstack.Server
+#ifndef DOCUMENTS_IN_POSTGRES
 import Happstack.State
+#else
+import Doc.DocUtils
+#endif
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
@@ -27,11 +31,14 @@ import FlashMessage
 import qualified AppLogger as Log
 import StateHelper
 import Mails.MailsUtil
-import Doc.DocState
+import Doc.Transitory
+import Doc.DocStateData
+import Doc.DocStateCommon
 import KontraMonad
 import MinutesTime
 import User.Model
 import Misc
+import File.Model
 import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
@@ -221,12 +228,10 @@ instance Arbitrary Document where
     ds <- arbitrary
     dt <- arbitrary
     sls <- arbitrary
-    f <- arbitrary
     ids <- arbitrary
     return $ blankDocument { documentstatus = ds
                            , documenttype = dt
                            , documentsignatorylinks = sls
-                           , documentfiles = [f]
                            , documentallowedidtypes = [ids]
                            }
 
@@ -393,6 +398,7 @@ blankUser = User {
               , usercompany = Nothing
               }
 
+{-
 blankDocument :: Document
 blankDocument =
           Document
@@ -427,6 +433,7 @@ blankDocument =
           , documentregion               = REGION_SE
           }
 
+-}
 
 testThat :: String -> Connection -> DB () -> Test
 testThat s conn a = testCase s (withTestEnvironment conn a)
@@ -435,6 +442,16 @@ addNewCompany ::  DB Company
 addNewCompany = do
     eid <- rand 10 arbitrary
     dbUpdate $ CreateCompany Nothing eid
+
+addNewFile :: String -> BS.ByteString -> DB File
+addNewFile filename content =
+  dbUpdate $ NewFile (BS.fromString filename) content
+
+addNewRandomFile :: DB File
+addNewRandomFile = do
+  fn <- rand 10 $ arbString 3 30
+  cnt <- rand 10 $ arbString 3 30
+  addNewFile fn (BS.fromString cnt)
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
@@ -482,19 +499,19 @@ addRandomDocumentWithAuthor user = do
   let sls = 1 + abs slsab
   sldets <- rand 10 (vectorOf sls arbitrary)
   slr <- rand 1000 (vectorOf sls $ elements [[], [SignatoryPartner]])
-  slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
+  slinks <- sequence $ zipWith (\a r -> doc_update $ (SignLinkFromDetailsForTest a r)) sldets slr
 
   mcompany <- case usercompany user of
     Nothing -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
 
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-  asl <- update $ SignLinkFromDetailsForTest asd roles
+  asl <- doc_update $ SignLinkFromDetailsForTest asd roles
   let adoc = doc { documentsignatorylinks = slinks ++
                                             [asl { maybesignatory = Just (userid user) }]
                  , documentregion = getRegion user
                  }
-  update $ StoreDocumentForTesting adoc
+  doc_update $ StoreDocumentForTesting adoc
 
 getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
 getRandomAuthorRoles doc =
@@ -515,11 +532,12 @@ addRandomDocumentWithAuthorAndCondition user p =  do
     Nothing -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
 
+  file <- addNewRandomFile
   now <- liftIO getMinutesTime
 
   (signinfo, seeninfo) <- rand 10 arbitrary
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-  asl <- update $ SignLinkFromDetailsForTest asd roles
+  asl <- doc_update $ SignLinkFromDetailsForTest asd roles
   let asl' = asl { maybeseeninfo = seeninfo
                  , maybesigninfo = signinfo
                  }
@@ -530,14 +548,15 @@ addRandomDocumentWithAuthorAndCondition user p =  do
   let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
   let adoc = doc { documentsignatorylinks = siglinksandauthor
                  , documentregion = getRegion user
+                 , documentfiles = [fileid file]
                  }
   if p adoc
     then do
     let d = (invariantProblems now adoc)
     if isNothing d
       then do
-        docid <- update $ StoreDocumentForTesting adoc
-        mdoc <- query $ GetDocumentByDocumentID docid
+        docid <- doc_update $ StoreDocumentForTesting adoc
+        mdoc <- doc_query $ GetDocumentByDocumentID docid
         case mdoc of
           Nothing -> do
             assertFailure "Could not store document."

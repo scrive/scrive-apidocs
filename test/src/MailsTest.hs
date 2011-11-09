@@ -64,7 +64,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
-        _ <- gRight $ randomUpdate $ AttachFile docid
+        file <- addNewRandomFile
+        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
