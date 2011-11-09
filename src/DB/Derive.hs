@@ -138,7 +138,7 @@ enumDeriveConvertible' checkTrivialConstructors t = do
               (NormalB (CaseE (SigE (AppE (VarE 'safeConvert) (VarE v')) (AppT (ConT ''ConvertResult) (ConT ''Integer))) $
                   map (\(n, (con, pr)) ->
                     Match (ConP 'Right [LitP (IntegerL n)]) (NormalB (AppE (ConE 'Right) 
-                                                                             (foldl1 AppE (ConE con : map (\_ -> (AppE (VarE 'error) (LitE (StringL "enumDeriveConvertible did not put a field value for you")))) pr)))) [])
+                                                                             (foldl1 AppE (ConE con : map (\_ -> (AppE (VarE 'error) (LitE (StringL $ "enumDeriveConvertible for " ++ show name ++ " did not put a field value in constructor " ++ show con)))) pr)))) [])
                     (zip [1..] ncons)
                 ++ [
                   Match (ConP 'Right [VarP n'])
