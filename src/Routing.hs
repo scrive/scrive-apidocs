@@ -11,6 +11,7 @@ module Routing ( hGet
                , hGetWrap
                , hPost
                , hDelete
+               , hPut
                , hPostNoXToken
                , hPostAllowHttp
                , hGetAllowHttp
@@ -26,7 +27,7 @@ import Control.Monad.IO.Class()
 import Data.Functor
 import AppView as V
 import Data.Maybe
-import Happstack.Server(Response, Method(GET,POST,DELETE), FromReqURI, rsCode)
+import Happstack.Server(Response, Method(GET,POST,DELETE,PUT), FromReqURI, rsCode)
 import qualified Happstack.Server as H
 import Happstack.StaticRouting(Route)
 import Happstack.StaticRouting.Internal(Route(Handler))
@@ -84,6 +85,10 @@ hGetWrap f = path GET f
 hDeleteWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
 hDeleteWrap f x = path DELETE f x
 
+hPutWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPutWrap f x = path PUT f x
+
+
 {- To change standard string to page-}
 page:: Kontra String -> Kontra Response
 page pageBody = do
@@ -123,6 +128,9 @@ hGet = hGetWrap https
 
 hDelete :: Path a => a -> Route (Kontra Response)
 hDelete = hDeleteWrap https
+
+hPut :: Path a => a -> Route (Kontra Response)
+hPut = hPutWrap https
 
 hGetAllowHttp :: Path a => a -> Route (Kontra Response)
 hGetAllowHttp = hGetWrap allowHttp

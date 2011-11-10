@@ -1,11 +1,9 @@
 module Doc.API where
 
 import Happstack.StaticRouting
-import DBError
 import Text.JSON
 import KontraMonad
 import Util.JSON
-import Happstack.Server.Response
 import Happstack.Server.Types
 import Happstack.State
 import Routing
@@ -29,119 +27,12 @@ import DB.Types
 import Kontra
 import Happstack.Server (FromReqURI(..))
 import Doc.DocUtils
-
-data APIResponse a = Created a
-                   | OK a
-                   | BadInput
-                   | NotLoggedIn
-                   | Forbidden
-                   | ActionNotAvailable
-                   | ServerError
-
-instance Monad APIResponse where
-  return = OK
-  
-  Created x          >>= f = f x
-  OK x               >>= f = f x
-  BadInput           >>= _ = BadInput 
-  NotLoggedIn        >>= _ = NotLoggedIn
-  Forbidden          >>= _ = Forbidden 
-  ActionNotAvailable >>= _ = ActionNotAvailable 
-  ServerError        >>= _ = ServerError 
-
-  fail _ = ServerError
-  
-newtype (Monad m) => APIMonad m a = AM { runAPIMonad :: m (APIResponse a) }
-  
-instance Monad m => Monad (APIMonad m) where                                     
-  return = AM . return . OK
-  
-  AM x >>= f = AM $ do
-    x' <- x
-    case x' of
-      Created v          -> runAPIMonad $ f v
-      OK v               -> runAPIMonad $ f v
-      BadInput           -> return $ BadInput
-      NotLoggedIn        -> return $ NotLoggedIn
-      Forbidden          -> return $ Forbidden
-      ActionNotAvailable -> return $ ActionNotAvailable
-      ServerError        -> return $ ServerError
-  
-apiCreated :: Monad m => a -> APIMonad m a
-apiCreated = AM . return . Created
-
-apiOK :: Monad m => a -> APIMonad m a
-apiOK = AM . return . OK
-
-apiBadInput :: Monad m => APIMonad m a
-apiBadInput = AM $ return BadInput
-
-apiNotLoggedIn :: Monad m => APIMonad m a
-apiNotLoggedIn = AM $ return NotLoggedIn
-
-apiForbidden :: Monad m => APIMonad m a
-apiForbidden = AM $ return Forbidden
-
-apiActionNotAvailable :: Monad m => APIMonad m a
-apiActionNotAvailable = AM $ return ActionNotAvailable
-
-apiServerError :: Monad m => APIMonad m a
-apiServerError = AM $ return ServerError
-
-instance MonadTrans APIMonad where
-  lift = AM . (liftM OK)
-
-jsonError :: Either String JSValue
-jsonError = (Right jsempty) >>=
-            jsset "status" "error"
-            
-setJsonType :: (Monad m) => Response -> m Response
-setJsonType r = return $ setHeader "Content-Type" "application/json" r
-
--- | convert the return type to the appropriate response
--- This defines the possible outputs of the api.
-api :: (Kontrakcja m) => APIMonad m JSValue -> m Response
-api acc = do
-  r <- runAPIMonad acc
-  case r of 
-    BadInput ->
-      badRequest (toResponse $ encode $ fromRight $
-                  jsonError >>=
-                  jsset "message" "The input sent was invalid. Please try again.") >>=
-      setJsonType
-    Forbidden ->
-      forbidden (toResponse $ encode $ fromRight $ 
-                 jsonError >>=
-                 jsset "message" "The resource you are trying to access does not exist or you do not have permission to access it.") >>=
-      setJsonType
-    NotLoggedIn -> 
-      unauthorized (toResponse $ encode $ fromRight $
-                    jsonError >>=
-                    jsset "message" "You must identify yourself to access this resource." >>=
-                    jsset "url" "http://scrive.com/api/user/login") >>=
-      setJsonType
-    ServerError ->
-      internalServerError (toResponse $ encode $ fromRight $
-                           jsonError >>=
-                           jsset "message" "We're sorry. The server just does not know what to do.") >>=
-      setJsonType
-    ActionNotAvailable ->
-      forbidden (toResponse $ toResponse $ encode $ fromRight $
-                 jsonError >>=
-                 jsset "message" "The action you requested is not available on this resource.") >>=
-      setJsonType
-    OK v -> ok $ toResponse $ encode v
-    Created v -> 
-      (ok $ toResponse $ encode v) >>=
-      setRsCode 201
-
-{-
-apiRightM :: Kontrakcja m => m (Either DBError a) -> APIMonad m a
-apiRightM a = do
-  a' <- a
-  case a' of
-    Left e -> 
--}
+import User.Model
+import Company.Model
+import Control.Applicative
+import API.APICommons
+import Happstack.Server.Monads
+import API.Monad
 
 documentApi :: Route (Kontra Response)
 documentApi = choice [
@@ -149,31 +40,29 @@ documentApi = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
   dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
-  dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
+  dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment,
+  dir "api" $ dir "document" $ hPostNoXToken $ toK2 $ documentChangeMetadata
+  --dir "api" $ dir "login"    $ hPostNoXToken $ toK0 $ apiLogin
   ]
-              
-apiResponseFromDBError :: DBError -> APIResponse a
-apiResponseFromDBError = undefined
 
-apiMonadFromAPIResponse :: Monad m => APIResponse a -> APIMonad m a
-apiMonadFromAPIResponse = AM . return
-
-class Monad m => APIGuard m b a where
-  apiGuard  :: a   -> APIMonad m b
-  apiGuardL :: m a -> APIMonad m b
-  apiGuardL acc = lift acc >>= apiGuard
-  
-instance Monad m => APIGuard m b (Either DBError b)  where
-  apiGuard (Left e)  = AM $ return $ apiResponseFromDBError e
-  apiGuard (Right v) = return v
-              
-instance Monad m => APIGuard m b (Maybe b) where
-  apiGuard Nothing = apiForbidden
-  apiGuard (Just x) = return x
-
-instance Monad m => APIGuard m b (Either String b) where
-  apiGuard (Left _) = apiServerError
-  apiGuard (Right v) = return v
+{-              
+_apiLogin :: Kontrakcja m => m Response
+_apiLogin = api $ do
+  memail  <- getDataFn' (look "email")
+  mpasswd <- getDataFn' (look "password")
+  case (memail, mpasswd) of
+    (Just email, Just passwd) -> do
+      -- check the user things here
+      maybeuser <- lift $ runDBQuery $ GetUserByEmail Nothing (Email $ BS.fromString email)
+      case maybeuser of
+        Just user@User{userpassword}
+          | verifyPassword userpassword (BS.fromString passwd) -> do
+            muuser <- runDBQuery $ GetUserByID (userid user)
+            lift $ logUserToContext muuser
+            apiOK jsempty
+        _ -> apiForbidden
+    _ -> apiBadInput
+-}              
 
 -- | Return a list of documents the logged in user can see
 documentList :: Kontrakcja m => m Response
@@ -182,38 +71,101 @@ documentList = api $
   lift . mapM jsonDocumentAndFiles >>=
   apiOK . showJSON
 
-documentNew :: Kontra.Kontra Response
-documentNew = api $ undefined
+documentNew :: Kontrakcja m => m Response
+documentNew = api $ do
+  user <- getAPIUser
+  mcompany <- case usercompany user of
+    Nothing -> return Nothing
+    Just cid -> do
+      a <- apiGuardL $ runDBQuery $ GetCompany cid
+      return $ Just a
+  
+  mdoctypes <- lift $ getDataFn' (look "type")
+  when (isNothing mdoctypes)
+    apiBadInput
+  let Just doctypes = mdoctypes
+  let mdoctypei = maybeRead doctypes
+  when (isNothing mdoctypei)
+    apiBadInput
+  let Just doctypei = mdoctypei
+  let mdoctype = toDocumentType <$> toSafeEnum doctypei
+  when (isNothing mdoctype)
+    apiBadInput
+  let Just doctype = mdoctype
+  
+  -- pdf exists  
+  mfile <- lift $ getDataFn' (lookInput "file")
+  when (isNothing mfile) $
+    apiBadInput
+  let Just (Input contentspec (Just filename') _contentType) = mfile
+  let filename = (BS.fromString $ basename filename')
+      
+  content1 <- case contentspec of
+    Left filepath -> lift $ liftIO $ BSL.readFile filepath
+    Right content -> return content
+  
+  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+  -- we use gs to do that of course
+  ctx <- lift $ getContext
+  let now = ctxtime ctx
+  
+  d1 <- apiGuardL $ update $ NewDocument user mcompany filename doctype now
+  
+  content <- lift $ liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
+  file <- lift $ runDB $ dbUpdate $ NewFile filename content
+
+  d2 <- apiGuardL $ update $ AttachFile (documentid d1) (fileid file) now
+  
+  apiCreated $ jsonDocumentForSignatory d2
+
+documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
+documentChangeMetadata docid _ = api $ do
+  user <- getAPIUser  
+  doc <- apiGuardL $ query $ GetDocumentByDocumentID docid
+  
+  asl <- apiGuard $ getAuthorSigLink doc
+  
+  when (Just (userid user) /= maybesignatory asl)
+    apiForbidden
+    
+  rq <- lift askRq
+    
+  bdy <- apiGuardL $ liftIO $ takeRequestBody rq
+  let jstring = BS.toString $ concatChunks $ unBody bdy
+  
+  json <- case decode jstring of
+    Error _ -> apiBadInput
+    Ok a -> return a
+    
+  ctx <- lift $ getContext
+  let now = ctxtime ctx
+  d <- case jsget "title" json of
+    Left _ -> return doc
+    Right (JSString s) ->
+      apiGuardL $ update $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
+    Right _ -> apiBadInput
+      
+  apiOK $ jsonDocumentMetadata d
 
 documentView :: (Kontrakcja m) => DocumentID -> m Response
 documentView (_ :: DocumentID) = api $  undefined
 
-data SignatoryResource = SignatoryResource
 
-instance Read SignatoryResource where
-  readsPrec _ ('s':'i':'g':'n':'a':'t':'o':'r':'y':x) = [(SignatoryResource, x)]
-  readsPrec _ _ = error "must be \"signatory\""
-  
+data SignatoryResource = SignatoryResource
 instance FromReqURI SignatoryResource where
-    fromReqURI = maybeRead
+    fromReqURI s = Just SignatoryResource <| s == "signatory" |> Nothing
 
 data AttachmentResource = AttachmentResource
-
-instance Read AttachmentResource where
-  readsPrec _  ('a':'t':'t':'a':'c':'h':'m':'e':'n':'t':x) = [(AttachmentResource, x)]
-  readsPrec _ _ = error "must be \"attachment\""
-
 instance FromReqURI AttachmentResource where
-    fromReqURI = maybeRead
+    fromReqURI s = Just AttachmentResource <| s == "attachment" |> Nothing
     
 data FileResource = FileResource
-
-instance Read FileResource where
-  readsPrec _  ('f':'i':'l':'e':x) = [(FileResource, x)]
-  readsPrec _ _ = error "must be \"file\""
-
 instance FromReqURI FileResource where
-    fromReqURI = maybeRead
+    fromReqURI s = Just FileResource <| s == "file" |> Nothing
+
+data MetadataResource = MetadataResource
+instance FromReqURI MetadataResource where
+    fromReqURI s = Just MetadataResource <| s == "metadata" |> Nothing
 
 getMagicHash :: Kontrakcja m => APIMonad m MagicHash
 getMagicHash = do
@@ -319,7 +271,6 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
 -- helpers
 
-  
 jsonDocumentAndFiles :: Kontrakcja m => Document -> m JSValue
 jsonDocumentAndFiles doc = do
   --files <- getFilesByStatus doc

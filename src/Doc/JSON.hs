@@ -4,6 +4,7 @@ module Doc.JSON
        , jsonDocumentID
        , jsonDocumentType
        , jsonSigAttachmentWithFile
+       , jsonDocumentMetadata
        )
 where
 
@@ -11,13 +12,17 @@ import Doc.DocStateData
 import Text.JSON
 import Util.JSON
 import Misc
+import KontraLink
 
 jsonDocumentType :: DocumentType -> JSValue
 jsonDocumentType (Signable Contract) = showJSON (1 :: Int)
 jsonDocumentType (Signable Offer)    = showJSON (3 :: Int)
 jsonDocumentType (Template Contract) = showJSON (2 :: Int)
 jsonDocumentType (Template Offer)    = showJSON (4 :: Int)
-jsonDocumentType x                   = error $ "Unsupported document type " ++ show x
+jsonDocumentType (Signable Order)    = showJSON (5 :: Int)
+jsonDocumentType (Template Order)    = showJSON (6 :: Int)
+jsonDocumentType (Attachment)        = showJSON (20 :: Int)
+jsonDocumentType (AttachmentTemplate)= error $ "Unsupported document type AttachmentTemplate"
 
 jsonDocumentID :: DocumentID -> JSValue
 jsonDocumentID = showJSON . show
@@ -37,6 +42,12 @@ jsonIdentificationType [EmailIdentification] = showJSON (1 :: Int)
 jsonIdentificationType [ELegitimationIdentification] = showJSON (10 :: Int)
 jsonIdentificationType x = error $ "Unknown id type " ++ show x
 
+jsonDocumentMetadata :: Document -> JSValue
+jsonDocumentMetadata doc = fromRight $
+                           (Right jsempty) >>=
+                           (jsset "url" $ show $ LinkAPIDocumentMetadata (documentid doc)) >>=
+                           (jsset "title" $ documenttitle doc)
+
 jsonDocumentForSignatory :: Document -> JSValue
 jsonDocumentForSignatory doc = 
   fromRight            $ (Right jsempty)                          >>=                                
@@ -44,6 +55,7 @@ jsonDocumentForSignatory doc =
   (jsset "title"       $ documenttitle doc)                       >>=                        
   (jsset "type"        $ jsonDocumentType $ documenttype doc)     >>=       
   (jsset "status"      $ jsonDocumentStatus $ documentstatus doc) >>=
+  (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
   (jsset "authorization" $ jsonIdentificationType $ documentallowedidtypes doc)
 
 -- I really want to add a url to the file in the json, but the only

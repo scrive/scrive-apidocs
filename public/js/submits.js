@@ -25,7 +25,8 @@ window.Submit = Backbone.Model.extend({
             k == "inputs" || 
             k == "ajax" || 
             k == "ajaxsuccess" ||
-            k == "expectedType";
+            k == "expectedType" ||
+            k == "onSend";
     },
     add: function(k,v)
     {
