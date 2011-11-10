@@ -13,9 +13,12 @@ window.Submit = Backbone.Model.extend({
         method : "GET",
         inputs : jQuery(),
         onSend : function () {},
+        beforeSend : function () {},
         // for ajax submission
         ajax : false,
         ajaxsuccess: function() {},
+        ajaxerror: function() {},
+
         expectedType: null
     },
     ignored : function(k)
@@ -25,7 +28,9 @@ window.Submit = Backbone.Model.extend({
             k == "inputs" || 
             k == "ajax" || 
             k == "ajaxsuccess" ||
+            k == "ajaxerror" ||
             k == "expectedType" ||
+            k == "beforeSend" ||
             k == "onSend";
     },
     add: function(k,v)
@@ -43,24 +48,21 @@ window.Submit = Backbone.Model.extend({
         form.attr("action", this.get("url"));
         form.attr("method", this.get("method"));
         if (this.get("method") == "POST")
-           form.attr("enctype","multipart/form-data");
+            form.attr("enctype","multipart/form-data");
         for (var k in this.attributes) {
-        var val = this.get(k)
-        if (this.ignored(k))
-          continue ;  
-        else
-          if (!$.isArray(val))
-            {var input = $("<input type='hidden' />");
-             input.attr("name", k);
-             input.attr("value", val);
-             form.append(input);
-            }
-        else 
-          for (var i=0;i<val.length;i++)
-            {var input = $("<input type='hidden' />");
-             input.attr("name", k);
-             input.attr("value", val[i]);
-             form.append(input);
+            var val = this.get(k);
+            if (this.ignored(k))
+                continue ;  
+            else if (!$.isArray(val)) {
+                var input = $("<input type='hidden' />");
+                input.attr("name", k);
+                input.attr("value", val);
+                form.append(input);
+            } else for (var i=0;i<val.length;i++) {
+                var input = $("<input type='hidden' />");
+                input.attr("name", k);
+                input.attr("value", val[i]);
+                form.append(input);
             }
         }
         form.append(this.get("inputs"));
@@ -68,7 +70,10 @@ window.Submit = Backbone.Model.extend({
 
         if (this.get('ajax'))
             form.ajaxForm({success: this.get('ajaxsuccess'),
+                           error: this.get('ajaxerror'),
                            dataType: this.get('expectedType')});
+
+        this.get('beforeSend')();
         form.submit();
         this.get('onSend')();
     }})

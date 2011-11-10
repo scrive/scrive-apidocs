@@ -99,6 +99,10 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                 onClick : function () {
                     attachment.loading();
                 },
+                onError: function() {
+                    attachment.notLoading();
+                    attachment.trigger('change');
+                },
                 submit : new Submit({
                     method : "POST",
                     url : uploadurl,
@@ -106,10 +110,22 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                     sigattachment : "YES",
                     ajax: true,
                     expectedType: 'json',
+                    beforeSend: function() {
+                        console.log("first");
+                    },
                     onSend: function() {
+                        console.log("here");
                         attachment.loading();
                     },
+                    ajaxerror: function(d,a){
+                        if(a === 'parsererror') // file too large
+                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+                        else
+                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                        attachment.notLoading();
+                    },
                     ajaxsuccess: function(d) {
+                        console.log("there");
                         if (d) {
                             attachment.setFile(new File(_.extend(d.file, {document: attachment.signatory().document() })));
                             attachment.notLoading();

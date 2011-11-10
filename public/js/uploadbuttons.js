@@ -28,7 +28,8 @@ var UploadButtonModel = Backbone.Model.extend({
       maxlength : 1,
       submitOnUpload : false,
       size : "small",
-      showLoadingDialog : true
+      showLoadingDialog : true,
+      onError: function() {}
   },
   width : function(){
        return this.get("width");
@@ -92,32 +93,31 @@ var UploadButtonView = Backbone.View.extend({
         fileinput.attr("accept","application/pdf").attr("maxlength",model.maxlength()).attr("name",model.name());
         fileinput.css("width",model.width()  + "px");
         var list = model.list();
-        if (list == undefined)
-            {
-               list = $("<div style='display:none'>");
-               button.append(list) ;
-            }
+        if (list == undefined) {
+            list = $("<div style='display:none'>");
+            button.append(list);
+        }
         fileinput.MultiFile({
             list: list,
+            onError: function(a,b,c,d) {
+                FlashMessages.add({content: localization.onlyPDFAllowed, color: "red"});
+                return model.get('onError')(a,b,c,d);
+            },
             onFileAppend: function() {
                 if (model.submitOnUpload()) {
                     if(model.get('showLoadingDialog'))
                         LoadingDialog.open(localization.loadingFile);
-                    if (model.hasSubmit())
-                    {
+                    if (model.hasSubmit()) {
                         model.submit().addInputs(list);
                         model.submit().addInputs(fileinput);
                         model.submit().send();
-                    }    
-                    else
-                    {
+                    } else {
                         button.parents("form").submit();
-                    }    
-                
+                    }
                 }
             }
         });
-        button .append(fileinput);
+        button.append(fileinput);
         this.el.append(button);
         return this;
     }

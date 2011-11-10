@@ -138,5 +138,8 @@ javascriptLocalisation =
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
             , skrivapa : "$_skrivapa()$"
             , tweetAccount : "$_tweetAccount()$"
+            , onlyPDFAllowed: "$_onlyPDFAllowed()$"
+            , fileTooLarge: "$_fileTooLarge()$"
+            , couldNotUpload: "$_couldNotUpload()$"
    }
 ####
