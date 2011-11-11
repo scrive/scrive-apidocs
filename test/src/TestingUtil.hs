@@ -562,10 +562,19 @@ addRandomDocumentWithAuthorAndCondition user p =
 
 addRandomDocument :: RandomDocumentAllows -> DB Document
 addRandomDocument rda = do
-  worker
-
+  file <- addNewRandomFile
+  now <- liftIO getMinutesTime
+  document <- worker file now
+  docid <- doc_update $ StoreDocumentForTesting document
+  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> do
+              assertFailure "Could not store document."
+              return document
+    Just doc' -> do
+              return doc'
   where
-    worker = do
+    worker file now = do
       let user = randomDocumentAuthor rda
           p = randomDocumentCondition rda
       doc' <- rand 10 arbitrary
@@ -579,8 +588,6 @@ addRandomDocument rda = do
                     Nothing -> return Nothing
                     Just cid -> dbQuery $ GetCompany cid
 
-      file <- addNewRandomFile
-      now <- liftIO getMinutesTime
 
       (signinfo, seeninfo) <- rand 10 arbitrary
       asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
@@ -603,27 +610,16 @@ addRandomDocument rda = do
                      , documentregion = getRegion user
                      , documentfiles = [fileid file]
                      }
-      if p adoc
-        then do
-          let d = (invariantProblems now adoc)
-          if isNothing d
-            then do
-              docid <- doc_update $ StoreDocumentForTesting adoc
-              mdoc <- doc_query $ GetDocumentByDocumentID docid
-              case mdoc of
-                Nothing -> do
-                          assertFailure "Could not store document."
-                          return doc
-                Just doc'' -> do
-                          return doc''
-             else do
+      case (p adoc, invariantProblems now adoc) of
+        (True, Nothing) -> return adoc
+        (False, _)  -> do
+                        worker file now
+        (_, Just _problems) -> do
+               -- am I right that random document should not have invariantProblems?
                --uncomment this to find out why the doc was rejected
                --print adoc
-               --print $ "rejecting doc: " ++ fromJust d
-               worker
-        else do
-          --print adoc
-          worker
+               --print $ "rejecting doc: " ++ _problems
+               worker file now
 
 rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do
