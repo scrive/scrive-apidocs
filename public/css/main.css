@@ -730,7 +730,7 @@ a.new-btn-small.black p {
 .body-container .left-column {
 	float: left;
 	margin-right: 20px;
-	margin-top: 40px;
+	margin-top: 20px;
 	width: 220px;
 }
 
@@ -738,7 +738,7 @@ a.new-btn-small.black p {
 
 .body-container .right-column {
 	float: left;
-	margin-top: 40px;
+	margin-top: 20px;
 	width: 700px;
 }
 
