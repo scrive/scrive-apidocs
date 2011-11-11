@@ -3302,7 +3302,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_modalUserSignupDoneBody","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till din inkorg.",,"Your account has been created! An email containing your account
  details has been sent to your inbox."
-"_GoBack","Gå tillbaks",,"Go back"
+"_GoBack","Gå tillbaka",,"Go back"
 "_signInEnglishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
 "_signInSwedish","Signera på svenska",,"Sign in Swedish"
 "_signInSwedishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på svenska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på svenska.</p><p>Personnummer och e-legitimation är alternativ som tillkommer då de även är möjliga i Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in Swedish.</p><p>This means that all emails sent to the parts about this document will be written in Swedish.</p><p>Swedish options for using social security numbers and e-legitimation will be added.</p>"
