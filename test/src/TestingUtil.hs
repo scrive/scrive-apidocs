@@ -562,58 +562,68 @@ addRandomDocumentWithAuthorAndCondition user p =
 
 addRandomDocument :: RandomDocumentAllows -> DB Document
 addRandomDocument rda = do
-  let user = randomDocumentAuthor rda
-      p = randomDocumentCondition rda
-  doc' <- rand 10 arbitrary
-  xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
-  status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-  let doc = doc' { documenttype = xtype, documentstatus = status }
+  worker
 
-  roles <- getRandomAuthorRoles doc
+  where
+    worker = do
+      let user = randomDocumentAuthor rda
+          p = randomDocumentCondition rda
+      doc' <- rand 10 arbitrary
+      xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
+      status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
+      let doc = doc' { documenttype = xtype, documentstatus = status }
 
-  mcompany <- case usercompany user of
-    Nothing -> return Nothing
-    Just cid -> dbQuery $ GetCompany cid
+      roles <- getRandomAuthorRoles doc
+    
+      mcompany <- case usercompany user of
+                    Nothing -> return Nothing
+                    Just cid -> dbQuery $ GetCompany cid
 
-  file <- addNewRandomFile
-  now <- liftIO getMinutesTime
+      file <- addNewRandomFile
+      now <- liftIO getMinutesTime
 
-  (signinfo, seeninfo) <- rand 10 arbitrary
-  asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-  asl <- doc_update $ SignLinkFromDetailsForTest asd roles
-  let asl' = asl { maybeseeninfo = seeninfo
-                 , maybesigninfo = signinfo
-                 }
+      (signinfo, seeninfo) <- rand 10 arbitrary
+      asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
+      asl <- doc_update $ SignLinkFromDetailsForTest asd roles
+      let asl' = asl { maybeseeninfo = seeninfo
+                     , maybesigninfo = signinfo
+                     }
 
-  let siglinks = documentsignatorylinks doc ++ [asl' { maybesignatory = Just (userid user), maybecompany = usercompany user }]
-  let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
-                                          maybeseeninfo = Nothing }) siglinks
-  let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
-  let adoc = doc { documentsignatorylinks = siglinksandauthor
-                 , documentregion = getRegion user
-                 , documentfiles = [fileid file]
-                 }
-  if p adoc
-    then do
-    let d = (invariantProblems now adoc)
-    if isNothing d
-      then do
-        docid <- doc_update $ StoreDocumentForTesting adoc
-        mdoc <- doc_query $ GetDocumentByDocumentID docid
-        case mdoc of
-          Nothing -> do
-            assertFailure "Could not store document."
-            return doc
-          Just doc'' -> do
-            return doc''
-      else do
-        --uncomment this to find out why the doc was rejected
-        --print adoc
-        --print $ "rejecting doc: " ++ fromJust d
-        addRandomDocument rda
-    else do
-      --print adoc
-      addRandomDocument rda
+      let siglinks = documentsignatorylinks doc ++
+                     [ asl' { maybesignatory = Just (userid user)
+                            , maybecompany = usercompany user 
+                            }
+                     ]
+      let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
+                                              maybeseeninfo = Nothing }) siglinks
+      let siglinksandauthor = if isPreparation doc
+                              then unsignedsiglinks
+                              else siglinks
+      let adoc = doc { documentsignatorylinks = siglinksandauthor
+                     , documentregion = getRegion user
+                     , documentfiles = [fileid file]
+                     }
+      if p adoc
+        then do
+          let d = (invariantProblems now adoc)
+          if isNothing d
+            then do
+              docid <- doc_update $ StoreDocumentForTesting adoc
+              mdoc <- doc_query $ GetDocumentByDocumentID docid
+              case mdoc of
+                Nothing -> do
+                          assertFailure "Could not store document."
+                          return doc
+                Just doc'' -> do
+                          return doc''
+             else do
+               --uncomment this to find out why the doc was rejected
+               --print adoc
+               --print $ "rejecting doc: " ++ fromJust d
+               worker
+        else do
+          --print adoc
+          worker
 
 rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do
