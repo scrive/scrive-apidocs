@@ -2228,10 +2228,6 @@ input.grayed, textarea.grayed
         float: right;
 }
 
-form.requestAccount {
-    height: 40px;
-
-}
 
 a {
     color: #35A4D6;
