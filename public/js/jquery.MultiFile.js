@@ -505,6 +505,7 @@
             /* Edited by Eric Normand to make it more user-friendly */
 			//alert(s);
             //# Trigger Event! onFileSelect
+            
             if(!this.trigger('onError', this, this)) return false;
             //# End Event!
 

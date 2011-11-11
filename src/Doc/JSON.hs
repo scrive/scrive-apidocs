@@ -5,6 +5,8 @@ module Doc.JSON
        , jsonDocumentType
        , jsonSigAttachmentWithFile
        , jsonDocumentMetadata
+       , jsonDocumentForAuthor
+       , apiDocumentType
        )
 where
 
@@ -14,15 +16,18 @@ import Util.JSON
 import Misc
 import KontraLink
 
+apiDocumentType :: DocumentType -> Int
+apiDocumentType (Signable Contract) = 1
+apiDocumentType (Signable Offer)    = 3
+apiDocumentType (Template Contract) = 2
+apiDocumentType (Template Offer)    = 4
+apiDocumentType (Signable Order)    = 5
+apiDocumentType (Template Order)    = 6
+apiDocumentType (Attachment)        = 20
+apiDocumentType (AttachmentTemplate)= error $ "Unsupported document type AttachmentTemplate"
+
 jsonDocumentType :: DocumentType -> JSValue
-jsonDocumentType (Signable Contract) = showJSON (1 :: Int)
-jsonDocumentType (Signable Offer)    = showJSON (3 :: Int)
-jsonDocumentType (Template Contract) = showJSON (2 :: Int)
-jsonDocumentType (Template Offer)    = showJSON (4 :: Int)
-jsonDocumentType (Signable Order)    = showJSON (5 :: Int)
-jsonDocumentType (Template Order)    = showJSON (6 :: Int)
-jsonDocumentType (Attachment)        = showJSON (20 :: Int)
-jsonDocumentType (AttachmentTemplate)= error $ "Unsupported document type AttachmentTemplate"
+jsonDocumentType = showJSON . apiDocumentType
 
 jsonDocumentID :: DocumentID -> JSValue
 jsonDocumentID = showJSON . show
@@ -48,15 +53,27 @@ jsonDocumentMetadata doc = fromRight $
                            (jsset "url" $ show $ LinkAPIDocumentMetadata (documentid doc)) >>=
                            (jsset "title" $ documenttitle doc)
 
+jsonDocumentForAuthor :: Document -> JSValue
+jsonDocumentForAuthor doc = 
+  fromRight            $ (Right jsempty)                          >>=                                
+  (jsset "designurl"   $ show $ LinkIssueDoc (documentid doc))    >>=
+  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
+  (jsset "title"       $ documenttitle doc)                       >>=                        
+  (jsset "type"        $ apiDocumentType $ documenttype doc)     >>=       
+  (jsset "status"      $ jsonDocumentStatus $ documentstatus doc) >>=
+  (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
+  (jsset "authorization" $ jsonIdentificationType $ documentallowedidtypes doc)
+
 jsonDocumentForSignatory :: Document -> JSValue
 jsonDocumentForSignatory doc = 
   fromRight            $ (Right jsempty)                          >>=                                
   (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
   (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ jsonDocumentType $ documenttype doc)     >>=       
+  (jsset "type"        $ apiDocumentType $ documenttype doc)     >>=       
   (jsset "status"      $ jsonDocumentStatus $ documentstatus doc) >>=
   (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
   (jsset "authorization" $ jsonIdentificationType $ documentallowedidtypes doc)
+
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair

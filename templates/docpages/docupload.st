@@ -14,7 +14,9 @@ orderuploadprompttext=$_orderuploadprompttext()$
 uploadPage=   
 $loadingdialog()$
 <div id="signStepsContainer" class="uploading">
-  
+  <script type="text/javascript">
+    jQuery(UploadProcessMain);
+  </script>
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer">
     </span>
@@ -47,61 +49,55 @@ $loadingdialog()$
   <div id="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
-$if(!isprocessselected)$
-<table style="width:100%" > <tbody> <tr valign="top">
- <td>
-   <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
-    <p class="text" style="padding-top:40px">
-       $_signStepsBodyUploadBoxStep1Info()$</p>
-   </div>
- </td>
-  $processes:{process |
+<!-- Templates -->
+
+<script type="text/template" id="jschooseprocesstext"> 
   <td>
-    <div class="documentTypeBox $if(process.selected)$selected$endif$"> 
-       <a class="documenticon" href="$linkupload$?doctype=$process.id$">$process.name$</a>    
+    <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
+      <p class="text" style="padding-top:40px">
+        $_signStepsBodyUploadBoxStep1Info()$</p>
     </div>
   </td>
-  }$
-</tr></tbody></table>
-<!-- MAIN FROM END HERE --> 
+</script>
 
-<!-- START: Form to select new upload or template  -->
-$elseif(!showTemplates)$
-<div class="postSignStepBody">
-<table style="width:100%"> <tbody> <tr valign="top">
-<td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
-    <p class="text" style="padding-top:30px">
-        $selectedprocess.uploadprompttext$
-    </p>
-    <p style="padding-top:25px;">
-      <a class="backicon float-left" href="$linkupload$"></a> &nbsp;$_GoBack()$
-    </p>
- </div>
-</td>
-<td>
-  <form action="/d" method="post" enctype="multipart/form-data" > 
-    <div class="signStepsBodyUploadBox">
-        <input type="hidden" name="doctype" value="$selectedprocess.id$" />
+<script type="text/template" id="jschooseprocess">
+  <td>
+    <div class="documentTypeBox"> 
+      <a class="documenticon" href="#"></a>    
+    </div>
+  </td>
+</script>
+
+<script type="text/template" id="jsuploadtext">
+  <td> 
+    <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
+      <p class="text jsprompt" style="padding-top:30px">
+      </p>
+      <p style="padding-top:25px;">
+        <a class="backicon float-left jswizardback" href="#"></a> &nbsp;$_GoBack()$
+      </p>
+    </div>
+  </td>
+</script>
+
+<script type="text/template" id="jsuploadbutton">
+  <td class="jsformbox">
+    <form action="/api/document" method="post" enctype="multipart/form-data" class="jsuploadform"> 
+      <div class="signStepsBodyUploadBox">
         <span class="header">$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$</span><br/>
         <span class="text">$_signStepsBodyUploadBoxStep1UpLoadOnlyPDF()$</span> 
-      <br/>
-      <div class="signStepsButtonContainer">
-        <a class="btn-small green" >
-          <div class="left"> </div>
-          <div class="label" style="width:100px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div>
-          <div class="right"> </div>
-          <input class="multiFileInput submitOnUpload jsflasherror" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
-        </a>
-       </div>
-      <div class="filelist" style="padding-left:10px;display:none"></div>
-    </div>
-  </form>
-</td>
+        <br/>
+        <div class="signStepsButtonContainer"></div>
+      </div>
+    </form>
+  </td>
+</script>
 
-<td>
-  <div class="signStepsBodyUploadBox $if(showTemplates)$ selected $endif$">  
-        <span class="header">$_signStepsBodyUploadBoxStep1ChooseTemplate()$</span><br/>
-        <span class="text">$_signStepsBodyUploadBoxStep1TemplateSaved()$</span>
+<script type="text/template" id="jschoosetemplate">
+  <td>
+    <div class="signStepsBodyUploadBox $if(showTemplates)$ selected $endif$">  
+      <span class="header">$_signStepsBodyUploadBoxStep1ChooseTemplate()$</span><br/>
+      <span class="text">$_signStepsBodyUploadBoxStep1TemplateSaved()$</span>
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
         <a class="btn-small green selectTemplateButton" href="$linkupload$?doctype=$selectedprocess.id$&amp;showTemplates=YES">  
@@ -110,57 +106,15 @@ $elseif(!showTemplates)$
           <div class="right"> </div>
         </a>
       </div>
-  </div>
-</td> </tr></tbody></table>
-</div>
-<!-- END: Form to select new upload or template -->
-$else$
-
-<div class="templatedDialogContainer">
-    <div class="doctablecontainer">
     </div>
-</div>
-
-<script>
-var documentsTable = KontraList.init({
-    name : "Templates table",
-    schema: new Schema({
-    url: "/docs",
-    extraParams : { documentType : "Template|$processid$" },
-    sorting: new Sorting({ fields: ["title"]}),
-    paging: new Paging({}),
-    filtering: new Filtering({text: "", infotext: "$_SearchTemplate()$"}),
-    cells : [
-        new Cell({name: "$_SortTemplate()$", width:"400px", field:"title",  special: "rendered",
-        rendering : function(title, _mainrow, listobject) {
-                var link = jQuery("<a/>").text(title);
-                link.click(function(){
-                  new Submit({
-                        method : "POST",
-                        url: "/t",
-                        template: listobject.field("id")
-                  }).send();
-                  return false;
-                })
-                return link;
-            }
-        })
-       ]
-    }),
-    headerExtras : jQuery("<div class='float-left basicinfo'>" +
-                            "<p>$_InfoSelectTemplate()$</p>" +
-                            "<p style='padding-top:25px;'><a class='backicon float-left' href='$linkupload$?doctype=$processid$'></a></p> &nbsp;$_GoBack()$" +
-                          "</div>")
-
-});
-
-
-jQuery(function(){
-    jQuery(".doctablecontainer").append(documentsTable.view.el)
-});
+  </td>
 </script>
 
-$endif$
+<table style="width:100%" >
+  <tbody> 
+  </tbody>
+</table>
+<!-- MAIN FROM END HERE --> 
 </div>
 </div>
 ####

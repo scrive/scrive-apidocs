@@ -300,6 +300,7 @@ newDocument user mcompany title documenttype ctime =
                 , documentservice              = userservice user
                 , documentauthorattachments    = []
                 , documentsignatoryattachments = []
+                , documentallowedidtypes       = [EmailIdentification]
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
       inserteddoc <- insertNewDocument doc

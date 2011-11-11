@@ -116,7 +116,7 @@ documentNew = api $ do
 
   d2 <- apiGuardL $ update $ AttachFile (documentid d1) (fileid file) now
   
-  apiCreated $ jsonDocumentForSignatory d2
+  apiCreated $ jsonDocumentForAuthor d2
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do

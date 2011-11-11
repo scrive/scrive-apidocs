@@ -83,6 +83,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
+import Doc.JSON
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -1133,6 +1134,7 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         field "selected" $ (Just process == mdocprocess)
         fieldM "name" $ renderTextForProcess (Signable process) processuploadname
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
+        field "apiid" $ apiDocumentType (Signable process)
 
 buildCustomJS :: SignatoryField -> Int -> JSValue
 buildCustomJS SignatoryField{sfType = CustomFT label _, sfValue, sfPlacements} i =
