@@ -338,6 +338,9 @@ function initFileInputs() {
         var form = $(this).parents("form");
         upload.MultiFile({
             list: upload.attr("rel"),
+            onError:function() {
+                FlashMessages.add({content: localization.onlyPDFAllowed, color: "red"});
+            },
             onFileAppend: function() {
                 if (upload.hasClass("submitOnUpload")) {
                     displayLoadingOverlay(localization.loadingFile);
@@ -1767,3 +1770,5 @@ safeReady(function() {
         fixed: false
     });
 });
+
+

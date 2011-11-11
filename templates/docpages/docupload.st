@@ -90,7 +90,7 @@ $elseif(!showTemplates)$
           <div class="left"> </div>
           <div class="label" style="width:100px"> $_signStepsBodyUploadBoxStepButtonChooseFile()$</div>
           <div class="right"> </div>
-          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+          <input class="multiFileInput submitOnUpload jsflasherror" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
         </a>
        </div>
       <div class="filelist" style="padding-left:10px;display:none"></div>
