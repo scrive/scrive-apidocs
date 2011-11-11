@@ -11,7 +11,6 @@ import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
 import Doc.Transitory
-import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
 import Doc.DocStorage
