@@ -310,7 +310,7 @@ a.new-btn-small.black p {
 	background: url(../img/persons.jpg);
 	top: 67px;
 	height: 363px;
-	left: 493px;
+	left: 520px;
 	position: absolute;
 	width: 390px;
 	z-index: 0;
@@ -381,47 +381,50 @@ a.new-btn-small.black p {
 
 /* Login Container & Enter Button */
 
-#top-container .enter-button {
+#top-container a.enter-button {
 	background: url(../img/btn-login.png);
 	color: #b3b3b3;
 	display: block;
 	font: 14px "Helvetica Neue";
-	height: 28px;
+	height: 27px;
 	padding-left: 47px;
-	padding-top: 15px;
-	position: absolute;
-	right: 3px;
+	padding-top: 16px;
+        float: right;
 	text-decoration: none;
 	text-shadow: #000 0 1px 3px;
-	top: 20px;
 	width: 95px;
-    z-index: 10;
-    font-weight: bold;
+        z-index: 10;
+        font-weight: bold;
+        margin-left: 30px;
 }
 
-#top-container #moveleft {
+#top-container .moveleft {
 	display: block;
 	height: 28px;
 	padding-left: 30px;
 	padding-top: 15px;
 	position: absolute;
-        right: 170px;
-	top: 3px;
+        width: 700px;
+        right: 0px;
         z-index: 10;
 }
 
-#top-container #moveleft a {
+#top-container .moveleft .toplink {
     padding: 0px;
     margin-left: 30px;
     font-weight: bold;
 }
 
-#top-container .document-button:hover
+#top-container .moveleft .localeSwitcher a {
+    margin-left: 0px;
+}
+
+#top-container .toplink :hover
 {
   color: #FFFFFF;
 }  
 
-#moveleft2
+.moveleft2
 {
 	display: block;
 	height: 28px;
@@ -445,16 +448,20 @@ a.new-btn-small.black p {
 }
 
 #top-container .localeSwitcher {
-  top: 33px;
-  left: 2px;
+  float: right;
+  padding-top: 15px;
+  padding-right: 0px;
 }
 
 #top-slim-container .localeSwitcher {
     float: right;
-    top: 17px;
-    padding-right: 8px;
+    top: 18px;
 }
 
+.localeSwitcher div {
+  float: left;
+  padding-left: 5px;
+}
 .localeSwitcher div {
   float: left;
   padding-left: 5px;
@@ -570,6 +577,7 @@ a.new-btn-small.black p {
 	display: block;
 	font: normal 10px/11px "Lucida Grande";
 	margin-top: 3px;
+        width: 260px;
 }
 
 #top-container .campaign-container .campaign-text a {
@@ -581,86 +589,25 @@ a.new-btn-small.black p {
 
 /* Nav Container */
 
-#nav-container {
+.nav-container {
 	background: #fff;
-	border: 1px solid #dadada;
-	height: 94px;
+	border-bottom: 1px solid #dadada;
+	height: 97px;
 	min-width: 940px;
 }
 
-#nav-container .bottom-border {
+.nav-container .bottom-border {
 	background: url(../img/spr-border1.png) repeat-x 0 0;
 	clear: both;
 	height: 3px;
 }
 
-#nav-container .col {
-	float: left;
-	height: 71px;
-	padding: 0 20px;
-	padding-top: 20px;
-	width: 250px;
-}
-
-#nav-container .col a {
-	text-decoration: none;
-}
-
-#nav-container .icon {
-	float: left;
-	margin: 10px 0;
-	padding: 0 30px 0 15px;
-}
-
-#nav-container .icon.one {
-	background-position: 0 0;
-	height: 34px;
-	width: 19px;
-}
-
-#nav-container .icon.two {
-	background-position: 0 -34px;
-	height: 34px;
-	width: 30px;
-}
-
-#nav-container .icon.three {
-	background-position: 0 -68px;
-	height: 34px;
-	width: 29px;
-}
-
-#nav-container .divider-hor {
-	background: url(../img/bg-divider-hor.png) repeat-y;
-	float: left;
-	height: 92px;
-	width: 3px;
-	padding: 0 10px;
-}
-
-#nav-container h3 {
-	color: #666;
-	font: normal 18px/24px "Copse";
-}
-
-#nav-container .col:hover h3 {
-	color: #137DAD;
-}
-
-#nav-container p {
-	color: #999;
-	font: 12px/16px "Lucida Grande";
-}
-
-#nav-container .col:hover p {
-	color: #35A4D6;
-}
-
 /* Body Container */
 
-#body-container {
+.body-container {
 	background: url(../img/bg-body.jpg);
 	min-width: 940px;
+        padding-top: 25px;
 }
 
 .spacer70 {
@@ -778,62 +725,9 @@ a.new-btn-small.black p {
 	color: #000;
 }
 
-/* Body Grid */
-
-#body-container .grid .col {
-	height: 200px;
-	margin: 10px;
-	text-align: center;
-	width: 218px;
-}
-
-.col.leftm {
-    margin-left:10px;
-}
-
-#body-container .grid .col.no-margin {
-	margin: 0;
-}
-
-#body-container .grid .col .spacer {
-	height: 1px;
-}
-
-#body-container .grid .col .icon-container {
-	height: 64px;
-	position: relative;
-}
-
-#body-container .grid .col .icon {
-	bottom: 0;
-	position: relative;
-}
-
-#body-container .grid .col h2 {
-	color: #000;
-	font: 14px/21px "Copse";
-}
-
-#body-container .grid .col a {
-	text-decoration: none;
-}
-
-#body-container .grid .col p {
-	color: #666;
-	font: 11px/18px "Lucida Grande";
-}
-
-#body-container .grid .col:hover h2 {
-	color: #137DAD;
-}
-
-#body-container .grid .col:hover p {
-	color: #35A4D6;
-}
-
 /* Body Left Column */
 
-#body-container .left-column {
+.body-container .left-column {
 	float: left;
 	margin-right: 20px;
 	margin-top: 40px;
@@ -842,137 +736,22 @@ a.new-btn-small.black p {
 
 /* Body Right Column */
 
-#body-container .right-column {
+.body-container .right-column {
 	float: left;
 	margin-top: 40px;
 	width: 700px;
 }
 
-/* Body Slide */
-
-#body-container .slide {
-	background: url(../img/bg-slide.jpg);
-	height: 210px;
-	position: relative;
-	width: 939px;
-	z-index: 1;
-}
-
-#body-container .slide .slide-container {
-	float: left;
-	height: 180px;
-	padding: 30px 0 0 20px;
-	width: 449px;
-}
-
-#body-container .slide .slide-content {
-	display: none;
-	height: 180px;
-	position: absolute;
-	width: 420px;
-}
-
-#body-container .slide .slide-content:first-child {
-	display: block;
-}
-
-#body-container .slide h2 {
-	color: #999;
-	font: 18px "Copse";
-}
-
-#body-container .slide-container h2 {
-	left: 162px;
-	position: absolute;
-	top: 30px;
-}
-
-#body-container .slide .portrait {
-	float: left;
-	margin-right: 20px;
-}
-
-#body-container .slide blockquote {
-	color: #fff;
-	font: italic 16px/18px "Georgia";
-	margin-top: 40px;
-}
-
-#body-container .slide em {
-	color: #999;
-	font: 9px "Lucida Grande";
-	text-transform: uppercase;
-}
-
-#body-container .slide .bubble {
-	background: url(../img/bg-slide-bubble.png);
-	float: left;
-	height: 141px;
-	margin-top: 10px;
-	padding: 25px;
-	width: 410px;
-}
-
-#body-container .slide .bubble h2 {
-	color: #999;
-	font: 18px "Copse";
-	margin-bottom: 20px;
-}
-
-#body-container .slide .bubble ul {
-	display: table;
-}
-
-#body-container .slide .bubble ul li {
-	display: table-column;
-	float: left;
-	height: 60px;
-	position: relative;
-	width: 200px;
-}
-
-#body-container .slide .bubble ul li a {
-	display: block;
-	text-align: center;
-	width: 200px;
-}
-
-#body-container .slide .bubble ul li img {
-
-}
-
-#body-container .slide .slide-nav {
-	bottom: 30px;
-	left: 250px;
-	position: absolute;
-}
-
-#body-container .slide .slide-nav li {
-	background: url(../img/spr-dots.png) 0 -1px no-repeat;
-	cursor: pointer;
-	float: left;
-	height: 7px;
-	margin-right: 3px;
-	width: 7px;
-}
-
-#body-container .slide .slide-nav li:hover {
-	background-position: 0 -8px;
-}
-
-#body-container .slide .slide-nav li.active {
-	background-position: 0 -16px;
-}
 
 /* Body Drop Shadow */
 
-#body-container .drop-shadow-container {
+.body-container .drop-shadow-container {
 	position: relative;
 	width: 1040px;
 	z-index: 0;
 }
 
-#body-container .drop-shadow {
+.body-container .drop-shadow {
 	background: url(../img/bg-drop-shadow.png);
 	bottom: -11px;
 	height: 22px;
@@ -985,7 +764,7 @@ a.new-btn-small.black p {
 
 /* Body Price Plan */
 
-#body-container .price-plan-container {
+.body-container .price-plan-container {
 	background: #fff;
 	border: 1px solid #ccc;
 	height: 250px;
@@ -998,46 +777,46 @@ a.new-btn-small.black p {
     border-radius: 5px 5px 5px 5px;
 }
 
-#body-container .price-plan {
+.body-container .price-plan {
 	height: 254px;
 	position: absolute;
 	width: 938px;
 	z-index: 1;
 }
 
-#body-container .price-plan th {
+.body-container .price-plan th {
 	height: 67px;
 	padding: 10px 0;
 }
 
-#body-container .price-plan th h3 {
+.body-container .price-plan th h3 {
 	color: #666;
 	font: 18px "Copse";
 }
 
-#body-container .price-plan th p {
+.body-container .price-plan th p {
 	color: #999;
 	font: italic 14px "Georgia";
 }
 
-#body-container .price-plan td, #body-container .price-plan th {
+.body-container .price-plan td, .body-container .price-plan th {
 	border-bottom: 1px solid #ccc;
 	border-right: 1px solid #ccc;
 }
 
-#body-container .price-plan td:last-child, #body-container .price-plan th:last-child {
+.body-container .price-plan td:last-child, .body-container .price-plan th:last-child {
 	border-right: 0;
 }
 
-#body-container .price-plan tr:last-child td {
+.body-container .price-plan tr:last-child td {
 	border-bottom: 0;
 }
 
-#body-container .price-plan tr {
+.body-container .price-plan tr {
 	height: 22px;
 }
 
-#body-container .price-plan td {
+.body-container .price-plan td {
 	color: #999;
 	font: 12px "Lucida Grande";
 	text-align: center;
@@ -1045,47 +824,47 @@ a.new-btn-small.black p {
 	width: 227px;
 }
 
-#body-container .price-plan td a {
+.body-container .price-plan td a {
 	color: #999;
 	text-decoration: none;
 }
 
-#body-container .price-plan td a:hover {
+.body-container .price-plan td a:hover {
 	color: #000;
 }
 
-#body-container .price-plan tr.odd-row td {
+.body-container .price-plan tr.odd-row td {
 	background: #F7F7F7;
 }
 
-#body-container .price-plan tr.big-row {
+.body-container .price-plan tr.big-row {
 	height: 70px;
 }
 
-#body-container .price-plan tr.big-row td {
+.body-container .price-plan tr.big-row td {
 	font: italic 14px "Georgia";
 }
 
-#body-container .price-plan tr.big-row h4 {
+.body-container .price-plan tr.big-row h4 {
         color: #666;
 	font: 16px "Georgia";
         font-weight: bold;
 }
 
-#body-container .price-plan tr.big-row td a {
+.body-container .price-plan tr.big-row td a {
 	color: #35A4D6;
 	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
 
-#body-container .price-plan tr.big-row td a:hover {
+.body-container .price-plan tr.big-row td a:hover {
 	border-color: #000;
 	color: #000;
 }
 
 /* Price Plan Highlight */
 
-#body-container .highlight-container {
+.body-container .highlight-container {
 	background: #fff;
 	box-shadow: 0 0 5px #999;
 	border: 2px solid #35A4D6;
@@ -1105,13 +884,13 @@ a.new-btn-small.black p {
     height: 910px;
 }
 
-#body-container .highlight-container .highlight-rows {
+.body-container .highlight-container .highlight-rows {
 	padding: 0 10px;
 	width: 224px;
     height: 290px;
 }
 
-#body-container .highlight-container .highlight-rows li {
+.body-container .highlight-container .highlight-rows li {
 	border-bottom: 1px solid #ccc;
 	color: #999;
 	font: 12px "Lucida Grande";
@@ -1120,37 +899,37 @@ a.new-btn-small.black p {
 	text-align: center;
 }
 
-#body-container .highlight-container .highlight-rows li a {
+.body-container .highlight-container .highlight-rows li a {
 	color: #999;
 	text-decoration: none;
 }
 
-#body-container .highlight-container .highlight-rows li a:hover {
+.body-container .highlight-container .highlight-rows li a:hover {
 	color: #000;
 }
 
-#body-container .highlight-container .highlight-rows li.top {
+.body-container .highlight-container .highlight-rows li.top {
 	height: 78px;
 	padding-top: 25px;
 }
 
-#body-container .highlight-container .highlight-rows li.top h3 {
+.body-container .highlight-container .highlight-rows li.top h3 {
 	color: #137DAD;
 	font: 24px "Copse";
 	line-height: 20px;
 }
 
-#body-container .highlight-container .highlight-rows li.top p {
+.body-container .highlight-container .highlight-rows li.top p {
 	color: #666;
 	font: italic 14px "Georgia";
 	margin-top: 4px;
 }
 
-#body-container .highlight-container .highlight-rows li.odd {
+.body-container .highlight-container .highlight-rows li.odd {
 	background: #f7f7f7;
 }
 
-#body-container .highlight-container .highlight-rows li.bottom {
+.body-container .highlight-container .highlight-rows li.bottom {
 	color: #999;
 	font: italic 14px "Georgia";
 	height: 70px;
@@ -1158,25 +937,25 @@ a.new-btn-small.black p {
 	padding-top: 15px;
 }
 
-#body-container .highlight-container .highlight-rows li.bottom h4 {
+.body-container .highlight-container .highlight-rows li.bottom h4 {
         color: #666;
         font-style: normal;
         font-size: 18px;
 }
 
 
-#body-container .highlight-container .highlight-rows li.bottom a {
+.body-container .highlight-container .highlight-rows li.bottom a {
 	color: #35A4D6;
 	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
 
-#body-container .highlight-container .highlight-rows li.bottom a:hover {
+.body-container .highlight-container .highlight-rows li.bottom a:hover {
 	border-color: #000;
 	color: #000;
 }
 
-#body-container .highlight-container .highlight-rows li:last-child {
+.body-container .highlight-container .highlight-rows li:last-child {
 	border: 0;
 }
 
@@ -1205,7 +984,7 @@ div.price-plan-details {
 
 /* Highlight Ribbon */
 
-#body-container .highlight-container .ribbon {
+.body-container .highlight-container .ribbon {
 	height: 107px;
 	left: -6px;
 	position: absolute;
@@ -1213,7 +992,7 @@ div.price-plan-details {
 	width: 107px;
 }
 
-#body-container .big-pp-container .highlight-container .ribbon {
+.body-container .big-pp-container .highlight-container .ribbon {
 	height: 74px;
 	left: -4px;
 	position: absolute;
@@ -1243,7 +1022,7 @@ div.price-plan-details {
 
 /* Try SkrivaPå Splash */
 
-#body-container .try-skrivapa {
+.body-container .try-skrivapa {
 	background: #fff;
 	border: 1px solid #35A4D6;
 	border-radius: 5px;
@@ -1255,28 +1034,28 @@ div.price-plan-details {
 	-webkit-border-radius: 5px;
 }
 
-#body-container .try-skrivapa .left {
+.body-container .try-skrivapa .left {
 	float: left;
 	width: 450px;
 }
 
-#body-container .try-skrivapa .right {
+.body-container .try-skrivapa .right {
 	float: left;
 	margin-top: 10px;
 	width: 390px;
 }
 
-#body-container .try-skrivapa .left h3 {
+.body-container .try-skrivapa .left h3 {
 	color: #000;
 	font: 24px/24px "Copse";
 }
 
-#body-container .try-skrivapa .left p {
+.body-container .try-skrivapa .left p {
 	color: #666;
 	font: 14px/24px "Copse";
 }
 
-#body-container .try-skrivapa .right a {
+.body-container .try-skrivapa .right a {
 	float: right;
 }
 
@@ -1299,12 +1078,7 @@ div.price-plan-details {
 }
 
 
-.enter-button div {
-    padding-left: 4px;
-    padding-top: 1px;
-}
-
-#top-container .document-button {
+#top-container .toplink  {
         color: #999;
         float: right;
         font: 14px/18px "Helvetica Neue";
@@ -1562,34 +1336,34 @@ div.price-plan-details {
 
 /* Big Price Plan */
 
-#body-container .big-price-plan {
+.body-container .big-price-plan {
 	padding-left: 4px;
 	padding-top: 20px;
 	width: 860px;
 }
 
-#body-container .big-price-plan h1 {
+.body-container .big-price-plan h1 {
 	color: #666;
 	font: normal 24px "Copse";
         padding-bottom: 15px;
 }
 
-#body-container .big-price-plan p.stronger {
+.body-container .big-price-plan p.stronger {
 	color: #000;
 	font: normal 18px "Copse";
 }
 
-#body-container .big-price-plan h2 {
+.body-container .big-price-plan h2 {
 	color: #000;
 	font: normal 18px "Copse";
 }
 
-#body-container .big-price-plan p {
+.body-container .big-price-plan p {
 	color: #666;
 	font: normal 12px "Lucida Grande";
 }
 
-#body-container .big-pp-container {
+.body-container .big-pp-container {
 	background: #fff;
 	border: 1px solid #ccc;
 	margin-top: 30px;
@@ -1601,66 +1375,66 @@ div.price-plan-details {
 	border-radius: 5px;
 }
 
-#body-container .big-pp-container table {
+.body-container .big-pp-container table {
 	width: 938px;
 	z-index: 1;
 }
 
-#body-container .big-pp-container th {
+.body-container .big-pp-container th {
         background: url(../img/bg-pp-header.png);
 	border-bottom: 1px solid #ccc;
 	height: 84px;
 }
 
-#body-container .big-pp-container th h2 {
+.body-container .big-pp-container th h2 {
 	color: #fff;
 	font: 22px "Copse";
         text-align: left;
         padding-left: 50px;
 }
 
-#body-container .big-pp-container th h3 {
+.body-container .big-pp-container th h3 {
 	color: #fff;
 	font: 18px "Copse";
 }
 
-#body-container .big-pp-container th p {
+.body-container .big-pp-container th p {
 	color: #999;
 	font: 12px "Georgia";
         font-weight: bold;
 }
 
-#body-container .big-pp-container th em {
+.body-container .big-pp-container th em {
 	color: #999;
 	font: italic 11px "Georgia";
 }
 
-#body-container .big-pp-container td {
+.body-container .big-pp-container td {
 	border-bottom: 1px solid #ccc;
 	border-right: 1px solid #ccc;
 }
 
-#body-container .big-pp-container td em {
+.body-container .big-pp-container td em {
 	font-style: italic;
 }
 
-#body-container .big-pp-container td:last-child, #body-container .big-pp-container th:last-child {
+.body-container .big-pp-container td:last-child, .body-container .big-pp-container th:last-child {
 	border-right: 0;
 }
 
-#body-container .big-pp-container tr:last-child td {
+.body-container .big-pp-container tr:last-child td {
 	border-bottom: 0;
 }
 
-#body-container .big-pp-container tr {
+.body-container .big-pp-container tr {
 	height: 26px;
 }
 
-#body-container .big-pp-container tr.spacer {
+.body-container .big-pp-container tr.spacer {
 	height: 5px;
 }
 
-#body-container .big-pp-container td {
+.body-container .big-pp-container td {
 	color: #999;
 	font: 12px "Lucida Grande";
 	text-align: center;
@@ -1668,89 +1442,89 @@ div.price-plan-details {
 	width: 169px;
 }
 
-#body-container .big-pp-container td:first-child {
+.body-container .big-pp-container td:first-child {
 	padding-right: 9px;
 	text-align: left;
 	width: 235px;
         padding-left: 50px;
 }
 
-#body-container .big-pp-container td a {
+.body-container .big-pp-container td a {
 	color: #999;
 	text-decoration: none;
 }
 
-#body-container .big-pp-container td a:hover {
+.body-container .big-pp-container td a:hover {
 	color: #000;
 }
 
-#body-container .big-pp-container tr.odd-row td {
+.body-container .big-pp-container tr.odd-row td {
 	background: #F7F7F7;
 }
 
-#body-container .big-pp-container tr.btn-row td {
+.body-container .big-pp-container tr.btn-row td {
 	height: 50px;
 }
 
-#body-container .big-pp-container tr.btn-row td a {
+.body-container .big-pp-container tr.btn-row td a {
 	margin: 0 auto;
 }
 
-#body-container .big-pp-container tr.big-row {
+.body-container .big-pp-container tr.big-row {
 	height: 70px;
 }
 
-#body-container .big-pp-container tr.big-row td {
+.body-container .big-pp-container tr.big-row td {
 	font: italic 14px "Georgia";
 }
 
-#body-container .big-pp-container tr.big-row td a {
+.body-container .big-pp-container tr.big-row td a {
 	border-bottom: 1px solid #35A4D6;
 	color: #35A4D6;
 	font: 12px "Lucida Grande";
 	text-transform: uppercase;
 }
 
-#body-container .big-pp-container tr.big-row td a:hover {
+.body-container .big-pp-container tr.big-row td a:hover {
 	border-color: #000;
 	color: #000;
 }
 
-#body-container .big-pp-container .highlight-container {
+.body-container .big-pp-container .highlight-container {
 	left: 599px;
 	width: 181px;
 }
 
-#body-container .big-pp-container .highlight-rows {
+.body-container .big-pp-container .highlight-rows {
         padding: 0 4px;
 	width: 173px;
 }
 
-#body-container .big-pp-container .highlight-container li {
+.body-container .big-pp-container .highlight-container li {
 	color: #666;
 	height: 25px;
 }
 
-#body-container .big-pp-container .highlight-container li a {
+.body-container .big-pp-container .highlight-container li a {
 	margin: 0 auto;
 }
 
-#body-container .big-pp-container .highlight-container li.top {
+.body-container .big-pp-container .highlight-container li.top {
 	height: 80px;
 	padding-top: 17px;
 }
 
-#body-container .big-pp-container .highlight-container li.top h3 {
+.body-container .big-pp-container .highlight-container li.top h3 {
 	color: #666;
 	font: 20px "Copse";
         padding-top: 10px;
 }
 
-#body-container .big-pp-container .highlight-container li.top em {
+.body-container .big-pp-container .highlight-container li.top em {
     font-size: 12px;
 }
 
-#body-container .big-pp-container .highlight-container li.top p {
+.body-container .big-pp-container .highlight-container li.top p {
 	color: #35A4D6;
 	font: 14px "Georgia";
 	margin-bottom: 8px;
@@ -1758,19 +1532,19 @@ div.price-plan-details {
         font-weight: bold;
 }
 
-#body-container .big-pp-container .highlight-container li.bottom {
+.body-container .big-pp-container .highlight-container li.bottom {
 	height: 22px;
 }
 
-#body-container .big-pp-container a.new-btn-small, #body-container .big-pp-container .highlight-container a.new-btn-small {
+.body-container .big-pp-container a.new-btn-small, .body-container .big-pp-container .highlight-container a.new-btn-small {
 	color: #fff;
 }
 
-#body-container .big-pp-container a.new-btn-small:hover, #body-container .big-pp-container .highlight-container a.new-btn-small:hover {
+.body-container .big-pp-container a.new-btn-small:hover, .body-container .big-pp-container .highlight-container a.new-btn-small:hover {
 	color: #fff;
 }
 
-#body-container .big-pp-container tr.btn-row td a {
+.body-container .big-pp-container tr.btn-row td a {
 	margin: 0 auto;
 }
 
@@ -1989,12 +1763,12 @@ top: 0px;
 
 /* Contact Inform */
 
-#body-container .contact-inform h2 {
+.body-container .contact-inform h2 {
 	color: #666;
 	font: 18px "Copse";
 }
 
-#body-container .contact-inform h3 {
+.body-container .contact-inform h3 {
 	color: #999;
 	font: 18px "Copse";
 }
@@ -2015,7 +1789,7 @@ top: 0px;
 	color: #666;
 	font: 11px "Lucida Grande";
 	padding-left: 20px;
-	padding-right: 60px;
+	padding-right: 40px;
 }
 
 .nicetext em {
@@ -2136,47 +1910,6 @@ input.grayed, textarea.grayed
 }
 
 
-
-
-.slide-content .portrait-image {
-	background: #fff;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	float: left;
-	height: 150px;
-	margin-right: 20px;
-	position: relative;
-	width: 127px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-}
-
-.slide-content .portrait-image:before {
-	bottom: 3px;
-	box-shadow: inset 0 0 5px #000;
-	content: "";
-	left: 3px;
-	opacity: 0.5;
-	position: absolute;
-	right: 3px;
-	top: 3px;
-	-moz-box-shadow: inset 0 0 5px #000;
-	-webkit-box-shadow: inset 0 0 5px #000;
-}
-
-.slide-content .portrait-image:after {
-	bottom: 0px;
-	box-shadow: 0 0 5px #000;
-	content: "";
-	left: 0px;
-	opacity: 0.5;
-	position: absolute;
-	right: 0px;
-	top: 0px;
-	-moz-box-shadow: 0 0 5px #000;
-	-webkit-box-shadow: 0 0 5px #000;
-}
-
 .box .about-container li .portrait-image img {
 	position: absolute;
 	top: 0;
@@ -2190,43 +1923,73 @@ input.grayed, textarea.grayed
     text-align: center;
 }
 
-.logos img {
-    margin-top: 17px;
-    margin-bottom: 17px;
-    padding-right: 96px;
-    padding-left: 96px;
-}
+/* Benefits and products box */
 
-.logos img.first {
-    padding-left: 0px;
-}
-.logos img.last {
-    padding-right: 0px;
-}
-
-.benefitstitle {
-    text-align: center;
+.benefitstitle , .productdescriptiontitle {
     font-family: Copse;
     font-weight: normal;
+    text-align: left;
 }
-
 .benefitsbox {
-	height: 500px;
-	position: relative;
-	width: 476px;
-	z-index: 1;
-        float: left;
     
-
+    float: left;
+    margin-right: 10px;
+    position: relative;
+    width: 470px;
+    z-index: 1;
 }
-
 .productdescriptionbox {
-	height: 500px;
-	position: relative;
-	width: 476px;
-	z-index: 1;
-        float: right;
+    float: right;
+    position: relative;
+    width: 480px;
+    z-index: 1;
 }
+
+.productdescriptionbox .separator{
+    background: #DADADA;
+    float:left;
+    width:1px;
+    height: 340px;
+    margin-right: 14px;
+}
+       
+
+.productdescriptionbox .smallbox,
+.benefitsbox .smallbox {
+    width: 230px;
+    height: 180px;
+}
+
+.smallbox h2 {
+    color: #000000;
+    font: 14px/21px "Copse";
+}
+.smallbox a {
+    text-decoration: none;
+}
+.smallbox p {
+    color: #666666;
+    font: 11px/18px "Lucida Grande";
+}
+.smallbox:hover h2 {
+    color: #137DAD;
+}
+.smallbox:hover p {
+    color: #35A4D6;
+}
+.smallbox .text-container {
+    float: right;
+    width: 150px;
+    margin-right: 5px;
+}
+.smallbox .icon-container {
+    float: left;
+    width: 60px;
+    margin-right: 15px;
+    margin-left: 10px
+    position: relative;
+}
+
 
 
 a {

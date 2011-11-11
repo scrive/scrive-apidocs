@@ -18,7 +18,7 @@ var DocumentStandarView = Backbone.View.extend({
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
         this.el.append(this.contrainer);
-        this.el.attr("id","body-container");
+        this.el.addClass("body-container");
         this.el.append("<div class='clearfix'/>");
         this.el.append("<div class='spacer40'/>");
        

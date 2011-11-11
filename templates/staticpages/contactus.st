@@ -25,7 +25,7 @@ contactUsPageContents=
                                         <div style="margin-left:auto;margin-right:auto;width:500px">
                                         <h3>   $_pageFooterContact1()$ </h3>
                                         <BR/>
-                                        <table class="contactus" style="margin-left:auto;margin-right:auto;width:400px"> 
+                                        <table class="contactus" style="margin-left:auto;margin-right:auto;width:500px"> 
                                             <tbody> 
                                                 <tr> 
                                                     <td style="width:200px;vertical-align:top">  $_pageFooterContact2()$ </td> 

@@ -420,7 +420,6 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     /* overflow: auto; 004 remove */
     /* margin-bottom: 25px; */
     margin-bottom: 0px;
-    margin-top: 25px;
 }
 
 .mainContainer a
