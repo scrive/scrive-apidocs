@@ -115,6 +115,10 @@
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
             var model = this.model;
+            // I had to put this callback here because
+            // it wasn't working in-place
+            //it's a hack but something must be interfering
+            // with the click event
             $("a.jsback1").live('click', function() {
                 console.log("hello");
                 if(model.get('wizard'))
