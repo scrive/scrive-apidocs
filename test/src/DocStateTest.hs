@@ -817,7 +817,10 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
 testCloseDocumentNotSignableNothing :: DB ()
 testCloseDocumentNotSignableNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
   etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertLeft etdoc
     
