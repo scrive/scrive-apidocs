@@ -38,11 +38,12 @@ import Doc.DocStateData
 import Mails.MailsUtil
 import User.Model
 import Util.HasSomeUserInfo
+import Data.Pairs
+import Misc
 
 import Data.List
 import Data.Maybe
 import Data.Functor
-import Misc
 
 import qualified Data.ByteString as BS
 
@@ -67,8 +68,11 @@ instance SignatoryLinkIdentity Signatory where
 {- |
    Identify a SignatoryLink based on a; if that does not match, identify based on b.
  -}
-instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
-  isJustSigLinkFor (a, b) sl = isSigLinkFor a sl || isSigLinkFor b sl
+instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (Or a b) where
+  isJustSigLinkFor (Or a b) sl = isSigLinkFor a sl || isSigLinkFor b sl
+  
+instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (And a b) where
+  isJustSigLinkFor (And a b) sl = isSigLinkFor a sl && isSigLinkFor b sl
 
 instance SignatoryLinkIdentity SignatoryLinkID where
   isJustSigLinkFor slid sl = slid == signatorylinkid sl
@@ -77,7 +81,7 @@ instance SignatoryLinkIdentity SignatoryLinkID where
    Identify a User based on UserID or Email (if UserID fails).
  -}
 instance SignatoryLinkIdentity User where
-  isJustSigLinkFor u sl = isSigLinkFor (userid u, getEmail u) sl
+  isJustSigLinkFor u sl = isSigLinkFor (Or (userid u) (getEmail u)) sl
 
 instance SignatoryLinkIdentity Author where
   isJustSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl

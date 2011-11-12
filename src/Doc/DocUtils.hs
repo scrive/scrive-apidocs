@@ -21,6 +21,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB.Classes
+import Data.Pairs
 import Misc
 
 import Control.Monad
@@ -304,7 +305,7 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
-  case getSigLinkFor doc (userid, email) of
+  case getSigLinkFor doc (Or userid email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
     Just siglink | isAuthor siglink                                            -> True
