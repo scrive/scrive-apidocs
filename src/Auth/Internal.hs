@@ -12,17 +12,20 @@ import Data.Int
 import DB.Derive
 
 -- | Privilege tokens; actions should fall into one of these
--- Privileges
+-- Privileges. Please think about granularity before adding a new one.
 data Privilege = DocumentPrivilege DocumentPrivilege
                | UserPrivilege     UserPrivilege
                  deriving (Show, Eq)
                           
-data DocumentPrivilege = DocumentSend
-                       | DocumentSign
-                       | DocumentView
+-- | Privileges that have to do with a specific, existing document
+data DocumentPrivilege = DocumentSend -- ^ Send invitations/reminders/etc
+                       | DocumentSign -- ^ Sign a document
+                       | DocumentView -- ^ View a document
                deriving (Show, Eq)
 
-data UserPrivilege = DocumentCreate
+-- | Privileges specific to a User (Creating docs, changing settings,
+-- etc).
+data UserPrivilege = DocumentCreate -- ^ Create a new document
                deriving (Show, Eq)
                         
 -- An informal standard of User Privileges being 2xx, doc privileges
@@ -39,14 +42,21 @@ instance SafeEnum Privilege where
   toSafeEnum 102 = Just (DocumentPrivilege DocumentView)
   toSafeEnum _   = Nothing
 
+-- | Instances of this class determine whether an Authorization can
+-- act on the document
 class DocumentAuthorization a where
+  -- | Can this authorization act on this document at this time and
+  -- privilege the action falls under
   canDocument :: a -> Document -> MinutesTime -> DocumentPrivilege -> Bool
   canDocument _ _ _ _ = False
 
+-- | Instances of this class determine whether an Authorization can
+-- act on the User
 class UserAuthorization a where
   canUser :: a -> UserID -> MinutesTime -> UserPrivilege -> Bool
   canUser _ _ _ _ = False
 
+-- | An authorization wrapper for a logged in user session
 data UserSessionAuthorization = UserSessionAuthorization UserID
 
 instance DocumentAuthorization UserSessionAuthorization where
@@ -73,6 +83,7 @@ instance DocumentAuthorization SigLinkMagicHashAuthorization where
 instance UserAuthorization SigLinkMagicHashAuthorization where
   canUser _ _ _ _ = False
 
+-- | API Access Token
 data AccessTokenAuthorization = AccessTokenAuthorization MinutesTime UserID [Privilege]
 
 instance DocumentAuthorization AccessTokenAuthorization where
@@ -113,26 +124,27 @@ instance (DocumentAuthorization a, DocumentAuthorization b) => DocumentAuthoriza
 instance (UserAuthorization a, UserAuthorization b) => UserAuthorization (Or a b) where
   canUser (Or a b) x y z = canUser a x y z || canUser b x y z
 
-
-
-
+-- | AccessToken for OAuth2 API calls
 newtype AccessToken = AccessToken { unAccessToken :: Int64 }
                     deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''AccessToken)
 $(newtypeDeriveUnderlyingReadShow ''AccessToken)
 
+-- | APIToken for API calls
 newtype APIToken = APIToken { unAPIToken :: Int64 }
                     deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''APIToken)
 $(newtypeDeriveUnderlyingReadShow ''APIToken)
 
+-- | APISecret (like the password) for API calls
 newtype APISecret = APISecret { unAPISecret :: Int64 }
                     deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''APISecret)
 $(newtypeDeriveUnderlyingReadShow ''APISecret)
 
-data APITokenStatus = APITokenActive
-                    | APITokenDeleted
+-- | APITokens have a status
+data APITokenStatus = APITokenActive   -- | The API Token can be used to get an AccessToken
+                    | APITokenDisabled -- | The API Token cannot be used to get an AccessToken
 
 instance SafeEnum APITokenStatus where
   fromSafeEnum APITokenActive  = 1
