@@ -1,5 +1,6 @@
 module DB.Utils
   ( getUniqueID
+  , getUniqueIDField
   , oneRowAffectedGuard
   , oneObjectReturnedGuard
   , checkIfOneObjectReturned
@@ -25,6 +26,15 @@ getUniqueID table = do
     st <- prepare conn $ "SELECT id FROM " ++ tblName table ++ " WHERE id = ?"
     fetchRow st >>= return . maybe (Just uid) (const Nothing)
   maybe (getUniqueID table) return muid
+
+getUniqueIDField :: Table -> String -> DB Int64
+getUniqueIDField table fieldname = do
+  muid <- wrapDB $ \conn -> do
+    uid <- randomRIO (0, maxBound)
+    st <- prepare conn $ "SELECT " ++ fieldname ++ " FROM " ++ tblName table ++ " WHERE " ++ fieldname ++ " = ?"
+    fetchRow st >>= return . maybe (Just uid) (const Nothing)
+  maybe (getUniqueIDField table fieldname) return muid
+
 
 oneRowAffectedGuard :: Monad m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False

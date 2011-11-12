@@ -3,7 +3,6 @@ module Stats.Migrations where
 import Database.HDBC
 
 import DB.Classes
-import DB.Model
 import Stats.Tables
 import Doc.DocState
 

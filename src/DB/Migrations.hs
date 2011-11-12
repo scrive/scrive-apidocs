@@ -17,6 +17,7 @@ import DB.Utils
 import qualified AppLogger as Log
 
 import API.Service.Tables
+import Auth.Tables
 import Company.Tables
 #ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Tables
@@ -45,6 +46,9 @@ tablesList = [
   , tableDocStatEvents
   , tableUserStatEvents
   , tableFiles
+  , tableAccessToken
+  , tableAPIToken
+  , tableAuthorization
 #ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments
   , tableSignatoryLinks
