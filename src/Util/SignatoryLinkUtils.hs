@@ -38,7 +38,7 @@ import Doc.DocStateData
 import Mails.MailsUtil
 import User.Model
 import Util.HasSomeUserInfo
-import Data.Pairs
+import Data.Semantic
 import Misc
 
 import Data.List
@@ -65,6 +65,12 @@ instance SignatoryLinkIdentity UserID where
 instance SignatoryLinkIdentity Signatory where
   isJustSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
 
+instance SignatoryLinkIdentity (SignatoryLink -> Bool) where
+  isJustSigLinkFor p sl = p sl
+  
+--instance MaybeSignatoryLink a => SignatoryLinkIdentity (a -> Bool) where
+--  isJustSigLinkFor p sl = p sl
+
 {- |
    Identify a SignatoryLink based on a; if that does not match, identify based on b.
  -}
@@ -76,6 +82,9 @@ instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIden
 
 instance SignatoryLinkIdentity SignatoryLinkID where
   isJustSigLinkFor slid sl = slid == signatorylinkid sl
+  
+instance SignatoryLinkIdentity SignatoryRole where
+  isJustSigLinkFor role sl = role `elem` signatoryroles sl
 
 {- |
    Identify a User based on UserID or Email (if UserID fails).
@@ -84,7 +93,7 @@ instance SignatoryLinkIdentity User where
   isJustSigLinkFor u sl = isSigLinkFor (Or (userid u) (getEmail u)) sl
 
 instance SignatoryLinkIdentity Author where
-  isJustSigLinkFor (Author uid) sl = isSigLinkFor uid sl && isAuthor sl
+  isJustSigLinkFor (Author uid) sl = isSigLinkFor (And SignatoryAuthor uid) sl
 
 instance SignatoryLinkIdentity CompanyID where
   isJustSigLinkFor cid sl = Just cid == maybecompany sl
@@ -128,7 +137,7 @@ isAuthorSignatory document =
    Get the author's signatory link.
  -}
 getAuthorSigLink :: Document -> Maybe SignatoryLink
-getAuthorSigLink = find isAuthor . documentsignatorylinks
+getAuthorSigLink doc = getSigLinkFor doc SignatoryAuthor
 
 {- |
    Given a Document, return the best guess at the author's name:
@@ -174,7 +183,7 @@ isAuthor msl = maybe False (elem SignatoryAuthor . signatoryroles) (getMaybeSign
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?
  -}
 isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool
-isSignatory msl = maybe False (elem SignatoryPartner . signatoryroles) (getMaybeSignatoryLink msl)
+isSignatory = isSigLinkFor SignatoryPartner
 
 {- |
    Is the user able to view the doc?

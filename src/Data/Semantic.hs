@@ -1,9 +1,10 @@
 -- | Special, semantic pairs.
 
-module Data.Pairs 
+module Data.Semantic
        (
         And(..), 
-        Or(..)
+        Or(..),
+        Not(..)
        )
        
        where
@@ -11,3 +12,5 @@ module Data.Pairs
 data And a b = And a b
 
 data Or a b = Or a b
+
+data Not a = Not a
