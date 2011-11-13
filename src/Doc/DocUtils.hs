@@ -21,7 +21,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB.Classes
-import Data.Pairs
+import Data.Semantic
 import Misc
 
 import Control.Monad

@@ -7,7 +7,7 @@ import Data.Maybe
 import Util.SignatoryLinkUtils
 import MinutesTime
 import DB.Types
-import Data.Pairs
+import Data.Semantic
 import Data.Int
 import DB.Derive
 
@@ -56,28 +56,29 @@ class UserAuthorization a where
   canUser :: a -> UserID -> MinutesTime -> UserPrivilege -> Bool
   canUser _ _ _ _ = False
 
--- | An authorization wrapper for a logged in user session
-data UserSessionAuthorization = UserSessionAuthorization UserID
+-- | An authorization wrapper for a user's base permissions
+data AuthenticatedUserAuthorization = AuthenticatedUserAuthorization UserID
 
-instance DocumentAuthorization UserSessionAuthorization where
-  canDocument (UserSessionAuthorization uid) doc _ DocumentSend = 
-    maybe False ((==) (Just uid) . maybesignatory) (getAuthorSigLink doc)
-  canDocument (UserSessionAuthorization uid) doc _ DocumentSign =
-    isJust (getSigLinkFor doc uid)
-  canDocument (UserSessionAuthorization uid) doc _ DocumentView =
-    isJust (getSigLinkFor doc uid)
+instance DocumentAuthorization AuthenticatedUserAuthorization where
+  canDocument (AuthenticatedUserAuthorization uid) doc _ DocumentSend = 
+    isJust $ getSigLinkFor doc $ And SignatoryAuthor uid
+  canDocument (AuthenticatedUserAuthorization uid) doc _ DocumentSign =
+    -- is this correct?
+    isJust $ getSigLinkFor doc $ And SignatoryPartner uid
+  canDocument (AuthenticatedUserAuthorization uid) doc _ DocumentView =
+    isJust $ getSigLinkFor doc uid
   
-instance UserAuthorization UserSessionAuthorization where
-  canUser (UserSessionAuthorization uid) uid2 _ _ = uid == uid2
+instance UserAuthorization AuthenticatedUserAuthorization where
+  canUser (AuthenticatedUserAuthorization uid) uid2 _ _ = uid == uid2
   
 -- | Authenticated with SignatoryLinkID and MagicHash combo
 data SigLinkMagicHashAuthorization = SigLinkMagicHashAuthorization SignatoryLinkID MagicHash
 
 instance DocumentAuthorization SigLinkMagicHashAuthorization where
   canDocument (SigLinkMagicHashAuthorization sid mh) doc _ DocumentView =
-    maybe False ((==) mh . signatorymagichash) (getSigLinkFor doc sid)
+    isJust $ getSigLinkFor doc (And sid mh)
   canDocument (SigLinkMagicHashAuthorization sid mh) doc _ DocumentSign =
-    maybe False ((==) mh . signatorymagichash) (getSigLinkFor doc sid)
+    isJust $ getSigLinkFor doc (And SignatoryPartner (And sid mh))
   canDocument _ _ _ _ = False
   
 instance UserAuthorization SigLinkMagicHashAuthorization where
@@ -89,18 +90,15 @@ data AccessTokenAuthorization = AccessTokenAuthorization MinutesTime UserID [Pri
 instance DocumentAuthorization AccessTokenAuthorization where
   canDocument (AccessTokenAuthorization ex _ _ ) _ now _ | ex <= now                        = False
   canDocument (AccessTokenAuthorization _ _ ps ) _ _ p   | DocumentPrivilege p `notElem` ps = False
-  canDocument (AccessTokenAuthorization _ uid _) doc _ DocumentView =
-    isJust (getSigLinkFor doc uid)
-  canDocument (AccessTokenAuthorization _ uid _) doc _ DocumentSign =
-    isJust (getSigLinkFor doc uid)
-  canDocument (AccessTokenAuthorization _ uid _) doc _ DocumentSend =
-    maybe False ((==) (Just uid) . maybesignatory) (getAuthorSigLink doc)
+  canDocument (AccessTokenAuthorization _ uid _) doc now p =
+    canDocument (AuthenticatedUserAuthorization uid) doc now p 
 
 instance UserAuthorization AccessTokenAuthorization where
   canUser (AccessTokenAuthorization ex _ _  ) _ now _  | ex <= now                    = False
   canUser (AccessTokenAuthorization _ _ ps  ) _ _ p    | UserPrivilege p `notElem` ps = False
   canUser (AccessTokenAuthorization _ uid _ ) uid2 _ _ | uid /= uid2                  = False
-  canUser (AccessTokenAuthorization _ _ _   ) _ _ DocumentCreate                      = True
+  canUser (AccessTokenAuthorization _ uid _ ) uid2 now p =
+    canUser (AuthenticatedUserAuthorization uid) uid2 now p
 
 instance DocumentAuthorization a => DocumentAuthorization (Maybe a) where
   canDocument Nothing _ _ _ = False
@@ -148,8 +146,8 @@ data APITokenStatus = APITokenActive   -- | The API Token can be used to get an 
 
 instance SafeEnum APITokenStatus where
   fromSafeEnum APITokenActive  = 1
-  fromSafeEnum APITokenDeleted = 0
+  fromSafeEnum APITokenDisabled = 0
   
   toSafeEnum 1 = Just APITokenActive
-  toSafeEnum 0 = Just APITokenDeleted
+  toSafeEnum 0 = Just APITokenDisabled
   toSafeEnum _ = Nothing
