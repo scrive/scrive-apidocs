@@ -32,6 +32,8 @@ module Util.SignatoryLinkUtils (
   hasCompany,
   SignatoryLinkIdentity,
   MaybeSignatoryLink(..),
+  filterSigLinksFor,
+  hasSigLinkFor
        ) where
 
 import Company.Model
@@ -154,7 +156,7 @@ instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a,
    Is the Author of this Document a signatory (not a Secretary)?
  -}
 isAuthorSignatory :: HasSignatoryLinks a => a -> Bool
-isAuthorSignatory hsl = isJust $ getSigLinkFor hsl (And SignatoryAuthor SignatoryPartner)
+isAuthorSignatory hsl = hasSigLinkFor (And SignatoryAuthor SignatoryPartner) hsl
 
 {- |
    Get the author's signatory link.
@@ -220,11 +222,6 @@ isViewer msl = isJust (getMaybeSignatoryLink msl)
 isDeletedFor :: (MaybeSignatoryLink a) => a -> Bool
 isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
 
-{- |
-  Get the SignatoryLink from a document given a matching value.
- -}
-getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => b -> a -> Maybe SignatoryLink
-getSigLinkFor d a = find (isSigLinkFor a) (getSignatoryLinks d)
 
 {- 
   Checks if siglink with magic hash is valid for this document
@@ -239,7 +236,7 @@ validSigLink _ _ _ = False
    signing the document, rather than just viewing.
 -}
 getSignatoryPartnerLinks :: HasSignatoryLinks hsl => hsl -> [SignatoryLink] 
-getSignatoryPartnerLinks doc = getSignatoryLinks (doc, SignatoryPartner)
+getSignatoryPartnerLinks doc = filterSigLinksFor SignatoryPartner doc
 
 {- |
   Does this siglink have a user (maybesignatory)?
@@ -271,3 +268,21 @@ isSigLinkSavedFor User{userid, useriscompanyadmin, usercompany} sl =
  -}
 isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i) => i -> sl -> Bool
 isSigLinkFor i sl = maybe False (isJustSigLinkFor i) (getMaybeSignatoryLink sl)
+
+{- |
+   Filters the signatory links based on the query
+ -}
+filterSigLinksFor :: (SignatoryLinkIdentity i, HasSignatoryLinks sls) => i -> sls -> [SignatoryLink]
+filterSigLinksFor i sls = filter (isSigLinkFor i) (getSignatoryLinks sls)
+
+{- |
+   True if one or more signatory links matches the query
+ -}
+hasSigLinkFor :: (SignatoryLinkIdentity i, HasSignatoryLinks sls) => i -> sls -> Bool
+hasSigLinkFor i sls = isJust $ getSigLinkFor sls i
+
+{- |
+  Get the SignatoryLink from a document given a matching value.
+ -}
+getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => b -> a -> Maybe SignatoryLink
+getSigLinkFor d a = find (isSigLinkFor a) (getSignatoryLinks d)
