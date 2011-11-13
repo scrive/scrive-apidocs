@@ -243,10 +243,12 @@ instance Arbitrary Document where
     dt <- arbitrary
     sls <- arbitrary
     ids <- arbitrary
+    fnc <- arbitrary
     return $ blankDocument { documentstatus = ds
                            , documenttype = dt
                            , documentsignatorylinks = sls
                            , documentallowedidtypes = [ids]
+                           , documentfunctionality = fnc
                            }
 
 documentAllStatuses :: [DocumentStatus]

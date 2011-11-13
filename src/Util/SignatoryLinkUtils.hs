@@ -7,6 +7,8 @@
 -- Portability :  portable
 --
 -- Utility for abstracting away finding signatory links for given information
+--
+-- It forms a kind of DSL for querying SignatoryLinks out of documents
 -----------------------------------------------------------------------------
 module Util.SignatoryLinkUtils (
 
@@ -105,6 +107,9 @@ instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
 instance SignatoryLinkIdentity MagicHash where
   isJustSigLinkFor mh sl = mh == signatorymagichash sl
 
+instance SignatoryLinkIdentity MailsDeliveryStatus where
+  isJustSigLinkFor mds sl = mds == invitationdeliverystatus sl
+
 {- |
    Anything that could resolve to a SignatoryLink.
  -}
@@ -121,22 +126,40 @@ instance (MaybeSignatoryLink msl) => MaybeSignatoryLink (Maybe msl) where
   getMaybeSignatoryLink (Just sl) = getMaybeSignatoryLink sl
   getMaybeSignatoryLink Nothing   = Nothing
 
-instance (SignatoryLinkIdentity a) => MaybeSignatoryLink (Document, a) where
+instance (SignatoryLinkIdentity a, HasSignatoryLinks b) => MaybeSignatoryLink (b, a) where
   getMaybeSignatoryLink (d, a) = getSigLinkFor d a
+
+{- |
+  A source of signatory links
+ -}
+class HasSignatoryLinks a where
+  getSignatoryLinks :: a -> [SignatoryLink]
+  
+instance HasSignatoryLinks Document where
+  getSignatoryLinks = documentsignatorylinks
+  
+instance HasSignatoryLinks [SignatoryLink] where
+  getSignatoryLinks = id
+  
+instance HasSignatoryLinks SignatoryLink where
+  getSignatoryLinks sl = [sl]
+  
+instance (HasSignatoryLinks a) => HasSignatoryLinks (Maybe a) where
+  getSignatoryLinks = maybe [] getSignatoryLinks
+  
+instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a, b) where
+  getSignatoryLinks (sls, i) = filter (isSigLinkFor i) (getSignatoryLinks sls)
 
 {- |
    Is the Author of this Document a signatory (not a Secretary)?
  -}
-isAuthorSignatory :: Document -> Bool
-isAuthorSignatory document =
-  case getAuthorSigLink document of
-    Just siglink -> isSignatory siglink
-    _ -> False
+isAuthorSignatory :: HasSignatoryLinks a => a -> Bool
+isAuthorSignatory hsl = isJust $ getSigLinkFor hsl (And SignatoryAuthor SignatoryPartner)
 
 {- |
    Get the author's signatory link.
  -}
-getAuthorSigLink :: Document -> Maybe SignatoryLink
+getAuthorSigLink :: HasSignatoryLinks a => a -> Maybe SignatoryLink
 getAuthorSigLink doc = getSigLinkFor doc SignatoryAuthor
 
 {- |
@@ -153,13 +176,13 @@ getAuthorName doc =
    Is this SignatoryLink undelivered?
  -}
 isUndelivered :: (MaybeSignatoryLink msl) => msl -> Bool
-isUndelivered msl = maybe False ((==) Undelivered . invitationdeliverystatus) (getMaybeSignatoryLink msl)
+isUndelivered = isSigLinkFor Undelivered
 
 {- |
    Is this SignatoryLink Deferred?
  -}
 isDeferred :: (MaybeSignatoryLink msl) => msl -> Bool
-isDeferred msl = maybe False ((==) Delivered . invitationdeliverystatus) (getMaybeSignatoryLink msl)
+isDeferred = isSigLinkFor Delivered
 
 {- |
    Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?
@@ -177,7 +200,7 @@ hasSeen msl = maybe False (isJust . maybeseeninfo) (getMaybeSignatoryLink msl)
    Is this SignatoryLink an author?
  -}
 isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
-isAuthor msl = maybe False (elem SignatoryAuthor . signatoryroles) (getMaybeSignatoryLink msl)
+isAuthor = isSigLinkFor SignatoryAuthor
 
 {- |
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?
@@ -200,8 +223,8 @@ isDeletedFor msl = maybe False signatorylinkdeleted (getMaybeSignatoryLink msl)
 {- |
   Get the SignatoryLink from a document given a matching value.
  -}
-getSigLinkFor :: (SignatoryLinkIdentity a) => Document -> a -> Maybe SignatoryLink
-getSigLinkFor d a = find (isSigLinkFor a) (documentsignatorylinks d)
+getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => b -> a -> Maybe SignatoryLink
+getSigLinkFor d a = find (isSigLinkFor a) (getSignatoryLinks d)
 
 {- 
   Checks if siglink with magic hash is valid for this document
@@ -215,8 +238,8 @@ validSigLink _ _ _ = False
    Gets the signatory links from the document that are
    signing the document, rather than just viewing.
 -}
-getSignatoryPartnerLinks :: Document -> [SignatoryLink] 
-getSignatoryPartnerLinks doc = filter isSignatory $ documentsignatorylinks doc
+getSignatoryPartnerLinks :: HasSignatoryLinks hsl => hsl -> [SignatoryLink] 
+getSignatoryPartnerLinks doc = getSignatoryLinks (doc, SignatoryPartner)
 
 {- |
   Does this siglink have a user (maybesignatory)?

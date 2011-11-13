@@ -41,6 +41,8 @@ import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Doc.DocInfo
 import User.Model
+import Data.Maybe
+import Data.Semantic
 
 {- |
    Assuming user is the logged in user, can he view the Document?
@@ -61,7 +63,7 @@ canUserViewDoc user doc
     docIsSavedFor u =
       any (isSigLinkSavedFor u) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = isSigLinkFor (usercompany user) (getAuthorSigLink doc)
+    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (And SignatoryAuthor $ usercompany user)
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -90,9 +92,9 @@ getDocByDocID docid = do
       mdoc <- doc_query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if any ((== (Just . companyid $ company)) . maybecompany) (documentsignatorylinks doc)
-                     then return $ Right doc
-                     else return $ Left DBResourceNotAvailable
+        Just doc -> if isJust $ getSigLinkFor doc (companyid company)
+                    then return $ Right doc
+                    else return $ Left DBResourceNotAvailable
 
 {- |
    Get all of the documents a user can view.
@@ -126,6 +128,6 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- doc_query $ GetDocumentByDocumentID docid
   case mdoc of
-    Just doc | isSigLinkFor mh (getSigLinkFor doc sigid) -> return $ Right doc
+    Just doc | isJust $ getSigLinkFor doc (And mh sigid) -> return $ Right doc
     _ -> return $ Left DBResourceNotAvailable
 
