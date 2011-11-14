@@ -937,7 +937,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          [ sqlFieldType "seen_time" "timestamp" time
                          , sqlField "seen_ip" ipnumber
                          ]
-                         "WHERE id = ? AND document_id = ? AND token = ?"
+                         "WHERE id = ? AND document_id = ? AND token = ? AND seen_time = NULL"
                          [ toSql signatorylinkid1
                          , toSql did
                          , toSql mh
@@ -953,8 +953,15 @@ instance DBUpdate AddInvitationEvidence (Either String Document) where
 data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesTime
                           deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate MarkInvitationRead (Either String Document) where
-  dbUpdate (MarkInvitationRead documentid linkid time) = wrapDB $ \conn -> do
-    unimplemented "MarkInvitationRead"
+  dbUpdate (MarkInvitationRead did linkid time) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlFieldType "read_invitation" "timestamp" time
+                         ]
+                         "WHERE id = ? AND document_id = ? AND read_invitation = NULL"
+                         [ toSql linkid
+                         , toSql did
+                         ]
+    getOneDocumentAffected "MarkInvitationRead" r did
 
 data MigrateDocumentSigLinkCompanies = MigrateDocumentSigLinkCompanies DocumentID [User]
                                        deriving (Eq, Ord, Show, Typeable)
@@ -1088,32 +1095,67 @@ instance DBUpdate SetDocumentTags (Either String Document) where
 data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTimeoutTime (Either String Document) where
-  dbUpdate (SetDocumentTimeoutTime documentid timeouttime) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentTimeoutTime"
+  dbUpdate (SetDocumentTimeoutTime did timeouttime) = do
+    r <- runUpdateStatement "documents" 
+                         [ sqlFieldType "timeout_time" "timestamp" timeouttime
+                         ]
+                         "WHERE id = ? AND deleted = FALSE AND type = ?"
+                         [ toSql did
+                         , toSql (toDocumentSimpleType (Signable undefined))
+                         ]
+    getOneDocumentAffected "SetDocumentTimeoutTime" r did
 
 data SetSignatoryCompany = SetSignatoryCompany DocumentID SignatoryLinkID CompanyID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetSignatoryCompany (Either String Document) where
-  dbUpdate (SetSignatoryCompany documentid slid cid) = wrapDB $ \conn -> do
-    unimplemented "SetSignatoryCompany"
+  dbUpdate (SetSignatoryCompany did slid cid) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlField "company_id" cid
+                         ]
+                         "WHERE id = ? AND document_id = ?"
+                         [ toSql slid
+                         , toSql did
+                         ]
+    getOneDocumentAffected "SetSignatoryCompany" r did
 
 data RemoveSignatoryCompany = RemoveSignatoryCompany DocumentID SignatoryLinkID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveSignatoryCompany (Either String Document) where
-  dbUpdate (RemoveSignatoryCompany documentid slid) = wrapDB $ \conn -> do
-    unimplemented "RemoveSignatoryCompany"
+  dbUpdate (RemoveSignatoryCompany did slid) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlField "company_id" SqlNull
+                         ]
+                         "WHERE id = ? AND document_id = ?"
+                         [ toSql slid
+                         , toSql did
+                         ]
+    getOneDocumentAffected "RemoveSignatoryCompany" r did
 
 data SetSignatoryUser = SetSignatoryUser DocumentID SignatoryLinkID UserID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetSignatoryUser (Either String Document) where
-  dbUpdate (SetSignatoryUser documentid slid uid) = wrapDB $ \conn -> do
-    unimplemented "SetSignatoryUser"
+  dbUpdate (SetSignatoryUser did slid uid) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlField "user_id" uid
+                         ]
+                         "WHERE id = ? AND document_id = ?"
+                         [ toSql slid
+                         , toSql did
+                         ]
+    getOneDocumentAffected "SetSignatoryUser" r did
 
 data RemoveSignatoryUser = RemoveSignatoryUser DocumentID SignatoryLinkID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveSignatoryUser (Either String Document) where
-  dbUpdate (RemoveSignatoryUser documentid slid) = wrapDB $ \conn -> do
-    unimplemented "RemoveSignatoryUser"
+  dbUpdate (RemoveSignatoryUser did slid) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlField "user_id" SqlNull
+                         ]
+                         "WHERE id = ? AND document_id = ?"
+                         [ toSql slid
+                         , toSql did
+                         ]
+    getOneDocumentAffected "RemoveSignatoryUser" r did
 
 data SetInviteText = SetInviteText DocumentID BS.ByteString MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
@@ -1129,14 +1171,24 @@ instance DBUpdate SetInviteText (Either String Document) where
 data SetDaysToSign = SetDaysToSign DocumentID Int MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDaysToSign (Either String Document) where
-  dbUpdate (SetDaysToSign docid days time) = wrapDB $ \conn -> do
-    unimplemented "SetDaysToSign"
+  dbUpdate (SetDaysToSign did days time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "days_to_sign" $ days
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDaysToSign" r did
 
 data RemoveDaysToSign = RemoveDaysToSign DocumentID MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDaysToSign (Either String Document) where
-  dbUpdate (RemoveDaysToSign docid time) = wrapDB $ \conn -> do
-    unimplemented "RemoveDaysToSign"
+  dbUpdate (RemoveDaysToSign did time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "days_to_sign" $ SqlNull
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "RemoveDaysToSign" r did
 
 data SetDocumentFunctionality = SetDocumentFunctionality DocumentID DocumentFunctionality MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
@@ -1193,8 +1245,15 @@ instance DBUpdate SetDocumentUI (Either String Document) where
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID Mail.MailsDeliveryStatus
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
-  dbUpdate (SetInvitationDeliveryStatus docid siglnkid status) = wrapDB $ \conn -> do
-    unimplemented "SetInvitationDeliveryStatus"
+  dbUpdate (SetInvitationDeliveryStatus did slid status) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlField "invitation_delivery_status" status
+                         ]
+                         "WHERE id = ? AND document_id = ? AND invitation_delivery_status = NULL"
+                         [ toSql slid
+                         , toSql did
+                         ]
+    getOneDocumentAffected "SetInvitationDeliveryStatus" r did
 
 
 data ShareDocument = ShareDocument DocumentID
