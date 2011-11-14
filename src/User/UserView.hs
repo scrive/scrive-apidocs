@@ -422,9 +422,10 @@ modalDoYouWantToBeCompanyAccount company =
   toModal <$> (renderTemplateFM "modalDoYouWantToBeCompanyAccount" $ do
             field "companyname" $ getCompanyName company)
 
-modalUserSignupDone :: TemplatesMonad m => m FlashMessage
-modalUserSignupDone =
-  toModal <$> renderTemplateM "modalUserSignupDone" ()
+modalUserSignupDone :: TemplatesMonad m => Email -> m FlashMessage
+modalUserSignupDone email =
+  toModal <$> (renderTemplateFM "modalUserSignupDone" $ do
+                 field "email" $ BS.toString (unEmail email))
 
 -------------------------------------------------------------------------------
 

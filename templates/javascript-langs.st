@@ -138,5 +138,27 @@ javascriptLocalisation =
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
             , skrivapa : "$_skrivapa()$"
             , tweetAccount : "$_tweetAccount()$"
+            , onlyPDFAllowed: "$_onlyPDFAllowed()$"
+            , fileTooLarge: "$_fileTooLarge()$"
+            , couldNotUpload: "$_couldNotUpload()$"
+            , process : {
+                contract: {
+                   uploadprompt: "$_contractuploadprompttext()$",
+                   name: "$_contractname()$"
+                },
+                offer: {
+                   uploadprompt: "$_offeruploadprompttext()$",
+                   name: "$_offername()$"
+                },
+                order: {
+                   uploadprompt: "$_orderuploadprompttext()$",
+                   name: "$_ordername()$"
+                }
+                
+              }
+           , searchTemplate : "$_SearchTemplate()$"
+           , sortTemplate : "$_SortTemplate()$"
+           , infoSelectTemplate : "$_InfoSelectTemplate()$"
+           , goBack : "$_GoBack()$"
    }
 ####

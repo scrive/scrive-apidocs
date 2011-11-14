@@ -47,14 +47,13 @@ import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import User.Model
 -- import qualified User.UserState as U
-import qualified File.State as F
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
-import File.TransState
+import File.Model
 import Doc.DocState
 import Happstack.State (query)
 
@@ -215,11 +214,13 @@ runKontrakcjaServer = Log.withLogger $ do
 
                               -- populate db with entries from happstack-state
                               ioRunDB conn $ do
-                                -- U.populateDBWithUsersIfEmpty
-                                F.populateDBWithFilesIfEmpty
+                                  -- U.populateDBWithUsersIfEmpty
 
-                                -- this is not ready yet
-                                --populateDBWithDocumentsIfEmpty
+                                  -- this is not ready yet
+                                  --populateDBWithDocumentsIfEmpty
+
+                                  return ()
+
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               let (routes,overlaps) = compile staticRoutes

@@ -54,10 +54,13 @@ import Happstack.State (query)
 import Misc
 import Kontra
 import Administration.AdministrationView
+#ifndef DOCUMENTS_IN_POSTGRES
 import Doc.DocControl (postDocumentChangeAction) -- required for 510 bug fix migration
 import Happstack.State (update) -- required for 510 bug fix migration
-import Doc.DocState
 import Doc.DocProcess
+import Util.SignatoryLinkUtils
+#endif
+import Doc.Transitory
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
@@ -87,7 +90,6 @@ import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
 import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
@@ -98,7 +100,7 @@ import qualified Data.ByteString.UTF8 as BS
 import InspectXMLInstances ()
 import InspectXML
 import ForkAction
-import File.TransState
+import File.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -167,20 +169,21 @@ showAdminUsersForPayments = onlySuperUser $ do
   content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
-getUsersAndStats :: Kontrakcja m => m [(User,Maybe Company, DocStats)]
+getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
 getUsersAndStats = do
     Context{ctxtime} <- getContext
     users <- runDBQuery GetUsers
     let queryStats user = do
           mcompany <- getCompanyForUser user
-          docstats <- query $ GetDocumentStatsByUser user ctxtime
+          docstats <- doc_query $ GetDocumentStatsByUser user ctxtime
           return (user, mcompany, docstats)
     users2 <- mapM queryStats users
     return users2
 
+
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
-  documents <- query $ GetDocumentsByAuthor userid
+  documents <- doc_query $ GetDocumentsByAuthor userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
   content <- adminUserUsageStatsPage user mcompany $ do
@@ -190,7 +193,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySuperUser $ do
   users <- runDBQuery $ GetCompanyAccounts companyid
-  userdocs <- mapM (query . GetDocumentsByAuthor . userid) users
+  userdocs <- mapM (doc_query . GetDocumentsByAuthor . userid) users
   let documents = concat userdocs
   Log.debug $ "There are " ++ (show $ length documents) ++ " docs related to company " ++ (show companyid)
   content <- adminCompanyUsageStatsPage companyid $ do
@@ -219,7 +222,7 @@ read_df = do
 
 showStats :: Kontrakcja m => m Response
 showStats = onlySuperUser $ do
-    docstats <- query GetDocumentStats
+    docstats <- doc_query GetDocumentStats
 #ifndef WINDOWS
     df <- liftIO read_df
 #else
@@ -299,8 +302,8 @@ handleUserChange uid = onlySuperUser $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySuperUser $ do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- query $ GetDocumentsByUser user
-  mapM_ (\doc -> update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- doc_query $ GetDocumentsByUser user
+  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -669,7 +672,7 @@ handleStatistics :: Kontrakcja m => m Response
 handleStatistics =
   onlySuperUser $ do
     ctx <- getContext
-    documents <- query $ GetDocuments $ currentServiceID ctx
+    documents <- doc_query $ GetDocuments $ currentServiceID ctx
     users <- runDBQuery GetUsers
     content <- renderTemplateFM "statisticsPage" $ do
       fieldsFromStats users documents
@@ -691,7 +694,7 @@ showFunctionalityStats :: Kontrakcja m => m Response
 showFunctionalityStats = onlySuperUser $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
-  documents <- query $ GetDocuments $ currentServiceID ctx
+  documents <- doc_query $ GetDocuments $ currentServiceID ctx
   content <- adminFunctionalityStatsPage (mkStats ctxtime users)
                                          (mkStats ctxtime documents)
   renderFromBody TopEmpty kontrakcja content
@@ -755,14 +758,14 @@ handleFixForAdminOnlyBug = onlySuperUser $ do
   sendRedirect LinkUpload
   where
     maybeFixForUser user = do
-      userdocs <- query $ GetDocumentsByUser user
+      userdocs <- doc_query $ GetDocumentsByUser user
       mapM_ (maybeFixForUserAndDoc user) userdocs
       return ()
     maybeFixForUserAndDoc user doc =
       if isFixNeeded user doc
         then do
           Log.debug $ "fixing for doc " ++ (show $ documentid doc) ++ " and user " ++ (show $ userid user) ++ " " ++ (show $ getEmail user)
-          _ <- update $ AdminOnlySaveForUser (documentid doc) user
+          _ <- doc_update $ AdminOnlySaveForUser (documentid doc) user
           return ()
         else return ()
     isFixNeeded user doc =
@@ -776,13 +779,14 @@ handleFixForAdminOnlyBug = onlySuperUser $ do
 -}
 handleFixForBug510 :: Kontrakcja m => m Response
 handleFixForBug510 = onlySuperUser $ do
+#ifndef DOCUMENTS_IN_POSTGRES
   services <- runDBQuery $ GetServices
   mapM_ fixForService $ Nothing : map (Just . serviceid) services
   sendRedirect LinkUpload
   where
     fixForService :: Kontrakcja m => Maybe ServiceID -> m ()
     fixForService service = do
-      docs <- query $ GetDocuments service
+      docs <- doc_query $ GetDocuments service
       mapM_ maybeFixForDocument docs
       return ()
     maybeFixForDocument :: Kontrakcja m => Document -> m ()
@@ -814,12 +818,15 @@ handleFixForBug510 = onlySuperUser $ do
                     " doc " ++ (show $ documentid doc) ++
                     " with type " ++ (show $ documenttype doc) ++
                     " and author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc) ++ " : " ++ msg
+#else
+   mzero
+#endif
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlySuperUser $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
-  mdoc <- query $ GetDocumentByDocumentID docid
+  mdoc <- doc_query $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> mzero
     Just doc -> do
@@ -843,7 +850,7 @@ replaceMainFile did = onlySuperUser $ do
                 Right c -> return c
             fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- update $ ChangeMainfile did (fileid file)
+            _ <- doc_update $ ChangeMainfile did (fileid file)
             return LoopBack
        _ -> mzero
 
@@ -851,7 +858,7 @@ replaceMainFile did = onlySuperUser $ do
 
 handleCheckSigLinkIDUniqueness :: Kontrakcja m => m String
 handleCheckSigLinkIDUniqueness = do
-  siglinkids <- query GetSignatoryLinkIDs
+  siglinkids <- doc_query GetSignatoryLinkIDs
   if length siglinkids == length (nub siglinkids)
      then return "Signatory link ids are unique globally."
      else return "Signatory link ids are NOT unique globally."
@@ -861,7 +868,7 @@ showDocumentsDaylyList = onlySuperUserGet $ do
     now <- getMinutesTime
     day <- fromMaybe now <$> parseDateOnly <$> getFieldWithDefault "" "day"
     srvs  <- runDBQuery $ GetServices
-    documents <- join <$> (sequence $ map (query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    documents <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     liftIO $ putStrLn $ show documents
     adminDocumentsDaylyList day $ filter (dayMatch day) documents
  where

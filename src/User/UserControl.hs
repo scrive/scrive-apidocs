@@ -17,7 +17,7 @@ import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
-import Doc.DocState
+import Doc.Transitory
 import Company.Model
 import InputValidation
 import Kontra
@@ -350,7 +350,7 @@ getUserDeletionDetails deleterid deleteeid = do
   let isSelfDelete = deleterid == deleteeid
       isAdminDelete = maybe False ((== (usercompany deleter)) . Just) (usercompany deletee)
       isPermissioned = isSelfDelete || isAdminDelete
-  userdocs <- query $ GetDocumentsByUser deletee  --maybe this should be GetDocumentsBySignatory, but what happens to things yet to be activated?
+  userdocs <- doc_query $ GetDocumentsByUser deletee  --maybe this should be GetDocumentsBySignatory, but what happens to things yet to be activated?
   let isAllDeletable = all isDeletableDocument userdocs
   case (isPermissioned, isAllDeletable) of
     (False, _) -> return $ Left NoDeletionRights
@@ -361,7 +361,7 @@ performUserDeletion :: Kontrakcja m => UserDeletionDetails -> m ()
 performUserDeletion (user, docs) = do
   _ <- runDBUpdate $ DeleteUser $ userid user
   idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
-  mapM_ (\iu -> update $ DeleteDocumentRecordIfRequired  (fst iu) (snd iu)) idsAndUsers
+  mapM_ (\iu -> doc_update $ DeleteDocumentRecordIfRequired  (fst iu) (snd iu)) idsAndUsers
 
 {- |
     This looks up all the users relevant for the given docid.
@@ -923,7 +923,7 @@ handleAccountRemovalGet aid hash = do
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ update . ArchiveDocuments user $ [documentid doc]
+  _ <- guardRightM $ doc_update . ArchiveDocuments user $ [documentid doc]
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 

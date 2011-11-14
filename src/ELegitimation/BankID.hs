@@ -16,12 +16,11 @@ import Data.Maybe
 import DB.Types
 import DB.Classes
 import Doc.DocControl
-import Doc.DocState
+import Doc.Transitory as D
 import Doc.DocUtils
 import Doc.DocView
 import ELegitimation.ELeg
 import Happstack.Server
-import Happstack.State
 import Kontra
 import KontraLink
 import MinutesTime
@@ -176,7 +175,7 @@ handleSignPostBankID docid signid magic = do
                         field "message"     $ concatMap para $ lines msg
                     -- send to canceled with reason msg
                     addFlash (Modal, txt)
-                    Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
+                    Right newdoc <- doc_update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc document (Just signid)
 
                     return $ LinkSignDoc document siglink
@@ -192,14 +191,14 @@ handleSignPostBankID docid signid magic = do
                                                     , signaturepersnumverified = bpn
                                                     }
                         fields = zip fieldnames fieldvalues
-                    ed1 <- update $ UpdateFields docid signid fields
+                    ed1 <- doc_update $ UpdateFields docid signid fields
                     case ed1 of 
                       Left m -> do
                         Log.eleg $ "SignDocument failed: " ++ m
                         addFlash (OperationFailed, m)
                         getHomeOrUploadLink -- where should we go?
                       Right _ -> do
-                        newdocument <- update $ SignDocument docid signid
+                        newdocument <- doc_update $ SignDocument docid signid
                                          magic
                                          ctxtime
                                          ctxipnumber
@@ -362,12 +361,12 @@ handleIssuePostBankID docid = withUserPost $ do
                                 signInd d = do
                                     mndoc <- case documentstatus document of
                                       Preparation -> do 
-                                        r1 <- update $ PreparationToPending (documentid d) ctxtime
+                                        r1 <- doc_update $ PreparationToPending (documentid d) ctxtime
                                         case r1 of
                                           Left m -> return $ Left m
-                                          Right _ -> update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
+                                          Right _ -> doc_update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
                                       AwaitingAuthor -> do
-                                        update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
+                                        doc_update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
                                       _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
                                         Left msg -> do
@@ -407,7 +406,7 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
         _ -> sendRedirect $ LinkSignDoc document signatorylink
 
 signCanceledDataMismatch :: TemplatesMonad m
-                         => Doc.DocState.Document
+                         => D.Document
                          -> SignatoryLink
                          -> Bool
                          -> String
@@ -693,7 +692,7 @@ findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m EL
 findTransactionByIDOrFail transactions transactionsid =
     guardJust $ find ((==) transactionsid . transactiontransactionid) transactions
 
-getTBS :: TemplatesMonad m => Doc.DocState.Document -> m String
+getTBS :: TemplatesMonad m => D.Document -> m String
 getTBS doc = do
     entries <- getSigEntries doc
     renderTemplateFM "tbs" $ do
@@ -701,7 +700,7 @@ getTBS doc = do
         field "documentnumber" $ show $ documentid doc
         field "tbssigentries"  entries
 
-getSigEntries :: TemplatesMonad m => Doc.DocState.Document -> m String
+getSigEntries :: TemplatesMonad m => D.Document -> m String
 getSigEntries doc = do
     s <- mapM (getSigEntry . signatorydetails) $ documentsignatorylinks doc
     return $ intercalate "\n" s

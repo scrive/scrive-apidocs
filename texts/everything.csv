@@ -1913,7 +1913,7 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_nameFieldName","namn",,"name"
 "_newUserMailContentBodyFirst","Jag heter Lukas Duczko och är VD på Scrive. Tack för att
 du skapat ett konto hos oss. När du aktiverat ditt konto får du
-100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I´m the CEO of Scrive.
+100 signaturer som du kan använda utan kostnad.",,"My name is Lukas Duczko and I'm the CEO of Scrive.
 Thank you for creating an account with us. When you have
 activated your account you will get 100 signatures that you can
 use free of charge."
@@ -3259,8 +3259,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_signInEnglish","Signera på engelska",,"Sign in English"
 "_modalUserSignupDoneHeader","Konto skapat",,"Account Saved"
 "_modalUserSignupDoneBody","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
- till din inkorg.",,"Your account has been created! An email containing your account
- details has been sent to your inbox."
+ till $email$.",,"Your account has been created. An email containing your account details has been sent to $email$."
 "_GoBack","Gå tillbaka",,"Go back"
 "_signInEnglishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
 "_signInSwedish","Signera på svenska",,"Sign in Swedish"
@@ -3282,7 +3281,9 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_modalAddCompanyAccountBody","Bjud in någon ny eller be en befintlig Scrive användare att ansluta ditt företag.",,"Invite someone new or ask an existing Scrive user to join your company."
 "_modalAddCompanyAccountInviteButtonText","Bjud in",,"Invite"
 "_newCompanyAccountButtonText","Nytt Konto",,"New Account"
-"_pageHeaderContactUs","Kontakta Scrive",,"Contact Scrive"
+"_onlyPDFAllowed","Sorry, only PDF uploads are allowed. Please try another file.",,"Sorry, only PDF uploads are allowed. Please try another file."
+"_fileTooLarge","Du har valt att bifoga en fil som överstiger 4 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a file that is larger than our limit of 4 MB. Please try another file."
+"_couldNotUpload","Sorry, the file could not be uploaded. Please try again or with a different file.",,"Sorry, the file could not be uploaded. Please try again or with a different file."
 "_flashCompanyAccountInviteSent","En inbjudan har skickats till $invitee.fullnamePlusEmail$.",,"An invitation has been sent to $invitee.fullnamePlusEmail$."
 "_role","Role",,"Role"
 "_admin","Admin",,"Admin"

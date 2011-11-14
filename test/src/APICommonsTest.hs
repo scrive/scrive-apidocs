@@ -15,6 +15,7 @@ import Util.HasSomeCompanyInfo
 import qualified Data.ByteString as BS
 import qualified  Codec.Binary.Base64 as BASE64
 import MinutesTime
+import Doc.DocStateCommon
 
 apiCommonsTest :: Test
 apiCommonsTest = testGroup "API Commons Test" [

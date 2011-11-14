@@ -37,7 +37,7 @@ import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import File.TransState
+import File.Model
 import DB.Classes
 import Database.HDBC.PostgreSQL
 import Control.Applicative

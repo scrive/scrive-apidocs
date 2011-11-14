@@ -338,6 +338,9 @@ function initFileInputs() {
         var form = $(this).parents("form");
         upload.MultiFile({
             list: upload.attr("rel"),
+            onError:function() {
+                FlashMessages.add({content: localization.onlyPDFAllowed, color: "red"});
+            },
             onFileAppend: function() {
                 if (upload.hasClass("submitOnUpload")) {
                     displayLoadingOverlay(localization.loadingFile);
@@ -1766,4 +1769,28 @@ safeReady(function() {
         top: standardDialogTop,
         fixed: false
     });
+});
+
+safeReady(function() {
+    var oldsignableform = $(".jsuploadform");
+    var signableform;
+    $(".jsuploadform").ajaxForm({
+        success: function(d) {
+            if(d)
+                window.location.href = d.designurl;
+        },
+        error: function(a, b) {
+            LoadingDialog.close();
+            if(b === 'parsererror')
+                FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+            else
+                FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+            oldsignableform.replaceWith(signableform);
+            oldsignableform = signableform;
+            signableform = signableform.clone(true);
+        },
+        dataType: 'json'
+    });
+    // this is kind of a hack. need more backbone!
+    signableform = oldsignableform.clone(true);
 });

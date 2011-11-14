@@ -5,6 +5,7 @@ module DB.Derive (
   , newtypeDeriveUnderlyingReadShow
   , newtypeDeriveConvertible
   , enumDeriveConvertible
+  , enumDeriveConvertibleIgnoreFields
   , bitfieldDeriveConvertible
   , jsonableDeriveConvertible
   ) where
@@ -113,30 +114,31 @@ newtypeDeriveConvertible t = do
 --      }
 --      Left e  -> Left e
 --
-enumDeriveConvertible :: Name -> Q [Dec]
-enumDeriveConvertible t = do
+enumDeriveConvertible' :: Bool -> Name -> Q [Dec]
+enumDeriveConvertible' checkTrivialConstructors t = do
   info <- reify t
   case info of
     TyConI (DataD _ name _ cons _) -> do
       ncons <- forM cons $ \c -> do
         case c of
-          NormalC con [] -> return con
+          NormalC con pr | not checkTrivialConstructors || null pr -> return (con, pr)
           _ -> error $ "Data constructor '" ++ show c ++ "' is not trivial"
       v' <- newName "v"
       n' <- newName "n"
       e' <- newName "e"
       return [
           InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT name)) (ConT ''SqlValue)) [
-            FunD 'safeConvert $ map (\(n, con) ->
-              Clause [ConP con []]
+            FunD 'safeConvert $ map (\(n, (con, _pr)) ->
+              Clause [RecP con []]
                 (NormalB (AppE (ConE 'Right) (AppE (ConE 'SqlInteger) (LitE (IntegerL n))))) [])
               $ zip [1..] ncons
             ]
         , InstanceD [] (AppT (AppT (ConT ''Convertible) (ConT ''SqlValue)) (ConT name)) [
             FunD 'safeConvert [Clause [VarP v']
               (NormalB (CaseE (SigE (AppE (VarE 'safeConvert) (VarE v')) (AppT (ConT ''ConvertResult) (ConT ''Integer))) $
-                  map (\(n, con) ->
-                    Match (ConP 'Right [LitP (IntegerL n)]) (NormalB (AppE (ConE 'Right) (ConE con))) [])
+                  map (\(n, (con, pr)) ->
+                    Match (ConP 'Right [LitP (IntegerL n)]) (NormalB (AppE (ConE 'Right) 
+                                                                             (foldl1 AppE (ConE con : map (\_ -> (AppE (VarE 'error) (LitE (StringL $ "enumDeriveConvertible for " ++ show name ++ " did not put a field value in constructor " ++ show con)))) pr)))) [])
                     (zip [1..] ncons)
                 ++ [
                   Match (ConP 'Right [VarP n'])
@@ -153,6 +155,12 @@ enumDeriveConvertible t = do
             ]
         ]
     _ -> error $ "Not a data type declaration: " ++ show info
+
+enumDeriveConvertible :: Name -> Q [Dec]
+enumDeriveConvertible = enumDeriveConvertible' True
+
+enumDeriveConvertibleIgnoreFields :: Name -> Q [Dec]
+enumDeriveConvertibleIgnoreFields = enumDeriveConvertible' False
 
 -- | Derives Convertible instances from/to SqlValue for bitfields, i.e.
 -- data types providing only trivial constructors that don't take any values.

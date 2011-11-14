@@ -16,7 +16,8 @@ tableDocuments = Table {
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("sealed_file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("title", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("status", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("status", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("error_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("process", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("functionality", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
@@ -50,7 +51,8 @@ tableDocuments = Table {
           ++ ", file_id BIGINT NULL"
           ++ ", sealed_file_id BIGINT NULL"
           ++ ", title TEXT NOT NULL"
-          ++ ", status TEXT NOT NULL"
+          ++ ", status SMALLINT NOT NULL"
+          ++ ", error_text TEXT NULL DEFAULT NULL"
           ++ ", type SMALLINT NOT NULL"
           ++ ", process SMALLINT NULL"
           ++ ", functionality SMALLINT NOT NULL"
@@ -96,29 +98,6 @@ tableDocuments = Table {
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
-tableFiles :: Table
-tableFiles = Table {
-    tblName = "files"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
-      [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("storage", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       ] -> return TVRvalid
-      [] -> do
-        runRaw conn $ "CREATE TABLE files ("
-          ++ "  id BIGINT NOT NULL"
-          ++ ", name TEXT NOT NULL"
-          ++ ", storage TEXT NULL"
-          ++ ", content BYTEA NULL"
-          ++ ", CONSTRAINT pk_files PRIMARY KEY (id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = return ()
-  }
 
 tableAuthorAttachments :: Table
 tableAuthorAttachments = Table {
@@ -212,30 +191,30 @@ tableSignatoryLinks = Table {
        , ("really_deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE signatory_links ("
-          ++ "  id BIGINT NOT NULL"
+        runRaw conn $ "CREATE TABLE signatory_links"
+          ++ "( id BIGINT NOT NULL"
           ++ ", document_id BIGINT NOT NULL"
-          ++ ", user_id BIGINT NULL"
-          ++ ", company_id BIGINT NULL"
-          ++ ", fields TEXT NOT NULL"
-          ++ ", sign_order INTEGER NOT NULL"
+          ++ ", user_id BIGINT NULL DEFAULT NULL"
+          ++ ", company_id BIGINT NULL DEFAULT NULL"
+          ++ ", fields TEXT NOT NULL DEFAULT NULL"
+          ++ ", sign_order INTEGER NOT NULL DEFAULT 1"
           ++ ", token BIGINT NOT NULL"
-          ++ ", sign_time TIMESTAMPTZ NULL"
-          ++ ", sign_ip INTEGER NULL"
-          ++ ", seen_time TIMESTAMPTZ NULL"
-          ++ ", seen_ip INTEGER NULL"
-          ++ ", read_invitation TIMESTAMPTZ NULL"
-          ++ ", invitation_delivery_status SMALLINT NOT NULL"
-          ++ ", signinfo_text TEXT NULL"
-          ++ ", signinfo_signature TEXT NULL"
-          ++ ", signinfo_certificate TEXT NULL"
-          ++ ", signinfo_provider SMALLINT NULL"
-          ++ ", signinfo_first_name_verified BOOL NULL"
-          ++ ", signinfo_last_name_verified BOOL NULL"
-          ++ ", signinfo_personal_number_verified BOOL NULL"
+          ++ ", sign_time TIMESTAMPTZ NULL DEFAULT NULL"
+          ++ ", sign_ip INTEGER NULL DEFAULT NULL"
+          ++ ", seen_time TIMESTAMPTZ NULL DEFAULT NULL"
+          ++ ", seen_ip INTEGER NULL DEFAULT NULL"
+          ++ ", read_invitation TIMESTAMPTZ NULL DEFAULT NULL"
+          ++ ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 1"
+          ++ ", signinfo_text TEXT NULL DEFAULT NULL"
+          ++ ", signinfo_signature TEXT NULL DEFAULT NULL"
+          ++ ", signinfo_certificate TEXT NULL DEFAULT NULL"
+          ++ ", signinfo_provider SMALLINT NULL DEFAULT NULL"
+          ++ ", signinfo_first_name_verified BOOL NULL DEFAULT NULL"
+          ++ ", signinfo_last_name_verified BOOL NULL DEFAULT NULL"
+          ++ ", signinfo_personal_number_verified BOOL NULL DEFAULT NULL"
           ++ ", roles INTEGER NOT NULL"
-          ++ ", deleted BOOL NOT NULL"
-          ++ ", really_deleted BOOL NOT NULL"
+          ++ ", deleted BOOL NOT NULL DEFAULT false"
+          ++ ", really_deleted BOOL NOT NULL DEFAULT false"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
           ++ ")"
         return TVRcreated

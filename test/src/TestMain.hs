@@ -82,6 +82,17 @@ import APICommonsTest
 #ifndef NO_JSON
 import JSONUtilTest
 #endif
+#ifndef NO_SQLUTILS
+import SQLUtilsTest
+#endif
+
+#ifndef NO_FILE
+import FileTest
+#endif
+
+#ifndef NO_DOCJSON
+import Doc.TestJSON
+#endif
 
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
@@ -151,6 +162,15 @@ allTests conn = tail tests
 #endif
 #ifndef NO_JSON
       , ("jsonutil", const $ jsonUtilTests )
+#endif
+#ifndef NO_FILE
+      , ("file", const $ fileTests conn )
+#endif
+#ifndef NO_DOCJSON
+      , ("docjson", const $ documentJSONTests)
+#endif
+#ifndef NO_SQLUTILS
+      , ("sqlutil", const $ sqlUtilsTests )
 #endif
       ]
 

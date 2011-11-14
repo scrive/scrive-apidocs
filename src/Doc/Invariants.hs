@@ -78,7 +78,7 @@ documentHasOneAuthor _ document =
  -}
 oldishDocumentHasFiles :: MinutesTime -> Document -> Maybe String
 oldishDocumentHasFiles now document =
-  assertInvariant "document must have files if older than one hour" $
+  assertInvariant ("document must have files if older than one hour (is " ++ show (toMinutes now - toMinutes (documentctime document)) ++ " minutes old)") $
     olderThan now document 60 =>> (length (documentfiles document ++ documentsealedfiles document) > 0)
 
 {- |

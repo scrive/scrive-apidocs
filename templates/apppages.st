@@ -97,6 +97,13 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>
+        <script src="/js/jquery.form.js"
+                type="text/javascript"></script>
+        <script src="/js/wizard.js"
+                type="text/javascript"></script>
+        <script src="/js/uploadview.js"
+                type="text/javascript"></script>
+
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>
@@ -165,7 +172,7 @@ standardBodyWrapper=
       </body>
 ####
 queryColumn=
-<div class="white thin box">
+<div class="white thin box createaccountbox">
                                                 <h4>$_queryColumnHead()$</h4>
 <br />
 <p>$_queryColumnBody1()$</p>
@@ -257,6 +264,12 @@ pageFooter=
         </li>
         <li>
           $_pageFooterContact5()$
+        </li>
+        <li>
+          $_pageFooterContact6()$
+        </li>
+        <li>
+          $_pageFooterContact7()$
         </li>
       </ul>
     </div>

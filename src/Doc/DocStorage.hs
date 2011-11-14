@@ -39,8 +39,9 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import qualified MemCache
 import ForkAction
-import File.TransState
+import File.Model
 import DB.Classes
+import File.FileID
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)

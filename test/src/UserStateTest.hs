@@ -12,6 +12,10 @@ import DB.Types
 import MinutesTime
 import User.Model
 import TestingUtil
+import Data.List
+
+sortByUserID :: [User] -> [User]
+sortByUserID = sortBy (\a b -> compare (userid a) (userid b))
 
 userStateTests :: Connection -> Test
 userStateTests conn = testGroup "UserState" [
@@ -104,7 +108,7 @@ test_addViewerByEmail = do
     assertBool "User was successfully added as a friend" res
     return user
   users <- dbQuery $ GetUserFriends userid
-  assertBool "User's friends list contains correct users" $ users == friends
+  assertBool "User's friends list contains correct users" $ sortByUserID users == sortByUserID friends
 
 test_getUsersByFriendUserID :: DB ()
 test_getUsersByFriendUserID = do
@@ -116,7 +120,7 @@ test_getUsersByFriendUserID = do
     assertBool "User was successfully added as a friend" res
     return user
   have_as_friend <- dbQuery $ GetUsersByFriendUserID fid
-  assertBool "User's 'have as friends' list contains correct users" $ users == have_as_friend
+  assertBool "User's 'have as friends' list contains correct users" $ sortByUserID users == sortByUserID have_as_friend
   return ()
 
 test_getCompanyAccounts :: DB ()
@@ -126,7 +130,7 @@ test_getCompanyAccounts = do
     Just user <- addNewCompanyUser "Emily" "Green" email cid
     return user
   company_accounts <- dbQuery $ GetCompanyAccounts cid
-  assertBool "Company accounts returned correctly" $ users == company_accounts
+  assertBool "Company accounts returned correctly" $ sortByUserID users == sortByUserID company_accounts
 
 test_getInviteInfo :: DB ()
 test_getInviteInfo = do

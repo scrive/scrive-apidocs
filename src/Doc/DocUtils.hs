@@ -21,6 +21,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB.Classes
+import Data.Semantic
 import Misc
 
 import Control.Monad
@@ -29,7 +30,7 @@ import Data.List hiding (insert)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import File.TransState
+import File.Model
 
 --import Happstack.State
 
@@ -304,7 +305,7 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
-  case getSigLinkFor doc (userid, email) of
+  case getSigLinkFor doc (Or userid email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
     Just siglink | isAuthor siglink                                            -> True
@@ -353,6 +354,12 @@ addTag _ (n,v) = [DocumentTag n v]
 
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
+
+getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
+getSignatoryAttachment email name doc =
+  find (\sl -> email == signatoryattachmentemail sl &&
+               name  == signatoryattachmentname sl) $ 
+  documentsignatoryattachments doc
 
 buildattach :: String -> Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]

@@ -31,6 +31,8 @@ module API.APICommons (
           , api_document_tag
           , api_signatory
           , api_file
+          , toSignatoryRoles
+          , emptySignatoryTMP
         ) where
 
 
@@ -88,7 +90,12 @@ instance SafeEnum DOCUMENT_RELATION where
     fromSafeEnum DOCUMENT_RELATION_SIGNATORY = 5
     fromSafeEnum DOCUMENT_RELATION_VIEWER = 10
     fromSafeEnum DOCUMENT_RELATION_OTHER = 20
-    toSafeEnum _ = Nothing
+    toSafeEnum 1  = Just DOCUMENT_RELATION_AUTHOR_SECRETARY
+    toSafeEnum 2  = Just DOCUMENT_RELATION_AUTHOR_SIGNATORY
+    toSafeEnum 5  = Just DOCUMENT_RELATION_SIGNATORY
+    toSafeEnum 10 = Just DOCUMENT_RELATION_VIEWER
+    toSafeEnum 20 = Just DOCUMENT_RELATION_OTHER
+    toSafeEnum _  = Nothing
 
 data DOCUMENT_STATUS =
       DOCUMENT_STATUS_PREPARATION
@@ -257,8 +264,21 @@ data SignatoryTMP = SignatoryTMP {
                 personalnumber::Maybe BS.ByteString,
                 companynumber::Maybe BS.ByteString,
                 email::Maybe BS.ByteString,
-                fields :: [(BS.ByteString,Maybe BS.ByteString)]
+                fields :: [(BS.ByteString,Maybe BS.ByteString)],
+                relation :: Maybe Integer
             } deriving Show
+                       
+emptySignatoryTMP :: SignatoryTMP
+emptySignatoryTMP = SignatoryTMP {
+                fstname = Nothing,
+                sndname = Nothing,
+                company = Nothing,
+                personalnumber = Nothing,
+                companynumber = Nothing, 
+                email = Nothing,
+                fields = [],
+                relation = Nothing
+            }
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
@@ -269,6 +289,7 @@ getSignatoryTMP = do
     personalnumber <- fromJSONField "personalnr"
     companynumber  <- fromJSONField "companynr"
     email          <- fromJSONField "email"
+    relation       <- fromJSONField "relation"
     fields <- fromJSONLocal "fields" $ fromJSONLocalMap $ do
                                         name <- fromJSONField "name"
                                         value <- fromJSONField "value"
@@ -281,7 +302,22 @@ getSignatoryTMP = do
                 , companynumber = companynumber
                 , email = email
                 , fields = concat $ maybeToList fields
+                , relation = relation
                 }
+
+rolesFromRelation :: DOCUMENT_RELATION -> [SignatoryRole]
+rolesFromRelation DOCUMENT_RELATION_AUTHOR_SECRETARY = [SignatoryAuthor]
+rolesFromRelation DOCUMENT_RELATION_AUTHOR_SIGNATORY = [SignatoryAuthor, SignatoryPartner]
+rolesFromRelation DOCUMENT_RELATION_SIGNATORY        = [SignatoryPartner]
+rolesFromRelation DOCUMENT_RELATION_VIEWER           = []
+rolesFromRelation DOCUMENT_RELATION_OTHER            = []
+
+
+toSignatoryRoles :: SignatoryTMP -> Maybe [SignatoryRole]
+toSignatoryRoles sTMP = case relation sTMP of
+  Nothing -> Nothing
+  Just bs -> rolesFromRelation <$> (toSafeEnum bs)
+    
 
 toSignatoryDetails :: SignatoryTMP -> SignatoryDetails
 toSignatoryDetails sTMP =

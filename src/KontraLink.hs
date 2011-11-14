@@ -13,6 +13,7 @@ import ListUtil
 import Session
 import API.Service.Model
 import Company.Model
+import File.FileID
 
 {- |
    Defines the reason why we are redirected to login page
@@ -64,7 +65,6 @@ data KontraLink
     | LinkOrders
     | LinkAttachments
     | LinkRubbishBin
-    | LinkNew (Maybe DocumentProcess) Bool
     | LinkAccount Bool -- show create company modal?
     | LinkAccountSecurity
     | LinkUserMailAPI
@@ -115,6 +115,8 @@ data KontraLink
     | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
+    | LinkAPIDocumentMetadata DocumentID
+    | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -166,7 +168,6 @@ instance Show KontraLink where
     showsPrec _ (LinkOrders) = (++) $ "/or"
     showsPrec _ (LinkAttachments) = (++) $ "/a"
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
-    showsPrec _ (LinkNew mdocprocess templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess)
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
@@ -240,3 +241,6 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)
+    showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
+    showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) = 
+      (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)

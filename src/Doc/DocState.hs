@@ -46,7 +46,6 @@ module Doc.DocState
     , TimeoutDocument(..)
     , UpdateDocumentSimple(..)
     , AttachCSVUpload(..)
-    , GetDocumentsByDocumentID(..)
     , AddDocumentAttachment(..)
     , RemoveDocumentAttachment(..)
     , CloseDocument(..)
@@ -121,6 +120,9 @@ import InputValidation
 import Control.Applicative
 import Doc.DocInfo
 import Data.List
+import File.FileID
+import Doc.DocStateCommon
+
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
@@ -260,17 +262,6 @@ getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = queryDocs $ \documents ->
   IxSet.toList $ (documents @= Pending) @< TimeoutTime now
 
-{- |
-    Determines whether a new document should have either Advanced or Basic
-    functionality according to the document's type and the user's preferences.
--}
-newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
-newDocumentFunctionality documenttype user =
-  case (getValueForProcess documenttype processbasicavailable, 
-        preferreddesignmode $ usersettings user) of
-    (Just True, Nothing) -> BasicFunctionality
-    (Just True, Just BasicMode) -> BasicFunctionality
-    _ -> AdvancedFunctionality
 
 {- |
     Creates and saves a new document that's authored by the given user,
@@ -309,6 +300,7 @@ newDocument user mcompany title documenttype ctime =
                 , documentservice              = userservice user
                 , documentauthorattachments    = []
                 , documentsignatoryattachments = []
+                , documentallowedidtypes       = [EmailIdentification]
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
       inserteddoc <- insertNewDocument doc
@@ -319,44 +311,6 @@ setDocumentLocale did locale time =
   modifySignableOrTemplate did $ guardStatus "set locale for" Preparation $ \document ->
     Right $ document { documentregion = getRegion locale
                      , documentmtime = time}
-
-{- |
-    A blank document containing default values that need to be set before
-    saving.
--}
-blankDocument :: Document
-blankDocument =
-          Document
-          { documentid                   = DocumentID 0
-          , documenttitle                = BS.empty
-          , documentsignatorylinks       = []
-          , documentfiles                = []
-          , documentstatus               = Preparation
-          , documenttype                 = Signable Contract
-          , documentfunctionality        = BasicFunctionality
-          , documentctime                = fromSeconds 0 
-          , documentmtime                = fromSeconds 0
-          , documentdaystosign           = Nothing
-          , documenttimeouttime          = Nothing
-          , documentlog                  = []
-          , documentinvitetext           = BS.empty
-          , documentsealedfiles          = []
-          -- , documenttrustweaverreference = Nothing
-          , documentallowedidtypes       = []
-          , documentcsvupload            = Nothing
-          , documentcancelationreason    = Nothing
-          , documentinvitetime           = Nothing
-          , documentsharing              = Private
-          , documentrejectioninfo        = Nothing
-          , documenttags                 = []
-          , documentui                   = emptyDocumentUI
-          , documentservice              = Nothing
-          , documentauthorattachments    = []
-          , documentdeleted              = False
-          , documentsignatoryattachments = []
-          -- , documentattachments          = []
-          , documentregion               = defaultValue
-          }
 
 
 {- |
@@ -510,12 +464,12 @@ checkResetSignatoryData doc sigs =
   let authors    = [ r | (_, r) <- sigs, SignatoryAuthor `elem` r]
       nonauthors = [ r | (_, r) <- sigs, SignatoryAuthor `notElem` r]
       isbasic = documentfunctionality doc == BasicFunctionality
-      allowspartner _ = getValueForProcess doc processauthorsend /= Just True
+      disallowspartner _ = getValueForProcess doc processauthorsend /= Just True
   in catMaybes $
       [trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc),
        trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors),
-       trueOrMessage (isbasic =>> (length nonauthors == 1)) $ "Should have exactly one signatory since it's basic functionality",
-       trueOrMessage (isbasic =>> all (allowspartner =>>^ (SignatoryPartner `elem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
+       trueOrMessage (isbasic =>> (length nonauthors <= 1)) $ "Should be at most one signatory since it's basic functionality",
+       trueOrMessage (isbasic =>> all (disallowspartner =>>^ (SignatoryPartner `notElem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
        trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" ]
   
 resetSignatoryDetails :: DocumentID
@@ -528,6 +482,7 @@ resetSignatoryDetails documentid signatories time =
     [] -> do
       -- this reassigns signlinkid and magic hash each time we call it
       signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
+      -- copy the author's user and company
       let signatorylinks2 = mapIf isAuthor (\sl -> sl { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                                       , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                                       }) signatorylinks
@@ -541,6 +496,9 @@ resetSignatoryDetails documentid signatories time =
     A cut down version of updateDocument that requires fewer parameters.  This is used by the integration api.
     If there is a problem, such as the document not existing,
     or the document not being in preparation mode then a Left is returned.
+    DEPRECATED; Don't use this.
+    Gracjan, please don't migrate this function to Postgres
+     -- Eric
 -}
 updateDocumentSimple::DocumentID -> (SignatoryDetails, User) -> [SignatoryDetails] -> Update Documents (Either String Document)
 updateDocumentSimple did (authordetails,author) signatories = do
@@ -587,19 +545,6 @@ attachCSVUpload documentid csvupload =
           (Left s, _) -> return $ Left s
           (Right _, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use attachCSVUpload"
-
-{- |
-    A bulk version of getDocumentsByDocumentID, this will get a list of
-    documents corresponding to the given list of document ids.  This would return documents
-    where documentdeleted = True.  If one of the documents doesn't exist then this returns
-    a Left.
--}
-getDocumentsByDocumentID :: [DocumentID] -> Query Documents (Either String [Document])
-getDocumentsByDocumentID docids = queryDocs $ \documents ->
-  let relevantdocs = documents @+ docids in
-  if (length docids == size relevantdocs)
-    then Right . toList $ relevantdocs
-    else Left "documents don't exist for all the given ids"
 
 addDocumentAttachment :: DocumentID -> FileID -> Update Documents (Either String Document)
 addDocumentAttachment docid fileid = 
@@ -1340,24 +1285,10 @@ changeSignatoryEmailWhenUndelivered did slid mnewuser email = modifySignable did
 signLinkFromDetails :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetails details roles = do
           sg <- ask
-          linkid <- getUnique sg SignatoryLinkID
+          linkid <- getUnique64 sg SignatoryLinkID
           magichash <- getRandom
-          return $ SignatoryLink
-                     { signatorylinkid = linkid
-                     , signatorydetails = details
-                     , signatorymagichash = magichash
-                     , maybesignatory = Nothing
-                     , maybesupervisor = Nothing  -- This field is now deprecated should use maybecompany instead
-                     , maybecompany = Nothing
-                     , maybesigninfo  = Nothing
-                     , maybeseeninfo  = Nothing
-                     , maybereadinvite = Nothing
-                     , invitationdeliverystatus = Unknown
-                     , signatorysignatureinfo = Nothing
-                     , signatoryroles = roles
-                     , signatorylinkdeleted = False
-                     , signatorylinkreallydeleted = False
-                     }
+          return $ signLinkFromDetails' details roles linkid magichash
+
 
 signLinkFromDetailsForTest :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetailsForTest = signLinkFromDetails
@@ -1368,7 +1299,7 @@ signLinkFromDetailsForTest = signLinkFromDetails
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
 getUniqueSignatoryLinkID = do
   sg <- ask
-  linkid <- getUnique sg SignatoryLinkID
+  linkid <- getUnique64 sg SignatoryLinkID
   return linkid
 
 {- |
@@ -1395,8 +1326,8 @@ signableFromDocument doc = insertNewDocument $ templateToDocument doc
    This is due to the fact that author personal data could get changed.  Also the company
    data may have changed.
 -}
-signableFromDocumentIDWithUpdatedAuthor :: User -> Maybe Company -> DocumentID -> Update Documents (Either String Document)
-signableFromDocumentIDWithUpdatedAuthor user mcompany docid = 
+signableFromDocumentIDWithUpdatedAuthor :: User -> Maybe Company -> DocumentID -> MinutesTime -> Update Documents (Either String Document)
+signableFromDocumentIDWithUpdatedAuthor user mcompany docid time = 
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
@@ -1404,6 +1335,7 @@ signableFromDocumentIDWithUpdatedAuthor user mcompany docid =
         (templateToDocument doc) {
               documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
                                        -- FIXME: Need to remove authorfields?
+              , documentctime = time
         }
     where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
           replaceAuthorSigLink sl
@@ -1668,7 +1600,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocumentSimple
                         , 'attachCSVUpload
-                        , 'getDocumentsByDocumentID
                         , 'addDocumentAttachment
                         , 'removeDocumentAttachment                          
                         , 'updateSigAttachments
