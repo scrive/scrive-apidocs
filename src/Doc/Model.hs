@@ -987,7 +987,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          [ sqlFieldType "seen_time" "timestamp" time
                          , sqlField "seen_ip" ipnumber
                          ]
-                         "WHERE id = ? AND document_id = ? AND token = ? AND seen_time = NULL"
+                         "WHERE id = ? AND document_id = ? AND token = ?"
                          [ toSql signatorylinkid1
                          , toSql did
                          , toSql mh
