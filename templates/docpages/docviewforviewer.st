@@ -34,7 +34,7 @@ var docview = KontraStandardDocument.init({
         })
     $endif$
     });
-jQuery("#body-container").replaceWith(docview.view.el)
+jQuery(".body-container").replaceWith(docview.view.el)
 })
 </script>
 
