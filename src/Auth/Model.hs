@@ -15,6 +15,8 @@ module Auth.Model
 
 import Database.HDBC hiding (originalQuery)
 
+import DB.Derive
+
 import Auth.Internal
 import DB.Utils
 import DB.Classes
@@ -28,6 +30,8 @@ import Random
 import Data.List
 
 import qualified Control.Exception as E
+
+
 
 -- | Given an AccessToken, return an Authorization representing those privileges
 data GetAccessTokenAuthorization = GetAccessTokenAuthorization AccessToken
@@ -200,3 +204,13 @@ packagePrivileges st = do
         merge = map merge'
         merge' ps@((uid, _):_) = (uid, map snd ps)
         merge' [] = error "This is impossible"
+
+
+$(newtypeDeriveConvertible ''AccessToken)
+$(newtypeDeriveUnderlyingReadShow ''AccessToken)
+
+$(newtypeDeriveConvertible ''APIToken)
+$(newtypeDeriveUnderlyingReadShow ''APIToken)
+
+$(newtypeDeriveConvertible ''APISecret)
+$(newtypeDeriveUnderlyingReadShow ''APISecret)

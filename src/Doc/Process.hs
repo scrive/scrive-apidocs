@@ -1,59 +1,90 @@
+{-# LANGUAGE FunctionalDependencies #-}
 module Doc.Process where
 
 import Doc.DocStateData
-import Doc.DocUtils
+import Auth.DocumentPrivilege
+import DB.Classes
+import MinutesTime
+import Database.HDBC
+import Data.Semantic
+import Control.Monad
+import Auth.DocumentAuthorization
 
--- | The building blocks for making a matcher
-data DocumentDataMatcher = MatchDocumentStatus DocumentStatus
-                         | MatchDocumentType   DocumentType
-                         | MatchDocStatusPred  (DocumentStatus -> Bool)
-                         | MatchDocTypePred    (DocumentType   -> Bool)
-                         | MatchDocAnd DocumentDataMatcher DocumentDataMatcher
-                         | MatchDocOr  DocumentDataMatcher DocumentDataMatcher
-                         | MatchDocNot DocumentDataMatcher
-                         | MatchDocAny
-                         | MatchDocNone
+-- examples
 
--- | The semantics of a DocumentDataMatcher are simple
-isDocMatch :: DocumentDataMatcher -> DocumentType -> DocumentStatus -> Bool
-isDocMatch (MatchDocumentStatus s1) _ s2 = s1 == s2
-isDocMatch (MatchDocumentType   t1) t2 _ = t1 == t2
-isDocMatch (MatchDocStatusPred  p ) _ s = p s
-isDocMatch (MatchDocTypePred    p ) t _ = p t
-isDocMatch (MatchDocAnd a b       ) t s = isDocMatch a t s && isDocMatch b t s
-isDocMatch (MatchDocOr a b        ) t s = isDocMatch a t s || isDocMatch b t s
-isDocMatch (MatchDocNot a         ) t s = not $ isDocMatch a t s
-isDocMatch (MatchDocAny           ) _ _ = True
-isDocMatch (MatchDocNone          ) _ _ = False
+data SetDocumentTitle a = SetDocumentTitle DocumentID String MinutesTime a
 
--- some examples
-
--- signing is only available in Signable and Pending
-signingRestriction :: DocumentDataMatcher
-signingRestriction = MatchDocAnd (MatchDocTypePred isSignable) (MatchDocumentStatus Pending)
-
--- changing the title is only available in Preparation
-changeTitleRestriction :: DocumentDataMatcher
-changeTitleRestriction = MatchDocumentStatus Preparation
-
--- we can then define a higher-level abstraction on DBUpdate
-class DocumentOperation a b where
-  docOp :: a -> DB b -- the Database stuff; you can assume a lock on documents
-  restriction :: a -> DocumentDataMatcher -- what are the restrictions on this operation
-  restriction _ = MatchDocNone
-  getDocumentID :: a -> DocumentID --  the documentid to act on
+instance DocumentOperation (SetDocumentTitle a) Bool where
+  docOp (SetDocumentTitle _ _ _ _) = do
+    undefined -- do your sql; you can assume locks on documents and signatory_links
+  docOpDocumentID  (SetDocumentTitle did _ _ _) = did
+  docOpMinutesTime (SetDocumentTitle _ _ mt _ ) = mt
+  docOpPrivilege _ = DocumentEdit
   
+instance DocumentAuthorization a => TakesDocumentAuthorization (SetDocumentTitle a) a where
+  getDocumentAuthorization (SetDocumentTitle _ _ _ a) = a
+  
+instance HasTypeStatusMatcher (SetDocumentTitle a) DocumentStatus where
+  getTypeStatusMatcher _ = Preparation -- only allow this 
+
+-- A small "DSL" to match documenttypes and documentstatuses
+
+class TypeStatusMatcher a where
+  tsMatch :: a -> DocumentType -> DocumentStatus -> Bool
+  
+instance TypeStatusMatcher DocumentStatus where
+  tsMatch ds _ s = ds == s
+  
+instance TypeStatusMatcher DocumentType where
+  tsMatch ts t _ = ts == t
+  
+instance (TypeStatusMatcher a, TypeStatusMatcher b) => TypeStatusMatcher (And a b) where
+  tsMatch (And a b) t s = tsMatch a t s && tsMatch b t s
+  
+instance (TypeStatusMatcher a, TypeStatusMatcher b) => TypeStatusMatcher (Or a b) where
+  tsMatch (Or a b) t s = tsMatch a t s || tsMatch b t s
+
+instance (TypeStatusMatcher a) => TypeStatusMatcher (Not a) where
+  tsMatch (Not a) t s = not $ tsMatch a t s
+
+instance TypeStatusMatcher (DocumentType -> Bool) where  
+  tsMatch p t _ = p t
+  
+instance TypeStatusMatcher (DocumentStatus -> Bool) where
+  tsMatch p _ s = p s
+
+-- define three new type classes
+
+class DocumentAuthorization b => TakesDocumentAuthorization a b | a -> b where
+  getDocumentAuthorization :: a -> b
+  
+class TypeStatusMatcher b => HasTypeStatusMatcher a b | a -> b where
+  getTypeStatusMatcher :: a -> b
+  
+class DocumentOperation a b | a -> b where
+  docOp :: a -> DB b -- the Database stuff; you can assume a lock on documents && signatorylinks
+  docOpDocumentID  :: a -> DocumentID        -- the documentid to act on
+  docOpMinutesTime :: a -> MinutesTime       -- the time of the operation
+  docOpPrivilege   :: a -> DocumentPrivilege -- the privilege the operation falls under
+  
+-- we can then define a higher-level abstraction on DBUpdate
 -- and now we make an instance for DBUpdate which performs the check
 -- automatically
-instance (DocumentOperation a b) => DBUpdate a b where
+instance (HasTypeStatusMatcher a d, TakesDocumentAuthorization a c, DocumentOperation a b) => DBUpdate a b where
   dbUpdate a = do
     wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+    wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+    -- replace the next line with SQL code to get the signatorylinks    
+    -- siglinks <- getSigLinks $ docOpDocumentID a
+    let siglinks :: [SignatoryLink] = []
+    unless (canDocument (getDocumentAuthorization a) siglinks (docOpMinutesTime a) (docOpPrivilege a)) $
+      error "Not authorized"
     -- replace next two lines with SQL code to get the status/type
     -- based on getDocumentID a
-    -- (docstatus, doctype) <- getStatusAndType $ getDocumentID a
+    -- (docstatus, doctype) <- getStatusAndType $ docOpDocumentID a
     let docstatus = Preparation
-        doctype   = Signable Contract
-    if isMatch (restriction a) doctype docstatus 
-      then docOp a
-      else error "Operation is not allowed."
+        doctype = Signable Contract
+    unless (tsMatch (getTypeStatusMatcher a) doctype docstatus) $
+      error "Operation is not allowed."
+    docOp a
 
