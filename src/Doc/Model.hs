@@ -932,8 +932,17 @@ instance DBQuery GetUniqueSignatoryLinkID SignatoryLinkID where
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash MinutesTime Word32
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate MarkDocumentSeen (Either String Document) where
-  dbUpdate (MarkDocumentSeen documentid signatorylinkid1 mh time ipnumber) = wrapDB $ \conn -> do
-    unimplemented "MarkDocumentSeen"
+  dbUpdate (MarkDocumentSeen did signatorylinkid1 mh time ipnumber) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlFieldType "seen_time" "timestamp" time
+                         , sqlField "seen_ip" ipnumber
+                         ]
+                         "WHERE id = ? AND document_id = ? AND token = ?"
+                         [ toSql signatorylinkid1
+                         , toSql did
+                         , toSql mh
+                         ]
+    getOneDocumentAffected "MarkDocumentSeen" r did
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID MinutesTime Word32
                           deriving (Eq, Ord, Show, Typeable)
