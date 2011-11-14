@@ -289,6 +289,7 @@ handleIssueBankID provider docid = withUserGet $ do
  -}
 handleIssuePostBankID :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssuePostBankID docid = withUserPost $ do
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
     ctx@Context { ctxmaybeuser = Just author
                 , ctxelegtransactions
                 , ctxtime
@@ -301,8 +302,7 @@ handleIssuePostBankID docid = withUserPost $ do
     document <- guardRightM $ getDocByDocID docid
 
     guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
-
-    -- valid transaction?
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"   
     ELegTransaction { transactiondocumentid
                     , transactiontbs
                     , transactionencodedtbs
@@ -310,6 +310,7 @@ handleIssuePostBankID docid = withUserPost $ do
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
     guard $ transactiondocumentid == docid
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"    
     -- end validation
     eudoc <- case documentstatus document of
                 Preparation -> updateDocument ctx document
@@ -317,11 +318,13 @@ handleIssuePostBankID docid = withUserPost $ do
                 s -> return $ Left $ "Wrong status: " ++ show s
     case eudoc of
         Left msg -> do
-            Log.eleg $ "updateDocument failed: " ++ msg
+            Log.eleg $ ("Document " ++ show docid ) ++ ": Update failed with "++ msg   
             addFlash (OperationFailed, "Could not save document.")
             getHomeOrUploadLink
         Right udoc -> do
+            Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"   
             guard (udoc `allowsIdentification` ELegitimationIdentification)
+            Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"   
             providerCode <- providerStringToNumber provider
             res <- verifySignature providerCode
                     transactionencodedtbs
@@ -333,7 +336,7 @@ handleIssuePostBankID docid = withUserPost $ do
 
             case res of
                 Left (ImplStatus _a _b code msg) -> do
-                    Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.eleg $ ("Document " ++ show docid ) ++ ": Verification failed with"   ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
                     -- change me! I should return back to the same page
                     return $ LinkDesignDoc $ DesignStep3 docid signlast
