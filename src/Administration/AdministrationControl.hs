@@ -67,7 +67,7 @@ import KontraLink
 import MinutesTime
 import System.Directory
 import DB.Classes
-import User.UserControl hiding (handleCreateCompanyUser)
+import User.UserControl hiding (handleAddCompanyAccount)
 import User.UserView
 import User.Model
 import Data.Maybe
@@ -97,7 +97,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import InspectXMLInstances ()
 import InspectXML
-import ForkAction 
+import ForkAction
 import File.TransState
 
 {- | Main page. Redirects users to other admin panels -}
@@ -830,18 +830,18 @@ resealFile docid = onlySuperUser $ do
             Left  _ -> Log.debug "We failed to reseal the document"
             Right _ -> Log.debug "Ok, so the document has been resealed"
         return LoopBack
-        
+
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlySuperUser $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ query $ GetDocumentByDocumentID did  
+  doc <- guardJustM $ query $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do
             content <- case contentspec of
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right c -> return c
-            fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)    
+            fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
             _ <- update $ ChangeMainfile did (fileid file)
             return LoopBack
@@ -864,13 +864,13 @@ showDocumentsDaylyList = onlySuperUserGet $ do
     documents <- join <$> (sequence $ map (query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     liftIO $ putStrLn $ show documents
     adminDocumentsDaylyList day $ filter (dayMatch day) documents
- where    
+ where
     dayMatch day doc = (documentctime doc >= day) && (documentctime doc <= ((24*60) `minutesAfter` day))
                        || ((documentctime doc <= day) && (documentmtime doc >= day))
-                       
-                       
-                       
-                       
+
+
+
+
 {- |
    Used by super users to inspect a particular document.
 -}
@@ -879,9 +879,9 @@ daveDocument documentid = onlySuperUserGet $ do
     document <- queryOrFail $ GetDocumentByDocumentID documentid
     renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
-        field "id" $ show documentid 
+        field "id" $ show documentid
         field "closed" $ documentstatus document == Closed
-        
+
 
 
 {- |
@@ -891,17 +891,17 @@ daveUser :: Kontrakcja m => UserID ->  m (Either KontraLink String)
 daveUser userid = onlySuperUserGet $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
-    
+
 {- |
     Used by super users to inspect a company in xml.
 -}
 daveCompany :: Kontrakcja m => CompanyID -> m (Either KontraLink String)
 daveCompany companyid = onlySuperUserGet $ do
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
-  return $ inspectXML company                       
-  
-  
-  
+  return $ inspectXML company
+
+
+
 {- |
    Ensures logged in as a super user
 -}
@@ -921,10 +921,10 @@ sysdump = onlySuperUserGet $ do
 serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
                    String
                   -> m Response
-serveLogDirectory filename = do 
+serveLogDirectory filename = do
     contents <- liftIO $ getDirectoryContents "log"
     when (filename `notElem` contents) $ do
         Log.debug $ "Log '" ++ filename ++ "' not found"
         mzero
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
-    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout  
+    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout

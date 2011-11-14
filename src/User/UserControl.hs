@@ -248,10 +248,8 @@ friendsSortSearchPage  =
     listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
-handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \companyid -> do
-    Context{ctxmaybeuser = Just user} <- getContext
-    companyaccounts' <- runDBQuery $ GetCompanyAccounts companyid
-    let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
+handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \(user,company) -> do
+    companyaccounts <- runDBQuery $ GetCompanyAccounts (companyid company)
     params <- getListParams
     content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
     renderFromBody TopAccount kontrakcja content
@@ -265,23 +263,16 @@ companyAccountsSearchFunc :: SearchingFunction User
 companyAccountsSearchFunc s user = userMatch user s -- split s so we support spaces
     where
         match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
-        userMatch u s' = match s' (usercompanyposition $ userinfo u)
-                      || match s' (getFirstName u)
-                      || match s' (getLastName  u)
-                      || match s' (getPersonalNumber u)
+        userMatch u s' = match s' (getFullName u)
                       || match s' (getEmail u)
 
 companyAccountsSortFunc :: SortingFunction User
-companyAccountsSortFunc "firstname" = viewComparing getFirstName
-companyAccountsSortFunc "firstnameREV" = viewComparingRev getFirstName
-companyAccountsSortFunc "lastname" = viewComparing getLastName
-companyAccountsSortFunc "lastnameREV" = viewComparingRev getLastName
-companyAccountsSortFunc "position" = viewComparing $ usercompanyposition . userinfo
-companyAccountsSortFunc "positionREV" = viewComparingRev $ usercompanyposition . userinfo
-companyAccountsSortFunc "phone" = viewComparing $  userphone . userinfo
-companyAccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
+companyAccountsSortFunc "fullname" = viewComparing getFullName
+companyAccountsSortFunc "fullnameREV" = viewComparingRev getFullName
 companyAccountsSortFunc "email" = viewComparing getEmail
 companyAccountsSortFunc "emailREV" = viewComparingRev getEmail
+companyAccountsSortFunc "iscompanyadmin" = viewComparing useriscompanyadmin
+companyAccountsSortFunc "iscompanyadminREV" = viewComparingRev useriscompanyadmin
 companyAccountsSortFunc _ = const $ const EQ
 
 companyAccountsPageSize :: Int
@@ -312,30 +303,23 @@ handleAddFriend User{userid} email = do
       addFlash (OperationFailed, "operation failed")
 
 handlePostCompanyAccounts :: Kontrakcja m => m KontraLink
-handlePostCompanyAccounts = do
-    ctx <- getContext
-    case (ctxmaybeuser ctx) of
-         Just user -> do
-             add <- isFieldSet "add"
-             remove <- isFieldSet "remove"
-             takeover <- isFieldSet "takeover"
-             case (add,remove,takeover) of
-                  (True, _, _) -> do
-                    handleCreateCompanyUser user
-                    return $ LinkCompanyAccounts emptyListParams
-                  (_, True, _) -> handleDeleteCompanyUser user
-                  (_, _, True) -> do
-                      memail <- getOptionalField asValidEmail "email"
-                      handleTakeOverUserForCompany (fromJust memail)
-                      return $ LinkCompanyAccounts emptyListParams
-                  _ -> LinkCompanyAccounts <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
+handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
+  add <- isFieldSet "add"
+  remove <- isFieldSet "remove"
+  case (add, remove) of
+    (True, _) -> do
+      _ <- handleAddCompanyAccount
+      return $ LinkCompanyAccounts emptyListParams
+    (_, True) -> do
+      _ <- handleDeleteCompanyUser
+      return $ LinkCompanyAccounts emptyListParams
+    _ -> LinkCompanyAccounts <$> getListParamsForSearch
 
-handleDeleteCompanyUser :: Kontrakcja m => User -> m KontraLink
-handleDeleteCompanyUser user = do
+handleDeleteCompanyUser :: Kontrakcja m => m ()
+handleDeleteCompanyUser = withCompanyAdmin $ \(user, _company) -> do
   companyaccountsids <- getCriticalFieldList asValidNumber "acccheck"
-  handleUserDelete user (map UserID companyaccountsids)
-  return $ LinkCompanyAccounts emptyListParams
+  _ <- handleUserDelete user (map UserID companyaccountsids)
+  return ()
 
 {- |
     Deletes a list of users one at a time.  It first checks the permissions
@@ -392,42 +376,42 @@ lookupUsersRelevantToDoc docid = do
   where
     linkedUserIDs = catMaybes . map maybesignatory . documentsignatorylinks
 
-handleTakeOverUserForCompany :: Kontrakcja m => BS.ByteString -> m ()
-handleTakeOverUserForCompany email = do
-  ctx@Context{ctxmaybeuser = Just companyadmin} <- getContext
-  Just invited <- runDBQuery $ GetUserByEmail Nothing (Email email)
-  mail <- mailInviteUserAsCompanyAccount ctx invited companyadmin
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress invited] }
-  addFlashM flashMessageUserInvitedAsCompanyAccount
+{- |
+    Handles adding a company user either by creating them or
+    by inviting them to be taken over.  This will return the invited user.
+-}
+handleAddCompanyAccount :: Kontrakcja m => m (Maybe User)
+handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
+  ctx <- getContext
+  memail <- getOptionalField asValidEmail "email"
+  mexistinguser <- maybe (return Nothing) (runDBQuery . GetUserByEmail Nothing . Email) memail
+  mexistingcompany <- maybe (return Nothing) getCompanyForUser mexistinguser
 
-handleCreateCompanyUser :: Kontrakcja m => User -> m ()
-handleCreateCompanyUser user = when (useriscompanyadmin user) $ do
-    ctx <- getContext
-    memail <- getOptionalField asValidEmail "email"
-    fstname <- maybe "" id <$> getField "fstname"
-    sndname <- maybe "" id <$> getField "sndname"
-    let fullname = (BS.fromString fstname, BS.fromString sndname)
-    case memail of
-      Just email -> do
-        mcompany <- getCompanyForUser user
-        muser <- createUser ctx fullname email (Just user) mcompany False
-        case muser of
-          Just newuser -> do
-            infoUpdate <- getUserInfoUpdate
-            _ <- runDBUpdate $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
-            return ()
-          Nothing -> do
-            Just invuser <- runDBQuery $ GetUserByEmail Nothing $ Email email
-            case usercompany invuser of
-              Nothing -> addFlashM $ modalInviteUserAsCompanyAccount fstname sndname (BS.toString email)
-              Just cid | fromJust (usercompany user) == cid -> addFlashM flashUserIsAlreadyCompanyAccount
-              _ ->
-                -- this is the case when companyid of invited user doesn't
-                -- match inviter's one. even if it's highly unlikely to
-                -- happen, I guess we should handle this case somehow.
-                return ()
-            return ()
-      _ -> return ()
+  minvitee <-
+    case (memail, mexistinguser, mexistingcompany) of
+      (Just email, Nothing, Nothing) -> do
+        --create a new company user
+        fstname <- fromMaybe BS.empty <$> getOptionalField asValidName "fstname"
+        sndname <- fromMaybe BS.empty <$> getOptionalField asValidName "sndname"
+        newuser <- guardJustM $ createUser ctx (fstname, sndname) email (Just user) (Just company) False
+        _ <- runDBUpdate $ SetUserInfo (userid newuser) (userinfo newuser) {
+                            userfstname = fstname
+                          , usersndname = sndname
+                          }
+        runDBQuery $ GetUserByID (userid newuser) --requery to get the updated user
+      (Just _email, Just existinguser, Nothing) -> do
+        --send a takeover invite to the existing user
+        mail <- mailInviteUserAsCompanyAccount ctx existinguser user company
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress existinguser] }
+        return $ Just existinguser
+      (Just _email, Just existinguser, Just existingcompany) | existingcompany /= company -> do
+        --this is a corner case where someone is trying to takeover someone in another company
+        return $ Just existinguser
+      _ -> return Nothing
+
+  when (isJust minvitee) $ addFlashM (flashMessageCompanyAccountInviteSent $ fromJust minvitee)
+
+  return minvitee
 
 handleViralInvite :: Kontrakcja m => m KontraLink
 handleViralInvite = withUserPost $ do
@@ -482,15 +466,8 @@ createUser :: Kontrakcja m => Context
                                   -> Maybe Company
                                   -> Bool
                                   -> m (Maybe User)
-createUser ctx names email madminuser mcompany' vip = do
+createUser ctx names email madminuser mcompany vip = do
   passwd <- liftIO $ createPassword =<< randomPassword
-  -- make sure we don't count the company unless the admin user actually is a company admin user
-  let mcompany = case (fmap useriscompanyadmin madminuser,
-                       madminuser >>= usercompany,
-                       mcompany') of
-                   (Just True, Just adminusercompanyid, Just company)
-                     | adminusercompanyid == companyid company -> mcompany'
-                   _ -> Nothing
   let Context{ctxhostpart} = ctx
   muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
@@ -558,14 +535,17 @@ withUserGet action = do
     Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
 
 {- |
-   Runs an action only if currently logged in user is a company admin
+    Guards that there is a user that is logged in and is the admin
+    of a company.  The user and company are passed as params to the
+    given action, to save you having to look them up yourself.
 -}
-withCompanyAdmin :: Kontrakcja m => (CompanyID -> m a) -> m a
+withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyAdmin action = do
-  ctx <- getContext
-  User{useriscompanyadmin, usercompany} <- guardJust $ ctxmaybeuser ctx
-  guard $ useriscompanyadmin && isJust usercompany
-  action $ fromJust usercompany
+  Context{ ctxmaybeuser } <- getContext
+  user <- guardJust ctxmaybeuser
+  company <- guardJustM $ getCompanyForUser user
+  if useriscompanyadmin user then action (user, company) else mzero
+
 {- |
      Takes a document and a action
      Runs an action only if current user (from context) is author of document
@@ -666,32 +646,24 @@ handlePhoneCallRequest = do
   return LoopBack
 
 handleGetBecomeCompanyAccount :: Kontrakcja m => UserID -> m (Either KontraLink Response)
-handleGetBecomeCompanyAccount _supervisorid = withUserGet $ do
-  addFlashM modalDoYouWantToBeCompanyAccount
+handleGetBecomeCompanyAccount inviterid = withUserGet $ do
+  inviter <- guardJustM $ runDBQuery $ GetUserByID inviterid
+  company <- guardJustM $ getCompanyForUser inviter
+  addFlashM $ modalDoYouWantToBeCompanyAccount company
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
   content <- showUser user mcompany False
   renderFromBody TopAccount kontrakcja content
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => UserID -> m KontraLink
-handlePostBecomeCompanyAccount supervisorid = withUserPost $ do
-  ctx@Context{ctxmaybeuser = Just user} <- getContext
-  supervisor <- fromMaybe user <$> (runDBQuery $ GetUserByID supervisorid)
-  case (userid user /= supervisorid, usercompany supervisor) of
-     (True, Just companyid) -> do
-          setcompanyresult <- runDBUpdate $ SetUserCompany (userid user) (Just companyid)
-          if setcompanyresult
-            then do
-              addFlashM $ flashMessageUserHasBecomeCompanyAccount supervisor
-              mail <- mailCompanyAccountAccepted ctx user supervisor
-              scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress supervisor] }
-            else do
-              -- FIXME: why this is exposed as flash message? We need this as template.
-              let msg = "Cannot become company account"
-              Log.debug msg
-              addFlash (OperationFailed, msg)
-          return $ LinkAccount False
-     _ -> return $ LinkAccount False
+handlePostBecomeCompanyAccount inviterid = withUserPost $ do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  inviter <- guardJustM $ runDBQuery $ GetUserByID inviterid
+  company <- guardJustM $ getCompanyForUser inviter
+  _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+  addFlashM $ flashMessageUserHasBecomeCompanyAccount company
+  --TODO: document takeover
+  return $ LinkAccount False
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
@@ -1048,11 +1020,8 @@ handleFriends = do
                                   ("paging", pagingParamsJSON friendsPage)]
 
 handleCompanyAccounts :: Kontrakcja m => m JSValue
-handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
-  Context{ctxmaybeuser = Just user} <- getContext
-  companyaccounts' <- runDBQuery $ GetCompanyAccounts $ companyid
-  -- filter out the current user, they don't want to see themselves in the list
-  let companyaccounts = filter ((/= userid user) . userid) companyaccounts'
+handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
+  companyaccounts <- runDBQuery $ GetCompanyAccounts $ (companyid company)
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",
@@ -1061,16 +1030,14 @@ handleCompanyAccounts = withCompanyAdmin $ \companyid -> do
                                               toJSObject [("fields",
                                                            JSObject $ toJSObject [("id",
                                                                                    JSString $ toJSString $ show $ userid f)
-                                                                                 ,("firstname",
-                                                                                   JSString $ toJSString $ BS.toString $ getFirstName f)
-                                                                                 ,("lastname",
-                                                                                   JSString $ toJSString $ BS.toString $ getLastName f)
-                                                                                 ,("position",
-                                                                                   JSString $ toJSString $ BS.toString $ usercompanyposition $ userinfo f)
-                                                                                 ,("phone",
-                                                                                   JSString $ toJSString $ BS.toString $ userphone $ userinfo f)
+                                                                                 ,("fullname",
+                                                                                   JSString $ toJSString $ BS.toString $ getFullName f)
                                                                                  ,("email",
-                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)])])
+                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)
+                                                                                 ,("iscompanyadmin",
+                                                                                   JSBool $ useriscompanyadmin f)
+                                                                                 ,("isctxuser",
+                                                                                   JSBool $ f == user)])])
                                    (list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
 

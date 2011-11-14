@@ -19,14 +19,12 @@ module User.UserView (
     resetPasswordMail,
 
     mailInviteUserAsCompanyAccount,
-    mailCompanyAccountAccepted,
 
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
-    modalInviteUserAsCompanyAccount,
     modalDoYouWantToBeCompanyAccount,
 
     -- flash messages
@@ -53,8 +51,7 @@ module User.UserView (
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
     flashMessageWeWillCallYouSoon,
-    flashUserIsAlreadyCompanyAccount,
-    flashMessageUserInvitedAsCompanyAccount,
+    flashMessageCompanyAccountInviteSent,
     flashMessageUserHasBecomeCompanyAccount,
     flashMessageUserHasLiveDocs,
     flashMessageAccountsDeleted,
@@ -62,7 +59,7 @@ module User.UserView (
     --modals
     modalNewPasswordView,
     modalUserSignupDone,
-    
+
     --utils
     userBasicFields,
 
@@ -253,28 +250,16 @@ mailAccountCreatedBySigning' mail_template hostpart doctitle personname activati
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
 
-mailInviteUserAsCompanyAccount :: TemplatesMonad m => Context -> User -> User -> m Mail
-mailInviteUserAsCompanyAccount ctx invited supervisor = do
-  kontramail  "mailInviteUserAsCompanyAccount" $ do
+mailInviteUserAsCompanyAccount :: TemplatesMonad m => Context -> User -> User -> Company -> m Mail
+mailInviteUserAsCompanyAccount ctx invited supervisor company = do
+  --invite in the language of the existing user, rather than in the supervisor language
+  kontramaillocal invited  "mailInviteUserAsCompanyAccount" $ do
                    field "hostpart" (ctxhostpart ctx)
                    fieldF "supervisor" $ userFields supervisor
                    fieldF "invited" $ userFields invited
-
-mailCompanyAccountAccepted :: TemplatesMonad m => Context -> User -> User -> m Mail
-mailCompanyAccountAccepted ctx invited supervisor = do
-  kontramail "mailCompanyAccountAccepted" $ do
-                   field "hostpart" $ ctxhostpart ctx
-                   fieldF "user" $ userFields supervisor
-                   fieldF "invited" $ userFields invited
+                   field "companyname" $ getCompanyName company
 
 -------------------------------------------------------------------------------
-
-modalInviteUserAsCompanyAccount :: TemplatesMonad m => String -> String -> String -> m FlashMessage
-modalInviteUserAsCompanyAccount fstname sndname email =
-    toModal <$> (renderTemplateFM "modalInviteUserAsCompanyAccount" $ do
-      field "email" email
-      field "fstname" fstname
-      field "sndname" sndname)
 
 modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
 modalWelcomeToSkrivaPa =
@@ -356,10 +341,15 @@ flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
 flashMessageUserPasswordChanged =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserPasswordChanged" ()
 
-flashMessageUserHasBecomeCompanyAccount :: TemplatesMonad m => User -> m FlashMessage
-flashMessageUserHasBecomeCompanyAccount supervisor =
+flashMessageCompanyAccountInviteSent :: TemplatesMonad m => User -> m FlashMessage
+flashMessageCompanyAccountInviteSent invitee =
+  toFlashMsg OperationDone <$> (renderTemplateFM "flashCompanyAccountInviteSent" $ do
+    fieldF "invitee" $ userFields invitee)
+
+flashMessageUserHasBecomeCompanyAccount :: TemplatesMonad m => Company -> m FlashMessage
+flashMessageUserHasBecomeCompanyAccount company =
   toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageUserHasBecomeCompanyAccount" $ do
-    fieldF "supervisor" $ userFields supervisor)
+    field "companyname" $ getCompanyName company)
 
 flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasLiveDocs =
@@ -422,22 +412,15 @@ flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
 
-flashUserIsAlreadyCompanyAccount :: TemplatesMonad m => m FlashMessage
-flashUserIsAlreadyCompanyAccount =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashUserIsAlreadyCompanyAccount" ()
-
-flashMessageUserInvitedAsCompanyAccount :: TemplatesMonad m => m FlashMessage
-flashMessageUserInvitedAsCompanyAccount =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserInvitedAsCompanyAccount" ()
-
 modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do
   toModal <$> (renderTemplateFM "modalNewPasswordView" $ do
             field "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
 
-modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => m FlashMessage
-modalDoYouWantToBeCompanyAccount =
-  toModal <$> renderTemplateM "modalDoYouWantToBeCompanyAccount" ()
+modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => Company -> m FlashMessage
+modalDoYouWantToBeCompanyAccount company =
+  toModal <$> (renderTemplateFM "modalDoYouWantToBeCompanyAccount" $ do
+            field "companyname" $ getCompanyName company)
 
 modalUserSignupDone :: TemplatesMonad m => m FlashMessage
 modalUserSignupDone =

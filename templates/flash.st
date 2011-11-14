@@ -234,11 +234,7 @@ flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()
 ###
 flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
-flashUserIsAlreadyCompanyAccount = $_flashUserIsAlreadyCompanyAccount()$
-###
-flashMessageUserInvitedAsCompanyAccount=	$_flashMessageUserInvitedAsSubaccount()$
-###
-flashMessageUserHasBecomeCompanyAccount=	$_flashMessageUserHasBecomeSubaccount()$
+flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeSubaccount()$
 ###
 flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
 ###
@@ -257,4 +253,6 @@ flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
 flashMessageUserHasLiveDocs=	$_flashMessageUserHasLiveDocs()$
 ###
 flashMessageAccountsDeleted=	$_flashMessageAccountsDeleted()$
+###
+flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###

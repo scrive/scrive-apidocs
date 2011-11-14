@@ -922,45 +922,6 @@ modalNewPasswordView=
   </div>
 </form>
 ####
-modalInviteUserAsCompanyAccount=
-<form action="" method="post">
-  <input type="hidden" name="takeover" value="really" />
-  <input type="hidden" name="email" value="$email$" />
-  <input type="hidden" name="fstname" value="$fstname$" />
-  <input type="hidden" name="sndname" value="$sndname$" />
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-	    <h1>$_modalInviteUserAsSubaccountHeaderSendRequest()$</h1>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-	    <div class="recovery-container">
-	      <div class="body">
-	        <p>$_modalInviteUserAsSubaccountBodySendRequest()$</p>
-	        <p>$_modalInviteUserAsSubaccountBodySendSure()$</p>
-	      </div>
-	    </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="float-left">
-	    <a class="close cancel">$_cancel()$</a>
-      </div>
-      <a href="#" class="btn-small blue float-right submit">
-	    <div class="left"></div>
-	    <div class="label">
-	      <p>$_modalInviteUserAsSubaccountFooterSendRequest()$</p>
-	    </div>
-	    <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
-####
 ####
 modalDoYouWantToBeCompanyAccount=
 <form action="" method="post">

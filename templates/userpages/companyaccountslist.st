@@ -41,20 +41,23 @@ viewCompanyAccounts =
     name : "CompanyAccountsTable",
     schema: new Schema({
       url: "/companyaccounts",
-      sorting: new Sorting({ fields: ["firstname",
-                                      "lastname",
-                                      "position",
-                                      "phone",
-                                      "email"] }),
+      sorting: new Sorting({ fields: ["fullname",
+                                      "email",
+                                      "iscompanyadmin"] }),
       paging: new Paging({}),
       filtering: new Filtering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
       cells : [
         new Cell({name: "ID", width:"20px", field:"id", special: "select"}),
-        new Cell({name: "$_firstname()$", width:"65px", field:"firstname"}),
-        new Cell({name: "$_lastname()$", width:"80px", field:"lastname" }),
-        new Cell({name: "$_companyposition()$", width:"50px", field:"position" }),
-        new Cell({name: "$_phone()$", width:"105px", field:"phone" }),
-        new Cell({name: "$_email()$", width:"100px", field:"email" })
+        new Cell({name: "$_name()$", width:"65px", field:"fullname"}),
+        new Cell({name: "$_email()$", width:"100px", field:"email" }),
+        new Cell({name: "$_role()$", width: "100px", field:"iscompanyadmin", special: "rendered",
+                  rendering: function(iscompanyadmin,idx,listobject) {
+                    if (iscompanyadmin) {
+                      return jQuery("<div>$_admin()$</div>");
+                    } else {
+                      return jQuery("<div>$_standard()$</div>");
+                    }
+                  }})
       ],
       options:
         [{ name: "$_delete()$",
@@ -107,6 +110,9 @@ modalAddCompanyAccount=
       <div class="modal-body">
         <div class="modal-content">
           <input type="hidden" name="add" value="true" />
+          <p>
+            $_modalAddCompanyAccountBody()$
+          </p>
           <div class="account-body">
             <table>
               <tr>
@@ -116,14 +122,6 @@ modalAddCompanyAccount=
               <tr>
                   <td>$_lastname()$:</td>
                   <td><input type="text" name="sndname" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_phone()$:</td>
-                  <td><input type="text" name="phone" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_companyposition()$:</td>
-                  <td><input type="text" name="companyposition" autocomplete="off" /></td>
               </tr>
               <tr>
                   <td>$_email()$:</td>

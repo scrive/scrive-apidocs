@@ -39,7 +39,7 @@
 "_CantRemoveActiveDocuments","Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
-"_CompanyAccounts","Underkonton",,"Sub Accounts"
+"_CompanyAccounts","Företagskonton",,"Company Accounts"
 "_CreateAccount","Skapa konto!",,"Create account!"
 "_Document","Dokument",,"Document"
 "_DownloadPDF","Ladda ned PDF",,"Download PDF"
@@ -264,7 +264,7 @@
 "_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
 "_SaveChanges","Spara ändringar",,"Save changes"
 "_SaveSettings","Spara inställningar",,"Save changes"
-"_SearchCompanyAccount","Sök underkonto",,"Search Sub Accounts"
+"_SearchCompanyAccount","Sök Konto",,"Search Accounts"
 "_SearchDoc","Sök dokument",,"Search documents"
 "_SearchTemplate","Sök  mall",,"Search templates"
 "_SendReminder","Skicka påminnelse",,"Send reminder"
@@ -817,13 +817,10 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
 "_flashMessageCompanyCreated","A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
-"_flashMessageUserHasBecomeSubaccount","Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
- och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a sub account to the main account $supervisor.fullnamePlusEmail$
- and the rights to your documents have been transferred."
+"_flashMessageUserHasBecomeSubaccount","Du är nu ett konto i $companyname$ och rättigheter till dina dokument har överförts.",,"You are now an account in $companyname$ and the rights to your documents have been transferred."
 "_flashMessageUserHasLiveDocs","Unable to remove account(s) as there are some remaining documents
  that need to be finalised (spec/translate me please).",,"Unable to remove account(s) as there are some remaining documents
  that need to be finalised."
-"_flashMessageUserInvitedAsSubaccount","Din förfrågan har skickats!",,"Your request has been sent!"
 "_flashMessageUserPasswordChanged","Ditt lösenord har ändrats.",,"Your password has been changed."
 "_flashMessageUserSignupDone","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till din inkorg.",,"Your account has been created. An email containing your account details has been sent to your inbox."
@@ -831,7 +828,6 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageViralInviteSent","Inbjudan har skickats!",,"The invitation has been sent!"
 "_flashRemindMailSentNotSigned","En påminnelse har skickats till",,"A reminder has been sent to"
 "_flashRemindMailSentSigned","Dokumentet har skickats till",,"The document has been sent to"
-"_flashUserIsAlreadyCompanyAccount","Du har redan skickat en inbjudan till denna e-post!",,"You've already sent an invite to that e-mail!"
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_friends","Vänner",,"Friends"
 "_from","från",,"from"
@@ -874,14 +870,10 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
-"_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till ett
-    underkonto på Scrive genom vilket du kan skriva avtal
-   för organisationen <strong>$companyname$</strong>. Observera
- att detta konto inte    är avsett för privat bruk då samtliga
- dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a sub account on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
-"_inviteCompanyAccountMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
+"_inviteCompanyAccountMailContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
+"_inviteCompanyAccountMailContentBodyUserName","Användarnamn:",,"Username:"
 "_inviteCompanyAccountMailContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
-"_inviteCompanyAccountMailTitle","Inbjudan från $supervisorname$ till underkonto",,"Invitation from $supervisorname$"
+"_inviteCompanyAccountMailTitle","Inbjudan från $supervisorname$ till $companyname$",,"Invitation from $supervisorname$ to join $companyname$"
 "_inviteTextFieldName","invite text",,"invite text"
 "_invitetextSaveTemplate","Spara mall",,"Save template"
 "_lastname","Efternamn",,"Last name"
@@ -1646,8 +1638,6 @@ profits and reduce frustration. The following mateials shall only
 "_mailCancelOrderByAuthorContentBody","<strong>$creatorname$</strong>   har valt att återkalla
  orderbekräftelsen  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$."
-"_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
-"_mailCompanyAccountAcceptedTitle","Kontoförfrågan",,"Account enquiry"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
@@ -1707,25 +1697,12 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-"_mailInviteUserAsCompanyAccountContentBodyFirst","Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
- huvudkonto till ditt konto. Om du accepterar blir ditt konto
- ett underkonto till avsändaren. Du kommer fortfarande att kunna
- se och administrera dina avtal, dock tar huvudkontot över ägarskapet
- över samtliga dokument i ditt konto.",,"The user $supervisor.fullnamePlusEmail$ has requested to become
- to become the supervisor of your account. If you accept, your
- account will become their sub account. You will still
- be able to see and administrate your agreements and the supervising
- account will take over the ownership over all your documents."
-"_mailInviteUserAsCompanyAccountContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om
- du  har privata dokument i kontot.",,"Please review before accepting, especially if you have private
- documents in the account."
+"_mailInviteUserAsCompanyAccountContentBodyFirst","Användare $supervisor.fullnamePlusEmail$ har bjudit in dig till bolaget $companyname$. Om du accepterar ditt konto och dokument kommer att ägas av $companyname$.",,"The user $supervisor.fullnamePlusEmail$ has invited you to join company $companyname$. If you accept your account and documents will be owned by $companyname$."
+"_mailInviteUserAsCompanyAccountContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om du har privata dokument i kontot.",,"Please consider before accepting, especially if you have private documents in your account."
 "_mailInviteUserAsCompanyAccountContentInstructionFirst","Så här går du vidare",,"To continue"
-"_mailInviteUserAsCompanyAccountContentInstructionSecond","<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
- <li>Spara ned samtliga privata dokument till din dator</li>
- <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
- <li>Acceptera</li> <li>Ditt konto är nu underkonto</li>",,"<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now a sub account</li>"
-"_mailInviteUserAsCompanyAccountContentLink","Detta är länken nedan",,"This is the link below"
-"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till underkonto",,"Sub account inquiry"
+"_mailInviteUserAsCompanyAccountContentInstructionSecond","<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li><li>Spara ned samtliga privata dokument till din dator</li><li>Klicka på länken nedan</li><li>Läs meddelandet online</li><li>Acceptera</li><li>Ditt konto är nu underkonto</li>",,"<li>Check your Archive for private or personal documents.</li><li>Download and save these documents, then remove from your Archive.</li> <li>Click the link below</li><li>Follow the online instructions.</li>"
+"_mailInviteUserAsCompanyAccountContentLink","Detta är länken nedan",,"Click to accept the invitation"
+"_mailInviteUserAsCompanyAccountTitle","Förfrågan att göra till företagskonton",,"Company Account Invitation"
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar",,"Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
@@ -1818,29 +1795,11 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_modalAccountSetupIfPrivateAccount","Privatperson",,"Private person"
 "_modalAccountSetupPosition","Position:",,"Position:"
 "_modalAccountSetupRepeatPassword","Upprepa lösenord:",,"Repeat password:"
-"_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du underkonto till huvudkontot
-   $supervisor.fullnamePlusEmail$ och huvudkontot tar över
-         ägarskapet över samtliga dokument i ditt konto.  Är
- du	          säker att du vill acceptera?	        ",,"If you accept to become subaccoount to the main account
-        $supervisor.fullnamePlusEmail$, the ownership of all
- your	           documents will be transferred to the main account.
- Are	          you sure you want to accept?	        "
+"_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du företagskonto till $companyname$ och huvudkontot tar över ägarskapet över samtliga dokument.  Är du säker att vill acceptera?",,"If you accept the invitation to join $companyname$ the ownership of all your documents will be transferred.  Are you sure you want to accept?"
 "_modalDoYouWantToBeSubaccountFooterAccept","Acceptera",,"Accept"
-"_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli underkonto?",,"Do accept becoming a sub account?"
+"_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli företagskonto?",,"Do you accept the invitation to become a company account?"
 "_modalErrorBody","Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
 "_modalErrorHeader","Oops, ett fel har uppstått",,"Oops, an error has occurred"
-"_modalInviteUserAsSubaccountBodySendRequest","Skicka en förfrågan till användaren att bli ett underkonto
-         under ditt konto. Det betyder att du blir
- huvudkonto och kommer att ta över ägarskapet över samtliga underkontots
- dokument. 	        ",,"Send a request to the user to become a sub account to your
-      account. This means that you will become	         the  main
- account, and the ownership of all the documents in the sub account
- will be transferred to you.	          "
-"_modalInviteUserAsSubaccountBodySendSure","	          Är du säker att du vill skicka förfrågan till användaren
- att bli	          underkonto?	        ",,"	          Are you sure you want to send a request to become a
-          sub account?	        "
-"_modalInviteUserAsSubaccountFooterSendRequest","Skicka förfrågan",,"Send request"
-"_modalInviteUserAsSubaccountHeaderSendRequest","Skicka förfrågan?",,"Send request?"
 "_modalLoginForSaveViewBody","Ditt konto har skapats. En aktiveringslänk har skickats till
  din inkorg.",,"Your account has been created. An activation link has been sent
  to your e-mail address."
@@ -2270,7 +2229,7 @@ use free of charge."
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
-"_contactUsPageMetaDescription", "Kontakta Scrive",, "Contact Scrive" 
+"_contactUsPageMetaDescription", "Kontakta Scrive",, "Contact Scrive"
 "_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>
                               <th>
           <h3>Small</h3>                                    <p>35
@@ -3320,6 +3279,11 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_legalTitleFrontPage","Juridiskt bindande såklart",,"Legally binding of course"
 "_legalBodyFrontPage","Lika bindande som en signatur på papper. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"As binding as a signature on paper."
 "_modalAddCompanyAccountTitle","Nytt Konto",,"New Account"
+"_modalAddCompanyAccountBody","Bjud in någon ny eller be en befintlig Scrive användare att ansluta ditt företag.",,"Invite someone new or ask an existing Scrive user to join your company."
 "_modalAddCompanyAccountInviteButtonText","Bjud in",,"Invite"
 "_newCompanyAccountButtonText","Nytt Konto",,"New Account"
 "_pageHeaderContactUs","Kontakta Scrive",,"Contact Scrive"
+"_flashCompanyAccountInviteSent","En inbjudan har skickats till $invitee.fullnamePlusEmail$.",,"An invitation has been sent to $invitee.fullnamePlusEmail$."
+"_role","Role",,"Role"
+"_admin","Admin",,"Admin"
+"_standard","Standard",,"Standard"
