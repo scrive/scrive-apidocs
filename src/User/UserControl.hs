@@ -2,7 +2,6 @@ module User.UserControl where
 
 import Control.Monad.State
 import Data.Char
-import Data.Either (lefts, rights)
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -17,7 +16,7 @@ import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
-import Doc.Transitory
+import Doc.DocState
 import Company.Model
 import InputValidation
 import Kontra
@@ -248,11 +247,9 @@ friendsSortSearchPage  =
     listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
-handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \(user,company) -> do
-    companyaccounts <- runDBQuery $ GetCompanyAccounts (companyid company)
-    params <- getListParams
-    content <- viewCompanyAccounts user (companyAccountsSortSearchPage params $ companyaccounts)
-    renderFromBody TopAccount kontrakcja content
+handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \_ -> do
+  content <- viewCompanyAccounts
+  renderFromBody TopAccount kontrakcja content
 
 -- Searching, sorting and paging
 companyAccountsSortSearchPage :: ListParams -> [User] -> PagedList User
@@ -306,62 +303,47 @@ handlePostCompanyAccounts :: Kontrakcja m => m KontraLink
 handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
   add <- isFieldSet "add"
   remove <- isFieldSet "remove"
-  case (add, remove) of
-    (True, _) -> do
-      _ <- handleAddCompanyAccount
-      return $ LinkCompanyAccounts emptyListParams
-    (_, True) -> do
-      _ <- handleDeleteCompanyUser
-      return $ LinkCompanyAccounts emptyListParams
-    _ -> LinkCompanyAccounts <$> getListParamsForSearch
+  changerole <- isFieldSet "changerole"
+  case True of
+    _ | add -> handleAddCompanyAccount
+    _ | remove -> handleRemoveCompanyAccount
+    _ | changerole -> handleChangeRoleOfCompanyAccount
+    _ -> return ()
+  LinkCompanyAccounts <$> getListParamsForSearch
 
-handleDeleteCompanyUser :: Kontrakcja m => m ()
-handleDeleteCompanyUser = withCompanyAdmin $ \(user, _company) -> do
-  companyaccountsids <- getCriticalFieldList asValidNumber "acccheck"
-  _ <- handleUserDelete user (map UserID companyaccountsids)
+handleChangeRoleOfCompanyAccount :: Kontrakcja m => m ()
+handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, _company) -> do
+  changeid <- getCriticalField asValidNumber "changeid"
+  makeadmin <- getFieldUTF "makeadmin"
+  _ <- runDBUpdate $ SetUserCompanyAdmin (UserID changeid) (makeadmin == Just (BS.fromString "true"))
   return ()
 
 {- |
-    Deletes a list of users one at a time.  It first checks the permissions
-    for all users, and if it's okay for all it deletes them all.  Otherwise
-    it deletes no-one.
+    Handles deletion of a company user.
 -}
-handleUserDelete :: Kontrakcja m => User -> [UserID] -> m ()
-handleUserDelete deleter deleteeids = do
-  mcompanyaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
-  case lefts mcompanyaccounts of
-    (NoDeletionRights:_) -> mzero
-    (UserHasLiveDocs:_) -> do
+handleRemoveCompanyAccount :: Kontrakcja m => m ()
+handleRemoveCompanyAccount = withCompanyAdmin $ \(user, _company) -> do
+  removeid <- getCriticalField asValidNumber "removeid"
+  deleteuser <- guardJustM $ runDBQuery $ GetUserByID (UserID removeid)
+  _ <- guard $ usercompany user == usercompany deleteuser
+  isdeletable <- isUserDeletable deleteuser
+  if isdeletable
+    then do
+      docs <- query $ GetDocumentsByUser deleteuser
+      _ <- runDBUpdate $ DeleteUser (userid deleteuser)
+      idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
+      mapM_ (\iu -> update $ DeleteDocumentRecordIfRequired  (fst iu) (snd iu)) idsAndUsers
+      addFlashM flashMessageAccountDeleted
+    else do
       addFlashM flashMessageUserHasLiveDocs
-      return ()
-    [] -> do
-      mapM_ performUserDeletion (rights mcompanyaccounts)
-      addFlashM flashMessageAccountsDeleted
-      return ()
 
-type UserDeletionDetails = (User, [Document])
-
-data UserDeletionProblem = NoDeletionRights | UserHasLiveDocs
-
-getUserDeletionDetails :: Kontrakcja m => UserID -> UserID -> m (Either UserDeletionProblem UserDeletionDetails)
-getUserDeletionDetails deleterid deleteeid = do
-  deleter <- runDBOrFail $ dbQuery $ GetUserByID deleterid
-  deletee <- runDBOrFail $ dbQuery $ GetUserByID deleteeid
-  let isSelfDelete = deleterid == deleteeid
-      isAdminDelete = maybe False ((== (usercompany deleter)) . Just) (usercompany deletee)
-      isPermissioned = isSelfDelete || isAdminDelete
-  userdocs <- doc_query $ GetDocumentsByUser deletee  --maybe this should be GetDocumentsBySignatory, but what happens to things yet to be activated?
-  let isAllDeletable = all isDeletableDocument userdocs
-  case (isPermissioned, isAllDeletable) of
-    (False, _) -> return $ Left NoDeletionRights
-    (_, False) -> return $ Left UserHasLiveDocs
-    _ -> return $ Right (deletee, userdocs)
-
-performUserDeletion :: Kontrakcja m => UserDeletionDetails -> m ()
-performUserDeletion (user, docs) = do
-  _ <- runDBUpdate $ DeleteUser $ userid user
-  idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
-  mapM_ (\iu -> doc_update $ DeleteDocumentRecordIfRequired  (fst iu) (snd iu)) idsAndUsers
+{- |
+    Checks for live documents owned by the user.
+-}
+isUserDeletable :: Kontrakcja m => User -> m Bool
+isUserDeletable user = do
+  userdocs <- query $ GetDocumentsByUser user
+  return $ all isDeletableDocument userdocs
 
 {- |
     This looks up all the users relevant for the given docid.
@@ -380,7 +362,7 @@ lookupUsersRelevantToDoc docid = do
     Handles adding a company user either by creating them or
     by inviting them to be taken over.  This will return the invited user.
 -}
-handleAddCompanyAccount :: Kontrakcja m => m (Maybe User)
+handleAddCompanyAccount :: Kontrakcja m => m ()
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
@@ -411,7 +393,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 
   when (isJust minvitee) $ addFlashM (flashMessageCompanyAccountInviteSent $ fromJust minvitee)
 
-  return minvitee
+  return ()
 
 handleViralInvite :: Kontrakcja m => m KontraLink
 handleViralInvite = withUserPost $ do
@@ -923,7 +905,7 @@ handleAccountRemovalGet aid hash = do
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ doc_update . ArchiveDocuments user $ [documentid doc]
+  _ <- guardRightM $ update . ArchiveDocuments user $ [documentid doc]
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 
@@ -1022,6 +1004,8 @@ handleFriends = do
 handleCompanyAccounts :: Kontrakcja m => m JSValue
 handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
   companyaccounts <- runDBQuery $ GetCompanyAccounts $ (companyid company)
+  isdeletablelist <- mapM isUserDeletable companyaccounts
+  let deletableuserids = map (userid . fst) . filter snd $ zip companyaccounts isdeletablelist
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
   return $ JSObject $ toJSObject [("list",
@@ -1037,7 +1021,9 @@ handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
                                                                                  ,("iscompanyadmin",
                                                                                    JSBool $ useriscompanyadmin f)
                                                                                  ,("isctxuser",
-                                                                                   JSBool $ f == user)])])
+                                                                                   JSBool $ f == user)
+                                                                                 ,("isdeletable",
+                                                                                   JSBool $ userid f `elem` deletableuserids)])])
                                    (list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
 

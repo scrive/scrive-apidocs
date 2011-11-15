@@ -54,7 +54,7 @@ module User.UserView (
     flashMessageCompanyAccountInviteSent,
     flashMessageUserHasBecomeCompanyAccount,
     flashMessageUserHasLiveDocs,
-    flashMessageAccountsDeleted,
+    flashMessageAccountDeleted,
 
     --modals
     modalNewPasswordView,
@@ -169,13 +169,10 @@ menuFields :: MonadIO m => User -> Fields m
 menuFields user = do
     field "iscompanyadmin" $ useriscompanyadmin user
 
-viewCompanyAccounts :: TemplatesMonad m => User -> PagedList User -> m String
-viewCompanyAccounts user companyusers =
+viewCompanyAccounts :: TemplatesMonad m => m String
+viewCompanyAccounts =
   renderTemplateFM "viewCompanyAccounts" $ do
-    fieldFL "companyaccounts" $ markParity $ map userFields $ list companyusers
-    field "currentlink" $ show $ LinkCompanyAccounts $ params companyusers
-    fieldF "user" $ userFields user
-    pagedListFields companyusers
+    field "currentlink" $ show $ LinkCompanyAccounts $ emptyListParams
 
 activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
@@ -355,9 +352,9 @@ flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasLiveDocs =
   toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserHasLiveDocs" ()
 
-flashMessageAccountsDeleted :: TemplatesMonad m => m FlashMessage
-flashMessageAccountsDeleted =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountsDeleted" ()
+flashMessageAccountDeleted :: TemplatesMonad m => m FlashMessage
+flashMessageAccountDeleted =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountDeleted" ()
 
 flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordChangeLinkNotValid =

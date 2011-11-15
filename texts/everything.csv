@@ -726,7 +726,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
 "_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
 "_flashMessageAccountRemovedFromSign","Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
-"_flashMessageAccountsDeleted","Account(s) successfully deleted (spec/translate me please).",,"The account(s) were successfully deleted."
+"_flashMessageAccountsDeleted","Kontot har tagits bort.",,"The account was successfully deleted."
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
@@ -818,9 +818,8 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
 "_flashMessageCompanyCreated","A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
 "_flashMessageUserHasBecomeSubaccount","Du är nu ett konto i $companyname$ och rättigheter till dina dokument har överförts.",,"You are now an account in $companyname$ and the rights to your documents have been transferred."
-"_flashMessageUserHasLiveDocs","Unable to remove account(s) as there are some remaining documents
- that need to be finalised (spec/translate me please).",,"Unable to remove account(s) as there are some remaining documents
- that need to be finalised."
+"_flashMessageUserHasLiveDocs","Det går inte att ta bort eftersom konto har dokument i undertecknandet processen.",,"Unable to delete because account has documents in the signing process."
+"_toolTipUserHasLiveDocs","Det går inte att ta bort eftersom konto har dokument i undertecknandet processen.",,"Unable to delete because account has documents in the signing process."
 "_flashMessageUserPasswordChanged","Ditt lösenord har ändrats.",,"Your password has been changed."
 "_flashMessageUserSignupDone","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till din inkorg.",,"Your account has been created. An email containing your account details has been sent to your inbox."
@@ -3284,6 +3283,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_onlyPDFAllowed","Sorry, only PDF uploads are allowed. Please try another file.",,"Sorry, only PDF uploads are allowed. Please try another file."
 "_fileTooLarge","Du har valt att bifoga en fil som överstiger 4 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a file that is larger than our limit of 4 MB. Please try another file."
 "_couldNotUpload","Sorry, the file could not be uploaded. Please try again or with a different file.",,"Sorry, the file could not be uploaded. Please try again or with a different file."
+"_pageHeaderContactUs","Kontakta Scrive",,"Contact Scrive"
 "_flashCompanyAccountInviteSent","En inbjudan har skickats till $invitee.fullnamePlusEmail$.",,"An invitation has been sent to $invitee.fullnamePlusEmail$."
 "_role","Role",,"Role"
 "_admin","Admin",,"Admin"
