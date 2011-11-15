@@ -21,9 +21,9 @@ import System.Exit
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
-import Control.Monad.Trans
 import qualified Control.Exception as E
-import qualified AppLogger as Log
+-- import qualified AppLogger as Log
+import Prelude hiding (print, putStrLn, putStr)
 
 data SOAP a = SOAP a
             | SOAPFault String String String
@@ -130,8 +130,6 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
     ExitFailure _ -> do
        return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
-      Log.debug "Writing /tmp/soap.xml"
-      BSL.writeFile "/tmp/soap.xml" xml
       case readXml (BSL.toString xml) of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
@@ -142,7 +140,6 @@ makeSoapCallCA :: (XmlContent request, XmlContent response) =>
 makeSoapCallCA url cert action request = do
   let input = fpsShowXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
-  liftIO $ print $ BSL.toString input
   let args = [               "-k", "--verbose", "--show-error",
                -- "--cert", cert ++ ":" ++ certpwd,
                "--cacert", cert,
@@ -154,7 +151,7 @@ makeSoapCallCA url cert action request = do
              ]
 
   (code,stdout,stderr) <- readProcessWithExitCode' "curl" args input
-  liftIO $ print $ BSL.toString stdout
+
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
@@ -175,7 +172,7 @@ makeSoapCallINSECURE :: (XmlContent request, XmlContent response) =>
 makeSoapCallINSECURE url action request = do
   let input = fpsShowXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
-  liftIO $ print $ BSL.toString input
+
   let args = [               "-k", "--verbose", "--show-error",
                -- "--cert", cert ++ ":" ++ certpwd,
                --"--cacert", cert,
@@ -187,7 +184,7 @@ makeSoapCallINSECURE url action request = do
              ]
 
   (code,stdout,stderr) <- readProcessWithExitCode' "curl" args input
-  liftIO $ print $ BSL.toString stdout
+
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
