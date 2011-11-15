@@ -37,6 +37,17 @@ import qualified Data.ByteString.Char8 as BS
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
+import Data.Maybe
+import Util.SignatoryLinkUtils
+
+                  
+{- |
+
+ -}
+trueOrMessage :: Bool -> String -> Maybe String
+trueOrMessage False s = Just s
+trueOrMessage True  _ = Nothing
+
 
 signLinkFromDetails' :: SignatoryDetails
                      -> [SignatoryRole]
@@ -110,3 +121,11 @@ newDocumentFunctionality documenttype user =
     (Just True, Nothing) -> BasicFunctionality
     (Just True, Just BasicMode) -> BasicFunctionality
     _ -> AdvancedFunctionality
+
+{- |
+
+-}
+checkCloseDocument :: Document -> [String]
+checkCloseDocument doc = catMaybes $
+  [trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc)),
+   trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all signatories have signed")]
