@@ -133,14 +133,14 @@ class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool
 
-instance  MaybeTemplate DocumentType where
+instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
    isTemplate AttachmentTemplate = True
    isTemplate _ = False
    isSignable (Signable _) = True
    isSignable _ = False
 
-instance  MaybeTemplate Document where
+instance MaybeTemplate Document where
    isTemplate = isTemplate . documenttype
    isSignable = isSignable . documenttype
 
