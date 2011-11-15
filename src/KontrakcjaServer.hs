@@ -56,6 +56,7 @@ import qualified MemCache
 import File.Model
 import Doc.DocState
 import Happstack.State (query)
+import qualified System.Mem as System.Mem
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -235,7 +236,8 @@ runKontrakcjaServer = Log.withLogger $ do
                               t6 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon appConf
                                                                         if r then loop else return ()) in loop)
-                              return [t1, t2, t3, t4, t5, t6]
+                              t7 <- forkIO $ cron (60*60) System.Mem.performGC
+                              return [t1, t2, t3, t4, t5, t6, t7]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day

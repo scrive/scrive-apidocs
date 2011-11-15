@@ -57,7 +57,7 @@ var docview = KontraStandardDocument.init({
 				magichash : "$sigmagichash$"
 			})
 	});
-jQuery("#body-container").replaceWith(docview.view.el)
+jQuery(".body-container").replaceWith(docview.view.el)
 })
 </script>
 #####

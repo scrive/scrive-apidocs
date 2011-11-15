@@ -36,7 +36,7 @@ describe "sign up" do
     #request an account and make sure you get a green flash back
     (@wait.until { @driver.find_element :css => ".requestAccount input" }).send_keys random_email
     (@wait.until { @driver.find_element :css => ".requestAccount .submit" }).click
-    @wait.until { @driver.find_element :css => ".flash-container.green" }
+    (@wait.until { @driver.find_element :css => ".modal-container .close" }).click
 
     #we should get an email to a page where we can accept the tos
     @emailhelper.follow_link_in_latest_mail_for random_email

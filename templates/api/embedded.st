@@ -15,7 +15,7 @@ $standardHeaderContents()$
 
 <style type="text/css">
 $if(background)$
-body, #body-container {
+body, #body-container, .body-container {
     background: $background$;
 }
 $endif$
@@ -173,7 +173,7 @@ jQuery(function(){propagateHeight();})
 $flashmessages(whitelabel="true")$
 
  $loginModal()$
-  <div id="body-container">
+  <div class="body-container">
  $content:noescape()$
   </div>
 </div>

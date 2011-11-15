@@ -420,7 +420,6 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     /* overflow: auto; 004 remove */
     /* margin-bottom: 25px; */
     margin-bottom: 0px;
-    margin-top: 25px;
 }
 
 .mainContainer a
@@ -2995,10 +2994,5 @@ a#attachmentback {
     border-top: solid 1px black;
     border-bottom: solid 1px black;
     height: 2em;
-}
-
-.uploading .searchBox {
-    margin-right: 330px;
-    
 }
 

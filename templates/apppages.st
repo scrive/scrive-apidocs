@@ -141,7 +141,7 @@ standardBodyWrapper=
         <div class="mainContainer960" >
           $flashmessages()$
           $loginModal()$
-        <div id="body-container">
+        <div class="body-container">
           $unwrappedbody:noescape()$
                                         <div class="clearfix"></div>
                                         <div class="spacer40"></div>
@@ -346,21 +346,18 @@ header=
                                  </form>
                                 </span>
                                  -->
-                               <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
-                               <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
-                               <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
-                               <a href="$linkupload$" class="document-button">$_headerSend()$</a>
+                               <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
+                               <a href="$linkaccount$" class="toplink">$_headerAccount()$</a>
+                               <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
+                               <a href="$linkupload$" class="toplink">$_headerSend()$</a>
                                 $localeSwitcher()$
                                 $else$
-
-                                <a href="#" class="login-button"><p>$_login()$</p></a>
-
-                                  <span id="moveleft2">
-                                <a href="$linkabout$"
-                                  class="document-button">$_pageFooterAbout()$</a>
-                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
-                                  <a href="$linkpriceplan$"
-                                  class="document-button">$_pageFooterPrices()$</a>
+                                <span id="moveleft2">
+                                    <a href="#" class="login-button"><p>$_login()$</p></a>
+                                    <a href="$linkcontactus$" class="toplink">$_pageHeaderContactUs()$</a>
+                                    <a href="$linkabout$" class="toplink">$_pageFooterAbout()$</a>
+                                    <a href="$linklegal$" class="toplink">$_pageFooterLaw()$</a>
+                                    <a href="$linkpriceplan$" class="toplink">$_pageFooterPrices()$</a>
                                 $localeSwitcher()$
                                   </span>
 
