@@ -172,3 +172,4 @@ checkSignDocument doc slid mh = catMaybes $
   , trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist"
   , trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"
   ]
+

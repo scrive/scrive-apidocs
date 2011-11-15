@@ -661,21 +661,6 @@ updateFields docid slid fields =
                               }
     s -> Left $ "Cannot updateFields on document " ++ show docid ++ " because " ++ concat s
 
-{- |
-    A helper function that signs the given signatory link.
-
-signWithUserID :: [SignatoryLink]
-                  -> UserID
-                  -> Maybe SignInfo
-                  -> Maybe SignatureInfo
-                  -> [SignatoryLink]
-signWithUserID [] _ _ _ = []
-signWithUserID (s:ss) uid sinfo msiginfo
-    | maybe False (((==) uid)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
-    | otherwise = s : signWithUserID ss uid sinfo msiginfo
--}
-                  
-
 {- | Move a document from Preparation to Pending
      Modifieds the documentstatus, documenttimeouttime, and the documentmtime
  -}
