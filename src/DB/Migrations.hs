@@ -46,9 +46,6 @@ tablesList = [
   , tableDocStatEvents
   , tableUserStatEvents
   , tableFiles
-  , tableAccessToken
-  , tableAPIToken
-  , tableAuthorization
 #ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments
   , tableSignatoryLinks
