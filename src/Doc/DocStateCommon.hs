@@ -17,7 +17,7 @@ import DB.Types
 import Doc.DocProcess
 import Doc.DocStateData
 --import Doc.DocStateUtils
---import Doc.DocUtils
+import Doc.DocUtils
 --import Happstack.Data.IxSet as IxSet hiding (null)
 --import Happstack.State
 import Mails.MailsUtil
@@ -25,13 +25,13 @@ import MinutesTime
 import Misc
 import User.Model
 import qualified Data.ByteString.Char8 as BS
---import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.UTF8 as BS
 --import Util.SignatoryLinkUtils
 --import Util.HasSomeCompanyInfo
---import Util.HasSomeUserInfo
---import InputValidation
+import Util.HasSomeUserInfo
+import InputValidation
 --import Control.Applicative
---import Doc.DocInfo
+import Doc.DocInfo
 --import Data.List
 --import File.FileID
 --import qualified AppLogger as Log
@@ -127,5 +127,48 @@ newDocumentFunctionality documenttype user =
 -}
 checkCloseDocument :: Document -> [String]
 checkCloseDocument doc = catMaybes $
-  [trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc)),
-   trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all signatories have signed")]
+  [ trueOrMessage (isSignable doc) ("document is not signable")
+  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) 
+                    ("Not all signatories have signed")
+  ]
+
+{- | Preconditions for moving a document from Preparation to Pending.
+ -}
+checkPreparationToPending :: Document -> [String]
+checkPreparationToPending document = catMaybes $
+  [ trueOrMessage (isSignable document) ("document is not signable")
+  , trueOrMessage (documentstatus document == Preparation)
+                    ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")")
+  , trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1)
+                    ("Number of authors was not 1")
+  , trueOrMessage (length (filter isSignatory $ documentsignatorylinks document) >= 1)
+                    ("There are no signatories")
+  , trueOrMessage (all (isSignatory =>>^ (isGood . asValidEmail . BS.toString . getEmail)) (documentsignatorylinks document))
+                    ("Not all signatories have valid email")
+  , trueOrMessage (length (documentfiles document) == 1) "Did not have exactly one file"
+  ]
+  -- NOTE: Should add stuff about first/last name, though currently the author may have his full name
+  -- stored in the first name field. OOPS!
+
+
+-- FIXME: check magic hash token
+-- FIXME: check proper role
+checkRejectDocument :: Document -> SignatoryLinkID -> [String]
+checkRejectDocument doc slid = catMaybes $
+  [ trueOrMessage (isSignable doc) ("document is not signable")
+  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (any ((== slid) . signatorylinkid) (documentsignatorylinks doc))
+                  ("signatory #" ++ show slid ++ " is not in the list of document signatories")
+  ]
+
+checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
+checkSignDocument doc slid mh = catMaybes $
+  [ trueOrMessage (isPending doc || isAwaitingAuthor doc) "Document is not in pending"
+  , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed"
+  , trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen"
+  , trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist"
+  , trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"
+  ]
