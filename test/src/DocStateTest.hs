@@ -742,7 +742,8 @@ testSetInvitationDeliveryStatusSignableRight :: DB ()
 testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isSignable
-  etdoc <- randomUpdate $ SetInvitationDeliveryStatus (documentid doc)
+  slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc)) 
+  etdoc <- randomUpdate $ SetInvitationDeliveryStatus (documentid doc) slid
   validTest $ assertRight etdoc
   
 testSetDocumentTimeoutTimeNotSignableLeft :: DB ()
