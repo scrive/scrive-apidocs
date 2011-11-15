@@ -131,15 +131,18 @@ sameUser u1 u2 = getUserID u1 == getUserID u2
 class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool
-   isSignable = not . isTemplate
 
-instance  MaybeTemplate DocumentType where
+instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
    isTemplate AttachmentTemplate = True
    isTemplate _ = False
 
-instance  MaybeTemplate Document where
-   isTemplate =  isTemplate . documenttype
+   isSignable (Signable _) = True
+   isSignable _ = False
+
+instance MaybeTemplate Document where
+   isTemplate = isTemplate . documenttype
+   isSignable = isSignable . documenttype
 
 class MaybeAttachment a where
    isAttachment :: a -> Bool
