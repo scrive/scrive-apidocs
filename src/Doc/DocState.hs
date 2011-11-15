@@ -690,13 +690,6 @@ signWithUserID (s:ss) uid sinfo msiginfo
     | otherwise = s : signWithUserID ss uid sinfo msiginfo
 -}
                   
-{- |
-
- -}
-trueOrMessage :: Bool -> String -> Maybe String
-trueOrMessage False s = Just s
-trueOrMessage True  _ = Nothing
-                  
 {- | Preconditions for moving a document from Preparation to Pending.
  -}
 checkPreparationToPending :: Document -> [String]
@@ -744,13 +737,6 @@ addInvitationEvidence docid slid time ipnumber =
     s -> Left $ "Document " ++ show documentid ++ " cannot have evidence attached for signatory " ++ show slid ++ " because " ++ concat s
 
 
-{- |
-
--}
-checkCloseDocument :: Document -> [String]
-checkCloseDocument doc = catMaybes $
-  [trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc)),
-   trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all signatories have signed")]
 
 {- | Close a document
  -} 
