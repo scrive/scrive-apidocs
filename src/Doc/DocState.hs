@@ -116,9 +116,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import InputValidation
 import Control.Applicative
-import Doc.DocInfo
 import Data.List
 import File.FileID
 import Doc.DocStateCommon
@@ -604,13 +602,6 @@ timeoutDocument documentid time = do
   modifySignable documentid $ guardStatus "timeout" Pending $ \document ->
     Right $ document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
 
-checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
-checkSignDocument doc slid mh = catMaybes $
-  [trueOrMessage (isPending doc || isAwaitingAuthor doc) "Document is not in pending",
-   trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed",
-   trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen",
-   trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist",
-   trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"]
 
 {- |
     Signs a particular signatory link.  If there is a problem, such as the document not existing,
@@ -684,17 +675,6 @@ signWithUserID (s:ss) uid sinfo msiginfo
     | otherwise = s : signWithUserID ss uid sinfo msiginfo
 -}
                   
-{- | Preconditions for moving a document from Preparation to Pending.
- -}
-checkPreparationToPending :: Document -> [String]
-checkPreparationToPending document = catMaybes $
-  [trueOrMessage (documentstatus document == Preparation) ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")"),
-  trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1) ("Number of authors was not 1"),
-  trueOrMessage (length (filter isSignatory $ documentsignatorylinks document) >= 1) ("There are no signatories"),
-  trueOrMessage (all (isSignatory =>>^ (isGood . asValidEmail . BS.toString . getEmail)) (documentsignatorylinks document)) ("Not all signatories have valid email"),
-  trueOrMessage (length (documentfiles document) == 1) "Did not have exactly one file"]
-  -- NOTE: Should add stuff about first/last name, though currently the author may have his full name
-  -- stored in the first name field. OOPS!
 
 {- | Move a document from Preparation to Pending
      Modifieds the documentstatus, documenttimeouttime, and the documentmtime

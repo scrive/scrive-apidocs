@@ -769,14 +769,44 @@ instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) w
 data PreparationToPending = PreparationToPending DocumentID MinutesTime
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate PreparationToPending (Either String Document) where
-  dbUpdate (PreparationToPending docid time) = wrapDB $ \conn -> do
-    unimplemented "PreparationToPending"
+  dbUpdate (PreparationToPending docid time) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot PreparationToPending document " ++ show docid ++ " because it does not exist"
+      Just document ->
+        case checkPreparationToPending document of
+          [] -> do
+            r <- runUpdateStatement "documents"
+                 [ sqlField "status" $ Preparation
+                 , sqlFieldType "mtime" "timestamp" $ time
+                 , sqlFieldType "timeout_time" "timestamp" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+                 ]
+                "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
+            getOneDocumentAffected "PreparationToPending" r docid
+          s -> return $ Left $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
+
 
 data CloseDocument = CloseDocument DocumentID MinutesTime Word32
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate CloseDocument (Either String Document) where
-  dbUpdate (CloseDocument docid time ipaddress) = wrapDB $ \conn -> do
-    unimplemented "CloseDocument"
+  dbUpdate (CloseDocument docid time ipaddress) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot Close document " ++ show docid ++ " because it does not exist"
+      Just document ->
+        case checkCloseDocument document of
+          [] -> do
+            r <- runUpdateStatement "documents"
+                 [ sqlField "status" $ Closed
+                 , sqlFieldType "mtime" "timestamp" $ time
+                 ]
+                "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
+            getOneDocumentAffected "PreparationToPending" r docid
+
+            -- return $ Right $ document { documentstatus = Closed 
+            --                          , documentmtime  = time
+            --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
+          s -> return $ Left $ "Cannot Close document " ++ show docid ++ " because " ++ concat s
 
 data DeleteDocumentRecordIfRequired = DeleteDocumentRecordIfRequired DocumentID [User]
                                       deriving (Eq, Ord, Show, Typeable)
@@ -1050,11 +1080,29 @@ instance DBUpdate ReallyDeleteDocuments (Either String [Document]) where
   dbUpdate (ReallyDeleteDocuments deletinguser docidsAndUsers) = wrapDB $ \conn -> do
     unimplemented "ReallyDeleteDocuments"
 
+
+
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID MinutesTime Word32 (Maybe BS.ByteString)
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RejectDocument (Either String Document) where
-  dbUpdate (RejectDocument documentid signatorylinkid1 time ipnumber customtext) = wrapDB $ \conn -> do
-    unimplemented "RejectDocument"
+  dbUpdate (RejectDocument docid slid time ipnumber customtext) =do
+    mdocument <- dbQuery $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because it does not exist"
+      Just document -> 
+        case checkRejectDocument document slid of
+          [] ->
+            do
+              r <- runUpdateStatement "documents" 
+                                               [ sqlField "status" Rejected
+                                               , sqlFieldType "time" "timestamp" time
+                                               , sqlFieldType "rejection_time" "timestamp" time
+                                               , sqlField "rejection_reason" customtext
+                                               , sqlField "rejection_signatory_link_id" slid
+                                               ]
+                                               "WHERE id = ?" [toSql docid]
+              getOneDocumentAffected "RejectDocument" r docid
+          s -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
 
 data RestartDocument = RestartDocument Document User MinutesTime Word32
                        deriving (Eq, Ord, Show, Typeable)
@@ -1267,8 +1315,29 @@ instance DBUpdate ShareDocument (Either String Document) where
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash MinutesTime Word32 (Maybe SignatureInfo)
                     deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignDocument (Either String Document) where
-  dbUpdate (SignDocument documentid signatorylinkid1 mh time ipnumber msiginfo) = wrapDB $ \conn -> do
-    unimplemented "SignDocument"
+  dbUpdate (SignDocument docid slid mh time ipnumber msiginfo) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot SignDocument document " ++ show docid ++ " because it does not exist"
+      Just document ->
+        case checkSignDocument document slid mh of
+          [] -> do
+            r <- runUpdateStatement "signatory_links"
+                      [ sqlField "sign_ip" $ ipnumber
+                      , sqlFieldType "sign_time" "timestamp" $ time
+                      , sqlField "signinfo_text" $ signatureinfotext `fmap` msiginfo
+                      , sqlField "signinfo_signature" $ signatureinfosignature `fmap` msiginfo
+                      , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` msiginfo
+                      , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` msiginfo
+                      , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` msiginfo
+                      , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
+                      , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
+                 ]
+                "WHERE id = ? AND document_id = ?" [ toSql slid
+                                                   , toSql docid
+                                                   ]
+            getOneDocumentAffected "SignDocument" r docid
+          s -> return $ Left $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
 
 
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] MinutesTime
