@@ -5,6 +5,7 @@ import Database.HDBC
 import DB.Classes
 import Stats.Tables
 import Doc.DocState
+import DB.Model
 
 mapStatement :: ([SqlValue] -> a) -> Statement -> IO [a]
 mapStatement f st = mapStatement' []
