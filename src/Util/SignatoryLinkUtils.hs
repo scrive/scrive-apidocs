@@ -32,6 +32,7 @@ module Util.SignatoryLinkUtils (
   hasCompany,
   SignatoryLinkIdentity,
   MaybeSignatoryLink(..),
+  HasSignatoryLinks,
   filterSigLinksFor,
   hasSigLinkFor
        ) where
