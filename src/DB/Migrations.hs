@@ -17,7 +17,6 @@ import DB.Utils
 import qualified AppLogger as Log
 
 import API.Service.Tables
-import Auth.Tables
 import Company.Tables
 #ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Tables
