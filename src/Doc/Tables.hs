@@ -204,7 +204,7 @@ tableSignatoryLinks = Table {
           ++ ", seen_time TIMESTAMPTZ NULL DEFAULT NULL"
           ++ ", seen_ip INTEGER NULL DEFAULT NULL"
           ++ ", read_invitation TIMESTAMPTZ NULL DEFAULT NULL"
-          ++ ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 1"
+          ++ ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"     -- this is Unknown
           ++ ", signinfo_text TEXT NULL DEFAULT NULL"
           ++ ", signinfo_signature TEXT NULL DEFAULT NULL"
           ++ ", signinfo_certificate TEXT NULL DEFAULT NULL"
