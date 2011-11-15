@@ -1040,8 +1040,12 @@ instance DBUpdate NewDocument (Either String Document) where
 
 
       -- here we emulate old behaviour and use current time instead of the one specified above
-      -- FIXME: should use time given from above (I think0
+      -- FIXME: should use time given from above (I think)
       now <- liftIO $ getMinutesTime
+
+      let simpletype = toDocumentSimpleType documenttype
+      let process = toDocumentProcess documenttype
+
       runInsertStatement "documents"
             [ sqlField "id" did
             , sqlField "status" Preparation
@@ -1050,8 +1054,8 @@ instance DBUpdate NewDocument (Either String Document) where
             , sqlField "log" "[]"
             , sqlField "invite_text" ""
             , sqlField "allowed_id_types" (1::Int)
-            , sqlField "type" (1::Int)
-            , sqlField "process" (1::Int)
+            , sqlField "type" $ toSql simpletype
+            , sqlField "process" $ toSql process
             , sqlField "sharing" (1::Int)
             , sqlField "tags" "[]"
             , sqlField "region" $ getRegion user
@@ -1297,7 +1301,7 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
     r <- runUpdateStatement "signatory_links" 
                          [ sqlField "invitation_delivery_status" status
                          ]
-                         "WHERE id = ? AND document_id = ? AND invitation_delivery_status = NULL"
+                         "WHERE id = ? AND document_id = ?"
                          [ toSql slid
                          , toSql did
                          ]
