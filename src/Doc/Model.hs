@@ -113,7 +113,6 @@ module Doc.Model
   , TimeoutDocument(..)
   , UpdateFields(..)
   , UpdateSigAttachments(..)
-
   -- , FixBug510ForDocument(..)
   --, MigrateDocumentSigAccounts(..)
   ) where
