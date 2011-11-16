@@ -57,11 +57,11 @@ statisticsCompanyFieldsByDay stats = for stats f
 
 statisticsCSV :: [DocStatEvent] -> String
 statisticsCSV events = 
-  "\"" ++ intercalate "\",\""  
+  "\"" ++ intercalate "\";\""  
   ["userid", "date", "event", "count", "docid", "serviceid", "companyid", "doctype"]
   ++ "\"\n" ++
   (concat $ map csvline events)
-    where csvline event = "\"" ++ intercalate "\",\""
+    where csvline event = "\"" ++ intercalate "\";\""
                           [ show $ seUserID event
                           , showDateYMD $ seTime event
                           , show $ seQuantity event
@@ -75,11 +75,11 @@ statisticsCSV events =
 
 userStatisticsCSV :: [UserStatEvent] -> String
 userStatisticsCSV events = 
-  "\"" ++ intercalate "\",\""  
+  "\"" ++ intercalate "\";\""  
   ["userid", "date", "event", "count", "serviceid", "companyid"]
   ++ "\"\n" ++
   (concat $ map csvline events)
-    where csvline event = "\"" ++ intercalate "\",\""
+    where csvline event = "\"" ++ intercalate "\";\""
                           [ show                                 $ usUserID    event                                    
                           , showDateYMD                          $ usTime      event                               
                           , show                                 $ usQuantity  event                                  
