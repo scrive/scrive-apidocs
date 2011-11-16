@@ -252,7 +252,7 @@ flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
 ###
 flashMessageUserHasLiveDocs=	$_flashMessageUserHasLiveDocs()$
 ###
-flashMessageAccountsDeleted=	$_flashMessageAccountsDeleted()$
+flashMessageAccountDeleted=	$_flashMessageAccountDeleted()$
 ###
 flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###

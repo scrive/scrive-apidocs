@@ -726,7 +726,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
 "_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
 "_flashMessageAccountRemovedFromSign","Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
-"_flashMessageAccountsDeleted","Kontot har tagits bort.",,"The account was successfully deleted."
+"_flashMessageAccountDeleted","Kontot har tagits bort.",,"The account was successfully deleted."
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
