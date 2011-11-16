@@ -48,7 +48,7 @@ setupLogger = do
     createDirectoryIfMissing False "log" `catch` (\_ -> return ())
 
     let fmt = tfLogFormatter "%F %T" "$time $msg"
-        
+
     appLog         <- fileHandler' "log/app.log"         INFO
     accessLog      <- fileHandler' "log/access.log"      INFO
     mailLog        <- fileHandler' "log/mail.log"        INFO >>= \lh -> return $ setFormatter lh fmt
@@ -135,7 +135,7 @@ setupLogger = do
     updateGlobalLogger
         "Happstack.Server"
         (setLevel NOTICE . setHandlers [stdoutLog])
-        
+
     -- ELeg Log
     updateGlobalLogger
         "Kontrakcja.Eleg"
@@ -145,7 +145,7 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.Stats"
         (setLevel NOTICE . setHandlers [statsLog])
-        
+
     -- Integration API Log
     updateGlobalLogger
         "Kontrakcja.Integration"
@@ -222,7 +222,7 @@ scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
 docevent :: (MonadIO m) => String -> m ()
 docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
 
--- | FIXME: use forkAction
+ -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
   liftIO $ do

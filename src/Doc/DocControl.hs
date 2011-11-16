@@ -134,7 +134,7 @@ postDocumentChangeAction document@Document  { documentstatus
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           threadDelay 5000
           withPostgreSQL (ctxdbconnstring ctx) $ \conn -> do
-          
+
            enewdoc <- runReaderT (sealDocument ctx document) conn
            case enewdoc of
              Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
@@ -157,7 +157,7 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ 
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $
          withPostgreSQL (ctxdbconnstring ctx) $ \conn -> do
           enewdoc <- runReaderT (sealDocument ctx document) conn
           case enewdoc of
@@ -184,8 +184,8 @@ postDocumentChangeAction document@Document  { documentstatus
     | oldstatus == Pending && documentstatus == Canceled = do
         Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
         _ <- addDocumentCancelStatEvents document
-          
-        if isJust documentcancelationreason && isELegDataMismatch (fromJust documentcancelationreason) 
+
+        if isJust documentcancelationreason && isELegDataMismatch (fromJust documentcancelationreason)
           then do
           ctx <- getContext
           author <- getDocAuthor
@@ -1083,7 +1083,7 @@ handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- getContext
    contents <- liftIO $ getFileIDContents ctx fileid'
-   
+
    if BS.null contents
       then mzero
       else do
