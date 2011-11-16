@@ -357,7 +357,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)) (ctxdbconn ctx)
+  update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
     Send a reminder email
