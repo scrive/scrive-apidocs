@@ -42,6 +42,7 @@ tablesList = [
   , tableUserInviteInfos
   , tableServices
   , tableCompanies
+  , tableCompanyInvites
   , tableDocStatEvents
   , tableUserStatEvents
   , tableFiles
