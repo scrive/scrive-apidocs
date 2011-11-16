@@ -45,6 +45,7 @@ module Administration.AdministrationControl(
           , daveCompany
           , sysdump
           , serveLogDirectory
+          , jsonUsersList
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -101,6 +102,9 @@ import InspectXMLInstances ()
 import InspectXML
 import ForkAction 
 import File.Model
+import ListUtil
+import Text.JSON
+import Util.HasSomeCompanyInfo
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -155,12 +159,66 @@ showAdminCompanyUsers companyid = onlySuperUser $ do
   content <- adminCompanyUsersPage company users params
   renderFromBody TopEmpty kontrakcja content
 
-showAdminUsersForSales :: Kontrakcja m => m Response
-showAdminUsersForSales = onlySuperUser $ do
-  users <- getUsersAndStats
-  params <- getAdminListPageParams
-  content <- adminUsersPageForSales users params
-  renderFromBody TopEmpty kontrakcja content
+showAdminUsersForSales :: Kontrakcja m => m String
+showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales 
+
+jsonUsersList ::Kontrakcja m => m JSValue
+jsonUsersList = do
+    params <- getListParamsNew
+    allUsers <- getUsersAndStats
+    let users = usersSortSearchPage params allUsers
+    return $ JSObject 
+           $ toJSObject 
+            [("list", JSArray $ map (\(user,mcompany,docstats) -> 
+                JSObject $ toJSObject 
+                    [("fields", JSObject $ toJSObject 
+                        [("id",       jsFromString . show $ userid user)
+                        ,("username", jsFromBString $ getFullName user)
+                        ,("email",    jsFromBString $ getEmail user)
+                        ,("company",  jsFromBString $ getCompanyName mcompany)
+                        ,("phone",    jsFromBString $ userphone $ userinfo user)
+                        ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
+                        ,("signed_docs", jsFromString . show $ doccount docstats)
+                        ,("subaccounts", jsFromString "")
+                        ])
+                    ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
+                    ]) (list users)),
+             ("paging", pagingParamsJSON users)]
+  where
+    jsFromString = JSString . toJSString 
+    jsFromBString = JSString . toJSString . BS.toString
+
+usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats)] 
+                       -> PagedList (User, Maybe Company, DocStats)
+usersSortSearchPage = 
+    listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
+
+usersSortFunc :: SortingFunction (User, Maybe Company, DocStats) 
+usersSortFunc "username"    = viewComparing (getFullName . (\(u,_,_) -> u))
+usersSortFunc "usernameREV" = viewComparingRev (getFullName . (\(u,_,_) -> u))
+usersSortFunc "email"       = viewComparing (getEmail . (\(u,_,_) -> u))
+usersSortFunc "emailREV"    = viewComparingRev (getEmail . (\(u,_,_) -> u))
+usersSortFunc "company"     = viewComparing (getCompanyName . (\(_,c,_) -> c))
+usersSortFunc "companyREV"  = viewComparingRev (getCompanyName . (\(_,c,_) -> c))
+usersSortFunc "phone"       = viewComparing (userphone . userinfo . (\(u,_,_) -> u))
+usersSortFunc "phoneREV"    = viewComparingRev (userphone . userinfo . (\(u,_,_) -> u))
+usersSortFunc "tos"         = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
+usersSortFunc "tosREV"      = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
+usersSortFunc "signed_docs" = viewComparing (doccount . (\(_,_,d) -> d))
+usersSortFunc "signed_docsREV" = viewComparingRev (doccount . (\(_,_,d) -> d))
+usersSortFunc _             = const $ const EQ
+
+usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats) 
+usersSearchFunc s userdata = userMatch userdata s 
+  where
+      match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
+      userMatch (u,mc,_) s' = match s' (getCompanyName mc)
+                            || match s' (getFirstName u)
+                            || match s' (getLastName  u)
+                            || match s' (getEmail u)
+
+usersPageSize :: Int
+usersPageSize = 100
 
 showAdminUsersForPayments :: Kontrakcja m => m Response
 showAdminUsersForPayments = onlySuperUser $ do

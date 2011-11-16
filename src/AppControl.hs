@@ -249,6 +249,7 @@ staticRoutes = choice
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ hGet $ toK0 $ Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
      , dir "adminonly" $ dir "useradminforpayments" $ hGet $ toK0 $ Administration.showAdminUsersForPayments
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK1 $ Administration.showAdminUsers . Just
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
