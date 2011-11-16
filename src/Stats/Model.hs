@@ -113,35 +113,30 @@ instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
 data AddDocStatEvent = AddDocStatEvent DocStatEvent
 instance DBUpdate AddDocStatEvent Bool where
   dbUpdate (AddDocStatEvent event) = wrapDB $ \conn -> do
-    runRaw conn "LOCK TABLE doc_stat_events IN ACCESS EXCLUSIVE MODE"
-    selectSt <- prepare conn $ selectDocStatEventsSQL
-      ++ " WHERE e.document_id = ? "
-      ++ " AND   e.quantity    = ? "
-    _ <- execute selectSt [toSql $ seDocumentID event
-                          ,toSql $ seQuantity event]
-    stats <- fetchDocStats selectSt []
-    case stats of
-      [] -> do
-        st <- prepare conn $ "INSERT INTO doc_stat_events ("
-              ++ "  user_id"
-              ++ ", time"
-              ++ ", quantity"
-              ++ ", amount"
-              ++ ", document_id"
-              ++ ", service_id"
-              ++ ", company_id"
-              ++ ", document_type"
-              ++ ") VALUES (?, to_timestamp(?), ?, ?, ?, ?, ?, ?)"
-        r <- execute st [toSql $ seUserID event
-                        ,toSql $ seTime event
-                        ,toSql $ seQuantity event
-                        ,toSql $ seAmount event
-                        ,toSql $ unDocumentID $ seDocumentID event
-                        ,toSql $ seServiceID event
-                        ,toSql $ seCompanyID event
-                        ,toSql $ show $ seDocumentType event]
-        oneRowAffectedGuard r
-      _ -> return False
+    st <- prepare conn $ "INSERT INTO doc_stat_events ("
+          ++ "  user_id"
+          ++ ", time"
+          ++ ", quantity"
+          ++ ", amount"
+          ++ ", document_id"
+          ++ ", service_id"
+          ++ ", company_id"
+          ++ ", document_type"
+          ++ ") SELECT ?, to_timestamp(?), ?, ?, ?, ?, ?, ? "
+          -- want to avoid an error, so check if exists
+          ++ " WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE"
+          ++ " document_id = ? AND quantity = ?)"
+    r <- execute st [toSql $ seUserID event
+                    ,toSql $ seTime event
+                    ,toSql $ seQuantity event
+                    ,toSql $ seAmount event
+                    ,toSql $ unDocumentID $ seDocumentID event
+                    ,toSql $ seServiceID event
+                    ,toSql $ seCompanyID event
+                    ,toSql $ show $ seDocumentType event
+                    ,toSql $ unDocumentID $ seDocumentID event
+                    ,toSql $ seQuantity event]
+    oneRowAffectedGuard r
 
 data GetUserStatEvents = GetUserStatEvents
 instance DBQuery GetUserStatEvents [UserStatEvent] where
@@ -153,31 +148,26 @@ instance DBQuery GetUserStatEvents [UserStatEvent] where
 data AddUserStatEvent = AddUserStatEvent UserStatEvent
 instance DBUpdate AddUserStatEvent Bool where
   dbUpdate (AddUserStatEvent event) = wrapDB $ \conn -> do
-    runRaw conn "LOCK TABLE user_stat_events IN ACCESS EXCLUSIVE MODE"
-    selectSt <- prepare conn $ selectUserStatEventsSQL
-      ++ " WHERE e.user_id = ? "
-      ++ " AND   e.quantity    = ? "
-    _ <- execute selectSt [toSql $ usUserID event
-                          ,toSql $ usQuantity event]
-    stats <- fetchUserStats selectSt []
-    case stats of
-      [] -> do
-        st <- prepare conn $ "INSERT INTO user_stat_events ("
-              ++ "  user_id"
-              ++ ", time"
-              ++ ", quantity"
-              ++ ", amount"
-              ++ ", service_id"
-              ++ ", company_id"
-              ++ ") VALUES (?, to_timestamp(?), ?, ?, ?, ?)"
-        r <- execute st [toSql $ usUserID event
-                        ,toSql $ usTime event
-                        ,toSql $ usQuantity event
-                        ,toSql $ usAmount event
-                        ,toSql $ usServiceID event
-                        ,toSql $ usCompanyID event]
-        oneRowAffectedGuard r
-      _ -> return False
+    st <- prepare conn $ "INSERT INTO user_stat_events ("
+          ++ "  user_id"
+          ++ ", time"
+          ++ ", quantity"
+          ++ ", amount"
+          ++ ", service_id"
+          ++ ", company_id"
+          ++ ") SELECT ?, to_timestamp(?), ?, ?, ?, ? "
+          -- want to avoid an error, so check if exists
+          ++ " WHERE NOT EXISTS (SELECT 1 FROM user_stat_events WHERE"
+          ++ " user_id = ? AND quantity = ?)"
+    r <- execute st [toSql $ usUserID event
+                    ,toSql $ usTime event
+                    ,toSql $ usQuantity event
+                    ,toSql $ usAmount event
+                    ,toSql $ usServiceID event
+                    ,toSql $ usCompanyID event
+                    ,toSql $ usUserID event
+                    ,toSql $ usQuantity event]
+    oneRowAffectedGuard r
 
 fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]
 fetchDocStats st acc = fetchRow st >>= maybe (return acc) f
