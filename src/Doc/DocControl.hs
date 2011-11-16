@@ -90,14 +90,14 @@ postDocumentChangeAction document@Document  { documentstatus
       (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) $ documentsignatorylinks document) &&
       (not $ hasSigned $ getAuthorSigLink document) &&
       (isSignatory $ getAuthorSigLink document) = do
-          Log.debug $ "Sending doc to awaiting aturho from pending"
+          Log.docevent $ "All have signed but author; Pending -> AwaitingAuthor: " ++ show documentid
           ctx <- getContext
           d <- guardRightM $ update $ PendingToAwaitingAuthor documentid (ctxtime ctx)
           postDocumentChangeAction d olddocument msignalinkid
     | (documentstatus == Pending ||
        documentstatus == AwaitingAuthor) &&
       (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
-          Log.debug $ "sending doc to closed from pending or awaiting author"
+          Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
           ctx <- getContext
           d <- guardRightM $ update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
           postDocumentChangeAction d olddocument msignalinkid
@@ -107,11 +107,12 @@ postDocumentChangeAction document@Document  { documentstatus
         when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
             ctx <- getContext
             Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-            sendInvitationEmails ctx document
+            _ <- sendInvitationEmails ctx document
+            return ()
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
-        _ <- addDocumentSendStatEvents document
+        Log.docevent $ "Preparation -> Pending; Sending invitation emails: " ++ show documentid
         ctx <- getContext
         msaveddoc <- saveDocumentForSignatories document
         document' <- case msaveddoc of
@@ -121,12 +122,15 @@ postDocumentChangeAction document@Document  { documentstatus
           (Right saveddoc) -> return saveddoc
         -- we don't need to forkIO here since we only schedule emails here
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-        sendInvitationEmails ctx document'
+        edoc <- sendInvitationEmails ctx document'
+        _ <- case edoc of
+          Left _ -> addDocumentSendStatEvents document'
+          Right doc2 -> addDocumentSendStatEvents doc2
         return ()
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
-        Log.debug $ "Sealing doc from prep to closed"
+        Log.docevent $ "Preparation -> Closed; Sealing document, sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
@@ -141,6 +145,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> AwaitingAuthor
     -- main action: sendAwaitingEmail
     | oldstatus == Pending && documentstatus == AwaitingAuthor = do
+        Log.docevent $ "Pending -> AwaitingAuthor; Send email to author: " ++ show documentid
         ctx <- getContext
         -- we don't need to forkIO here since we only schedule emails here
         author <- getDocAuthor
@@ -150,7 +155,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
-        Log.debug $ " sealing doc from pending/aa to closed"
+        Log.docevent $ show oldstatus ++ " -> Closed; Sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
@@ -168,6 +173,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- Pending -> Rejected
     -- main action: sendRejectAuthorEmail
     | oldstatus == Pending && documentstatus == Rejected = do
+        Log.docevent $ "Pending -> Rejected; send reject emails: " ++ show documentid
         _ <- addDocumentRejectStatEvents document
         ctx <- getContext
         customMessage <- getCustomTextField "customtext"
@@ -177,18 +183,23 @@ postDocumentChangeAction document@Document  { documentstatus
         return ()
     -- Pending -> Canceled
     -- main action: if canceled because of ElegDataMismatch, send out emails
-    | oldstatus == Pending &&
-        documentstatus == Canceled &&
-        isJust documentcancelationreason &&
-        isELegDataMismatch (fromJust documentcancelationreason) = do
-            _ <- addDocumentCancelStatEvents document
-            ctx <- getContext
-            author <- getDocAuthor
-            Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-            sendElegDataMismatchEmails ctx document author
-            return ()
+    | oldstatus == Pending && documentstatus == Canceled = do
+        Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
+        _ <- addDocumentCancelStatEvents document
+          
+        if isJust documentcancelationreason && isELegDataMismatch (fromJust documentcancelationreason) 
+          then do
+          ctx <- getContext
+          author <- getDocAuthor
+          Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+          sendElegDataMismatchEmails ctx document author
+          else do
+          -- should we send cancelation emails?
+          return ()
+        return ()
     --  -> DocumentError
-    | DocumentError _msg <- documentstatus = do
+    | DocumentError msg <- documentstatus = do
+        Log.docevent $ "DocumentError; " ++ msg ++ " : " ++ show documentid
         ctx <- getContext
         author <- getDocAuthor
         Log.server $ "Sending error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
@@ -317,19 +328,23 @@ sendDocumentErrorEmailToSignatory ctx document signatorylink = do
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: TemplatesMonad m => Context -> Document -> m ()
+sendInvitationEmails :: TemplatesMonad m => Context -> Document -> m (Either String Document)
 sendInvitationEmails ctx document = do
-  Log.debug $ show document
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
                       , not $ isAuthor sl]
-  forM_ signlinks (sendInvitationEmail1 ctx document)
+  case signlinks of
+    [] -> return $ Left "No signatories."
+    _ -> do
+      edocs <- forM signlinks (sendInvitationEmail1 ctx document)
+      return $ msum edocs
+
 
 {- |
    Helper function to send emails to invited parties
    ??: Should this be in DocControl or in an email-specific file?
  -}
-sendInvitationEmail1 :: TemplatesMonad m => Context -> Document -> SignatoryLink -> m ()
+sendInvitationEmail1 :: TemplatesMonad m => Context -> Document -> SignatoryLink -> m (Either String Document)
 sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
@@ -342,8 +357,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  _ <- update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
-  return ()
+  update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
     Send a reminder email
@@ -1813,7 +1827,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
             Right newdoc -> do
               -- get (updated) siglink from updated document
               sl <- guardJust (getSigLinkFor newdoc slid)
-              sendInvitationEmail1 ctx newdoc sl
+              _ <- sendInvitationEmail1 ctx newdoc sl
               return $ LoopBack
             _ -> return LoopBack
     _ -> return LoopBack

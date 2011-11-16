@@ -13,6 +13,7 @@ module AppLogger ( amazon
                  , trustWeaver
                  , withLogger
                  , setupLogger
+                 , docevent
                  ) where
 
 import Control.Exception.Extensible (bracket)
@@ -59,6 +60,7 @@ setupLogger = do
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
 
+    doceventLog <- fileHandler' "log/docevent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
 
     let allLoggers = [ appLog
@@ -74,6 +76,7 @@ setupLogger = do
                      , statsLog
                      , mailContentLog
                      , integrationLog
+                     , doceventLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -143,6 +146,11 @@ setupLogger = do
         "Kontrakcja.Integration"
         (setLevel NOTICE . setHandlers [integrationLog])
 
+    -- DocEvent Log
+    updateGlobalLogger
+        "Kontrakcja.DocEvent"
+        (setLevel NOTICE . setHandlers [doceventLog])
+
     return $ LoggerHandle allLoggers
 
 -- | Tear down the application logger; i.e. close all associated log handlers.
@@ -189,6 +197,9 @@ stats msg = liftIO $ noticeM "Kontrakcja.Stats" msg
 integration :: (MonadIO m) => String -> m ()
 integration msg = liftIO $ noticeM "Kontrakcja.Integration" msg
 
+
+docevent :: (MonadIO m) => String -> m ()
+docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
