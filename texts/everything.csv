@@ -816,7 +816,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageUserActivated","Välkommen till Scrive!",,"Welcome to Scrive!"
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
-"_flashMessageCompanyCreated","A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
+"_flashMessageCompanyCreated","Ditt företag har skapats. Nu kan du bjuda in andra att gå med dig.",,"Your company has been created.  Now you can invite others to join you."
 "_flashMessageUserHasBecomeSubaccount","Du är nu ett konto i $companyname$ och rättigheter till dina dokument har överförts.",,"You are now an account in $companyname$ and the rights to your documents have been transferred."
 "_flashMessageUserHasLiveDocs","Det går inte att ta bort eftersom konto har dokument i undertecknandet processen.",,"Unable to delete because account has documents in the signing process."
 "_toolTipUserHasLiveDocs","Det går inte att ta bort eftersom konto har dokument i undertecknandet processen.",,"Unable to delete because account has documents in the signing process."
@@ -3288,3 +3288,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_role","Role",,"Role"
 "_admin","Admin",,"Admin"
 "_standard","Standard",,"Standard"
+"_modalResendCompanyAccountInviteHeader","Skicka inbjudan igen",,"Resend Invite"
+"_modalResendCompanyAccountInviteBody","Vänligen bekräfta att du vill skicka om inbjudan till",,"Please confirm that you would like to resend an invitation to"
+"_modalResendCompanyAccountInviteConfirm","Skicka",,"Send"
+

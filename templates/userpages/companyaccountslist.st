@@ -19,193 +19,6 @@ viewCompanyAccounts =
 
 <script>
 
-  (function(window) {
-     window.ListDeleteButtonModel = Backbone.Model.extend({
-        initialize: function(args) {
-          _.bindAll(this, 'change');
-          _.bindAll(this, 'listObjectId',
-                          'listObjectLabel',
-                          'isEnabled',
-                          'isVisible');
-          this.set({ listObjectId: args.listObjectId,
-                     listObjectLabel: args.listObjectLabel,
-                     enabled: args.enabled,
-                     visible: args.visible });
-        },
-        listObjectId: function() {
-          return this.get("listObjectId");
-        },
-        listObjectLabel: function() {
-          return this.get("listObjectLabel");
-        },
-        isEnabled: function() {
-          return this.get("enabled")==undefined || this.get("enabled");
-        },
-        isVisible: function() {
-          return this.get("visible")==undefined || this.get("visible");
-        }
-     });
-
-     window.ListDeleteButtonView = Backbone.View.extend({
-       model: ListDeleteButtonModel,
-       initialize: function() {
-         _.bindAll(this, 'createElems', 'render', 'popupDeleteConfirmation');
-         this.model.bind('change', this.render);
-         this.model.view = this;
-         this.createElems();
-         this.render();
-       },
-       createElems : function() {
-
-         var enabledIcon = jQuery("<a>");
-         enabledIcon.addClass("icon");
-         enabledIcon.addClass("delete");
-         enabledIcon.click(this.popupDeleteConfirmation);
-         enabledIcon.hide();
-         this.enabledIcon = enabledIcon;
-         this.el.append(this.enabledIcon);
-
-         var disabledIcon = jQuery("<span>");
-         disabledIcon.addClass("icon");
-         disabledIcon.addClass("delete");
-         disabledIcon.addClass("gray");
-         disabledIcon.hide();
-         this.disabledIcon = disabledIcon;
-         this.el.append(this.disabledIcon);
-       },
-       render: function() {
-         if (!this.model.isVisible()) {
-           this.enabledIcon.hide();
-           this.disabledIcon.hide();
-         } else if (this.model.isVisible() && !this.model.isEnabled()) {
-           this.enabledIcon.hide();
-           this.disabledIcon.show();
-         } else {
-           this.disabledIcon.hide();
-           this.enabledIcon.show();
-         }
-       },
-       popupDeleteConfirmation: function() {
-         var submit = new Submit({
-           url: "$currentlink$",
-           method: "POST",
-           remove: "true",
-           removeid: this.model.listObjectId
-         });
-         var text = "$_listLocalDialogsBody()$" + this.model.listObjectLabel() + "?";
-         var content = jQuery("<p/>").text(text);
-         console.log("text: " + text);
-         Confirmation.popup({
-           submit: submit,
-           acceptText: "$_ok()$",
-           rejectText: "$_cancel()$",
-           title: "$_delete()$",
-           content: content
-         });
-       }
-     });
-
-     window.ListDeleteButton = {
-       init: function(args) {
-         this.model = new ListDeleteButtonModel({
-           listObjectId: args.listObjectId,
-           listObjectLabel: args.listObjectLabel,
-           visible: args.visible,
-           enabled: args.enabled
-         });
-         this.view = new ListDeleteButtonView({
-           model: this.model,
-           el: jQuery("<span>")
-         });
-         return this;
-       }
-     };
-
-     window.RoleModel = Backbone.Model.extend({
-        initialize: function(args) {
-          _.bindAll(this, 'change');
-          _.bindAll(this, 'listObjectId',
-                          'isAdmin',
-                          'isEnabled');
-          this.set({ listObjectId: args.listObjectId,
-                     admin: args.admin,
-                     enabled: args.enabled });
-        },
-        listObjectId: function() {
-          return this.get("listObjectId");
-        },
-        isAdmin: function() {
-          return this.get("admin")==undefined || this.get("admin");
-        },
-        isEnabled: function() {
-          return this.get("enabled")==undefined || this.get("enabled");
-        }
-     });
-
-     window.RoleView = Backbone.View.extend({
-       model: RoleModel,
-       initialize: function() {
-         _.bindAll(this, 'createElems', 'render', 'submitRoleChange');
-         this.model.bind('change', this.render);
-         this.model.view = this;
-         this.createElems();
-         this.render();
-       },
-       createElems : function() {
-         var enabledRole = jQuery("<a>");
-         enabledRole.hide();
-         enabledRole.click(this.submitRoleChange);
-         this.enabledRole = enabledRole;
-         this.el.append(this.enabledRole);
-
-         var disabledRole = jQuery("<span>");
-         disabledRole.hide();
-         this.disabledRole = disabledRole;
-         this.el.append(this.disabledRole);
-       },
-       render: function() {
-         var label = "$_standard()$";
-         if (this.model.isAdmin()) {
-           label = "$_admin()$";
-         }
-
-         if (!this.model.isEnabled()) {
-           this.enabledRole.hide();
-           this.disabledRole.text(label);
-           this.disabledRole.show();
-         } else {
-           this.disabledRole.hide();
-           this.enabledRole.text(label);
-           this.enabledRole.show();
-         }
-       },
-       submitRoleChange: function() {
-         (new Submit({
-           url: "$currentlink$",
-           method: "POST",
-           changerole: true,
-           makeadmin: !this.model.isAdmin(),
-           changeid: this.model.listObjectId
-         })).send();
-       }
-     });
-
-     window.Role = {
-       init: function(args) {
-         this.model = new RoleModel({
-           listObjectId: args.listObjectId,
-           admin: args.admin,
-           enabled: args.enabled
-         });
-         this.view = new RoleView({
-           model: this.model,
-           el: jQuery("<span>")
-         });
-         return this;
-       }
-     };
-  })(window);
-
   var createAddCompanyButton = function() {
     var addCompanyButton = Button.init({
         color: "green",
@@ -224,6 +37,14 @@ viewCompanyAccounts =
     return addCompanyButton;
   };
 
+  var getFullname = function(user) {
+    var fullname = user.field("fullname");
+    if (user.field("fullname") == undefined || user.field("fullname").length < 2) {
+      fullname = user.field("email");
+    }
+    return fullname;
+  };
+
   var companyAccountsTable = KontraList.init({
     name : "CompanyAccountsTable",
     schema: new Schema({
@@ -234,38 +55,106 @@ viewCompanyAccounts =
       paging: new Paging({}),
       filtering: new Filtering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
       cells : [
-        new Cell({name: "$_name()$", width:"150px", field:"fullname"}),
-        new Cell({name: "$_email()$", width:"150px", field:"email" }),
+        new Cell({name: "$_name()$", width: "100px", field:"fullname"}),
+        new Cell({name: "$_email()$", width: "100px", field:"email" }),
         new Cell({name: "$_role()$", width: "100px", field:"iscompanyadmin", special: "rendered",
                   rendering: function(value, idx, user) {
-                    return (Role.init({
-                      listObjectId: user.field("id"),
-                      admin: user.field("iscompanyadmin"),
-                      enabled: !user.field("isctxuser")
-                    })).view.el;
+                    var label = "$_standard()$";
+                    if (user.field("iscompanyadmin")) {
+                      label = "$_admin()$";
+                    }
+
+                    if (user.field("isctxuser")) {
+                      var role = jQuery("<span>");
+                      role.text(label);
+                      return role;
+                    } else {
+                      var role = jQuery("<a>");
+                      role.text(label);
+
+                      var submitRoleChange = function() {
+                        (new Submit({
+                          url: "$currentlink$",
+                          method: "POST",
+                          changerole: true,
+                          makeadmin: !user.field("iscompanyadmin"),
+                          changeid: user.field("id")
+                        })).send();
+                      }
+                      role.click(submitRoleChange);
+                      return role;
+                    }
                   }}),
-        new Cell({name: "", width: "100px", field:"isctxuser", special: "rendered",
+        new Cell({width: "16px", field:"isaccepttos", special: "rendered",
                   rendering: function(value, idx, user) {
+                    if (!user.field("isaccepttos")) {
+                      var icon = jQuery("<a>");
+                      icon.addClass("reminderForSendIcon");
 
-                    var fullname = user.field("fullname");
-                    if (user.field("fullname") == undefined || user.field("fullname").length < 2) {
-                      fullname = user.field("email");
+                      var popupResendConfirmation = function() {
+                        var submit = new Submit({
+                          url: "$currentlink$",
+                          method: "POST",
+                          remind: "true",
+                          remindid: user.field("id")
+                        });
+                        var text = "$_modalResendCompanyAccountInviteBody()$ " + getFullname(user) + "?";
+                        var content = jQuery("<p/>").text(text);
+                        console.log("text: " + text);
+                        Confirmation.popup({
+                          submit: submit,
+                          acceptText: "$_modalResendCompanyAccountInviteConfirm()$",
+                          rejectText: "$_cancel()$",
+                          title: "$_modalResendCompanyAccountInviteHeader()$",
+                          content: content
+                        });
+                      };
+                      icon.click(popupResendConfirmation);
+
+                      return icon;
                     }
+                    return jQuery("<span>");
+                  }}),
+        new Cell({width: "16px", field:"isctxuser", special: "rendered",
+                  rendering: function(value, idx, user) {
+                    if (!user.field("isctxuser")) {
+                      if (user.field("isdeletable")) {
+                        var icon = jQuery("<a>");
+                        icon.addClass("icon");
+                        icon.addClass("delete");
 
-                    var deletebutton = (ListDeleteButton.init({
-                      listObjectId: user.field("id"),
-                      listObjectLabel: fullname,
-                      visible: !user.field("isctxuser"),
-                      enabled: user.field("isdeletable")
-                    })).view.el;
+                        var popupDeleteConfirmation = function() {
+                          var submit = new Submit({
+                            url: "$currentlink$",
+                            method: "POST",
+                            remove: "true",
+                            removeid: user.field("id")
+                          });
+                          var text = "$_listLocalDialogsBody()$" + getFullname(user) + "?";
+                          var content = jQuery("<p/>").text(text);
+                          console.log("text: " + text);
+                          Confirmation.popup({
+                            submit: submit,
+                            acceptText: "$_ok()$",
+                            rejectText: "$_cancel()$",
+                            title: "$_delete()$",
+                            content: content
+                          });
+                        };
+                        icon.click(popupDeleteConfirmation);
 
-                    if (!user.field("isdeletable")) {
-                      ToolTip.set({ on: deletebutton,
-                                    tip: "$_toolTipUserHasLiveDocs()$" });
+                        return icon;
+                      } else {
+                        var icon = jQuery("<span>");
+                        icon.addClass("icon");
+                        icon.addClass("delete");
+                        icon.addClass("gray");
+                        return icon;
+                      }
+                    } else {
+                      return jQuery("<span>");
                     }
-
-                    return deletebutton;
-                  }})
+                 }})
       ]
     }),
     headerExtras: createAddCompanyButton

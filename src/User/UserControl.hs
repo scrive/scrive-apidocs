@@ -92,7 +92,7 @@ handleUserPost = do
               _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
               _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
               upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
-              return (upgradeduser, Just flashMessageCompanyCreated, LinkAccount False)
+              return (upgradeduser, Just flashMessageCompanyCreated, LinkCompanyAccounts emptyListParams)
             Nothing -> return (user, Nothing, LinkAccount True)
         else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
 
@@ -1023,7 +1023,9 @@ handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
                                                                                  ,("isctxuser",
                                                                                    JSBool $ f == user)
                                                                                  ,("isdeletable",
-                                                                                   JSBool $ userid f `elem` deletableuserids)])])
+                                                                                   JSBool $ userid f `elem` deletableuserids)
+                                                                                 ,("isaccepttos",
+                                                                                   JSBool $ isJust (userhasacceptedtermsofservice f))])])
                                    (list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
 
