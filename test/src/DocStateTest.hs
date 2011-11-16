@@ -692,7 +692,8 @@ testRejectDocumentSignablePendingRight :: DB ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  edoc <- randomUpdate $ RejectDocument (documentid doc)
+  slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc)) 
+  edoc <- randomUpdate $ RejectDocument (documentid doc) slid
   validTest $ do
     assertRight edoc
     assertInvariants $ fromRight edoc
