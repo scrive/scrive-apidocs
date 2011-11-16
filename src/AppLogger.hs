@@ -15,6 +15,7 @@ module AppLogger ( amazon
                  , setupLogger
                  , scrivebymail
                  , scrivebymailfailure
+                 , docevent
                  ) where
 
 import Control.Exception.Extensible (bracket)
@@ -62,6 +63,7 @@ setupLogger = do
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailLog<- fileHandler' "log/scrivebymail.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailFailuresLog <- fileHandler' "log/scrivebymail.failures.log" INFO >>= \lh -> return $ setFormatter lh nullFormatter
+    doceventLog <- fileHandler' "log/docevent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
 
     let allLoggers = [ appLog
@@ -79,6 +81,7 @@ setupLogger = do
                      , integrationLog
                      , scriveByMailLog
                      , scriveByMailFailuresLog
+                     , doceventLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -158,6 +161,11 @@ setupLogger = do
         "Kontrakcja.ScriveByMailFailures"
         (setLevel NOTICE . setHandlers [scriveByMailFailuresLog])
 
+    -- DocEvent Log
+    updateGlobalLogger
+        "Kontrakcja.DocEvent"
+        (setLevel NOTICE . setHandlers [doceventLog])
+
 
     return $ LoggerHandle allLoggers
 
@@ -210,6 +218,9 @@ scrivebymail msg = liftIO $ noticeM "Kontrakcja.ScriveByMail" msg
 
 scrivebymailfailure :: (MonadIO m) => String -> m ()
 scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
+
+docevent :: (MonadIO m) => String -> m ()
+docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
