@@ -69,6 +69,7 @@ import File.FileID
 import File.File
 import Doc.JpegPages
 import Database.HDBC
+import Data.List
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -256,7 +257,12 @@ data SignatoryDetails = SignatoryDetails
     -- for templates
     , signatoryfields    :: [SignatoryField]
     }
-    deriving (Eq, Ord, Typeable)
+    deriving (Ord, Typeable)
+             
+instance Eq SignatoryDetails where
+  SignatoryDetails {signatorysignorder=so1, signatoryfields=sf1} ==
+    SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2} =
+      so1 == so2 && (sort sf2) == (sort sf1)
 
 data SignatoryLink1 = SignatoryLink1
     { signatorylinkid1    :: SignatoryLinkID

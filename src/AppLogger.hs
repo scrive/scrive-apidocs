@@ -13,6 +13,8 @@ module AppLogger ( amazon
                  , trustWeaver
                  , withLogger
                  , setupLogger
+                 , scrivebymail
+                 , scrivebymailfailure
                  ) where
 
 import Control.Exception.Extensible (bracket)
@@ -23,7 +25,7 @@ import System.IO (stdout, Handle, hSetEncoding, utf8, IOMode(..), hClose)
 import System.Log.Formatter
 import System.Log.Handler (close, setFormatter)
 import System.Log.Handler.Simple (streamHandler, GenericHandler(..))
-import System.Log.Logger (Priority(..), rootLoggerName, setLevel, setHandlers, updateGlobalLogger, noticeM)
+import System.Log.Logger (Priority(..), rootLoggerName, setLevel, setHandlers, updateGlobalLogger, noticeM, errorM)
 import qualified Control.Concurrent as C
 import qualified Control.Exception as C
 import OpenFileShared
@@ -58,7 +60,8 @@ setupLogger = do
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
-
+    scriveByMailLog<- fileHandler' "log/scrivebymail.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    scriveByMailFailuresLog <- fileHandler' "log/scrivebymail.failures.log" INFO >>= \lh -> return $ setFormatter lh nullFormatter
     stdoutLog <- streamHandler stdout NOTICE
 
     let allLoggers = [ appLog
@@ -74,6 +77,8 @@ setupLogger = do
                      , statsLog
                      , mailContentLog
                      , integrationLog
+                     , scriveByMailLog
+                     , scriveByMailFailuresLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -143,6 +148,17 @@ setupLogger = do
         "Kontrakcja.Integration"
         (setLevel NOTICE . setHandlers [integrationLog])
 
+    -- ScriveByMail Log
+    updateGlobalLogger
+        "Kontrakcja.ScriveByMail"
+        (setLevel NOTICE . setHandlers [scriveByMailLog])
+
+    -- ScriveByMail Failed Message Log
+    updateGlobalLogger
+        "Kontrakcja.ScriveByMailFailures"
+        (setLevel NOTICE . setHandlers [scriveByMailFailuresLog])
+
+
     return $ LoggerHandle allLoggers
 
 -- | Tear down the application logger; i.e. close all associated log handlers.
@@ -188,6 +204,12 @@ stats msg = liftIO $ noticeM "Kontrakcja.Stats" msg
 
 integration :: (MonadIO m) => String -> m ()
 integration msg = liftIO $ noticeM "Kontrakcja.Integration" msg
+
+scrivebymail :: (MonadIO m) => String -> m ()
+scrivebymail msg = liftIO $ noticeM "Kontrakcja.ScriveByMail" msg
+
+scrivebymailfailure :: (MonadIO m) => String -> m ()
+scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()

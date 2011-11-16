@@ -20,7 +20,6 @@ import API.IntegrationAPI
 import API.Service.Model
 import API.Service.ServiceControl
 import API.UserAPI
-import API.MailAPI
 
 import ActionSchedulerState
 import AppView as V
@@ -54,6 +53,7 @@ import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
 import qualified TrustWeaver as TW
 import qualified User.UserControl as UserControl
+import qualified ScriveByMail.Control as ScriveByMail
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.KontraLinkUtils
@@ -75,6 +75,7 @@ import Happstack.State (query, update)
 import Network.Socket
 import System.Directory
 import System.Time
+
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -132,7 +133,7 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , mailAPI
+     , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
      , Elegitimation.handleRoutes
      , dir "s" $ hGet $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet $ toK3 $ DocControl.handleSignShow
@@ -249,6 +250,7 @@ staticRoutes = choice
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ hGet $ toK0 $ Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
      , dir "adminonly" $ dir "useradminforpayments" $ hGet $ toK0 $ Administration.showAdminUsersForPayments
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK1 $ Administration.showAdminUsers . Just
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing

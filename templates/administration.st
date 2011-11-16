@@ -210,32 +210,39 @@ admincompanies=
       </table>
 ###
 adminUsersForSales=
-    <strong>USER ADMIN FOR SALES</strong>
-    <br/>
-    $backtoadminmainlink()$
-    $adminlistfilter(link=adminlistlink;item="user";items="users")$
-    $adminlistpaging()$
-    <br/><br/>
-    <table>
-        <thead>
-         <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-          <td style="width:200px">Company</td>
-          <td style="width:200px">Phone</td>
-          <td style="width:200px">TOS date</td>
-          <td style="width:50px">Signed Docs</td>
-          <td style="width:50px">Subaccounts</td>
-       </thead>
-        $users:{user|<tr>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
-          <td> $user.userdetails.company$</td>
-          <td> $user.userdetails.phone$ </td>
-          <td> $user.userdetails.TOSDate$ </td>
-          <td> $user.docstats.doccount$ </td>
-          <td> </td>
-       </tr>}$
-      </table>
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>USER ADMIN FOR SALES</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+       <div id="users-viewer"></div>
+    </div>
+    <script>
+    var usersTable = KontraList.init({
+        name : "Users Table",
+        schema: new Schema({
+            url: "/adminonly/userslist",
+            sorting: new Sorting({ fields: ["username", "email", "company", "phone", "tos", "signed_docs"]}),
+            paging: new Paging({}),
+            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
+            cells : [
+                new Cell({name: "Username", width:"130px", field:"username", special:"link"}),
+                new Cell({name: "Email", width:"130px", field:"email", special:"link"}),
+                new Cell({name: "Company", width:"100px", field:"company", special:"link"}),
+                new Cell({name: "Phone", width:"100px", field:"phone", special:"link"}),
+                new Cell({name: "TOS date", width:"100px", field:"tos", special:"link"}),
+                new Cell({name: "Signed Docs", width:"100px", field:"signed_docs", special:"link"}),
+                new Cell({name: "Subaccounts", width:"100px", field:"subaccounts", special:"link"})
+                ]
+        })
+    });
+
+    jQuery(function(){
+        jQuery("#users-viewer").append(usersTable.view.el)
+    });
+    </script>
 ###
 adminUsersForPayments=
     <strong>USER ADMIN FOR PAYMENTS</strong>
