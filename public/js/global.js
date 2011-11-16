@@ -1498,6 +1498,7 @@ function renumberParts() {
     persondetails.each(function() {
         var authorrole = $(this).find("input:radio[value='signatory']:checked");
         var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
+        var isauthor  = $(this).hasClass("authordetails");
         var isSignatory = (authorrole.length + signatoryrole.length) > 0;
         var isMultiPart = isMultiPartElem($(this));
         if (isMultiPart) {
@@ -1511,7 +1512,7 @@ function renumberParts() {
             idx = idx + 1;
         } else {
             var text = localization.nonsignatory.toUpperCase();
-            if (issendonly)
+            if (issendonly && isauthor)
                 text = localization.offerAuthor.toUpperCase();
             $(this).find(".partnumber").text(text);
         }
