@@ -1002,3 +1002,13 @@ $nicemailpreviewrow(
     )$
 $endif$
 ####
+mailMailAPIError=
+    Scrive by Mail Error
+    $nicemail(
+        mailheader= ScriveBy Mail Error;
+        mailp1 = Greetings from Scrive by Mail!;
+        mailp2 = I'm sorry, but I was unable to process the mail you just sent me and I have not forwarded the document to anyone.;
+        mailp3 = errormsg;
+        mailp4 = Thanks for using Scrive by Mail;
+    )$
+#####

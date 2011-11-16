@@ -14,6 +14,8 @@ import TestingUtil
 import Company.Model
 import Doc.Invariants
 import MinutesTime
+import Test.HUnit.Base (Assertion)
+import qualified Data.ByteString.UTF8 as BS
 
 import Data.Maybe
 import Data.Convertible(convert)
@@ -23,11 +25,13 @@ import Control.Monad
 import Data.List
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
+  dataStructureProperties,
   
   testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
   
@@ -125,6 +129,37 @@ docStateTests conn = testGroup "DocState" [
   testThat "TimeoutDocument fails when document is not signable" conn testTimeoutDocumentNonSignableLeft,
   testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId
   ]
+                     
+dataStructureProperties :: Test
+dataStructureProperties = testGroup "data structure properties" [
+  testProperty "signatories are equal with same fields" propSignatoryDetailsEq,
+  testProperty "signatories are different with different fields" propSignatoryDetailsNEq,
+  testCase "given example" testSignatories1
+  ]
+
+testSignatories1 :: Assertion
+testSignatories1 = 
+  let s1 = SignatoryDetails {signatorysignorder = SignOrder 0,
+                             signatoryfields = [SignatoryField FirstNameFT (BS.fromString "Eric") []
+                                               ,SignatoryField LastNameFT (BS.fromString "Normand") []
+                                                ]
+                            }
+      s2 = SignatoryDetails {signatorysignorder = SignOrder 0,
+                             signatoryfields = [SignatoryField LastNameFT (BS.fromString "Normand") []
+                                               ,SignatoryField FirstNameFT (BS.fromString "Eric") []
+                                                ]
+                            }
+  in assertBool "Signatories should be equal" (s1 == s2)
+
+propSignatoryDetailsEq :: SignatoryDetails -> SignatoryDetails -> Property
+propSignatoryDetailsEq sd1 sd2 = 
+   (signatorysignorder sd1 == signatorysignorder sd2) && (sort $ signatoryfields sd1) == (sort $ signatoryfields sd2) ==>
+   sd1 == sd2
+   
+propSignatoryDetailsNEq :: SignatoryDetails -> SignatoryDetails ->  Property
+propSignatoryDetailsNEq sd1 sd2 =
+  (signatorysignorder sd1 /= signatorysignorder sd2) || (sort $ signatoryfields sd1) /= (sort $ signatoryfields sd2) ==>
+  sd1 /= sd2
 
 testSetDocumentLocaleNotLeft :: DB ()
 testSetDocumentLocaleNotLeft = doTimes 10 $ do

@@ -1,6 +1,7 @@
+{-# OPTIONS_GHC -XOverloadedStrings #-}
 module SimpleMailTest where
 
-import API.MailAPI
+import ScriveByMail.Parse
 
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
@@ -9,8 +10,8 @@ import Util.StringUtil
 
 import Data.Maybe
 
-import Text.JSON.String
 import Data.List
+import Doc.DocStateData
 
 simpleMailTests :: Test
 simpleMailTests = testGroup "Simple Mail Tests" [
@@ -26,8 +27,6 @@ simpleMailTests = testGroup "Simple Mail Tests" [
   ,testMinimumDistance
   ,testWackySignature
   ]
--- TestName
--- Assertion
 
 blankEmailTest :: Test
 blankEmailTest = testCase "Blank Email Test" $ do
@@ -40,11 +39,15 @@ singleMinimalSignatory = testCase "Single Minimal Signatory" $ do
   case parseSimpleEmail "Contract Title" 
        "First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se" of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"}]}") -> return ()
-    _ -> error "Did not return correct json"
+    Right (title, [sig]) | 
+      title == "Contract Title" &&
+      sig == SignatoryDetails { signatorysignorder = SignOrder 0,
+                                signatoryfields = [ SignatoryField FirstNameFT "Mariusz" []
+                                                  , SignatoryField LastNameFT  "Rak" []
+                                                  , SignatoryField EmailFT     "mariusz@skrivapa.se" []]} 
+      -> return ()
+    _ -> error "Did not return correct details"
+    
 
 doubleMinimalSignatory :: Test
 doubleMinimalSignatory = testCase "Double Minimal Signatory" $ do
@@ -52,35 +55,35 @@ doubleMinimalSignatory = testCase "Double Minimal Signatory" $ do
        ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\n\n" ++ 
         "First name: Eric\nLast name: Normand\nemail: eric@skrivapa.se") of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"}," ++
-        "{\"fstname\":\"Eric\"," ++
-        "\"sndname\":\"Normand\"," ++
-        "\"email\":\"eric@skrivapa.se\"}" ++
-        "]}") -> return ()
+    Right (title, sigs) | 
+      title == "Contract Title" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
+                                              , SignatoryField LastNameFT  "Rak" []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
+                                              , SignatoryField LastNameFT  "Normand" []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []]]
+      -> return ()
     _ -> error "Did not return correct json"
 
 doubleOptionalFieldsSignatory :: Test
 doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
-  case parseSimpleEmail "Contract Title"
+  case parseSimpleEmail "Contract Title2"
        ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrganization number : 78765554\n \n" ++ 
         "personal number: 78676545464  \nFirs name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"," ++
-        "\"companynumber\":\"78765554\"" ++
-        "}," ++
-        "{" ++
-        "\"fstname\":\"Eric\"," ++
-        "\"sndname\":\"Normand\"," ++
-        "\"email\":\"eric@skrivapa.se\"," ++
-        "\"company\":\"Hello\"," ++
-        "\"personalnumber\": \"78676545464\"}" ++
-        "]}") -> return ()
+    Right (title, sigs) | 
+      title == "Contract Title2" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
+                                              , SignatoryField LastNameFT  "Rak" []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []
+                                              , SignatoryField CompanyNumberFT "78765554" []],
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
+                                              , SignatoryField LastNameFT  "Normand" []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []
+                                              , SignatoryField CompanyFT   "Hello" []
+                                              , SignatoryField PersonalNumberFT "78676545464" []]]
+      -> return ()
     a -> do
       Log.debug $ "JSON returned from parse: " ++ show a
       error "Did not return correct json"
@@ -93,7 +96,7 @@ doubleOptionalFieldsBadFieldSignatory = testCase "Double Optional Fields Bad Fie
     Left msg | "Jones" `isInfixOf` msg -> return ()
     Left _ -> error "Did not talk about bad field name: Jones"
     _ -> error "Did not fail with bad field name"
-    
+
 doubleOptionalFieldsNoFirstNameSignatory :: Test
 doubleOptionalFieldsNoFirstNameSignatory = testCase "Double Optional Fields Bad Field Signatory" $ do
   case parseSimpleEmail "Contract Title"
@@ -118,14 +121,15 @@ stupidEmailSignature = testCase "Stupid email signature" $ do
         ++"Homepage: https://skrivapa.se\n"
         ++"________________________________________\n") of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"}," ++
-        "{\"fstname\":\"Eric\"," ++
-        "\"sndname\":\"Normand\"," ++
-        "\"email\":\"eric@skrivapa.se\"}" ++
-        "]}") -> return ()
+    Right (title, sigs) | 
+      title == "Contract Title" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
+                                              , SignatoryField LastNameFT  "Rak" []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
+                                              , SignatoryField LastNameFT  "Normand" []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []]]
+      -> return ()
     _ -> error "Did not return correct json"
 
 looksLikeSignature :: Test
@@ -139,15 +143,16 @@ looksLikeSignature = testCase "Stupid email looks like signatory signature" $ do
         ++"Homepage: https://skrivapa.se\n"
         ++"________________________________________\n") of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"}," ++
-        "{\"fstname\":\"Eric\"," ++
-        "\"sndname\":\"Normand\"," ++
-        "\"email\":\"eric@skrivapa.se\"}" ++
-        "]}") -> return ()
-    _ -> error "Did not return correct json"
+    Right (title, sigs) | 
+      title == "Contract Title" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
+                                              , SignatoryField LastNameFT  "Rak" []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
+                                              , SignatoryField LastNameFT  "Normand" []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []]]
+      -> return ()
+    _ -> error "Did not return correct values"
 
 doubleOptionalFieldsWeirdSignatory :: Test
 doubleOptionalFieldsWeirdSignatory = testCase "Double Optional Fields Weird Signatory" $ do
@@ -155,22 +160,19 @@ doubleOptionalFieldsWeirdSignatory = testCase "Double Optional Fields Weird Sign
        ("First name: Mariusz\nLast name: Rak\nemail: mariusz@skrivapa.se\nOrg num : 78765554\n \n" ++ 
         "pers number: 78676545464  \nFirs name: Eric\nLast name: Normand\nemail: eric@skrivapa.se\ncompany  :Hello\n\n\n  \n") of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"," ++
-        "\"companynumber\":\"78765554\"" ++
-        "}," ++
-        "{" ++
-        "\"fstname\":\"Eric\"," ++
-        "\"sndname\":\"Normand\"," ++
-        "\"email\":\"eric@skrivapa.se\"," ++
-        "\"company\":\"Hello\"," ++
-        "\"personalnumber\": \"78676545464\"}" ++
-        "]}") -> return ()
-    a ->  do
-      Log.debug $ "JSON returned from parse: " ++ show a
-      error $ "Did not return correct json" ++ show a
+    Right (title, sigs) | 
+      title == "Contract Title" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
+                                              , SignatoryField LastNameFT  "Rak" []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []
+                                              , SignatoryField CompanyNumberFT "78765554" []],
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
+                                              , SignatoryField LastNameFT  "Normand" []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []
+                                              , SignatoryField CompanyFT   "Hello" []
+                                              , SignatoryField PersonalNumberFT "78676545464" []]]
+      -> return ()
+    a -> error $ "Did not return correct value: " ++ show a
 
 testMinimumDistance :: Test
 testMinimumDistance = testCase "Test minimum distance between keys" $ 
@@ -207,12 +209,13 @@ testWackySignature = testCase "Test wacky signature (rtf)" $
         " =20\n" ++
         " =20\n") of
     Left msg -> error msg
-    a | a == runGetJSON readJSValue ("{\"title\":\"Contract Title\"," ++
-        "\"involved\":[{\"fstname\":\"Mariusz\"," ++
-        "\"sndname\":\"Rak\"," ++
-        "\"email\":\"mariusz@skrivapa.se\"," ++
-        "\"companynumber\":\"78765554\"" ++
-        "}]}") -> return ()
+    Right (title, sigs) | 
+      title == "Contract Title" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
+                                              , SignatoryField LastNameFT  "Rak" []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []
+                                              , SignatoryField CompanyNumberFT "78765554" []]]
+      -> return ()
     a ->  do
       Log.debug $ "JSON returned from parse: " ++ show a
       error ("Did not return correct json; got: " ++ show a) 
