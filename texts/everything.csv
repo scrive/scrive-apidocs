@@ -812,7 +812,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
-"_flashMessageWeWillCallYouSoon","Thanks.  We'll call you at $phone$ within the next 24 hours.",,"Thanks.  We'll call you at $phone$ within the next 24 hours."
+"_flashMessageWeWillCallYouSoon","Tack. Vi kommer att kontakta dig på $phone$ inom 24 timmarna.",,"Thanks.  We'll call you at $phone$ within the next 24 hours."
 "_flashMessageUserActivated","Välkommen till Scrive!",,"Welcome to Scrive!"
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
@@ -2270,7 +2270,7 @@ use free of charge."
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
-"_contactUsPageMetaDescription", "Kontakta Scrive",, "Contact Scrive" 
+"_contactUsPageMetaDescription", "Kontakta Scrive",, "Contact Scrive"
 "_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>
                               <th>
           <h3>Small</h3>                                    <p>35
