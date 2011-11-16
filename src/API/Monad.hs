@@ -28,7 +28,7 @@ instance ToAPIResponse Response where
   
 instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = toResponse $ encode jv in
-    setHeader "Content-Type" "application/json" r1
+    setHeader "Content-Type" "text/plain" r1
 
 instance Monad APIResponse where
   return = OK
