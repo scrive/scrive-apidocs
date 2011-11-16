@@ -249,7 +249,7 @@
  för andra.”",,"""After one week's usage, your customers start showing the
  service to others."""
 "_Quote6By","Martin Lindström, IPAS",,"Martin Lindström, IPAS"
-"_QuoteOnVid","”Processerna blir betydligt smidigare.”",,"""The whole process is incredibly smooth."""
+"_QuoteOnVid","”Processerna blir betydligt smidigare.”",,"""The sign process is much smoother."""
 "_QuoteOnVidBy","- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise",,"- Lisa Renander and Julia Hamrin, CEO and Sales Manager at Go
  Enterprise"
 "_QuotesHead","Kunder berättar",,"What our customers think"
@@ -719,9 +719,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_fieldName","Namnge fältet",,"Name field"
 "_fieldNameFieldName","namn på fält",,"field name"
 "_fieldValueFieldName","värde på fält",,"field value"
-"_firstPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Spara tid, pengar
- och frustration – både åt dig och dina kunder.",,"Sign and store your contracts online. Save time, and money.  Reduce frustration.
- – both for yourself and your customers."
+"_firstPageMetaDescription","Scrive | E-signera offerter och avtal | 010-195 99 15",,"Scrive | E-sign tenders and contracts | +46 10 195 99 15"
 "_firstname","Förnamn",,"First name"
 "_flashAuthorSigned","Dokumentet har undertecknats.",,"The document has been signed."
 "_flashDocumentDraftSaved","Du har sparat dokumentet. ",,"Your document has been saved."
@@ -3293,7 +3291,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_mailMailAPIConfirmOrderHeader","Order <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The order <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
-"_tweetAccount","skrivapa",,"scriveuk"
+"_tweetAccount","scrive",,"scriveuk"
 "_mailsubheader"," Signera Dokument Online med Scrive",," Sign Documents Online with Scrive"
 "_createCompany","Skapa företag",,"Create Company"
 "_createCompanyExplanation","När ett företag är skapat kommer du att bli en administratör och kommer kunna bjuda in dina kollegor till underkonton.",,"When a company is created you will be made an admin user and will be able to invite your colleagues to join you."
@@ -3319,10 +3317,11 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_Product4Body","Scrive fungerar för alla dina processer och passar för alla typer av dokument. Skicka till exempel avtal, offerter eller orderbekräftelser med Scrive.",,"Scrive works for all types of processes and fits all types of documents. For example you can send contracts, tenders or order confirmations through Scrive."
 "_legalModalTitle","Artikel med John Kihlman, doktor i avtalsrätt",,""
 "_legalTitleFrontPage","Juridiskt bindande såklart",,"Legally binding of course"
-"_legalBodyFrontPage","Orolig för juridiken? Inte experterna. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"Worried about the legality? The experts are not."
+"_legalBodyFrontPage","Lika bindande som en signatur på papper. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"As binding as a signature on paper."
 "_modalAddCompanyAccountTitle","Nytt Konto",,"New Account"
 "_modalAddCompanyAccountInviteButtonText","Bjud in",,"Invite"
 "_newCompanyAccountButtonText","Nytt Konto",,"New Account"
 "_onlyPDFAllowed","Sorry, only PDF uploads are allowed. Please try another file.",,"Sorry, only PDF uploads are allowed. Please try another file."
 "_fileTooLarge","Du har valt att bifoga en fil som överstiger 4 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a file that is larger than our limit of 4 MB. Please try another file."
 "_couldNotUpload","Sorry, the file could not be uploaded. Please try again or with a different file.",,"Sorry, the file could not be uploaded. Please try again or with a different file."
+"_pageHeaderContactUs","Kontakta Scrive",,"Contact Scrive"

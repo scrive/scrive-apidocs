@@ -27,6 +27,7 @@ import qualified Data.ListTrie.Map as Trie
 import Data.Map(Map)
 import qualified Data.Map as Map
 import Data.List(intercalate)
+import Data.Maybe
 
 -- | Static routing tables consisting of handlers of type 'a'
 data Route a =
@@ -88,7 +89,7 @@ doParam (Just p) = H.getDataFn (look p) >>= either (const mzero) (const (return 
 
 type Param = Maybe String
 newtype RouteTree a =
-  R { unR :: Trie.TrieMap Map Segment (Map EndSegment (Map Param [a])) }
+  R { unR :: Trie.TrieMap Map Segment (Map EndSegment (Map Param [a])) } deriving (Show)
 
 type Segments = ([Segment],EndSegment)
 
@@ -143,9 +144,13 @@ dispatch (R t) = do
      -- least specific: a 'remainingPath' taking any number of remaining segments
      )
 
+     
+-- We want first to handle ones with params     
 dispatchParams :: (MonadIO m, HasRqData m, ServerMonad m, MonadPlus m) =>
                   Map (Maybe String) [m a] -> m a
-dispatchParams m = msum [doParam p >> msum hs | (p,hs) <- Map.assocs m]
+dispatchParams m = let
+                    (paramfull,paramless) = Map.partitionWithKey (const . isJust) m    
+                   in msum $ [doParam p >> msum hs | (p,hs) <- Map.assocs paramfull] ++ [msum hs | (Nothing,hs) <- Map.assocs paramless]
 
 dispatchRemainingPath :: MonadPlus m => Map k [m a] -> m a
 dispatchRemainingPath m = msum (map msum (Map.elems m))
