@@ -17,6 +17,22 @@ instance DocumentAuthorization AuthenticatedUserAuthorization where
     hasSigLinkFor (And SignatoryPartner uid) doc
   canDocument (AuthenticatedUserAuthorization uid) doc _ DocumentView =
     hasSigLinkFor uid doc
+    
+  docSqlWhere (AuthenticatedUserAuthorization uid) DocumentSend did =
+    ("(SELECT count(*) FROM signatory_links WHERE (roles = ? OR roles = ?) AND user_id = ? AND document_id = ?)", 
+     [toSql [SignatoryAuthor]
+     ,toSql [SignatoryAuthor, SignatoryPartner]
+     ,toSql uid
+     ,toSql did])
+  docSqlWhere (AuthenticatedUserAuthorization uid) DocumentSign did = 
+    ("(SELECT count(*) FROM signatory_links WHERE roles = ? AND user_id = ? AND document_id = ?)", 
+     [toSql [SignatoryPartner]
+     ,toSql uid
+     ,toSql did])
+  docSqlWhere (AuthenticatedUserAuthorization uid) DocumentView did = 
+    ("(SELECT count(*) FROM signatory_links WHERE user_id = ? AND document_id = ?)", 
+     [toSql uid,
+      toSql did])
   
 instance UserAuthorization AuthenticatedUserAuthorization where
   canUser (AuthenticatedUserAuthorization uid) uid2 _ _ = uid == uid2
