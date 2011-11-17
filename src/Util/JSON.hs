@@ -21,6 +21,7 @@ module Util.JSON (
     , jsgetdef
     , jsmodifydef
     , jsset
+    , jsempty
     )where
 
 import Text.JSON
