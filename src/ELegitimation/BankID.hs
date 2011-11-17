@@ -353,7 +353,7 @@ handleIssuePostBankID docid = withUserPost $ do
                         -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
                             Log.eleg "author merge succeeded. (details omitted)"
-                            let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink document
+                            let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink udoc
                             let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                             , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
@@ -363,16 +363,16 @@ handleIssuePostBankID docid = withUserPost $ do
                                                             , signaturepersnumverified = bpn
                                                             }
                                 signInd d = do
-                                    mndoc <- case documentstatus document of
+                                    mndoc <- case documentstatus udoc of
                                       Preparation -> do 
                                         r1 <- update $ PreparationToPending (documentid d) ctxtime
                                         case r1 of
                                           Left m -> return $ Left m
                                           Right _ -> do
-                                              _ <- update $ MarkDocumentSeen (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber
-                                              update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
+                                            _ <- update $  MarkDocumentSeen (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber
+                                            update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
                                       AwaitingAuthor -> do
-                                        _ <- update $ MarkDocumentSeen (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber  
+                                        _ <- update $  MarkDocumentSeen (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber
                                         update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
                                       _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
