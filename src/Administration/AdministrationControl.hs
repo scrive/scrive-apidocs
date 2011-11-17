@@ -71,7 +71,7 @@ import KontraLink
 import MinutesTime
 import System.Directory
 import DB.Classes
-import User.UserControl hiding (handleAddCompanyAccount)
+import User.UserControl
 import User.UserView
 import User.Model
 import Data.Maybe
@@ -160,18 +160,18 @@ showAdminCompanyUsers companyid = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForSales :: Kontrakcja m => m String
-showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales 
+showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
     allUsers <- getUsersAndStats
     let users = usersSortSearchPage params allUsers
-    return $ JSObject 
-           $ toJSObject 
-            [("list", JSArray $ map (\(user,mcompany,docstats) -> 
-                JSObject $ toJSObject 
-                    [("fields", JSObject $ toJSObject 
+    return $ JSObject
+           $ toJSObject
+            [("list", JSArray $ map (\(user,mcompany,docstats) ->
+                JSObject $ toJSObject
+                    [("fields", JSObject $ toJSObject
                         [("id",       jsFromString . show $ userid user)
                         ,("username", jsFromBString $ getFullName user)
                         ,("email",    jsFromBString $ getEmail user)
@@ -185,15 +185,15 @@ jsonUsersList = do
                     ]) (list users)),
              ("paging", pagingParamsJSON users)]
   where
-    jsFromString = JSString . toJSString 
+    jsFromString = JSString . toJSString
     jsFromBString = JSString . toJSString . BS.toString
 
-usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats)] 
+usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats)]
                        -> PagedList (User, Maybe Company, DocStats)
-usersSortSearchPage = 
+usersSortSearchPage =
     listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
 
-usersSortFunc :: SortingFunction (User, Maybe Company, DocStats) 
+usersSortFunc :: SortingFunction (User, Maybe Company, DocStats)
 usersSortFunc "username"    = viewComparing (getFullName . (\(u,_,_) -> u))
 usersSortFunc "usernameREV" = viewComparingRev (getFullName . (\(u,_,_) -> u))
 usersSortFunc "email"       = viewComparing (getEmail . (\(u,_,_) -> u))
@@ -208,8 +208,8 @@ usersSortFunc "signed_docs" = viewComparing (doccount . (\(_,_,d) -> d))
 usersSortFunc "signed_docsREV" = viewComparingRev (doccount . (\(_,_,d) -> d))
 usersSortFunc _             = const $ const EQ
 
-usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats) 
-usersSearchFunc s userdata = userMatch userdata s 
+usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats)
+usersSearchFunc s userdata = userMatch userdata s
   where
       match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
       userMatch (u,mc,_) s' = match s' (getCompanyName mc)

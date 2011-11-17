@@ -1,6 +1,5 @@
 module User.UserView (
     -- pages
-    viewCompanyAccounts,
     viewFriends,
     showUser,
     showUserSecurity,
@@ -10,7 +9,6 @@ module User.UserView (
 
     -- mails
     newUserMail,
-    inviteCompanyAccountMail,
     viralInviteMail,
     mailNewAccountCreatedByAdmin,
     mailAccountCreatedBySigningContractReminder,
@@ -18,14 +16,11 @@ module User.UserView (
     mailAccountCreatedBySigningOrderReminder,
     resetPasswordMail,
 
-    mailInviteUserAsCompanyAccount,
-
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
-    modalDoYouWantToBeCompanyAccount,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -51,10 +46,6 @@ module User.UserView (
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
     flashMessageWeWillCallYouSoon,
-    flashMessageCompanyAccountInviteSent,
-    flashMessageUserHasBecomeCompanyAccount,
-    flashMessageUserHasLiveDocs,
-    flashMessageAccountDeleted,
 
     --modals
     modalNewPasswordView,
@@ -169,11 +160,6 @@ menuFields :: MonadIO m => User -> Fields m
 menuFields user = do
     field "iscompanyadmin" $ useriscompanyadmin user
 
-viewCompanyAccounts :: TemplatesMonad m => m String
-viewCompanyAccounts =
-  renderTemplateFM "viewCompanyAccounts" $ do
-    field "currentlink" $ show $ LinkCompanyAccounts $ emptyListParams
-
 activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
   renderTemplateFM "activatePageViewNotValidLink" $ field "email" email
@@ -193,18 +179,6 @@ newUserMail hostpart emailaddress personname activatelink vip = do
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
     field "vip"            vip
-
-
-
-inviteCompanyAccountMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
-inviteCompanyAccountMail hostpart supervisorname companyname emailaddress personname setpasslink = do
-  kontramail "inviteCompanyAccountMail" $ do
-    field "personname"     $ BS.toString personname
-    field "email"          $ BS.toString emailaddress
-    field "passwordlink"   $ show setpasslink
-    field "supervisorname" $ BS.toString supervisorname
-    field "companyname"    $ BS.toString companyname
-    field "ctxhostpart"    $ hostpart
 
 viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do
@@ -246,15 +220,6 @@ mailAccountCreatedBySigning' mail_template hostpart doctitle personname activati
         field "ctxhostpart"    $ hostpart
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-
-mailInviteUserAsCompanyAccount :: TemplatesMonad m => Context -> User -> User -> Company -> m Mail
-mailInviteUserAsCompanyAccount ctx invited supervisor company = do
-  --invite in the language of the existing user, rather than in the supervisor language
-  kontramaillocal invited  "mailInviteUserAsCompanyAccount" $ do
-                   field "hostpart" (ctxhostpart ctx)
-                   fieldF "supervisor" $ userFields supervisor
-                   fieldF "invited" $ userFields invited
-                   field "companyname" $ getCompanyName company
 
 -------------------------------------------------------------------------------
 
@@ -338,24 +303,6 @@ flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
 flashMessageUserPasswordChanged =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserPasswordChanged" ()
 
-flashMessageCompanyAccountInviteSent :: TemplatesMonad m => User -> m FlashMessage
-flashMessageCompanyAccountInviteSent invitee =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashCompanyAccountInviteSent" $ do
-    fieldF "invitee" $ userFields invitee)
-
-flashMessageUserHasBecomeCompanyAccount :: TemplatesMonad m => Company -> m FlashMessage
-flashMessageUserHasBecomeCompanyAccount company =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageUserHasBecomeCompanyAccount" $ do
-    field "companyname" $ getCompanyName company)
-
-flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
-flashMessageUserHasLiveDocs =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserHasLiveDocs" ()
-
-flashMessageAccountDeleted :: TemplatesMonad m => m FlashMessage
-flashMessageAccountDeleted =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountDeleted" ()
-
 flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordChangeLinkNotValid =
   toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordChangeLinkNotValid" ()
@@ -413,11 +360,6 @@ modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMess
 modalNewPasswordView aid hash = do
   toModal <$> (renderTemplateFM "modalNewPasswordView" $ do
             field "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
-
-modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => Company -> m FlashMessage
-modalDoYouWantToBeCompanyAccount company =
-  toModal <$> (renderTemplateFM "modalDoYouWantToBeCompanyAccount" $ do
-            field "companyname" $ getCompanyName company)
 
 modalUserSignupDone :: TemplatesMonad m => Email -> m FlashMessage
 modalUserSignupDone email =

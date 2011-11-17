@@ -44,6 +44,7 @@ import User.UserView as UserView
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
 import qualified AppLogger as Log (error, security, debug)
+import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
@@ -199,7 +200,7 @@ staticRoutes = choice
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
      , dir "friends"               $ hGet  $ toK0 $ UserControl.handleFriends
-     , dir "companyaccounts"       $ hGet  $ toK0 $ UserControl.handleCompanyAccounts
+     , dir "companyaccounts"       $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
 
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet  $ toK1 $ DocControl.handleAttachmentViewForAuthor
@@ -228,16 +229,16 @@ staticRoutes = choice
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
-     , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ UserControl.handleGetCompanyAccounts
-     , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ UserControl.handlePostCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
      , dir "account" $ dir "sharing" $ hGet $ toK0 $ UserControl.handleGetSharing
      , dir "account" $ dir "sharing" $ hPost $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
-     , dir "account" $ dir "bsa" $ hGet $ toK1 $ UserControl.handleGetBecomeCompanyAccount
-     , dir "account" $ dir "bsa" $ hPost $ toK1 $ UserControl.handlePostBecomeCompanyAccount
+     , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
+     , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
      , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
      , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
@@ -777,7 +778,6 @@ signupPagePost = do
 -}
 signup :: Kontrakcja m => Bool -> Maybe MinutesTime -> m KontraLink
 signup vip _freetill =  do
-  ctx@Context{ctxhostpart} <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> return LoopBack
@@ -785,14 +785,14 @@ signup vip _freetill =  do
       muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
       case (muser, muser >>= userhasacceptedtermsofservice) of
         (Just user, Nothing) -> do
-          -- there is an existing user that hasn't been activated, so resend the details
-          al <- newAccountCreatedLink user
-          mail <- newUserMail ctxhostpart email email al vip
-          scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = email, email = email}] }
+          -- there is an existing user that hasn't been activated
+          -- send them another invite
+          UserControl.sendNewUserMail vip user
         (Nothing, Nothing) -> do
           -- this email address is new to the system, so create the user
-          _mnewuser <- UserControl.createUser ctx (BS.empty, BS.empty) email Nothing Nothing vip
-          return ()
+          -- and send an invite
+          mnewuser <- UserControl.createUser (Email email) BS.empty BS.empty Nothing
+          maybe (return ()) (UserControl.sendNewUserMail vip) mnewuser
         (_, _) -> return ()
       -- whatever happens we want the same outcome, we just claim we sent the activation link,
       -- because we don't want any security problems with user information leaks

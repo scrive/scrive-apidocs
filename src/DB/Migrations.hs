@@ -18,6 +18,7 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
+import CompanyAccounts.Tables
 #ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Tables
 #endif

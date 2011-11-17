@@ -9,10 +9,6 @@ module Company.Model (
   , CreateCompany(..)
   , SetCompanyInfo(..)
   , GetOrCreateCompanyWithExternalID(..)
-  , AddCompanyInvite(..)
-  , RemoveCompanyInvite(..)
-  , GetCompanyInvite(..)
-  , GetInvitesForCompany(..)
   ) where
 
 import Control.Applicative
@@ -57,18 +53,6 @@ data CompanyInfo = CompanyInfo {
   , companyzip     :: BS.ByteString
   , companycity    :: BS.ByteString
   , companycountry :: BS.ByteString
-  } deriving (Eq, Ord, Show)
-
-{- |
-    A CompanyInvite is a record
-    of an invitation made by a company
-    to takeover an existing user.
--}
-data CompanyInvite = CompanyInvite {
-    invitedemail    :: BS.ByteString --who was invited
-  , invitedfstname  :: BS.ByteString --the fstname they were invited as
-  , invitedsndname  :: BS.ByteString --the sndname they were invited as
-  , invitingcompany :: CompanyID --the company they are invited to
   } deriving (Eq, Ord, Show)
 
 data GetCompanies = GetCompanies (Maybe ServiceID)
@@ -148,61 +132,6 @@ instance DBUpdate GetOrCreateCompanyWithExternalID Company where
       Just c  -> return c
       Nothing -> dbUpdate $ CreateCompany msid $ Just ecid
 
-data AddCompanyInvite = AddCompanyInvite CompanyInvite
-instance DBUpdate AddCompanyInvite CompanyInvite where
-  dbUpdate (AddCompanyInvite CompanyInvite{
-      invitedemail
-    , invitedfstname
-    , invitedsndname
-    , invitingcompany
-    }) = do
-    wrapDB $ \conn -> runRaw conn "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
-    wrapDB $ \conn -> do
-      _ <- run conn ("DELETE FROM companyinvites "
-                      ++ "WHERE (company_id = ? AND email = ?)") $
-                      [ toSql invitingcompany
-                      , toSql invitedemail]
-      _ <- run conn ("INSERT INTO companyinvites ("
-                      ++ "  email"
-                      ++ ", first_name"
-                      ++ ", last_name"
-                      ++ ", company_id) VALUES (?, ?, ?, ?)") $
-                      [ toSql invitedemail
-                      , toSql invitedfstname
-                      , toSql invitedsndname
-                      , toSql invitingcompany]
-      return ()
-    dbQuery (GetCompanyInvite invitingcompany invitedemail) >>= maybe (E.throw $ NoObject "") return
-
-data RemoveCompanyInvite = RemoveCompanyInvite CompanyID BS.ByteString
-instance DBUpdate RemoveCompanyInvite () where
-  dbUpdate (RemoveCompanyInvite companyid email) = do
-  wrapDB $ \conn -> runRaw conn "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
-  wrapDB $ \conn -> do
-    _ <- run conn ("DELETE FROM companyinvites "
-                    ++ "WHERE (company_id = ? AND email = ?)") $
-                    [ toSql companyid
-                    , toSql email]
-    return ()
-  dbQuery (GetCompanyInvite companyid email) >>= maybe (return ()) (const $ E.throw $ NoObject "")
-
-data GetCompanyInvite = GetCompanyInvite CompanyID BS.ByteString
-instance DBQuery GetCompanyInvite (Maybe CompanyInvite) where
-  dbQuery (GetCompanyInvite companyid email) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompanyInvitesSQL
-      ++ "WHERE (c.company_id = ? AND c.email = ?)"
-    _ <- execute st [toSql companyid, toSql email]
-    cs <- fetchCompanyInvites st []
-    oneObjectReturnedGuard cs
-
-data GetInvitesForCompany = GetInvitesForCompany CompanyID
-instance DBQuery GetInvitesForCompany [CompanyInvite] where
-    dbQuery (GetInvitesForCompany companyid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompanyInvitesSQL
-      ++ "WHERE (c.company_id = ?)"
-    _ <- execute st [toSql companyid]
-    fetchCompanyInvites st []
-
 -- helpers
 
 selectCompaniesSQL :: String
@@ -237,26 +166,6 @@ fetchCompanies st acc = fetchRow st >>= maybe (return acc) f
          } : acc
         f l = error $ "fetchCompanies: unexpected row: "++show l
 
-selectCompanyInvitesSQL :: String
-selectCompanyInvitesSQL = "SELECT"
-  ++ "  ci.email"
-  ++ ", ci.first_name"
-  ++ ", ci.last_name"
-  ++ ", ci.company_id"
-  ++ "  FROM companyinvites ci"
-  ++ " "
-
-fetchCompanyInvites :: Statement -> [CompanyInvite] -> IO [CompanyInvite]
-fetchCompanyInvites st acc = fetchRow st >>= maybe (return acc) f
-  where f [email, fstname, sndname, cid
-         ] = fetchCompanyInvites st $ CompanyInvite {
-             invitedemail = fromSql email
-           , invitedfstname = fromSql fstname
-           , invitedsndname = fromSql sndname
-           , invitingcompany = fromSql cid
-         } : acc
-        f l = error $ "fetchCompanyInvites: unexpected row: "++show l
-
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take
 -- need to be serializable. I don't know wtf, but I'll gladly dispose of these
@@ -268,7 +177,6 @@ newtype CompanyID_0 = CompanyID_0 Int
 deriving instance Typeable Company
 deriving instance Typeable CompanyInfo
 deriving instance Typeable ExternalCompanyID
-deriving instance Typeable CompanyInvite
 
 instance Version CompanyID where
   mode = extension 2 (Proxy :: Proxy CompanyID_0)
@@ -277,7 +185,6 @@ instance Version CompanyID_0
 instance Version Company
 instance Version CompanyInfo
 instance Version ExternalCompanyID
-instance Version CompanyInvite
 
 instance Migrate CompanyID_0 CompanyID where
   migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
@@ -288,5 +195,4 @@ $(deriveSerializeFor [
   , ''Company
   , ''CompanyInfo
   , ''ExternalCompanyID
-  , ''CompanyInvite
   ])
