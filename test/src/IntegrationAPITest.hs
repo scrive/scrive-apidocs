@@ -18,7 +18,7 @@ import API.IntegrationAPI
 import Context
 import DB.Classes
 import Text.JSON
---import Data.Ratio
+import Data.Ratio
 import Data.List
 import Data.Maybe
 import Database.HDBC.PostgreSQL
