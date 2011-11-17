@@ -368,8 +368,11 @@ handleIssuePostBankID docid = withUserPost $ do
                                         r1 <- update $ PreparationToPending (documentid d) ctxtime
                                         case r1 of
                                           Left m -> return $ Left m
-                                          Right _ -> update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
+                                          Right _ -> do
+                                              _ <- update $ MarkDocumentSeen (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber
+                                              update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
                                       AwaitingAuthor -> do
+                                        _ <- update $ MarkDocumentSeen (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber  
                                         update $ SignDocument (documentid d) signatorylinkid signatorymagichash ctxtime ctxipnumber $ Just signinfo
                                       _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
