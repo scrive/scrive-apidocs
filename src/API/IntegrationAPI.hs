@@ -213,6 +213,7 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale
             file <- runDB $ dbUpdate $ NewFile name content
             update $ AttachFile (documentid doc) (fileid file) now
     mapM_ (uncurry addAndAttachFile) files
+    _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality now
     _ <- update $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
       ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now

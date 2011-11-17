@@ -137,6 +137,8 @@ javascriptLocalisation =
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
             , skrivapa : "$_skrivapa()$"
+
+
             , tweetAccount : "$_tweetAccount()$"
    }
 ####

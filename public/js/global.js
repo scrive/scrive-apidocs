@@ -1025,8 +1025,10 @@ function isAuthorSignatory() {
 
  *************************************************************/
 function showProperSignButtons() {
+    console.log("spsb");
     var checkBox = $("#switchercheckbox");
     if(!isAuthorSignatory()) {
+        console.log("author not sig");
         if (!checkBox.attr("checked"))
             checkBox.attr("checked", true).change();
 
@@ -1038,9 +1040,12 @@ function showProperSignButtons() {
         $("#dialog-confirm-text-send-normal").hide();
 
     } else {
+        console.log("author sig");
         checkBox.parent().find(".usual").show();
         checkBox.parent().find(".secretary").hide();
-        $("#dialog-confirm-text-send").hide();
+        // don't know why this was here; things have changed since it
+        // was written
+        // $("#dialog-confirm-text-send").hide();
         $("#dialog-confirm-text-send-fields").hide();
         $("#dialog-confirm-text-send-normal").show();
         var numsigs = $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
@@ -1500,15 +1505,24 @@ function renumberParts() {
         var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
         var isauthor  = $(this).hasClass("authordetails");
         var isSignatory = (authorrole.length + signatoryrole.length) > 0;
+        var isAuthor = $(this).hasClass("authordetails");
         var isMultiPart = isMultiPartElem($(this));
         if (isMultiPart) {
+            console.log("is multipart");
             $(this).find(".partnumber").text(localization.multipleSignatory.toUpperCase());
+        } 
+
+        // I'm leaving the following as a stub in case we want
+        // different logic for the author as signatory, which I
+        // suspect is true.
+        else if (isAuthor && isSignatory) {
+            $(this).find(".partnumber").text(localization.contractSignatory(idx).toUpperCase());
+            idx = idx + 1;
+        } else if (isAuthor) {
+            var text = localization.nonsignatory.toUpperCase();
+            $(this).find(".partnumber").text(text);
         } else if (isSignatory) {
-            if (issendonly) {
-                $(this).find(".partnumber").text(localization.offerSignatory.toUpperCase());
-            } else {
-                $(this).find(".partnumber").text(localization.contractSignatory(idx).toUpperCase());
-            }
+            $(this).find(".partnumber").text(localization.contractSignatory(idx).toUpperCase());
             idx = idx + 1;
         } else {
             var text = localization.nonsignatory.toUpperCase();
