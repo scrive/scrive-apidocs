@@ -52,7 +52,9 @@ countingMailer counter mail = do
 testDocumentFromTemplate :: Connection -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
-    doc <- addRandomDocumentWithAuthorAndCondition user isTemplate
+    doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
+                                                            Template _ -> True
+                                                            _ -> False)
     docs1 <- randomQuery $ GetDocumentsByUser user
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
