@@ -116,7 +116,7 @@ handleScriveByMail = do
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.scrivebymail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     
-    sendMailAPIErrorEmail ctx username $ "For your own protection, Scrive by Mail sets a daily limit on how many emails you can send out. Your daily Scrive by Mail limit has been reached. To reset your daily limit, please visit " ++ show LinkUserMailAPI ++ " ."
+    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive by Mail sets a daily limit on how many emails you can send out. Your daily Scrive by Mail limit has been reached. To reset your daily limit, please visit " ++ show LinkUserMailAPI ++ " .<p>"
     
     mzero
 
@@ -133,13 +133,13 @@ handleScriveByMail = do
         ]
                 
   when ([] /= errors1) $ do
-    let errorstring = intercalate "\n\n" errors1
+    let errorstring = intercalate "<br />\n" errors1
   
     Log.scrivebymail $ (show $ toSeconds ctxtime) ++ " " ++ errorstring
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
   
     -- send error email
-    sendMailAPIErrorEmail ctx username $ "Please ensure that the following condition is met: \n\n " ++ errorstring ++ "."
+    sendMailAPIErrorEmail ctx username $ "<p>Please ensure that the following condition is met: <br /> " ++ errorstring ++ "</p>"
   
     mzero
   
@@ -155,7 +155,7 @@ handleScriveByMail = do
       Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
           
       -- send error email          
-      sendMailAPIErrorEmail ctx username $ "I don't know what the problem is. Perhaps try again with a different email program."
+      sendMailAPIErrorEmail ctx username $ "<p>I don't know what the problem is. Perhaps try again with a different email program.</p>"
       mzero
       
   let recodedPlain = (replace "\r\n\r\n" "\r\n" $ BS.toString recodedPlain') <| isOutlook |> BS.toString recodedPlain'
@@ -168,7 +168,7 @@ handleScriveByMail = do
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     
     -- send error mail
-    sendMailAPIErrorEmail ctx username $ "I'm only a little smart :(. I couldn't understand the email you sent me. Here are the things I didn't understand: \n\n" ++ msg ++ "\n\nIf you correct them and send me the email again, maybe I can understand it!"
+    sendMailAPIErrorEmail ctx username $ "<p>I'm only a little smart :(. I couldn't understand the email you sent me. Here are the things I didn't understand: <br /><br />\n" ++ msg ++ "<br /><br />\nIf you correct them and send me the email again, maybe I can understand it!</p>"
     
     mzero
     
@@ -212,7 +212,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can click here: " ++ (show $ LinkIssueDoc (documentid doc))
+    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can click here: " ++ (show $ LinkIssueDoc (documentid doc)) ++ " .</p>"
     
     mzero
 
@@ -222,7 +222,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, click here: " ++ (show $  LinkIssueDoc (documentid doc))
+    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, click here: " ++ (show $  LinkIssueDoc (documentid doc)) ++ ".</p>"
     
     mzero
   

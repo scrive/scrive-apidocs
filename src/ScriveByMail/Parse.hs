@@ -24,12 +24,23 @@ data SimpleMailError = NoColon String
                      | UnknownKey String
                      | MissingField String
                      | NoSignatory
+                     | CombinedError [String] [SimpleMailError]
                        
 instance Show SimpleMailError where
   show (NoColon l) = "Each line must be of the form key:value; this line had no colon " ++ l
   show (UnknownKey k) = "This key was not recognized: " ++ k
   show (MissingField k) = "This required key was missing: " ++ k
   show NoSignatory = "The body of the email was empty; we cannot send a contract with no signatories"
+  show (CombinedError s es) = 
+    let len = foldl max 20 (map length s)
+        rule = take len $ repeat '-'
+    in "For this signatory:<br /><br />\n" ++
+       rule ++ "<br />\n" ++
+       intercalate "<br />\n" s ++
+       "<br />\n" ++ 
+       rule ++ "<br /><br />\n" ++
+       "There were the following errors: <br />\n  * " ++
+       intercalate "<br />\n  * " (map show es)
 
 noColonCheck :: String -> Maybe SimpleMailError
 noColonCheck l | isNothing $ find (== ':') l = Just $ NoColon l
@@ -53,7 +64,7 @@ emailStrings :: [String]
 emailStrings = ["email"]
 
 companyStrings :: [String]
-companyStrings = ["company"]
+companyStrings = ["company", "organization"]
 
 orgStrings :: [String]
 orgStrings = [a ++ s ++ b | a <- ["org", "cmp"]
@@ -82,15 +93,18 @@ getParseErrorsLine l = catMaybes $ map ($ l) [unknownKeyCheck
                                              ,noColonCheck
                                              ]
                        
-getParseErrorsSig :: [String] -> [SimpleMailError]
-getParseErrorsSig ls = concatMap getParseErrorsLine ls ++
-                       let pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
+getParseErrorsSig :: [String] -> Maybe SimpleMailError
+getParseErrorsSig ls = let unks = concatMap getParseErrorsLine ls
+                           pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
                            fstname = levLookup "first name"          pairs
                            sndname = levLookup "last name"           pairs
                            email   = levLookup "email"               pairs
-                       in [MissingField s | (s, Nothing) <- [("First name", fstname), 
-                                                             ("Last name",  sndname),
-                                                             ("Email",      email)]]
+                           missings = [MissingField s | (s, Nothing) <- [("First name", fstname), 
+                                                                         ("Last name",  sndname),
+                                                                         ("Email",      email)]]
+                       in case unks ++ missings of
+                         [] -> Nothing
+                         es -> Just $ CombinedError ls es
 
 splitSignatories :: String -> [[String]]
 splitSignatories mailbody =
@@ -103,7 +117,7 @@ getParseErrorsEmail :: String -> [SimpleMailError]
 getParseErrorsEmail mailbody = 
   if strip mailbody == ""
   then [NoSignatory]
-  else concatMap getParseErrorsSig $ splitSignatories mailbody
+  else catMaybes $ map getParseErrorsSig $ splitSignatories mailbody
 
 parseSignatory :: [String] -> Maybe SignatoryDetails
 parseSignatory sig = 
@@ -136,6 +150,6 @@ parseSimpleEmail subject mailbody =
           else let sigs = map parseSignatory $ splitSignatories mailbody
                in Right $ (strip subject,
                            catMaybes sigs)
-    es -> Left $ intercalate "<br />\n" (map show es)
+    es -> Left $ intercalate "<br /><br />\n" (map show es)
                            
 
