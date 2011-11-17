@@ -48,6 +48,7 @@ import Mails.MailsData as MD
 import Data.String.Utils
 import Util.StringUtil
 import Doc.DocViewMail
+import Doc.DocProcess
 
 import Util.JSON
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
@@ -221,6 +222,7 @@ handleMailCommand = do
                   Just companyid -> runDBQuery $ GetCompany companyid
                   Nothing -> return Nothing
     let userDetails = signatoryDetailsFromUser user mcompany
+    let authorrole = [SignatoryAuthor] <| Just True == getValueForProcess doctype processauthorsend |> [SignatoryAuthor, SignatoryPartner]
 
     (eitherdoc :: Either String Document) <- liftIO $ update $ NewDocument user mcompany title doctype ctxtime
     (doc :: Document) <- case eitherdoc of
@@ -230,7 +232,7 @@ handleMailCommand = do
     _errs <- lefts <$> (liftIO $ sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
                                             update $ SetDocumentTitle (documentid doc) title ctxtime,
                                             update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime,
-                                            update $ ResetSignatoryDetails (documentid doc) ((userDetails, [SignatoryPartner, SignatoryAuthor]):signatories) ctxtime])
+                                            update $ ResetSignatoryDetails (documentid doc) ((userDetails, authorrole):signatories) ctxtime])
 
     (eithernewdocument :: Either String Document) <- update $ PreparationToPending (documentid doc) ctxtime
     (newdocument :: Document) <- case eithernewdocument of

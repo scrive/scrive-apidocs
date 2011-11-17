@@ -194,22 +194,24 @@ var DocumentStandarView = Backbone.View.extend({
       box.append (leftbox); 
       var guardbox;
       var checkbox;
+        console.log("xxx");
       if (document.process().requiressignguard())
       {
-            var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
-            guardbox = $("<div id='signGuardField'/>");
-            var checkboxwrapper =  $("<div class='float-left'/>");
-            checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
-            checkbox.click(function() {guardbox.css("border","");});
-            checkboxwrapper.append(checkbox);
-            guardbox.append(checkboxwrapper);
-            var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
-            var label =  $("<label for='signGuardCBox'/>").append(localization.sign.guardCBox);
-            labelwrapper.append(label);
-            guardbox.append(labelwrapper);
-            middlebox.append(guardbox);
-            box.append(middlebox);  
-           
+          console.log("requires sign guard");
+          var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
+          guardbox = $("<div id='signGuardField'/>");
+          var checkboxwrapper =  $("<div class='float-left'/>");
+          checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
+          checkbox.click(function() {guardbox.css("border","");});
+          checkboxwrapper.append(checkbox);
+          guardbox.append(checkboxwrapper);
+          var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
+          var label =  $("<label for='signGuardCBox'/>").append(localization.sign.guardCBox);
+          labelwrapper.append(label);
+          guardbox.append(labelwrapper);
+          middlebox.append(guardbox);
+          box.append(middlebox);  
+          
             
       }
            
@@ -309,7 +311,7 @@ var DocumentStandarView = Backbone.View.extend({
     popupSignConfirmationByAuthor : function() {
         var document = this.model;
         var signatory = document.currentSignatory();
-        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
+        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentauthorlast()) : $(document.process().signatorysignmodalcontentnotlast());
         var acceptButton;
         if (document.elegAuthorization())
         {
@@ -370,21 +372,26 @@ var DocumentStandarView = Backbone.View.extend({
       leftbox.append(this.cancelByAuthorButton().input());
       box.append (leftbox);
  
-      var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
-      var guardbox = $("<div id='signGuardField'/>");
-      var checkboxwrapper =  $("<div class='float-left'/>");
-      var checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
-      checkbox.click(function() {guardbox.css("border","");});
-      checkboxwrapper.append(checkbox);
-      guardbox.append(checkboxwrapper);
-      var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
-      var label =  $("<label for='signGuardCBox'/>").append(localization.signByAuthor.guardCBoxForAuthorLabel);
-      labelwrapper.append(label);
-      guardbox.append(labelwrapper);
-      guardbox.append(localization.signByAuthor.guardCBoxForAuthorAfterLabel);
-      middlebox.append(guardbox);
-      box.append(middlebox);   
-           
+        console.log("xxx");
+        if (document.process().requiressignguard())
+        {
+            var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
+            console.log("requires sign guard");
+            
+            var guardbox = $("<div id='signGuardField'/>");
+            var checkboxwrapper =  $("<div class='float-left'/>");
+            var checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
+            checkbox.click(function() {guardbox.css("border","");});
+            checkboxwrapper.append(checkbox);
+            guardbox.append(checkboxwrapper);
+            var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
+            var label =  $("<label for='signGuardCBox'/>").append(localization.signByAuthor.guardCBoxForAuthorLabel);
+            labelwrapper.append(label);
+            guardbox.append(labelwrapper);
+            guardbox.append(localization.signByAuthor.guardCBoxForAuthorAfterLabel);
+            middlebox.append(guardbox);
+            box.append(middlebox);   
+        }
       var rightbox = $("<div id='signViewBottomBoxContainerRight'/>"); 
       var acceptButton = Button.init({
                                 size:"big",

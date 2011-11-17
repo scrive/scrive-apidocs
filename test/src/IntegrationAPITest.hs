@@ -47,6 +47,8 @@ integrationAPITests conn = testGroup "Integration API" [
     , testCase "test that GB works as a region (all caps)" $ testNewDocumentSetRegionGB conn
     
       --, testCase "test that signatories have attachment array" $ testNewDocumentAttachments conn    
+    , testCase "test create order" $ testNewDocumentOrder conn      
+      
       
     , testCase "Test that you can set the relation for a signatory and read it back" $ testNewDocumentRelations conn
       
@@ -54,6 +56,21 @@ integrationAPITests conn = testGroup "Integration API" [
     ]
 
 -- Main tests
+
+testNewDocumentOrder :: Connection -> Assertion
+testNewDocumentOrder conn = withTestEnvironment conn $ do
+  createTestService
+  apiReq <- createOrderJSON "test_company1" "mariusz@skrivapa.se"
+  apiRes <- makeAPIRequest createDocument $ apiReq
+  assertBool ("Failed to create doc: " ++ show apiRes) $ not (isError apiRes)
+  let Right did = jsget ["document_id"] (showJSON apiRes)
+  let Right apiReq2 = (Right jsempty) >>= jsset "document_id" did
+  apiRes2 <- makeAPIRequest getDocument apiReq2
+  assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
+  assertBool ("doctype is not order: " ++ show apiRes2) $ (Right (showJSON (5 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
+  let Right (JSArray (authorjson:_)) = jsget ["document", "involved"] (showJSON apiRes2)
+      
+  assertBool ("relation for author is not secretary: " ++ show apiRes2) $ (Right (JSRational False (1%1))) == jsget ["relation"] authorjson
 
 testDocumentCreation :: Connection -> Assertion
 testDocumentCreation conn = withTestEnvironment conn $ do
@@ -186,6 +203,26 @@ createDocumentJSON company author t = randomCall $ \title fname sname -> JSObjec
                                     ]
                                 ]
         )]
+        
+
+createOrderJSON :: String -> String -> DB JSValue
+createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
+         ,("title" , JSString $ toJSString  title)
+         ,("type" , JSRational True (5%1))
+         ,("involved" , JSArray [ JSObject $ toJSObject $
+                                    [ ("fstname", JSString $ toJSString fname),
+                                      ("sndname", JSString $ toJSString sname),
+                                      ("email",   JSString $ toJSString author)
+                                    ],
+                                  JSObject $ toJSObject $
+                                  [ ("fstname", JSString $ toJSString fname2),
+                                    ("sndname", JSString $ toJSString sname2),
+                                    ("email",   JSString $ toJSString em2)
+                                  ]
+                                ]
+        )]
+        
 
 getDocumentsJSON :: String -> String -> DB JSValue
 getDocumentsJSON company email = randomCall $ JSObject $ toJSObject $
