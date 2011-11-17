@@ -502,7 +502,7 @@
             this.bottomExtras = args.bottomExtras;
         },
         makeElementsViews : function(ms){
-            this.el.empty();
+            this.el.children().detach();
             this.prerender();
             for(var i=0;i<ms.length;i++)
                 new ListObjectView({
