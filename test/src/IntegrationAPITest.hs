@@ -450,3 +450,52 @@ containsUserEmbedLink obj =    "connectuser" `isInfixOf` (getJSONStringField "li
 containsCompanyEmbedLink :: JSObject JSValue -> Bool
 containsCompanyEmbedLink obj = "connectcompany" `isInfixOf` (getJSONStringField "link" obj)
 
+  
+{- use this later
+createTemplateJSON :: String -> String -> DB JSValue
+createTemplateJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
+         ,("title" , JSString $ toJSString  title)
+         ,("type" , JSRational True (2%1))
+         ,("involved" , JSArray [ JSObject $ toJSObject $
+                                    [ ("fstname", JSString $ toJSString fname),
+                                      ("sndname", JSString $ toJSString sname),
+                                      ("email",   JSString $ toJSString author)
+                                    ]
+                                ]
+        )]
+
+
+createFromTemplateJSON :: String -> String -> JSValue -> DB JSValue
+createFromTemplateJSON company author did = randomCall $ \title fname sname -> JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
+         ,("title" , JSString $ toJSString  title)
+         ,("type" , JSRational True (1%1))
+         ,("template_id", did)
+         ,("involved" , JSArray [ JSObject $ toJSObject $
+                                    [ ("fstname", JSString $ toJSString fname),
+                                      ("sndname", JSString $ toJSString sname),
+                                      ("email",   JSString $ toJSString author)
+                                    ]
+                                ]
+        )]
+
+
+
+testCreateFromTemplate :: Connection -> Assertion
+testCreateFromTemplate conn = withTestEnvironment conn $ do
+  createTestService
+  apiReq <- createTemplateJSON "test_company1" "mariusz@skrivapa.se"
+  apiRes <- makeAPIRequest createDocument $ apiReq
+  assertBool ("Failed to create doc: " ++ show apiRes) $ not (isError apiRes)    
+  let Right did = jsget ["document_id"] (showJSON apiRes)
+  apiReq' <- createFromTemplateJSON "test_company1" "mariusz@skrivapa.se" did
+  apiRes' <- makeAPIRequest createDocument apiReq'
+  assertBool ("Failed to get doc: " ++ show apiRes') $ not (isError apiRes')  
+  let Right did2 = jsget ["document_id"] (showJSON apiRes')
+  let Right apiReq2 = (Right jsempty) >>= jsset "document_id" did2
+  apiRes2 <- makeAPIRequest getDocument apiReq2
+  assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
+  assertBool ("doctype is not contract: " ++ show apiRes2) $ (Right (showJSON (1 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
+  
+-}  
