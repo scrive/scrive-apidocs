@@ -68,7 +68,9 @@ testDocumentFromTemplateShared :: Connection -> Assertion
 testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
     (Company {companyid}) <- addNewCompany
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
-    doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate)
+    doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
+                                                            Template _ -> True
+                                                            _ -> False)
     _ <- randomUpdate $ ShareDocument $ documentid doc
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByUser user
