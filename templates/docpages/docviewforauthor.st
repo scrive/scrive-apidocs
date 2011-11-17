@@ -254,9 +254,9 @@ pageDocumentForAuthor=
 $signatoryScriptIfRequired()$
 -->
 <script>
-
+var docview;
 jQuery(function(){
-var docview = KontraStandardDocument.init({
+docview = KontraStandardDocument.init({
     id:"$documentid$"
      $if(siglinkid)$
     , viewer : new DocumentViewer({
