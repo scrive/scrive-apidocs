@@ -174,7 +174,7 @@ var DocumentStandarView = Backbone.View.extend({
                                 size:"small",
                                 color: "red",
                                 text: document.process().rejectbuttontext(),
-                                style : "width: 140px;margin-right: 12px;",
+                                style : "width: 150px;margin-right: 12px;",
                                 onClick : function(){
                                     ConfirmationWithEmail.popup({
                                         title : document.process().signatorycancelmodaltitle(), 
