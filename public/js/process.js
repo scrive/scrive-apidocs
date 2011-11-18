@@ -86,6 +86,9 @@ window.Process = Backbone.Model.extend({
     },
     signatorysignmodaltitle : function() {
         return this.get("signatorysignmodaltitle");
+    },
+    authorsignlastbutton : function() {
+        return this.get("authorsignlastbutton");
     }
     
 

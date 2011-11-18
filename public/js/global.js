@@ -1529,8 +1529,6 @@ function renumberParts() {
             idx = idx + 1;
         } else {
             var text = localization.nonsignatory.toUpperCase();
-            if (issendonly && isauthor)
-                text = localization.offerAuthor.toUpperCase();
             $(this).find(".partnumber").text(text);
         }
     });
