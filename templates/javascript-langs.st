@@ -18,7 +18,8 @@ javascriptLocalisation =
              , addRequiredAttachments : "$_addRequiredAttachments()$"
              , setAllFields : "$_setAllFields()$"
              , multipleSignatory : "$_multipleSignatory()$"
-             , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
+             , contractSignatory : function(idx) {return
+"$_contractSignatory()$ " + idx}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
              , author : "$_sender()$"
