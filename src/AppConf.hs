@@ -1,4 +1,4 @@
-
+{-# LANGUAGE RecordWildCards #-}
 
 
 module AppConf
@@ -9,6 +9,8 @@ import Crypto
 import User.Model
 import Mails.MailsConfig
 import Data.Word
+import Misc
+
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -34,5 +36,26 @@ data AppConf
               , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
               , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
               }
-      deriving (Show,Read,Eq,Ord)
+      deriving (Read,Eq,Ord)
 
+instance Show AppConf where
+    show (AppConf{..}) = indentLinesMore 2 $ unlines
+      [ "AppConf"
+      , "{ httpBindAddress = " ++ show httpBindAddress
+      , ", hostpart = " ++ show hostpart
+      , ", store = " ++ show store
+      , ", docstore = " ++ show docstore
+      , ", static = " ++ show static
+      , ", amazonConfig = " ++ show amazonConfig
+      , ", dbConfig = " ++ show dbConfig
+      , ", gsCmd = " ++ show gsCmd
+      , ", production = " ++ show production
+      , ", trustWeaverSign = " ++ show trustWeaverSign
+      , ", trustWeaverAdmin = " ++ show trustWeaverAdmin
+      , ", trustWeaverStorage = " ++ show trustWeaverStorage
+      , ", mailsConfig = " ++ show mailsConfig
+      , ", aesConfig = " ++ show aesConfig
+      , ", admins = " ++ show admins
+      , ", initialUsers = " ++ show initialUsers
+      , "}"
+      ]
