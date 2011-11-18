@@ -68,7 +68,8 @@ readAppConfig = readConf `catch` printDefault
         h <- openFile filepath ReadMode
         hSetEncoding h utf8
         c <- hGetContents h
-        conf <- readIO c
+        let c' = unwords (lines c)
+        conf <- readIO c'
         hClose h
         Log.server $ "App config file " ++ filepath ++" read and parsed"
         case verifyAESConf $ aesConfig conf of
