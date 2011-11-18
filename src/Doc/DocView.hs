@@ -447,6 +447,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signbuttontext", text processsignbuttontext)
       , ("signbuttontextauthor", text processsignbuttontextauthor)        
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
+      , ("authorsignlastbutton", text processauthorsignlastbuttontext)
      ]
     where
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k

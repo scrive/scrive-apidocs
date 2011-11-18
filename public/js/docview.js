@@ -340,7 +340,7 @@ var DocumentStandarView = Backbone.View.extend({
                   size: "small",
                   color : "blue",
                   icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
-                  text :  localization.skrivapa,
+                    text :  document.process().authorsignlastbutton(),
                   onClick : function() {                    
                       document.sign().send();
                     }
@@ -396,7 +396,7 @@ var DocumentStandarView = Backbone.View.extend({
       var acceptButton = Button.init({
                                 size:"big",
                                 color: "blue",
-                                text: localization.skrivapa,
+          text: document.process().authorsignlastbutton(),
                                 icon : jQuery("<span class='icon cross' style='margin-left:5px'/>"),
                                 labelstyle :  "width:120px" ,
                                 cssClass : "center" ,

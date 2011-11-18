@@ -29,6 +29,12 @@ offersignatorysignmodalcontentauthorlast=<p> $_offersignatorysignmodalcontentaut
 ####
 ordersignatorysignmodalcontentauthorlast= <p> $_ordersignatorysignmodalcontentauthorlast()$ </p>  
 ####
+contractauthorsignlastbuttontext=$_contractauthorsignlastbuttontext()$
+####
+offerauthorsignlastbuttontext=$_offerauthorsignlastbuttontext()$
+####
+orderauthorsignlastbuttontext=$_orderauthorsignlastbuttontext()$
+####
 contractsignbuttontext=$_contractsignbuttontext()$
 ####
 offersignbuttontext=$_offersignbuttontext()$
