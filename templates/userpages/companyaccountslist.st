@@ -51,20 +51,26 @@ viewCompanyAccounts =
       url: "/companyaccounts",
       sorting: new Sorting({ fields: ["fullname",
                                       "email",
-                                      "iscompanyadmin"] }),
+                                      "role",
+                                      "activated",
+                                      "deletable"] }),
       paging: new Paging({}),
       filtering: new Filtering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
       cells : [
         new Cell({name: "$_name()$", width: "100px", field:"fullname"}),
         new Cell({name: "$_email()$", width: "100px", field:"email" }),
-        new Cell({name: "$_role()$", width: "100px", field:"iscompanyadmin", special: "rendered",
+        new Cell({name: "$_role()$", width: "100px", field:"role", special: "rendered",
                   rendering: function(value, idx, user) {
                     var label = "$_standard()$";
-                    if (user.field("iscompanyadmin")) {
+                    if (user.field("role")=="RoleAdmin") {
                       label = "$_admin()$";
+                    } else if (user.field("role")=="RoleStandard") {
+                      label = "$_standard()$";
+                    } else {
+                      label = "$_pendingcompanyaccount()$";
                     }
 
-                    if (user.field("isctxuser")) {
+                    if (user.field("isctxuser") || !user.field("isactivated")) {
                       var role = jQuery("<span>");
                       role.text(label);
                       return role;
@@ -77,7 +83,7 @@ viewCompanyAccounts =
                           url: "$currentlink$",
                           method: "POST",
                           changerole: true,
-                          makeadmin: !user.field("iscompanyadmin"),
+                          makeadmin: user.field("role")=="RoleStandard",
                           changeid: user.field("id")
                         })).send();
                       }
@@ -85,9 +91,9 @@ viewCompanyAccounts =
                       return role;
                     }
                   }}),
-        new Cell({width: "16px", field:"isaccepttos", special: "rendered",
+        new Cell({width: "16px", field:"activated", special: "rendered",
                   rendering: function(value, idx, user) {
-                    if (!user.field("isaccepttos")) {
+                    if (!user.field("activated")) {
                       var icon = jQuery("<a>");
                       icon.addClass("reminderForSendIcon");
 
@@ -115,10 +121,10 @@ viewCompanyAccounts =
                     }
                     return jQuery("<span>");
                   }}),
-        new Cell({width: "16px", field:"isctxuser", special: "rendered",
+        new Cell({width: "16px", field:"deletable", special: "rendered",
                   rendering: function(value, idx, user) {
                     if (!user.field("isctxuser")) {
-                      if (user.field("isdeletable")) {
+                      if (user.field("deletable")) {
                         var icon = jQuery("<a>");
                         icon.addClass("icon");
                         icon.addClass("delete");
