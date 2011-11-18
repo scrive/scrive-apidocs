@@ -14,6 +14,7 @@ module Administration.AdministrationControl(
           , showAdminUserAdvanced
           , showAdminUsers
           , showAdminCompanies
+          , showAdminCompany
           , showAdminCompanyUsers
           , showAdminUsersForSales
           , showAdminUsersForPayments
@@ -46,6 +47,7 @@ module Administration.AdministrationControl(
           , sysdump
           , serveLogDirectory
           , jsonUsersList
+          , jsonCompanies
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -139,17 +141,73 @@ showAdminUsers (Just userId) = onlySuperUser $ do
       content <- adminUserPage user mcompany
       renderFromBody TopEmpty kontrakcja content
 
-showAdminCompanies :: Kontrakcja m => Maybe CompanyID -> m Response
-showAdminCompanies Nothing = onlySuperUser $ do
-  companies <- runDBQuery $ GetCompanies Nothing
-  params <- getAdminListPageParams
-  content <- adminCompaniesPage companies params
-  renderFromBody TopEmpty kontrakcja content
+showAdminCompanies :: Kontrakcja m => m String
+showAdminCompanies = onlySuperUser $  adminCompaniesPage 
 
-showAdminCompanies (Just companyid) = onlySuperUser $ do
-  company <- guardJustM . runDBQuery $ GetCompany companyid
-  content <- adminCompanyPage company
-  renderFromBody TopEmpty kontrakcja content
+showAdminCompany :: Kontrakcja m => CompanyID -> m String
+showAdminCompany companyid = onlySuperUser $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
+
+jsonCompanies :: Kontrakcja m => m JSValue
+jsonCompanies = onlySuperUser $ do
+    params <- getListParamsNew
+    allCompanies <- runDBQuery $ GetCompanies Nothing
+    let companies = companiesSortSearchPage params allCompanies 
+    return . JSObject . toJSObject $
+        [("list", JSArray $ map (\company ->
+            JSObject . toJSObject $
+                [("fields", JSObject . toJSObject $
+                    [("id",             jsFromString . show . companyid $ company)
+                    ,("companyname",    jsFromBString . getCompanyName $ company)
+                    ,("companynumber",  jsFromBString . getCompanyNumber $ company)
+                    ,("companyaddress", jsFromBString . companyaddress . companyinfo $ company)
+                    ,("companyzip",     jsFromBString . companyzip . companyinfo $ company)
+                    ,("companycity",    jsFromBString . companycity . companyinfo $ company)
+                    ,("companycountry", jsFromBString . companycountry . companyinfo $ company)
+                    ]
+                 )
+                ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
+                ]) (list companies) )
+        ,("paging", pagingParamsJSON companies)
+        ]
+  where
+    jsFromString = JSString . toJSString
+    jsFromBString = JSString . toJSString . BS.toString 
+
+companiesSortSearchPage :: ListParams -> [Company] -> PagedList Company
+companiesSortSearchPage =
+    listSortSearchPage companiesSortFunc companiesSearchFunc companiesPageSize
+
+companiesSortFunc :: SortingFunction Company
+companiesSortFunc "companyname"       = viewComparing    (companyname    . companyinfo)
+companiesSortFunc "companynameREV"    = viewComparingRev (companyname    . companyinfo)
+companiesSortFunc "companynumber"     = viewComparing    (companynumber  . companyinfo)
+companiesSortFunc "companynumberREV"  = viewComparingRev (companynumber  . companyinfo)
+companiesSortFunc "companyaddress"    = viewComparing    (companyaddress . companyinfo)
+companiesSortFunc "companyaddressREV" = viewComparingRev (companyaddress . companyinfo) 
+companiesSortFunc "companyzip"        = viewComparing    (companyzip     . companyinfo)
+companiesSortFunc "companyzipREV"     = viewComparingRev (companyzip     . companyinfo) 
+companiesSortFunc "companycity"       = viewComparing    (companycity    . companyinfo)
+companiesSortFunc "companycityREV"    = viewComparingRev (companycity    . companyinfo) 
+companiesSortFunc "companycountry"    = viewComparing    (companycountry . companyinfo)
+companiesSortFunc "companycountryREV" = viewComparingRev (companycountry . companyinfo) 
+companiesSortFunc _                   = const $ const EQ
+
+companiesSearchFunc :: SearchingFunction Company
+companiesSearchFunc search_str company =
+     any (isInfixOf (map toUpper search_str) . (map toUpper))
+    $ [ 
+        show $ companyid company
+      , BS.toString $ companyname    $ companyinfo $ company
+      , BS.toString $ companynumber  $ companyinfo $ company
+      , BS.toString $ companyaddress $ companyinfo $ company
+      , BS.toString $ companyzip     $ companyinfo $ company
+      , BS.toString $ companycity    $ companyinfo $ company
+      , BS.toString $ companycountry $ companyinfo $ company
+      ]
+
+
+companiesPageSize :: Int
+companiesPageSize = 100
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsers companyid = onlySuperUser $ do

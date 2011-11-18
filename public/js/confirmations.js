@@ -31,8 +31,14 @@ var ConfirmationModel = Backbone.Model.extend({
   content : function(){
        return this.get("content");
   },
+  onAccept : function() {
+      if (this.get("onAccept") != undefined )
+        return this.get("onAccept");
+      var submit = this.get("submit")
+       return function() {submit.send();};
+  },
   accept : function(){
-       return this.get("submit").send();
+       return this.onAccept()();
   },
   acceptText: function() {
        return this.get("acceptText");
@@ -109,6 +115,7 @@ window.Confirmation = {
           var model = new ConfirmationModel({
                       submit : args.submit,
                       title  : args.title,
+                      onAccept : args.onAccept,
                       acceptText: args.acceptText,
                       acceptColor : args.acceptColor,
                       rejectText: args.rejectText,
