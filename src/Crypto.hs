@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Crypto (
       AESConf(..)
     , verifyAESConf
@@ -9,11 +11,21 @@ import Data.ByteString (ByteString)
 import Data.Word
 import qualified Crypto.Cipher.AES as AES
 import qualified Data.ByteString as BS
+import Misc
 
 data AESConf = AESConf {
       aesKey :: BS.ByteString -- ^ AES key, has to be 32 bytes long
     , aesIV  :: BS.ByteString -- ^ initialization vector, has to be 16 bytes long
-    } deriving (Eq, Ord, Show, Read)
+    } deriving (Eq, Ord, Read)
+
+instance Show AESConf where
+    show (AESConf{..}) = indentLinesMore 2 $ unlines
+      [ "AESConf"
+      , "{ aesKey = " ++ show aesKey
+      , ", aesIV = " ++ show aesIV
+      , "}"
+      ]
+    
 
 verifyAESConf :: AESConf -> Either String ()
 verifyAESConf (AESConf key iv) =
