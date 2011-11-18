@@ -257,8 +257,8 @@ staticRoutes = choice
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
-     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompanies . Just
-     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies Nothing
+     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies 
+     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handleCreateCompanyUser
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
@@ -289,6 +289,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
      , dir "adminonly" $ dir "translations" $ hGet $ toK0 $ Administration.showAdminTranslations
+     , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies 
 
      -- a temporary service to help migration
      --, dir "adminonly" $ dir "migratesigaccounts" $ hGet $ toK0 $ Administration.migrateSigAccounts

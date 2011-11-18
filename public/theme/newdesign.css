@@ -633,6 +633,7 @@
    z-index: -1;
 }
 
+.account-body,
 #tab-viewer .account-body {
    background: #f7f7f7;
    border: 1px solid #dedede;
@@ -644,6 +645,7 @@
    min-height: 150px;
 }
 
+.account-body h2,
 #tab-viewer .account-body h2 {
    color: #000;
    font: 14px/24px "Helvetica Neue";
@@ -674,21 +676,24 @@
     width: 70px !important;
 }
 
+.account-body table,
 #tab-viewer .account-body table {
    color: #666;
    margin-top: 10px;
    margin-bottom: 10px;
    text-transform: uppercase;
 }
-
+.account-body table td,
 #tab-viewer .account-body table td {
    padding: 4px;
 }
 
+.account-body table td:first-child,
 #tab-viewer .account-body table td:first-child {
    width: 120px;
 }
 
+.account-body table input,
 #tab-viewer .account-body table input {
    border: 1px solid #6f89aa;
    /* color: #666; */

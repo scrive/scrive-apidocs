@@ -579,8 +579,8 @@
             this.bottomExtras = args.bottomExtras;
             this.makeElementsViews([]);
         },
-        makeElementsViews: function(ms) {
-            this.el.empty();
+        makeElementsViews : function(ms){
+            this.el.children().detach();
             this.prerender();
             new LoadingView({
                 model: this.loading,

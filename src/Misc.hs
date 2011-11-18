@@ -671,3 +671,12 @@ basename filename =
   case break (\x -> (x=='\\') || (x=='/')) filename of
     (_,(_:rest)) -> basename rest
     _            -> takeWhile ((/=) '.') filename
+
+indentLinesMore :: Int -> String -> String
+indentLinesMore nspaces sublines =
+  case lines sublines of
+    (x:xs) -> unlines $ x : map (spaces ++) xs
+    [] -> []
+  where 
+    spaces = replicate nspaces ' '
+

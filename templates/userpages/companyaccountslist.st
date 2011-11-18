@@ -2,7 +2,6 @@
 viewCompanyAccounts =
 <div>
   <div id="tab-viewer">
-    <form method="post" action="$currentlink$" class="listForm">
       <div class="tab-header"></div>
       <ul class="tabs">
         <li><a href="/account">$_HeadUserInfo()$</a></li>
@@ -11,31 +10,66 @@ viewCompanyAccounts =
         <li><a href="/account/sharing">$_sharing()$</a></li>
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
       </ul>
-    </form>
-    $modalAddCompanyAccount()$
   </div>
-  $listLocalDialogs()$
 </div>
 
 <script>
-
-  var createAddCompanyButton = function() {
-    var addCompanyButton = Button.init({
+ jQuery(function(){
+  var addCompanyButton = Button.init({
         color: "green",
         size: "tiny",
-        text: "$_newCompanyAccountButtonText()$"
-      }).input();
+        text: "$_newCompanyAccountButtonText()$",
+        onClick: function() {
+            var body = jQuery("<div class='account-body'>");
+            var table = jQuery("<table/>");
 
-    //maybe make a component for this sort of button?
-    addCompanyButton.overlay({
-      target: jQuery("#dialog-add-company-user"),
-      mask: standardDialogMask,
-      top: standardDialogTop,
-      fixed: false
-    });
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("$_firstname()$:"));
+            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
+            tr1.append(jQuery("<td/>").append(fstname));
+            table.append(tr1);
 
-    return addCompanyButton;
-  };
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("$_lastname()$:"));
+            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
+            tr2.append(jQuery("<td/>").append(sndname));
+            table.append(tr2);
+
+            var tr3 = jQuery("<tr/>").append(jQuery("<td/>").text("$_phone()$:"));
+            var phone = jQuery("<input type='text' name='phone' autocomplete='off' />");
+            tr3.append(jQuery("<td/>").append(phone));
+            table.append(tr3);
+
+            var tr4 = jQuery("<tr/>").append(jQuery("<td/>").text("$_companyposition()$:"));
+            var companyposition = jQuery("<input type='text' name='companyposition' autocomplete='off' />");
+            tr4.append(jQuery("<td/>").append(companyposition));
+            table.append(tr4);
+
+            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("$_email()$"));
+            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+            tr5.append(jQuery("<td/>").append(email));
+            table.append(tr5);
+
+            body.append(table);
+
+
+            Confirmation.popup({
+              onAccept : function() {
+                            new Submit({
+                                method: "POST",
+                                add : "true",
+                                fstname : fstname.val(),
+                                sndname : sndname.val(),
+                                phone : phone.val(),
+                                companyposition : companyposition.val(),
+                                email : email.val(),
+                                }).send();
+                         },
+              title : "$_modalAddCompanyAccountTitle()$",
+              acceptButtonText : "$_modalAddCompanyAccountInviteButtonText()$",
+              content  : body
+            });
+            }
+      });
+
 
   var getFullname = function(user) {
     var fullname = user.field("fullname");
@@ -164,10 +198,8 @@ viewCompanyAccounts =
                  }})
       ]
     }),
-    headerExtras: createAddCompanyButton
+    headerExtras: addCompanyButton.input()
   });
-
-  jQuery(function(){
     jQuery("#tab-viewer").append(companyAccountsTable.view.el);
   });
 </script>

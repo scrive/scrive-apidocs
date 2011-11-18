@@ -182,32 +182,45 @@ adminusers=
       </table>
 ###
 admincompanies=
-    <strong>COMPANY ADMIN</strong>
-    <br/>
-    $backtoadminmainlink()$
-    $adminlistfilter(link=adminlistlink;item="company";items="companies")$
-    $adminlistpaging()$
-    <br/><br/>
-    <table>
-        <thead>
-          <td style="width:200px">ID</td>
-          <td style="width:200px">Name</td>
-          <td style="width:200px">Number</td>
-          <td style="width:200px">Address</td>
-          <td style="width:200px">Zip</td>
-          <td style="width:200px">City</td>
-          <td style="width:200px">Country</td>
-        </thead>
-        $companies:{company|<tr>
-          <td><a href="$adminlistlink$/$company.companyid$">$company.companyid$</a> </td>
-          <td><a href="$adminlistlink$/$company.companyid$">$company.companyname$</a> </td>
-          <td> $company.companynumber$ </td>
-          <td> $company.companyaddress$ </td>
-          <td> $company.companyzip$ </td>
-          <td> $company.companycity$ </td>
-          <td> $company.companycountry$ </td>
-        </tr>}$
-      </table>
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>COMPANY ADMIN</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+       <div id="companies-viewer"></div>
+    </div>
+<script>
+  var companiesTable = KontraList.init({
+    name : "CompaniesTable",
+    schema: new Schema({
+      url: "/adminonly/companies",
+      sorting: new Sorting({ fields: [         
+                                       "companyname",  
+                                       "companynumber",
+                                       "companyaddress",
+                                       "companyzip",
+                                       "companycity",
+                                       "companycountry"  ] }),
+      paging: new Paging({}),
+      filtering: new Filtering({ text: "", infotext: "Search companies" }),
+      cells : [
+        new Cell({name: "Name",   width:"120px", field:"companyname"   , special:"link"}),
+        new Cell({name: "Number", width:"100px", field:"companynumber" , special:"link"}),
+        new Cell({name: "Address",width:"200px", field:"companyaddress", special:"link"}),
+        new Cell({name: "Zip",    width:"50px",  field:"companyzip"    , special:"link"}),
+        new Cell({name: "City",   width:"100px", field:"companycity"   , special:"link"}),
+        new Cell({name: "Contry", width:"100px", field:"companycountry", special:"link"}),
+        new Cell({name: "ID",     width:"120px", field:"id"            , special:"link"})
+      ] 
+    })
+  });
+
+  jQuery(function(){
+    jQuery("#companies-viewer").append(companiesTable.view.el);
+  });
+</script>
 ###
 adminUsersForSales=
    <div id="tab-viewer">

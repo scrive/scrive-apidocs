@@ -76,11 +76,10 @@ adminUsersPage users params =
         adminListFields LinkUserAdmin users params
 
 {- | Manage companies page - can find a company here -}
-adminCompaniesPage :: TemplatesMonad m => [Company] -> AdminListPageParams -> m String
-adminCompaniesPage companies params =
+adminCompaniesPage :: TemplatesMonad m => m String
+adminCompaniesPage =
     renderTemplateFM "admincompanies" $ do
-        fieldFL "companies" $ map (companyFields . Just) $ visibleItems params companies
-        adminListFields LinkCompanyAdmin companies params
+        field "adminlink" $ show $ LinkAdminOnly
 
 {- | Manage company users page - can find a company user here -}
 adminCompanyUsersPage :: TemplatesMonad m => Company -> [User] -> AdminListPageParams -> m String
