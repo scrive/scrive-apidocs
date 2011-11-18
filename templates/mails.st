@@ -386,22 +386,22 @@ newUserMailMainP=
 ####
 #### INVITE TO COMPANY MAIL
 ####
-inviteCompanyAccountMail=
-    $_inviteCompanyAccountMailTitle()$
+mailNewCompanyUserInvite=
+    $_mailNewCompanyUserInviteTitle()$
     $nicemail(
-        mailheader=_inviteCompanyAccountMailTitle();
-        mailp1=inviteCompanyAccountMailMainP();
+        mailheader=_mailNewCompanyUserInviteTitle();
+        mailp1=mailNewCompanyUserInviteMainP();
         mailp2=poweredBySkrivaPaPara()
     )$
 ####
-inviteCompanyAccountMailMainP=
+mailNewCompanyUserInviteMainP=
  <p>$_hi()$ <strong>$personname$</strong>,</p>
 
-    <p>$_inviteCompanyAccountMailContentBodyFirst()$</p>
+    <p>$_mailNewCompanyUserInviteContentBodyFirst()$</p>
 
-    <p>$_inviteCompanyAccountMailContentBodyUserName()$ $email$</p>
+    <p>$_mailNewCompanyUserInviteContentBodyUserName()$ $email$</p>
 
-    <p>$_inviteCompanyAccountMailContentClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
 ####
 #### CREATING ACCOUNTS AFTER SIGNING
@@ -618,24 +618,37 @@ $messages:noescape()$
 <p>$_mailMismatchAuthorContentBestRegards()$</p>
 ####
 ####
-mailInviteUserAsCompanyAccount=
-  $_mailInviteUserAsCompanyAccountTitle()$
+mailTakeoverPrivateUserInvite=
+  $_mailTakeoverPrivateUserInviteTitle()$
   $nicemail(
-      mailheader=_mailInviteUserAsCompanyAccountTitle();
-      mailp1=mailInviteUserAsCompanyAccountP();
+      mailheader=_mailTakeoverPrivateUserInviteTitle();
+      mailp1=mailTakeoverPrivateUserInviteP();
       mailp2=poweredBySkrivaPaPara()
     )$
 ####
-mailInviteUserAsCompanyAccountP=
-  <p>$_hi()$ $invited.fullnameOrEmail$,</p>
-  <p>$_mailInviteUserAsCompanyAccountContentBodyFirst()$</p>
+mailTakeoverPrivateUserInviteP=
+  <p>$_hi()$ $invitedname$,</p>
+  <p>$_mailTakeoverPrivateUserInviteContentBodyFirst()$</p>
 
-  <p>$_mailInviteUserAsCompanyAccountContentBodySecond()$</p>
+  <p>$_mailTakeoverPrivateUserInviteContentBodySecond()$</p>
 
-  <p>$_mailInviteUserAsCompanyAccountContentInstructionFirst()$</p>
-  <ul>$_mailInviteUserAsCompanyAccountContentInstructionSecond()$</ul>
+  <p>$_mailTakeoverPrivateUserInviteContentInstructionFirst()$</p>
+  <ul>$_mailTakeoverPrivateUserInviteContentInstructionSecond()$</ul>
 
-  <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailInviteUserAsCompanyAccountContentLink()$</a></p>
+  <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailTakeoverPrivateUserInviteContentLink()$</a></p>
+####
+####
+mailTakeoverCompanyUserInfo=
+  $_mailTakeoverCompanyUserInfoTitle()$
+  $nicemail(
+      mailheader=_mailTakeoverCompanyUserInfoTitle();
+      mailp1=mailTakeoverCompanyUserInfoP();
+      mailp2=poweredBySkrivaPaPara()
+    )$
+####
+mailTakeoverCompanyUserInfoP=
+  <p>$_hi()$ $invitedname$,</p>
+  <p>$_mailTakeoverCompanyUserInfoBody()$</p>
 ####
 #### Mail API EMAILS
 ####

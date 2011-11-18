@@ -66,11 +66,11 @@ viewCompanyAccounts =
                       label = "$_admin()$";
                     } else if (user.field("role")=="RoleStandard") {
                       label = "$_standard()$";
-                    } else {
+                    } else if (user.field("role")=="RolePending") {
                       label = "$_pendingcompanyaccount()$";
                     }
 
-                    if (user.field("isctxuser") || !user.field("isactivated")) {
+                    if (user.field("isctxuser") || user.field("role")=="RolePending") {
                       var role = jQuery("<span>");
                       role.text(label);
                       return role;
@@ -101,8 +101,9 @@ viewCompanyAccounts =
                         var submit = new Submit({
                           url: "$currentlink$",
                           method: "POST",
-                          remind: "true",
-                          remindid: user.field("id")
+                          resend: "true",
+                          resendid: user.field("id"),
+                          resendemail: user.field("email")
                         });
                         var text = "$_modalResendCompanyAccountInviteBody()$ " + getFullname(user) + "?";
                         var content = jQuery("<p/>").text(text);

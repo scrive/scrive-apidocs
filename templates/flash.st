@@ -256,3 +256,5 @@ flashMessageAccountDeleted=	$_flashMessageAccountDeleted()$
 ###
 flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###
+flashCompanyAccountInviteResent=$_flashCompanyAccountInviteResent()$
+###
