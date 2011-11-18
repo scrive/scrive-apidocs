@@ -2812,7 +2812,7 @@ _signCanceledDataMismatchModalErrorReport,Felrapport:,,"Error report:"
 _signCanceledDataMismatchModalHeader,"Felaktiga personuppgifter",,"Incorrect personal data"
 _signGuardCBox,"Jag intygar att:              <br/>1. Samtliga undertecknande parter är korrekta.              <br/>2. Jag granskat och förstått dokumentet.           <br/>3. Jag har befogenhet att skriva på dokumentet.",,"I certify that:          <br/>1. All signatories are correct.          <br/>2. I have reviewed and understood the document.           <br/>3. I am authorized to sign the document."
 _signGuardField1,"Jag intygar att:",,"I certify that:"
-_signGuardField2,"<br/>1. Samtliga undertecknande parter är korrekta.          <br/>2. Jag granskat och förstått dokumentet.         <br/>3. Jag har befogenhet att skriva på dokumentet.",,"<br/>1. All signatories are correct.          <br/>2. I have reviewed and understood the document.           <br/>3. I am authorized to sign the document."
+_signGuardField2,"<br/> <br/>1. Samtliga undertecknande parter är korrekta.          <br/>2. Jag granskat och förstått dokumentet.         <br/>3. Jag har befogenhet att skriva på dokumentet.",,"<br/> <br/> 1. All signatories are correct.          <br/>2. I have reviewed and understood the document.           <br/>3. I am authorized to sign the document."
 _signMethodEleg,e-legitimation,,e-ID
 _signMethodElegBankID,BankID,,BankID
 _signMethodElegNordea,"Nordea e-legitimation",,"Nordea e-ID"
