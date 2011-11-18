@@ -23,11 +23,23 @@ offersignatorysignmodalcontentnotlast=<p> $_offersignatorysignmodalcontentnotlas
 ####
 ordersignatorysignmodalcontentnotlast= <p> $_ordersignatorysignmodalcontentnotlast()$ </p>         
 ####
+contractsignatorysignmodalcontentauthorlast=<p> $_contractsignatorysignmodalcontentauthorlast()$ </p>
+####
+offersignatorysignmodalcontentauthorlast=<p> $_offersignatorysignmodalcontentauthorlast()$ </p>
+####
+ordersignatorysignmodalcontentauthorlast= <p> $_ordersignatorysignmodalcontentauthorlast()$ </p>  
+####
 contractsignbuttontext=$_contractsignbuttontext()$
 ####
 offersignbuttontext=$_offersignbuttontext()$
 ####
 ordersignbuttontext=$_ordersignbuttontext()$
+####
+contractsignbuttontextauthor=$_contractsignbuttontextauthor()$
+####
+offersignbuttontextauthor=$_offersignbuttontextauthor()$
+####
+ordersignbuttontextauthor=$_ordersignbuttontextauthor()$
 ####
 contractsignatorycancelmodaltitle=
           <h2>$_contractsignatorycancelmodaltitleHead()$</h2>

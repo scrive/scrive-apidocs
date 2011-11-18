@@ -277,24 +277,12 @@ pageDocumentDesign=
                     <div class="right"></div>
                   </a>
                 </div>
-                $elseif(process.isauthorsend)$
-                <input type="hidden" value="email" name="validationmethod" />
-                <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"class="btn-small green center">
-                    <div class="left"></div>
-                    <div class="label" style="">
-                      <span>$process.sendbuttontext$</span>
-                      <span class="btn-symbol green arrow-left" ></span>
-                    </div>
-                    <div class="right"></div>
-                  </a>
-                </div>
                 $else$
                 <div class="signbutton" style="display:inline-block;">
                   <a type="button" id="signinvite" rel="#dialog-confirm-signinvite"  style="display:inline-block" class="btn-small blue center">
                     <div class="left"></div>
                     <div class="label" style="width:134px;">
-                       <span style="padding-left:9px;padding-right:9px">$process.signbuttontext$</span>
+                       <span style="padding-left:9px;padding-right:9px">$process.signbuttontextauthor$</span>
                       <span class="btn-symbol cross"></span>
                     </div>
                     <div class="right"></div>
@@ -413,7 +401,6 @@ pageDocumentDesign=
                 $if(region.iselegavailable)$
                 $validationdropdown()$
                 $endif$
-                $if(!process.isauthorsend)$
                 <div style="padding-bottom:8px; $if(region.iselegavailable)$padding-top: 2px;$else$padding-top: 20px;$endif$">
                   <input id="switchercheckbox"
                   style="position:relative;top:2px" type="checkbox"
@@ -424,8 +411,7 @@ pageDocumentDesign=
                   <label class="secretary"
                   style="margin-left:3px;display:none;">$_switchercheckboxNotSignatory()$</label></input>
                 </div>
-                $endif$
-                <div class="sendbutton" style="$if(!process.isauthorsend)$display:none;$else$padding-top:20px;$endif$">
+                <div class="sendbutton" style="display:none;">
                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                     <div class="left"></div>
                     <div class="label" style="width: 120px;">
@@ -436,18 +422,16 @@ pageDocumentDesign=
                     <div class="right"></div>
                   </a>
                 </div>
-                $if(!process.isauthorsend)$
                 <div class="signbutton">
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
                     <div class="label" style="width: 120px;">
-                    <span>$process.signbuttontext$</span>
+                    <span>$process.signbuttontextauthor$</span>
                       <span class="icon cross"></span>
                     </div>
                     <div class="right"></div>
                   </a>
                 </div>
-                $endif$
               </div>
               $endif$
 
@@ -470,7 +454,6 @@ pageDocumentDesign=
     var csvrowcount = $csvrowcount$;
     var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
-    var issendonly = $if(process.isauthorsend)$true$else$false$endif$;
     $if(step3)$ safeReady(function(){showStep3()});$endif$
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
@@ -1122,7 +1105,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <a href="#" class="btn-small blue float-right submiter signhidden">
         <div class="left"></div>
         <div class="label">
-            <p>$process.signbuttontext$</p>
+            <p>$process.signbuttontextauthor$</p>
           <span class="btn-symbol cross"></span>
         </div>
         <div class="right"></div>
@@ -1159,23 +1142,9 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        $if(!process.isauthorsend)$
-        <div id="dialog-confirm-text-send">
-            <p>$_dialogConfirmSendinviteBody()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody2To()$<span class="Xinvited">Invited</span>?</p>
-        </div>
-        <div id="dialog-confirm-text-send-fields">
-            <p>$_dialogConfirmSendinviteBody3()$</p>
-            <p>$_dialogConfirmSendinviteBody4()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody5()$	<span class="Xinvited">Invited</span>?  </p>
-        </div>
-
-        <div id="dialog-confirm-text-send-normal">
-            <p>$_dialogConfirmTextSendNormalBody1()$<span class="Xinvited">Invited</span>$_dialogConfirmTextSendNormalBody2()$</p>
-        </div>
-        $else$
         <div id="dialog-confirm-text-send">
               <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmTextSendIfNotNormalOrFieldsTo()$<span class="Xinvited">Invited</span>?</p>
         </div>
-        $endif$
       </div>
     </div>
     <div class="modal-footer">

@@ -28,7 +28,7 @@ instance ToAPIResponse Response where
   
 instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = toResponse $ encode jv in
-    setHeader "Content-Type" "text/plain" r1
+    setHeader "Content-Type" "text/plain" r1 -- must be text/plain to allow browsers who want to save stuff to files
 
 instance Monad APIResponse where
   return = OK

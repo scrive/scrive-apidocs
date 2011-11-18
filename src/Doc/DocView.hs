@@ -445,7 +445,9 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signguardwarntext", text processsignguardwarntext)
       , ("signatorysignmodalcontentlast", text processsignatorysignmodalcontentlast)
       , ("signatorysignmodalcontentnotlast", text processsignatorysignmodalcontentnotlast)
+      , ("signatorysignmodalcontentauthorlast", text processsignatorysignmodalcontentauthorlast)
       , ("signbuttontext", text processsignbuttontext)
+      , ("signbuttontextauthor", text processsignbuttontextauthor)        
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
      ]
     where
@@ -768,6 +770,7 @@ pageDocumentDesign ctx
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "sendbuttontext" $ getProcessText processsendbuttontext
        fieldM "signbuttontext" $ getProcessText processsignbuttontext
+       fieldM "signbuttontextauthor" $ getProcessText processsignbuttontextauthor       
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
