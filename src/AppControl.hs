@@ -200,7 +200,6 @@ staticRoutes = choice
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
      , dir "friends"               $ hGet  $ toK0 $ UserControl.handleFriends
-     , dir "companyaccounts"       $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
 
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet  $ toK1 $ DocControl.handleAttachmentViewForAuthor
@@ -229,20 +228,28 @@ staticRoutes = choice
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
-     , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
-     , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
      , dir "account" $ dir "sharing" $ hGet $ toK0 $ UserControl.handleGetSharing
      , dir "account" $ dir "sharing" $ hPost $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
-     , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
-     , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
      , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
      , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
+
+     --CompanyAccountsControl
+     , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
+     , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
+     , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
+     , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
+     -- these two are deprecated now, but we mailed out the links so we need to keep them hanging
+     -- around for a litte bit
+     , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccountOld
+     , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
+
 
      -- super user only
      , dir "stats"      $ hGet  $ toK0 $ Administration.showStats
@@ -257,7 +264,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
-     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies 
+     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handleCreateCompanyUser
@@ -289,7 +296,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
      , dir "adminonly" $ dir "translations" $ hGet $ toK0 $ Administration.showAdminTranslations
-     , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies 
+     , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
 
      -- a temporary service to help migration
      --, dir "adminonly" $ dir "migratesigaccounts" $ hGet $ toK0 $ Administration.migrateSigAccounts

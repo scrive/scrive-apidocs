@@ -728,7 +728,7 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
 "_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
 "_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
 "_flashMessageAccountRemovedFromSign","Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
-"_flashMessageAccountDeleted","Kontot har tagits bort.",,"The account was successfully deleted."
+"_flashMessageCompanyAccountDeleted","Kontot har tagits bort.",,"The account was successfully deleted."
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
@@ -871,10 +871,10 @@ profits and reduce frustration.</p>						<br />						<p>We are confident
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
-"_mailNewCompanyUserInviteContentBodyFirst","<strong>$supervisorname$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
+"_mailNewCompanyUserInviteContentBodyFirst","<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$invitername$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
 "_mailNewCompanyUserInviteContentBodyUserName","Användarnamn:",,"Username:"
 "_mailNewCompanyUserInviteContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
-"_mailNewCompanyUserInviteTitle","Inbjudan från $supervisorname$ till $companyname$",,"Invitation from $supervisorname$ to join $companyname$"
+"_mailNewCompanyUserInviteTitle","Inbjudan från $invitername$ till $companyname$",,"Invitation from $invitername$ to join $companyname$"
 "_inviteTextFieldName","invite text",,"invite text"
 "_invitetextSaveTemplate","Spara mall",,"Save template"
 "_lastname","Efternamn",,"Last name"

@@ -21,6 +21,7 @@ viewCompanyAccounts =
         text: "$_newCompanyAccountButtonText()$",
         onClick: function() {
             var body = jQuery("<div class='account-body'>");
+            body.append("<p>$_modalAddCompanyAccountBody()$</p>");
             var table = jQuery("<table/>");
 
             var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("$_firstname()$:"));
@@ -32,16 +33,6 @@ viewCompanyAccounts =
             var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
             tr2.append(jQuery("<td/>").append(sndname));
             table.append(tr2);
-
-            var tr3 = jQuery("<tr/>").append(jQuery("<td/>").text("$_phone()$:"));
-            var phone = jQuery("<input type='text' name='phone' autocomplete='off' />");
-            tr3.append(jQuery("<td/>").append(phone));
-            table.append(tr3);
-
-            var tr4 = jQuery("<tr/>").append(jQuery("<td/>").text("$_companyposition()$:"));
-            var companyposition = jQuery("<input type='text' name='companyposition' autocomplete='off' />");
-            tr4.append(jQuery("<td/>").append(companyposition));
-            table.append(tr4);
 
             var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("$_email()$"));
             var email = jQuery("<input type='text' name='email' autocomplete='off' />");
@@ -58,8 +49,6 @@ viewCompanyAccounts =
                                 add : "true",
                                 fstname : fstname.val(),
                                 sndname : sndname.val(),
-                                phone : phone.val(),
-                                companyposition : companyposition.val(),
                                 email : email.val(),
                                 }).send();
                          },
@@ -169,7 +158,8 @@ viewCompanyAccounts =
                             url: "$currentlink$",
                             method: "POST",
                             remove: "true",
-                            removeid: user.field("id")
+                            removeid: user.field("id"),
+                            removeemail: user.field("email")
                           });
                           var text = "$_listLocalDialogsBody()$" + getFullname(user) + "?";
                           var content = jQuery("<p/>").text(text);
@@ -204,51 +194,3 @@ viewCompanyAccounts =
   });
 </script>
 ####
-modalAddCompanyAccount=
-  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-add-company-user" rel=".listForm">
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2>$_modalAddCompanyAccountTitle()$</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <input type="hidden" name="add" value="true" />
-          <p>
-            $_modalAddCompanyAccountBody()$
-          </p>
-          <div class="account-body">
-            <table>
-              <tr>
-                  <td>$_firstname()$:</td>
-                  <td><input type="text" name="fstname" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_lastname()$:</td>
-                  <td><input type="text" name="sndname" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_email()$:</td>
-                  <td><input type="email" name="email" autocomplete="off"/></td>
-              </tr>
-            </table>
-          </div>
-        </div>
-        <input type="submit" class="hidden" />
-      </div>
-      <div class="modal-footer">
-        <a class="cancel close float-left" style="height:40px;">
-          <div class="label">$_cancel()$</div>
-        </a>
-        <a class="btn-small green float-right submit" href="#">
-          <div class="left"></div>
-          <div class="label"><p>$_modalAddCompanyAccountInviteButtonText()$</p></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-#####

@@ -635,7 +635,7 @@ mailTakeoverPrivateUserInviteP=
   <p>$_mailTakeoverPrivateUserInviteContentInstructionFirst()$</p>
   <ul>$_mailTakeoverPrivateUserInviteContentInstructionSecond()$</ul>
 
-  <p><a href="$hostpart$/account/bsa/$supervisor.id$">$_mailTakeoverPrivateUserInviteContentLink()$</a></p>
+  <p>$_mailTakeoverPrivateUserInviteContentLink()$: <a href="$linktojoin$">$linktojoin$</a></p>
 ####
 ####
 mailTakeoverCompanyUserInfo=

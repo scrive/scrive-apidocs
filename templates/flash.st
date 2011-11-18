@@ -250,9 +250,9 @@ flashMessagePleaseSignOffer=	$_flashMessagePleaseSignOffer()$
 ###
 flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
 ###
-flashMessageUserHasLiveDocs=	$_flashMessageUserHasLiveDocs()$
+flashMessageUserHasLiveDocs=$_flashMessageUserHasLiveDocs()$
 ###
-flashMessageAccountDeleted=	$_flashMessageAccountDeleted()$
+flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$
 ###
 flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###

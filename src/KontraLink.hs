@@ -76,6 +76,7 @@ data KontraLink
     | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
+    | LinkCompanyTakeover CompanyID
     | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
@@ -151,7 +152,7 @@ instance Show KontraLink where
     showsPrec _ (LinkClients locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kunder"
       | otherwise = (++) $ localeFolder locale ++ "/clients"
-    showsPrec _ (LinkContactUs locale)  
+    showsPrec _ (LinkContactUs locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kontakta"
       | otherwise = (++) $ localeFolder locale ++ "/contact"
     showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login"
@@ -172,6 +173,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
+    showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkAccountSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
@@ -242,5 +244,5 @@ instance Show KontraLink where
     showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)
     showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
-    showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) = 
+    showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
