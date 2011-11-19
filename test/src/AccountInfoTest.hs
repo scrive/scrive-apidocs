@@ -83,7 +83,7 @@ assertCompanyUpgradeSuccessful uid (UpgradeInfo cname fstname sndname position p
   mcompany <- getCompanyForUser user
 
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res))
+  assertEqual "Location is /account/companyaccounts" (Just "/account/companyaccounts?page=1") (T.getHeader "location" (rsHeaders res))
   assertEqual "User is logged in" (Just $ userid user) (fmap userid $ ctxmaybeuser ctx)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx) `isFlashOfType` OperationDone
