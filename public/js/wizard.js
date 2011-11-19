@@ -9,63 +9,52 @@
             steps: new Backbone.Collection
         },
         initialize: function() {
-            var wiz = this;
-            var steps = wiz.get('steps');
 
         },
-        hasCurrentStep: function() {
-            console.log("currentStep: " + this.get('currentStep'));
-            return this.get('currentStep') !== -1;
+        steps: function() {
+            return this.get('steps');
         },
-        getCurrentStep: function() {
+        hasCurrentStep: function() {
+            return this.stepIndex() !== -1;
+        },
+        stepIndex: function() {
             return this.get('currentStep');
         },
-        setCurrentStep: function(i) {
-            console.log("setCurrentStep: " + i);
+        setStepIndex: function(i) {
             this.set({'currentStep': i});
-            console.log("after");
             return this;
         },
         nextStep: function() {
-            return this.setCurrentStep(this.getCurrentStep() + 1);
+            return this.setStepIndex(this.stepIndex() + 1);
         },
         previousStep: function() {
-            return this.setCurrentStep(this.getCurrentStep() - 1);
+            return this.setStepIndex(this.stepIndex() - 1);
         },
         currentStep: function() {
-            console.log("currentStep; currentStep = " + this.getCurrentStep());
-            return this.get('steps').at(this.getCurrentStep());
+            return this.steps().at(this.stepIndex());
         },
         addStep: function(s) {
-            console.log("addStep");
             var wiz = this;
-            if(wiz.getCurrentStep() === -1)
+            if(!wiz.hasCurrentStep())
+                // sorry for the set, but I need to make it silent!
                 wiz.set({'currentStep': 0}, {silent:true});
             s.set({wizard : wiz}, {silent: true});
-            console.log("before add");
-            this.get('steps').add(s);
-            console.log("addStep: now we have: " + this.get('steps').length);
+            this.steps().add(s);
             this.trigger('change');
-
             return this;
         }
     });
 
     window.WizardView = Backbone.View.extend({
         initialize: function (args) {
-            console.log('initialize wizardview');
-            console.log(this);
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
             this.model.view = this;
         },
         render: function() {
-            console.log("wizardview render");
-            console.log(this);
             var wiz = this.model;
             $(this.el).children().detach();
             if(wiz.hasCurrentStep()) {
-                console.log("wizard has current step");
                 $(this.el).append(wiz.currentStep().view.el);
                 wiz.currentStep().view.render();
             }
@@ -80,8 +69,15 @@
             var step = this;
             step.view = function() { return new Backbone.View; };
         },
-        getIndex: function() {
-            return this.get('wizard').indexOf(this);
+        myIndex: function() {
+            return this.wizard().steps().indexOf(this);
+        },
+        wizard: function() {
+            return this.get('wizard');
+        },
+        setWizard: function(wiz) {
+            this.set({'wizard':wiz});
+            return this
         }
     });
 })(window);

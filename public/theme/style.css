@@ -2244,6 +2244,7 @@ form {
     padding-top:3px;
     padding-right:4px;
     padding-bottom:3px;
+    display: block;
 }
 
 #signViewBottomBoxContainerRight

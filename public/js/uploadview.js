@@ -11,11 +11,10 @@
             this.choose = $("#jschooseprocess").html();
         },
         render: function() {
-            console.log("selectprocessview.render");
             var view = this;
             $(view.el).children().detach();
             var model = view.model;
-            var wiz = model.get('wizard');
+            var wiz = model.wizard();
             $(view.el).append(this.text);
             $.each(model.get('processes'), function(i, v) {
                 var n = $(view.choose);
@@ -42,11 +41,10 @@
             this.template = $("#jschoosetemplate").html();
         },
         render: function() {
-            console.log("selectprocessview.render");
             var view = this;
             $(view.el).children().detach();
             var model = view.model;
-            var wiz = model.get('wizard');
+            var wiz = model.wizard();
             var t = $(view.text);
             t.find("a.jswizardback").click(function() {
                 wiz.previousStep();
@@ -120,19 +118,16 @@
             //it's a hack but something must be interfering
             // with the click event
             $("a.jsback1").live('click', function() {
-                console.log("hello");
-                if(model.get('wizard'))
-                    model.get('wizard').previousStep();
+                if(model.wizard())
+                    model.wizard().previousStep();
                 return false;
             });
-
         },
         render: function() {
-            console.log("selecttempalteview.render");
             var view = this;
             var el = $(view.el);
             var model = view.model
-            var wiz = model.get('wizard');
+            var wiz = model.wizard();
 
             var documentsTable = KontraList.init({
                 name : "Templates table",
@@ -186,7 +181,6 @@
 
         var sp = new WizardStep;
 
-        console.log("a");
         sp.set({processes:
                 [
                     {name: "Contract",
@@ -207,7 +201,7 @@
                 ]
                },
                {silent: true});
-        console.log("b");
+
         var spview = new SelectProcessView({model: sp});
 
         var up = new WizardStep;

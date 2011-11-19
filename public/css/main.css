@@ -419,7 +419,7 @@ a.new-btn-small.black p {
     margin-left: 0px;
 }
 
-#top-container .toplink :hover
+#top-container .moveleft .toplink:hover
 {
   color: #FFFFFF;
 }  
@@ -1647,84 +1647,109 @@ top: 0px;
 }
 
 .group-portrait-image a.group {
-      background: url(../img/group-portrait-1.jpg) center no-repeat;
+      background: url(../img/team/group-1.jpg) center no-repeat;
 }
 
 .group-portrait-image a.group:hover {
-      background: url(../img/group-portrait-2.jpg) center no-repeat;
+      background: url(../img/team/group-2.jpg) center no-repeat;
 }
 
 .portrait-image a.lukas {
-      background: url(../img/lukas-portrait-1.jpg) center no-repeat;
+      background: url(../img/team/lukas-1.jpg) center no-repeat;
 }
 
 .portrait-image a.lukas:hover {
-      background: url(../img/lukas-portrait-2.jpg) center no-repeat;
+      background: url(../img/team/lukas-2.jpg) center no-repeat;
 }
 
 .portrait-image a.gracjan {
-      background: url(../img/gracjan-portrait-1.jpg) center no-repeat;
+      background: url(../img/team/gracjan-1.jpg) center no-repeat;
 }
 
 .portrait-image a.gracjan:hover {
-      background: url(../img/gracjan-portrait-2.jpg) center no-repeat;
+      background: url(../img/team/gracjan-2.jpg) center no-repeat;
 }
 
 .portrait-image a.viktor {
-      background: url(../img/viktor-portrait-1.jpg) center no-repeat;
+      background: url(../img/team/viktor-1.jpg) center no-repeat;
 }
 
 .portrait-image a.viktor:hover {
-      background: url(../img/viktor-portrait-2.jpg) center no-repeat;
+      background: url(../img/team/viktor-2.jpg) center no-repeat;
 }
 
 .portrait-image a.mariusz {
-      background: url(../img/mariusz-portrait-1.jpg) center no-repeat;
+      background: url(../img/team/mariusz-1.jpg) center no-repeat;
 }
 
 .portrait-image a.mariusz:hover {
-      background: url(../img/mariusz-portrait-2.jpg) center no-repeat;
+      background: url(../img/team/mariusz-2.jpg) center no-repeat;
 }
 
 .portrait-image a.eric {
-      background: url(../img/missing-portrait.png) center no-repeat;
+      background: url(../img/team/eric-1.jpg) center no-repeat;
 }
 
 .portrait-image a.eric:hover {
-      background: url(../img/missing-portrait.png) center no-repeat;
+      background: url(../img/team/eric-2.jpg) center no-repeat;
 }
 
 .portrait-image a.emily {
-      background: url(../img/emily-portrait-1.jpg) center no-repeat;
+      background: url(../img/team/emily-1.jpg) center no-repeat;
 }
 
 .portrait-image a.emily:hover {
-      background: url(../img/emily-portrait-2.jpg) center no-repeat;
+      background: url(../img/team/emily-2.jpg) center no-repeat;
 }
 
-.portrait-image a.oskar {
-      background: url(../img/missing-portrait.png) center no-repeat;
+.portrait-image a.tim {
+      background: url(../img/team/tim-1.jpg) center no-repeat;
 }
 
-.portrait-image a.oskar:hover {
-      background: url(../img/missing-portrait.png) center no-repeat;
+.portrait-image a.tim:hover {
+      background: url(../img/team/tim-2.jpg) center no-repeat;
 }
 
-.portrait-image a.nazli {
-      background: url(../img/nazli-portrait-1.jpg) center no-repeat;
+.portrait-image a.fredrica {
+      background: url(../img/team/fredrica-1.jpg) center no-repeat;
 }
 
-.portrait-image a.nazli:hover {
-      background: url(../img/nazli-portrait-2.jpg) center no-repeat;
+.portrait-image a.fredrica:hover {
+      background: url(../img/team/fredrica-2.jpg) center no-repeat;
 }
 
-.portrait-image a.belle {
-      background: url(../img/missing-portrait.png) center no-repeat;
+.portrait-image a.daniel {
+      background: url(../img/team/daniel-1.jpg) center no-repeat;
 }
 
-.portrait-image a.belle:hover {
-      background: url(../img/missing-portrait.png) center no-repeat;
+.portrait-image a.daniel:hover {
+      background: url(../img/team/daniel-2.jpg) center no-repeat;
 }
+
+.portrait-image a.josef {
+      background: url(../img/team/josef-1.jpg) center no-repeat;
+}
+
+.portrait-image a.josef:hover {
+      background: url(../img/team/josef-2.jpg) center no-repeat;
+}
+
+.portrait-image a.magnus {
+      background: url(../img/team/magnus-1.png) center no-repeat;
+}
+
+.portrait-image a.magnus:hover {
+      background: url(../img/team/magnus-2.png) center no-repeat;
+}
+
+.portrait-image a.andrzej {
+      background: url(../img/team/andrzej-1.jpg) center no-repeat;
+}
+
+.portrait-image a.andrzej:hover {
+      background: url(../img/team/andrzej-2.jpg) center no-repeat;
+}
+
 
 .box .about-container li .portrait-image:before {
 	bottom: 3px;
