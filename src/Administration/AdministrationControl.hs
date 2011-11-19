@@ -142,7 +142,7 @@ showAdminUsers (Just userId) = onlySuperUser $ do
       renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanies :: Kontrakcja m => m String
-showAdminCompanies = onlySuperUser $  adminCompaniesPage 
+showAdminCompanies = onlySuperUser $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySuperUser $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
@@ -151,7 +151,7 @@ jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySuperUser $ do
     params <- getListParamsNew
     allCompanies <- runDBQuery $ GetCompanies Nothing
-    let companies = companiesSortSearchPage params allCompanies 
+    let companies = companiesSortSearchPage params allCompanies
     return . JSObject . toJSObject $
         [("list", JSArray $ map (\company ->
             JSObject . toJSObject $
@@ -171,7 +171,7 @@ jsonCompanies = onlySuperUser $ do
         ]
   where
     jsFromString = JSString . toJSString
-    jsFromBString = JSString . toJSString . BS.toString 
+    jsFromBString = JSString . toJSString . BS.toString
 
 companiesSortSearchPage :: ListParams -> [Company] -> PagedList Company
 companiesSortSearchPage =
@@ -183,19 +183,19 @@ companiesSortFunc "companynameREV"    = viewComparingRev (companyname    . compa
 companiesSortFunc "companynumber"     = viewComparing    (companynumber  . companyinfo)
 companiesSortFunc "companynumberREV"  = viewComparingRev (companynumber  . companyinfo)
 companiesSortFunc "companyaddress"    = viewComparing    (companyaddress . companyinfo)
-companiesSortFunc "companyaddressREV" = viewComparingRev (companyaddress . companyinfo) 
+companiesSortFunc "companyaddressREV" = viewComparingRev (companyaddress . companyinfo)
 companiesSortFunc "companyzip"        = viewComparing    (companyzip     . companyinfo)
-companiesSortFunc "companyzipREV"     = viewComparingRev (companyzip     . companyinfo) 
+companiesSortFunc "companyzipREV"     = viewComparingRev (companyzip     . companyinfo)
 companiesSortFunc "companycity"       = viewComparing    (companycity    . companyinfo)
-companiesSortFunc "companycityREV"    = viewComparingRev (companycity    . companyinfo) 
+companiesSortFunc "companycityREV"    = viewComparingRev (companycity    . companyinfo)
 companiesSortFunc "companycountry"    = viewComparing    (companycountry . companyinfo)
-companiesSortFunc "companycountryREV" = viewComparingRev (companycountry . companyinfo) 
+companiesSortFunc "companycountryREV" = viewComparingRev (companycountry . companyinfo)
 companiesSortFunc _                   = const $ const EQ
 
 companiesSearchFunc :: SearchingFunction Company
 companiesSearchFunc search_str company =
      any (isInfixOf (map toUpper search_str) . (map toUpper))
-    $ [ 
+    $ [
         show $ companyid company
       , BS.toString $ companyname    $ companyinfo $ company
       , BS.toString $ companynumber  $ companyinfo $ company
@@ -957,7 +957,7 @@ resealFile docid = onlySuperUser $ do
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlySuperUser $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ query $ GetDocumentByDocumentID did
+  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do

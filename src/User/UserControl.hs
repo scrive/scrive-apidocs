@@ -16,7 +16,7 @@ import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
-import Doc.DocState
+import Doc.Transitory
 import Company.Model
 import InputValidation
 import Kontra
@@ -785,7 +785,7 @@ handleAccountRemovalGet aid hash = do
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ update . ArchiveDocuments user $ [documentid doc]
+  _ <- guardRightM $ doc_update . ArchiveDocuments user $ [documentid doc]
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 

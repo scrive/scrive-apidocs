@@ -1,22 +1,4 @@
-"!Template name","(REGION_SE, LANG_SE)","(REGION_SE, LANG_EN)","(REGION_GB, LANG_EN)"
-_AddCompanyAccount,"Lägg till",,Add
-_Attachment,Bilaga:,,Attachment:
-_Attachments,Bilagor,,Attachments
-_BelowPriceTable1,"<h3>Gratis för privatpersoner och enmansföretagare</h3>
-                             <p>Det finns tusen skäl varför alla
- bör signera sina dokument elektroniskt. Vår ambition är att
- alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
- möjlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
- vi ett supportfritt konto för alla mindre användare. 1 användare,
- 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"<h3>Free for personal use</h3>
-                    <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
-_Bemefit1,"Nöjdare kunder",,"More satisfied customers"
-_Bemefit1Body,"Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers´ customers. Scrive decrease the administrative burden of all parties.",
-_Bemefit2,"Snabbare avslut",,"Quick completion"
-_Bemefit2Body,"Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
- din omsättning.",,"Less time on admin means more time to grow your business.  Professional tools to increase your profit."
-_Bemefit3,"Överallt. Alltid.",,"Any time.  Any place."
-_Bemefit3Body,"Arbeta när du vill och var du vill. Glöm problemen med att buda
+Hill. Glöm problemen med att buda
  dokument jorden runt.",,"Work whenever and wherever you want. No more waiting for expensive couriers."
 _Bemefit4,"Starkare bevis",,"Peace of mind"
 _Bemefit4Body,"Scrive verifierar transaktionen och stärker din bevisposition
@@ -35,41 +17,6 @@ _Bemefit7Body,"Visa att ni tar ansvar. Skippa pappersavtalandet och minska din
 _Bemefit8,"Image branding",,"Improve perception"
 _Bemefit8Body,"Visa era kunder att ni är i framkant och gillar att tänka i nya
  banor.",,"Show your customers how you're using the latest technology for mutual benefit."
-<<<<<<< HEAD
-"_ButtonCreateAccount","Skapa konto!",,"Create account!"
-"_CantRemoveActiveDocuments","Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
-"_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
-"_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
-"_CompanyAccounts","Företagskonton",,"Company Accounts"
-"_CreateAccount","Skapa konto!",,"Create account!"
-"_Document","Dokument",,"Document"
-"_DownloadPDF","Ladda ned PDF",,"Download PDF"
-"_English"," Engelska ",,"English"
-"_FillInEmail","Fyll i din e-postadress",,"Enter your email address"
-"_HeadAccountSettings","Kontoinställningar",,"Account settings"
-"_HeadMailApi","Scrive by Mail",,"Scrive by Mail"
-"_HeadUserInfo","Användaruppgifter",,"User info"
-"_InfoSelectTemplate"," Klicka på den mall du vill använda för att starta processen",,"  Click a template you want to use to start the process"
-"_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
-"_LanguageSettings","Regioninställningar",,"Region settings"
-"_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
-"_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
-"_MailAPILimitHead","Begränsningar",,"Limits"
-"_MailAPILimitsDaily","Daglig begränsning för processade mail",,"Daily limit of processed e-mails"
-"_MailAPILimitsProcessedToday","Mail processade idag:",,"Emails processed today:"
-"_MailAPILimitsResetToday","Återställ mail processade idag",,"Reset counter of e-mails processed today"
-"_MailAPIResetKey","API-nyckel",,"Reset API key"
-"_MailAPISettings","Inställningar",,"Settings"
-"_NewPassword","Nytt lösenord:",,"New password:"
-"_OfferReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för ",,"Are you sure you want to send reminders to the parties involved in the"
-"_OfferReminderBodyMulti2","offerter.          ",,"offers?          "
-"_OfferReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i offerter ",," Are you sure you want to send a reminder to the parties involved in the offer"
-"_OfferReminderHead","Skicka påminnelse",,"Send reminder"
-"_PartnersHead","Partners",,"Partners"
-"_PleaseAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
-"_PresentPassword","Nuvarande lösenord:",,"Present password:"
-"_PriceTableHead","                                                        <th>
-=======
 _ButtonCreateAccount,"Skapa konto!",,"Create account!"
 _CantRemoveActiveDocuments,"Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 _CantRemoveActiveOffers,"Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
@@ -103,7 +50,6 @@ _PartnersHead,Partners,,Partners
 _PleaseAcceptTOS,"Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
 _PresentPassword,"Nuvarande lösenord:",,"Present password:"
 _PriceTableHead,"<th>
->>>>>>> master
 
     <h3>Small</h3>
                       <p>Förbättra processerna i den mindre organisationen</p>
@@ -288,7 +234,6 @@ _Quote6By,"Martin Lindström, IPAS",,"Martin Lindström, IPAS"
 _QuoteOnVid,"”Processerna blir betydligt smidigare.”",,"""The sign process is much smoother."""
 _QuoteOnVidBy,"- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise",,"- Lisa Renander and Julia Hamrin, CEO and Sales Manager at Go
  Enterprise"
-<<<<<<< HEAD
 "_QuotesHead","Kunder berättar",,"What our customers think"
 "_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för ",,"Are you sure you want to send reminders to the parties involved in the "
@@ -328,47 +273,6 @@ _QuoteOnVidBy,"- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterpr
 "_Britain","Storbritanien",,"Britain"
 "_UserRegion","Land:",,"Country/Region:"
 "_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive är skapat
-=======
-_QuotesHead,"Kunder berättar",,"What our customers think"
-_ReadUnderstoodTOS,"Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
-_ReminderBodyIfMulti,"Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
-_ReminderBodyIfMulti2,dokument.,,documents?
-_ReminderBodyIfSingel,"Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet",,"Are you sure you want to send a reminder to the parties involved in the document"
-_ReminderBodyMulti,"Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
-_ReminderBodyMulti2,orderbekräftelse.,,"order confirmations?"
-_ReminderBodySingel,"Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
-_RepeatNewPassword,"Upprepa nytt lösenord:",,"Repeat new password:"
-_RequestedAttachments,"Bägarda bilagor:",,"Requested attachments:"
-_SaveChanges,"Spara ändringar",,"Save changes"
-_SaveSettings,"Spara inställningar",,"Save changes"
-_SearchCompanyAccount,"Sök underkonto",,"Search Sub Accounts"
-_SearchDoc,"Sök dokument",,"Search documents"
-_SearchTemplate,"Sök  mall",,"Search templates"
-_SendReminder,"Skicka påminnelse",,"Send reminder"
-_SortAttachment,Bilaga,,Attachment
-_SortCompany,Företag,,Company
-_SortDoc,Dokument,,Document
-_SortEmail,E-postadress,,"Email address"
-_SortParty,Parter,,Parties
-_SortReciever,Mottagare,,Recipient
-_SortSender,Avsändare,,Sender
-_SortStatus,Status,,Status
-_SortTemplate,Mall,,Template
-_SortTime,"Senaste händelse",,"Last event"
-_SortType,Typ,,Type
-_StepsH3Send,Skicka,,Send
-_StepsH3SendBody,"Ladda upp dokument,<br />välj mottagare, skicka!",,"Upload your document.<br/>Choose recipients. Send!"
-_StepsH3Sign,"Skriva på",,Sign
-_StepsH3SignBody,"Alla parter skriver på<br />elektroniskt.",,"Recipients simply <br />sign online."
-_StepsH3Store,"Spara och arkivera",,Store
-_StepsH3StoreBody,"Vi sparar dina dokument<br />tryggt och säkert.",,"We keep your documents<br />safe and secure."
-_Swedish,Svenska,,Swedish
-_UserLanguage,Användarspråk:,,"User language:"
-_Sweden,Sverige,,Sweden
-_Britain,Storbritanien,,Britain
-_UserRegion,Land:,,Country/Region:
-_aboutPagaMetaDescription,"Signera och arkivera dina avtal elektroniskt. Scrive är skapat
->>>>>>> master
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. Scrive is made
  by an ambitious, international team based in Stockholm."
 _aboutPageH1,"Om Scrive och teamet bakom",,"About Scrive and the team behind it"
@@ -733,28 +637,6 @@ _documentInfoTextTimedoutNotsignedbymeImauthorHead,"Förfallodatum har passerat"
 _documentInfoTextTimedoutSignedbymeImauthorBody,"Samtliga parter undertecknade inte dokumentet i tid. Förfallodatum
  har passerat och därför har dokumentet avbrutits.",,"All parties did not sign the document in time. The expiration
  date has passed and the document process has therefore been canceled."
-<<<<<<< HEAD
-"_documentInfoTextTimedoutSignedbymeImauthorHead","Förfallodatum har passerat",,"Expiration date has passed"
-"_editInviteTextDialogFooterOwnMessage","Skriv eget meddelande",,"Write your own message"
-"_editInviteTextDialogHead","Hälsningsmeddelande",,"Invitation message"
-"_editinvitetextlink","JUSTERA HÄLSNINGSMEDDELANDE",,"ADJUST INVITATION MESSAGE"
-"_editinvitetextlinkInviteText","HÄLSNINGSMEDDELANDE",,"INVITATION MESSAGE"
-"_eleg","E-legitimation",,"E-ID"
-"_email","E-post",,"Email"
-"_emptyOrNotValidEmail","Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.",,"You have not entered an email address, or the email address is incorrect. Please try again."
-"_fieldName","Namnge fältet",,"Name field"
-"_fieldNameFieldName","namn på fält",,"field name"
-"_fieldValueFieldName","värde på fält",,"field value"
-"_firstPageMetaDescription","Scrive | E-signera offerter och avtal | 010-195 99 15",,"Scrive | E-sign tenders and contracts | +46 10 195 99 15"
-"_firstname","Förnamn",,"First name"
-"_flashAuthorSigned","Dokumentet har undertecknats.",,"The document has been signed."
-"_flashDocumentDraftSaved","Du har sparat dokumentet. ",,"Your document has been saved."
-"_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
-"_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
-"_flashMessageAccountRemovedFromSign","Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
-"_flashMessageCompanyAccountDeleted","Kontot har tagits bort.",,"The account was successfully deleted."
-"_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
-=======
 _documentInfoTextTimedoutSignedbymeImauthorHead,"Förfallodatum har passerat",,"Expiration date has passed"
 _editInviteTextDialogFooterOwnMessage,"Skriv eget meddelande",,"Write your own message"
 _editInviteTextDialogHead,Hälsningsmeddelande,,"Invitation message"
@@ -773,9 +655,8 @@ _flashDocumentDraftSaved,"Du har sparat dokumentet.",,"Your document has been sa
 _flashDocumentTemplateSaved,"Din mall är sparad.",,"Your template has been saved."
 _flashMessageAccountActivatedFromSign,"Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
 _flashMessageAccountRemovedFromSign,"Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
-_flashMessageAccountsDeleted,"Account(s) successfully deleted (spec/translate me please).",,"The account(s) were successfully deleted."
+_flashMessageCompanyAccountDeleted,"Account(s) successfully deleted (spec/translate me please).",,"The account(s) were successfully deleted."
 _flashMessageActivationLinkNotValid,"Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
->>>>>>> master
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
 _flashMessageAttachmentArchiveDone,"Valda bilagor har blivit raderade.",,"The selected attachments have been deleted."
@@ -860,40 +741,6 @@ _flashMessageSingleTemplateShareDone,"$docname$ har blivit delad inom din organi
 _flashMessageTemplateArchiveDone,"Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 _flashMessageThanksForTheQuestion,"Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
-<<<<<<< HEAD
-"_flashMessageWeWillCallYouSoon","Tack. Vi kommer att kontakta dig på $phone$ inom 24 timmarna.",,"Thanks.  We'll call you at $phone$ within the next 24 hours."
-"_flashMessageUserActivated","Välkommen till Scrive!",,"Welcome to Scrive!"
-"_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.",,"You have already activated this account."
-"_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.",,"Your account settings have been saved."
-"_flashMessageCompanyCreated","Ditt företag har skapats. Nu kan du bjuda in andra att gå med dig.",,"Your company has been created.  Now you can invite others to join you."
-"_flashMessageUserHasBecomeSubaccount","Du är nu ett konto i $companyname$ och rättigheter till dina dokument har överförts.",,"You are now an account in $companyname$ and the rights to your documents have been transferred."
-"_flashMessageUserHasLiveDocs","Det går inte att ta bort eftersom konto har dokument i undertecknandet processen.",,"Unable to delete because account has documents in the signing process."
-"_toolTipUserHasLiveDocs","Det går inte att ta bort eftersom konto har dokument i undertecknandet processen.",,"Unable to delete because account has documents in the signing process."
-"_flashMessageUserPasswordChanged","Ditt lösenord har ändrats.",,"Your password has been changed."
-"_flashMessageUserSignupDone","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
- till din inkorg.",,"Your account has been created. An email containing your account details has been sent to your inbox."
-"_flashMessageUserWithSameEmailExists","En användare med samma e-post existerar redan.",,"A user with this email already exists."
-"_flashMessageViralInviteSent","Inbjudan har skickats!",,"The invitation has been sent!"
-"_flashRemindMailSentNotSigned","En påminnelse har skickats till",,"A reminder has been sent to"
-"_flashRemindMailSentSigned","Dokumentet har skickats till",,"The document has been sent to"
-"_forgotpassword","Glömt lösenord",,"Forgot password"
-"_friends","Vänner",,"Friends"
-"_from","från",,"from"
-"_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
-"_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
-"_h3CreateAccount","100 fria signaturer!",,"100 free signatures!"
-"_h3CreateAccountBody","Kom igång omedelbart. Inga installationer. Inga dolda kostnader.",,"Get started instantly. No installation. No hidden costs."
-"_headerAccount","Konto",,"Account"
-"_headerArchive","Arkiv",,"Archive"
-"_headerInvite","Bjud in",,"Invite"
-"_headerInviteFriend"," Bjud en vän på 1 månad fri användning. Skriv deras e-post här!",,"Enter email and invite a friend to one month free usage!"
-"_headerLogOut","Logga ut",,"Log Out"
-"_headerSend","Skicka",,"Send"
-"_hi","Hej",,"Hi"
-"_idFieldName","id",,"id"
-"_ie6NotSupported","Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen uppgradera till en modern webbläsare",,"Your browser, Internet Explorer 6, is no longer supported. Please upgrade to a newer version."
-"_invitationMailDeferredContentBodyFirst","Vi skickar detta meddelande för att meddela att vårt system har
-=======
 _flashMessageWeWillCallYouSoon,"Tack. Vi kommer att kontakta dig på $phone$ inom 24 timmarna.",,"Thanks.  We'll call you at $phone$ within the next 24 hours."
 _flashMessageUserActivated,"Välkommen till Scrive!",,"Welcome to Scrive!"
 _flashMessageUserAlreadyActivated,"Du har redan aktiverat detta konto.",,"You have already activated this account."
@@ -931,7 +778,6 @@ _hi,Hej,,Hi
 _idFieldName,id,,id
 _ie6NotSupported,"Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen uppgradera till en modern webbläsare",,"Your browser, Internet Explorer 6, is no longer supported. Please upgrade to a newer version."
 _invitationMailDeferredContentBodyFirst,"Vi skickar detta meddelande för att meddela att vårt system har
->>>>>>> master
  identifierat ett problem med mottagarens e-postserver. Antingen
  finns inte e-postadressen eller så ligger mottagarens e-postserver
  nere för tillfället. Vänligen kontrollera att mottagarens e-post
@@ -956,7 +802,6 @@ _invitationMailUndeliveredContentInstruction,"1. Kontrollera vilken som är mott
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
-<<<<<<< HEAD
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
 "_mailNewCompanyUserInviteContentBodyFirst","<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$invitername$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
 "_mailNewCompanyUserInviteContentBodyUserName","Användarnamn:",,"Username:"
@@ -969,24 +814,6 @@ _invitationMailUndeliveredContentInstruction,"1. Kontrollera vilken som är mott
 "_legalPageH2DocHandeling","Hantering av signerade dokument",,"Handling of signed documents"
 "_legalPageH2DocHandelingH31","Stämpling",,"Stamping"
 "_legalPageH2DocHandelingH31Body1","Då alla parter skrivit på ett dokument skickar vi dokumentet
-=======
-_invitationMailUndeliveredTitle,"Felaktig e-post",,"Incorrect email"
-_inviteCompanyAccountMailContentBodyFirst,"<strong>$supervisorname$</strong> har bjudit in dig till ett
-    underkonto på Scrive genom vilket du kan skriva avtal
-   för organisationen <strong>$companyname$</strong>. Observera
- att detta konto inte    är avsett för privat bruk då samtliga
- dokument i kontot    tillhör organisationen",,"<strong>$supervisorname$</strong> has invited you to be a sub account on Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use, and all this account's documents will belong to the organisation."
-_inviteCompanyAccountMailContentBodyUserName,Användarnamn:<br/>,,Username:<br/>
-_inviteCompanyAccountMailContentClickLink,"Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
-_inviteCompanyAccountMailTitle,"Inbjudan från $supervisorname$ till underkonto",,"Invitation from $supervisorname$"
-_inviteTextFieldName,"invite text",,"invite text"
-_invitetextSaveTemplate,"Spara mall",,"Save template"
-_lastname,Efternamn,,"Last name"
-_legalPageH1,JURIDIK,,LEGAL
-_legalPageH2DocHandeling,"Hantering av signerade dokument",,"Handling of signed documents"
-_legalPageH2DocHandelingH31,Stämpling,,Stamping
-_legalPageH2DocHandelingH31Body1,"Då alla parter skrivit på ett dokument skickar vi dokumentet
->>>>>>> master
  (kraftigt krypterat) till TrustWeaver där det förses med en
  kvalificerad signatur. Den kvalificerade signaturen går inte
  att förvanska och därmed säkerställer den att dokumentet inte
@@ -1744,15 +1571,8 @@ _mailCancelOfferByAuthorContentBody,"<strong>$creatorname$</strong>   har valt a
 _mailCancelOrderByAuthorContentBody,"<strong>$creatorname$</strong>   har valt att återkalla
  orderbekräftelsen  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$."
-<<<<<<< HEAD
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
-=======
-_mailCompanyAccountAcceptedContentBody,"$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
-_mailCompanyAccountAcceptedTitle,Kontoförfrågan,,"Account enquiry"
-_mailContractClosedContentAttached,"Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
-_mailContractClosedContentSignedBy,"Dokumentet <strong>$documenttitle$</strong> har undertecknats
->>>>>>> master
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 _mailDocumentAwaitingForAuthorContentInstruction,"För att färdigställa dokumentet gör följande:<br/>      1. Klicka
  på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
@@ -1806,7 +1626,6 @@ _mailInvitationToSignOrderContentPartys,Parter:,,Parties:
 _mailInvitationToSignOrderContentSender,Avsändare:,,Sender:
 _mailInvitationToSignOrderDefaultHeader,"<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order:"
-<<<<<<< HEAD
 "_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
 "_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
@@ -1821,33 +1640,6 @@ _mailInvitationToSignOrderDefaultHeader,"<strong>$creatorname$</strong> har skic
 "_mailTakeoverCompanyUserInfoBody","$invitername$ vill du gå med som ett företagskonto för $companyname$. Vi märker att du redan är medlem i ett annat företag. Om du vill flytta ditt konto kontakta oss på +46 (0) 10-195 99 15 eller info@scrive.se och vi kommer att kunna hjälpa dig.",,"$invitername$ would like you to join as a company account for $companyname$.  We notice that you are already a member of another company.  If you would like to move your account please contact us at +46 (0)10-195 99 15 or info@scrive.se and we will be able to help you out."
 "_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar",,"Best regards"
 "_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
-=======
-_mailInvitationToSignTitle,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-_mailInvitationToViewDefaultHeader,"<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
-_mailInvitationToViewDefaultHeaderWithService,"<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
-_mailInvitationToViewTitle,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-_mailInviteUserAsCompanyAccountContentBodyFirst,"Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
- huvudkonto till ditt konto. Om du accepterar blir ditt konto
- ett underkonto till avsändaren. Du kommer fortfarande att kunna
- se och administrera dina avtal, dock tar huvudkontot över ägarskapet
- över samtliga dokument i ditt konto.",,"The user $supervisor.fullnamePlusEmail$ has requested to become
- to become the supervisor of your account. If you accept, your
- account will become their sub account. You will still
- be able to see and administrate your agreements and the supervising
- account will take over the ownership over all your documents."
-_mailInviteUserAsCompanyAccountContentBodySecond,"Vänligen iaktta försiktighet innan du accepterar. Särskilt om
- du  har privata dokument i kontot.",,"Please review before accepting, especially if you have private
- documents in the account."
-_mailInviteUserAsCompanyAccountContentInstructionFirst,"Så här går du vidare",,"To continue"
-_mailInviteUserAsCompanyAccountContentInstructionSecond,"<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
- <li>Spara ned samtliga privata dokument till din dator</li>
- <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
- <li>Acceptera</li> <li>Ditt konto är nu underkonto</li>",,"<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now a sub account</li>"
-_mailInviteUserAsCompanyAccountContentLink,"Detta är länken nedan",,"This is the link below"
-_mailInviteUserAsCompanyAccountTitle,"Förfrågan att göra till underkonto",,"Sub account inquiry"
-_mailMismatchAuthorContentBestRegards,"Med vänliga hälsningar",,"Best regards"
-_mailMismatchAuthorContentBodyFirst,"Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
->>>>>>> master
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
  e-legitimation.",,"We are sorry, the information given to Scrive in <a href=""$doclink$"">$documenttitle$</a>
  does not match information from  <a href=""mailto:$bademail$"">$badname$</a>'s
@@ -1930,7 +1722,6 @@ _modalAccountRemovedBestRegards,"Med vänliga hälsningar<br/>        Team Scriv
 _modalAccountRemovedBody,"Din kopia av dokumentet ""$documenttitle$"" är nu raderat tillsammans
  från Scrive tillsammans med ditt konto.",,"Your duplicate for the document ""$documenttitle$"" is now deleted
  from Scrive together with your account."
-<<<<<<< HEAD
 "_modalAccountRemovedHeader","Raderat",,"Deleted"
 "_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
@@ -1945,40 +1736,6 @@ _modalAccountRemovedBody,"Din kopia av dokumentet ""$documenttitle$"" är nu rad
 "_modalErrorBody","Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
 "_modalErrorHeader","Oops, ett fel har uppstått",,"Oops, an error has occurred"
 "_modalLoginForSaveViewBody","Ditt konto har skapats. En aktiveringslänk har skickats till
-=======
-_modalAccountRemovedHeader,Raderat,,Deleted
-_modalAccountSetupBodyAcceptTOS,"Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
-_modalAccountSetupChoosePassword,"Välj lösenord:",,"Choose password:"
-_modalAccountSetupFooter,"Skapa konto!",,"Create account!"
-_modalAccountSetupHeaderAcceptTOS,"Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
-_modalAccountSetupIfPrivateAccount,Privatperson,,"Private person"
-_modalAccountSetupPosition,Position:,,Position:
-_modalAccountSetupRepeatPassword,"Upprepa lösenord:",,"Repeat password:"
-_modalDoYouWantToBeSubaccountBody,"Om du accepterar blir du underkonto till huvudkontot
-   $supervisor.fullnamePlusEmail$ och huvudkontot tar över
-         ägarskapet över samtliga dokument i ditt konto.  Är
- du	          säker att du vill acceptera?",,"If you accept to become subaccoount to the main account
-        $supervisor.fullnamePlusEmail$, the ownership of all
- your	           documents will be transferred to the main account.
- Are	          you sure you want to accept?"
-_modalDoYouWantToBeSubaccountFooterAccept,Acceptera,,Accept
-_modalDoYouWantToBeSubaccountHeader,"Vill du acceptera att bli underkonto?",,"Do accept becoming a sub account?"
-_modalErrorBody,"Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
-_modalErrorHeader,"Oops, ett fel har uppstått",,"Oops, an error has occurred"
-_modalInviteUserAsSubaccountBodySendRequest,"Skicka en förfrågan till användaren att bli ett underkonto
-         under ditt konto. Det betyder att du blir
- huvudkonto och kommer att ta över ägarskapet över samtliga underkontots
- dokument.",,"Send a request to the user to become a sub account to your
-      account. This means that you will become	         the  main
- account, and the ownership of all the documents in the sub account
- will be transferred to you."
-_modalInviteUserAsSubaccountBodySendSure,"Är du säker att du vill skicka förfrågan till användaren
- att bli	          underkonto?",,"Are you sure you want to send a request to become a
-          sub account?"
-_modalInviteUserAsSubaccountFooterSendRequest,"Skicka förfrågan",,"Send request"
-_modalInviteUserAsSubaccountHeaderSendRequest,"Skicka förfrågan?",,"Send request?"
-_modalLoginForSaveViewBody,"Ditt konto har skapats. En aktiveringslänk har skickats till
->>>>>>> master
  din inkorg.",,"Your account has been created. An activation link has been sent
  to your e-mail address."
 _modalLoginForSaveViewHeader,"Konto har skapats",,"The account has been created"
@@ -3425,7 +3182,6 @@ _signInEnglish,"Signera på engelska",,"Sign in English"
 _modalUserSignupDoneHeader,"Konto skapat",,"Account Saved"
 _modalUserSignupDoneBody,"Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till $email$.",,"Your account has been created. An email containing your account details has been sent to $email$."
-<<<<<<< HEAD
 "_GoBack","Gå tillbaka",,"Go back"
 "_signInEnglishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
 "_signInSwedish","Signera på svenska",,"Sign in Swedish"
@@ -3460,32 +3216,3 @@ _modalUserSignupDoneBody,"Ditt konto har skapats! Vi har skickat ett mail med di
 "_modalResendCompanyAccountInviteBody","Vänligen bekräfta att du vill skicka om inbjudan till",,"Please confirm that you would like to resend an invitation to"
 "_modalResendCompanyAccountInviteConfirm","Skicka",,"Send"
 "_pendingcompanyaccount","Väntar",,"Pending"
-=======
-_GoBack,"Gå tillbaka",,"Go back"
-_signInEnglishConfirmText,"<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
-_signInSwedish,"Signera på svenska",,"Sign in Swedish"
-_signInSwedishConfirmText,"<p>Vänligen bekräfta att du vill att parterna ska signera på svenska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på svenska.</p><p>Personnummer och e-legitimation är alternativ som tillkommer då de även är möjliga i Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in Swedish.</p><p>This means that all emails sent to the parts about this document will be written in Swedish.</p><p>Swedish options for using social security numbers and e-legitimation will be added.</p>"
-_benefitsTitle,Fördelar,,Benefits
-_productDescriptionTitle,Produkter,,Products
-_Product1,"Scrive by Cloud",,"Scrive by Cloud"
-_Product1Body,"Skicka inbjudan att signera ditt dokument från tjänsten online. Logga in och följ en process i tre enkla steg. <BR/> <a href='#' class='campaign-play-video'>Se demo</a>",,"Send invite to sign your document from the online service. Log in and follow a simple three step process. <BR/> <a href='#' class='campaign-play-video'>See demo</a>"
-_Product2,"Scrive by Mail",,"Scrive by Mail"
-_Product2Body,"Skicka inbjudan att signera ditt dokument direkt från din mailklient. Inga installationer, inget krångel. Det kan inte bli enklare.",,"Send invite to sign your document directly from your mail client. No installations, no hassle. Cant be simpler."
-_Product3,"Scrive API",,"Scrive API"
-_Product3Body,"Vill ni integrera tjänsten i era arbetsflöden? Vi tillhandahåller ett API med full integration av vår tjänst. Ändra färg och form efter vad som passar er bäst.",,"Do you want to integrate the service in your workflows? We provide an API with full integration of our service. Change color and forms after what fits you best."
-_Product4,"Alla typer av dokument",,"All types of documents"
-_Product4Body,"Scrive fungerar för alla dina processer och passar för alla typer av dokument. Skicka till exempel avtal, offerter eller orderbekräftelser med Scrive.",,"Scrive works for all types of processes and fits all types of documents. For example you can send contracts, tenders or order confirmations through Scrive."
-_legalModalTitle,"Artikel med John Kihlman, doktor i avtalsrätt",,
-_legalTitleFrontPage,"Juridiskt bindande såklart",,"Legally binding of course"
-_legalBodyFrontPage,"Lika bindande som en signatur på papper. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"As binding as a signature on paper."
-_modalAddCompanyAccountTitle,"Nytt Konto",,"New Account"
-_modalAddCompanyAccountInviteButtonText,"Bjud in",,Invite
-_newCompanyAccountButtonText,"Nytt Konto",,"New Account"
-"_onlyPDFAllowed","Sorry, only PDF uploads are allowed. Please try another file.",,"Sorry, only PDF uploads are allowed. Please try another file."
-"_fileTooLarge","Du har valt att bifoga en fil som överstiger 4 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a file that is larger than our limit of 4 MB. Please try another file."
-"_couldNotUpload","Sorry, the file could not be uploaded. Please try again or with a different file.",,"Sorry, the file could not be uploaded. Please try again or with a different file."
-_pageHeaderContactUs,"Kontakta Scrive",,"Contact Scrive"
-_contractauthorsignlastbuttontext,Signera,,Sign
-_offerauthorsignlastbuttontext,Bekräfta,,Confirm
-_orderauthorsignlastbuttontext,Bekräfta,,Confirm
->>>>>>> master
