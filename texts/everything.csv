@@ -39,7 +39,7 @@ _ButtonCreateAccount,"Skapa konto!",,"Create account!"
 _CantRemoveActiveDocuments,"Det går inte att radera dokument som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 _CantRemoveActiveOffers,"Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 _CantRemoveActiveOrders,"Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
-_CompanyAccounts,Underkonton,,"Sub Accounts"
+_CompanyAccounts,"Företagkonton",,"Company Accounts"
 _CreateAccount,"Skapa konto!",,"Create account!"
 _Document,Dokument,,Document
 _DownloadPDF,"Ladda ned PDF",,"Download PDF"
@@ -763,13 +763,10 @@ _flashMessageWeWillCallYouSoon,"Tack. Vi kommer att kontakta dig på $phone$ ino
 _flashMessageUserActivated,"Välkommen till Scrive!",,"Welcome to Scrive!"
 _flashMessageUserAlreadyActivated,"Du har redan aktiverat detta konto.",,"You have already activated this account."
 _flashMessageUserDetailsSaved,"Dina kontoändringar har sparats.",,"Your account settings have been saved."
-_flashMessageCompanyCreated,"A company has been created and your new details saved (in Swedish).",,"A company has been created and your new details saved."
-_flashMessageUserHasBecomeSubaccount,"Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
- och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a sub account to the main account $supervisor.fullnamePlusEmail$
- and the rights to your documents have been transferred."
-_flashMessageUserHasLiveDocs,"Unable to remove account(s) as there are some remaining documents
- that need to be finalised (spec/translate me please).",,"Unable to remove account(s) as there are some remaining documents
- that need to be finalised."
+_flashMessageCompanyCreated,"Ditt företag har skapats. Nu bjuder dina kollegor att gå med dig.",,"Your company has been created.  Now invite your colleagues to join you."
+_flashMessageUserHasBecomeCompanyAccount,"Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
+ och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a part of $companyname$ and the rights to your documents have been transferred."
+_flashMessageUserHasLiveDocs,"Det går inte att ta bort kontot som de har dokument som ännu inte avslutats.",,"Unable to remove account as they have documents that are not yet finalised."
 _flashMessageUserInvitedAsSubaccount,"Din förfrågan har skickats!",,"Your request has been sent!"
 _flashMessageUserPasswordChanged,"Ditt lösenord har ändrats.",,"Your password has been changed."
 _flashMessageUserSignupDone,"Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
@@ -1769,9 +1766,9 @@ _modalAccountSetupHeaderAcceptTOS,"Vänligen acceptera användarvillkoren",,"Ple
 _modalAccountSetupIfPrivateAccount,Privatperson,,"Private person"
 _modalAccountSetupPosition,Position:,,Position:
 _modalAccountSetupRepeatPassword,"Upprepa lösenord:",,"Repeat password:"
-_modalDoYouWantToBeSubaccountBody,"Om du accepterar blir du företagskonto till $companyname$ och huvudkontot tar över ägarskapet över samtliga dokument.  Är du säker att vill acceptera?",,"If you accept the invitation to join $companyname$ the ownership of all your documents will be transferred.  Are you sure you want to accept?"
-_modalDoYouWantToBeSubaccountFooterAccept,"Acceptera",,"Accept"
-_modalDoYouWantToBeSubaccountHeader,"Vill du acceptera att bli företagskonto?",,"Do you accept the invitation to become a company account?"
+_modalDoYouWantToBeCompanyAccountBody,"Om du accepterar blir du företagskonto till $companyname$ och huvudkontot tar över ägarskapet över samtliga dokument.  Är du säker att vill acceptera?",,"If you accept the invitation to join $companyname$ the ownership of all your documents will be transferred.  Are you sure you want to accept?"
+_modalDoYouWantToBeCompanyAccountFooterAccept,"Acceptera",,"Accept"
+_modalDoYouWantToBeCompanyAccountHeader,"Vill du acceptera att bli företagskonto?",,"Do you accept the invitation to become a company account?"
 _modalErrorBody,"Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
 _modalErrorHeader,"Oops, ett fel har uppstått",,"Oops, an error has occurred"
 _modalLoginForSaveViewBody,"Ditt konto har skapats. En aktiveringslänk har skickats till

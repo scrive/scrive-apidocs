@@ -51,14 +51,14 @@ mailNewCompanyUserInvite hostpart invitername companyname emailaddress personnam
     field "companyname"    $ BS.toString companyname
     field "ctxhostpart"    $ hostpart
 
-mailTakeoverPrivateUserInvite :: TemplatesMonad m => User -> User -> Company -> m Mail
-mailTakeoverPrivateUserInvite invited inviter company = do
+mailTakeoverPrivateUserInvite :: TemplatesMonad m => String -> User -> User -> Company -> m Mail
+mailTakeoverPrivateUserInvite hostpart invited inviter company = do
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
                    field "invitedname" $ getFullName invited
                    field "invitername" $ getFullName inviter
                    field "companyname" $ getCompanyName company
-                   field "linktojoin"  $ show $ LinkCompanyTakeover (companyid company)
+                   field "linktojoin"  $ hostpart ++ (show $ LinkCompanyTakeover (companyid company))
 
 mailTakeoverCompanyUserInfo :: TemplatesMonad m => User -> User -> Company -> m Mail
 mailTakeoverCompanyUserInfo invited inviter company = do

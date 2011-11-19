@@ -929,7 +929,7 @@ modalDoYouWantToBeCompanyAccount=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-	    <h1>$_modalDoYouWantToBeSubaccountHeader()$</h1>
+	    <h1>$_modalDoYouWantToBeCompanyAccountHeader()$</h1>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -937,7 +937,7 @@ modalDoYouWantToBeCompanyAccount=
       <div class="modal-content">
 	    <div class="recovery-container">
 	      <div class="body">
-	        <p>$_modalDoYouWantToBeSubaccountBody()$</p>
+	        <p>$_modalDoYouWantToBeCompanyAccountBody()$</p>
 	      </div>
 	    </div>
       </div>
@@ -949,7 +949,7 @@ modalDoYouWantToBeCompanyAccount=
       <a href="#" class="btn-small blue float-right submit">
 	    <div class="left"></div>
 	    <div class="label">
-	      <p>$_modalDoYouWantToBeSubaccountFooterAccept()$</p>
+	      <p>$_modalDoYouWantToBeCompanyAccountFooterAccept()$</p>
 	    </div>
 	    <div class="right"></div>
       </a>

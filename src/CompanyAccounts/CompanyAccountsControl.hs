@@ -277,7 +277,7 @@ sendNewCompanyUserMail inviter company user = do
 sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
-  mail <- mailTakeoverPrivateUserInvite user inviter company
+  mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()

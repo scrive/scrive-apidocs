@@ -234,7 +234,7 @@ flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()
 ###
 flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
-flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeSubaccount()$
+flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
 flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
 ###

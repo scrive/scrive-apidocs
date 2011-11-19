@@ -161,7 +161,7 @@ viewCompanyAccounts =
                             removeid: user.field("id"),
                             removeemail: user.field("email")
                           });
-                          var text = "$_listLocalDialogsBody()$" + getFullname(user) + "?";
+                          var text = "$_listLocalDialogsBody()$ " + getFullname(user) + "?";
                           var content = jQuery("<p/>").text(text);
                           console.log("text: " + text);
                           Confirmation.popup({
@@ -180,6 +180,9 @@ viewCompanyAccounts =
                         icon.addClass("icon");
                         icon.addClass("delete");
                         icon.addClass("gray");
+
+                        ToolTip.set({ on: icon,
+                                      tip: "$flashMessageUserHasLiveDocs()$" });
                         return icon;
                       }
                     } else {
