@@ -1,4 +1,22 @@
-Hill. Glöm problemen med att buda
+"!Template name","(REGION_SE, LANG_SE)","(REGION_SE, LANG_EN)","(REGION_GB, LANG_EN)"
+_AddCompanyAccount,"Lägg till",,Add
+_Attachment,Bilaga:,,Attachment:
+_Attachments,Bilagor,,Attachments
+_BelowPriceTable1,"<h3>Gratis för privatpersoner och enmansföretagare</h3>
+                             <p>Det finns tusen skäl varför alla
+ bör signera sina dokument elektroniskt. Vår ambition är att
+ alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
+ möjlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
+ vi ett supportfritt konto för alla mindre användare. 1 användare,
+ 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"<h3>Free for personal use</h3>
+                    <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
+_Bemefit1,"Nöjdare kunder",,"More satisfied customers"
+_Bemefit1Body,"Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers´ customers. Scrive decrease the administrative burden of all parties.",
+_Bemefit2,"Snabbare avslut",,"Quick completion"
+_Bemefit2Body,"Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
+ din omsättning.",,"Less time on admin means more time to grow your business.  Professional tools to increase your profit."
+_Bemefit3,"Överallt. Alltid.",,"Any time.  Any place."
+_Bemefit3Body,"Arbeta när du vill och var du vill. Glöm problemen med att buda
  dokument jorden runt.",,"Work whenever and wherever you want. No more waiting for expensive couriers."
 _Bemefit4,"Starkare bevis",,"Peace of mind"
 _Bemefit4Body,"Scrive verifierar transaktionen och stärker din bevisposition
@@ -234,51 +252,51 @@ _Quote6By,"Martin Lindström, IPAS",,"Martin Lindström, IPAS"
 _QuoteOnVid,"”Processerna blir betydligt smidigare.”",,"""The sign process is much smoother."""
 _QuoteOnVidBy,"- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise",,"- Lisa Renander and Julia Hamrin, CEO and Sales Manager at Go
  Enterprise"
-"_QuotesHead","Kunder berättar",,"What our customers think"
-"_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
-"_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för ",,"Are you sure you want to send reminders to the parties involved in the "
-"_ReminderBodyIfMulti2"," dokument.          ",," documents?          "
-"_ReminderBodyIfSingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet ",,"Are you sure you want to send a reminder to the parties involved in the document "
-"_ReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för ",,"Are you sure you want to send reminders to the parties involved in the"
-"_ReminderBodyMulti2"," orderbekräftelse.          ",,"order confirmations?          "
-"_ReminderBodySingel"," Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse ",," Are you sure you want to send a reminder to the parties involved in the order confirmation"
-"_RepeatNewPassword","Upprepa nytt lösenord:",,"Repeat new password:"
-"_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
-"_SaveChanges","Spara ändringar",,"Save changes"
-"_SaveSettings","Spara inställningar",,"Save changes"
-"_SearchCompanyAccount","Sök Konto",,"Search Accounts"
-"_SearchDoc","Sök dokument",,"Search documents"
-"_SearchTemplate","Sök  mall",,"Search templates"
-"_SendReminder","Skicka påminnelse",,"Send reminder"
-"_SortAttachment","Bilaga",,"Attachment"
-"_SortCompany","Företag ",,"Company"
-"_SortDoc","Dokument",,"Document"
-"_SortEmail","E-postadress",,"Email address"
-"_SortParty","Parter",,"Parties"
-"_SortReciever","Mottagare ",,"Recipient"
-"_SortSender","Avsändare ",,"Sender"
-"_SortStatus","Status",,"Status"
-"_SortTemplate","Mall",,"Template"
-"_SortTime","Senaste händelse",,"Last event"
-"_SortType","Typ",,"Type"
-"_StepsH3Send","Skicka",,"Send"
-"_StepsH3SendBody","Ladda upp dokument,<br />välj mottagare, skicka!",,"Upload your document.<br/>Choose recipients. Send!"
-"_StepsH3Sign","Skriva på",,"Sign"
-"_StepsH3SignBody","Alla parter skriver på<br />elektroniskt.",,"Recipients simply <br />sign online."
-"_StepsH3Store","Spara och arkivera",,"Store"
-"_StepsH3StoreBody","Vi sparar dina dokument<br />tryggt och säkert.",,"We keep your documents<br />safe and secure."
-"_Swedish"," Svenska ",,"Swedish"
-"_UserLanguage","Användarspråk:",,"User language:"
-"_Sweden","Sverige",,"Sweden"
-"_Britain","Storbritanien",,"Britain"
-"_UserRegion","Land:",,"Country/Region:"
-"_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive är skapat
+_QuotesHead,"Kunder berättar",,"What our customers think"
+_ReadUnderstoodTOS,"Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
+_ReminderBodyIfMulti,"Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
+_ReminderBodyIfMulti2,dokument.,,documents?
+_ReminderBodyIfSingel,"Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet",,"Are you sure you want to send a reminder to the parties involved in the document"
+_ReminderBodyMulti,"Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
+_ReminderBodyMulti2,orderbekräftelse.,,"order confirmations?"
+_ReminderBodySingel,"Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
+_RepeatNewPassword,"Upprepa nytt lösenord:",,"Repeat new password:"
+_RequestedAttachments,"Bägarda bilagor:",,"Requested attachments:"
+_SaveChanges,"Spara ändringar",,"Save changes"
+_SaveSettings,"Spara inställningar",,"Save changes"
+_SearchCompanyAccount,"Sök konto",,"Search Accounts"
+_SearchDoc,"Sök dokument",,"Search documents"
+_SearchTemplate,"Sök  mall",,"Search templates"
+_SendReminder,"Skicka påminnelse",,"Send reminder"
+_SortAttachment,Bilaga,,Attachment
+_SortCompany,Företag,,Company
+_SortDoc,Dokument,,Document
+_SortEmail,E-postadress,,"Email address"
+_SortParty,Parter,,Parties
+_SortReciever,Mottagare,,Recipient
+_SortSender,Avsändare,,Sender
+_SortStatus,Status,,Status
+_SortTemplate,Mall,,Template
+_SortTime,"Senaste händelse",,"Last event"
+_SortType,Typ,,Type
+_StepsH3Send,Skicka,,Send
+_StepsH3SendBody,"Ladda upp dokument,<br />välj mottagare, skicka!",,"Upload your document.<br/>Choose recipients. Send!"
+_StepsH3Sign,"Skriva på",,Sign
+_StepsH3SignBody,"Alla parter skriver på<br />elektroniskt.",,"Recipients simply <br />sign online."
+_StepsH3Store,"Spara och arkivera",,Store
+_StepsH3StoreBody,"Vi sparar dina dokument<br />tryggt och säkert.",,"We keep your documents<br />safe and secure."
+_Swedish,Svenska,,Swedish
+_UserLanguage,Användarspråk:,,"User language:"
+_Sweden,Sverige,,Sweden
+_Britain,Storbritanien,,Britain
+_UserRegion,Land:,,Country/Region:
+_aboutPagaMetaDescription,"Signera och arkivera dina avtal elektroniskt. Scrive är skapat
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. Scrive is made
  by an ambitious, international team based in Stockholm."
 _aboutPageH1,"Om Scrive och teamet bakom",,"About Scrive and the team behind it"
 _aboutPagePerson1,"Lukas Duczko",,"Lukas Duczko"
 _aboutPagePerson1Body,"Lukas har en bakgrund från Handelshögskolan i Stockholm och från finanssektorn från sin tid som affärsutvecklare på Klarna. Lukas grundade och var under en tid VD på bokningsbolaget SpokenWord AB som även drev en egen liveshow och TV-serie. Lukas är VD på Scrive.",,"Lukas has a background from Stockholm School of Economics and from the financial sector as business developer at Klarna. Lukas founded and was CEO of the booking agency SpokenWord AB that also hosted their own live show and TV series. Lukas is CEO at Scrive."
-_aboutPagePerson1Contact,"lukas@scrive.com<br/>	+46 704 56 04 04",,"lukas@scrive.com<br/> +46 704 56 04 04"
+_aboutPagePerson1Contact,"lukas@scrive.com<br/> +46 704 56 04 04",,"lukas@scrive.com<br/> +46 704 56 04 04"
 _aboutPagePerson1Position,CEO,,CEO
 _aboutPagePerson2,"Viktor Wrede",,"Viktor Wrede"
 _aboutPagePerson2Body,"Viktor har en bakgrund från Handelshögskolan i Stockholm och som elithandbollsspelare i Allsvenskan. Han har tidigare arbetat som affärsutvecklare åt familjeföretaget Kundia AB där han bland annat hjälpte till att utveckla kontrollsystem och affärsprocesser. Viktor är huvudansvarig för kundintegrationer och för Scrives affärsutveckling.",,"Viktor has a background from Stockholm School of Economics and as elite handboll-player in Allsvenskan. He has previously worked as a business developer at the family company Kundia AB where he, among other things, helped develop control systems and business processes. Viktor is respobsible for customer integrations and Scrives business development."
@@ -399,13 +417,13 @@ _clientsPageH1,"Kundutlåtanden om Scrive",,"Customer quotes about Scrive"
 _clientsPageTitle,"| Kunder",,"| Customers"
 _clientsPageTopBody,"<p>Scrive är en tjänst för att underteckna och arkivera avtal
  elektroniskt. Vi hjälper våra kunder att minska sina kostnader,
- öka sin omsättning och spara frustration. </p>						<br />						<p>Vi
+ öka sin omsättning och spara frustration. </p>                                         <br />                                          <p>Vi
  är övertygade om att våra främsta styrkor är vår förmåga att
  se kundens behov, vår kundnära personliga approach och vår förmåga
  att lösa oerhört komplexa och svåra juridiska och säkerhetsrelaterade
  problem på sätt som verkar enkla och tilltalande för slutkund.</p>",,"<p>Scrive is a service for signing and storing contracts electronically.
  We help our customers lower their costs, increase their
-profits and reduce frustration.</p>						<br />						<p>We are confident
+profits and reduce frustration.</p>                                             <br />                                          <p>We are confident
  that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve
  complex legal and security-related issues in a way that seems
  simple and appealing to the end user.</p>"
@@ -655,7 +673,7 @@ _flashDocumentDraftSaved,"Du har sparat dokumentet.",,"Your document has been sa
 _flashDocumentTemplateSaved,"Din mall är sparad.",,"Your template has been saved."
 _flashMessageAccountActivatedFromSign,"Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
 _flashMessageAccountRemovedFromSign,"Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
-_flashMessageCompanyAccountDeleted,"Account(s) successfully deleted (spec/translate me please).",,"The account(s) were successfully deleted."
+_flashMessageCompanyAccountDeleted,"Kontot har tagits bort.",,"The account was successfully removed."
 _flashMessageActivationLinkNotValid,"Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
  password"" to generate a new link."
@@ -802,18 +820,26 @@ _invitationMailUndeliveredContentInstruction,"1. Kontrollera vilken som är mott
        <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/>
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
-"_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
-"_mailNewCompanyUserInviteContentBodyFirst","<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$invitername$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
-"_mailNewCompanyUserInviteContentBodyUserName","Användarnamn:",,"Username:"
-"_mailNewCompanyUserInviteContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
-"_mailNewCompanyUserInviteTitle","Inbjudan från $invitername$ till $companyname$",,"Invitation from $invitername$ to join $companyname$"
-"_inviteTextFieldName","invite text",,"invite text"
-"_invitetextSaveTemplate","Spara mall",,"Save template"
-"_lastname","Efternamn",,"Last name"
-"_legalPageH1","JURIDIK",,"LEGAL"
-"_legalPageH2DocHandeling","Hantering av signerade dokument",,"Handling of signed documents"
-"_legalPageH2DocHandelingH31","Stämpling",,"Stamping"
-"_legalPageH2DocHandelingH31Body1","Då alla parter skrivit på ett dokument skickar vi dokumentet
+_invitationMailUndeliveredTitle,"Felaktig e-post",,"Incorrect email"
+_mailNewCompanyUserInviteContentBodyFirst,"<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$invitername$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
+_mailNewCompanyUserInviteContentBodyUserName,"Användarnamn:",,"Username:"
+_mailNewCompanyUserInviteContentClickLink,"Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
+_mailNewCompanyUserInviteTitle,"Inbjudan från $invitername$ till $companyname$",,"Invitation from $invitername$ to join $companyname$"
+_mailTakeoverPrivateUserInviteContentBodyFirst,"$invitername$ har bjudit in dig till bolaget $companyname$. Om du accepterar ditt konto och dokument kommer att ägas av $companyname$.",,"$invitername$ has invited you to join company $companyname$. If you accept your account and documents will be owned by $companyname$."
+_mailTakeoverPrivateUserInviteContentBodySecond,"Vänligen iaktta försiktighet innan du accepterar. Särskilt om du har privata dokument i kontot.",,"Please consider before accepting, especially if you have private documents in your account."
+_mailTakeoverPrivateUserInviteContentInstructionFirst,"Så här går du vidare",,"To continue"
+_mailTakeoverPrivateUserInviteContentInstructionSecond,"<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li><li>Spara ned samtliga privata dokument till din dator</li><li>Klicka på länken nedan</li><li>Läs meddelandet online</li><li>Acceptera</li><li>Ditt konto är nu underkonto</li>",,"<li>Check your Archive for private or personal documents.</li><li>Download and save these documents, then remove from your Archive.</li> <li>Click the link below</li><li>Follow the online instructions.</li>"
+_mailTakeoverPrivateUserInviteContentLink,"Detta är länken nedan",,"Click to accept the invitation"
+_mailTakeoverPrivateUserInviteTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
+_mailTakeoverCompanyUserInfoTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
+_mailTakeoverCompanyUserInfoBody,"$invitername$ vill du gå med som ett företagskonto för $companyname$. Vi märker att du redan är medlem i ett annat företag. Om du vill flytta ditt konto kontakta oss på +46 (0) 10-195 99 15 eller info@scrive.se och vi kommer att kunna hjälpa dig.",,"$invitername$ would like you to join as a company account for $companyname$.  We notice that you are already a member of another company.  If you would like to move your account please contact us at +46 (0)10-195 99 15 or info@scrive.se and we will be able to help you out."
+_inviteTextFieldName,"invite text",,"invite text"
+_invitetextSaveTemplate,"Spara mall",,"Save template"
+_lastname,Efternamn,,"Last name"
+_legalPageH1,JURIDIK,,LEGAL
+_legalPageH2DocHandeling,"Hantering av signerade dokument",,"Handling of signed documents"
+_legalPageH2DocHandelingH31,Stämpling,,Stamping
+_legalPageH2DocHandelingH31Body1,"Då alla parter skrivit på ett dokument skickar vi dokumentet
  (kraftigt krypterat) till TrustWeaver där det förses med en
  kvalificerad signatur. Den kvalificerade signaturen går inte
  att förvanska och därmed säkerställer den att dokumentet inte
@@ -856,12 +882,12 @@ _legalPageH2DocHandelingH32Body2,"<h4>TrustWeaver:</h4> Som beskrivet i säkerhe
  are stored:"
 _legalPageH2DocHandelingH32Body21,"<li>För att få lagra material på TrustWeaver måste man genomgå
  rigorösa kontroller för att hindra användare från att äventyra
- andra användares datasäkerhet.</li>			<li>Tjänsten är utformad
+ andra användares datasäkerhet.</li>                    <li>Tjänsten är utformad
  på sådant sätt att dokument inte kan tas ut och stoppas in igen.
  Därmed garanteras dokumentens integritet i ytterligare ett steg
  efter stämplingen med den kvalificerade signaturen.</li>",,"<li>To qualify as a TrustWeaver user, one has to go through rigorous
  controls to prevent users from endangering other user's data
- security.</li>			<li>The service was created in a way that makes
+ security.</li>                 <li>The service was created in a way that makes
  it impossible to remove a document and then put it back in.
  Therefore, the integrity of the document is further secured in
  addition to the stamping with the qualified signature.</li>"
@@ -1000,7 +1026,7 @@ _legalPageH2IntroH33Body3,"<li>Gör det enklare över lag att skriva på dokumen
  rent muntliga överenskommelser).</li><li>Genererar och säkrar
  högkvalitativt bevismaterial på förhand istället för som generellt
  är fallet idag: att man letar efter historiska bevis då konflikten
- 		    redan är ett faktum och mycket material kan ha försvunnit
+                    redan är ett faktum och mycket material kan ha försvunnit
  eller blivit oanvändbart.</li><li>Försöker göra vårt bästa för
  att informera användaren om vad som gäller och därmed främja
  välinformerat beslutsfattande.</li>",,"<li>As we generally make it easier to sign documents and thus reduce
@@ -1041,9 +1067,9 @@ _legalPageH2KeyLegalBody1,"I svensk rätt råder fri bevisprövning. Det betyder
  The following factors are the most important ones within Scrive's
  area of control affecting the strength of the evidence generated
  when using Scrive:"
-_legalPageH2KeyLegalBody2,"<li>Verifikation av identitet</li>	<li>Dokumentsigneringsprocess</li>	<li>Generering
- av data</li>	<li>Dokumentförvaring</li>",,"<li>Verification of identity</li>	<li>Document signing process</li>	<li>Data
- generation</li>	<li>Data storage</li>"
+_legalPageH2KeyLegalBody2,"<li>Verifikation av identitet</li>   <li>Dokumentsigneringsprocess</li>      <li>Generering
+ av data</li>   <li>Dokumentförvaring</li>",,"<li>Verification of identity</li> <li>Document signing process</li>       <li>Data
+ generation</li>        <li>Data storage</li>"
 _legalPageH2KeyLegalH31,"Verifikation av identitet",,"Verification of identity"
 _legalPageH2KeyLegalH31Body,"Svensk lagstiftning reglerar mycket sällan formen för signering
  (sk. formkrav). Huvudregeln är att en överenskommelse är juridiskt
@@ -1121,11 +1147,11 @@ _legalPageH2KeyLegalH32Body3,"<h4>Juridisk reflektion:</h4> E-postidentifiering 
  domain specific e-mail addresses such as PersonName@CompanyDomain.com.
  There are two reasons for this:"
 _legalPageH2KeyLegalH32Body31,"<li>Det går inte att vara anonym domänägare. Därmed är domänägaren
- alltid känd.</li>	<li>De domänspecifika adresserna är inte fria
+ alltid känd.</li>      <li>De domänspecifika adresserna är inte fria
  utan i standardfallet delas de ut genom personliga relationer
  inom organisationen och därmed är den interna verifieringen
  stark.</li>",,"<li>It is impossible to be an anonymous domain owner. Thus, the
- domain oner is always known.</li>	<li>The domain specific addresses
+ domain oner is always known.</li>      <li>The domain specific addresses
  are not accessible by anyone, but access are distributed and
  certified through relationships within the organisation. This
  makes the identification of the user very strong.</li>"
@@ -1189,7 +1215,7 @@ _legalPageH2KeyLegalH33Body2,"<li>Första steget är då parten införskaffar si
  genom att logga in på sin internetbank. För att kunna logga
  in på internetbanken måste du först ha skaffat ett konto på
  banken genom att identifiera dig med ID-kort eller målsmans
- godkännande.</li>	<li>I processen när parten genom internetbanken
+ godkännande.</li>      <li>I processen när parten genom internetbanken
  installerar sin e-legitimation på datorn ombeds den definiera
  en stark kod som den sedan ska använda för att verifiera sig
  vid användning av legitimationen. Vid tillfället då parterna
@@ -1198,21 +1224,21 @@ _legalPageH2KeyLegalH33Body2,"<li>Första steget är då parten införskaffar si
  sig genom att skriva in sin e-legitimationskod. För att verifiera
  partens identitet kommunicerar e-legitimationsklienten med certifikatsutfärdarens
  server som kontrollerar partens personuppgifter och om allting
- stämmer så accepteras partens identitet.</li>	<li>I sista steget
+ stämmer så accepteras partens identitet.</li>  <li>I sista steget
  kontrollerar Scrive partens e-legitimation mot personuppgifter
  på avsedd undertecknande part enligt definition från dokumentutfärdaren.
  Om uppgifterna från e-legitimationen matchar med dokumentutfärdarens
  godkänns underskriften av Scrive.</li>",,"<li>The first step of identification is when the user obtains
  his e-ID by logging in at his online bank. To be able to log
  in at the bank, you first have to get an account in the bank
- and identify yourself using your ID or legal guardian.</li>	<li>Where the person installs his e-ID on the computer,
+ and identify yourself using your ID or legal guardian.</li>    <li>Where the person installs his e-ID on the computer,
  he is asked to select a strong password for identification when
  using the e-ID. When a party are about to sign a document with
  the e-ID, the e-ID client is opened on the computer, and the
  party identifies himself by writing the strong password selected
  previously. To confirm the party's identity, the e-ID client
  Communicates with the e-ID provider's server that confirms the
- party's ID. </li>	<li>In the last step, Scrive compares the
+ party's ID. </li>      <li>In the last step, Scrive compares the
  party's e-ID with the personal info given by the creator of
  the document. If everything matches, the signature is accepted
  by Scrive.</li>"
@@ -1345,20 +1371,20 @@ _legalPageH2ProofH31Body6,"<li>Vi begränsar antalet individer med tillgång til
  kärna. Endast vår tekniska chef och ytterligare två utvalda
  tekniker har tillgång till att göra ändringar i våra servrar.
  Därmed kan endast ändringar genomföras av en begränsad och väl
- definierad grupp individer.</li>	<li>Samtliga anställda får
+ definierad grupp individer.</li>       <li>Samtliga anställda får
  underteckna strikta avtal som reglerar vad som är tillåtet inom
  ramarna för arbetsplatsen och samtliga anställda synas grundligt
- innan de kan få anställning på Scrive.</li>	<li>Systemet loggar
+ innan de kan få anställning på Scrive.</li>    <li>Systemet loggar
  all aktivitet på våra servrar. Vi registrerar samtliga ändringar,
  när de utförts och av vem. Därmed finns alltid full spårbarhet
  av ändringar genomförda i systemet.</li>",,"<li>We limit the number of individuals with access to the core
  of the system. Only our CTO and another two carefully selected
  technicians have access to make changes in our servers. Therefore,
  changes can only be made by a small, and carefully selected
- group of individuals.</li>	<li>All employees have to sign strict
+ group of individuals.</li>     <li>All employees have to sign strict
  contracts regulating what is allowed within the context of the
  work, and all employees are examined thoroughly before being
- employed at Scrive.</li>	<li>The system logs all activities of our
+ employed at Scrive.</li>       <li>The system logs all activities of our
  our servers. We register all changes, when they occur, and
  who preforms them. Thereby, all changes in the system are traceable.</li>"
 _legalPageH2ProofH32,Bevissäkring,,"Securing evidence"
@@ -1385,16 +1411,16 @@ _legalPageH2ProofH32Body1,"Bevis måste inte bara genereras på rätt sätt utan
  allow material to be extracted, distorted and put back in again.
  The following types of material are stored in the way described
  above:"
-_legalPageH2ProofH32Body2,"<li>Valda delar av våra loggar (dagligen)</li>	<li>Vår tjänst,
+_legalPageH2ProofH32Body2,"<li>Valda delar av våra loggar (dagligen)</li>       <li>Vår tjänst,
  själva mjukvarumaskinen som genererar de undertecknade dokumenten
- (efter varje systemuppdatering)</li>	<li>Vår tjänst, hur den
+ (efter varje systemuppdatering)</li>   <li>Vår tjänst, hur den
  ser ut för användaren när den undertecknar dokumenten (efter
- varje systemuppdatering)</li>	<li>Samtligavåratestdokument (efter
- varje systemuppdatering)</li>",,"<li>Selected parts of our logs (daily)</li>	<li>Our service,
+ varje systemuppdatering)</li>  <li>Samtligavåratestdokument (efter
+ varje systemuppdatering)</li>",,"<li>Selected parts of our logs (daily)</li>   <li>Our service,
  the software itself that generates the signed documents (after
- each system update)</li>	<li>Our service, how it looks from
+ each system update)</li>       <li>Our service, how it looks from
  the user's point of view when he/she signs a document (after each
- system update)</li>	<li>All of our test documents (after each
+ system update)</li>    <li>All of our test documents (after each
  system update)</li>"
 _legalPageH2SignProcess,Dokumentsigneringsprocess,,"Document signing process"
 _legalPageH2SignProcessH31,Användargränssnitt,,"User interface"
@@ -1409,98 +1435,98 @@ _legalPageH2SignProcessH31Body1,"En förutsättning, enligt svensk lagstiftning,
  If this is not the case, the contract should be considered invalid. We have developed the following
  steps to ensure that all parties involved understand that they
  are signing, and what they are signing:"
-_legalPageH2SignProcessH31Body2Table1,"<td>1</td>		<td>Avsändare</td>		<td>Avsändaren skapar ett konto
+_legalPageH2SignProcessH31Body2Table1,"<td>1</td>               <td>Avsändare</td>              <td>Avsändaren skapar ett konto
  online på tjänsten Scrive, kommunicerar med en person som
  bjuder in till ett konto eller skapar ett konto i slutsteget
  då den har varit mottagande part i ett dokument skickat genom
- Scrive. Avsändaren antas här ha blivit införstådd i tjänsten.</td>",,"<td>1</td>		<td>Sender</td>		<td>The sender creates an account
+ Scrive. Avsändaren antas här ha blivit införstådd i tjänsten.</td>",,"<td>1</td>               <td>Sender</td>         <td>The sender creates an account
  online in Scrive, communicates with another user who is invited
  to an account, or creates an account in the last step of a signing
  process through Scrive in which it was a signatory. The sender
  is assumed to understand the service.</td>"
-_legalPageH2SignProcessH31Body2Table10,"<td>10</td>		<td>Mottagare</td>		<td>Då mottagaren tryckt på
+_legalPageH2SignProcessH31Body2Table10,"<td>10</td>             <td>Mottagare</td>              <td>Då mottagaren tryckt på
  knappen ”Underteckna” visas ett pop-up- fönster där sändaren
  frågas om den verkligen är säker på att den vill underteckna
- dokumentet.</td>",,"<td>10</td>		<td>Recipient</td>		<td>When the recipient presses
+ dokumentet.</td>",,"<td>10</td>                <td>Recipient</td>              <td>When the recipient presses
  the button ""Sign"", a pop-up shows where the signatory is asked
  if it really wants to sign the document.</td>"
-_legalPageH2SignProcessH31Body2Table11,"<td>11</td>		<td>Mottagare</td>		<td>Slutligen, då dokumentet
+_legalPageH2SignProcessH31Body2Table11,"<td>11</td>             <td>Mottagare</td>              <td>Slutligen, då dokumentet
  är undertecknat visas en informationstext som konstaterar att
- mottagaren har undertecknat dokumentet.</td>",,"<td>11</td>		<td>Recipient</td>		<td>Finally, when the document
+ mottagaren har undertecknat dokumentet.</td>",,"<td>11</td>            <td>Recipient</td>              <td>Finally, when the document
  has been signed, an informative text appears, telling the recipient
  that the document has been signed.</td>"
-_legalPageH2SignProcessH31Body2Table12,"<td>12</td>		<td>Mottagare &amp; Avsändare</td>		<td>När samtliga
+_legalPageH2SignProcessH31Body2Table12,"<td>12</td>             <td>Mottagare &amp; Avsändare</td>              <td>När samtliga
  parter undertecknat dokumentet stämplar Scrive det med dokumentuppgifter
  och med en kvalificerad signatur. Sedan skickas ett e-postmeddelande
  innehållandes det färdiga dokumentet och information om att
  dokumentet slutligen undertecknats av samtliga parter och är
- juridiskt bindande till alla avtalsparter.</td>",,"<td>12</td>		<td>Recipient &amp; Sender</td>		<td>When all
+ juridiskt bindande till alla avtalsparter.</td>",,"<td>12</td>         <td>Recipient &amp; Sender</td>         <td>When all
  parties have signed the document, Scrive stamps it with the
  document information and a qualified signature. The document
  is then sent out to all involved parties by e-mail, telling
  them that the document has been signed, and that it is legally
  binding for all signatories.</td>"
-_legalPageH2SignProcessH31Body2Table2,"<td>2</td>		<td>Avsändare</td>		<td>Avsändaren får ett mail
+_legalPageH2SignProcessH31Body2Table2,"<td>2</td>               <td>Avsändare</td>              <td>Avsändaren får ett mail
  med ett välkomstmeddelande innehållandes information om tjänsten
- och en verifieringslänk.</td>",,"<td>2</td>		<td>Sender</td>		<td>The sender recives an e-mail
+ och en verifieringslänk.</td>",,"<td>2</td>            <td>Sender</td>         <td>The sender recives an e-mail
  with a welcome message containing information about the service
  and an activation link.</td>"
-_legalPageH2SignProcessH31Body2Table3,"<td>3</td>		<td>Avsändare</td>		<td>Efter att avsändaren klickat
+_legalPageH2SignProcessH31Body2Table3,"<td>3</td>               <td>Avsändare</td>              <td>Efter att avsändaren klickat
  på länken fyller den i sina uppgifter på Scrive, läser och
- accepterar användarvillkoren.</td>",,"<td>3</td>		<td>Sender</td>		<td>After clicking the link, the
+ accepterar användarvillkoren.</td>",,"<td>3</td>               <td>Sender</td>         <td>After clicking the link, the
  personal information is filled into Scrive, and the Terms Of
  Service are ridden and accepted.</td>"
-_legalPageH2SignProcessH31Body2Table4,"<td>4</td>		<td>Avsändare</td>		<td>När avsändaren ska bjuda
+_legalPageH2SignProcessH31Body2Table4,"<td>4</td>               <td>Avsändare</td>              <td>När avsändaren ska bjuda
  in en motpart följer den en trestegsprocess. Först laddar den
  upp ett dokument, sedan fyller den i inbjudna parters uppgifter
  och definierar fält i dokumentet som eventuellt ska fyllas i
  av mottagaren. I sista steget kan avsändaren underteckna dokumentet
- genom att klicka på knappen ”Underteckna”.</td>",,"<td>4</td>		<td>Sener</td>		<td>When the sender is inviting
+ genom att klicka på knappen ”Underteckna”.</td>",,"<td>4</td>          <td>Sener</td>          <td>When the sender is inviting
  the other party, it follows a three step process. First, a document
  is uploaded. Second, information about the counterpart is
  filled in and fields are that the counterpart is supposed to
  fill in are defined. In the last step, the sender signs the
  document by clicking ""Sign"".</td>"
-_legalPageH2SignProcessH31Body2Table5,"<td>5</td>		<td>Avsändare</td>		<td>Då avsändaren trycker på
+_legalPageH2SignProcessH31Body2Table5,"<td>5</td>               <td>Avsändare</td>              <td>Då avsändaren trycker på
  knappen ”Underteckna” visas ett pop-up-fönster där avsändaren
  frågas om den verkligen är säker på att den vill underteckna
  dokumentet. När den klickat ”Underteckna” skickas en inbjudan
  via e-post till definierade parter och avsändaren informeras
  att det undertecknade dokumentet nu undertecknats och skickats.
- </td>",,"<td>5</td>		<td>Sender</td>		<td>When the sender clicks the
+ </td>",,"<td>5</td>            <td>Sender</td>         <td>When the sender clicks the
  button ""Sign"", a pop-up shows where the sender is asked if it
  s really sure about signing the document. When ""Sign""
  is clicked, an invitation is sent by e-mail to the involved
  Counterparts, and the sender is informed that the document
  has been signed and sent.</td>"
-_legalPageH2SignProcessH31Body2Table6,"<td>6</td>		<td>Mottagare</td>		<td>Mottagaren tar emot meddelandet
+_legalPageH2SignProcessH31Body2Table6,"<td>6</td>               <td>Mottagare</td>              <td>Mottagaren tar emot meddelandet
  i vilket denne informeras om att den är inbjuden att skriva
  på dokumentet med parterna xyz och den informeras även hur den
- ska gå vidare.</td>",,"<td>6</td>		<td>Recipient</td>		<td>The recipient receives the
+ ska gå vidare.</td>",,"<td>6</td>              <td>Recipient</td>              <td>The recipient receives the
  message which contains an invitation to sign the document with
  the parties xyz, and information about how to proceed with the
  signing process.</td>"
-_legalPageH2SignProcessH31Body2Table7,"<td>7</td>		<td>Mottagare</td>		<td>Då mottagaren klickar på
+_legalPageH2SignProcessH31Body2Table7,"<td>7</td>               <td>Mottagare</td>              <td>Då mottagaren klickar på
  länken som bifogas med e-postmeddelandet hamnar den i en vy
  på Scrive där vi informerar mottagaren om att den noggrant
  bör läsa all tillgänglig information i dokumentet samt de tillhörande
- kontaktuppgifterna.</td>",,"<td>7</td>		<td>Recipient</td>		<td>When the recipient clicks
+ kontaktuppgifterna.</td>",,"<td>7</td>         <td>Recipient</td>              <td>When the recipient clicks
  the link in the e-mail, a view inside Scrive appears where the
  recipient is informed that it should read the document carefully,
  and the associated contact information.</td>"
-_legalPageH2SignProcessH31Body2Table8,"<td>8</td>		<td>Mottagare</td>		<td>För att försäkra oss om
+_legalPageH2SignProcessH31Body2Table8,"<td>8</td>               <td>Mottagare</td>              <td>För att försäkra oss om
  att mottagaren har tagit del av innehållet i dokumentet måste
  mottagaren bläddra igenom hela dokumentet ned till slutet för
- att komma vidare och kunna underteckna.</td>",,"<td>8</td>		<td>Recipient</td>		<td>To ensure that the recipient
+ att komma vidare och kunna underteckna.</td>",,"<td>8</td>             <td>Recipient</td>              <td>To ensure that the recipient
  reads the who document, it has to scroll down to the bottom
  of the document to sign.</td>"
-_legalPageH2SignProcessH31Body2Table9,"<td>9</td>		<td>Mottagare</td>		<td>När mottagaren bläddrat
+_legalPageH2SignProcessH31Body2Table9,"<td>9</td>               <td>Mottagare</td>              <td>När mottagaren bläddrat
  ned genom hela dokumentet till slutet och med största sannolikt
  noterat att den bläddrar genom ett dokument kan mottagaren slutligen
- klicka i en knapp med texten ”Underteckna”.</td>",,"<td>9</td>		<td>Recipient</td>		<td>When the recipient has
+ klicka i en knapp med texten ”Underteckna”.</td>",,"<td>9</td>         <td>Recipient</td>              <td>When the recipient has
  scrolled through the whole document, he clicks a button with
  the text ""Sign"" if he wants to sign.</td>"
-_legalPageH2SignProcessH31Body2TableHead,"<th>Steg</th>		<th>Användare</th>		<th>Juridisk orsak</th>",,"<th>Step</th>		<th>User</th>		<th>Legal reason</th>"
+_legalPageH2SignProcessH31Body2TableHead,"<th>Steg</th>         <th>Användare</th>              <th>Juridisk orsak</th>",,"<th>Step</th>                <th>User</th>           <th>Legal reason</th>"
 _legalPageH2SignProcessH31Body3,"Efter de sex steg med vilka avsändaren (steg 1-5 och 12) och
  mottagaren (6-12) vardera informeras om att de använder en tjänst
  för att skriva på ett dokument bör med all rimlighet parterna
@@ -1508,10 +1534,10 @@ _legalPageH2SignProcessH31Body3,"Efter de sex steg med vilka avsändaren (steg 1
  the recipient (step 6-12), each are informed that they are using
  a service to sign a document, they should reasonably understand:"
 _legalPageH2SignProcessH31Body4,"<li>Att det rör sig om en tjänst för att skriva på ett juridiskt
- bindande dokument.</li>	<li>Innehållet i dokumentet som de skriver
- på.</li>	<li>Att de endast får skriva på dokumentet under förutsättning
- att de är rätt person.</li>",,"<li>That they are signing a legally binding document.</li>	<li>The
- contents of the document they are signing.</li>	<li>That they
+ bindande dokument.</li>        <li>Innehållet i dokumentet som de skriver
+ på.</li>       <li>Att de endast får skriva på dokumentet under förutsättning
+ att de är rätt person.</li>",,"<li>That they are signing a legally binding document.</li>      <li>The
+ contents of the document they are signing.</li>        <li>That they
  may only sing the document if they are the right person to do
  so.</li>"
 _legalPageMetaDescription,"Signera och arkivera dina avtal elektroniskt. Välj mellan olika
@@ -1571,8 +1597,10 @@ _mailCancelOfferByAuthorContentBody,"<strong>$creatorname$</strong>   har valt a
 _mailCancelOrderByAuthorContentBody,"<strong>$creatorname$</strong>   har valt att återkalla
  orderbekräftelsen  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$."
-"_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
-"_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
+_mailCompanyAccountAcceptedContentBody,"$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
+_mailCompanyAccountAcceptedTitle,Kontoförfrågan,,"Account enquiry"
+_mailContractClosedContentAttached,"Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
+_mailContractClosedContentSignedBy,"Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 _mailDocumentAwaitingForAuthorContentInstruction,"För att färdigställa dokumentet gör följande:<br/>      1. Klicka
  på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
@@ -1626,20 +1654,31 @@ _mailInvitationToSignOrderContentPartys,Parter:,,Parties:
 _mailInvitationToSignOrderContentSender,Avsändare:,,Sender:
 _mailInvitationToSignOrderDefaultHeader,"<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order:"
-"_mailInvitationToSignTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-"_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
-"_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
-"_mailInvitationToViewTitle","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
-"_mailTakeoverPrivateUserInviteContentBodyFirst","$invitername$ har bjudit in dig till bolaget $companyname$. Om du accepterar ditt konto och dokument kommer att ägas av $companyname$.",,"$invitername$ has invited you to join company $companyname$. If you accept your account and documents will be owned by $companyname$."
-"_mailTakeoverPrivateUserInviteContentBodySecond","Vänligen iaktta försiktighet innan du accepterar. Särskilt om du har privata dokument i kontot.",,"Please consider before accepting, especially if you have private documents in your account."
-"_mailTakeoverPrivateUserInviteContentInstructionFirst","Så här går du vidare",,"To continue"
-"_mailTakeoverPrivateUserInviteContentInstructionSecond","<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li><li>Spara ned samtliga privata dokument till din dator</li><li>Klicka på länken nedan</li><li>Läs meddelandet online</li><li>Acceptera</li><li>Ditt konto är nu underkonto</li>",,"<li>Check your Archive for private or personal documents.</li><li>Download and save these documents, then remove from your Archive.</li> <li>Click the link below</li><li>Follow the online instructions.</li>"
-"_mailTakeoverPrivateUserInviteContentLink","Detta är länken nedan",,"Click to accept the invitation"
-"_mailTakeoverPrivateUserInviteTitle","Förfrågan att göra till företagskonton",,"Company Account Invitation"
-"_mailTakeoverCompanyUserInfoTitle","Förfrågan att göra till företagskonton",,"Company Account Invitation"
-"_mailTakeoverCompanyUserInfoBody","$invitername$ vill du gå med som ett företagskonto för $companyname$. Vi märker att du redan är medlem i ett annat företag. Om du vill flytta ditt konto kontakta oss på +46 (0) 10-195 99 15 eller info@scrive.se och vi kommer att kunna hjälpa dig.",,"$invitername$ would like you to join as a company account for $companyname$.  We notice that you are already a member of another company.  If you would like to move your account please contact us at +46 (0)10-195 99 15 or info@scrive.se and we will be able to help you out."
-"_mailMismatchAuthorContentBestRegards","Med vänliga hälsningar",,"Best regards"
-"_mailMismatchAuthorContentBodyFirst","Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
+_mailInvitationToSignTitle,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+_mailInvitationToViewDefaultHeader,"<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
+_mailInvitationToViewDefaultHeaderWithService,"<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
+_mailInvitationToViewTitle,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+_mailInviteUserAsCompanyAccountContentBodyFirst,"Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
+ huvudkonto till ditt konto. Om du accepterar blir ditt konto
+ ett underkonto till avsändaren. Du kommer fortfarande att kunna
+ se och administrera dina avtal, dock tar huvudkontot över ägarskapet
+ över samtliga dokument i ditt konto.",,"The user $supervisor.fullnamePlusEmail$ has requested to become
+ to become the supervisor of your account. If you accept, your
+ account will become their sub account. You will still
+ be able to see and administrate your agreements and the supervising
+ account will take over the ownership over all your documents."
+_mailInviteUserAsCompanyAccountContentBodySecond,"Vänligen iaktta försiktighet innan du accepterar. Särskilt om
+ du  har privata dokument i kontot.",,"Please review before accepting, especially if you have private
+ documents in the account."
+_mailInviteUserAsCompanyAccountContentInstructionFirst,"Så här går du vidare",,"To continue"
+_mailInviteUserAsCompanyAccountContentInstructionSecond,"<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
+ <li>Spara ned samtliga privata dokument till din dator</li>
+ <li>Klicka på länken nedan</li> <li>Läs meddelandet online</li>
+ <li>Acceptera</li> <li>Ditt konto är nu underkonto</li>",,"<li>Check that you do not have any private documents in  your Archive.</li> <li>Save all private documents to  your computer</li> <li>Click the link below</li> <li>Read the  message online</li> <li>Accept</li>  <li>Your account is now a sub account</li>"
+_mailInviteUserAsCompanyAccountContentLink,"Detta är länken nedan",,"This is the link below"
+_mailInviteUserAsCompanyAccountTitle,"Förfrågan att göra till underkonto",,"Sub account inquiry"
+_mailMismatchAuthorContentBestRegards,"Med vänliga hälsningar",,"Best regards"
+_mailMismatchAuthorContentBodyFirst,"Vi beklagar, de uppgifter du angivet i <a href=""$doclink$"">$documenttitle$</a>
  matchar inte personuppgifterna hos <a href=""mailto:$bademail$"">$badname$</a>s
  e-legitimation.",,"We are sorry, the information given to Scrive in <a href=""$doclink$"">$documenttitle$</a>
  does not match information from  <a href=""mailto:$bademail$"">$badname$</a>'s
@@ -1722,20 +1761,20 @@ _modalAccountRemovedBestRegards,"Med vänliga hälsningar<br/>        Team Scriv
 _modalAccountRemovedBody,"Din kopia av dokumentet ""$documenttitle$"" är nu raderat tillsammans
  från Scrive tillsammans med ditt konto.",,"Your duplicate for the document ""$documenttitle$"" is now deleted
  from Scrive together with your account."
-"_modalAccountRemovedHeader","Raderat",,"Deleted"
-"_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
-"_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
-"_modalAccountSetupFooter","Skapa konto!",,"Create account!"
-"_modalAccountSetupHeaderAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
-"_modalAccountSetupIfPrivateAccount","Privatperson",,"Private person"
-"_modalAccountSetupPosition","Position:",,"Position:"
-"_modalAccountSetupRepeatPassword","Upprepa lösenord:",,"Repeat password:"
-"_modalDoYouWantToBeSubaccountBody","Om du accepterar blir du företagskonto till $companyname$ och huvudkontot tar över ägarskapet över samtliga dokument.  Är du säker att vill acceptera?",,"If you accept the invitation to join $companyname$ the ownership of all your documents will be transferred.  Are you sure you want to accept?"
-"_modalDoYouWantToBeSubaccountFooterAccept","Acceptera",,"Accept"
-"_modalDoYouWantToBeSubaccountHeader","Vill du acceptera att bli företagskonto?",,"Do you accept the invitation to become a company account?"
-"_modalErrorBody","Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
-"_modalErrorHeader","Oops, ett fel har uppstått",,"Oops, an error has occurred"
-"_modalLoginForSaveViewBody","Ditt konto har skapats. En aktiveringslänk har skickats till
+_modalAccountRemovedHeader,Raderat,,Deleted
+_modalAccountSetupBodyAcceptTOS,"Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
+_modalAccountSetupChoosePassword,"Välj lösenord:",,"Choose password:"
+_modalAccountSetupFooter,"Skapa konto!",,"Create account!"
+_modalAccountSetupHeaderAcceptTOS,"Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
+_modalAccountSetupIfPrivateAccount,Privatperson,,"Private person"
+_modalAccountSetupPosition,Position:,,Position:
+_modalAccountSetupRepeatPassword,"Upprepa lösenord:",,"Repeat password:"
+_modalDoYouWantToBeSubaccountBody,"Om du accepterar blir du företagskonto till $companyname$ och huvudkontot tar över ägarskapet över samtliga dokument.  Är du säker att vill acceptera?",,"If you accept the invitation to join $companyname$ the ownership of all your documents will be transferred.  Are you sure you want to accept?"
+_modalDoYouWantToBeSubaccountFooterAccept,"Acceptera",,"Accept"
+_modalDoYouWantToBeSubaccountHeader,"Vill du acceptera att bli företagskonto?",,"Do you accept the invitation to become a company account?"
+_modalErrorBody,"Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
+_modalErrorHeader,"Oops, ett fel har uppstått",,"Oops, an error has occurred"
+_modalLoginForSaveViewBody,"Ditt konto har skapats. En aktiveringslänk har skickats till
  din inkorg.",,"Your account has been created. An activation link has been sent
  to your e-mail address."
 _modalLoginForSaveViewHeader,"Konto har skapats",,"The account has been created"
@@ -2636,7 +2675,7 @@ _securityPageH2IntroBody2,"<li>Våra kunder måste kunna lita på oss som tillha
  trovärdighet för risk. Syftet är att dokument som behandlats
  genom tjänsten ska ha högsta möjliga trovärdighet vid eventuella
  tvister. Detta gör att Scrive måste hålla en hög säkerhetsprofil
- för att möta kundernas förväntningar.</li>	<li>Våra kunder använder
+ för att möta kundernas förväntningar.</li>     <li>Våra kunder använder
  vår tjänst till lagring av sina mest känsliga företagsdata.
  Att skydda dessa data tillräckligt bra är inte bra nog. Material
  och dokument måste vara 100 % skyddade och säkra.</li>",,"<li>Scrive's customers must be able to trust us as a provider of a
@@ -2645,7 +2684,7 @@ _securityPageH2IntroBody2,"<li>Våra kunder måste kunna lita på oss som tillha
  the documents to any risk. The intention is that documents treated
  by the service shall have the highest trustworthiness possible
  in a possible dispute. Because of this, Scrive needs to maintain
- a high security standard to meet the expectations of our customers.</li>	<li>Our
+ a high security standard to meet the expectations of our customers.</li>       <li>Our
  customer use our service for storage of their most sensitive
  company data. When protecting this kind of data, sufficiently
  good is not good enough. Materials and documents has to be 100% protected and secured.</li>"
@@ -2655,20 +2694,20 @@ _securityPageH2IntroBody3,"Vi strävar efter att alltid tillämpa den senaste te
  idag:",,"We always strive for using the latest technology in our service
  and being the market leader in security. These are some of the
  Most important security action taken by us today:"
-_securityPageH2IntroBody4,"<li>	Haskell utgör själva grunden för vårt system</li>	<li>	TrustWeaver
- säkerhetsklassad premiumlagring</li>	<li>	Högsta möjliga SSL
+_securityPageH2IntroBody4,"<li> Haskell utgör själva grunden för vårt system</li>       <li>    TrustWeaver
+ säkerhetsklassad premiumlagring</li>   <li>    Högsta möjliga SSL
  256 bit kryptering för kommunikation med användare via webb
- och e-mail</li>	<li>	2048 bit kryptering, AES certifikat och
- RSA-nycklar för intern datatransfer mellan oss och våra partners</li>	<li>	Förändringshantering
- med flera steg av ändringsacceptans</li>	<li>	Strikt säkerhetspolicy
- för all Scrive personal</li>	<li>	Del i ledande säkerhetsforskning
- via partnerskap med Chalmers datasäkerhetsgrupp</li>",,"<li>	Haskell forms the base of our system</li>	<li>	TrustWeaver
- secure premium storage</li>	<li>	Most powerful SSL 256 bit encryption
- for communication with our users through webb and email</li>	<li>	2048
+ och e-mail</li>        <li>    2048 bit kryptering, AES certifikat och
+ RSA-nycklar för intern datatransfer mellan oss och våra partners</li>  <li>    Förändringshantering
+ med flera steg av ändringsacceptans</li>       <li>    Strikt säkerhetspolicy
+ för all Scrive personal</li>   <li>    Del i ledande säkerhetsforskning
+ via partnerskap med Chalmers datasäkerhetsgrupp</li>",,"<li>   Haskell forms the base of our system</li>       <li>    TrustWeaver
+ secure premium storage</li>    <li>    Most powerful SSL 256 bit encryption
+ for communication with our users through webb and email</li>   <li>    2048
  bit encryption, AES certificate and RSA-keys for internal data
- transfer between Scrive and our partners.</li>	<li>	Change management
- processes with several steps of approval</li>	<li>	Strict staff
- policy for all Scrive employees</li>	<li>	Participation in leading
+ transfer between Scrive and our partners.</li> <li>    Change management
+ processes with several steps of approval</li>  <li>    Strict staff
+ policy for all Scrive employees</li>   <li>    Participation in leading
  security research through the data security group at Chalmers
  Technical University.</li>"
 _securityPageH2SSL,"SSL 256 kryptering",,"SSL 256 encryption"
@@ -3182,31 +3221,34 @@ _signInEnglish,"Signera på engelska",,"Sign in English"
 _modalUserSignupDoneHeader,"Konto skapat",,"Account Saved"
 _modalUserSignupDoneBody,"Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till $email$.",,"Your account has been created. An email containing your account details has been sent to $email$."
-"_GoBack","Gå tillbaka",,"Go back"
-"_signInEnglishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
-"_signInSwedish","Signera på svenska",,"Sign in Swedish"
-"_signInSwedishConfirmText","<p>Vänligen bekräfta att du vill att parterna ska signera på svenska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på svenska.</p><p>Personnummer och e-legitimation är alternativ som tillkommer då de även är möjliga i Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in Swedish.</p><p>This means that all emails sent to the parts about this document will be written in Swedish.</p><p>Swedish options for using social security numbers and e-legitimation will be added.</p>"
-"_benefitsTitle","Fördelar",,"Benefits"
-"_productDescriptionTitle","Produkter",,"Products"
-"_Product1","Scrive by Cloud",,"Scrive by Cloud"
-"_Product1Body","Skicka inbjudan att signera ditt dokument från tjänsten online. Logga in och följ en process i tre enkla steg. <BR/> <a href='#' class='campaign-play-video'>Se demo</a>",,"Send invite to sign your document from the online service. Log in and follow a simple three step process. <BR/> <a href='#' class='campaign-play-video'>See demo</a>"
-"_Product2","Scrive by Mail",,"Scrive by Mail"
-"_Product2Body","Skicka inbjudan att signera ditt dokument direkt från din mailklient. Inga installationer, inget krångel. Det kan inte bli enklare.",,"Send invite to sign your document directly from your mail client. No installations, no hassle. Cant be simpler."
-"_Product3","Scrive API",,"Scrive API"
-"_Product3Body","Vill ni integrera tjänsten i era arbetsflöden? Vi tillhandahåller ett API med full integration av vår tjänst. Ändra färg och form efter vad som passar er bäst.",,"Do you want to integrate the service in your workflows? We provide an API with full integration of our service. Change color and forms after what fits you best."
-"_Product4","Alla typer av dokument",,"All types of documents"
-"_Product4Body","Scrive fungerar för alla dina processer och passar för alla typer av dokument. Skicka till exempel avtal, offerter eller orderbekräftelser med Scrive.",,"Scrive works for all types of processes and fits all types of documents. For example you can send contracts, tenders or order confirmations through Scrive."
-"_legalModalTitle","Artikel med John Kihlman, doktor i avtalsrätt",,""
-"_legalTitleFrontPage","Juridiskt bindande såklart",,"Legally binding of course"
-"_legalBodyFrontPage","Lika bindande som en signatur på papper. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"As binding as a signature on paper."
-"_modalAddCompanyAccountTitle","Nytt Konto",,"New Account"
-"_modalAddCompanyAccountBody","Bjud in någon ny eller be en befintlig Scrive användare att ansluta ditt företag.",,"Invite someone new or ask an existing Scrive user to join your company."
-"_modalAddCompanyAccountInviteButtonText","Bjud in",,"Invite"
-"_newCompanyAccountButtonText","Nytt Konto",,"New Account"
+_GoBack,"Gå tillbaka",,"Go back"
+_signInEnglishConfirmText,"<p>Vänligen bekräfta att du vill att parterna ska signera på engelska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på engelska.</p><p>Personnummer och e-legitimation är alternativ som ej är möjliga då de endast gäller för Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in English.</p><p>This means that all emails sent to the parts about this document will be written in English.</p><p>Swedish options for using social security numbers and e-legitimation will be removed.</p>"
+_signInSwedish,"Signera på svenska",,"Sign in Swedish"
+_signInSwedishConfirmText,"<p>Vänligen bekräfta att du vill att parterna ska signera på svenska.</p><p>Det innebär att alla mail som skickas till parterna gällande detta dokument kommer att vara på svenska.</p><p>Personnummer och e-legitimation är alternativ som tillkommer då de även är möjliga i Sverige.</p>",,"<p>Please confirm that you would like the parts to sign in Swedish.</p><p>This means that all emails sent to the parts about this document will be written in Swedish.</p><p>Swedish options for using social security numbers and e-legitimation will be added.</p>"
+_benefitsTitle,Fördelar,,Benefits
+_productDescriptionTitle,Produkter,,Products
+_Product1,"Scrive by Cloud",,"Scrive by Cloud"
+_Product1Body,"Skicka inbjudan att signera ditt dokument från tjänsten online. Logga in och följ en process i tre enkla steg. <BR/> <a href='#' class='campaign-play-video'>Se demo</a>",,"Send invite to sign your document from the online service. Log in and follow a simple three step process. <BR/> <a href='#' class='campaign-play-video'>See demo</a>"
+_Product2,"Scrive by Mail",,"Scrive by Mail"
+_Product2Body,"Skicka inbjudan att signera ditt dokument direkt från din mailklient. Inga installationer, inget krångel. Det kan inte bli enklare.",,"Send invite to sign your document directly from your mail client. No installations, no hassle. Cant be simpler."
+_Product3,"Scrive API",,"Scrive API"
+_Product3Body,"Vill ni integrera tjänsten i era arbetsflöden? Vi tillhandahåller ett API med full integration av vår tjänst. Ändra färg och form efter vad som passar er bäst.",,"Do you want to integrate the service in your workflows? We provide an API with full integration of our service. Change color and forms after what fits you best."
+_Product4,"Alla typer av dokument",,"All types of documents"
+_Product4Body,"Scrive fungerar för alla dina processer och passar för alla typer av dokument. Skicka till exempel avtal, offerter eller orderbekräftelser med Scrive.",,"Scrive works for all types of processes and fits all types of documents. For example you can send contracts, tenders or order confirmations through Scrive."
+_legalModalTitle,"Artikel med John Kihlman, doktor i avtalsrätt",,
+_legalTitleFrontPage,"Juridiskt bindande såklart",,"Legally binding of course"
+_legalBodyFrontPage,"Lika bindande som en signatur på papper. Läs mer <a href='#' class='openmodal' rel='#legalmodal'>här</a>.",,"As binding as a signature on paper."
+_modalAddCompanyAccountTitle,"Nytt Konto",,"New Account"
+_modalAddCompanyAccountBody,"Bjud in någon ny eller be en befintlig Scrive användare att ansluta ditt företag.",,"Invite someone new or ask an existing Scrive user to join your company."
+_modalAddCompanyAccountInviteButtonText,"Bjud in",,Invite
+_newCompanyAccountButtonText,"Nytt Konto",,"New Account"
 "_onlyPDFAllowed","Sorry, only PDF uploads are allowed. Please try another file.",,"Sorry, only PDF uploads are allowed. Please try another file."
 "_fileTooLarge","Du har valt att bifoga en fil som överstiger 4 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a file that is larger than our limit of 4 MB. Please try another file."
 "_couldNotUpload","Sorry, the file could not be uploaded. Please try again or with a different file.",,"Sorry, the file could not be uploaded. Please try again or with a different file."
-"_pageHeaderContactUs","Kontakta Scrive",,"Contact Scrive"
+_pageHeaderContactUs,"Kontakta Scrive",,"Contact Scrive"
+_contractauthorsignlastbuttontext,Signera,,Sign
+_offerauthorsignlastbuttontext,Bekräfta,,Confirm
+_orderauthorsignlastbuttontext,Bekräfta,,Confirm
 "_flashCompanyAccountInviteSent","En inbjudan har skickats.",,"An invitation has been sent."
 "_flashCompanyAccountInviteResent","Den inbjudan har skickats igen.",,"The invitation has been sent again."
 "_role","Role",,"Role"
