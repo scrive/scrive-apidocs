@@ -466,7 +466,7 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomAdvancedUser
-  docid <- addRandomDocumentWithAuthor user
+  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (not . isAttachment)
   tmpdoc <- fmap fromJust $ doc_query $ GetDocumentByDocumentID docid
   doc <- if (isTemplate tmpdoc)
          then return tmpdoc
