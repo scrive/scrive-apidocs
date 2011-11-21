@@ -334,8 +334,8 @@ decodeRowAsDocument :: DocumentID
                     -> Maybe CancelationReason
                     -> DocumentSharing
                     -> Maybe MinutesTime
-                    -> Maybe BS.ByteString
                     -> Maybe SignatoryLinkID
+                    -> Maybe BS.ByteString
                     -> [DocumentTag]
                     -> Maybe ServiceID
                     -> Bool
@@ -403,7 +403,7 @@ decodeRowAsDocument did
                                                                        _ -> Nothing
                                                , documentcancelationreason = cancelationreason
                                                , documentsharing = sharing
-                                               , documentrejectioninfo = case (rejection_time, rejection_reason, rejection_signatory_link_id) of
+                                               , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
                                                                            (Just t, Just r, Just sl) -> Just (t, r, sl)
                                                                            _ -> Nothing
                                                , documenttags = tags
@@ -1479,14 +1479,33 @@ instance DBUpdate UpdateDocumentAttachments (Either String Document) where
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AddDocumentAttachment (Either String Document) where
-  dbUpdate (AddDocumentAttachment docid fid) = wrapDB $ \conn -> do
-    unimplemented "AddDocumentAttachment"
+  dbUpdate (AddDocumentAttachment did fid) = do
+            r <- wrapDB $ \conn -> do
+                   run conn ("INSERT INTO author_attachments(document_id, file_id) (SELECT ?, ? WHERE" ++
+                         " EXISTS (SELECT TRUE FROM documents WHERE id = ? AND status = ?))")
+                      [ toSql did
+                      , toSql fid
+                      , toSql did
+                      , toSql Preparation
+                      ]
+            getOneDocumentAffected "AddDocumentAttachment" r did
 
 data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDocumentAttachment (Either String Document) where
-  dbUpdate (RemoveDocumentAttachment docid fid) = wrapDB $ \conn -> do
-    unimplemented "RemoveDocumentAttachment"
+  dbUpdate (RemoveDocumentAttachment did fid) = do
+            r <- wrapDB $ \conn -> run conn "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT TRUE FROM documents WHERE id = ? AND status = ?)"
+                      [ toSql did
+                      , toSql fid
+                      , toSql did
+                      , toSql Preparation
+                      ]
+            m <- dbQuery $ GetDocumentByDocumentID did
+            case m of
+              Just doc -> case documentstatus doc of
+                            Preparation -> return $ Right doc
+                            _ -> return $ Left "bad document status"
+              Nothing -> return $ Left "no such document"
 
 
 data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment] MinutesTime
