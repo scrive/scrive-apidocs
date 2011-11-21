@@ -48,7 +48,7 @@ import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
-import qualified ELegitimation.Routes as Elegitimation
+import qualified ELegitimation.BankID as BankID
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified Payments.PaymentsControl as Payments
@@ -135,7 +135,8 @@ staticRoutes = choice
 
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
-     , Elegitimation.handleRoutes
+     , dir "s" $ hGet                         $ toK4 $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPostNoXToken $ toK3 $ BankID.handleSignPostBankID
      , dir "s" $ hGet $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet $ toK3 $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  FIXME: Shadowed by ELegitimation.handleRoutes; This will be droped
@@ -195,6 +196,8 @@ staticRoutes = choice
      , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
+     , dir "d"                     $ hGet  $ toK2 $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg"      $ hPost $ toK1 $ BankID.handleIssuePostBankID
      , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
