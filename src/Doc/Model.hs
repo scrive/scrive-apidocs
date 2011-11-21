@@ -1099,7 +1099,7 @@ instance DBUpdate RejectDocument (Either String Document) where
             do
               r <- runUpdateStatement "documents" 
                                                [ sqlField "status" Rejected
-                                               , sqlFieldType "time" "timestamp" time
+                                               , sqlFieldType "mtime" "timestamp" time
                                                , sqlFieldType "rejection_time" "timestamp" time
                                                , sqlField "rejection_reason" customtext
                                                , sqlField "rejection_signatory_link_id" slid
