@@ -73,6 +73,9 @@ import SimpleMailTest
 #ifndef NO_LOCALE
 import LocaleTest
 #endif
+#ifndef NO_COMPANYACCOUNTS
+import CompanyAccountsTest
+#endif
 #ifndef NO_MAILS
 import MailsTest
 #endif
@@ -153,6 +156,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_LOCALE
       , ("locale", const $ localeTests conn)
+#endif
+#ifndef NO_COMPANYACCOUNTS
+      , ("companyaccounts", const $ companyAccountsTests conn)
 #endif
 #ifndef NO_MAILS
       , ("mails", mailsTests conn )
