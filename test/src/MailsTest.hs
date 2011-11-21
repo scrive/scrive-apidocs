@@ -69,7 +69,9 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
-        _ <- gRight $ randomUpdate $ UpdateDocumentSimple docid (authordetails,author) [isl]
+        let authorrole = [SignatoryAuthor, SignatoryPartner]
+            sigs = [(authordetails,authorrole), (isl,[SignatoryPartner])]
+        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs now
         d2 <- gRight $ randomUpdate $ PreparationToPending docid now
         let asl2 = head $ documentsignatorylinks d2
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
