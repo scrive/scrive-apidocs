@@ -1859,9 +1859,10 @@ _modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword,"Glö
 _modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader,"Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
 _modalSignedViewOrderNotClosedNoAccountBody,"$partyUnsignedListString:noescape()$ har ännu inte bekräftat.",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed."
 _modalSignedViewOrderNotClosedNoAccountHeader,"Du har bekräftat ordern!",,"You have confirmed the order!"
-_modalWelcomeToSkrivaPaBodyMain,"<p>Välkommen! Du kan använda vår service för att få handlingar undertecknade snabbt och smidigt. Det är verkligen enkelt.</p><p>Om du vill veta mer eller behöver någon hjälp, lämna oss ditt nummer och så återkommer vi till dig.</p>",,"<p>Welcome!  You can use Scrive to get documents signed quickly and smoothly.  It's really easy.</p><p>If you would like to learn more, or need any help, please leave Scrive your number and we'll get back to you.</p>"
-_modalWelcomeToSkrivaPaFooter,Välkommen!,,Welcome
-_modalWelcomeToSkrivaPaHeader,Scrive,,Scrive
+_modalWelcomeToSkrivaPaBodyMain,"<p>Du har nu 100 fria signaturer. Det är bara att börja skicka.</p><p>Lämna gärna ditt nummer om du vill ha hjälp att komma igång. Vi kontaktar dig så snart vi kan.</p>",,"<p>You now have 100 free signatures. You can start using the service immediately.</p><p>Please leave your number if you would like help getting started. We will call you as soon as we can.</p>"
+_modalWelcomeToSkrivaPaFooterAccept,"Ring mig!",,"Call Me"
+_modalWelcomeToSkrivaPaFooterReject,"Nej tack",,"No thanks"
+_modalWelcomeToSkrivaPaHeader,"Välkommen!",,"Welcome!"
 _multiPartPartner,Parter,,Parties
 _multipleSignatory,Massutskick,,"Multi send"
 _mustFillFieldsBeforeSigning,"Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."

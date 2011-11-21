@@ -577,7 +577,6 @@ handleAccountSetupFromSign aid hash = do
           case mactivateduser of
             Just activateduser -> do
               _ <- addUserSaveAfterSignStatEvent activateduser
-              addFlashM modalWelcomeToSkrivaPa
               return ()
             Nothing -> return ()
           return mactivateduser

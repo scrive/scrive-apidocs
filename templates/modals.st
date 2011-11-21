@@ -222,10 +222,13 @@ modalWelcomeToSkrivaPa=
       </div>
     </div>
     <div class="modal-footer">
+      <div class="float-left">
+        <a class="cancel close">$_modalWelcomeToSkrivaPaFooterReject()$</a>
+      </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>$_modalWelcomeToSkrivaPaFooter()$</p>
+          <p>$_modalWelcomeToSkrivaPaFooterAccept()$</p>
           <div class="btn-symbol green arrow-left"></div>
         </div>
         <div class="right"></div>
