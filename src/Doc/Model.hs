@@ -111,7 +111,6 @@ module Doc.Model
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
   , TimeoutDocument(..)
-  , UpdateDocumentSimple(..)
   , UpdateFields(..)
   , UpdateSigAttachments(..)
 
@@ -710,8 +709,28 @@ instance DBUpdate ArchiveDocuments (Either String [Document]) where
 data AttachCSVUpload = AttachCSVUpload DocumentID CSVUpload
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachCSVUpload (Either String Document) where
-  dbUpdate (AttachCSVUpload docid csvupload) = wrapDB $ \conn -> do
-    unimplemented "AttachCSVUpload"
+  dbUpdate (AttachCSVUpload did csvupload) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID did
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot PreparationToPending document " ++ show did ++ " because it does not exist"
+      Just document -> do
+        let msigindex = checkCSVSigIndex
+                    (documentsignatorylinks document)
+                    (csvsignatoryindex csvupload)
+        case (msigindex, documentstatus document) of
+          (Left s, _) -> return $ Left s
+          (Right _, Preparation) -> do
+                     r <- runUpdateStatement "documents"
+                          [ {- sqlFieldType "mtime" "timestamp" $ time
+                          , -} sqlField "csv_title" $ csvtitle csvupload
+                          , sqlField "csv_signatory_index" $ csvsignatoryindex csvupload
+                          , sqlField "csv_contents" $ show $ csvcontents csvupload
+                          ]
+                         "WHERE id = ? AND status = ? AND deleted = FALSE" [ toSql did, toSql Preparation ]
+                     getOneDocumentAffected "AttachCSVUpload" r did
+
+          _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be"
+
 
 data AttachFile = AttachFile DocumentID FileID MinutesTime
                   deriving (Eq, Ord, Show, Typeable)
@@ -1468,13 +1487,6 @@ data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID
 instance DBUpdate RemoveDocumentAttachment (Either String Document) where
   dbUpdate (RemoveDocumentAttachment docid fid) = wrapDB $ \conn -> do
     unimplemented "RemoveDocumentAttachment"
-
-
-data UpdateDocumentSimple = UpdateDocumentSimple DocumentID (SignatoryDetails, User) [SignatoryDetails]
-                            deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate UpdateDocumentSimple (Either String Document) where
-  dbUpdate (UpdateDocumentSimple did (authordetails,author) signatories) = wrapDB $ \conn -> do
-    unimplemented "UpdateDocumentSimple"
 
 
 data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment] MinutesTime
