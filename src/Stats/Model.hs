@@ -59,6 +59,7 @@ data UserStatQuantity = UserSignTOS  -- When user signs TOS
                         | UserSaveAfterSign -- when user accepts the save option after signing
                         | UserRefuseSaveAfterSign -- when user refuses the save option after signing
                         | UserPhoneAfterTOS -- when a user requests a phone call after accepting the TOS
+                        | UserCreateCompany -- when a user creates a company
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 

@@ -13,6 +13,7 @@ module Stats.Control
          addUserSaveAfterSignStatEvent,
          addUserRefuseSaveAfterSignStatEvent,
          addUserPhoneAfterTOS,
+         addUserCreateCompanyStatEvent,
          addAllDocsToStats,
          addAllUsersToStats,
          handleDocStatsCSV,
@@ -302,7 +303,7 @@ addDocumentCloseStatEvents doc = msum [
 addDocumentSendStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentSendStatEvents doc = msum [
   do
-    if isNothing $ documentinvitetime doc 
+    if isNothing $ documentinvitetime doc
       then do
       Log.stats $ "Cannot add send stat because there is not invite time: " ++ show (documentid doc)
       return False
@@ -342,8 +343,8 @@ addDocumentSendStatEvents doc = msum [
 addDocumentCancelStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCancelStatEvents doc = msum [
   do
-    if not $ isCanceled doc 
-      then do 
+    if not $ isCanceled doc
+      then do
       Log.stats $ "Cannot add Cancel event because doc is not canceled: " ++ show (documentid doc)
       return False
       else do
@@ -384,7 +385,7 @@ addDocumentRejectStatEvents doc = msum [
   do
     if not $ isRejected doc
       then do
-      Log.stats $ "Cannot add Reject stat because document is not rejected: " ++ show (documentid doc)     
+      Log.stats $ "Cannot add Reject stat because document is not rejected: " ++ show (documentid doc)
       return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
@@ -494,6 +495,15 @@ addUserRefuseSaveAfterSignStatEvent user siglink = msum [
       Nothing -> return False
       Just SignInfo{ signtime } -> do
         addUserIDStatEvent UserRefuseSaveAfterSign (userid user) signtime (usercompany user) (userservice user)
+  , return False]
+
+addUserCreateCompanyStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
+addUserCreateCompanyStatEvent time user = msum [
+    do
+      case usercompany user of
+        Nothing -> return False
+        Just cid ->
+          addUserIDStatEvent UserCreateCompany (userid user) time (Just cid) (userservice user)
   , return False]
 
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool

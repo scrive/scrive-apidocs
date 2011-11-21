@@ -77,7 +77,8 @@ handleUserPost = do
     -- and just failed if there were a problem with it on the server, rather
     -- than make an effort to handle it elegantly
     maybeUpgradeToCompanyAdmin = do
-      user <- guardJustM $ ctxmaybeuser <$> getContext
+      ctx <- getContext
+      user <- guardJust $ ctxmaybeuser ctx
       mcompany <- getCompanyForUser user
       createcompany <- isFieldSet "createcompany"
       if isNothing mcompany && createcompany
@@ -91,6 +92,7 @@ handleUserPost = do
               _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
               _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
               upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+              _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
               return (upgradeduser, Just flashMessageCompanyCreated, LinkCompanyAccounts emptyListParams)
             Nothing -> return (user, Nothing, LinkAccount True)
         else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
