@@ -46,6 +46,10 @@ import Data.Bits
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
+-- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
+infixl 8  &&^
+infixl 8  ||^
+
 selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
