@@ -109,9 +109,9 @@ docStateTests conn = testGroup "DocState" [
 -}
   testThat "when I create document from shared template author custom fields are stored" conn testCreateFromSharedTemplate,
 
-  testThat "when I call updateDocumentSimple, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentSimpleAlwaysLeft,
-  testThat "When I call updateDocumentSimple with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentSimpleAlwaysLeft,
-  testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" conn testPreparationUpdateDocumentSimpleAlwaysRight,
+  testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" conn testNoDocumentResetSignatoryDetailsAlwaysLeft,
+  testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" conn testNotPreparationResetSignatoryDetailsAlwaysLeft,
+  testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" conn testPreparationResetSignatoryDetailsAlwaysRight,
   testThat "when I call attachcsvupload with a doc that does not exist, always returns left" conn testNoDocumentAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" conn testNotPreparationAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload and the csvindex is the author, return left" conn testPreparationAttachCSVUploadAuthorIndexLeft,
@@ -363,37 +363,40 @@ testNoDocumentUpdateDocumentAlwaysLeft = doTimes 10 $ do
   --assert
   validTest $ assertLeft edoc
 -}
-testNotPreparationUpdateDocumentSimpleAlwaysLeft :: DB ()
-testNotPreparationUpdateDocumentSimpleAlwaysLeft = doTimes 10 $ do
+testNotPreparationResetSignatoryDetailsAlwaysLeft :: DB ()
+testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  mt <- rand 10 arbitrary
   let sd = signatoryDetailsFromUser author Nothing
   --execute
-  edoc <- doc_update $ UpdateDocumentSimple (documentid doc) (sd, author) []
+  edoc <- doc_update $ ResetSignatoryDetails (documentid doc) [(sd, [SignatoryAuthor])] mt
   --assert
   validTest $ assertLeft edoc
 
-testPreparationUpdateDocumentSimpleAlwaysRight :: DB ()
-testPreparationUpdateDocumentSimpleAlwaysRight = doTimes 10 $ do
+testPreparationResetSignatoryDetailsAlwaysRight :: DB ()
+testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  mt <- rand 10 arbitrary  
   --execute
-  edoc <- doc_update $ UpdateDocumentSimple (documentid doc) (emptySignatoryDetails, author) []
+  edoc <- doc_update $ ResetSignatoryDetails (documentid doc) [(emptySignatoryDetails, [SignatoryAuthor])] mt
   --assert
   validTest $ do
     assertRight edoc
     assertInvariants $ fromRight edoc
 
-testNoDocumentUpdateDocumentSimpleAlwaysLeft :: DB ()
-testNoDocumentUpdateDocumentSimpleAlwaysLeft = doTimes 10 $ do
+testNoDocumentResetSignatoryDetailsAlwaysLeft :: DB ()
+testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   -- setup
   a <- rand 10 arbitrary
-  author <- addNewRandomAdvancedUser
+  --author <- addNewRandomAdvancedUser
+  mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  edoc <- doc_update $ UpdateDocumentSimple a (emptySignatoryDetails, author) []  
+  edoc <- doc_update $ ResetSignatoryDetails a [(emptySignatoryDetails, [SignatoryAuthor])] mt
   --assert
   validTest $ assertLeft edoc
     
