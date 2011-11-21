@@ -77,7 +77,7 @@
         },
         setWizard: function(wiz) {
             this.set({'wizard':wiz});
-            return this
+            return this;
         }
     });
 })(window);
