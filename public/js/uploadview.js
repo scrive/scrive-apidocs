@@ -126,7 +126,7 @@
         render: function() {
             var view = this;
             var el = $(view.el);
-            var model = view.model
+            var model = view.model;
             var wiz = model.wizard();
 
             var documentsTable = KontraList.init({

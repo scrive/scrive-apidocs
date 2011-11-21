@@ -33,9 +33,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   onAccept : function() {
       if (this.get("onAccept") != undefined )
-        return this.get("onAccept");
-      var submit = this.get("submit")
-       return function() {submit.send();};
+          return this.get("onAccept");
+      var submit = this.get("submit");
+      return function() {submit.send();};
   },
   accept : function(){
        return this.onAccept()();
