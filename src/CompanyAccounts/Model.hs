@@ -41,14 +41,14 @@ instance DBUpdate AddCompanyInvite CompanyInvite where
     wrapDB $ \conn -> runRaw conn "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
     wrapDB $ \conn -> do
       _ <- run conn ("DELETE FROM companyinvites "
-                      ++ "WHERE (company_id = ? AND email = ?)") $
+                      ++ "WHERE (company_id = ? AND email = ?)")
                       [ toSql invitingcompany
                       , toSql invitedemail]
       _ <- run conn ("INSERT INTO companyinvites ("
                       ++ "  email"
                       ++ ", first_name"
                       ++ ", last_name"
-                      ++ ", company_id) VALUES (?, ?, ?, ?)") $
+                      ++ ", company_id) VALUES (?, ?, ?, ?)")
                       [ toSql invitedemail
                       , toSql invitedfstname
                       , toSql invitedsndname
@@ -62,7 +62,7 @@ instance DBUpdate RemoveCompanyInvite () where
   wrapDB $ \conn -> runRaw conn "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
   wrapDB $ \conn -> do
     _ <- run conn ("DELETE FROM companyinvites "
-                    ++ "WHERE (company_id = ? AND email = ?)") $
+                    ++ "WHERE (company_id = ? AND email = ?)")
                     [ toSql companyid
                     , toSql email]
     return ()

@@ -12,7 +12,7 @@ tableCompanyInvites :: Table
 tableCompanyInvites = Table {
     tblName = "companyinvites"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
+  , tblCreateOrValidate = \desc -> wrapDB $ \conn ->
     case desc of
       [ ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})

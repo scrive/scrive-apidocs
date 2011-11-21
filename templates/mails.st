@@ -395,13 +395,13 @@ mailNewCompanyUserInvite=
     )$
 ####
 mailNewCompanyUserInviteMainP=
- <p>$_hi()$ <strong>$personname$</strong>,</p>
+ <p>$_hi()$ <strong>$invitedname$</strong>,</p>
 
     <p>$_mailNewCompanyUserInviteContentBodyFirst()$</p>
 
-    <p>$_mailNewCompanyUserInviteContentBodyUserName()$ $email$</p>
+    <p>$_mailNewCompanyUserInviteContentBodyUserName()$ $inviteremail$</p>
 
-    <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
 
 ####
 #### CREATING ACCOUNTS AFTER SIGNING
@@ -635,7 +635,7 @@ mailTakeoverPrivateUserInviteP=
   <p>$_mailTakeoverPrivateUserInviteContentInstructionFirst()$</p>
   <ul>$_mailTakeoverPrivateUserInviteContentInstructionSecond()$</ul>
 
-  <p>$_mailTakeoverPrivateUserInviteContentLink()$: <a href="$linktojoin$">$linktojoin$</a></p>
+  <p>$_mailTakeoverPrivateUserInviteContentLink()$: <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
 ####
 ####
 mailTakeoverCompanyUserInfo=

@@ -19,10 +19,7 @@ module CompanyAccounts.CompanyAccountsView (
     ) where
 
 import Control.Applicative ((<$>))
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 
-import Company.Model
 import FlashMessage
 import KontraLink
 import ListUtil
@@ -36,44 +33,52 @@ import Util.HasSomeUserInfo
 
 viewCompanyAccounts :: TemplatesMonad m => m String
 viewCompanyAccounts =
-  renderTemplateFM "viewCompanyAccounts" $ do
-    field "currentlink" $ show $ LinkCompanyAccounts $ emptyListParams
+  renderTemplateFM "viewCompanyAccounts" $
+    field "currentlink" $ show $ LinkCompanyAccounts emptyListParams
 
 ----------------------------------------------------------------------------
 
-mailNewCompanyUserInvite :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> m Mail
-mailNewCompanyUserInvite hostpart invitername companyname emailaddress personname setpasslink = do
+mailNewCompanyUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
+                               String -> a -> b -> c -> KontraLink -> m Mail
+mailNewCompanyUserInvite hostpart invited inviter company link =
   kontramail "mailNewCompanyUserInvite" $ do
-    field "personname"     $ BS.toString personname
-    field "email"          $ BS.toString emailaddress
-    field "passwordlink"   $ show setpasslink
-    field "invitername"    $ BS.toString invitername
-    field "companyname"    $ BS.toString companyname
-    field "ctxhostpart"    $ hostpart
+    basicCompanyInviteFields invited inviter company
+    basicLinkFields hostpart link
 
-mailTakeoverPrivateUserInvite :: TemplatesMonad m => String -> User -> User -> Company -> m Mail
-mailTakeoverPrivateUserInvite hostpart invited inviter company = do
+mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
+                               String -> a -> b -> c -> KontraLink -> m Mail
+mailTakeoverPrivateUserInvite hostpart invited inviter company link =
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
-                   field "invitedname" $ getFullName invited
-                   field "invitername" $ getFullName inviter
-                   field "companyname" $ getCompanyName company
-                   field "linktojoin"  $ hostpart ++ (show $ LinkCompanyTakeover (companyid company))
+    basicCompanyInviteFields invited inviter company
+    basicLinkFields hostpart link
 
-mailTakeoverCompanyUserInfo :: TemplatesMonad m => User -> User -> Company -> m Mail
-mailTakeoverCompanyUserInfo invited inviter company = do
+mailTakeoverCompanyUserInfo :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
+                               a -> b -> c -> m Mail
+mailTakeoverCompanyUserInfo invited inviter company =
   --send info in the language of the existing user rather than in the inviter's language
-  kontramaillocal invited  "mailTakeoverCompanyUserInfo" $ do
-                   field "invitedname" $ getFullName invited
-                   field "invitername" $ getFullName inviter
-                   field "companyname" $ getCompanyName company
+  kontramaillocal invited  "mailTakeoverCompanyUserInfo" $
+    basicCompanyInviteFields invited inviter company
+
+basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
+                            a -> b -> c -> Fields m
+basicCompanyInviteFields invited inviter company = do
+  field "invitedname" $ getFullName invited
+  field "invitedemail" $ getEmail invited
+  field "invitername" $ getSmartName inviter
+  field "companyname" $ getCompanyName company
+
+basicLinkFields :: TemplatesMonad m => String -> KontraLink -> Fields m
+basicLinkFields hostpart link = do
+  field "ctxhostpart" hostpart
+  field "link" $ show link
 
 -------------------------------------------------------------------------------
 
-modalDoYouWantToBeCompanyAccount :: TemplatesMonad m => Company -> m FlashMessage
+modalDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
 modalDoYouWantToBeCompanyAccount company =
-  toModal <$> (renderTemplateFM "modalDoYouWantToBeCompanyAccount" $ do
-            field "companyname" $ getCompanyName company)
+  toModal <$> renderTemplateFM "modalDoYouWantToBeCompanyAccount"
+                 (field "companyname" $ getCompanyName company)
 
 -------------------------------------------------------------------------------
 
@@ -85,10 +90,10 @@ flashMessageCompanyAccountInviteResent :: TemplatesMonad m => m FlashMessage
 flashMessageCompanyAccountInviteResent =
   toFlashMsg OperationDone <$> renderTemplateM "flashCompanyAccountInviteResent" ()
 
-flashMessageUserHasBecomeCompanyAccount :: TemplatesMonad m => Company -> m FlashMessage
+flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
 flashMessageUserHasBecomeCompanyAccount company =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageUserHasBecomeCompanyAccount" $ do
-    field "companyname" $ getCompanyName company)
+  toFlashMsg OperationDone <$> renderTemplateFM "flashMessageUserHasBecomeCompanyAccount"
+                                  (field "companyname" $ getCompanyName company)
 
 flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasLiveDocs =

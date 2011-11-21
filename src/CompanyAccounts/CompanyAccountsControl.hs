@@ -60,11 +60,11 @@ handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
   companyusers <- runDBQuery $ GetCompanyAccounts (companyid company)
   deletableuserids <- map userid <$> filterM isUserDeletable companyusers
   companyinvites <- runDBQuery $ GetCompanyInvites (companyid company)
-  let isUser CompanyInvite{invitedemail} = (unEmail invitedemail) `elem` (map getEmail companyusers)
+  let isUser CompanyInvite{invitedemail} = unEmail invitedemail `elem` map getEmail companyusers
   let
     companyaccounts =
-      (map mkAccountFromUser companyusers)
-      ++ (map mkAccountFromInvite $ filter (not . isUser) companyinvites)
+      map mkAccountFromUser companyusers
+      ++ map mkAccountFromInvite (filter (not . isUser) companyinvites)
     mkAccountFromUser u = CompanyAccount {
         camaybeuserid = Just $ userid u
       , cafstname = getFirstName u
@@ -82,9 +82,9 @@ handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
         camaybeuserid = Nothing
       , cafstname = invitedfstname i
       , casndname = invitedsndname i
-      , cafullname = (invitedfstname i)
-                     `BS.append` (BS.fromString " ")
-                     `BS.append` (invitedsndname i)
+      , cafullname = invitedfstname i
+                     `BS.append` BS.fromString " "
+                     `BS.append` invitedsndname i
       , caemail = unEmail $ invitedemail i
       , carole = RolePending
       , cadeletable = True
@@ -103,7 +103,7 @@ handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
                                                             , ("role", JSString $ toJSString $ show $ carole f)
                                                             , ("deletable", JSBool $ cadeletable f)
                                                             , ("activated", JSBool $ caactivated f)
-                                                            , ("isctxuser", JSBool $ (Just $ userid user) == (camaybeuserid f))])])
+                                                            , ("isctxuser", JSBool $ Just (userid user) == camaybeuserid f)])])
                                    (list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
 
@@ -135,7 +135,7 @@ companyAccountsSortSearchPage  =
 companyAccountsSearchFunc :: SearchingFunction CompanyAccount
 companyAccountsSearchFunc s ca = accountMatch ca s
   where
-      match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
+      match s' m = map toUpper s' `isInfixOf` map toUpper (BS.toString m)
       accountMatch ca' s' = match s' (cafstname ca')
                             || match s' (casndname ca')
                             || match s' (cafullname ca')
@@ -221,7 +221,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   -- record the invite and flash a message
   when (isJust minvitee) $ do
     email <- guardJust memail
-    _ <- runDBUpdate $ AddCompanyInvite $ CompanyInvite{
+    _ <- runDBUpdate $ AddCompanyInvite CompanyInvite{
             invitedemail = Email email
           , invitedfstname = fstname
           , invitedsndname = sndname
@@ -263,21 +263,20 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
           return True
       _ -> return False
 
-  when (resent) $ do
-    addFlashM flashMessageCompanyAccountInviteResent
+  when resent $ addFlashM flashMessageCompanyAccountInviteResent
 
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
-  mail <- mailNewCompanyUserInvite (ctxhostpart ctx) (getSmartName inviter) (getCompanyName company) (getEmail user) (getFullName user) al
+  mail <- mailNewCompanyUserInvite (ctxhostpart ctx) user inviter company al
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
 
 sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
-  mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company
+  mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company (LinkCompanyTakeover (companyid company))
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
@@ -289,18 +288,18 @@ sendTakeoverCompanyUserMail inviter company user = do
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverCompanyInternalWarningMail inviter company user = do
   ctx <- getContext
-  let content = "Oh dear!  " ++ (BS.toString $ getFullName inviter)
-                ++ " &lt;" ++ (BS.toString $ getEmail inviter) ++ "&gt;"
-                ++ " in company " ++ (BS.toString $ getCompanyName company)
-                ++ " has asked to takeover " ++ (BS.toString $ getFullName user)
-                ++ " &lt;" ++ (BS.toString $ getEmail user) ++ "&gt;"
+  let content = "Oh dear!  " ++ BS.toString (getFullName inviter)
+                ++ " &lt;" ++ BS.toString (getEmail inviter) ++ "&gt;"
+                ++ " in company " ++ BS.toString (getCompanyName company)
+                ++ " has asked to takeover " ++ BS.toString (getFullName user)
+                ++ " &lt;" ++ BS.toString (getEmail user) ++ "&gt;"
                 ++ " who is already in a company."
-                ++ "  " ++ (BS.toString $ getFullName user)
+                ++ "  " ++ BS.toString (getFullName user)
                 ++ " has been emailed about the problem and advised to contact us if they want to move accounts."
   scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
         to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-      , title = BS.fromString $ "Attempted Company Account Takeover"
-      , content = BS.fromString $ content
+      , title = BS.fromString "Attempted Company Account Takeover"
+      , content = BS.fromString content
   }
 
 {- |
@@ -330,14 +329,14 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   isdeletable <- maybe (return False) isUserDeletable mremoveuser
 
   case (mremoveuser, mremovecompany) of
-    (Just removeuser, Just removecompany) | company == removecompany -> do
+    (Just removeuser, Just removecompany) | company == removecompany ->
          --there's an actual user to delete
          if isdeletable
            then do
              _ <- runDBUpdate $ RemoveCompanyInvite (companyid company) (Email $ getEmail removeuser)
              _ <- runDBUpdate $ DeleteUser (userid removeuser)
              addFlashM flashMessageCompanyAccountDeleted
-           else do
+           else
              addFlashM flashMessageUserHasLiveDocs
     _ -> do
       _ <- runDBUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)

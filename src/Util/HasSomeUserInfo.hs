@@ -18,6 +18,7 @@ module Util.HasSomeUserInfo (
   getLastName,
   getPersonalNumber,
   getSmartName,
+  HasSomeUserInfo
   ) where
 
 import Doc.DocStateData
