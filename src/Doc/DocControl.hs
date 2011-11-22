@@ -13,6 +13,7 @@ import Doc.DocSeal
 import Doc.Transitory
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
+import Doc.DocStateData
 import Doc.DocStorage
 import Doc.DocUtils
 import Doc.DocView
