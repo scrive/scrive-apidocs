@@ -49,7 +49,7 @@ class (Functor m, MonadIO m) => DBMonad m where
 
 instance (Monad m, Functor m, MonadIO m) => DBMonad (ReaderT Connection m) where
   getConnection = ask
-  handleDBError e = error $ "instance (Monad m) => DBMonad (ReaderT Connection m) lacks handleDBError " ++ show e
+  handleDBError e = error $ "instance (Monad m) => DBMonad (ReaderT Connection m) lacks handleDBError \n" ++ DB.Classes.originalQuery e ++ "\n" ++ show e
 
 -- | Wrapper for calling db related functions in controlled environment
 -- (DB/unDB is not exposed so functions may enter DB wrapper, but they
@@ -79,7 +79,7 @@ runDB f = do
   where
     -- we catch only SqlError/DBException here
     handlers = [
-        E.Handler (return . Left . SQLError "")
+        E.Handler (return . Left . SQLError "<unknown SQL query>")
       , E.Handler (return . Left)
       ]
 
