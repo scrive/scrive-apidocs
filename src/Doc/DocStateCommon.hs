@@ -186,3 +186,35 @@ checkResetSignatoryData doc sigs =
       , trueOrMessage (isbasic =>> all (disallowspartner =>>^ (SignatoryPartner `notElem`)) authors) "The author should not be a signatory with this doc type and basic functionality"
       , trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" 
       ]
+
+{- |
+    Pumps data into a signatory link
+-}
+replaceSignatoryData :: SignatoryLink
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> [BS.ByteString]
+                        -> SignatoryLink
+replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname email company personalnumber companynumber fieldvalues =
+  siglink { signatorydetails = signatorydetails { signatoryfields = pumpData (signatoryfields signatorydetails) fieldvalues } }
+  where
+    pumpData [] _ = []
+    pumpData (sf:rest) vs = (case sfType sf of
+      FirstNameFT      -> sf { sfValue = fstname }
+      LastNameFT       -> sf { sfValue = sndname }
+      CompanyFT        -> sf { sfValue = company }
+      PersonalNumberFT -> sf { sfValue = personalnumber }
+      CompanyNumberFT  -> sf { sfValue = companynumber }
+      EmailFT          -> sf { sfValue = email }
+      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v })
+        : pumpData rest vs'
+      where
+        (v, vs') = case sfType sf of
+          CustomFT{} -> if null vs
+                           then (BS.empty, [])
+                           else (head vs, tail vs)
+          _          -> (error "you can't use it", vs)
