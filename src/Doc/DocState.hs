@@ -114,8 +114,8 @@ import User.Model
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
-import Util.HasSomeCompanyInfo
-import Util.HasSomeUserInfo
+--import Util.HasSomeCompanyInfo
+--import Util.HasSomeUserInfo
 import Control.Applicative
 import Data.List
 import File.FileID
@@ -1276,39 +1276,6 @@ signableFromDocumentIDWithUpdatedAuthor user mcompany docid time =
             | isAuthor sl = replaceSignatoryUser sl user mcompany
             | otherwise = sl
 
-{- |
-    Creates a signable document from a template document.
-    The new signable will have the same process as the template,
-    and it will be in preparation mode.  It won't be shared.
--}
-templateToDocument :: Document -> Document
-templateToDocument doc =
-    let Template process = documenttype doc in
-    doc {
-          documentstatus = Preparation
-        , documenttype =  Signable process
-        , documentsharing = Private
-    }
-
-{- |
-    Replaces signatory data with given user's data.
--}
-replaceSignatoryUser :: SignatoryLink
-                        -> User
-                        -> Maybe Company
-                        -> SignatoryLink
-replaceSignatoryUser siglink user mcompany =
-  let newsl = replaceSignatoryData
-                       siglink
-                       (getFirstName      user)
-                       (getLastName       user)
-                       (getEmail          user)
-                       (getCompanyName    mcompany)
-                       (getPersonalNumber user)
-                       (getCompanyNumber  mcompany)
-                       (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
-  newsl { maybesignatory = Just $ userid user,
-          maybecompany = usercompany user }
 
 
 {- |

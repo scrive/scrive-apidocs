@@ -5,7 +5,7 @@ module Doc.DocStateCommon
 where
 
 --import API.Service.Model
---import Company.Model
+import Company.Model
 --import Control.Monad
 --import Control.Monad.Reader (ask)
 --import Database.HDBC
@@ -27,7 +27,7 @@ import User.Model
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 --import Util.SignatoryLinkUtils
---import Util.HasSomeCompanyInfo
+import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import InputValidation
 --import Control.Applicative
@@ -218,3 +218,41 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
                            then (BS.empty, [])
                            else (head vs, tail vs)
           _          -> (error "you can't use it", vs)
+
+
+
+{- |
+    Creates a signable document from a template document.
+    The new signable will have the same process as the template,
+    and it will be in preparation mode.  It won't be shared.
+-}
+templateToDocument :: Document -> Document
+templateToDocument doc =
+    let Template process = documenttype doc in
+    doc {
+          documentstatus = Preparation
+        , documenttype =  Signable process
+        , documentsharing = Private
+    }
+
+
+
+{- |
+    Replaces signatory data with given user's data.
+-}
+replaceSignatoryUser :: SignatoryLink
+                        -> User
+                        -> Maybe Company
+                        -> SignatoryLink
+replaceSignatoryUser siglink user mcompany =
+  let newsl = replaceSignatoryData
+                       siglink
+                       (getFirstName      user)
+                       (getLastName       user)
+                       (getEmail          user)
+                       (getCompanyName    mcompany)
+                       (getPersonalNumber user)
+                       (getCompanyNumber  mcompany)
+                       (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
+  newsl { maybesignatory = Just $ userid user,
+          maybecompany = usercompany user }

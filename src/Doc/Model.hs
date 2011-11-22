@@ -141,6 +141,7 @@ import Data.Convertible
 import Data.List
 import Doc.Tables
 import Control.Applicative
+import Util.SignatoryLinkUtils
 --import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
@@ -1128,10 +1129,14 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          [ sqlFieldType "seen_time" "timestamp" time
                          , sqlField "seen_ip" ipnumber
                          ]
-                         "WHERE id = ? AND document_id = ? AND token = ? AND seen_time = NULL"
+                         "WHERE id = ? AND document_id = ? AND token = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
                          [ toSql signatorylinkid1
                          , toSql did
                          , toSql mh
+                         , toSql did
+                         , toSql (toDocumentSimpleType (Signable undefined))
+                         , toSql Preparation
+                         , toSql Closed
                          ]
     getOneDocumentAffected "MarkDocumentSeen" r did
 
@@ -1462,9 +1467,11 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
     r <- runUpdateStatement "signatory_links" 
                          [ sqlField "invitation_delivery_status" status
                          ]
-                         "WHERE id = ? AND document_id = ?"
+                         "WHERE id = ? AND document_id = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ?)"
                          [ toSql slid
                          , toSql did
+                         , toSql did
+                         , toSql (toDocumentSimpleType (Signable undefined))
                          ]
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
 
@@ -1518,12 +1525,18 @@ instance DBUpdate ResetSignatoryDetails (Either String Document) where
             wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
             wrapDB $ \conn -> run conn "DELETE FROM signatory_links WHERE document_id = ?" [toSql documentid]
 
+            let mauthorsiglink = getAuthorSigLink document
             flip mapM signatories $ \(details, roles) -> do
                      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
                      magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
 
-                     let link = signLinkFromDetails' details roles linkid magichash
+                     let link' = signLinkFromDetails' details roles linkid magichash
+                         link = if isAuthor link'
+                                then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
+                                           , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
+                                           }
+                                else link'
                      r1 <- runInsertStatement "signatory_links"
                            [ sqlField "id" $ signatorylinkid link
                            , sqlField "document_id" documentid
@@ -1582,8 +1595,20 @@ instance DBUpdate SignableFromDocument (Either String Document) where
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID MinutesTime
                                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where
-  dbUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid time) = wrapDB $ \conn -> do
-    unimplemented "SignableFromDocumentIDWithUpdatedAuthor"
+  dbUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid time) =
+      if fmap companyid mcompany /= usercompany user
+        then return $ Left "company and user don't match"
+        else do
+          (flip newFromDocument) docid $ \doc -> 
+            (templateToDocument doc) {
+                                 documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
+                                -- FIXME: Need to remove authorfields?
+                                , documentctime = time
+                                }
+    where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
+          replaceAuthorSigLink sl
+            | isAuthor sl = replaceSignatoryUser sl user mcompany
+            | otherwise = sl
 
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
@@ -1596,12 +1621,22 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
     Just doc <- insertDocumentAsIs (document { documentid = did })
     return (documentid doc)
 
-
+{-
+   FIXME: this is so wrong on so many different levels
+   - should set mtime
+   - should not change type or copy this doc into new doc
+-}
 data TemplateFromDocument = TemplateFromDocument DocumentID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TemplateFromDocument (Either String Document) where
-  dbUpdate (TemplateFromDocument documentid) = wrapDB $ \conn -> do
-    unimplemented "TemplateFromDocument"
+  dbUpdate (TemplateFromDocument did) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "status" Preparation
+         , sqlField "type" $ toDocumentSimpleType (Template undefined)
+         ]
+         "WHERE id = ?" [ toSql did ]                               
+    getOneDocumentAffected "TemplateFromDocument" r did
+
 
 data TimeoutDocument = TimeoutDocument DocumentID MinutesTime
                        deriving (Eq, Ord, Show, Typeable)
