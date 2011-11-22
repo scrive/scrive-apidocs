@@ -88,7 +88,7 @@ documentNew = api $ do
   when (isNothing mdoctypei)
     apiBadInput
   let Just doctypei = mdoctypei
-  let mdoctype = toDocumentType <$> toSafeEnum doctypei
+  let mdoctype = toDocumentType <$> toSafeEnumInt doctypei
   when (isNothing mdoctype)
     apiBadInput
   let Just doctype = mdoctype

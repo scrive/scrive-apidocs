@@ -450,7 +450,9 @@ window.Eleg = {
         return false;
       LoadingDialog.open(localization.startingSaveSigning);
       $.ajax({
-            'url': "/s/bankid/" + document.documentid() +  document.viewer().urlPart(),
+            'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            'magichash' : document.viewer().magichash(),
+            'provider' : 'bankid',
             'dataType': 'json',
             'data': {}, 
             'scriptCharset': "utf-8",
@@ -504,7 +506,9 @@ window.Eleg = {
 
     LoadingDialog.open(localization.startingSaveSigning);
     $.ajax({
-            'url': "/s/nordea/" + document.documentid() +  document.viewer().urlPart(),
+            'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            'magichash' : document.viewer().magichash(),
+            'provider' : 'nordea',   
             'dataType': 'json',
             'data': {}, 
             'scriptCharset': "utf-8",
@@ -563,7 +567,9 @@ window.Eleg = {
             return false;
         LoadingDialog.open(localization.startingSaveSigning);
         $.ajax({
-            'url': "/s/telia/" + document.documentid() +  document.viewer().urlPart(),
+            'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            'magichash' : document.viewer().magichash(),
+            'provider' : 'telia',   
             'dataType': 'json',
             'data': {}, 
             'scriptCharset': "utf-8",

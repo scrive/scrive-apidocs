@@ -135,13 +135,16 @@ staticRoutes = choice
 
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
-     , dir "s" $ hGet                         $ toK4 $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hPostNoXToken $ toK3 $ BankID.handleSignPostBankID
+     
+     
+     
+     , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.handleSignBankID
      , dir "s" $ hGet $ toK0 $ sendRedirect $ LinkContracts
      , dir "s" $ hGet $ toK3 $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  FIXME: Shadowed by ELegitimation.handleRoutes; This will be droped
 
-
+     
+     , dir "s" $ param "eleg" $ hPostNoXToken $ toK3 $ BankID.handleSignPostBankID
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocument
      , dir "s" $ param "cancel"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign

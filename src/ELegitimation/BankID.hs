@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module ELegitimation.BankID
     ( handleSignBankID
     , handleSignPostBankID
@@ -51,8 +52,30 @@ import Util.StringUtil
    URL: /s/{provider}/{docid}/{signid}/{magic}
    Method: GET
  -}
-handleSignBankID :: Kontrakcja m => String -> DocumentID -> SignatoryLinkID -> MagicHash -> m Response
-handleSignBankID provider docid signid magic = do
+ 
+instance FromReqURI SignatureProvider where
+    fromReqURI = maybeRead
+    
+instance Read SignatureProvider where
+    readsPrec _ "bankid" = [(BankIDProvider,"")]
+    readsPrec _ "telia"  = [(TeliaProvider,"")]   
+    readsPrec _ "nordea" = [(NordeaProvider,"")]
+    readsPrec _ _        = []
+
+instance SafeEnum SignatureProvider where
+    fromSafeEnum BankIDProvider = 6
+    fromSafeEnum TeliaProvider  = 5
+    fromSafeEnum NordeaProvider = 4
+    
+    toSafeEnum 6 = Just BankIDProvider
+    toSafeEnum 5 = Just TeliaProvider
+    toSafeEnum 4 = Just  NordeaProvider
+    toSafeEnum _ = Nothing
+    
+handleSignBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+handleSignBankID docid signid = do
+    magic <- guardJustM $ readField "magichash"
+    provider <- guardJustM $ readField "provider"
     Context{ctxtime} <- getContext
     let seconds = toSeconds ctxtime 
 
@@ -61,8 +84,8 @@ handleSignBankID provider docid signid magic = do
 
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
-    providerCode <- providerStringToNumber provider
-    nonceresponse <- generateChallenge providerCode
+    
+    nonceresponse <- generateChallenge provider
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
             Log.eleg $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -70,7 +93,7 @@ handleSignBankID provider docid signid magic = do
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
             tbs <- getTBS document
-            encodetbsresponse <- encodeTBS providerCode tbs transactionid
+            encodetbsresponse <- encodeTBS provider tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
                     Log.eleg $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -118,7 +141,7 @@ handleSignPostBankID docid signid magic = do
             , ctxtime
             , ctxipnumber } <- getContext
     -- POST values
-    provider      <- getDataFnM $ look "eleg"
+    provider      <- guardJustM $ readField "eleg"
     signature     <- getDataFnM $ look "signature"
     transactionid <- getDataFnM $ look "transactionid"
     fieldnames    <- getAndConcat "fieldname"
@@ -144,25 +167,23 @@ handleSignPostBankID docid signid magic = do
     guard (mtmagic  == Just magic )
     -- end validation
     Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
-    providerCode <- providerStringToNumber provider
     -- send signature to ELeg
-    res <- verifySignature providerCode
+    res <- verifySignature provider
                 transactionencodedtbs
                 signature
-                (if providerCode == 6
+                (if provider == BankIDProvider
                     then Just transactionnonce
                     else Nothing)
                 transactionid
     case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
-            Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
+            Log.eleg $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt $ fromSafeEnum provider), ("sig", JString signature)]
             addFlash (OperationFailed, "E-legitimationstjänsten misslyckades att verifiera din signatur")
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
-            providerType <- providerStringToType provider
             -- compare information from document (and fields) to that obtained from BankID
             case compareSigLinkToElegData siglink attrs of
                 -- either number or name do not match
@@ -185,7 +206,7 @@ handleSignPostBankID docid signid magic = do
                     let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                     , signatureinfosignature   = signature
                                                     , signatureinfocertificate = cert
-                                                    , signatureinfoprovider    = providerType
+                                                    , signatureinfoprovider    = provider
                                                     , signaturefstnameverified = bfn
                                                     , signaturelstnameverified = bln
                                                     , signaturepersnumverified = bpn
@@ -223,7 +244,7 @@ handleSignPostBankID docid signid magic = do
     the document absolutely must exist. If the docid is not found, 404
     the tbs text must exist
 -}
-handleIssueBankID :: Kontrakcja m => String -> DocumentID -> m (Either KontraLink Response)
+handleIssueBankID :: Kontrakcja m => SignatureProvider -> DocumentID -> m (Either KontraLink Response)
 handleIssueBankID provider docid = withUserGet $ do
     Context { ctxtime, ctxmaybeuser = Just author } <- getContext
     let seconds = toSeconds ctxtime
@@ -237,8 +258,7 @@ handleIssueBankID provider docid = withUserGet $ do
 
     guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
 
-    providerCode <- providerStringToNumber provider
-    nonceresponse <- generateChallenge providerCode
+    nonceresponse <- generateChallenge provider
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
             Log.eleg $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -246,7 +266,7 @@ handleIssueBankID provider docid = withUserGet $ do
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
 
-            encodetbsresponse <- encodeTBS providerCode tbs transactionid
+            encodetbsresponse <- encodeTBS provider tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
                     Log.eleg $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -294,7 +314,7 @@ handleIssuePostBankID docid = withUserPost $ do
                 , ctxtime
                 , ctxipnumber } <- getContext
 
-    provider      <- getDataFnM $ look "eleg"
+    provider      <- guardJustM $ readField "eleg"
     signature     <- getDataFnM $ look "signature"
     transactionid <- getDataFnM $ look "transactionid"
     signlast <- isFieldSet "signlast"
@@ -324,13 +344,10 @@ handleIssuePostBankID docid = withUserPost $ do
             Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"   
             guard (udoc `allowsIdentification` ELegitimationIdentification)
             Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"   
-            providerCode <- providerStringToNumber provider
-            res <- verifySignature providerCode
+            res <- verifySignature provider
                     transactionencodedtbs
                     signature
-                    (if providerCode == 6
-                    then Just transactionnonce
-                    else Nothing)
+                    ( Just transactionnonce <|  provider == BankIDProvider |> Nothing )
                     transactionid
 
             case res of
@@ -341,7 +358,6 @@ handleIssuePostBankID docid = withUserPost $ do
                     return $ LinkDesignDoc $ DesignStep3 docid signlast
                 Right (cert, attrs) -> do
                     Log.debug $ show attrs
-                    providerType <- providerStringToType provider
                     authorsl <- guardJust $ getAuthorSigLink udoc
                     -- compare information from document (and fields) to that obtained from BankID
                     case compareSigLinkToElegData authorsl attrs of
@@ -356,7 +372,7 @@ handleIssuePostBankID docid = withUserPost $ do
                             let signinfo = SignatureInfo    { signatureinfotext        = transactiontbs
                                                             , signatureinfosignature   = signature
                                                             , signatureinfocertificate = cert
-                                                            , signatureinfoprovider    = providerType
+                                                            , signatureinfoprovider    = provider
                                                             , signaturefstnameverified = bfn
                                                             , signaturelstnameverified = bln
                                                             , signaturepersnumverified = bpn
@@ -445,7 +461,7 @@ serviceid = "skrivapa9421" -- production
 
 data ImplStatus = ImplStatus Int String Int String
 
-data GenerateChallengeRequest = GenerateChallengeRequest Int String
+data GenerateChallengeRequest = GenerateChallengeRequest SignatureProvider String
 
 instance HTypeable (GenerateChallengeRequest) where
     toHType _x = Defined "GenerateChallengeRequest" [] []
@@ -492,7 +508,7 @@ instance XmlContent (GenerateChallengeResponse) where
             }
         } `adjustErr` ("in <GenerateChallengeResponse>, "++)
 
-data EncodeTBSRequest = EncodeTBSRequest Int String String String
+data EncodeTBSRequest = EncodeTBSRequest SignatureProvider String String String
 
 instance HTypeable (EncodeTBSRequest) where
     toHType _x = Defined "EncodeTBSRequest" [] []
@@ -502,7 +518,7 @@ instance XmlContent (EncodeTBSRequest) where
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
                 [CElem (Elem "provider"
                                  [mkAttr "xmlns" ""]
-                                 (toText $ show provider)) ()
+                                 (toText $ show $ fromSafeEnumInt provider)) ()
                 ,CElem (Elem "policy"
                                  [mkAttr "xmlns" ""]
                                  (toText policy)) ()
@@ -545,7 +561,7 @@ instance XmlContent (EncodeTBSResponse) where
             }
         } `adjustErr` ("in <EncodeTBSResponse>, "++)
 
-data VerifySignatureRequest = VerifySignatureRequest Int String String String (Maybe String) String
+data VerifySignatureRequest = VerifySignatureRequest SignatureProvider String String String (Maybe String) String
 
 instance HTypeable (VerifySignatureRequest) where
     toHType _x = Defined "VerifySignatureRequest" [] []
@@ -555,7 +571,7 @@ instance XmlContent (VerifySignatureRequest) where
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
                 ([CElem (Elem "provider"
                                  [mkAttr "xmlns" ""]
-                                 (toText $ show provider)) ()
+                                 (toText $ show $ fromSafeEnumInt provider)) ()
                 ,CElem (Elem "policy"
                                  [mkAttr "xmlns" ""]
                                  (toText policy)) ()
@@ -622,9 +638,9 @@ instance XmlContent (VerifySignatureResponse) where
 certfile :: String
 certfile = "certs/steria3.pem"
 
-generateChallenge :: Kontrakcja m => Int -> m (Either ImplStatus (String, String))
-generateChallenge pid = do
-    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest pid serviceid
+generateChallenge :: Kontrakcja m => SignatureProvider -> m (Either ImplStatus (String, String))
+generateChallenge provider = do
+    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest provider serviceid
     case eresponse of
         Left msg -> do
             liftIO $ print msg
@@ -634,7 +650,7 @@ generateChallenge pid = do
             then return $ Right (challenge, transactionid)
             else return $ Left (ImplStatus a b status msg)
 
-encodeTBS :: Kontrakcja m => Int -> String -> String -> m (Either ImplStatus String)
+encodeTBS :: Kontrakcja m => SignatureProvider -> String -> String -> m (Either ImplStatus String)
 encodeTBS provider tbs transactionID = do
     eresponse <- liftIO $ makeSoapCallCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider serviceid tbs transactionID
     case eresponse of
@@ -647,7 +663,7 @@ encodeTBS provider tbs transactionID = do
             else return $ Left (ImplStatus a b status msg)
 
 verifySignature :: Kontrakcja m
-                => Int
+                => SignatureProvider
                 -> String
                 -> String
                 -> Maybe String
@@ -724,20 +740,6 @@ fieldvaluebyid _ [] = BS.fromString ""
 fieldvaluebyid fid ((k, v):xs)
     | k == fid  = v
     | otherwise = fieldvaluebyid fid xs
-
-providerStringToNumber :: Kontrakcja m => String -> m Int
-providerStringToNumber provider
-    | provider == "bankid" = return 6
-    | provider == "nordea" = return 4
-    | provider == "telia"  = return 5
-    | otherwise            = mzero
-
-providerStringToType :: Kontrakcja m => String -> m SignatureProvider
-providerStringToType provider
-    | provider == "bankid" = return BankIDProvider
-    | provider == "nordea" = return NordeaProvider
-    | provider == "telia"  = return TeliaProvider
-    | otherwise            = mzero
 
 compareFirstNames :: BS.ByteString -> BS.ByteString -> MergeResult
 compareFirstNames fnContract fnEleg

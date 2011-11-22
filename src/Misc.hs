@@ -312,8 +312,14 @@ instance (Bounded a) => HasDefaultValue a where
 
 -- | Extra classes for one way enums
 class SafeEnum a where
-    fromSafeEnum::a -> Integer
-    toSafeEnum::Integer -> Maybe a
+    fromSafeEnum::(Integral b) =>  a -> b
+    toSafeEnum::(Integral b) =>  b -> Maybe a
+
+fromSafeEnumInt :: (SafeEnum a) => a -> Int
+fromSafeEnumInt = fromSafeEnumInt
+
+toSafeEnumInt :: (SafeEnum a) => Int -> Maybe a
+toSafeEnumInt = toSafeEnumInt
 
 -- | Just @flip map@.
 for :: [a] -> (a -> b) -> [b]
